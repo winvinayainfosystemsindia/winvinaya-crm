@@ -7,9 +7,9 @@ from app.core.database import get_db
 from app.core.rate_limiter import rate_limit_medium
 from app.api.deps import get_current_user, require_roles
 from app.models.user import User, UserRole
-from app.schemas.user import UserResponse, UserUpdate, PaginationParams
+from app.schemas.user import UserResponse, UserUpdate, PaginationParams, UserCreate
 from app.services.user_service import UserService
-from app.utils.activity_tracker import log_update, log_delete
+from app.utils.activity_tracker import log_update, log_delete, log_create
 from loguru import logger
 
 
@@ -73,6 +73,35 @@ async def update_current_user(
     
     logger.info(f"User updated successfully: {current_user.email}")
     return updated_user
+
+
+@router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@rate_limit_medium()
+async def create_user(
+    request: Request,
+    user_in: UserCreate,
+    current_user: User = Depends(require_roles([UserRole.ADMIN])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Create a new user (Admin only)
+    """
+    logger.info(f"Creating new user: {user_in.email} by admin {current_user.email}")
+    
+    user_service = UserService(db)
+    user = await user_service.create_user(user_in)
+    
+    # Log the creation
+    await log_create(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="user",
+        resource_id=user.id,
+    )
+    
+    logger.info(f"User created successfully: {user.id}")
+    return user
 
 
 @router.get("/", response_model=List[UserResponse])
