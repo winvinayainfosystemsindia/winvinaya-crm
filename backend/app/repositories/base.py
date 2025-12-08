@@ -1,0 +1,105 @@
+"""Base repository with generic CRUD operations"""
+
+from typing import TypeVar, Generic, Type, Optional, List, Any
+from sqlalchemy import select, update, delete, func
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.models.base import BaseModel
+
+
+ModelType = TypeVar("ModelType", bound=BaseModel)
+
+
+class BaseRepository(Generic[ModelType]):
+    """Generic repository for CRUD operations"""
+    
+    def __init__(self, model: Type[ModelType], db: AsyncSession):
+        self.model = model
+        self.db = db
+    
+    async def get(self, id: int, include_deleted: bool = False) -> Optional[ModelType]:
+        """Get a single record by ID"""
+        query = select(self.model).where(self.model.id == id)
+        
+        if not include_deleted:
+            query = query.where(self.model.is_deleted == False)
+        
+        result = await self.db.execute(query)
+        return result.scalar_one_or_none()
+    
+    async def get_multi(
+        self,
+        skip: int = 0,
+        limit: int = 100,
+        include_deleted: bool = False,
+    ) -> List[ModelType]:
+        """Get multiple records with pagination"""
+        query = select(self.model)
+        
+        if not include_deleted:
+            query = query.where(self.model.is_deleted == False)
+        
+        query = query.offset(skip).limit(limit)
+        result = await self.db.execute(query)
+        return list(result.scalars().all())
+    
+    async def create(self, obj_in: dict[str, Any]) -> ModelType:
+        """Create a new record"""
+        db_obj = self.model(**obj_in)
+        self.db.add(db_obj)
+        await self.db.flush()
+        await self.db.refresh(db_obj)
+        return db_obj
+    
+    async def update(
+        self,
+        id: int,
+        obj_in: dict[str, Any],
+    ) -> Optional[ModelType]:
+        """Update an existing record"""
+        query = (
+            update(self.model)
+            .where(self.model.id == id)
+            .where(self.model.is_deleted == False)
+            .values(**obj_in)
+            .returning(self.model)
+        )
+        
+        result = await self.db.execute(query)
+        await self.db.flush()
+        return result.scalar_one_or_none()
+    
+    async def delete(self, id: int, soft: bool = True) -> bool:
+        """Delete a record (soft delete by default)"""
+        if soft:
+            # Soft delete
+            db_obj = await self.get(id)
+            if db_obj:
+                db_obj.soft_delete()
+                await self.db.flush()
+                return True
+            return False
+        else:
+            # Hard delete
+            query = delete(self.model).where(self.model.id == id)
+            result = await self.db.execute(query)
+            await self.db.flush()
+            return result.rowcount > 0
+    
+    async def count(self, include_deleted: bool = False) -> int:
+        """Count total records"""
+        query = select(func.count()).select_from(self.model)
+        
+        if not include_deleted:
+            query = query.where(self.model.is_deleted == False)
+        
+        result = await self.db.execute(query)
+        return result.scalar_one()
+    
+    async def exists(self, id: int) -> bool:
+        """Check if a record exists"""
+        query = select(self.model.id).where(
+            self.model.id == id,
+            self.model.is_deleted == False
+        )
+        result = await self.db.execute(query)
+        return result.scalar_one_or_none() is not None
