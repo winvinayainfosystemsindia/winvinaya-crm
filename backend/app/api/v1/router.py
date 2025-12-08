@@ -1,7 +1,7 @@
 """API v1 main router"""
 
 from fastapi import APIRouter
-from app.api.v1.endpoints import auth, users, activity_logs
+from app.api.v1.endpoints import auth, users, activity_logs, candidates
 
 
 # Create main v1 router
@@ -11,6 +11,7 @@ router = APIRouter()
 router.include_router(auth.router)
 router.include_router(users.router)
 router.include_router(activity_logs.router)
+router.include_router(candidates.router)
 
 # Add more endpoint routers here as you create them
 # router.include_router(products.router)
