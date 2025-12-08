@@ -1,6 +1,5 @@
 # Quick Start Script for Windows
 # Save this as: setup.ps1
-# Run with: .\setup.ps1
 
 Write-Host "FastAPI Boilerplate - Windows Quick Setup" -ForegroundColor Green
 Write-Host "=========================================" -ForegroundColor Green
@@ -60,6 +59,7 @@ if (Test-Path ".env") {
 Write-Host ""
 Write-Host "Checking PostgreSQL..." -ForegroundColor Yellow
 $pgService = Get-Service -Name "postgresql*" -ErrorAction SilentlyContinue
+
 if ($pgService) {
     if ($pgService.Status -eq "Running") {
         Write-Host "✓ PostgreSQL is running" -ForegroundColor Green

@@ -63,7 +63,7 @@ class User(BaseModel):
     )
     
     role: Mapped[UserRole] = mapped_column(
-        Enum(UserRole),
+        Enum(UserRole, values_callable=lambda x: [e.value for e in x]),
         default=UserRole.PLACEMENT,
         nullable=False,
         index=True,

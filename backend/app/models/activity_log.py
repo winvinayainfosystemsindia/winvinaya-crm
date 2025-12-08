@@ -29,7 +29,7 @@ class ActivityLog(BaseModel):
     )
     
     action_type: Mapped[ActionType] = mapped_column(
-        Enum(ActionType),
+        Enum(ActionType, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
         index=True,
     )
