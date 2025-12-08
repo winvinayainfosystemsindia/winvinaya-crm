@@ -142,6 +142,15 @@ Then edit `.env` with your database credentials and secret key.
 
 ### 4. Run Migrations
 
+
+#### Note
+Now, when you change a column name (e.g., in app/models/activity_log.py), you can simply run:
+
+```
+alembic revision --autogenerate -m "renamed_column_x_to_y"
+alembic upgrade head
+``````
+
 ```powershell
 alembic upgrade head
 ```
