@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Typography, Box } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import PeopleIcon from '@mui/icons-material/People';
@@ -8,8 +8,17 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import StatCard from '../components/dashboard/StatCard';
 import RecentActivity from '../components/dashboard/RecentActivity';
 import SystemStatus from '../components/dashboard/SystemStatus';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { fetchCandidates } from '../store/slices/candidateSlice';
 
 const Home: React.FC = () => {
+	const dispatch = useAppDispatch();
+	const { list: candidates } = useAppSelector((state) => state.candidates);
+
+	useEffect(() => {
+		dispatch(fetchCandidates());
+	}, [dispatch]);
+
 	return (
 		<Box>
 			<Typography variant="h5" sx={{ mb: 3, fontWeight: 700, color: '#16191f' }}>
@@ -18,7 +27,12 @@ const Home: React.FC = () => {
 
 			<Grid container spacing={3} sx={{ mb: 4 }}>
 				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-					<StatCard title="Total Candidates" count="1,248" icon={<PeopleIcon fontSize="large" />} color="#1976d2" />
+					<StatCard
+						title="Total Candidates"
+						count={candidates.length.toLocaleString()}
+						icon={<PeopleIcon fontSize="large" />}
+						color="#1976d2"
+					/>
 				</Grid>
 				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
 					<StatCard title="Active Interviews" count="45" icon={<WorkIcon fontSize="large" />} color="#ed6c02" />
