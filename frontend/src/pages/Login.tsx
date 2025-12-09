@@ -1,32 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Container, Box, Typography, Paper, TextField, CircularProgress } from '@mui/material';
-import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import useToast from '../hooks/useToast';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { loginUser } from '../store/slices/authSlice';
 
 const Login: React.FC = () => {
-	const { login } = useAuth();
+	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
 	const toast = useToast();
-	const [loading, setLoading] = useState(false);
+	const { loading, error, isAuthenticated } = useAppSelector((state) => state.auth);
+
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 
+	useEffect(() => {
+		if (isAuthenticated) {
+			navigate('/');
+		}
+	}, [isAuthenticated, navigate]);
+
+	useEffect(() => {
+		if (error) {
+			toast.error(typeof error === 'string' ? error : 'Login failed');
+		}
+	}, [error, toast]);
+
 	const handleLogin = async (e: React.FormEvent) => {
 		e.preventDefault();
-		setLoading(true);
-
-		// Simulate API call
-		setTimeout(() => {
-			setLoading(false);
-			if (email && password) {
-				login();
-				toast.success('Login successful');
-				navigate('/');
-			} else {
-				toast.error('Please enter valid credentials');
-			}
-		}, 1000);
+		try {
+			await dispatch(loginUser({ email, password })).unwrap();
+			toast.success('Login successful');
+		} catch (err) {
+			console.error('Login failed', err);
+		}
 	};
 
 	return (
