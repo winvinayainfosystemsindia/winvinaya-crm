@@ -50,13 +50,14 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
     
     # CORS
-    BACKEND_CORS_ORIGINS: Union[str, List[str]] = ""
+    BACKEND_CORS_ORIGINS: Union[str, List[str]] = "http://localhost:5173,http://localhost:3000"
+    # BACKEND_CORS_ORIGINS: Union[str, List[str]] = "http://localhost:5173,http://localhost:3000"
     
     @validator("BACKEND_CORS_ORIGINS", pre=True)
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
         """Parse CORS origins from string or list"""
         if v is None or v == "":
-            return []
+            return ["*"]
         if isinstance(v, str):
             # Handle comma-separated string from .env
             return [origin.strip() for origin in v.split(",") if origin.strip()]
