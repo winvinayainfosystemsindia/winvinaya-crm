@@ -4,6 +4,8 @@ import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
+import Breadcrumbs from '../common/Breadcrumbs';
+
 const MainLayout: React.FC = () => {
 	return (
 		<Box sx={{ display: 'flex', minHeight: '100vh' }}>
@@ -25,6 +27,7 @@ const MainLayout: React.FC = () => {
 					minHeight: 'calc(100vh - 48px)',
 				}}
 			>
+				<Breadcrumbs />
 				<Box sx={{ flexGrow: 1 }}>
 					<Outlet />
 				</Box>
