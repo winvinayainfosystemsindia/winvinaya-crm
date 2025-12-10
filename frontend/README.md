@@ -1,73 +1,107 @@
-# React + TypeScript + Vite
+# Frontend Boilerplate (React + TypeScript + Vite)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, production-ready frontend boilerplate built with React, TypeScript, Vite, and Material UI.
 
-Currently, two official plugins are available:
+## 🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Framework**: React 19 with TypeScript
+- **Build Tool**: Vite for lightning-fast development and building
+- **Styling**: Material UI (MUI) v6 with Emotion
+- **State Management**: Redux Toolkit for global state
+- **Routing**: React Router v7
+- **HTTP Client**: Axios for API requests
+- **Notifications**: Notistack for toast notifications
+- **Linting**: ESLint with TypeScript support
 
-## React Compiler
+## 📁 Project Structure
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+frontend/
+├── public/                 # Static assets
+├── src/
+│   ├── assets/             # Images, fonts, etc.
+│   ├── components/         # Reusable UI components
+│   │   ├── layout/         # Layout components (Header, Footer, Sidebar)
+│   │   └── dashboard/      # Dashboard specific components
+│   ├── context/            # React Contexts
+│   ├── hooks/              # Custom React Hooks
+│   ├── models/             # TypeScript interfaces and types
+│   ├── pages/              # Page components (views)
+│   ├── router/             # Route definitions and navigation logic
+│   ├── services/           # API service modules
+│   ├── store/              # Redux setup (slices, store config)
+│   ├── theme/              # MUI theme customization
+│   ├── App.tsx             # Root component
+│   └── main.tsx            # Entry point
+├── .env                    # Environment variables
+├── package.json            # Dependencies and scripts
+├── tsconfig.json           # TypeScript configuration
+└── vite.config.ts          # Vite configuration
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🛠️ Quick Start
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Prerequisites
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- Node.js 18+
+- npm (comes with Node.js)
+
+### Installation
+
+1.  **Navigate to the frontend directory:**
+    ```bash
+    cd frontend
+    ```
+
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+
+3.  **Configure Environment:**
+    Copy `.env.example` to `.env` and update the values.
+    ```bash
+    cp .env.example .env
+    ```
+
+4.  **Start Development Server:**
+    ```bash
+    npm run dev
+    ```
+    The application will be available at `http://localhost:5173`.
+
+## 📜 Scripts
+
+| Script | Description |
+| :--- | :--- |
+| `npm run dev` | Starts the development server with HMR. |
+| `npm run build` | Builds the application for production (tsc + vite build). |
+| `npm run lint` | Runs ESLint to check for code quality issues. |
+| `npm run preview` | Locally preview the production build. |
+
+## 🔧 Configuration
+
+### Environment Variables
+
+| Variable | Description |
+| :--- | :--- |
+| `VITE_API_URL` | Base URL for the backend API (e.g., `http://localhost:8000/api/v1`). |
+
+### Theme
+
+The application uses Material UI. Theme customization is located in `src/theme/`. You can modify colors, typography, and component defaults there.
+
+## 🤝 Best Practices
+
+- **Components**: Keep components small and focused. Use the `components` folder for reusable UI elements.
+- **State**: Use local state (`useState`) for component-specific logic and Redux (`store`) for global data.
+- **API**: All API calls should be defined in `src/services/` to separate data fetching from UI logic.
+- **Types**: Always define interfaces/types for props and API responses in `src/models/`.
+
+## 📦 Deployment
+
+Build the application:
+```bash
+npm run build
 ```
+This generates a `dist` folder containing static files that can be served by Nginx, Vercel, Netlify, or AWS S3.
