@@ -68,7 +68,14 @@ const CandidateRegistration: React.FC = () => {
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Box sx={{ mb: 4 }}>
+            <Box sx={{ mb: 4, textAlign: "center" }}>
+                <Box sx={{ mb: 2 }}>
+                    <img
+                        src="/assets/winvinaya_foundation_logo.png"   // <-- update path to your logo
+                        alt="WinVinaya Foundation Logo"
+                        style={{ height: 80, objectFit: "contain" }}
+                    />
+                </Box>
                 <Typography
                     variant="h3"
                     component="h1"
@@ -79,7 +86,7 @@ const CandidateRegistration: React.FC = () => {
                         mb: 2,
                     }}
                 >
-                    Welcome to Candidate Registration
+                    Welcome to WinVinaya Foundation
                 </Typography>
                 <Typography
                     variant="body1"
