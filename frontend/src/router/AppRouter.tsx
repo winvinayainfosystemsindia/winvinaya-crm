@@ -4,12 +4,14 @@ import Login from '../pages/Login';
 import Home from '../pages/Home';
 import ProtectedRoute from './ProtectedRoute';
 import MainLayout from '../components/layout/MainLayout';
+import CandidateRegistration from '../pages/Candidates/CandidateRegistration';
 
 const AppRouter: React.FC = () => {
 	return (
 		<Router>
 			<Routes>
 				<Route path="/login" element={<Login />} />
+				<Route path="/candidate-registration" element={<CandidateRegistration />} />
 
 				<Route element={<ProtectedRoute />}>
 					<Route element={<MainLayout />}>
