@@ -15,6 +15,7 @@
     "@mui/icons-material": "^7.3.6",
     "@mui/material": "^7.3.6",
     "@reduxjs/toolkit": "^2.11.1",
+    "@studio-freight/lenis": "^1.0.42",
     "axios": "^1.13.2",
     "notistack": "^3.0.2",
     "react": "^19.2.0",

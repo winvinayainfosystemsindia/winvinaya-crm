@@ -58,6 +58,9 @@ const theme = createTheme({
 		},
 		MuiCssBaseline: {
 			styleOverrides: {
+				html: {
+					scrollBehavior: 'smooth',
+				},
 				body: {
 					scrollbarColor: "#6b7a90 #f2f3f3",
 					"&::-webkit-scrollbar, & *::-webkit-scrollbar": {

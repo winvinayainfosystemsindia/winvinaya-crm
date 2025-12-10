@@ -6,6 +6,7 @@ import { Provider } from 'react-redux';
 import { SnackbarProvider } from 'notistack';
 import { store } from './store/store';
 import AppRouter from './router/AppRouter';
+import SmoothScroll from "./components/layout/SmoothScroll";
 
 function App() {
   return (
@@ -13,9 +14,11 @@ function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <SnackbarProvider maxSnack={3}>
-          <AuthProvider>
-            <AppRouter />
-          </AuthProvider>
+          <SmoothScroll>
+            <AuthProvider>
+              <AppRouter />
+            </AuthProvider>
+          </SmoothScroll>
         </SnackbarProvider>
       </ThemeProvider>
     </Provider>
