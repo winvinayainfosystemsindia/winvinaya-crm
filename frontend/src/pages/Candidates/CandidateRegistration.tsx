@@ -26,9 +26,15 @@ const CandidateRegistration: React.FC = () => {
             setShowSuccess(true);
 
             // Optionally navigate to a success page or candidate list after a delay
-            setTimeout(() => {
-                navigate('/'); // Navigate to home or candidate list
-            }, 2000);
+            // Navigate to success page
+            navigate('/success', {
+                state: {
+                    title: 'Registration Successful!',
+                    message: `Thank you for registering${createdCandidate.name ? `, ${createdCandidate.name}` : ''}. Your application has been submitted successfully. We will review your details and get back to you soon.`,
+                    actionText: 'Return to Home',
+                    actionPath: '/'
+                }
+            });
 
             console.log('Candidate created successfully:', createdCandidate);
         } catch (error: any) {
