@@ -11,6 +11,7 @@ import {
     CircularProgress,
     Divider,
     IconButton,
+    useMediaQuery,
 } from '@mui/material';
 import {
     Person as PersonIcon,
@@ -113,6 +114,7 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
     initialData,
 }) => {
     const theme = useTheme();
+    const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
     const [activeStep, setActiveStep] = useState(0);
     const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
     const [errorSteps, setErrorSteps] = useState<Set<number>>(new Set());
@@ -351,8 +353,8 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
 
             <Stepper
                 activeStep={activeStep}
-                orientation="horizontal"
-                alternativeLabel
+                orientation={isSmallScreen ? 'vertical' : 'horizontal'}
+                alternativeLabel={!isSmallScreen}
                 sx={{
                     mb: 4,
                     '& .MuiStepLabel-alternativeLabel': {
@@ -381,17 +383,19 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
                                 />
                             )}
                             optional={
-                                <Typography
-                                    variant="caption"
-                                    sx={{
-                                        color: errorSteps.has(index)
-                                            ? theme.palette.error.main
-                                            : theme.palette.text.secondary,
-                                        fontWeight: errorSteps.has(index) ? 600 : 400,
-                                    }}
-                                >
-                                    {step.description}
-                                </Typography>
+                                !isSmallScreen && (
+                                    <Typography
+                                        variant="caption"
+                                        sx={{
+                                            color: errorSteps.has(index)
+                                                ? theme.palette.error.main
+                                                : theme.palette.text.secondary,
+                                            fontWeight: errorSteps.has(index) ? 600 : 400,
+                                        }}
+                                    >
+                                        {step.description}
+                                    </Typography>
+                                )
                             }
                             error={errorSteps.has(index)}
                             sx={{
@@ -449,8 +453,8 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
                 }}
             >
                 <Button
-                    onClick={onCancel || handleBack}
-                    disabled={activeStep === 0}
+                    onClick={activeStep === 0 && onCancel ? onCancel : handleBack}
+                    disabled={activeStep === 0 && !onCancel}
                     variant="outlined"
                     sx={{
                         color: theme.palette.text.secondary,
