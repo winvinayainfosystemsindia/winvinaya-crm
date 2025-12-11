@@ -40,7 +40,7 @@ export const fetchCurrentUser = createAsyncThunk(
  */
 export const validateSession = createAsyncThunk(
 	'auth/validateSession',
-	async (_, { dispatch, rejectWithValue }) => {
+	async (_, { rejectWithValue }) => {
 		try {
 			const isValid = await authService.validateSession();
 
@@ -64,7 +64,7 @@ export const validateSession = createAsyncThunk(
  */
 export const loginUser = createAsyncThunk(
 	'auth/login',
-	async ({ email, password }: { email: string; password: string }, { dispatch, rejectWithValue }) => {
+	async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
 		try {
 			const response = await authService.login(email, password);
 			// Fetch user details immediately after login

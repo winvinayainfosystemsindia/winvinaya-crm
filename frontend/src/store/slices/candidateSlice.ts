@@ -5,10 +5,7 @@ import type {
 	CandidateListItem,
 	CandidateCreate,
 	CandidateUpdate,
-	CandidateProfile,
 	CandidateProfileCreate,
-	CandidateDocument,
-	CandidateCounseling,
 	CandidateCounselingCreate
 } from '../../models/candidate';
 
@@ -245,8 +242,9 @@ const candidateSlice = createSlice({
 			})
 
 			// Create candidate
-			.addCase(createCandidate.fulfilled, (state, action: PayloadAction<Candidate>) => {
+			.addCase(createCandidate.fulfilled, (state) => {
 				state.loading = false;
+				// Refresh list after creation
 			})
 
 			// Update candidate
