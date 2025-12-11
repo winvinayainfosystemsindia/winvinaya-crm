@@ -147,12 +147,12 @@ const RecentActivity: React.FC<RecentActivityProps> = ({
       setLoadingUsers(true);
       try {
         // Fetch all users (admins/managers can see all users)
-        const users = await userService.getUsers(0, 100);
+        const users = await userService.getAll(0, 100);
 
         // Build a cache
         const newCache: Record<number, User> = { ...userCache };
         users.forEach(user => {
-          newCache[user.id] = user;
+          newCache[Number(user.id)] = user as unknown as User;
         });
 
         setUserCache(newCache);
