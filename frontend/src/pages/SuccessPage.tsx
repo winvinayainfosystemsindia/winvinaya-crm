@@ -17,8 +17,8 @@ const SuccessPage: React.FC = () => {
 
 	const title = state?.title || 'Submission Successful';
 	const message = state?.message || 'Your information has been successfully submitted.';
-	const actionText = state?.actionText || 'Go to Home';
-	const actionPath = state?.actionPath || '/dashboard';
+	const actionText = state?.actionText || 'Back to Registration';
+	const actionPath = state?.actionPath || '/candidate-registration';
 
 	return (
 		<Container maxWidth="sm" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>

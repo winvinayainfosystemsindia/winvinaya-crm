@@ -31,8 +31,8 @@ const CandidateRegistration: React.FC = () => {
                 state: {
                     title: 'Registration Successful!',
                     message: `Thank you for registering${createdCandidate.name ? `, ${createdCandidate.name}` : ''}. Your application has been submitted successfully. We will review your details and get back to you soon.`,
-                    actionText: 'Return to Home',
-                    actionPath: '/'
+                    actionText: 'Back to Registration',
+                    actionPath: '/candidate-registration'
                 }
             });
 
