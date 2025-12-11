@@ -9,16 +9,17 @@ const Login: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
 	const toast = useToast();
-	const { loading, error, isAuthenticated } = useAppSelector((state) => state.auth);
+	const { loading, error, isAuthenticated, isInitialized } = useAppSelector((state) => state.auth);
 
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 
 	useEffect(() => {
-		if (isAuthenticated) {
-			navigate('/');
+		// Only redirect if auth is initialized and user is authenticated
+		if (isInitialized && isAuthenticated) {
+			navigate('/dashboard');
 		}
-	}, [isAuthenticated, navigate]);
+	}, [isAuthenticated, isInitialized, navigate]);
 
 	useEffect(() => {
 		if (error) {
