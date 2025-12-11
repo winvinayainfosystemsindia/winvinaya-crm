@@ -1,0 +1,140 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: "3.11"
+  NODE_VERSION: "20"
+
+jobs:
+  test:
+    name: Run Full Test Suite
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Run Backend Tests
+        working-directory: ./backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest httpx pytest-asyncio
+          pytest -v
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Run Frontend Tests
+        working-directory: ./frontend
+        run: |
+          npm ci
+          npm run lint
+          npm run build
+
+  deploy-prod:
+    name: Deploy to Production Environment
+    runs-on: ubuntu-latest
+    needs: test
+    environment:
+      name: production
+      url: https://crm.winvinaya.com
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build Frontend
+        working-directory: ./frontend
+        run: |
+          npm ci
+          npm run build
+        env:
+          VITE_API_URL: https://crm.winvinaya.com/api
+
+      - name: Create Backup Tag
+        run: |
+          git tag "backup-$(date +%Y%m%d-%H%M%S)"
+          git push origin --tags
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd /var/www/winvinaya-crm
+            git fetch origin
+            git checkout main
+            git pull origin main
+            
+            # Backup database
+            ./deploy/backup-db.sh prod
+            
+            # Deploy backend
+            ./deploy/backend-deploy.sh prod
+            
+            # Deploy frontend
+            ./deploy/frontend-deploy.sh prod
+            
+            # Run health check
+            ./deploy/health-check.sh prod
+
+      - name: Verify Deployment
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            # Check backend health
+            curl -f https://crm.winvinaya.com/api/health || exit 1
+            
+            # Check frontend
+            curl -f https://crm.winvinaya.com || exit 1
+
+      - name: Rollback on Failure
+        if: failure()
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd /var/www/winvinaya-crm
+            ./deploy/rollback.sh prod
+
+      - name: Notify Deployment Success
+        if: success()
+        run: |
+          echo "✅ Production deployment successful!"
+          echo "🌐 Frontend: https://crm.winvinaya.com"
+          echo "🔌 API: https://crm.winvinaya.com/api"
+
+      - name: Notify Deployment Failure
+        if: failure()
+        run: |
+          echo "❌ Production deployment failed and rolled back!"
+          echo "Check logs for details"

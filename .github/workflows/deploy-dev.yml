@@ -1,0 +1,70 @@
+name: Deploy to Development
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: "3.11"
+  NODE_VERSION: "20"
+
+jobs:
+  deploy-dev:
+    name: Deploy to Development Environment
+    runs-on: ubuntu-latest
+    environment: development
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build Frontend
+        working-directory: ./frontend
+        run: |
+          npm ci
+          npm run build
+        env:
+          VITE_API_URL: https://dev-crm.winvinaya.com/api
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd /var/www/winvinaya-crm
+            git fetch origin
+            git checkout develop
+            git pull origin develop
+            
+            # Deploy backend
+            ./deploy/backend-deploy.sh dev
+            
+            # Deploy frontend  
+            ./deploy/frontend-deploy.sh dev
+            
+            # Run health check
+            ./deploy/health-check.sh dev
+
+      - name: Notify Deployment Success
+        if: success()
+        run: |
+          echo "✅ Development deployment successful!"
+          echo "🌐 Frontend: https://dev-crm.winvinaya.com"
+          echo "🔌 API: https://dev-crm.winvinaya.com/api"
+
+      - name: Notify Deployment Failure
+        if: failure()
+        run: |
+          echo "❌ Development deployment failed!"
+          echo "Check logs for details"
