@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from '../pages/Login';
 import Home from '../pages/Home';
+import UserManagement from '../pages/UserManagement';
 import ProtectedRoute from './ProtectedRoute';
 import MainLayout from '../components/layout/MainLayout';
 import CandidateRegistration from '../pages/Candidates/CandidateRegistration';
@@ -23,6 +24,7 @@ const AppRouter: React.FC = () => {
 				<Route element={<ProtectedRoute />}>
 					<Route element={<MainLayout />}>
 						<Route path="/dashboard" element={<Home />} />
+						<Route path="/users" element={<UserManagement />} />
 						{/* Add more protected routes here */}
 					</Route>
 				</Route>
