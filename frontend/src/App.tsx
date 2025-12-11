@@ -7,6 +7,7 @@ import { SnackbarProvider } from 'notistack';
 import { store } from './store/store';
 import AppRouter from './router/AppRouter';
 import SmoothScroll from "./components/layout/SmoothScroll";
+import AuthInitializer from './components/auth/AuthInitializer';
 
 function App() {
   return (
@@ -16,7 +17,9 @@ function App() {
         <SnackbarProvider maxSnack={3}>
           <SmoothScroll>
             <AuthProvider>
-              <AppRouter />
+              <AuthInitializer>
+                <AppRouter />
+              </AuthInitializer>
             </AuthProvider>
           </SmoothScroll>
         </SnackbarProvider>
