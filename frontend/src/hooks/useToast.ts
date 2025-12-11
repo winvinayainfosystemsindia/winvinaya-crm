@@ -8,7 +8,7 @@ const useToast = () => {
 		enqueueSnackbar(message, {
 			variant,
 			anchorOrigin: {
-				vertical: 'top',
+				vertical: 'bottom',
 				horizontal: 'right',
 			}
 		});
