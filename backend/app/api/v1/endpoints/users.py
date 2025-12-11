@@ -75,6 +75,61 @@ async def update_current_user(
     return updated_user
 
 
+@router.get("/stats")
+@rate_limit_medium()
+async def get_user_stats(
+    request: Request,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get user statistics (Admin or Manager only)
+    
+    Returns statistics about users including:
+    - Total count
+    - Count by role (admin, trainer, counselor, manager)
+    - Active vs inactive count
+    """
+    logger.info(f"Fetching user stats by {current_user.role.value} {current_user.email}")
+    
+    from sqlalchemy import select, func
+    from app.models.user import User
+    
+    # Get total count
+    total_query = select(func.count(User.id)).where(User.is_deleted == False)
+    total_result = await db.execute(total_query)
+    total = total_result.scalar() or 0
+    
+    # Get count by role
+    role_query = select(User.role, func.count(User.id)).where(
+        User.is_deleted == False
+    ).group_by(User.role)
+    role_result = await db.execute(role_query)
+    role_counts = {role.value: count for role, count in role_result.all()}
+    
+    # Get active/inactive counts
+    active_query = select(func.count(User.id)).where(
+        User.is_deleted == False,
+        User.is_active == True
+    )
+    active_result = await db.execute(active_query)
+    active = active_result.scalar() or 0
+    
+    inactive = total - active
+    
+    return {
+        "total": total,
+        "by_role": {
+            "admin": role_counts.get("admin", 0),
+            "trainer": role_counts.get("trainer", 0),
+            "counselor": role_counts.get("counselor", 0),
+            "manager": role_counts.get("manager", 0),
+        },
+        "active": active,
+        "inactive": inactive
+    }
+
+
 @router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 @rate_limit_medium()
 async def create_user(
