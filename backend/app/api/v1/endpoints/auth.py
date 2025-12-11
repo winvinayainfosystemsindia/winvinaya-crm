@@ -11,6 +11,8 @@ from app.schemas.user import UserCreate, UserResponse, Token, LoginRequest, Refr
 from app.services.user_service import UserService
 from app.utils.activity_tracker import log_create, log_login
 from loguru import logger
+from app.api.deps import get_current_user
+from app.models.user import User
 
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -165,3 +167,16 @@ async def refresh_token(
         "refresh_token": new_refresh_token,
         "token_type": "bearer"
     }
+
+
+@router.get("/me", response_model=UserResponse)
+@rate_limit_auth()
+async def read_users_me(
+    request: Request,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get current user
+    """
+    return current_user
+
