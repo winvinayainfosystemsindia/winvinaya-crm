@@ -1,7 +1,14 @@
 """Candidate Pydantic schemas"""
 
 from typing import List, Optional, Any
+from uuid import UUID
+from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field
+
+# Import related schemas (forward compatibility)
+from app.schemas.candidate_profile import CandidateProfileResponse
+from app.schemas.candidate_document import CandidateDocumentResponse
+from app.schemas.candidate_counseling import CandidateCounselingResponse
 
 
 # Nested Schemas for JSON fields
@@ -81,12 +88,37 @@ class CandidateUpdate(BaseModel):
 
 
 class CandidateResponse(CandidateBase):
-    id: int
+    """
+    Candidate response schema.
+    Note: Uses public_id (UUID) instead of internal id for security.
+    """
+    public_id: UUID  # Secure UUID for external API
     city: str
     district: str
     state: str
-    created_at: Any
-    updated_at: Any
+    created_at: datetime
+    updated_at: datetime
+    
+    # Optional nested relationships (filled by trainers)
+    profile: Optional[CandidateProfileResponse] = None
+    documents: List[CandidateDocumentResponse] = []
+    counseling: Optional[CandidateCounselingResponse] = None
     
     class Config:
         from_attributes = True
+
+
+class CandidateListResponse(BaseModel):
+    """Simplified response for list endpoints"""
+    public_id: UUID
+    name: str
+    email: EmailStr
+    phone: str
+    city: str
+    district: str
+    state: str
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+

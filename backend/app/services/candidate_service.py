@@ -1,6 +1,7 @@
 """Candidate Service"""
 
 from typing import List, Optional
+from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.candidate import Candidate
@@ -55,21 +56,28 @@ class CandidateService:
         if candidate_in.disability_details:
              candidate_data["disability_details"] = candidate_in.disability_details.model_dump()
 
-        # Build candidate object
+        # Build candidate object (UUID is automatically generated)
         candidate = await self.repository.create(candidate_data)
         return candidate
 
-    async def get_candidate(self, candidate_id: int) -> Candidate:
-        candidate = await self.repository.get(candidate_id)
+    async def get_candidate(self, public_id: UUID, with_details: bool = False) -> Candidate:
+        """Get candidate by public_id (UUID)"""
+        if with_details:
+            candidate = await self.repository.get_by_public_id_with_details(public_id)
+        else:
+            candidate = await self.repository.get_by_public_id(public_id)
+            
         if not candidate:
             raise HTTPException(status_code=404, detail="Candidate not found")
         return candidate
 
     async def get_candidates(self, skip: int = 0, limit: int = 100) -> List[Candidate]:
+        """Get list of candidates"""
         return await self.repository.get_multi(skip=skip, limit=limit)
 
-    async def update_candidate(self, candidate_id: int, candidate_in: CandidateUpdate) -> Candidate:
-        candidate = await self.get_candidate(candidate_id)
+    async def update_candidate(self, public_id: UUID, candidate_in: CandidateUpdate) -> Candidate:
+        """Update candidate by public_id"""
+        candidate = await self.get_candidate(public_id)
         
         update_data = candidate_in.model_dump(exclude_unset=True)
         
@@ -85,8 +93,12 @@ class CandidateService:
         if "disability_details" in update_data and update_data["disability_details"]:
              update_data["disability_details"] = update_data["disability_details"].model_dump()
 
-        return await self.repository.update(candidate_id, update_data)
+        # Use internal id for repository update
+        return await self.repository.update(candidate.id, update_data)
 
-    async def delete_candidate(self, candidate_id: int) -> bool:
-        candidate = await self.get_candidate(candidate_id)
-        return await self.repository.delete(candidate_id)
+    async def delete_candidate(self, public_id: UUID) -> bool:
+        """Delete candidate by public_id"""
+        candidate = await self.get_candidate(public_id)
+        # Use internal id for repository delete
+        return await self.repository.delete(candidate.id)
+
