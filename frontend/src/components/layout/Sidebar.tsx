@@ -1,24 +1,41 @@
-import React from 'react';
-import { Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Divider, Box } from '@mui/material';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import PeopleIcon from '@mui/icons-material/People';
-import SettingsIcon from '@mui/icons-material/Settings';
-import BusinessIcon from '@mui/icons-material/Business';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import {
+	Drawer,
+	List,
+	ListItem,
+	ListItemButton,
+	ListItemIcon,
+	ListItemText,
+	Divider,
+	Box,
+	Collapse
+} from '@mui/material';
+import {
+	Settings as SettingsIcon,
+	Business as BusinessIcon,
+	ExpandLess,
+	ExpandMore,
+	ManageAccounts as UserIcon,
+	HelpOutline as HelpIcon,
+	Home as HomeIcon,
+	Group as CandidatesIcon
+} from '@mui/icons-material';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppSelector } from '../../store/hooks';
 
-const drawerWidth = 240;
+const drawerWidth = 260;
 
 const Sidebar: React.FC = () => {
 	const navigate = useNavigate();
+	const location = useLocation();
 	const open = useAppSelector((state) => state.ui.sidebarOpen);
+	const [candidatesOpen, setCandidatesOpen] = useState(true);
 
-	const menuItems = [
-		{ text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
-		{ text: 'Candidates', icon: <PeopleIcon />, path: '/candidates' },
-		{ text: 'Companies', icon: <BusinessIcon />, path: '/companies' },
-		{ text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
-	];
+	const isActive = (path: string) => location.pathname === path;
+
+	const handleNavigate = (path: string) => {
+		navigate(path);
+	};
 
 	return (
 		<Drawer
@@ -37,27 +54,171 @@ const Sidebar: React.FC = () => {
 					boxSizing: 'border-box',
 					top: '48px', // Below dense AppBar
 					height: 'calc(100% - 48px)',
-					backgroundColor: '#f2f3f3',
+					backgroundColor: '#f8f9fa', // Lighter background for professional look
+					borderRight: '1px solid #e0e0e0',
 				},
 			}}
 		>
-			<Box sx={{ overflow: 'auto' }}>
-				<List>
-					{menuItems.map((item) => (
-						<ListItem key={item.text} disablePadding>
-							<ListItemButton onClick={() => navigate(item.path)}>
-								<ListItemIcon sx={{ minWidth: 40, color: '#444' }}>
-									{item.icon}
+			<Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+				{/* Main Navigation */}
+				<Box sx={{ overflow: 'auto', flexGrow: 1, py: 1 }}>
+					<List component="nav" disablePadding>
+						{/* Home */}
+						<ListItem disablePadding>
+							<ListItemButton
+								selected={isActive('/dashboard')}
+								onClick={() => handleNavigate('/dashboard')}
+								sx={{ py: 0.5 }}
+							>
+								<ListItemIcon sx={{ minWidth: 40, color: isActive('/dashboard') ? 'primary.main' : '#5f6368' }}>
+									<HomeIcon />
 								</ListItemIcon>
 								<ListItemText
-									primary={item.text}
-									primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 500, color: '#16191f' }}
+									primary="Home"
+									primaryTypographyProps={{
+										fontSize: '0.95rem',
+										fontWeight: isActive('/dashboard') ? 600 : 500,
+										color: isActive('/dashboard') ? 'primary.main' : '#202124'
+									}}
 								/>
 							</ListItemButton>
 						</ListItem>
-					))}
-				</List>
-				<Divider />
+
+						{/* User Management */}
+						<ListItem disablePadding>
+							<ListItemButton
+								selected={isActive('/users')}
+								onClick={() => handleNavigate('/users')}
+								sx={{ py: 0.5 }}
+							>
+								<ListItemIcon sx={{ minWidth: 40, color: isActive('/users') ? 'primary.main' : '#5f6368' }}>
+									<UserIcon />
+								</ListItemIcon>
+								<ListItemText
+									primary="User Management"
+									primaryTypographyProps={{
+										fontSize: '0.95rem',
+										fontWeight: isActive('/users') ? 600 : 500,
+										color: isActive('/users') ? 'primary.main' : '#202124'
+									}}
+								/>
+							</ListItemButton>
+						</ListItem>
+
+						{/* Candidates Group */}
+						<ListItem disablePadding>
+							<ListItemButton onClick={() => setCandidatesOpen(!candidatesOpen)} sx={{ py: 0.5 }}>
+								<ListItemIcon sx={{ minWidth: 40, color: '#5f6368' }}>
+									<CandidatesIcon />
+								</ListItemIcon>
+								<ListItemText
+									primary="Candidates"
+									primaryTypographyProps={{ fontSize: '0.95rem', fontWeight: 500, color: '#202124' }}
+								/>
+								{candidatesOpen ? <ExpandLess sx={{ color: '#5f6368' }} /> : <ExpandMore sx={{ color: '#5f6368' }} />}
+							</ListItemButton>
+						</ListItem>
+
+						<Collapse in={candidatesOpen} timeout="auto" unmountOnExit>
+							<List component="div" disablePadding>
+								<ListItemButton
+									sx={{ pl: 9, py: 0.5 }}
+									selected={isActive('/candidates/summary')}
+									onClick={() => handleNavigate('/candidates/summary')}
+								>
+									<ListItemText
+										primary="Summary"
+										primaryTypographyProps={{
+											fontSize: '0.9rem',
+											color: isActive('/candidates/summary') ? 'primary.main' : '#5f6368',
+											fontWeight: isActive('/candidates/summary') ? 600 : 400
+										}}
+									/>
+								</ListItemButton>
+								<ListItemButton
+									sx={{ pl: 9, py: 0.5 }}
+									selected={isActive('/candidates') || isActive('/candidates/list')}
+									onClick={() => handleNavigate('/candidates')}
+								>
+									<ListItemText
+										primary="Candidates List"
+										primaryTypographyProps={{
+											fontSize: '0.9rem',
+											color: isActive('/candidates') ? 'primary.main' : '#5f6368',
+											fontWeight: isActive('/candidates') ? 600 : 400
+										}}
+									/>
+								</ListItemButton>
+							</List>
+						</Collapse>
+
+						{/* Company */}
+						<ListItem disablePadding>
+							<ListItemButton
+								selected={isActive('/companies')}
+								onClick={() => handleNavigate('/companies')}
+								sx={{ py: 0.5 }}
+							>
+								<ListItemIcon sx={{ minWidth: 40, color: isActive('/companies') ? 'primary.main' : '#5f6368' }}>
+									<BusinessIcon />
+								</ListItemIcon>
+								<ListItemText
+									primary="Company"
+									primaryTypographyProps={{
+										fontSize: '0.95rem',
+										fontWeight: isActive('/companies') ? 600 : 500,
+										color: isActive('/companies') ? 'primary.main' : '#202124'
+									}}
+								/>
+							</ListItemButton>
+						</ListItem>
+					</List>
+				</Box>
+
+				{/* Bottom Section */}
+				<Box>
+					<Divider />
+					<List>
+						<ListItem disablePadding>
+							<ListItemButton
+								selected={isActive('/settings')}
+								onClick={() => handleNavigate('/settings')}
+								sx={{ py: 0.5 }}
+							>
+								<ListItemIcon sx={{ minWidth: 40, color: isActive('/settings') ? 'primary.main' : '#5f6368' }}>
+									<SettingsIcon />
+								</ListItemIcon>
+								<ListItemText
+									primary="Settings"
+									primaryTypographyProps={{
+										fontSize: '0.95rem',
+										fontWeight: isActive('/settings') ? 600 : 500,
+										color: isActive('/settings') ? 'primary.main' : '#202124'
+									}}
+								/>
+							</ListItemButton>
+						</ListItem>
+						<ListItem disablePadding>
+							<ListItemButton
+								selected={isActive('/support')}
+								onClick={() => handleNavigate('/support')}
+								sx={{ py: 0.5 }}
+							>
+								<ListItemIcon sx={{ minWidth: 40, color: isActive('/support') ? 'primary.main' : '#5f6368' }}>
+									<HelpIcon />
+								</ListItemIcon>
+								<ListItemText
+									primary="Help and Support"
+									primaryTypographyProps={{
+										fontSize: '0.95rem',
+										fontWeight: isActive('/support') ? 600 : 500,
+										color: isActive('/support') ? 'primary.main' : '#202124'
+									}}
+								/>
+							</ListItemButton>
+						</ListItem>
+					</List>
+				</Box>
 			</Box>
 		</Drawer>
 	);
