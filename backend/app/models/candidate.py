@@ -52,23 +52,20 @@ class Candidate(BaseModel):
         "CandidateProfile",
         back_populates="candidate",
         uselist=False,
-        cascade="all, delete-orphan",
-        lazy="joined"
+        cascade="all, delete-orphan"
     )
     
     documents: Mapped[list["CandidateDocument"]] = relationship(
         "CandidateDocument",
         back_populates="candidate",
-        cascade="all, delete-orphan",
-        lazy="select"
+        cascade="all, delete-orphan"
     )
     
     counseling: Mapped["CandidateCounseling"] = relationship(
         "CandidateCounseling",
         back_populates="candidate",
         uselist=False,
-        cascade="all, delete-orphan",
-        lazy="joined"
+        cascade="all, delete-orphan"
     )
     
     def __repr__(self) -> str:

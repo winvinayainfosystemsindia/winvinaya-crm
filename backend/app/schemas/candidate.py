@@ -104,6 +104,35 @@ class CandidateResponse(CandidateBase):
     documents: List[CandidateDocumentResponse] = []
     counseling: Optional[CandidateCounselingResponse] = None
     
+    @classmethod
+    def model_validate(cls, obj, *args, **kwargs):
+        """Custom validation to handle unloaded SQLAlchemy relationships"""
+        from sqlalchemy.orm import object_session
+        from sqlalchemy.inspect import inspect
+        
+        # If this is a SQLAlchemy object, check which relationships are loaded
+        if hasattr(obj, '__dict__'):
+            state = inspect(obj)
+            if state:
+                # Only include relationships that are actually loaded
+                data = {}
+                for key in cls.model_fields.keys():
+                    if key in ['profile', 'documents', 'counseling']:
+                        # Check if the relationship is loaded
+                        if key in state.unloaded:
+                            # Skip unloaded relationships
+                            continue
+                    # Get the attribute value
+                    try:
+                        data[key] = getattr(obj, key)
+                    except:
+                        # If we can't get it, skip it
+                        continue
+                        
+                return super().model_validate(data, *args, **kwargs)
+        
+        return super().model_validate(obj, *args, **kwargs)
+    
     class Config:
         from_attributes = True
 

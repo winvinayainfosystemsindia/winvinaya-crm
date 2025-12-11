@@ -58,7 +58,12 @@ class CandidateService:
 
         # Build candidate object (UUID is automatically generated)
         candidate = await self.repository.create(candidate_data)
-        return candidate
+        
+        # Refresh to get the candidate with relationships loaded
+        # This ensures the response includes profile, documents, counseling (even if empty)
+        candidate_with_details = await self.repository.get_by_public_id_with_details(candidate.public_id)
+        
+        return candidate_with_details
 
     async def get_candidate(self, public_id: UUID, with_details: bool = False) -> Candidate:
         """Get candidate by public_id (UUID)"""
