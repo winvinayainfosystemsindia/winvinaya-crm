@@ -3,7 +3,7 @@ import { AppBar, Toolbar, Typography, IconButton, Box, Badge, Menu, MenuItem } f
 import MenuIcon from '@mui/icons-material/Menu';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import AccountCircle from '@mui/icons-material/AccountCircle';
-import { useAppDispatch } from '../../store/hooks';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { toggleSidebar } from '../../store/slices/uiSlice';
 import { logoutUser } from '../../store/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 const Navbar: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
+	const { user } = useAppSelector((state) => state.auth);
 	const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
 	const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
@@ -42,7 +43,7 @@ const Navbar: React.FC = () => {
 				<Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontSize: '1rem', fontWeight: 700 }}>
 					WinVinaya Console
 				</Typography>
-				<Box sx={{ display: 'flex' }}>
+				<Box sx={{ display: 'flex', alignItems: 'center' }}>
 					<IconButton
 						size="large"
 						aria-label="show 17 new notifications"
@@ -52,6 +53,16 @@ const Navbar: React.FC = () => {
 							<NotificationsIcon />
 						</Badge>
 					</IconButton>
+					{user && (
+						<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', mr: 2 }}>
+							<Typography variant="subtitle2" sx={{ lineHeight: 1.2 }}>
+								{user.full_name || user.username}
+							</Typography>
+							<Typography variant="caption" sx={{ opacity: 0.8 }}>
+								{user.email}
+							</Typography>
+						</Box>
+					)}
 					<IconButton
 						size="large"
 						edge="end"

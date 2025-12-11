@@ -140,9 +140,8 @@ const authService = {
 	 * Get current user info
 	 */
 	getCurrentUser: async (): Promise<User> => {
-		// This is a placeholder - implement based on your backend API
-		// You might have a /auth/me endpoint or decode user info from token
-		return {} as User;
+		const response = await api.get<User>('/auth/me');
+		return response.data;
 	}
 };
 
