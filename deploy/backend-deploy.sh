@@ -74,8 +74,9 @@ fi
 
 # Run database migrations
 echo "Running database migrations..."
+# Load environment variables, filtering out comments and empty lines
 set -a
-source $ENV_FILE
+source <(grep -v '^#' $ENV_FILE | grep -v '^$' | sed 's/\r$//')
 set +a
 alembic upgrade head
 
