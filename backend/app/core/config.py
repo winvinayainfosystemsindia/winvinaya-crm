@@ -1,5 +1,6 @@
 """Application configuration using Pydantic Settings"""
 
+import os
 from typing import List, Optional, Union
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import AnyHttpUrl, PostgresDsn, validator
@@ -91,7 +92,7 @@ class Settings(BaseSettings):
     EMAILS_FROM_NAME: Optional[str] = None
     
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=os.getenv("ENV_FILE", ".env"),
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="allow"
