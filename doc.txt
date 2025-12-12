@@ -80,7 +80,7 @@ CREATE DATABASE winvinaya_dev;
 CREATE DATABASE winvinaya_qa;
 CREATE DATABASE winvinaya_prod;
 
-CREATE USER winvinaya_user WITH PASSWORD 'WinvinayaCRM12345&';
+CREATE USER winvinaya_user WITH PASSWORD 'winvinaya@12345';
 
 GRANT ALL PRIVILEGES ON DATABASE winvinaya_dev TO winvinaya_user;
 GRANT ALL PRIVILEGES ON DATABASE winvinaya_qa TO winvinaya_user;
