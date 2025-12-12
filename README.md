@@ -61,3 +61,9 @@ To run the project locally, please refer to the specific `README.md` files in ea
 
 1.  **Backend Setup**: Go to [backend/README.md](backend/README.md)
 2.  **Frontend Setup**: Go to [frontend/README.md](frontend/README.md)
+
+
+<!-- icacls.exe winvinaya-crm-server.pem  /reset
+whoami
+icacls.exe winvinaya-crm-server.pem  /grant:r dharanidaran\daran:(R)
+icacls.exe winvinaya-crm-server.pem  /inheritance:r -->

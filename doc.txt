@@ -1,0 +1,119 @@
+# Step-by-Step Guide to Create Branches
+
+I'll help you create these branches properly. Here's what we'll do:
+
+1. First, commit or stash your current changes:
+# Check what's modified
+git status
+
+# Either commit the changes
+git add README.md
+git commit -m "docs: update README"
+
+# OR stash them temporarily
+git stash
+
+2. Create the develop branch from main:
+# Make sure you're on main and it's up to date
+git checkout main
+git pull origin main
+
+# Create develop branch from main
+git checkout -b develop
+git push -u origin develop
+
+3. Create the qa branch from main:
+# Go back to main
+git checkout main
+
+# Create qa branch from main
+git checkout -b qa
+git push -u origin qa
+
+4. Verify all branches are created:
+git branch -a
+
+------------------------------------------------
+
+STEP 2: Set Up Your EC2 Instance
+2.1 Launch EC2 Instance
+OS: Ubuntu 22.04 LTS
+Instance Type: t3.medium or larger (recommended)
+Security Group: Open ports 22 (SSH), 80 (HTTP), 443 (HTTPS)
+Storage: At least 20GB
+
+2.2 Connect to EC2
+ssh -i your-key.pem ubuntu@YOUR_EC2_IP
+
+2.3 Install Required Software
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install Python 3.11
+sudo apt install software-properties-common -y
+sudo add-apt-repository ppa:deadsnakes/ppa -y
+sudo apt update
+sudo apt install python3.11 python3.11-venv python3.11-dev -y
+
+# Install Node.js 20
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install nodejs -y
+
+# Install PostgreSQL
+sudo apt install postgresql postgresql-contrib -y
+
+# Install Nginx
+sudo apt install nginx -y
+
+# Install PM2 globally
+sudo npm install -g pm2
+
+# Install Git
+sudo apt install git -y
+
+STEP 3: Set Up PostgreSQL Databases
+# Switch to postgres user
+sudo -u postgres psql
+
+# Create databases and user (run these in PostgreSQL prompt)
+CREATE DATABASE winvinaya_dev;
+CREATE DATABASE winvinaya_qa;
+CREATE DATABASE winvinaya_prod;
+
+CREATE USER winvinaya_user WITH PASSWORD 'WinvinayaCRM12345&';
+
+GRANT ALL PRIVILEGES ON DATABASE winvinaya_dev TO winvinaya_user;
+GRANT ALL PRIVILEGES ON DATABASE winvinaya_qa TO winvinaya_user;
+GRANT ALL PRIVILEGES ON DATABASE winvinaya_prod TO winvinaya_user;
+
+\q
+
+STEP 4: Clone Repository on EC2
+# Create directory
+sudo mkdir -p /var/www
+cd /var/www
+
+# Clone your repository
+sudo git clone https://github.com/winvinayainfosystemsindia/winvinaya-crm.git
+sudo chown -R ubuntu:ubuntu winvinaya-crm
+cd winvinaya-crm
+
+STEP 5: Set Up Environment Files
+
+cd /var/www/winvinaya-crm/backend
+
+# Create .env.dev
+cp .env.dev.example .env.dev
+nano .env.dev
+# Update DATABASE_URL, SECRET_KEY, etc.
+
+# Create .env.qa
+cp .env.qa.example .env.qa
+nano .env.qa
+# Update DATABASE_URL, SECRET_KEY, etc.
+
+# Create .env.prod
+cp .env.prod.example .env.prod
+nano .env.prod
+# Update DATABASE_URL, SECRET_KEY, etc.
+
