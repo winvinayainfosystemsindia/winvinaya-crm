@@ -74,7 +74,9 @@ fi
 
 # Run database migrations
 echo "Running database migrations..."
-export $(cat $ENV_FILE | xargs)
+set -a
+source $ENV_FILE
+set +a
 alembic upgrade head
 
 # Start application with PM2
