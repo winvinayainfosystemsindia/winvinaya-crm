@@ -17,12 +17,15 @@ fi
 case $ENV in
     dev)
         DEPLOY_DIR="/var/www/winvinaya-crm/frontend/dist-dev"
+        ENV_FILE=".env.dev"
         ;;
     qa)
         DEPLOY_DIR="/var/www/winvinaya-crm/frontend/dist-qa"
+        ENV_FILE=".env.qa"
         ;;
     prod)
         DEPLOY_DIR="/var/www/winvinaya-crm/frontend/dist-prod"
+        ENV_FILE=".env.prod"
         ;;
     *)
         echo "Error: Invalid environment. Use dev, qa, or prod"
@@ -42,7 +45,17 @@ cd /var/www/winvinaya-crm/frontend
 echo "Installing dependencies..."
 npm ci
 
-# Build application (already built in GitHub Actions, but rebuild to be safe)
+# Check if environment file exists
+if [ ! -f "$ENV_FILE" ]; then
+    echo "Error: Environment file $ENV_FILE not found!"
+    exit 1
+fi
+
+# Copy environment file for build
+echo "Using environment file: $ENV_FILE"
+cp $ENV_FILE .env
+
+# Build application
 echo "Building application..."
 npm run build
 

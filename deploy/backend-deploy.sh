@@ -82,9 +82,10 @@ alembic upgrade head
 
 # Start application with PM2
 echo "Starting backend with PM2..."
-pm2 start "uvicorn app.main:app --host 0.0.0.0 --port $PORT --env-file $ENV_FILE" \
+pm2 start venv-$ENV/bin/uvicorn \
     --name $APP_NAME \
-    --interpreter venv-$ENV/bin/python
+    --interpreter none \
+    -- app.main:app --host 0.0.0.0 --port $PORT --env-file $ENV_FILE
 
 # Save PM2 configuration
 pm2 save
