@@ -79,12 +79,11 @@ cp -r dist/* $DEPLOY_DIR/
 
 # Set proper permissions
 echo "Setting permissions..."
-chown -R www-data:www-data $DEPLOY_DIR
 chmod -R 755 $DEPLOY_DIR
 
 # Reload Nginx
 echo "Reloading Nginx..."
-nginx -t && systemctl reload nginx
+sudo nginx -t && sudo systemctl reload nginx
 
 echo "================================"
 echo "✅ Frontend deployed successfully!"
