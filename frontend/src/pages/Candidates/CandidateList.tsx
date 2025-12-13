@@ -52,7 +52,7 @@ const CandidateList: React.FC = () => {
 							mb: 0.5
 						}}
 					>
-						Candidate Management
+						Candidate List
 					</Typography>
 					<Typography variant="body2" color="text.secondary">
 						Manage candidate registrations, profiles, and status

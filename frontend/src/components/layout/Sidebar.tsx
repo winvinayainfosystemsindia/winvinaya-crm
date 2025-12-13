@@ -112,7 +112,7 @@ const Sidebar: React.FC = () => {
 									<CandidatesIcon />
 								</ListItemIcon>
 								<ListItemText
-									primary="Candidates"
+									primary="Candidates Management"
 									primaryTypographyProps={{ fontSize: '0.95rem', fontWeight: 500, color: '#202124' }}
 								/>
 								{candidatesOpen ? <ExpandLess sx={{ color: '#5f6368' }} /> : <ExpandMore sx={{ color: '#5f6368' }} />}
