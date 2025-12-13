@@ -6,6 +6,7 @@ import UserManagement from '../pages/UserManagement';
 import ProtectedRoute from './ProtectedRoute';
 import MainLayout from '../components/layout/MainLayout';
 import CandidateRegistration from '../pages/Candidates/CandidateRegistration';
+import CandidateList from '../pages/Candidates/CandidateList';
 import SuccessPage from '../pages/SuccessPage';
 import NotFoundPage from '../pages/NotFoundPage';
 import MaintenancePage from '../pages/MaintenancePage';
@@ -25,6 +26,7 @@ const AppRouter: React.FC = () => {
 					<Route element={<MainLayout />}>
 						<Route path="/dashboard" element={<Home />} />
 						<Route path="/users" element={<UserManagement />} />
+						<Route path="/candidates" element={<CandidateList />} />
 						{/* Add more protected routes here */}
 					</Route>
 				</Route>

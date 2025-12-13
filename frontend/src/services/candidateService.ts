@@ -9,7 +9,8 @@ import type {
 	CandidateDocument,
 	CandidateDocumentCreate,
 	CandidateCounseling,
-	CandidateCounselingCreate
+	CandidateCounselingCreate,
+	CandidateStats
 } from '../models/candidate';
 
 // ======================
@@ -21,6 +22,14 @@ const candidateService = {
 	 */
 	getAll: async (skip = 0, limit = 100): Promise<CandidateListItem[]> => {
 		const response = await api.get<CandidateListItem[]>(`/candidates/?skip=${skip}&limit=${limit}`);
+		return response.data;
+	},
+
+	/**
+	 * Get candidate statistics
+	 */
+	getStats: async (): Promise<CandidateStats> => {
+		const response = await api.get<CandidateStats>('/candidates/stats');
 		return response.data;
 	},
 

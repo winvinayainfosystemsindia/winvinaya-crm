@@ -144,6 +144,9 @@ export interface CandidateListItem {
 	district: string;
 	state: string;
 	created_at: string;
+	is_disabled?: boolean;
+	disability_type?: string;
+	education_level?: string;
 }
 
 export interface CandidateCreate extends Omit<Candidate, 'public_id' | 'city' | 'district' | 'state' | 'created_at' | 'updated_at' | 'profile' | 'documents' | 'counseling'> { }
@@ -164,3 +167,11 @@ export interface CandidateUpdate {
 	skills?: string[];
 }
 
+export interface CandidateStats {
+	total: number;
+	male: number;
+	female: number;
+	others: number;
+	today: number;
+	weekly: number[];
+}
