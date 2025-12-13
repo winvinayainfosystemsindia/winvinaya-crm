@@ -107,3 +107,7 @@ class CandidateService:
         # Use internal id for repository delete
         return await self.repository.delete(candidate.id)
 
+    async def get_stats(self) -> dict:
+        """Get candidate statistics"""
+        return await self.repository.get_stats()
+

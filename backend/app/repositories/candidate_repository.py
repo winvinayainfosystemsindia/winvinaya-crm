@@ -48,3 +48,51 @@ class CandidateRepository(BaseRepository[Candidate]):
         )
         return result.scalars().first()
 
+    async def get_stats(self) -> dict:
+        """Get candidate statistics"""
+        from sqlalchemy import func
+        from datetime import datetime, time, timedelta
+        
+        # Helper to execute count query
+        async def get_count(filter_expr=None):
+            stmt = select(func.count(Candidate.id))
+            if filter_expr is not None:
+                stmt = stmt.where(filter_expr)
+            result = await self.db.execute(stmt)
+            return result.scalar() or 0
+
+        async def get_weekly_stats():
+            # Get stats for last 7 days
+            today = datetime.now().date()
+            stats = []
+            # Loop for last 7 days including today (or 6 days + today)
+            for i in range(6, -1, -1):
+                day = today - timedelta(days=i)
+                start = datetime.combine(day, time.min)
+                end = datetime.combine(day, time.max)
+                count = await get_count((Candidate.created_at >= start) & (Candidate.created_at <= end))
+                stats.append(count)
+            return stats
+
+        total = await get_count()
+        male = await get_count(func.lower(Candidate.gender) == 'male')
+        female = await get_count(func.lower(Candidate.gender) == 'female')
+        
+        # All others that are not male/female (case insensitive)
+        others = total - (male + female)
+        
+        # Candidates registered today
+        today_start = datetime.combine(datetime.now().date(), time.min)
+        today = await get_count(Candidate.created_at >= today_start)
+        
+        weekly = await get_weekly_stats()
+        
+        return {
+            "total": total,
+            "male": male,
+            "female": female,
+            "others": others,
+            "today": today,
+            "weekly": weekly
+        }
+

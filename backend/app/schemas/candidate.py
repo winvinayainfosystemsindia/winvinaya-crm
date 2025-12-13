@@ -3,7 +3,7 @@
 from typing import List, Optional, Any
 from uuid import UUID
 from datetime import datetime
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, model_validator
 
 # Import related schemas (forward compatibility)
 from app.schemas.candidate_profile import CandidateProfileResponse
@@ -141,13 +141,88 @@ class CandidateListResponse(BaseModel):
     """Simplified response for list endpoints"""
     public_id: UUID
     name: str
-    email: EmailStr
+    email: Any  # Relaxed type to handle possible None or non-email strings temporarily
     phone: str
     city: str
     district: str
     state: str
     created_at: datetime
+    is_disabled: bool = False
+    disability_type: Optional[str] = None
+    education_level: Optional[str] = None
     
+    @model_validator(mode='before')
+    @classmethod
+    def extract_flattened_data(cls, data: Any) -> Any:
+        # data could be ORM object or dict
+        is_disabled = False
+        disability_type = None
+        education_level = None
+        
+        # Helper to extract from dict or object
+        def get_attr(obj, key, default=None):
+            if isinstance(obj, dict):
+                return obj.get(key, default)
+            return getattr(obj, key, default)
+
+        # 1. Disability Data
+        details = get_attr(data, 'disability_details')
+        if details and isinstance(details, dict):
+            is_disabled = details.get('is_disabled', False)
+            disability_type = details.get('disability_type')
+
+        # 2. Education Data (Determine highest level)
+        edu_details = get_attr(data, 'education_details')
+        if edu_details and isinstance(edu_details, dict):
+            if edu_details.get('degrees') and len(edu_details.get('degrees', [])) > 0:
+                education_level = "Graduate/Post-Graduate" # Simplification for now, or take first degree name
+                degrees = edu_details.get('degrees', [])
+                if degrees:
+                    education_level = degrees[0].get('degree_name')
+            elif edu_details.get('twelfth_or_diploma'):
+                education_level = edu_details.get('twelfth_or_diploma', {}).get('type', '12th/Diploma')
+            elif edu_details.get('tenth'):
+                education_level = "10th"
+
+        if isinstance(data, dict):
+            data['is_disabled'] = is_disabled
+            data['disability_type'] = disability_type
+            data['education_level'] = education_level
+            return data
+            
+        # If it's an object (ORM), convert to dict to inject our calculated fields
+        if hasattr(data, '__dict__'):
+            try:
+                obj_dict = {
+                    'public_id': data.public_id,
+                    'name': data.name,
+                    'email': data.email,
+                    'phone': data.phone,
+                    'city': data.city,
+                    'district': data.district,
+                    'state': data.state,
+                    'created_at': data.created_at,
+                    'is_disabled': is_disabled,
+                    'disability_type': disability_type,
+                    'education_level': education_level
+                }
+                return obj_dict
+            except Exception:
+                return data
+                
+        return data
+
     class Config:
         from_attributes = True
+
+
+class CandidateStats(BaseModel):
+    total: int
+    male: int
+    female: int
+    others: int
+    today: int
+    weekly: List[int] = []
+
+
 

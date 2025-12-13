@@ -8,7 +8,8 @@ from app.core.database import get_db
 from app.core.rate_limiter import rate_limit_medium
 from app.api.deps import require_roles
 from app.models.user import User, UserRole
-from app.schemas.candidate import CandidateCreate, CandidateResponse, CandidateUpdate, CandidateListResponse
+from app.models.user import User, UserRole
+from app.schemas.candidate import CandidateCreate, CandidateResponse, CandidateUpdate, CandidateListResponse, CandidateStats
 from app.services.candidate_service import CandidateService
 
 
@@ -45,6 +46,20 @@ async def get_candidates(
     """
     service = CandidateService(db)
     return await service.get_candidates(skip=skip, limit=limit)
+
+
+@router.get("/stats", response_model=CandidateStats)
+@rate_limit_medium()
+async def get_candidate_stats(
+    request: Request,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get candidate statistics (Restricted)
+    """
+    service = CandidateService(db)
+    return await service.get_stats()
 
 
 @router.get("/{public_id}", response_model=CandidateResponse)
