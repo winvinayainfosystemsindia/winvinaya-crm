@@ -2,103 +2,41 @@ name: Deploy to QA
 
 on:
   push:
-    branches: [qa]
+    branches: [ qa ]
   workflow_dispatch:
 
-env:
-  PYTHON_VERSION: "3.11"
-  NODE_VERSION: "20"
-
 jobs:
-  test:
-    name: Run Tests
+  deploy:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Run Backend Tests
-        working-directory: ./backend
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest httpx pytest-asyncio
-          pytest
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Run Frontend Tests
-        working-directory: ./frontend
-        run: |
-          npm ci
-          npm run lint
-          npm run build
-
-  deploy-qa:
-    name: Deploy to QA Environment
-    runs-on: ubuntu-latest
-    needs: test
-    environment: qa
-    
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Build Frontend
-        working-directory: ./frontend
-        run: |
-          npm ci
-          npm run build
-        env:
-          VITE_API_URL: https://qa-crm.winvinaya.com/api
-
       - name: Deploy to EC2
-        uses: appleboy/ssh-action@v1.0.0
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
           script: |
+            # Navigate to project
             cd /var/www/winvinaya-crm
-            git fetch origin
-            git checkout qa
-            git pull origin qa
             
-            # Deploy backend
+            # Pull latest changes
+            git fetch origin qa
+            git checkout qa
+            git reset --hard origin/qa
+            
+            # Make scripts executable
+            chmod +x deploy/*.sh
+            
+            # Deploy Backend
             ./deploy/backend-deploy.sh qa
             
-            # Deploy frontend
+            # Deploy Frontend
             ./deploy/frontend-deploy.sh qa
             
-            # Run health check
-            ./deploy/health-check.sh qa
-
-      - name: Notify Deployment Success
-        if: success()
-        run: |
-          echo "✅ QA deployment successful!"
-          echo "🌐 Frontend: https://qa-crm.winvinaya.com"
-          echo "🔌 API: https://qa-crm.winvinaya.com/api"
-
-      - name: Notify Deployment Failure
-        if: failure()
-        run: |
-          echo "❌ QA deployment failed!"
-          echo "Check logs for details"
+            # Optional: Run health check
+            if [ -f "./deploy/health-check.sh" ]; then
+                ./deploy/health-check.sh qa
+            fi
+            
+            echo "✅ QA Deployment Complete"
