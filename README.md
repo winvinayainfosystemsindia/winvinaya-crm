@@ -1,129 +1,53 @@
-# WinVinaya CRM
+# WinVinaya CRM System
 
-Welcome to the WinVinaya CRM repository. This project is a full-stack application composed of a FastAPI backend and a React/TypeScript frontend.
+Welcome to the WinVinaya CRM project repository. This is a robust, full-stack Client Relationship Management system designed to streamline operations for the WinVinaya Foundation. It manages candidate registrations, internal user administration, and key organizational metrics.
 
-## 📂 Project Structure
+## 📂 Documentation
 
-- **[backend/](backend/README.md)**: Python FastAPI application handling API requests, database interactions, and business logic.
-- **[frontend/](frontend/README.md)**: React application (Vite + TypeScript + MUI) providing the user interface.
-- **`.github/workflows/`**: CI/CD configuration files.
+We have comprehensive documentation to help you understand, deploy, and use the system.
 
-## 🚀 DevOps & CI/CD
+### 📘 For Users & Stakeholders
+*   **[Application User Manual](docs/APPLICATION_USER_MANUAL.md)**: A complete guide for End Users (Candidates) and Administrators.
+*   **[Application Workflow](docs/APPLICATION_WORKFLOW.md)**: Visual and descriptive overview of key business processes (Registration, Login, etc.).
 
-This project uses [GitHub Actions](https://github.com/features/actions) for Continuous Integration and Continuous Deployment. The workflow is defined in `.github/workflows/ci-cd.yml`.
 
-### The Pipeline Workflow
-
-The pipeline triggers automatically on:
-- Pushes to the `main` branch.
-- Pull Requests targeting the `main` branch.
-
-It consists of the following jobs:
-
-#### 1. Backend CI (`backend-ci`)
-- **Environment**: Ubuntu Latest
-- **Services**: PostgreSQL (Service container)
-- **Steps**:
-    1. Check out the code.
-    2. Set up Python 3.11.
-    3. Install dependencies from `requirements.txt`.
-    4. Run Unit Tests using `pytest`.
-
-#### 2. Frontend CI (`frontend-ci`)
-- **Environment**: Ubuntu Latest
-- **Steps**:
-    1. Check out the code.
-    2. Set up Node.js 20.
-    3. Install dependencies (`npm ci`).
-    4. Lint the code (`npm run lint`).
-    5. Build the production bundle (`npm run build`).
-
-#### 3. Deployment (`deploy`)
-- **Trigger**: Runs only on pushes to `main` AND if both CI jobs pass.
-- **Current Status**: Placeholder.
-- **Action Required**: You need to configure your specific deployment target (AWS, Docker Hub, DigitalOcean, etc.).
-
-### 🔧 Setting Up Deployment
-
-To fully automate deployment, follow these steps:
-
-1.  **Container Registry (Docker Hub/GHCR)**:
-    -   Uncomment the "Login to Docker Hub" and "Build and Push" steps in `.github/workflows/ci-cd.yml`.
-    -   Add `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` to your GitHub Repository Secrets.
-
-2.  **Server Deployment**:
-    -   **Option A (SSH)**: Add a step to SSH into your server, `docker pull` the new images, and `docker-compose up -d`. You'll need to add `SSH_HOST`, `SSH_USER`, and `SSH_KEY` to secrets.
-    -   **Option B (Cloud Provider)**: Use an AWS/Azure/GCP action to deploy the container to a managed service (e.g., AWS ECS, App Runner, Azure App Service).
-
-## 🌐 Production Deployment
-
-This project supports deployment to a single EC2 instance with three separate environments (Development, QA, Production). Each environment has its own database, backend process, and frontend build.
-
-### 📚 Deployment Documentation
-
-We provide comprehensive deployment documentation and automation scripts:
-
-- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Complete step-by-step deployment guide with detailed explanations
-- **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** - Interactive checklist to track your deployment progress
-- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - Quick command reference for common operations
-- **[quick-deploy.sh](quick-deploy.sh)** - Automated deployment script for all three environments
-- **[health-check.sh](health-check.sh)** - System health check and troubleshooting script
-
-### ⚡ Quick Start Deployment
-
-1. **Prerequisites:**
-   - EC2 instance with Ubuntu 22.04
-   - Python 3.11, Node.js 20, PostgreSQL, Nginx, and PM2 installed
-   - Three PostgreSQL databases created (winvinaya_dev, winvinaya_qa, winvinaya_prod)
-   - Repository cloned to `/var/www/winvinaya-crm`
-
-2. **One-Command Deployment:**
-   ```bash
-   cd /var/www/winvinaya-crm
-   bash quick-deploy.sh
-   ```
-
-3. **Set up SSL:**
-   ```bash
-   sudo certbot --nginx -d dev-crm.winvinaya.com
-   sudo certbot --nginx -d qa-crm.winvinaya.com
-   sudo certbot --nginx -d crm.winvinaya.com
-   ```
-
-### 🎯 Environment Overview
-
-| Environment | Backend Port | Database | Domain |
-|------------|-------------|----------|---------|
-| Development | 8000 | winvinaya_dev | dev-crm.winvinaya.com |
-| QA | 8001 | winvinaya_qa | qa-crm.winvinaya.com |
-| Production | 8002 | winvinaya_prod | crm.winvinaya.com |
-
-### 📊 Health Monitoring
-
-Check system health at any time:
-```bash
-bash health-check.sh
-```
-
-View application logs:
-```bash
-pm2 logs
-pm2 list
-```
-
-For detailed deployment instructions, troubleshooting, and best practices, see the [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md).
+### �️ Architecture & Deployment
+*   **[Architecture & Design](docs/ARCHITECTURE_AND_DESIGN.md)**: Technical diagrams (Mermaid) of the Application, Deployment, and CI/CD pipelines.
+*   **[Initial Deployment Guide](docs/INITIAL_DEPLOYMENT.md)**: Step-by-step technical guide to setting up the server from scratch (EC2, Nginx, Postgres, PM2).
+*   **[CI/CD Workflow Guide](docs/CI_CD_WORKFLOW_GUIDE.md)**: Instructions on how to trigger automated tests and deployments using Git.
+*   **[Optimization and Architecture](docs/OPTIMIZATION_AND_ARCHITECTURE.md)**: Non-technical breakdown of cost savings and performance strategies (Cost Analysis included).
 
 ---
 
-## 🛠️ Local Development
+## 🚀 Live Environments
 
-To run the project locally, please refer to the specific `README.md` files in each directory:
+The application is deployed across three environments to ensure stability and quality assurance.
 
-1.  **Backend Setup**: Go to [backend/README.md](backend/README.md)
-2.  **Frontend Setup**: Go to [frontend/README.md](frontend/README.md)
+| Environment | Purpose | App URL | API Documentation |
+| :--- | :--- | :--- | :--- |
+| **Development** | *"The Kitchen"* - For active development and experimentation. | [https://dev.winvinaya.com](https://dev.winvinaya.com) | [API Docs](https://dev-api.winvinaya.com/docs) |
+| **QA** | *"The Tasting Room"* - For testing stable features before release. | [https://qa.winvinaya.com](https://qa.winvinaya.com) | [API Docs](https://qa-api.winvinaya.com/docs) |
+| **Production** | *"The Dining Hall"* - The live, stable environment for end-users. | [https://winvinaya.com](https://winvinaya.com) | [API Docs](https://api.winvinaya.com/docs) |
 
+---
 
-<!-- icacls.exe winvinaya-crm-server.pem  /reset
-whoami
-icacls.exe winvinaya-crm-server.pem  /grant:r dharanidaran\daran:(R)
-icacls.exe winvinaya-crm-server.pem  /inheritance:r -->
+## �️ Tech Stack
+*   **Frontend**: React, TypeScript, Vite, Material UI (MUI).
+*   **Backend**: Python FastAPI, SQLAlchemy, Pydantic.
+*   **Database**: PostgreSQL.
+*   **Infrastructure**: AWS EC2, Nginx, PM2, GitHub Actions.
+
+## � Local Development Setup
+To run the project locally on your machine:
+
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/winvinayainfosystemsindia/winvinaya-crm.git
+    cd winvinaya-crm
+    ```
+
+2.  **Backend Setup**:
+    Refer to **[backend/README.md](backend/README.md)** for instructions on setting up the Python environment and database.
+
+3.  **Frontend Setup**:
+    Refer to **[frontend/README.md](frontend/README.md)** for instructions on installing Node.js dependencies and starting the dev server.
