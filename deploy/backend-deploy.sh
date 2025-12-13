@@ -8,7 +8,7 @@ set -e  # Exit on error
 ENV=$1
 
 if [ -z "$ENV" ]; then
-    echo "Error: Environment not specified"
+    echo "❌ Error: Environment not specified"
     echo "Usage: ./backend-deploy.sh {dev|qa|prod}"
     exit 1
 fi
@@ -31,27 +31,27 @@ case $ENV in
         ENV_FILE="/var/www/winvinaya-crm/backend/.env.prod"
         ;;
     *)
-        echo "Error: Invalid environment. Use dev, qa, or prod"
+        echo "❌ Error: Invalid environment. Use dev, qa, or prod"
         exit 1
         ;;
 esac
 
 echo "================================"
-echo "Deploying Backend - $ENV Environment"
+echo "🚀 Deploying Backend - $ENV"
+echo "App:  $APP_NAME"
 echo "Port: $PORT"
 echo "================================"
 
-# Navigate to backend directory
 cd /var/www/winvinaya-crm/backend
 
-# Stop existing PM2 process
-echo "Stopping existing backend process..."
+# Stop existing PM2 process safely
+echo "🛑 Stopping existing PM2 process..."
 pm2 stop $APP_NAME || true
 pm2 delete $APP_NAME || true
 
-# Create virtual environment if it doesn't exist
+# Create virtual environment if missing
 if [ ! -d "venv-$ENV" ]; then
-    echo "Creating virtual environment..."
+    echo "🐍 Creating virtual environment (venv-$ENV)..."
     python3.11 -m venv venv-$ENV
 fi
 
@@ -59,42 +59,43 @@ fi
 source venv-$ENV/bin/activate
 
 # Upgrade pip
-echo "Upgrading pip..."
+echo "⬆️ Upgrading pip..."
 pip install --upgrade pip
 
-# Install/update dependencies
-echo "Installing dependencies..."
+# Install dependencies
+echo "📦 Installing dependencies..."
 pip install -r requirements.txt
 
-# Check if environment file exists
+# Verify env file
 if [ ! -f "$ENV_FILE" ]; then
-    echo "Error: Environment file $ENV_FILE not found!"
+    echo "❌ Error: Env file not found: $ENV_FILE"
     exit 1
 fi
 
-# Run database migrations
-echo "Running database migrations..."
-# Load environment variables, filtering out comments and empty lines
+# Load env vars for Alembic
+echo "🗄️ Running database migrations..."
 set -a
-source <(grep -v '^#' $ENV_FILE | grep -v '^$' | sed 's/\r$//')
+source <(grep -v '^#' "$ENV_FILE" | grep -v '^$' | sed 's/\r$//')
 set +a
 alembic upgrade head
 
-# Start application with PM2
-echo "Starting backend with PM2..."
+# Start backend using EXACT working PM2 command
+echo "▶️ Starting backend with PM2..."
 pm2 start venv-$ENV/bin/uvicorn \
-    --name $APP_NAME \
+    --name "$APP_NAME" \
     --interpreter none \
-    -- app.main:app --host 0.0.0.0 --port $PORT --env-file $ENV_FILE
+    -- app.main:app \
+    --host 0.0.0.0 \
+    --port "$PORT" \
+    --env-file "$ENV_FILE"
 
-# Save PM2 configuration
+# Persist PM2 processes
 pm2 save
 
 echo "================================"
 echo "✅ Backend deployed successfully!"
 echo "Process: $APP_NAME"
-echo "Port: $PORT"
+echo "Port:    $PORT"
 echo "================================"
 
-# Display status
-pm2 status $APP_NAME
+pm2 status "$APP_NAME"
