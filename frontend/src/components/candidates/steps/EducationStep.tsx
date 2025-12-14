@@ -13,6 +13,7 @@ import {
     InputLabel,
     Select,
     MenuItem,
+    Autocomplete,
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -21,6 +22,9 @@ import {
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import type { CandidateCreate, Degree } from '../../../models/candidate';
+import { degrees } from '../../../data/Degree';
+import { specializations } from '../../../data/Specialization';
+import { colleges } from '../../../data/College';
 
 interface EducationStepProps {
     formData: CandidateCreate;
@@ -82,6 +86,23 @@ const EducationStep: React.FC<EducationStepProps> = ({
         updatedDegrees[index] = {
             ...updatedDegrees[index],
             [field]: event.target.value,
+        };
+        onChange({
+            education_details: {
+                ...formData.education_details!,
+                degrees: updatedDegrees,
+            },
+        });
+    };
+
+    const handleDegreeAutocompleteChange = (index: number, field: keyof Degree) => (
+        _event: any,
+        newValue: string | null
+    ) => {
+        const updatedDegrees = [...(formData.education_details?.degrees || [])];
+        updatedDegrees[index] = {
+            ...updatedDegrees[index],
+            [field]: newValue || '',
         };
         onChange({
             education_details: {
@@ -288,32 +309,53 @@ const EducationStep: React.FC<EducationStepProps> = ({
 
                             <Grid container spacing={3}>
                                 <Grid size={{ xs: 12, md: 4 }}>
-                                    <TextField
-                                        fullWidth
-                                        label="Degree Name"
+                                    <Autocomplete
+                                        freeSolo
+                                        options={degrees}
                                         value={degree.degree_name}
-                                        onChange={handleDegreeChange(index, 'degree_name')}
-                                        variant="outlined"
-                                        placeholder="e.g., B.Tech, B.Sc, etc."
+                                        onChange={handleDegreeAutocompleteChange(index, 'degree_name')}
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                fullWidth
+                                                label="Degree Name"
+                                                variant="outlined"
+                                                placeholder="e.g., B.Tech, B.Sc, etc."
+                                            />
+                                        )}
                                     />
                                 </Grid>
                                 <Grid size={{ xs: 12, md: 4 }}>
-                                    <TextField
-                                        fullWidth
-                                        label="Specialization"
+                                    <Autocomplete
+                                        freeSolo
+                                        options={specializations}
                                         value={degree.specialization}
-                                        onChange={handleDegreeChange(index, 'specialization')}
-                                        variant="outlined"
-                                        placeholder="e.g., Computer Science"
+                                        onChange={handleDegreeAutocompleteChange(index, 'specialization')}
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                fullWidth
+                                                label="Specialization"
+                                                variant="outlined"
+                                                placeholder="e.g., Computer Science"
+                                            />
+                                        )}
                                     />
                                 </Grid>
                                 <Grid size={{ xs: 12, md: 4 }}>
-                                    <TextField
-                                        fullWidth
-                                        label="College/University"
+                                    <Autocomplete
+                                        freeSolo
+                                        options={colleges}
                                         value={degree.college_name}
-                                        onChange={handleDegreeChange(index, 'college_name')}
-                                        variant="outlined"
+                                        onChange={handleDegreeAutocompleteChange(index, 'college_name')}
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                fullWidth
+                                                label="College/University"
+                                                variant="outlined"
+                                            />
+                                        )}
                                     />
                                 </Grid>
                                 <Grid size={{ xs: 12, md: 4 }}>

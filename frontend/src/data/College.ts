@@ -1,0 +1,20 @@
+export const colleges = [
+	"Anna University",
+	"Bangalore University",
+	"Technological University",
+	"Bharathiar University",
+	"Bharathidasan University",
+	"Madras University",
+	"Delhi University",
+	"Mumbai University",
+	"Calcutta University",
+	"Jawaharlal Nehru University",
+	"Banaras Hindu University",
+	"Osmania University",
+	"University of Hyderabad",
+	"VIT University",
+	"SRM University",
+	"Manipal University",
+	"Amrita Vishwa Vidyapeetham",
+	"Other"
+];
