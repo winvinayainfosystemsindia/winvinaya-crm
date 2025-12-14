@@ -8,16 +8,14 @@ import {
     Alert,
     TextField,
     FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
     Slider,
     Stack,
-    FormHelperText,
+    Autocomplete,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import type { CandidateCreate } from '../../../models/candidate';
 import { Accessible as AccessibleIcon } from '@mui/icons-material';
+import { disabilityTypes } from '../../../data/Disabilities';
 
 interface DisabilityStepProps {
     formData: CandidateCreate;
@@ -42,11 +40,11 @@ const DisabilityStep: React.FC<DisabilityStepProps> = ({
         });
     };
 
-    const handleDisabilitySelectChange = (event: any) => {
+    const handleDisabilityAutocompleteChange = (_event: any, newValue: string | null) => {
         onChange({
             disability_details: {
                 ...formData.disability_details!,
-                disability_type: event.target.value,
+                disability_type: newValue || '',
             },
         });
     };
@@ -60,15 +58,7 @@ const DisabilityStep: React.FC<DisabilityStepProps> = ({
         });
     };
 
-    const disabilityTypes = [
-        'Visual Impairment',
-        'Hearing Impairment',
-        'Locomotor Disability',
-        'Intellectual Disability',
-        'Mental Illness',
-        'Multiple Disabilities',
-        'Other',
-    ];
+
 
     return (
         <Box>
@@ -128,19 +118,24 @@ const DisabilityStep: React.FC<DisabilityStepProps> = ({
                     <>
                         <Grid size={{ xs: 12, md: 6 }}>
                             <FormControl fullWidth required>
-                                <InputLabel>Type of Disability</InputLabel>
-                                <Select
+                                {/* <InputLabel>Type of Disability</InputLabel> */}
+                                <Autocomplete
+                                    freeSolo
+                                    options={disabilityTypes}
                                     value={formData.disability_details?.disability_type || ''}
-                                    label="Type of Disability"
-                                    onChange={handleDisabilitySelectChange}
-                                >
-                                    {disabilityTypes.map((type) => (
-                                        <MenuItem key={type} value={type.toLowerCase()}>
-                                            {type}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                                <FormHelperText>Select the type of disability</FormHelperText>
+                                    onChange={handleDisabilityAutocompleteChange}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            fullWidth
+                                            label="Type of Disability"
+                                            variant="outlined"
+                                            helperText="Select or type the type of disability"
+                                            required
+                                        />
+                                    )}
+                                />
+                                {/* <FormHelperText>Select the type of disability</FormHelperText> */}
                             </FormControl>
                         </Grid>
 
