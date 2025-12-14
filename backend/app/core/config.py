@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     """Application settings with environment variable support"""
     
     # Application
-    APP_NAME: str = "FastAPI Production Boilerplate"
+    APP_NAME: str = "CRM - WinVinaya"
     APP_VERSION: str = "1.0.0"
     API_V1_PREFIX: str = "/api/v1"
     DEBUG: bool = False
