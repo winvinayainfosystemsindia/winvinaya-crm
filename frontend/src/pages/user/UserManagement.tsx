@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Box, Container, Typography, Dialog } from '@mui/material';
-import UserStatCards from '../components/users/UserStatCards';
-import UserTable from '../components/users/UserTable';
-import UserCreateForm from '../components/users/forms/UserCreateForm';
-import UserEditForm from '../components/users/forms/UserEditForm';
-import UserView from '../components/users/forms/UserView';
-import type { User } from '../models/user';
+import UserStatCards from '../../components/users/UserStatCards';
+import UserTable from '../../components/users/UserTable';
+import UserCreateForm from '../../components/users/forms/UserCreateForm';
+import UserEditForm from '../../components/users/forms/UserEditForm';
+import UserView from '../../components/users/forms/UserView';
+import type { User } from '../../models/user';
 
 const UserManagement: React.FC = () => {
 	const [openDialog, setOpenDialog] = useState(false);
