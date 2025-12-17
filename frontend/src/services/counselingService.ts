@@ -1,5 +1,5 @@
 import api from './api';
-import type { CandidateCounselingCreate, CandidateCounseling, CandidateListItem } from '../models/candidate';
+import type { CandidateCounselingCreate, CandidateCounseling } from '../models/candidate';
 
 const counselingService = {
 	// Create counseling record

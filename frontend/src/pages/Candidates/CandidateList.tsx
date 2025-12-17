@@ -16,7 +16,24 @@ const CandidateList: React.FC = () => {
 		weekly: number[];
 		profiled: number;
 		not_profiled: number;
-	}>({ total: 0, male: 0, female: 0, others: 0, today: 0, weekly: [], profiled: 0, not_profiled: 0 });
+		total_counseled: number;
+		counseling_pending: number;
+		counseling_selected: number;
+		counseling_rejected: number;
+	}>({
+		total: 0,
+		male: 0,
+		female: 0,
+		others: 0,
+		today: 0,
+		weekly: [],
+		profiled: 0,
+		not_profiled: 0,
+		total_counseled: 0,
+		counseling_pending: 0,
+		counseling_selected: 0,
+		counseling_rejected: 0
+	});
 
 	useEffect(() => {
 		fetchStats();
