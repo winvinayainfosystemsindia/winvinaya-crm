@@ -99,11 +99,7 @@ class CandidateService:
              update_data["disability_details"] = update_data["disability_details"].model_dump()
 
         # Use internal id for repository update
-        await self.repository.update(candidate.id, update_data)
-        
-        # Refresh the candidate with all relationships loaded to avoid session detachment issues
-        updated_candidate = await self.repository.get_by_public_id_with_details(public_id)
-        return updated_candidate
+        return await self.repository.update(candidate.id, update_data)
 
     async def delete_candidate(self, public_id: UUID) -> bool:
         """Delete candidate by public_id"""
