@@ -71,6 +71,9 @@ class CandidateRepository(BaseRepository[Candidate]):
             select(Candidate)
             .outerjoin(Candidate.profile)
             .where(CandidateProfile.id.is_(None))
+            .options(
+                selectinload(Candidate.counseling).selectinload(CandidateCounseling.counselor)
+            )
             .offset(skip)
             .limit(limit)
         )
