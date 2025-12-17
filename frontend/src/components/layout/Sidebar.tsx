@@ -112,7 +112,7 @@ const Sidebar: React.FC = () => {
 									<CandidatesIcon />
 								</ListItemIcon>
 								<ListItemText
-									primary="Candidates Management"
+									primary="Candidate Management"
 									primaryTypographyProps={{ fontSize: '0.95rem', fontWeight: 500, color: '#202124' }}
 								/>
 								{candidatesOpen ? <ExpandLess sx={{ color: '#5f6368' }} /> : <ExpandMore sx={{ color: '#5f6368' }} />}
@@ -127,7 +127,7 @@ const Sidebar: React.FC = () => {
 									onClick={() => handleNavigate('/candidates/summary')}
 								>
 									<ListItemText
-										primary="Summary"
+										primary="Dashboard"
 										primaryTypographyProps={{
 											fontSize: '0.9rem',
 											color: isActive('/candidates/summary') ? 'primary.main' : '#5f6368',
@@ -141,11 +141,25 @@ const Sidebar: React.FC = () => {
 									onClick={() => handleNavigate('/candidates')}
 								>
 									<ListItemText
-										primary="Candidates List"
+										primary="All Candidates"
 										primaryTypographyProps={{
 											fontSize: '0.9rem',
 											color: isActive('/candidates') ? 'primary.main' : '#5f6368',
 											fontWeight: isActive('/candidates') ? 600 : 400
+										}}
+									/>
+								</ListItemButton>
+								<ListItemButton
+									sx={{ pl: 9, py: 0.5 }}
+									selected={isActive('/candidates/profiling')}
+									onClick={() => handleNavigate('/candidates/profiling')}
+								>
+									<ListItemText
+										primary="Profiling"
+										primaryTypographyProps={{
+											fontSize: '0.9rem',
+											color: isActive('/candidates/profiling') ? 'primary.main' : '#5f6368',
+											fontWeight: isActive('/candidates/profiling') ? 600 : 400
 										}}
 									/>
 								</ListItemButton>
