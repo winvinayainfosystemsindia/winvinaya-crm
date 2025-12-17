@@ -2,14 +2,14 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from '../pages/Login';
 import Home from '../pages/Home';
-import UserManagement from '../pages/UserManagement';
+import UserManagement from '../pages/user/UserManagement';
 import ProtectedRoute from './ProtectedRoute';
 import MainLayout from '../components/layout/MainLayout';
-import CandidateRegistration from '../pages/Candidates/CandidateRegistration';
-import CandidateList from '../pages/Candidates/CandidateList';
-import SuccessPage from '../pages/SuccessPage';
-import NotFoundPage from '../pages/NotFoundPage';
-import MaintenancePage from '../pages/MaintenancePage';
+import CandidateRegistration from '../pages/candidates/CandidateRegistration';
+import CandidateList from '../pages/candidates/CandidateList';
+import SuccessPage from '../pages/common/SuccessPage';
+import NotFoundPage from '../pages/common/NotFoundPage';
+import MaintenancePage from '../pages/common/MaintenancePage';
 
 const AppRouter: React.FC = () => {
 	return (
