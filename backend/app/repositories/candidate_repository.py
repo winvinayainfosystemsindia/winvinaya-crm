@@ -48,6 +48,23 @@ class CandidateRepository(BaseRepository[Candidate]):
         )
         return result.scalars().first()
 
+    async def get_multi(self, skip: int = 0, limit: int = 100, include_deleted: bool = False):
+        """Get multiples candidates with counseling loaded for list view"""
+        stmt = (
+            select(Candidate)
+            .options(
+                selectinload(Candidate.counseling).selectinload(CandidateCounseling.counselor)
+            )
+            .offset(skip)
+            .limit(limit)
+        )
+        
+        if not include_deleted:
+            stmt = stmt.where(Candidate.is_deleted == False) 
+            
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
+
     async def get_unprofiled(self, skip: int = 0, limit: int = 100):
         """Get candidates without profile records"""
         stmt = (
