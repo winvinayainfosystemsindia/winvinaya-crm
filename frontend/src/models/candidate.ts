@@ -174,4 +174,6 @@ export interface CandidateStats {
 	others: number;
 	today: number;
 	weekly: number[];
+	profiled: number;
+	not_profiled: number;
 }

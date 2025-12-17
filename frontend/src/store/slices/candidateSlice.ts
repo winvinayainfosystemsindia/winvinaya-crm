@@ -6,12 +6,14 @@ import type {
 	CandidateCreate,
 	CandidateUpdate,
 	CandidateProfileCreate,
-	CandidateCounselingCreate
+	CandidateCounselingCreate,
+	CandidateStats
 } from '../../models/candidate';
 
 interface CandidateState {
 	list: CandidateListItem[];
 	selectedCandidate: Candidate | null;
+	stats: CandidateStats | null;
 	loading: boolean;
 	error: string | null;
 }
@@ -19,6 +21,7 @@ interface CandidateState {
 const initialState: CandidateState = {
 	list: [],
 	selectedCandidate: null,
+	stats: null,
 	loading: false,
 	error: null,
 };
@@ -26,6 +29,18 @@ const initialState: CandidateState = {
 // ======================
 // CANDIDATE OPERATIONS
 // ======================
+
+export const fetchCandidateStats = createAsyncThunk(
+	'candidates/fetchStats',
+	async (_, { rejectWithValue }) => {
+		try {
+			const response = await candidateService.getStats();
+			return response;
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.message || 'Failed to fetch candidate stats');
+		}
+	}
+);
 
 export const fetchCandidates = createAsyncThunk(
 	'candidates/fetchAll',
@@ -213,6 +228,20 @@ const candidateSlice = createSlice({
 	},
 	extraReducers: (builder) => {
 		builder
+			// Fetch stats
+			.addCase(fetchCandidateStats.pending, (state) => {
+				state.loading = true;
+				state.error = null;
+			})
+			.addCase(fetchCandidateStats.fulfilled, (state, action: PayloadAction<CandidateStats>) => {
+				state.loading = false;
+				state.stats = action.payload;
+			})
+			.addCase(fetchCandidateStats.rejected, (state, action: PayloadAction<any>) => {
+				state.loading = false;
+				state.error = action.payload;
+			})
+
 			// Fetch all candidates
 			.addCase(fetchCandidates.pending, (state) => {
 				state.loading = true;

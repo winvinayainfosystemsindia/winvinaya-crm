@@ -62,8 +62,24 @@ const candidateService = {
 	/**
 	 * Delete candidate by public_id (UUID)
 	 */
-	delete: async (publicId: string): Promise<void> => {
-		await api.delete(`/candidates/${publicId}`);
+	delete: async (public_id: string): Promise<void> => {
+		await api.delete(`/candidates/${public_id}`);
+	},
+
+	/**
+	 * Get unprofiled candidates
+	 */
+	getUnprofiled: async (skip = 0, limit = 100): Promise<CandidateListItem[]> => {
+		const response = await api.get<CandidateListItem[]>(`/candidates/unprofiled?skip=${skip}&limit=${limit}`);
+		return response.data;
+	},
+
+	/**
+	 * Get profiled candidates (with profile data)
+	 */
+	getProfiled: async (skip = 0, limit = 100): Promise<CandidateListItem[]> => {
+		const response = await api.get<CandidateListItem[]>(`/candidates/profiled?skip=${skip}&limit=${limit}`);
+		return response.data;
 	}
 };
 
