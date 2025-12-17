@@ -7,7 +7,16 @@ import { useNavigate } from 'react-router-dom';
 
 const CandidateList: React.FC = () => {
 	const navigate = useNavigate();
-	const [stats, setStats] = useState<{ total: number; male: number; female: number; others: number; today: number; weekly: number[] }>({ total: 0, male: 0, female: 0, others: 0, today: 0, weekly: [] });
+	const [stats, setStats] = useState<{
+		total: number;
+		male: number;
+		female: number;
+		others: number;
+		today: number;
+		weekly: number[];
+		profiled: number;
+		not_profiled: number;
+	}>({ total: 0, male: 0, female: 0, others: 0, today: 0, weekly: [], profiled: 0, not_profiled: 0 });
 
 	useEffect(() => {
 		fetchStats();
