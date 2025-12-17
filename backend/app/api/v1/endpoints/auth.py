@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.config import settings
 from app.core.security import create_access_token, create_refresh_token, decode_token, verify_token_type
-from app.core.rate_limiter import rate_limit_auth
+from app.core.rate_limiter import rate_limit_auth, rate_limit_high
 from app.schemas.user import UserCreate, UserResponse, Token, LoginRequest, RefreshTokenRequest
 from app.services.user_service import UserService
 from app.utils.activity_tracker import log_create, log_login
@@ -170,7 +170,7 @@ async def refresh_token(
 
 
 @router.get("/me", response_model=UserResponse)
-@rate_limit_auth()
+@rate_limit_high()
 async def read_users_me(
     request: Request,
     current_user: User = Depends(get_current_user)
