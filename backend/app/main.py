@@ -15,7 +15,7 @@ from app.middleware.logging import LoggingMiddleware
 from app.middleware.error_handler import ErrorHandlerMiddleware
 from app.api.v1.router import router as v1_router
 from loguru import logger
-
+from fastapi.exceptions import RequestValidationError
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -52,6 +52,16 @@ app = FastAPI(
 # Add rate limiter state
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    logger.error(f"Validation Error for {request.url}: {exc.errors()}")
+    # Re-raise to let default handler return 422, or return JSON response
+    # We just want to log here
+    return await request_validation_exception_handler(request, exc)
+
+from fastapi.exception_handlers import request_validation_exception_handler
+
 
 # Add CORS middleware
 app.add_middleware(
