@@ -8,6 +8,7 @@ import MainLayout from '../components/layout/MainLayout';
 import CandidateRegistration from '../pages/candidates/CandidateRegistration';
 import CandidateList from '../pages/candidates/CandidateList';
 import ProfileList from '../pages/profiling/ProfileList';
+import CounselingList from '../pages/counseling/CounselingList';
 import SuccessPage from '../pages/common/SuccessPage';
 import NotFoundPage from '../pages/common/NotFoundPage';
 import MaintenancePage from '../pages/common/MaintenancePage';
@@ -24,17 +25,23 @@ const AppRouter: React.FC = () => {
 				<Route path="/maintenance" element={<MaintenancePage />} />
 
 				<Route element={<ProtectedRoute />}>
+					{/* Protected Routes */}
 					<Route element={<MainLayout />}>
-						<Route path="/dashboard" element={<Home />} />
-						<Route path="/users" element={<UserManagement />} />
-						<Route path="/candidates" element={<CandidateList />} />
-						<Route path="/candidates/summary" element={<ProfileList />} />
-						<Route path="/candidates/profiling" element={<ProfileList />} />
+						<Route path="/" element={<Navigate to="/dashboard" replace />} />
+						<Route path="dashboard" element={<Home />} />
+						<Route path="users" element={<UserManagement />} />
+
+						<Route path="candidates">
+							<Route index element={<CandidateList />} />
+							<Route path="list" element={<CandidateList />} />
+							<Route path="profiling" element={<ProfileList />} />
+							<Route path="counseling" element={<CounselingList />} />
+						</Route>
+
 						{/* Add more protected routes here */}
 					</Route>
 				</Route>
 
-				<Route path="/" element={<Navigate to="/login" replace />} />
 				<Route path="*" element={<NotFoundPage />} />
 			</Routes>
 		</Router>
