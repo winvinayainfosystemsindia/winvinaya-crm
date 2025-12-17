@@ -65,7 +65,10 @@ class CandidateRepository(BaseRepository[Candidate]):
         stmt = (
             select(Candidate)
             .join(Candidate.profile)
-            .options(joinedload(Candidate.profile))
+            .options(
+                joinedload(Candidate.profile),
+                joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor)
+            )
             .offset(skip)
             .limit(limit)
         )

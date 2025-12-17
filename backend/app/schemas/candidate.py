@@ -150,6 +150,9 @@ class CandidateListResponse(BaseModel):
     is_disabled: bool = False
     disability_type: Optional[str] = None
     education_level: Optional[str] = None
+    counseling_status: Optional[str] = None
+    counselor_name: Optional[str] = None
+    counseling_date: Optional[datetime] = None
     
     @model_validator(mode='before')
     @classmethod
@@ -158,6 +161,7 @@ class CandidateListResponse(BaseModel):
         is_disabled = False
         disability_type = None
         education_level = None
+        counseling_status = None
         
         # Helper to extract from dict or object
         def get_attr(obj, key, default=None):
@@ -184,10 +188,24 @@ class CandidateListResponse(BaseModel):
             elif edu_details.get('tenth'):
                 education_level = "10th"
 
+        # 3. Counseling Status
+        counseling = get_attr(data, 'counseling')
+        counselor_name = None
+        counseling_date = None
+        if counseling:
+            counseling_status = get_attr(counseling, 'status')
+            counseling_date = get_attr(counseling, 'counseling_date')
+            counselor = get_attr(counseling, 'counselor')
+            if counselor:
+                counselor_name = get_attr(counselor, 'full_name')
+
         if isinstance(data, dict):
             data['is_disabled'] = is_disabled
             data['disability_type'] = disability_type
             data['education_level'] = education_level
+            data['counseling_status'] = counseling_status
+            data['counselor_name'] = counselor_name
+            data['counseling_date'] = counseling_date
             return data
             
         # If it's an object (ORM), convert to dict to inject our calculated fields
@@ -204,7 +222,10 @@ class CandidateListResponse(BaseModel):
                     'created_at': data.created_at,
                     'is_disabled': is_disabled,
                     'disability_type': disability_type,
-                    'education_level': education_level
+                    'education_level': education_level,
+                    'counseling_status': counseling_status,
+                    'counselor_name': counselor_name,
+                    'counseling_date': counseling_date
                 }
                 return obj_dict
             except Exception:

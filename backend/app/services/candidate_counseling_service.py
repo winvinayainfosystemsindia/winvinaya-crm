@@ -26,7 +26,7 @@ class CandidateCounselingService:
     ) -> CandidateCounseling:
         """Create counseling record for a candidate"""
         # Verify candidate exists
-        candidate = await self.candidate_repo.get_by_public_id(candidate_public_id)
+        candidate = await self.candidate_repo.get_by_public_id_with_details(candidate_public_id)
         if not candidate:
             raise HTTPException(status_code=404, detail="Candidate not found")
         
