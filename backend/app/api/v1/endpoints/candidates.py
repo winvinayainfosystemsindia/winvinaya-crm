@@ -62,6 +62,40 @@ async def get_candidate_stats(
     return await service.get_stats()
 
 
+@router.get("/unprofiled", response_model=List[CandidateListResponse])
+@rate_limit_medium()
+async def get_unprofiled_candidates(
+    request: Request,
+    skip: int = 0,
+    limit: int = 100,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get list of candidates without profile records (Restricted)
+    """
+    service = CandidateService(db)
+    return await service.get_unprofiled_candidates(skip=skip, limit=limit)
+
+
+@router.get("/profiled", response_model=List[CandidateListResponse])
+@rate_limit_medium()
+async def get_profiled_candidates(
+    request: Request,
+    skip: int = 0,
+    limit: int = 100,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get list of candidates with profile records (Restricted)
+    Returns list with basic candidate info.
+    """
+    service = CandidateService(db)
+    return await service.get_profiled_candidates(skip=skip, limit=limit)
+
+
+
 @router.get("/{public_id}", response_model=CandidateResponse)
 @rate_limit_medium()
 async def get_candidate(

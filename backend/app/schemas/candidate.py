@@ -223,6 +223,8 @@ class CandidateStats(BaseModel):
     others: int
     today: int
     weekly: List[int] = []
+    profiled: int
+    not_profiled: int
 
 
 

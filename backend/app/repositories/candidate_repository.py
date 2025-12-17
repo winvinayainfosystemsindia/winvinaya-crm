@@ -48,6 +48,31 @@ class CandidateRepository(BaseRepository[Candidate]):
         )
         return result.scalars().first()
 
+    async def get_unprofiled(self, skip: int = 0, limit: int = 100):
+        """Get candidates without profile records"""
+        stmt = (
+            select(Candidate)
+            .outerjoin(Candidate.profile)
+            .where(CandidateProfile.id.is_(None))
+            .offset(skip)
+            .limit(limit)
+        )
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
+
+    async def get_profiled(self, skip: int = 0, limit: int = 100):
+        """Get candidates with profile records loaded"""
+        stmt = (
+            select(Candidate)
+            .join(Candidate.profile)
+            .options(joinedload(Candidate.profile))
+            .offset(skip)
+            .limit(limit)
+        )
+        result = await self.db.execute(stmt)
+        return result.scalars().unique().all()
+
+
     async def get_stats(self) -> dict:
         """Get candidate statistics"""
         from sqlalchemy import func
@@ -85,6 +110,13 @@ class CandidateRepository(BaseRepository[Candidate]):
         today_start = datetime.combine(datetime.now().date(), time.min)
         today = await get_count(Candidate.created_at >= today_start)
         
+        # Profiling stats - count only candidates with formal profile records
+        stmt_profiled = select(func.count(CandidateProfile.id))
+        result_profiled = await self.db.execute(stmt_profiled)
+        profiled = result_profiled.scalar() or 0
+        
+        not_profiled = total - profiled
+
         weekly = await get_weekly_stats()
         
         return {
@@ -93,6 +125,8 @@ class CandidateRepository(BaseRepository[Candidate]):
             "female": female,
             "others": others,
             "today": today,
-            "weekly": weekly
+            "weekly": weekly,
+            "profiled": profiled,
+            "not_profiled": not_profiled
         }
 

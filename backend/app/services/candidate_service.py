@@ -111,3 +111,12 @@ class CandidateService:
         """Get candidate statistics"""
         return await self.repository.get_stats()
 
+    async def get_unprofiled_candidates(self, skip: int = 0, limit: int = 100) -> List[Candidate]:
+        """Get list of candidates without profile records"""
+        return await self.repository.get_unprofiled(skip=skip, limit=limit)
+
+    async def get_profiled_candidates(self, skip: int = 0, limit: int = 100) -> List[Candidate]:
+        """Get list of candidates with profile records"""
+        return await self.repository.get_profiled(skip=skip, limit=limit)
+
+
