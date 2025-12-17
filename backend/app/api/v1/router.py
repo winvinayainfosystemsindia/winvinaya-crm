@@ -8,7 +8,9 @@ from app.api.v1.endpoints import (
     candidates,
     candidate_profile,
     candidate_documents,
-    candidate_counseling
+    candidate_documents,
+    candidate_counseling,
+    analytics
 )
 
 
@@ -23,4 +25,5 @@ router.include_router(candidates.router)
 router.include_router(candidate_profile.router)
 router.include_router(candidate_documents.router)
 router.include_router(candidate_counseling.router)
+router.include_router(analytics.router)
 
