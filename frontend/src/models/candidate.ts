@@ -179,4 +179,8 @@ export interface CandidateStats {
 	weekly: number[];
 	profiled: number;
 	not_profiled: number;
+	total_counseled: number;
+	counseling_pending: number;
+	counseling_selected: number;
+	counseling_rejected: number;
 }

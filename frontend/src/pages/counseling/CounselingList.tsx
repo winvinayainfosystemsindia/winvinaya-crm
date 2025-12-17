@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import CounselingTable from '../../components/counseling/CounselingTable';
 import CounselingFormDialog from '../../components/counseling/form/CounselingFormDialog';
+import CounselingStats from '../../components/counseling/CounselingStats';
 import counselingService from '../../services/counselingService';
 import type { CandidateListItem, CandidateCounselingCreate } from '../../models/candidate';
 import candidateService from '../../services/candidateService';
@@ -129,6 +130,9 @@ const CounselingList: React.FC = () => {
 						Assess and counsel profiled candidates
 					</Typography>
 				</Box>
+
+				{/* Stats Section */}
+				<CounselingStats />
 
 				{/* Tab Navigation */}
 				<Box
