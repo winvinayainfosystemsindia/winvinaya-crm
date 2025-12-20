@@ -31,7 +31,7 @@ export interface CandidateProfileCreate {
 export interface CandidateDocument {
 	id: number;
 	candidate_id: number;
-	document_type: 'resume' | 'disability_certificate' | 'other';
+	document_type: 'resume' | 'disability_certificate' | '10th_certificate' | '12th_certificate' | 'degree_certificate' | 'other';
 	document_name: string;
 	file_path: string;
 	file_size?: number;
@@ -42,7 +42,7 @@ export interface CandidateDocument {
 }
 
 export interface CandidateDocumentCreate {
-	document_type: 'resume' | 'disability_certificate' | 'other';
+	document_type: 'resume' | 'disability_certificate' | '10th_certificate' | '12th_certificate' | 'degree_certificate' | 'other';
 	document_name: string;
 	file_path: string;
 	file_size?: number;
@@ -150,6 +150,7 @@ export interface CandidateListItem {
 	counseling_status?: string;
 	counselor_name?: string;
 	counseling_date?: string;
+	documents_uploaded?: string[];
 }
 
 export interface CandidateCreate extends Omit<Candidate, 'public_id' | 'city' | 'district' | 'state' | 'created_at' | 'updated_at' | 'profile' | 'documents' | 'counseling'> { }

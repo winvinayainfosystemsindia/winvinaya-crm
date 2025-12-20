@@ -177,6 +177,20 @@ const Sidebar: React.FC = () => {
 										}}
 									/>
 								</ListItemButton>
+								<ListItemButton
+									sx={{ pl: 9, py: 0.5 }}
+									selected={isActive('/candidates/documents')}
+									onClick={() => handleNavigate('/candidates/documents')}
+								>
+									<ListItemText
+										primary="Document Collection"
+										primaryTypographyProps={{
+											fontSize: '0.9rem',
+											color: isActive('/candidates/documents') ? 'primary.main' : '#5f6368',
+											fontWeight: isActive('/candidates/documents') ? 600 : 400
+										}}
+									/>
+								</ListItemButton>
 							</List>
 						</Collapse>
 

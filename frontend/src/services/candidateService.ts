@@ -120,7 +120,7 @@ export const documentService = {
 	 */
 	upload: async (
 		publicId: string,
-		documentType: 'resume' | 'disability_certificate' | 'other',
+		documentType: 'resume' | 'disability_certificate' | '10th_certificate' | '12th_certificate' | 'degree_certificate' | 'other',
 		file: File,
 		description?: string
 	): Promise<CandidateDocument> => {

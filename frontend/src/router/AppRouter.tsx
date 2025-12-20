@@ -12,6 +12,8 @@ import CounselingList from '../pages/counseling/CounselingList';
 import SuccessPage from '../pages/common/SuccessPage';
 import NotFoundPage from '../pages/common/NotFoundPage';
 import MaintenancePage from '../pages/common/MaintenancePage';
+import DocumentCollectionList from '../pages/documents/DocumentCollectionList';
+import DocumentCollection from '../pages/documents/DocumentCollection';
 
 const AppRouter: React.FC = () => {
 	return (
@@ -36,6 +38,8 @@ const AppRouter: React.FC = () => {
 							<Route path="list" element={<CandidateList />} />
 							<Route path="profiling" element={<ProfileList />} />
 							<Route path="counseling" element={<CounselingList />} />
+							<Route path="documents" element={<DocumentCollectionList />} />
+							<Route path="documents/:id" element={<DocumentCollection />} />
 						</Route>
 
 						{/* Add more protected routes here */}
