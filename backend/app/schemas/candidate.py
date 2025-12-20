@@ -153,6 +153,7 @@ class CandidateListResponse(BaseModel):
     counseling_status: Optional[str] = None
     counselor_name: Optional[str] = None
     counseling_date: Optional[datetime] = None
+    documents_uploaded: List[str] = []
     
     @model_validator(mode='before')
     @classmethod
@@ -162,6 +163,7 @@ class CandidateListResponse(BaseModel):
         disability_type = None
         education_level = None
         counseling_status = None
+        documents_uploaded = []
         
         # Helper to extract from dict or object
         def get_attr(obj, key, default=None):
@@ -199,6 +201,12 @@ class CandidateListResponse(BaseModel):
             if counselor:
                 counselor_name = get_attr(counselor, 'full_name')
 
+        # 4. Documents
+        documents = get_attr(data, 'documents')
+        if documents:
+             # documents is a list of objects or dicts
+             documents_uploaded = [get_attr(d, 'document_type') for d in documents]
+
         if isinstance(data, dict):
             data['is_disabled'] = is_disabled
             data['disability_type'] = disability_type
@@ -206,6 +214,7 @@ class CandidateListResponse(BaseModel):
             data['counseling_status'] = counseling_status
             data['counselor_name'] = counselor_name
             data['counseling_date'] = counseling_date
+            data['documents_uploaded'] = documents_uploaded
             return data
             
         # If it's an object (ORM), convert to dict to inject our calculated fields
@@ -225,7 +234,8 @@ class CandidateListResponse(BaseModel):
                     'education_level': education_level,
                     'counseling_status': counseling_status,
                     'counselor_name': counselor_name,
-                    'counseling_date': counseling_date
+                    'counseling_date': counseling_date,
+                    'documents_uploaded': documents_uploaded
                 }
                 return obj_dict
             except Exception:

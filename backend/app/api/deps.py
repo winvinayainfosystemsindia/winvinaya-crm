@@ -1,7 +1,7 @@
 """Shared API dependencies"""
 
 from typing import Generator, Optional
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
@@ -10,20 +10,34 @@ from app.models.user import User
 from app.repositories.user_repository import UserRepository
 
 
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    token_query: Optional[str] = Query(None, alias="token"),
     db: AsyncSession = Depends(get_db)
 ) -> User:
     """
-    Get current authenticated user from JWT token
+    Get current authenticated user from JWT token.
+    Checks Authorization header first, then 'token' query parameter.
     
     Raises:
         HTTPException: If token is invalid or user not found
     """
-    token = credentials.credentials
+    token = None
+    if credentials:
+        token = credentials.credentials
+    elif token_query:
+        token = token_query
+        
+    if token is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     payload = decode_token(token)
     
     if payload is None:

@@ -18,6 +18,9 @@ class FileStorageService:
     ALLOWED_EXTENSIONS = {
         "resume": {".pdf", ".doc", ".docx"},
         "disability_certificate": {".pdf", ".jpg", ".jpeg", ".png"},
+        "10th_certificate": {".pdf", ".jpg", ".jpeg", ".png"},
+        "12th_certificate": {".pdf", ".jpg", ".jpeg", ".png"},
+        "degree_certificate": {".pdf", ".jpg", ".jpeg", ".png"},
         "other": {".pdf", ".doc", ".docx", ".jpg", ".jpeg", ".png", ".zip"}
     }
     

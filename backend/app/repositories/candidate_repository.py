@@ -87,6 +87,7 @@ class CandidateRepository(BaseRepository[Candidate]):
             .join(Candidate.profile)
             .options(
                 joinedload(Candidate.profile),
+                selectinload(Candidate.documents),
                 joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor)
             )
             .offset(skip)

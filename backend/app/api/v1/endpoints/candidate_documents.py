@@ -59,11 +59,13 @@ async def upload_candidate_document(
 async def download_candidate_document(
     request: Request,
     document_id: int,
+    disposition: str = "attachment",
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING])),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Download a candidate document file (Trainer only)
+    Download or preview a candidate document file.
+    - disposition: 'attachment' (default, download) or 'inline' (preview)
     """
     service = CandidateDocumentService(db)
     document = await service.get_document(document_id)
@@ -78,7 +80,8 @@ async def download_candidate_document(
     return FileResponse(
         path=str(file_path),
         filename=document.document_name,
-        media_type=document.mime_type or "application/octet-stream"
+        media_type=document.mime_type or "application/octet-stream",
+        content_disposition_type=disposition
     )
 
 
