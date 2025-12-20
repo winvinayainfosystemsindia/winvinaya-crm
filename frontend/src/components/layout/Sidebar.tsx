@@ -123,15 +123,15 @@ const Sidebar: React.FC = () => {
 							<List component="div" disablePadding>
 								<ListItemButton
 									sx={{ pl: 9, py: 0.5 }}
-									selected={isActive('/candidates/summary')}
-									onClick={() => handleNavigate('/candidates/summary')}
+									selected={isActive('/candidates/overview')}
+									onClick={() => handleNavigate('/candidates/overview')}
 								>
 									<ListItemText
-										primary="Dashboard"
+										primary="Overview"
 										primaryTypographyProps={{
 											fontSize: '0.9rem',
-											color: isActive('/candidates/summary') ? 'primary.main' : '#5f6368',
-											fontWeight: isActive('/candidates/summary') ? 600 : 400
+											color: isActive('/candidates/overview') ? 'primary.main' : '#5f6368',
+											fontWeight: isActive('/candidates/overview') ? 600 : 400
 										}}
 									/>
 								</ListItemButton>

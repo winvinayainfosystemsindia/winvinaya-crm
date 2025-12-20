@@ -14,6 +14,7 @@ import NotFoundPage from '../pages/common/NotFoundPage';
 import MaintenancePage from '../pages/common/MaintenancePage';
 import DocumentCollectionList from '../pages/documents/DocumentCollectionList';
 import DocumentCollection from '../pages/documents/DocumentCollection';
+const SourcingAnalytics = React.lazy(() => import('../pages/analytics/SourcingAnalytics'));
 
 const AppRouter: React.FC = () => {
 	return (
@@ -36,6 +37,7 @@ const AppRouter: React.FC = () => {
 						<Route path="candidates">
 							<Route index element={<CandidateList />} />
 							<Route path="list" element={<CandidateList />} />
+							<Route path="overview" element={<SourcingAnalytics />} />
 							<Route path="profiling" element={<ProfileList />} />
 							<Route path="counseling" element={<CounselingList />} />
 							<Route path="documents" element={<DocumentCollectionList />} />
