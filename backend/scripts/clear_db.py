@@ -66,11 +66,11 @@ async def clear_database(engine_to_use, include_users: bool = False):
 
 def main():
     parser = argparse.ArgumentParser(description="Clear records from database tables.")
-    parser.add_argument("--host", help="Database host (overrides .env)")
-    parser.add_argument("--port", help="Database port (overrides .env)")
-    parser.add_argument("--user", help="Database user (overrides .env)")
-    parser.add_argument("--password", help="Database password (overrides .env)")
-    parser.add_argument("--dbname", help="Database name (overrides .env)")
+    parser.add_argument("--host", help="Database host (overrides .env.dev)")
+    parser.add_argument("--port", help="Database port (overrides .env.dev)")
+    parser.add_argument("--user", help="Database user (overrides .env.dev)")
+    parser.add_argument("--password", help="Database password (overrides .env.dev)")
+    parser.add_argument("--dbname", help="Database name (overrides .env.dev)")
     parser.add_argument(
         "--confirm", 
         action="store_true", 
