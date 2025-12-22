@@ -168,6 +168,14 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 		}
 	};
 
+	const toTitleCase = (str: string) => {
+		if (!str) return '';
+		return str.replace(
+			/\w\S*/g,
+			(txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+		);
+	};
+
 	return (
 		<Paper sx={{ border: '1px solid #d5dbdb', boxShadow: 'none', borderRadius: 0 }}>
 			{/* Header with Search and Add Button */}
@@ -368,10 +376,10 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 									<TableCell>
 										<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
 											<Typography variant="body2" sx={{ fontWeight: 500 }}>
-												{candidate.name}
+												{toTitleCase(candidate.name)}
 											</Typography>
-											{candidate.is_disabled && (
-												<Tooltip title="Person with Disability">
+											{(candidate.is_disabled || candidate.disability_type) && (
+												<Tooltip title={candidate.disability_type || "Person with Disability"}>
 													<Accessible color="primary" fontSize="small" />
 												</Tooltip>
 											)}
@@ -408,7 +416,10 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 									</TableCell>
 									<TableCell>
 										<Typography variant="body2" color="text.secondary">
-											{candidate.disability_type || '-'}
+											{candidate.is_disabled || candidate.disability_type
+												? (candidate.disability_type || 'Unspecified')
+												: 'Non-PwD'
+											}
 										</Typography>
 									</TableCell>
 									<TableCell>

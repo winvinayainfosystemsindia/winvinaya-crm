@@ -202,10 +202,10 @@ class CandidateListResponse(BaseModel):
                 education_level = "10th"
 
         # 3. Counseling Status - only access if loaded
+        counselor_name = None
+        counseling_date = None
         if is_relationship_loaded(data, 'counseling'):
             counseling = get_attr(data, 'counseling')
-            counselor_name = None
-            counseling_date = None
             if counseling:
                 counseling_status = get_attr(counseling, 'status')
                 counseling_date = get_attr(counseling, 'counseling_date')
