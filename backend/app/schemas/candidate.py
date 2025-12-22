@@ -2,7 +2,7 @@
 
 from typing import List, Optional, Any
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, date
 from pydantic import BaseModel, EmailStr, Field, model_validator
 
 # Import related schemas (forward compatibility)
@@ -54,6 +54,7 @@ class CandidateBase(BaseModel):
     email: EmailStr
     phone: str
     whatsapp_number: Optional[str] = None
+    dob: Optional[date] = None
     pincode: str
     
     guardian_details: Optional[dict] = None
@@ -72,6 +73,7 @@ class CandidateUpdate(BaseModel):
     email: Optional[EmailStr] = None
     phone: Optional[str] = None
     whatsapp_number: Optional[str] = None
+    dob: Optional[date] = None
     pincode: Optional[str] = None
     guardian_details: Optional[dict] = None
     work_experience: Optional[dict] = None

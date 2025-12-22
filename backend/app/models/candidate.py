@@ -1,7 +1,8 @@
 """Candidate model"""
 
 import uuid
-from sqlalchemy import String, Boolean, JSON
+from datetime import date
+from sqlalchemy import String, Boolean, JSON, Date
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.models.base import BaseModel
@@ -27,6 +28,7 @@ class Candidate(BaseModel):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
     phone: Mapped[str] = mapped_column(String(50), nullable=False)
     whatsapp_number: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    dob: Mapped[date | None] = mapped_column(Date, nullable=True)
     
     # Address Details
     pincode: Mapped[str] = mapped_column(String(20), nullable=False)
