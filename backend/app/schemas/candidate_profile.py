@@ -8,7 +8,7 @@ from pydantic import BaseModel
 # Profile Schemas
 
 class CandidateProfileBase(BaseModel):
-    date_of_birth: Optional[datetime] = None
+    dob: Optional[datetime] = None
     trained_by_winvinaya: bool = False
     training_domain: Optional[str] = None
     batch_number: Optional[str] = None
@@ -26,7 +26,7 @@ class CandidateProfileCreate(CandidateProfileBase):
 
 class CandidateProfileUpdate(BaseModel):
     """Schema for updating candidate profile"""
-    date_of_birth: Optional[datetime] = None
+    dob: Optional[datetime] = None
     trained_by_winvinaya: Optional[bool] = None
     training_domain: Optional[str] = None
     batch_number: Optional[str] = None

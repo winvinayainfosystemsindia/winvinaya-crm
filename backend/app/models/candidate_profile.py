@@ -21,7 +21,7 @@ class CandidateProfile(BaseModel):
     )
     
     # Profiling Data
-    date_of_birth: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    dob: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     trained_by_winvinaya: Mapped[bool] = mapped_column(Boolean, default=False)
     training_domain: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
     batch_number: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)

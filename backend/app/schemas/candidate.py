@@ -13,18 +13,6 @@ from app.schemas.candidate_counseling import CandidateCounselingResponse
 
 # Nested Schemas for JSON fields
 
-class Education10th(BaseModel):
-    school_name: str
-    year_of_passing: int
-    percentage: float
-
-
-class Education12thOrDiploma(BaseModel):
-    institution_name: str
-    year_of_passing: int
-    percentage: float
-    type: str = Field(..., description=" '12th' or 'Diploma'")
-
 
 class Degree(BaseModel):
     degree_name: str
@@ -35,9 +23,13 @@ class Degree(BaseModel):
 
 
 class EducationDetails(BaseModel):
-    tenth: Optional[Education10th] = None
-    twelfth_or_diploma: Optional[Education12thOrDiploma] = None
     degrees: List[Degree] = []
+
+
+class WorkExperience(BaseModel):
+    is_experienced: bool = False
+    currently_employed: bool = False
+    year_of_experience: Optional[str] = None
 
 
 class DisabilityDetails(BaseModel):
@@ -58,7 +50,7 @@ class CandidateBase(BaseModel):
     pincode: str
     
     guardian_details: Optional[dict] = None
-    work_experience: Optional[dict] = None
+    work_experience: Optional[WorkExperience] = None
     education_details: Optional[EducationDetails] = None
     disability_details: Optional[DisabilityDetails] = None
 
@@ -185,15 +177,10 @@ class CandidateListResponse(BaseModel):
         # 2. Education Data (Determine highest level)
         edu_details = get_attr(data, 'education_details')
         if edu_details and isinstance(edu_details, dict):
-            if edu_details.get('degrees') and len(edu_details.get('degrees', [])) > 0:
-                education_level = "Graduate/Post-Graduate" # Simplification for now, or take first degree name
-                degrees = edu_details.get('degrees', [])
-                if degrees:
-                    education_level = degrees[0].get('degree_name')
-            elif edu_details.get('twelfth_or_diploma'):
-                education_level = edu_details.get('twelfth_or_diploma', {}).get('type', '12th/Diploma')
-            elif edu_details.get('tenth'):
-                education_level = "10th"
+            degrees = edu_details.get('degrees', [])
+            if degrees and len(degrees) > 0:
+                # Simplification: take first degree name as education level
+                education_level = degrees[0].get('degree_name', "Graduate/Post-Graduate")
 
         # 3. Counseling Status - only access if loaded
         counselor_name = None
