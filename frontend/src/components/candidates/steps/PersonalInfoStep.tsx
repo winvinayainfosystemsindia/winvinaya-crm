@@ -41,6 +41,17 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
         });
     };
 
+    const handleGuardianChange = (field: keyof NonNullable<CandidateCreate['guardian_details']>) => (
+        event: any
+    ) => {
+        onChange({
+            guardian_details: {
+                ...formData.guardian_details,
+                [field]: event.target.value,
+            },
+        });
+    };
+
     return (
         <Box>
             <Typography
@@ -65,14 +76,16 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                         onChange={handleChange('name')}
                         variant="outlined"
                         placeholder="Enter your full name"
-                        helperText="As per official documents"
+                        helperText="As per in Aadhar card"
+                        autoComplete="name"
                     />
                 </Grid>
 
                 <Grid size={{ xs: 12, md: 6 }}>
                     <FormControl fullWidth required>
-                        <InputLabel>Gender</InputLabel>
+                        <InputLabel id="gender-label">Gender</InputLabel>
                         <Select
+                            labelId="gender-label"
                             value={formData.gender}
                             label="Gender"
                             onChange={handleSelectChange('gender')}
@@ -84,6 +97,20 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                         </Select>
                         <FormHelperText>Select your gender</FormHelperText>
                     </FormControl>
+                </Grid>
+
+                <Grid size={{ xs: 12, md: 6 }}>
+                    <TextField
+                        required
+                        fullWidth
+                        type="date"
+                        label="Date of Birth"
+                        value={formData.dob}
+                        onChange={handleChange('dob')}
+                        variant="outlined"
+                        InputLabelProps={{ shrink: true }}
+                        autoComplete="bday"
+                    />
                 </Grid>
 
                 <Grid size={{ xs: 12 }}>
@@ -107,6 +134,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                         variant="outlined"
                         placeholder="your.email@example.com"
                         helperText="We'll send important updates to this email"
+                        autoComplete="email"
                     />
                 </Grid>
 
@@ -119,7 +147,11 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                         onChange={handleChange('phone')}
                         variant="outlined"
                         placeholder="10-digit mobile number"
-                        inputProps={{ maxLength: 10 }}
+                        inputProps={{
+                            maxLength: 10,
+                            'aria-label': '10-digit mobile number'
+                        }}
+                        autoComplete="tel"
                     />
                 </Grid>
 
@@ -144,7 +176,11 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                         onChange={handleChange('pincode')}
                         variant="outlined"
                         placeholder="6-digit pincode"
-                        inputProps={{ maxLength: 6 }}
+                        inputProps={{
+                            maxLength: 6,
+                            'aria-label': '6-digit pincode'
+                        }}
+                        autoComplete="postal-code"
                     />
                 </Grid>
 
@@ -158,23 +194,41 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                     </Typography>
                 </Grid>
 
-                <Grid size={{ xs: 12, md: 6 }}>
+                <Grid size={{ xs: 12, md: 4 }}>
                     <TextField
                         fullWidth
                         label="Parent/Guardian Name"
-                        value={formData.parent_name}
-                        onChange={handleChange('parent_name')}
+                        value={formData.guardian_details?.parent_name || ''}
+                        onChange={handleGuardianChange('parent_name')}
                         variant="outlined"
                         placeholder="Optional"
                     />
                 </Grid>
 
-                <Grid size={{ xs: 12, md: 6 }}>
+                <Grid size={{ xs: 12, md: 4 }}>
+                    <FormControl fullWidth>
+                        <InputLabel id="guardian-relationship-label">Relationship</InputLabel>
+                        <Select
+                            labelId="guardian-relationship-label"
+                            value={formData.guardian_details?.relationship || ''}
+                            label="Relationship"
+                            onChange={handleGuardianChange('relationship')}
+                        >
+                            <MenuItem value="Father">Father</MenuItem>
+                            <MenuItem value="Mother">Mother</MenuItem>
+                            <MenuItem value="Guardian">Guardian</MenuItem>
+                            <MenuItem value="Brother">Brother</MenuItem>
+                            <MenuItem value="Sister">Sister</MenuItem>
+                        </Select>
+                    </FormControl>
+                </Grid>
+
+                <Grid size={{ xs: 12, md: 4 }}>
                     <TextField
                         fullWidth
                         label="Parent/Guardian Phone"
-                        value={formData.parent_phone}
-                        onChange={handleChange('parent_phone')}
+                        value={formData.guardian_details?.parent_phone || ''}
+                        onChange={handleGuardianChange('parent_phone')}
                         variant="outlined"
                         placeholder="Optional"
                     />

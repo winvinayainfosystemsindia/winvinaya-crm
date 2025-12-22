@@ -20,7 +20,6 @@ import {
     School as SchoolIcon,
     Work as WorkIcon,
     Accessible as AccessibleIcon,
-    CheckCircle as CheckCircleIcon,
     Circle as CircleIcon,
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
@@ -61,7 +60,12 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ formData }) => {
 
             <Stack spacing={4}>
                 {/* Personal Information */}
-                <Paper variant="outlined" sx={{ p: 3 }}>
+                <Paper
+                    variant="outlined"
+                    sx={{ p: 3 }}
+                    role="region"
+                    aria-label="Personal Information Summary"
+                >
                     <Typography variant="subtitle1" gutterBottom fontWeight={600} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <PersonIcon /> Personal Information
                     </Typography>
@@ -70,6 +74,10 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ formData }) => {
                         <Grid size={{ xs: 12, md: 6 }}>
                             <Typography variant="body2" color="text.secondary">Name</Typography>
                             <Typography variant="body1">{formData.name}</Typography>
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <Typography variant="body2" color="text.secondary">Date of Birth</Typography>
+                            <Typography variant="body1">{formData.dob}</Typography>
                         </Grid>
                         <Grid size={{ xs: 12, md: 6 }}>
                             <Typography variant="body2" color="text.secondary">Gender</Typography>
@@ -100,59 +108,51 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ formData }) => {
                     </Grid>
                 </Paper>
 
+                {/* Guardian Information */}
+                <Paper
+                    variant="outlined"
+                    sx={{ p: 3 }}
+                    role="region"
+                    aria-label="Parent/Guardian Information Summary"
+                >
+                    <Typography variant="subtitle1" gutterBottom fontWeight={600} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <PersonIcon /> Parent/Guardian Information
+                    </Typography>
+                    <Divider sx={{ my: 2 }} />
+                    <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, md: 4 }}>
+                            <Typography variant="body2" color="text.secondary">Guardian Name</Typography>
+                            <Typography variant="body1">{formData.guardian_details?.parent_name || 'Not provided'}</Typography>
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 4 }}>
+                            <Typography variant="body2" color="text.secondary">Relationship</Typography>
+                            <Typography variant="body1">{formData.guardian_details?.relationship || 'Not provided'}</Typography>
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 4 }}>
+                            <Typography variant="body2" color="text.secondary">Guardian Phone</Typography>
+                            <Typography variant="body1">{formData.guardian_details?.parent_phone || 'Not provided'}</Typography>
+                        </Grid>
+                    </Grid>
+                </Paper>
+
                 {/* Education Information */}
-                <Paper variant="outlined" sx={{ p: 3 }}>
+                <Paper
+                    variant="outlined"
+                    sx={{ p: 3 }}
+                    role="region"
+                    aria-label="Education Details Summary"
+                >
                     <Typography variant="subtitle1" gutterBottom fontWeight={600} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <SchoolIcon /> Education Details
                     </Typography>
                     <Divider sx={{ my: 2 }} />
 
-                    <Box sx={{ mb: 3 }}>
-                        <Typography variant="subtitle2" gutterBottom>10th Standard</Typography>
-                        <Grid container spacing={2}>
-                            <Grid size={{ xs: 12, md: 4 }}>
-                                <Typography variant="body2" color="text.secondary">School</Typography>
-                                <Typography variant="body1">{formData.education_details?.tenth?.school_name}</Typography>
-                            </Grid>
-                            <Grid size={{ xs: 12, md: 4 }}>
-                                <Typography variant="body2" color="text.secondary">Year of Passing</Typography>
-                                <Typography variant="body1">{formatDate(formData.education_details?.tenth?.year_of_passing || 0)}</Typography>
-                            </Grid>
-                            <Grid size={{ xs: 12, md: 4 }}>
-                                <Typography variant="body2" color="text.secondary">Percentage</Typography>
-                                <Typography variant="body1">{formatPercentage(formData.education_details?.tenth?.percentage || 0)}</Typography>
-                            </Grid>
-                        </Grid>
-                    </Box>
-
-                    {formData.education_details?.twelfth_or_diploma?.institution_name && (
-                        <Box sx={{ mb: 3 }}>
-                            <Typography variant="subtitle2" gutterBottom>
-                                {formData.education_details.twelfth_or_diploma.type === 'diploma' ? 'Diploma' : '12th Standard'}
-                            </Typography>
-                            <Grid container spacing={2}>
-                                <Grid size={{ xs: 12, md: 4 }}>
-                                    <Typography variant="body2" color="text.secondary">Institution</Typography>
-                                    <Typography variant="body1">{formData.education_details.twelfth_or_diploma.institution_name}</Typography>
-                                </Grid>
-                                <Grid size={{ xs: 12, md: 4 }}>
-                                    <Typography variant="body2" color="text.secondary">Year of Passing</Typography>
-                                    <Typography variant="body1">{formatDate(formData.education_details.twelfth_or_diploma.year_of_passing)}</Typography>
-                                </Grid>
-                                <Grid size={{ xs: 12, md: 4 }}>
-                                    <Typography variant="body2" color="text.secondary">Percentage</Typography>
-                                    <Typography variant="body1">{formatPercentage(formData.education_details.twelfth_or_diploma.percentage)}</Typography>
-                                </Grid>
-                            </Grid>
-                        </Box>
-                    )}
-
-                    {formData.education_details?.degrees && formData.education_details.degrees.length > 0 && (
+                    {formData.education_details?.degrees && formData.education_details.degrees.length > 0 ? (
                         <Box>
                             <Typography variant="subtitle2" gutterBottom>Degrees</Typography>
-                            <List>
+                            <List aria-label="List of educational degrees">
                                 {formData.education_details.degrees.map((degree, index) => (
-                                    <ListItem key={index} divider>
+                                    <ListItem key={index} divider={index !== formData.education_details!.degrees.length - 1}>
                                         <ListItemIcon>
                                             <CircleIcon fontSize="small" sx={{ color: theme.palette.primary.main }} />
                                         </ListItemIcon>
@@ -164,45 +164,63 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ formData }) => {
                                 ))}
                             </List>
                         </Box>
+                    ) : (
+                        <Typography color="text.secondary">No education details provided</Typography>
                     )}
                 </Paper>
 
                 {/* Experience */}
-                <Paper variant="outlined" sx={{ p: 3 }}>
+                <Paper
+                    variant="outlined"
+                    sx={{ p: 3 }}
+                    role="region"
+                    aria-label="Work Experience Summary"
+                >
                     <Typography variant="subtitle1" gutterBottom fontWeight={600} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <WorkIcon /> Work Experience
                     </Typography>
                     <Divider sx={{ my: 2 }} />
-                    <Stack direction="row" spacing={3}>
-                        <Box>
+                    <Stack direction="row" spacing={3} flexWrap="wrap">
+                        <Box aria-label="Experience status">
                             <Typography variant="body2" color="text.secondary">Has Experience</Typography>
                             <Chip
-                                label={formData.is_experienced ? 'Yes' : 'No'}
-                                color={formData.is_experienced ? 'success' : 'default'}
+                                label={formData.work_experience?.is_experienced ? 'Yes' : 'No'}
+                                color={formData.work_experience?.is_experienced ? 'success' : 'default'}
                                 size="small"
                             />
                         </Box>
-                        {formData.is_experienced && (
-                            <Box>
-                                <Typography variant="body2" color="text.secondary">Currently Employed</Typography>
-                                <Chip
-                                    label={formData.currently_employed ? 'Yes' : 'No'}
-                                    color={formData.currently_employed ? 'success' : 'default'}
-                                    size="small"
-                                />
-                            </Box>
+                        {formData.work_experience?.is_experienced && (
+                            <>
+                                <Box aria-label="Employment status">
+                                    <Typography variant="body2" color="text.secondary">Currently Employed</Typography>
+                                    <Chip
+                                        label={formData.work_experience.currently_employed ? 'Yes' : 'No'}
+                                        color={formData.work_experience.currently_employed ? 'success' : 'default'}
+                                        size="small"
+                                    />
+                                </Box>
+                                <Box aria-label="Years of experience">
+                                    <Typography variant="body2" color="text.secondary">Years of Experience</Typography>
+                                    <Typography variant="body1">{formData.work_experience.year_of_experience || 'Not specified'}</Typography>
+                                </Box>
+                            </>
                         )}
                     </Stack>
                 </Paper>
 
                 {/* Disability */}
-                <Paper variant="outlined" sx={{ p: 3 }}>
+                <Paper
+                    variant="outlined"
+                    sx={{ p: 3 }}
+                    role="region"
+                    aria-label="Disability Information Summary"
+                >
                     <Typography variant="subtitle1" gutterBottom fontWeight={600} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <AccessibleIcon /> Disability Information
                     </Typography>
                     <Divider sx={{ my: 2 }} />
-                    <Stack direction="row" spacing={3}>
-                        <Box>
+                    <Stack direction="row" spacing={3} flexWrap="wrap">
+                        <Box aria-label="Disability status">
                             <Typography variant="body2" color="text.secondary">Has Disability</Typography>
                             <Chip
                                 label={formData.disability_details?.is_disabled ? 'Yes' : 'No'}
@@ -212,44 +230,19 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ formData }) => {
                         </Box>
                         {formData.disability_details?.is_disabled && (
                             <>
-                                <Box>
+                                <Box aria-label="Disability type">
                                     <Typography variant="body2" color="text.secondary">Type</Typography>
                                     <Typography variant="body1" sx={{ textTransform: 'capitalize' }}>
                                         {formData.disability_details.disability_type}
                                     </Typography>
                                 </Box>
-                                <Box>
+                                <Box aria-label="Disability percentage">
                                     <Typography variant="body2" color="text.secondary">Percentage</Typography>
                                     <Typography variant="body1">{formData.disability_details.disability_percentage}%</Typography>
                                 </Box>
                             </>
                         )}
                     </Stack>
-                </Paper>
-
-                {/* Skills */}
-                <Paper variant="outlined" sx={{ p: 3 }}>
-                    <Typography variant="subtitle1" gutterBottom fontWeight={600} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <CheckCircleIcon /> Skills
-                    </Typography>
-                    <Divider sx={{ my: 2 }} />
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                        {formData.skills.length > 0 ? (
-                            formData.skills.map((skill, index) => (
-                                <Chip
-                                    key={index}
-                                    label={skill}
-                                    size="small"
-                                    sx={{
-                                        backgroundColor: theme.palette.primary.light,
-                                        color: '#fff',
-                                    }}
-                                />
-                            ))
-                        ) : (
-                            <Typography color="text.secondary">No skills added</Typography>
-                        )}
-                    </Box>
                 </Paper>
 
                 <Alert severity="success">

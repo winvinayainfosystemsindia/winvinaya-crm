@@ -4,21 +4,15 @@ import {
     TextField,
     Typography,
     Box,
-    Divider,
     Button,
     IconButton,
     Paper,
     Stack,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
     Autocomplete,
 } from '@mui/material';
 import {
     Add as AddIcon,
     Delete as DeleteIcon,
-    School as SchoolIcon,
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import type { CandidateCreate, Degree } from '../../../models/candidate';
@@ -36,48 +30,6 @@ const EducationStep: React.FC<EducationStepProps> = ({
     onChange,
 }) => {
     const theme = useTheme();
-
-    const handleTenthChange = (field: string) => (
-        event: React.ChangeEvent<HTMLInputElement>
-    ) => {
-        onChange({
-            education_details: {
-                ...formData.education_details!,
-                tenth: {
-                    ...formData.education_details?.tenth!,
-                    [field]: event.target.value,
-                },
-            },
-        });
-    };
-
-    const handleTwelfthChange = (field: string) => (
-        event: React.ChangeEvent<HTMLInputElement>
-    ) => {
-        onChange({
-            education_details: {
-                ...formData.education_details!,
-                twelfth_or_diploma: {
-                    ...formData.education_details?.twelfth_or_diploma!,
-                    [field]: event.target.value,
-                },
-            },
-        });
-    };
-
-    const handleTwelfthSelectChange = (field: string) => (
-        event: any
-    ) => {
-        onChange({
-            education_details: {
-                ...formData.education_details!,
-                twelfth_or_diploma: {
-                    ...formData.education_details?.twelfth_or_diploma!,
-                    [field]: event.target.value,
-                },
-            },
-        });
-    };
 
     const handleDegreeChange = (index: number, field: keyof Degree) => (
         event: React.ChangeEvent<HTMLInputElement>
@@ -153,120 +105,6 @@ const EducationStep: React.FC<EducationStepProps> = ({
                 Education Details
             </Typography>
 
-            <Box sx={{ mb: 4 }}>
-                <Typography
-                    variant="subtitle1"
-                    sx={{
-                        mb: 2,
-                        color: theme.palette.primary.main,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
-                    }}
-                >
-                    <SchoolIcon /> 10th Standard (Required)
-                </Typography>
-                <Grid container spacing={3}>
-                    <Grid size={{ xs: 12, md: 4 }}>
-                        <TextField
-                            required
-                            fullWidth
-                            label="School Name"
-                            value={formData.education_details?.tenth?.school_name || ''}
-                            onChange={handleTenthChange('school_name')}
-                            variant="outlined"
-                        />
-                    </Grid>
-                    <Grid size={{ xs: 12, md: 4 }}>
-                        <TextField
-                            required
-                            fullWidth
-                            type="number"
-                            label="Year of Passing"
-                            value={formData.education_details?.tenth?.year_of_passing || ''}
-                            onChange={handleTenthChange('year_of_passing')}
-                            variant="outlined"
-                            inputProps={{ min: 1900, max: new Date().getFullYear() }}
-                        />
-                    </Grid>
-                    <Grid size={{ xs: 12, md: 4 }}>
-                        <TextField
-                            required
-                            fullWidth
-                            type="number"
-                            label="Percentage"
-                            value={formData.education_details?.tenth?.percentage || ''}
-                            onChange={handleTenthChange('percentage')}
-                            variant="outlined"
-                            InputProps={{ endAdornment: '%' }}
-                            inputProps={{ min: 0, max: 100, step: 0.1 }}
-                        />
-                    </Grid>
-                </Grid>
-            </Box>
-
-            <Divider sx={{ my: 4 }} />
-
-            <Box sx={{ mb: 4 }}>
-                <Typography
-                    variant="subtitle1"
-                    sx={{
-                        mb: 2,
-                        color: theme.palette.primary.main,
-                    }}
-                >
-                    12th Standard or Diploma
-                </Typography>
-                <Grid container spacing={3}>
-                    <Grid size={{ xs: 12, md: 3 }}>
-                        <FormControl fullWidth>
-                            <InputLabel>Type</InputLabel>
-                            <Select
-                                value={formData.education_details?.twelfth_or_diploma?.type || ''}
-                                label="Type"
-                                onChange={handleTwelfthSelectChange('type')}
-                            >
-                                <MenuItem value="">Select</MenuItem>
-                                <MenuItem value="12th">12th Standard</MenuItem>
-                                <MenuItem value="diploma">Diploma</MenuItem>
-                            </Select>
-                        </FormControl>
-                    </Grid>
-                    <Grid size={{ xs: 12, md: 4 }}>
-                        <TextField
-                            fullWidth
-                            label="Institution Name"
-                            value={formData.education_details?.twelfth_or_diploma?.institution_name || ''}
-                            onChange={handleTwelfthChange('institution_name')}
-                            variant="outlined"
-                        />
-                    </Grid>
-                    <Grid size={{ xs: 12, md: 2 }}>
-                        <TextField
-                            fullWidth
-                            type="number"
-                            label="Year of Passing"
-                            value={formData.education_details?.twelfth_or_diploma?.year_of_passing || ''}
-                            onChange={handleTwelfthChange('year_of_passing')}
-                            variant="outlined"
-                        />
-                    </Grid>
-                    <Grid size={{ xs: 12, md: 3 }}>
-                        <TextField
-                            fullWidth
-                            type="number"
-                            label="Percentage"
-                            value={formData.education_details?.twelfth_or_diploma?.percentage || ''}
-                            onChange={handleTwelfthChange('percentage')}
-                            variant="outlined"
-                            InputProps={{ endAdornment: '%' }}
-                        />
-                    </Grid>
-                </Grid>
-            </Box>
-
-            <Divider sx={{ my: 4 }} />
-
             <Box>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
                     <Typography
@@ -293,6 +131,8 @@ const EducationStep: React.FC<EducationStepProps> = ({
                             key={index}
                             variant="outlined"
                             sx={{ p: 3, position: 'relative' }}
+                            role="region"
+                            aria-label={`Educational Qualification ${index + 1}`}
                         >
                             <IconButton
                                 onClick={() => removeDegree(index)}
@@ -303,6 +143,7 @@ const EducationStep: React.FC<EducationStepProps> = ({
                                     color: theme.palette.error.main,
                                 }}
                                 size="small"
+                                aria-label={`Remove educational qualification ${index + 1}`}
                             >
                                 <DeleteIcon />
                             </IconButton>

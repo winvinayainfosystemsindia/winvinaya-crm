@@ -59,7 +59,7 @@ const ProfileFormDialog: React.FC<ProfileFormDialogProps> = ({
 
 		// List of optional fields that might be empty strings
 		const optionalFields = [
-			'date_of_birth',
+			'dob',
 			'training_domain',
 			'batch_number',
 			'training_from',
@@ -75,7 +75,7 @@ const ProfileFormDialog: React.FC<ProfileFormDialogProps> = ({
 		});
 
 		// Append time to date fields to match backend datetime schema
-		const dateFields = ['date_of_birth', 'training_from', 'training_to'];
+		const dateFields = ['dob', 'training_from', 'training_to'];
 		dateFields.forEach(field => {
 			if (cleanedData[field] && !cleanedData[field].includes('T')) {
 				cleanedData[field] = `${cleanedData[field]}T00:00:00`;
@@ -118,8 +118,8 @@ const ProfileFormDialog: React.FC<ProfileFormDialogProps> = ({
 							fullWidth
 							label="Date of Birth"
 							type="date"
-							value={formData.date_of_birth || ''}
-							onChange={(e) => handleChange('date_of_birth', e.target.value)}
+							value={formData.dob || ''}
+							onChange={(e) => handleChange('dob', e.target.value)}
 							InputLabelProps={{ shrink: true }}
 						/>
 						<TextField

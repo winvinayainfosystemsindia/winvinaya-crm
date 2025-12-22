@@ -8,7 +8,6 @@ import {
     Alert,
     TextField,
     FormControl,
-    Slider,
     Stack,
     Autocomplete,
 } from '@mui/material';
@@ -49,11 +48,12 @@ const DisabilityStep: React.FC<DisabilityStepProps> = ({
         });
     };
 
-    const handlePercentageChange = (_event: Event, newValue: number | number[]) => {
+    const handlePercentageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const val = parseInt(event.target.value);
         onChange({
             disability_details: {
                 ...formData.disability_details!,
-                disability_percentage: newValue as number,
+                disability_percentage: isNaN(val) ? 0 : val,
             },
         });
     };
@@ -97,6 +97,7 @@ const DisabilityStep: React.FC<DisabilityStepProps> = ({
                                     checked={formData.disability_details?.is_disabled || false}
                                     onChange={handleSwitchChange}
                                     color="primary"
+                                    inputProps={{ 'aria-label': 'Do you have any disability?' }}
                                 />
                             }
                             label={
@@ -139,43 +140,29 @@ const DisabilityStep: React.FC<DisabilityStepProps> = ({
                             </FormControl>
                         </Grid>
 
-                        <Grid size={{ xs: 12 }}>
-                            <Box sx={{ p: 3, border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}>
-                                <Typography gutterBottom fontWeight={600}>
-                                    Disability Percentage: {formData.disability_details?.disability_percentage || 0}%
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <TextField
+                                fullWidth
+                                label="Disability Percentage (%)"
+                                type="number"
+                                value={formData.disability_details?.disability_percentage || ''}
+                                onChange={handlePercentageChange}
+                                variant="outlined"
+                                inputProps={{ min: 0, max: 100 }}
+                                helperText="Enter percentage from 0 to 100"
+                                required
+                            />
+                            <Stack direction="row" justifyContent="space-between" sx={{ mt: 1, px: 1 }}>
+                                <Typography variant="caption" color="text.secondary">
+                                    Less than 40%: Mild
                                 </Typography>
-                                <Slider
-                                    value={formData.disability_details?.disability_percentage || 0}
-                                    onChange={handlePercentageChange}
-                                    aria-labelledby="disability-percentage-slider"
-                                    valueLabelDisplay="auto"
-                                    step={5}
-                                    marks={[
-                                        { value: 0, label: '0%' },
-                                        { value: 40, label: '40%' },
-                                        { value: 100, label: '100%' },
-                                    ]}
-                                    min={0}
-                                    max={100}
-                                    sx={{
-                                        color: theme.palette.primary.main,
-                                        '& .MuiSlider-valueLabel': {
-                                            backgroundColor: theme.palette.primary.main,
-                                        },
-                                    }}
-                                />
-                                <Stack direction="row" justifyContent="space-between" sx={{ mt: 1 }}>
-                                    <Typography variant="caption" color="text.secondary">
-                                        Less than 40%: Mild
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary">
-                                        40-75%: Moderate
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary">
-                                        75-100%: Severe
-                                    </Typography>
-                                </Stack>
-                            </Box>
+                                <Typography variant="caption" color="text.secondary">
+                                    40-75%: Moderate
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    75-100%: Severe
+                                </Typography>
+                            </Stack>
                         </Grid>
 
                         <Grid size={{ xs: 12 }}>

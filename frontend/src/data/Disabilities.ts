@@ -18,7 +18,7 @@ export const disabilityTypes = [
 	"Hemophilia",
 	"Sickle Cell Disease",
 	"Multiple Disabilities including deaf-blindness",
-	"Acid Attack victim",
+	"Acid Attack Survivor",
 	"Parkinson's disease",
 	"Other"
 ];

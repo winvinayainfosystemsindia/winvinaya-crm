@@ -29,7 +29,6 @@ import PersonalInfoStep from './steps/PersonalInfoStep';
 import EducationStep from './steps/EducationStep';
 import ExperienceStep from './steps/ExperienceStep';
 import DisabilityStep from './steps/DisabilityStep';
-import SkillsStep from './steps/SkillsStep';
 import ReviewStep from './steps/ReviewStep';
 
 // Import types
@@ -39,26 +38,22 @@ import type { CandidateCreate } from '../../models/candidate';
 const initialFormData: CandidateCreate = {
     name: '',
     gender: '',
+    dob: '',
     email: '',
     phone: '',
     whatsapp_number: '',
-    parent_name: '',
-    parent_phone: '',
+    guardian_details: {
+        parent_name: '',
+        relationship: '',
+        parent_phone: '',
+    },
     pincode: '',
-    is_experienced: false,
-    currently_employed: false,
+    work_experience: {
+        is_experienced: false,
+        currently_employed: false,
+        year_of_experience: '',
+    },
     education_details: {
-        tenth: {
-            school_name: '',
-            year_of_passing: new Date().getFullYear(),
-            percentage: 0,
-        },
-        twelfth_or_diploma: {
-            institution_name: '',
-            year_of_passing: new Date().getFullYear(),
-            percentage: 0,
-            type: '',
-        },
         degrees: [],
     },
     disability_details: {
@@ -66,7 +61,6 @@ const initialFormData: CandidateCreate = {
         disability_type: '',
         disability_percentage: 0,
     },
-    skills: [],
 };
 
 const steps = [
@@ -89,11 +83,6 @@ const steps = [
         label: 'Disability',
         icon: <AccessibleIcon />,
         description: 'Disability information (if applicable)',
-    },
-    {
-        label: 'Skills',
-        icon: <CheckCircleIcon />,
-        description: 'Add your skills and competencies',
     },
     {
         label: 'Review & Submit',
@@ -135,15 +124,12 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
                     formData.phone &&
                     formData.gender &&
                     formData.pincode &&
+                    formData.dob &&
                     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) &&
                     /^\d{10}$/.test(formData.phone.replace(/\D/g, ''))
                 );
             case 1: // Education
-                return !!(
-                    formData.education_details?.tenth?.school_name &&
-                    formData.education_details?.tenth?.year_of_passing &&
-                    formData.education_details?.tenth?.percentage > 0
-                );
+                return (formData.education_details?.degrees?.length ?? 0) > 0;
             case 2: // Experience
                 // Always valid - all fields optional
                 return true;
@@ -155,8 +141,6 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
                     );
                 }
                 return true;
-            case 4: // Skills
-                return formData.skills.length > 0;
             default:
                 return true;
         }
@@ -200,8 +184,8 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
             // Handle nested education_details properly
             if (data.education_details) {
                 updated.education_details = {
-                    tenth: data.education_details.tenth || prev.education_details?.tenth || initialFormData.education_details!.tenth,
-                    twelfth_or_diploma: data.education_details.twelfth_or_diploma || prev.education_details?.twelfth_or_diploma || initialFormData.education_details!.twelfth_or_diploma,
+                    ...prev.education_details,
+                    ...data.education_details,
                     degrees: data.education_details.degrees !== undefined ? data.education_details.degrees : (prev.education_details?.degrees || []),
                 };
             }
@@ -214,9 +198,25 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
                 };
             }
 
+            // Handle nested guardian_details
+            if (data.guardian_details) {
+                updated.guardian_details = {
+                    ...prev.guardian_details,
+                    ...data.guardian_details,
+                };
+            }
+
+            // Handle nested工作经验
+            if (data.work_experience) {
+                updated.work_experience = {
+                    ...prev.work_experience,
+                    ...data.work_experience,
+                };
+            }
+
             // Handle other fields
             Object.keys(data).forEach(key => {
-                if (key !== 'education_details' && key !== 'disability_details') {
+                if (!['education_details', 'disability_details', 'guardian_details', 'work_experience'].includes(key)) {
                     (updated as any)[key] = (data as any)[key];
                 }
             });
@@ -272,8 +272,6 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
             case 3:
                 return <DisabilityStep {...baseProps} />;
             case 4:
-                return <SkillsStep {...baseProps} />;
-            case 5:
                 return <ReviewStep formData={formData} />;
             default:
                 return <Typography>Unknown step</Typography>;
@@ -355,6 +353,7 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
                 activeStep={activeStep}
                 orientation={isSmallScreen ? 'vertical' : 'horizontal'}
                 alternativeLabel={!isSmallScreen}
+                aria-label="Registration Progress"
                 sx={{
                     mb: 4,
                     '& .MuiStepLabel-alternativeLabel': {
@@ -382,6 +381,7 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
                                     icon={index}
                                 />
                             )}
+                            aria-current={activeStep === index ? 'step' : undefined}
                             optional={
                                 !isSmallScreen && (
                                     <Typography
@@ -424,9 +424,11 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
                 <Alert
                     severity="error"
                     sx={{ mb: 3 }}
+                    role="alert"
+                    aria-live="assertive"
                     action={
                         <IconButton
-                            aria-label="close"
+                            aria-label="close error alert"
                             color="inherit"
                             size="small"
                             onClick={() => setSubmitError(null)}
@@ -472,6 +474,7 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
                     <Typography
                         variant="caption"
                         color="text.secondary"
+                        aria-live="polite"
                     >
                         Step {activeStep + 1} of {steps.length}
                     </Typography>

@@ -2,7 +2,7 @@
 export interface CandidateProfile {
 	id: number;
 	candidate_id: number;
-	date_of_birth?: string;
+	dob?: string;
 	trained_by_winvinaya: boolean;
 	training_domain?: string;
 	batch_number?: string;
@@ -16,7 +16,7 @@ export interface CandidateProfile {
 }
 
 export interface CandidateProfileCreate {
-	date_of_birth?: string;
+	dob?: string;
 	trained_by_winvinaya?: boolean;
 	training_domain?: string;
 	batch_number?: string;
@@ -72,20 +72,6 @@ export interface CandidateCounselingCreate {
 	counseling_date?: string;
 }
 
-// Education Types
-export interface Education10th {
-	school_name: string;
-	year_of_passing: number;
-	percentage: number;
-}
-
-export interface Education12thOrDiploma {
-	institution_name: string;
-	year_of_passing: number;
-	percentage: number;
-	type: string;
-}
-
 export interface Degree {
 	degree_name: string;
 	specialization: string;
@@ -95,8 +81,6 @@ export interface Degree {
 }
 
 export interface EducationDetails {
-	tenth?: Education10th;
-	twelfth_or_diploma?: Education12thOrDiploma;
 	degrees: Degree[];
 }
 
@@ -106,22 +90,32 @@ export interface DisabilityDetails {
 	disability_percentage?: number;
 }
 
+export interface GuardianDetails {
+	parent_name?: string;
+	relationship?: string;
+	parent_phone?: string;
+}
+
+export interface WorkExperience {
+	is_experienced: boolean;
+	currently_employed: boolean;
+	year_of_experience?: string;
+}
+
 // Main Candidate Types
 export interface Candidate {
 	public_id: string; // UUID - Used for all API operations
 	name: string;
 	gender: string;
+	dob?: string;
 	email: string;
 	phone: string;
 	whatsapp_number?: string;
-	parent_name?: string;
-	parent_phone?: string;
+	guardian_details?: GuardianDetails;
 	pincode: string;
-	is_experienced: boolean;
-	currently_employed: boolean;
+	work_experience?: WorkExperience;
 	education_details?: EducationDetails;
 	disability_details?: DisabilityDetails;
-	skills: string[];
 	city: string;
 	district: string;
 	state: string;
@@ -161,14 +155,12 @@ export interface CandidateUpdate {
 	email?: string;
 	phone?: string;
 	whatsapp_number?: string;
-	parent_name?: string;
-	parent_phone?: string;
 	pincode?: string;
-	is_experienced?: boolean;
-	currently_employed?: boolean;
+	guardian_details?: GuardianDetails;
+	work_experience?: WorkExperience;
 	education_details?: EducationDetails;
 	disability_details?: DisabilityDetails;
-	skills?: string[];
+	dob?: string;
 }
 
 export interface CandidateStats {
