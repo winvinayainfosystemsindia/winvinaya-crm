@@ -254,4 +254,10 @@ class CandidateStats(BaseModel):
     not_profiled: int
 
 
+class CandidatePaginatedResponse(BaseModel):
+    """Paginated response for candidate listing"""
+    items: List[CandidateListResponse]
+    total: int
+
+
 

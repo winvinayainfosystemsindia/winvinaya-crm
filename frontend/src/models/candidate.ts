@@ -177,3 +177,8 @@ export interface CandidateStats {
 	counseling_selected: number;
 	counseling_rejected: number;
 }
+
+export interface CandidatePaginatedResponse {
+	items: CandidateListItem[];
+	total: number;
+}

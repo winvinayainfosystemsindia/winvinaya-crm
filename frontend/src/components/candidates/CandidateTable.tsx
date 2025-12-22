@@ -23,7 +23,11 @@ import {
 	TableSortLabel,
 	Popover
 } from '@mui/material';
-import { Search, Add, Edit, Visibility, Accessible, FilterList } from '@mui/icons-material';
+import { Search, Add, Edit, Visibility, Accessible, FilterList, Refresh } from '@mui/icons-material';
+import {
+	CircularProgress,
+	Stack
+} from '@mui/material';
 import { format, isToday, parseISO } from 'date-fns';
 import candidateService from '../../services/candidateService';
 import type { CandidateListItem } from '../../models/candidate';
@@ -40,7 +44,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 	const [loading, setLoading] = useState(false);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(10);
+	const [rowsPerPage, setRowsPerPage] = useState(5);
 	const [totalCount, setTotalCount] = useState(0);
 	const [order, setOrder] = useState<'asc' | 'desc'>('desc');
 	const [orderBy, setOrderBy] = useState<keyof CandidateListItem>('created_at');
@@ -54,14 +58,8 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 		setLoading(true);
 		try {
 			const response = await candidateService.getAll(page * rowsPerPage, rowsPerPage);
-			setCandidates(response);
-			// Assuming backend doesn't return total count in list response yet, 
-			// we approximate or set it. If response length < rowsPerPage, we know limit.
-			// For proper pagination, backend should return total count. 
-			// For now, mirroring UserTable logic which seems to accumulate count or assume infinite scroll style?
-			// Actually UserTable sets totalCount = response.length + (page * rowsPerPage). 
-			// This works if we assume there are more pages until we get less than requested.
-			setTotalCount(response.length + (page * rowsPerPage));
+			setCandidates(response.items);
+			setTotalCount(response.total);
 		} catch (error) {
 			console.error('Failed to fetch candidates:', error);
 		} finally {
@@ -112,6 +110,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 				: [...current, value];
 			return { ...prev, [field]: newValues };
 		});
+		setPage(0);
 	};
 
 	const clearFilters = () => {
@@ -120,6 +119,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 			education_level: [],
 			city: []
 		});
+		setPage(0);
 		handleFilterClose();
 	};
 
@@ -209,6 +209,25 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 				</Box>
 
 				<Box sx={{ display: 'flex', gap: 2 }}>
+					<Tooltip title="Refresh Data">
+						<IconButton
+							onClick={fetchCandidates}
+							disabled={loading}
+							sx={{
+								border: '1px solid #d5dbdb',
+								borderRadius: 1,
+								color: 'text.secondary',
+								'&:hover': {
+									borderColor: theme.palette.primary.main,
+									color: theme.palette.primary.main,
+									bgcolor: 'white'
+								}
+							}}
+						>
+							<Refresh fontSize="small" className={loading ? 'spin-animation' : ''} />
+						</IconButton>
+					</Tooltip>
+
 					<Button
 						variant="outlined"
 						startIcon={<FilterList />}
@@ -226,6 +245,18 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 					>
 						Filter
 					</Button>
+
+					<style>
+						{`
+							@keyframes spin {
+								from { transform: rotate(0deg); }
+								to { transform: rotate(360deg); }
+							}
+							.spin-animation {
+								animation: spin 1s linear infinite;
+							}
+						`}
+					</style>
 
 					<Popover
 						open={Boolean(anchorEl)}
@@ -349,15 +380,25 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 					</TableHead>
 					<TableBody>
 						{loading ? (
-							<TableRow>
-								<TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-									<Typography color="text.secondary">Loading candidates...</Typography>
-								</TableCell>
-							</TableRow>
+							Array.from(new Array(rowsPerPage)).map((_, index) => (
+								<TableRow key={`skeleton-${index}`}>
+									<TableCell colSpan={7} sx={{ py: 2.5 }}>
+										<Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+											<CircularProgress size={20} thickness={5} />
+											<Typography variant="body2" color="text.secondary">Loading data...</Typography>
+										</Box>
+									</TableCell>
+								</TableRow>
+							))
 						) : filteredCandidates.length === 0 ? (
 							<TableRow>
-								<TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-									<Typography color="text.secondary">No candidates found</Typography>
+								<TableCell colSpan={7} align="center" sx={{ py: 10 }}>
+									<Stack spacing={1} alignItems="center">
+										<Typography variant="h6" color="text.secondary">No candidates found</Typography>
+										<Typography variant="body2" color="text.disabled">
+											Try adjusting your filters or search terms
+										</Typography>
+									</Stack>
 								</TableCell>
 							</TableRow>
 						) : (
@@ -365,6 +406,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 								<TableRow
 									key={candidate.public_id}
 									sx={{
+										height: '60px', // Fixed height for stability
 										'&:hover': {
 											bgcolor: '#f5f8fa',
 										},
@@ -482,6 +524,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 								}
 							}}
 						>
+							<MenuItem value={5}>5</MenuItem>
 							<MenuItem value={10}>10</MenuItem>
 							<MenuItem value={25}>25</MenuItem>
 							<MenuItem value={50}>50</MenuItem>

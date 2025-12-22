@@ -9,7 +9,7 @@ from app.core.rate_limiter import rate_limit_medium
 from app.api.deps import require_roles
 from app.models.user import User, UserRole
 from app.models.user import User, UserRole
-from app.schemas.candidate import CandidateCreate, CandidateResponse, CandidateUpdate, CandidateListResponse, CandidateStats
+from app.schemas.candidate import CandidateCreate, CandidateResponse, CandidateUpdate, CandidateListResponse, CandidateStats, CandidatePaginatedResponse
 from app.services.candidate_service import CandidateService
 
 
@@ -31,7 +31,7 @@ async def register_candidate(
     return await service.create_candidate(candidate_in)
 
 
-@router.get("/", response_model=List[CandidateListResponse])
+@router.get("/", response_model=CandidatePaginatedResponse)
 @rate_limit_medium()
 async def get_candidates(
     request: Request,
@@ -62,7 +62,7 @@ async def get_candidate_stats(
     return await service.get_stats()
 
 
-@router.get("/unprofiled", response_model=List[CandidateListResponse])
+@router.get("/unprofiled", response_model=CandidatePaginatedResponse)
 @rate_limit_medium()
 async def get_unprofiled_candidates(
     request: Request,
@@ -78,7 +78,7 @@ async def get_unprofiled_candidates(
     return await service.get_unprofiled_candidates(skip=skip, limit=limit)
 
 
-@router.get("/profiled", response_model=List[CandidateListResponse])
+@router.get("/profiled", response_model=CandidatePaginatedResponse)
 @rate_limit_medium()
 async def get_profiled_candidates(
     request: Request,

@@ -10,7 +10,8 @@ import type {
 	CandidateDocumentCreate,
 	CandidateCounseling,
 	CandidateCounselingCreate,
-	CandidateStats
+	CandidateStats,
+	CandidatePaginatedResponse
 } from '../models/candidate';
 
 // ======================
@@ -20,8 +21,8 @@ const candidateService = {
 	/**
 	 * Get all candidates (simplified list)
 	 */
-	getAll: async (skip = 0, limit = 100): Promise<CandidateListItem[]> => {
-		const response = await api.get<CandidateListItem[]>(`/candidates/?skip=${skip}&limit=${limit}`);
+	getAll: async (skip = 0, limit = 100): Promise<CandidatePaginatedResponse> => {
+		const response = await api.get<CandidatePaginatedResponse>(`/candidates/?skip=${skip}&limit=${limit}`);
 		return response.data;
 	},
 
@@ -69,8 +70,8 @@ const candidateService = {
 	/**
 	 * Get unprofiled candidates
 	 */
-	getUnprofiled: async (skip = 0, limit = 100): Promise<CandidateListItem[]> => {
-		const response = await api.get<CandidateListItem[]>(`/candidates/unprofiled?skip=${skip}&limit=${limit}`);
+	getUnprofiled: async (skip = 0, limit = 100): Promise<CandidatePaginatedResponse> => {
+		const response = await api.get<CandidatePaginatedResponse>(`/candidates/unprofiled?skip=${skip}&limit=${limit}`);
 		return response.data;
 	},
 

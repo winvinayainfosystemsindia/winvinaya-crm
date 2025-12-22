@@ -78,9 +78,10 @@ class CandidateService:
             raise HTTPException(status_code=404, detail="Candidate not found")
         return candidate
 
-    async def get_candidates(self, skip: int = 0, limit: int = 100) -> List[Candidate]:
-        """Get list of candidates"""
-        return await self.repository.get_multi(skip=skip, limit=limit)
+    async def get_candidates(self, skip: int = 0, limit: int = 100) -> dict:
+        """Get list of candidates with total count"""
+        items, total = await self.repository.get_multi(skip=skip, limit=limit)
+        return {"items": items, "total": total}
 
     async def update_candidate(self, public_id: UUID, candidate_in: CandidateUpdate) -> Candidate:
         """Update candidate by public_id"""
@@ -115,12 +116,14 @@ class CandidateService:
         """Get candidate statistics"""
         return await self.repository.get_stats()
 
-    async def get_unprofiled_candidates(self, skip: int = 0, limit: int = 100) -> List[Candidate]:
-        """Get list of candidates without profile records"""
-        return await self.repository.get_unprofiled(skip=skip, limit=limit)
+    async def get_unprofiled_candidates(self, skip: int = 0, limit: int = 100) -> dict:
+        """Get list of candidates without profile records with total count"""
+        items, total = await self.repository.get_unprofiled(skip=skip, limit=limit)
+        return {"items": items, "total": total}
 
-    async def get_profiled_candidates(self, skip: int = 0, limit: int = 100) -> List[Candidate]:
-        """Get list of candidates with profile records"""
-        return await self.repository.get_profiled(skip=skip, limit=limit)
+    async def get_profiled_candidates(self, skip: int = 0, limit: int = 100) -> dict:
+        """Get list of candidates with profile records with total count"""
+        items, total = await self.repository.get_profiled(skip=skip, limit=limit)
+        return {"items": items, "total": total}
 
 

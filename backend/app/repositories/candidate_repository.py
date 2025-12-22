@@ -2,7 +2,7 @@
 
 from typing import Optional
 from uuid import UUID
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.candidate import Candidate
@@ -62,9 +62,19 @@ class CandidateRepository(BaseRepository[Candidate]):
         
         if not include_deleted:
             stmt = stmt.where(Candidate.is_deleted == False) 
-            
+        
+        # Count total matching records WITHOUT offset/limit
+        count_stmt = select(func.count(Candidate.id))
+        if not include_deleted:
+            count_stmt = count_stmt.where(Candidate.is_deleted == False)
+        
+        count_result = await self.db.execute(count_stmt)
+        total = count_result.scalar() or 0
+        
+        # Now apply pagination for the data fetch
+        stmt = stmt.offset(skip).limit(limit)
         result = await self.db.execute(stmt)
-        return result.scalars().unique().all()
+        return result.scalars().unique().all(), total
 
     async def get_unprofiled(self, skip: int = 0, limit: int = 100):
         """Get candidates without profile records"""
@@ -76,11 +86,17 @@ class CandidateRepository(BaseRepository[Candidate]):
             .options(
                 joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor)
             )
-            .offset(skip)
-            .limit(limit)
         )
+        
+        # Count total unprofiled
+        count_stmt = select(func.count(Candidate.id)).outerjoin(Candidate.profile).where(CandidateProfile.id.is_(None))
+        count_result = await self.db.execute(count_stmt)
+        total = count_result.scalar() or 0
+        
+        # Apply pagination
+        stmt = stmt.offset(skip).limit(limit)
         result = await self.db.execute(stmt)
-        return result.scalars().unique().all()
+        return result.scalars().unique().all(), total
 
     async def get_profiled(self, skip: int = 0, limit: int = 100):
         """Get candidates with profile records loaded"""
@@ -92,11 +108,17 @@ class CandidateRepository(BaseRepository[Candidate]):
                 selectinload(Candidate.documents),
                 joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor)
             )
-            .offset(skip)
-            .limit(limit)
         )
+        
+        # Count total profiled
+        count_stmt = select(func.count(Candidate.id)).join(Candidate.profile)
+        count_result = await self.db.execute(count_stmt)
+        total = count_result.scalar() or 0
+        
+        # Apply pagination
+        stmt = stmt.offset(skip).limit(limit)
         result = await self.db.execute(stmt)
-        return result.scalars().unique().all()
+        return result.scalars().unique().all(), total
 
 
     async def get_stats(self) -> dict:
