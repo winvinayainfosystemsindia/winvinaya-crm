@@ -170,6 +170,17 @@ class CandidateListResponse(BaseModel):
             if isinstance(obj, dict):
                 return obj.get(key, default)
             return getattr(obj, key, default)
+        
+        # Helper to check if a relationship is loaded (for ORM objects)
+        def is_relationship_loaded(obj, relationship_name):
+            if isinstance(obj, dict):
+                return True  # Dict always has all keys available
+            try:
+                from sqlalchemy.inspect import inspect as sqla_inspect
+                state = sqla_inspect(obj)
+                return relationship_name not in state.unloaded
+            except:
+                return False  # If we can't inspect, assume not loaded
 
         # 1. Disability Data
         details = get_attr(data, 'disability_details')
@@ -190,22 +201,26 @@ class CandidateListResponse(BaseModel):
             elif edu_details.get('tenth'):
                 education_level = "10th"
 
-        # 3. Counseling Status
-        counseling = get_attr(data, 'counseling')
-        counselor_name = None
-        counseling_date = None
-        if counseling:
-            counseling_status = get_attr(counseling, 'status')
-            counseling_date = get_attr(counseling, 'counseling_date')
-            counselor = get_attr(counseling, 'counselor')
-            if counselor:
-                counselor_name = get_attr(counselor, 'full_name')
+        # 3. Counseling Status - only access if loaded
+        if is_relationship_loaded(data, 'counseling'):
+            counseling = get_attr(data, 'counseling')
+            counselor_name = None
+            counseling_date = None
+            if counseling:
+                counseling_status = get_attr(counseling, 'status')
+                counseling_date = get_attr(counseling, 'counseling_date')
+                # Check if counselor relationship is loaded before accessing
+                if is_relationship_loaded(counseling, 'counselor'):
+                    counselor = get_attr(counseling, 'counselor')
+                    if counselor:
+                        counselor_name = get_attr(counselor, 'full_name')
 
-        # 4. Documents
-        documents = get_attr(data, 'documents')
-        if documents:
-             # documents is a list of objects or dicts
-             documents_uploaded = [get_attr(d, 'document_type') for d in documents]
+        # 4. Documents - only access if loaded
+        if is_relationship_loaded(data, 'documents'):
+            documents = get_attr(data, 'documents')
+            if documents:
+                 # documents is a list of objects or dicts
+                 documents_uploaded = [get_attr(d, 'document_type') for d in documents]
 
         if isinstance(data, dict):
             data['is_disabled'] = is_disabled

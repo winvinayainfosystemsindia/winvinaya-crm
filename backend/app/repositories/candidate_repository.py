@@ -52,8 +52,9 @@ class CandidateRepository(BaseRepository[Candidate]):
         """Get multiples candidates with counseling loaded for list view"""
         stmt = (
             select(Candidate)
+            .outerjoin(Candidate.counseling)
             .options(
-                selectinload(Candidate.counseling).selectinload(CandidateCounseling.counselor)
+                joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor)
             )
             .offset(skip)
             .limit(limit)
@@ -63,22 +64,23 @@ class CandidateRepository(BaseRepository[Candidate]):
             stmt = stmt.where(Candidate.is_deleted == False) 
             
         result = await self.db.execute(stmt)
-        return result.scalars().all()
+        return result.scalars().unique().all()
 
     async def get_unprofiled(self, skip: int = 0, limit: int = 100):
         """Get candidates without profile records"""
         stmt = (
             select(Candidate)
             .outerjoin(Candidate.profile)
+            .outerjoin(Candidate.counseling)
             .where(CandidateProfile.id.is_(None))
             .options(
-                selectinload(Candidate.counseling).selectinload(CandidateCounseling.counselor)
+                joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor)
             )
             .offset(skip)
             .limit(limit)
         )
         result = await self.db.execute(stmt)
-        return result.scalars().all()
+        return result.scalars().unique().all()
 
     async def get_profiled(self, skip: int = 0, limit: int = 100):
         """Get candidates with profile records loaded"""
