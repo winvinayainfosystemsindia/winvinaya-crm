@@ -54,17 +54,12 @@ class CandidateBase(BaseModel):
     email: EmailStr
     phone: str
     whatsapp_number: Optional[str] = None
-    parent_name: Optional[str] = None
-    parent_phone: Optional[str] = None
-    
     pincode: str
     
-    is_experienced: bool = False
-    currently_employed: bool = False
-    
+    guardian_details: Optional[dict] = None
+    work_experience: Optional[dict] = None
     education_details: Optional[EducationDetails] = None
     disability_details: Optional[DisabilityDetails] = None
-    skills: List[str] = []
 
 
 class CandidateCreate(CandidateBase):
@@ -77,14 +72,11 @@ class CandidateUpdate(BaseModel):
     email: Optional[EmailStr] = None
     phone: Optional[str] = None
     whatsapp_number: Optional[str] = None
-    parent_name: Optional[str] = None
-    parent_phone: Optional[str] = None
     pincode: Optional[str] = None
-    is_experienced: Optional[bool] = None
-    currently_employed: Optional[bool] = None
+    guardian_details: Optional[dict] = None
+    work_experience: Optional[dict] = None
     education_details: Optional[EducationDetails] = None
     disability_details: Optional[DisabilityDetails] = None
-    skills: Optional[List[str]] = None
 
 
 class CandidateResponse(CandidateBase):

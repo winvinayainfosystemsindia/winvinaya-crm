@@ -56,6 +56,8 @@ class CandidateService:
         if candidate_in.disability_details:
              candidate_data["disability_details"] = candidate_in.disability_details.model_dump()
 
+        # guardian_details and work_experience are passed as dicts currently
+
         # Build candidate object (UUID is automatically generated)
         candidate = await self.repository.create(candidate_data)
         
@@ -93,10 +95,12 @@ class CandidateService:
             
         # JSON fields handling for updates
         if "education_details" in update_data and update_data["education_details"]:
-             update_data["education_details"] = update_data["education_details"].model_dump()
+             if hasattr(update_data["education_details"], "model_dump"):
+                update_data["education_details"] = update_data["education_details"].model_dump()
         
         if "disability_details" in update_data and update_data["disability_details"]:
-             update_data["disability_details"] = update_data["disability_details"].model_dump()
+             if hasattr(update_data["disability_details"], "model_dump"):
+                update_data["disability_details"] = update_data["disability_details"].model_dump()
 
         # Use internal id for repository update
         return await self.repository.update(candidate.id, update_data)

@@ -28,24 +28,17 @@ class Candidate(BaseModel):
     phone: Mapped[str] = mapped_column(String(50), nullable=False)
     whatsapp_number: Mapped[str | None] = mapped_column(String(50), nullable=True)
     
-    # Guardian Details
-    parent_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    parent_phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    
     # Address Details
     pincode: Mapped[str] = mapped_column(String(20), nullable=False)
     city: Mapped[str] = mapped_column(String(100), nullable=False)
     district: Mapped[str] = mapped_column(String(100), nullable=False)
     state: Mapped[str] = mapped_column(String(100), nullable=False)
     
-    # Work Status
-    is_experienced: Mapped[bool] = mapped_column(Boolean, default=False)
-    currently_employed: Mapped[bool] = mapped_column(Boolean, default=False)
-    
     # JSON Data (filled by candidates)
+    guardian_details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    work_experience: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     education_details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     disability_details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
-    skills: Mapped[list | None] = mapped_column(JSON, nullable=True)
     
     # Relationships (filled by trainers)
     profile: Mapped["CandidateProfile"] = relationship(
