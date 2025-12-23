@@ -62,9 +62,9 @@ async def get_candidate_stats(
     return await service.get_stats()
 
 
-@router.get("/unprofiled", response_model=CandidatePaginatedResponse)
+@router.get("/unscreened", response_model=CandidatePaginatedResponse)
 @rate_limit_medium()
-async def get_unprofiled_candidates(
+async def get_unscreened_candidates(
     request: Request,
     skip: int = 0,
     limit: int = 100,
@@ -72,15 +72,15 @@ async def get_unprofiled_candidates(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Get list of candidates without profile records (Restricted)
+    Get list of candidates without screening records (Restricted)
     """
     service = CandidateService(db)
-    return await service.get_unprofiled_candidates(skip=skip, limit=limit)
+    return await service.get_unscreened_candidates(skip=skip, limit=limit)
 
 
-@router.get("/profiled", response_model=CandidatePaginatedResponse)
+@router.get("/screened", response_model=CandidatePaginatedResponse)
 @rate_limit_medium()
-async def get_profiled_candidates(
+async def get_screened_candidates(
     request: Request,
     skip: int = 0,
     limit: int = 100,
@@ -88,11 +88,11 @@ async def get_profiled_candidates(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Get list of candidates with profile records (Restricted)
+    Get list of candidates with screening records (Restricted)
     Returns list with basic candidate info.
     """
     service = CandidateService(db)
-    return await service.get_profiled_candidates(skip=skip, limit=limit)
+    return await service.get_screened_candidates(skip=skip, limit=limit)
 
 
 
@@ -107,7 +107,7 @@ async def get_candidate(
 ):
     """
     Get candidate details by public_id (UUID) (Restricted)
-    Set with_details=true to include profile, documents, and counseling data.
+    Set with_details=true to include screening, documents, and counseling data.
     """
     service = CandidateService(db)
     return await service.get_candidate(public_id, with_details=with_details)

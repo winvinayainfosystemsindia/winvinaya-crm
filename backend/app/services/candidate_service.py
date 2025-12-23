@@ -62,7 +62,7 @@ class CandidateService:
         candidate = await self.repository.create(candidate_data)
         
         # Refresh to get the candidate with relationships loaded
-        # This ensures the response includes profile, documents, counseling (even if empty)
+        # This ensures the response includes screening, documents, counseling (even if empty)
         candidate_with_details = await self.repository.get_by_public_id_with_details(candidate.public_id)
         
         return candidate_with_details
@@ -116,14 +116,14 @@ class CandidateService:
         """Get candidate statistics"""
         return await self.repository.get_stats()
 
-    async def get_unprofiled_candidates(self, skip: int = 0, limit: int = 100) -> dict:
-        """Get list of candidates without profile records with total count"""
-        items, total = await self.repository.get_unprofiled(skip=skip, limit=limit)
+    async def get_unscreened_candidates(self, skip: int = 0, limit: int = 100) -> dict:
+        """Get list of candidates without screening records with total count"""
+        items, total = await self.repository.get_unscreened(skip=skip, limit=limit)
         return {"items": items, "total": total}
 
-    async def get_profiled_candidates(self, skip: int = 0, limit: int = 100) -> dict:
-        """Get list of candidates with profile records with total count"""
-        items, total = await self.repository.get_profiled(skip=skip, limit=limit)
+    async def get_screened_candidates(self, skip: int = 0, limit: int = 100) -> dict:
+        """Get list of candidates with screening records with total count"""
+        items, total = await self.repository.get_screened(skip=skip, limit=limit)
         return {"items": items, "total": total}
 
 

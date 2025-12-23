@@ -6,7 +6,7 @@ from datetime import datetime, date
 from pydantic import BaseModel, EmailStr, Field, model_validator
 
 # Import related schemas (forward compatibility)
-from app.schemas.candidate_profile import CandidateProfileResponse
+from app.schemas.candidate_screening import CandidateScreeningResponse
 from app.schemas.candidate_document import CandidateDocumentResponse
 from app.schemas.candidate_counseling import CandidateCounselingResponse
 
@@ -86,7 +86,7 @@ class CandidateResponse(CandidateBase):
     updated_at: datetime
     
     # Optional nested relationships (filled by trainers)
-    profile: Optional[CandidateProfileResponse] = None
+    screening: Optional[CandidateScreeningResponse] = None
     documents: List[CandidateDocumentResponse] = []
     counseling: Optional[CandidateCounselingResponse] = None
     
@@ -103,7 +103,7 @@ class CandidateResponse(CandidateBase):
                 # Only include relationships that are actually loaded
                 data = {}
                 for key in cls.model_fields.keys():
-                    if key in ['profile', 'documents', 'counseling']:
+                    if key in ['screening', 'documents', 'counseling']:
                         # Check if the relationship is loaded
                         if key in state.unloaded:
                             # Skip unloaded relationships
@@ -250,8 +250,8 @@ class CandidateStats(BaseModel):
     others: int
     today: int
     weekly: List[int] = []
-    profiled: int
-    not_profiled: int
+    screened: int
+    not_screened: int
 
 
 class CandidatePaginatedResponse(BaseModel):

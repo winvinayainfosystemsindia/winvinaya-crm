@@ -7,7 +7,7 @@ from fastapi.encoders import jsonable_encoder
 from app.api import deps
 from app.models.user import User, UserRole
 from app.models.candidate import Candidate
-from app.models.candidate_profile import CandidateProfile
+from app.models.candidate_screening import CandidateScreening
 from app.models.candidate_counseling import CandidateCounseling
 from app.models.candidate_document import CandidateDocument
 
@@ -30,8 +30,8 @@ async def get_analytics_dump(
     candidates_result = await db.execute(select(Candidate))
     candidates = candidates_result.scalars().all()
 
-    profiles_result = await db.execute(select(CandidateProfile))
-    candidate_profiles = profiles_result.scalars().all()
+    screenings_result = await db.execute(select(CandidateScreening))
+    candidate_screenings = screenings_result.scalars().all()
 
     counseling_result = await db.execute(select(CandidateCounseling))
     candidate_counselings = counseling_result.scalars().all()
@@ -43,7 +43,7 @@ async def get_analytics_dump(
     return {
         "users": jsonable_encoder(users),
         "candidates": jsonable_encoder(candidates),
-        "candidate_profiles": jsonable_encoder(candidate_profiles),
+        "candidate_screenings": jsonable_encoder(candidate_screenings),
         "candidate_counselings": jsonable_encoder(candidate_counselings),
         "candidate_documents": jsonable_encoder(candidate_documents),
     }
@@ -70,7 +70,7 @@ async def get_sourcing_overview(
     
     candidates_result = await db.execute(
         select(Candidate)
-        .options(selectinload(Candidate.profile), selectinload(Candidate.documents))
+        .options(selectinload(Candidate.screening), selectinload(Candidate.documents))
     )
     candidates = candidates_result.scalars().all()
     
@@ -80,7 +80,7 @@ async def get_sourcing_overview(
     
     # Aggregation
     total_candidates = len(candidates)
-    profiled_candidates = sum(1 for c in candidates if c.profile)
+    screened_candidates = sum(1 for c in candidates if c.screening)
     
     # Counseling Stats
     counseling_status_map = {} # candidate_id -> status
@@ -127,11 +127,17 @@ async def get_sourcing_overview(
         "Currently Employed": 0
     }
     
-    if profiled_candidates > 0:
-        # Denominator for profile-related stats is profiled_candidates
-        profiled_objs = [c.profile for c in candidates if c.profile]
-        readiness_metrics["Willing to Train"] = round(sum(1 for p in profiled_objs if p.willing_for_training) / profiled_candidates * 100, 1)
-        readiness_metrics["Ready to Relocate"] = round(sum(1 for p in profiled_objs if p.ready_to_relocate) / profiled_candidates * 100, 1)
+    if screened_candidates > 0:
+        # Denominator for screening-related stats is screened_candidates
+        screened_objs = [c.screening for c in candidates if c.screening]
+        
+        # Willingness to Train - extracted from others JSON field
+        willing_count = sum(1 for s in screened_objs if s.others and s.others.get('willing_for_training'))
+        readiness_metrics["Willing to Train"] = round(willing_count / screened_candidates * 100, 1)
+        
+        # Readiness to Relocate - extracted from others JSON field
+        relocate_count = sum(1 for s in screened_objs if s.others and s.others.get('ready_to_relocate'))
+        readiness_metrics["Ready to Relocate"] = round(relocate_count / screened_candidates * 100, 1)
     
     if total_candidates > 0:
          # Denominator for candidate-level stats
@@ -152,7 +158,7 @@ async def get_sourcing_overview(
     return {
         "funnel": {
             "registered": total_candidates,
-            "profiled": profiled_candidates,
+            "screened": screened_candidates,
             "counseled": counseled_candidates,
             "selected": selected_count,
             "documents_collected": docs_collected_count
@@ -166,7 +172,7 @@ async def get_sourcing_overview(
         "trend": sorted_trend,
         "metrics": {
             "total_candidates": total_candidates,
-            "active_pipeline": profiled_candidates,
+            "active_pipeline": screened_candidates,
             "selection_rate": round((selected_count / counseled_candidates * 100) if counseled_candidates > 0 else 0, 1),
             "conversion_rate": round((docs_collected_count / selected_count * 100) if selected_count > 0 else 0, 1)
         }

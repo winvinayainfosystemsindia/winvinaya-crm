@@ -6,7 +6,7 @@ from sqlalchemy import select, func
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.candidate import Candidate
-from app.models.candidate_profile import CandidateProfile
+from app.models.candidate_screening import CandidateScreening
 from app.models.candidate_document import CandidateDocument
 from app.models.candidate_counseling import CandidateCounseling
 from app.repositories.base import BaseRepository
@@ -36,12 +36,12 @@ class CandidateRepository(BaseRepository[Candidate]):
         return result.scalars().first()
     
     async def get_by_public_id_with_details(self, public_id: UUID) -> Optional[Candidate]:
-        """Get candidate by public_id with all related data (profile, documents, counseling)"""
+        """Get candidate by public_id with all related data (screening, documents, counseling)"""
         result = await self.db.execute(
             select(Candidate)
             .where(Candidate.public_id == public_id)
             .options(
-                joinedload(Candidate.profile),
+                joinedload(Candidate.screening),
                 selectinload(Candidate.documents),
                 joinedload(Candidate.counseling)
             )
@@ -76,20 +76,20 @@ class CandidateRepository(BaseRepository[Candidate]):
         result = await self.db.execute(stmt)
         return result.scalars().unique().all(), total
 
-    async def get_unprofiled(self, skip: int = 0, limit: int = 100):
-        """Get candidates without profile records"""
+    async def get_unscreened(self, skip: int = 0, limit: int = 100):
+        """Get candidates without screening records"""
         stmt = (
             select(Candidate)
-            .outerjoin(Candidate.profile)
+            .outerjoin(Candidate.screening)
             .outerjoin(Candidate.counseling)
-            .where(CandidateProfile.id.is_(None))
+            .where(CandidateScreening.id.is_(None))
             .options(
                 joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor)
             )
         )
         
-        # Count total unprofiled
-        count_stmt = select(func.count(Candidate.id)).outerjoin(Candidate.profile).where(CandidateProfile.id.is_(None))
+        # Count total unscreened
+        count_stmt = select(func.count(Candidate.id)).outerjoin(Candidate.screening).where(CandidateScreening.id.is_(None))
         count_result = await self.db.execute(count_stmt)
         total = count_result.scalar() or 0
         
@@ -98,20 +98,20 @@ class CandidateRepository(BaseRepository[Candidate]):
         result = await self.db.execute(stmt)
         return result.scalars().unique().all(), total
 
-    async def get_profiled(self, skip: int = 0, limit: int = 100):
-        """Get candidates with profile records loaded"""
+    async def get_screened(self, skip: int = 0, limit: int = 100):
+        """Get candidates with screening records loaded"""
         stmt = (
             select(Candidate)
-            .join(Candidate.profile)
+            .join(Candidate.screening)
             .options(
-                joinedload(Candidate.profile),
+                joinedload(Candidate.screening),
                 selectinload(Candidate.documents),
                 joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor)
             )
         )
         
-        # Count total profiled
-        count_stmt = select(func.count(Candidate.id)).join(Candidate.profile)
+        # Count total screened
+        count_stmt = select(func.count(Candidate.id)).join(Candidate.screening)
         count_result = await self.db.execute(count_stmt)
         total = count_result.scalar() or 0
         
@@ -128,7 +128,7 @@ class CandidateRepository(BaseRepository[Candidate]):
         from sqlalchemy import func
         from datetime import datetime, time, timedelta
         from app.models.candidate_counseling import CandidateCounseling
-        from app.models.candidate_profile import CandidateProfile
+        from app.models.candidate_screening import CandidateScreening
         
         try:
             # Helper to execute count query
@@ -163,12 +163,12 @@ class CandidateRepository(BaseRepository[Candidate]):
             today_start = datetime.combine(datetime.now().date(), time.min)
             today_count = await get_count(Candidate.created_at >= today_start)
             
-            # Profiling stats - count only candidates with formal profile records
-            stmt_profiled = select(func.count(CandidateProfile.id))
-            result_profiled = await self.db.execute(stmt_profiled)
-            profiled = result_profiled.scalar() or 0
+            # Screening stats - count only candidates with formal screening records
+            stmt_screened = select(func.count(CandidateScreening.id))
+            result_screened = await self.db.execute(stmt_screened)
+            screened = result_screened.scalar() or 0
             
-            not_profiled = total - profiled
+            not_screened = total - screened
 
             # Counseling stats
             # Normalize status to lowercase for consistent counting
@@ -182,9 +182,9 @@ class CandidateRepository(BaseRepository[Candidate]):
             
             # Pending counseling should include:
             # 1. Candidates with explicit 'pending' status
-            # 2. Profiled candidates who have NOT started counseling yet
-            # So: Pending = Total Profiled - (Selected + Rejected)
-            counseling_pending = max(0, profiled - (raw_selected + raw_rejected))
+            # 2. Screened candidates who have NOT started counseling yet
+            # So: Pending = Total Screened - (Selected + Rejected)
+            counseling_pending = max(0, screened - (raw_selected + raw_rejected))
             
             counseling_selected = raw_selected
             counseling_rejected = raw_rejected
@@ -199,8 +199,8 @@ class CandidateRepository(BaseRepository[Candidate]):
                 "others": others,
                 "today": today_count,
                 "weekly": weekly,
-                "profiled": profiled,
-                "not_profiled": not_profiled,
+                "screened": screened,
+                "not_screened": not_screened,
                 "total_counseled": total_counseled,
                 "counseling_pending": counseling_pending,
                 "counseling_selected": counseling_selected,
@@ -212,7 +212,7 @@ class CandidateRepository(BaseRepository[Candidate]):
             print(traceback.format_exc())
             return {
                 "total": 0, "male": 0, "female": 0, "others": 0,
-                "today": 0, "weekly": [], "profiled": 0, "not_profiled": 0,
+                "today": 0, "weekly": [], "screened": 0, "not_screened": 0,
                 "total_counseled": 0, "counseling_pending": 0,
                 "counseling_selected": 0, "counseling_rejected": 0
             }
