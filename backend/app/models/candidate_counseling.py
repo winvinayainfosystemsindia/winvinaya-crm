@@ -21,9 +21,11 @@ class CandidateCounseling(BaseModel):
     )
     
     # Counseling Data
-    skills_observed: Mapped[list | None] = mapped_column(JSON, nullable=True)
-    suitable_training: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    counselor_comments: Mapped[str | None] = mapped_column(Text, nullable=True)
+    skills: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
+    questions: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    others: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    counselor_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     
     status: Mapped[str] = mapped_column(
         String(20),

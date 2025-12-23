@@ -98,11 +98,12 @@ class CandidateRepository(BaseRepository[Candidate]):
         result = await self.db.execute(stmt)
         return result.scalars().unique().all(), total
 
-    async def get_screened(self, skip: int = 0, limit: int = 100):
-        """Get candidates with screening records loaded"""
+    async def get_screened(self, skip: int = 0, limit: int = 100, counseling_status: Optional[str] = None):
+        """Get candidates with screening records loaded, with optional counseling status filter"""
         stmt = (
             select(Candidate)
             .join(Candidate.screening)
+            .outerjoin(Candidate.counseling)
             .options(
                 joinedload(Candidate.screening),
                 selectinload(Candidate.documents),
@@ -110,8 +111,24 @@ class CandidateRepository(BaseRepository[Candidate]):
             )
         )
         
-        # Count total screened
-        count_stmt = select(func.count(Candidate.id)).join(Candidate.screening)
+        # Base count statement for screened candidates
+        count_stmt = select(func.count(Candidate.id)).join(Candidate.screening).outerjoin(Candidate.counseling)
+        
+        # Apply counseling status filter
+        if counseling_status:
+            if counseling_status == 'pending':
+                # Pending includes candidates with no counseling record OR status='pending'
+                stmt = stmt.where((CandidateCounseling.id.is_(None)) | (CandidateCounseling.status == 'pending'))
+                count_stmt = count_stmt.where((CandidateCounseling.id.is_(None)) | (CandidateCounseling.status == 'pending'))
+            elif counseling_status == 'counseled':
+                # Counseled includes 'selected' or 'rejected'
+                stmt = stmt.where(CandidateCounseling.status.in_(['selected', 'rejected']))
+                count_stmt = count_stmt.where(CandidateCounseling.status.in_(['selected', 'rejected']))
+            else:
+                stmt = stmt.where(CandidateCounseling.status == counseling_status)
+                count_stmt = count_stmt.where(CandidateCounseling.status == counseling_status)
+
+        # Count total screened (with filter)
         count_result = await self.db.execute(count_stmt)
         total = count_result.scalar() or 0
         

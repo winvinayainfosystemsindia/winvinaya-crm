@@ -8,9 +8,11 @@ from pydantic import BaseModel
 # Counseling Schemas
 
 class CandidateCounselingBase(BaseModel):
-    skills_observed: Optional[List[str]] = None
-    suitable_training: Optional[str] = None
-    counselor_comments: Optional[str] = None
+    skills: Optional[List[dict]] = None
+    feedback: Optional[str] = None
+    questions: Optional[List[dict]] = None
+    others: Optional[dict] = None
+    counselor_name: Optional[str] = None
     status: str = "pending"  # 'pending', 'selected', 'rejected'
     counseling_date: Optional[datetime] = None
 
@@ -22,9 +24,11 @@ class CandidateCounselingCreate(CandidateCounselingBase):
 
 class CandidateCounselingUpdate(BaseModel):
     """Schema for updating candidate counseling"""
-    skills_observed: Optional[List[str]] = None
-    suitable_training: Optional[str] = None
-    counselor_comments: Optional[str] = None
+    skills: Optional[List[dict]] = None
+    feedback: Optional[str] = None
+    questions: Optional[List[dict]] = None
+    others: Optional[dict] = None
+    counselor_name: Optional[str] = None
     status: Optional[str] = None
     counselor_id: Optional[int] = None
     counseling_date: Optional[datetime] = None

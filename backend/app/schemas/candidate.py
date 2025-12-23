@@ -182,19 +182,29 @@ class CandidateListResponse(BaseModel):
                 # Simplification: take first degree name as education level
                 education_level = degrees[0].get('degree_name', "Graduate/Post-Graduate")
 
-        # 3. Counseling Status - only access if loaded
+        # 3. Counseling Status - more robust access using helper
         counselor_name = None
         counseling_date = None
-        if is_relationship_loaded(data, 'counseling'):
-            counseling = get_attr(data, 'counseling')
-            if counseling:
-                counseling_status = get_attr(counseling, 'status')
-                counseling_date = get_attr(counseling, 'counseling_date')
-                # Check if counselor relationship is loaded before accessing
-                if is_relationship_loaded(counseling, 'counselor'):
-                    counselor = get_attr(counseling, 'counselor')
-                    if counselor:
-                        counselor_name = get_attr(counselor, 'full_name')
+        
+        # Try to get counseling record directly or via relationship using helper
+        counseling = get_attr(data, 'counseling', None)
+        if counseling:
+            counseling_status = get_attr(counseling, 'status', None)
+            counseling_date = get_attr(counseling, 'counseling_date', None)
+            
+            # Use direct field as primary/fallback for counselor name
+            counselor_name = get_attr(counseling, 'counselor_name', None)
+            
+            # If counselor object is available, prefer its full_name
+            try:
+                counselor = get_attr(counseling, 'counselor', None)
+                if counselor:
+                    # Accessing full_name might fail if not loaded, get_attr handles it
+                    fname = get_attr(counselor, 'full_name', None)
+                    if fname:
+                        counselor_name = fname
+            except:
+                pass # Fallback to counselor_name string already set
 
         # 4. Documents - only access if loaded
         if is_relationship_loaded(data, 'documents'):

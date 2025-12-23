@@ -121,9 +121,9 @@ class CandidateService:
         items, total = await self.repository.get_unscreened(skip=skip, limit=limit)
         return {"items": items, "total": total}
 
-    async def get_screened_candidates(self, skip: int = 0, limit: int = 100) -> dict:
+    async def get_screened_candidates(self, skip: int = 0, limit: int = 100, counseling_status: Optional[str] = None) -> dict:
         """Get list of candidates with screening records with total count"""
-        items, total = await self.repository.get_screened(skip=skip, limit=limit)
+        items, total = await self.repository.get_screened(skip=skip, limit=limit, counseling_status=counseling_status)
         return {"items": items, "total": total}
 
 
