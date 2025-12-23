@@ -39,7 +39,7 @@ const DocumentCollectionList: React.FC = () => {
 				// Fetch profiled candidates as they contain counseling status and docs
 				const data = await candidateService.getProfiled();
 				// Filter for candidates who have been selected in counseling
-				const selectedCandidates = data.filter(c => c.counseling_status === 'selected');
+				const selectedCandidates = data.items.filter((c: CandidateListItem) => c.counseling_status === 'selected');
 				setCandidates(selectedCandidates);
 				setFilteredCandidates(selectedCandidates);
 			} catch (error) {

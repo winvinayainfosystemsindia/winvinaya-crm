@@ -11,9 +11,9 @@ import {
 import CounselingTable from '../../components/counseling/CounselingTable';
 import CounselingFormDialog from '../../components/counseling/form/CounselingFormDialog';
 import CounselingStats from '../../components/counseling/CounselingStats';
-import counselingService from '../../services/counselingService';
+import { useAppDispatch } from '../../store/hooks';
+import { createCounseling, updateCounseling, fetchCandidateById } from '../../store/slices/candidateSlice';
 import type { CandidateListItem, CandidateCounselingCreate } from '../../models/candidate';
-import candidateService from '../../services/candidateService';
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -37,6 +37,7 @@ function TabPanel(props: TabPanelProps) {
 }
 
 const CounselingList: React.FC = () => {
+	const dispatch = useAppDispatch();
 	const [tabValue, setTabValue] = useState(0);
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
@@ -65,23 +66,27 @@ const CounselingList: React.FC = () => {
 		} else if (action === 'edit') {
 			try {
 				// Fetch full candidate details to get existing counseling data
-				const fullCandidate = await candidateService.getById(candidate.public_id, true);
-				setSelectedCandidate(fullCandidate);
+				// We use the service directly for fetch or we could use dispatch(fetchCandidateById)
+				// Since we need the result immediately to populate the form, let's use the thunk result
+				const resultAction = await dispatch(fetchCandidateById({ publicId: candidate.public_id, withDetails: true }));
 
-				// Map existing counseling data to form format
-				if (fullCandidate.counseling) {
-					// Backend returns array of strings for skills? No, it returns list.
-					// We need to type cast or ensure it matches
-					setInitialFormData({
-						...fullCandidate.counseling
-					} as CandidateCounselingCreate);
+				if (fetchCandidateById.fulfilled.match(resultAction)) {
+					const fullCandidate = resultAction.payload;
+					setSelectedCandidate(fullCandidate);
+
+					if (fullCandidate.counseling) {
+						setInitialFormData({
+							...fullCandidate.counseling
+						} as CandidateCounselingCreate);
+					} else {
+						setInitialFormData(undefined);
+					}
+					setDialogOpen(true);
 				} else {
-					setInitialFormData(undefined);
+					showSnackbar('Failed to fetch candidate details', 'error');
 				}
-
-				setDialogOpen(true);
 			} catch (error) {
-				showSnackbar('Failed to fetch candidate details', 'error');
+				showSnackbar('An error occurred while fetching details', 'error');
 			}
 		}
 	};
@@ -95,18 +100,24 @@ const CounselingList: React.FC = () => {
 	const handleFormSubmit = async (data: CandidateCounselingCreate) => {
 		try {
 			if (selectedCandidate.counseling) {
-				// Update
-				await counselingService.update(selectedCandidate.public_id, data);
+				// Update via Redux
+				await dispatch(updateCounseling({
+					publicId: selectedCandidate.public_id,
+					counseling: data
+				})).unwrap();
 				showSnackbar('Counseling updated successfully', 'success');
 			} else {
-				// Create
-				await counselingService.create(selectedCandidate.public_id, data);
+				// Create via Redux
+				await dispatch(createCounseling({
+					publicId: selectedCandidate.public_id,
+					counseling: data
+				})).unwrap();
 				showSnackbar('Counseling record created successfully', 'success');
 			}
 			setRefreshKey(prev => prev + 1); // Trigger table refresh
 		} catch (error: any) {
 			console.error("Counseling submit error", error);
-			showSnackbar('Failed to save counseling record', 'error');
+			showSnackbar(error || 'Failed to save counseling record', 'error');
 		}
 	};
 

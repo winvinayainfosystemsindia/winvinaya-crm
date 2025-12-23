@@ -46,19 +46,10 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 	const fetchCandidates = async () => {
 		setLoading(true);
 		try {
-			// Both tabs rely on 'profiled' candidates list, but filtered by counseling status
-			const response = await candidateService.getProfiled(page * rowsPerPage, rowsPerPage * 5); // Fetch more to client filter
+			// Both tabs rely on 'profiled' candidates list, but filtered by counseling status on the server
+			const response = await candidateService.getProfiled(page * rowsPerPage, rowsPerPage * 5, type);
 
-			// Filter based on type
-			const filtered = response.filter(c => {
-				if (type === 'pending') {
-					return !c.counseling_status || c.counseling_status === 'pending';
-				} else {
-					return c.counseling_status && c.counseling_status !== 'pending';
-				}
-			});
-
-			setCandidates(filtered);
+			setCandidates(response.items);
 		} catch (error) {
 			console.error(`Failed to fetch ${type} candidates:`, error);
 		} finally {

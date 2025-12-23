@@ -41,12 +41,24 @@ export interface CandidateDocumentCreate {
 }
 
 // Candidate Counseling Types
+export interface CounselingSkill {
+	name: string;
+	level: 'Beginner' | 'Intermediate' | 'Advanced';
+}
+
+export interface CounselingQuestion {
+	question: string;
+	answer: string;
+}
+
 export interface CandidateCounseling {
 	id: number;
 	candidate_id: number;
-	skills_observed?: string[];
-	suitable_training?: string;
-	counselor_comments?: string;
+	skills?: CounselingSkill[];
+	feedback?: string;
+	questions?: CounselingQuestion[];
+	others?: Record<string, any>;
+	counselor_name?: string;
 	status: 'pending' | 'selected' | 'rejected';
 	counselor_id?: number;
 	counseling_date?: string;
@@ -55,12 +67,16 @@ export interface CandidateCounseling {
 }
 
 export interface CandidateCounselingCreate {
-	skills_observed?: string[];
-	suitable_training?: string;
-	counselor_comments?: string;
+	skills?: CounselingSkill[];
+	feedback?: string;
+	questions?: CounselingQuestion[];
+	others?: Record<string, any>;
+	counselor_name?: string;
 	status?: 'pending' | 'selected' | 'rejected';
 	counseling_date?: string;
 }
+
+export interface CandidateCounselingUpdate extends Partial<CandidateCounselingCreate> { }
 
 export interface Degree {
 	degree_name: string;

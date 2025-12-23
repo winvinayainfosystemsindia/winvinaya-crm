@@ -1,7 +1,6 @@
 import api from './api';
 import type {
 	Candidate,
-	CandidateListItem,
 	CandidateCreate,
 	CandidateUpdate,
 	CandidateScreening,
@@ -78,17 +77,16 @@ const candidateService = {
 	/**
 	 * Get screened candidates (with screening data)
 	 */
-	getScreened: async (skip = 0, limit = 100): Promise<CandidateListItem[]> => {
-		const response = await api.get<CandidateListItem[]>(`/candidates/screened?skip=${skip}&limit=${limit}`);
+	getScreened: async (skip = 0, limit = 100, counselingStatus?: string): Promise<CandidatePaginatedResponse> => {
+		const response = await api.get<CandidatePaginatedResponse>(`/candidates/screened?skip=${skip}&limit=${limit}${counselingStatus ? `&counseling_status=${counselingStatus}` : ''}`);
 		return response.data;
 	},
 
 	/**
 	 * Get profiled candidates (alias for getScreened for backward compatibility)
 	 */
-	getProfiled: async (skip = 0, limit = 100): Promise<CandidateListItem[]> => {
-		const response = await api.get<CandidateListItem[]>(`/candidates/screened?skip=${skip}&limit=${limit}`);
-		return response.data;
+	getProfiled: async (skip = 0, limit = 100, counselingStatus?: string): Promise<CandidatePaginatedResponse> => {
+		return candidateService.getScreened(skip, limit, counselingStatus);
 	}
 };
 
@@ -129,7 +127,7 @@ export const documentService = {
 	 */
 	upload: async (
 		publicId: string,
-		documentType: 'resume' | 'disability_certificate' | '10th_certificate' | '12th_certificate' | 'degree_certificate' | 'other',
+		documentType: string,
 		file: File,
 		description?: string
 	): Promise<CandidateDocument> => {
@@ -140,6 +138,8 @@ export const documentService = {
 			formData.append('description', description);
 		}
 
+		// Use multipart/form-data for file uploads.
+		// Axios will automatically add the boundary if we provide the header.
 		const response = await api.post<CandidateDocument>(
 			`/candidates/${publicId}/documents/upload`,
 			formData,
