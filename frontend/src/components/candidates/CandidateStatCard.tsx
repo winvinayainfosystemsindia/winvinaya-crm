@@ -45,7 +45,7 @@ const CandidateStatCard: React.FC<CandidateStatCardProps> = ({ total, male, fema
 
 				<Box sx={{ display: 'flex', alignItems: 'baseline', mt: 1 }}>
 					<Typography variant="h3" component="div" sx={{ fontWeight: 300, color: theme.palette.secondary.main }}>
-						{total.toLocaleString()}
+						{(total || 0).toLocaleString()}
 					</Typography>
 				</Box>
 

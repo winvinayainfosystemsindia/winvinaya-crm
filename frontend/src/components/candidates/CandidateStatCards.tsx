@@ -49,7 +49,7 @@ const CandidateStatCards: React.FC<CandidateStatCardsProps> = ({ stats }) => {
 									Total Candidates
 								</Typography>
 								<Typography variant="h3" sx={{ mt: 2, fontWeight: 300, color: theme.palette.primary.main }}>
-									{stats.total.toLocaleString()}
+									{(stats.total || 0).toLocaleString()}
 								</Typography>
 								<Box sx={{ mt: 1, display: 'flex', alignItems: 'center' }}>
 									<StatSparkLine color={theme.palette.primary.light} data={stats.weekly.length > 0 ? stats.weekly : [0, 0, 0, 0, 0, 0, 0]} />
@@ -129,7 +129,7 @@ const CandidateStatCards: React.FC<CandidateStatCardsProps> = ({ stats }) => {
 									Registered Today
 								</Typography>
 								<Typography variant="h3" sx={{ mt: 2, fontWeight: 300, color: theme.palette.success.main }}>
-									{stats.today.toLocaleString()}
+									{(stats.today || 0).toLocaleString()}
 								</Typography>
 								<Box sx={{ mt: 1, display: 'flex', alignItems: 'center' }}>
 									<StatSparkLine color={theme.palette.success.light} data={stats.weekly.length > 0 ? stats.weekly : [0, 0, 0, 0, 0, 0, 0]} />

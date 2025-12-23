@@ -79,7 +79,7 @@ const UserStatCards: React.FC = () => {
 								</Typography>
 								<Box sx={{ display: 'flex', alignItems: 'baseline', mt: 1 }}>
 									<Typography variant="h3" component="div" sx={{ fontWeight: 300, color: theme.palette.secondary.main }}>
-										{stats.total.toLocaleString()}
+										{(stats.total || 0).toLocaleString()}
 									</Typography>
 								</Box>
 							</Box>
@@ -100,7 +100,7 @@ const UserStatCards: React.FC = () => {
 								</Typography>
 								<Box sx={{ display: 'flex', alignItems: 'baseline', mt: 1 }}>
 									<Typography variant="h3" component="div" sx={{ fontWeight: 300, color: theme.palette.secondary.main }}>
-										{stats.total.toLocaleString()}
+										{(stats.total || 0).toLocaleString()}
 									</Typography>
 								</Box>
 								<Box sx={{ mt: 2 }}>

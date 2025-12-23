@@ -29,7 +29,7 @@ const Home: React.FC = () => {
 				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
 					<StatCard
 						title="Total Candidates"
-						count={candidates.length.toLocaleString()}
+						count={(candidates?.length || 0).toLocaleString()}
 						icon={<PeopleIcon fontSize="large" />}
 						color="#1976d2"
 					/>
