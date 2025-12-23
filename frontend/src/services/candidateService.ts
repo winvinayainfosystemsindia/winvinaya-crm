@@ -81,6 +81,14 @@ const candidateService = {
 	getScreened: async (skip = 0, limit = 100): Promise<CandidateListItem[]> => {
 		const response = await api.get<CandidateListItem[]>(`/candidates/screened?skip=${skip}&limit=${limit}`);
 		return response.data;
+	},
+
+	/**
+	 * Get profiled candidates (alias for getScreened for backward compatibility)
+	 */
+	getProfiled: async (skip = 0, limit = 100): Promise<CandidateListItem[]> => {
+		const response = await api.get<CandidateListItem[]>(`/candidates/screened?skip=${skip}&limit=${limit}`);
+		return response.data;
 	}
 };
 

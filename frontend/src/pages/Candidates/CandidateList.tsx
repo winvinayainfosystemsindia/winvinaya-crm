@@ -4,31 +4,19 @@ import CandidateStatCards from '../../components/candidates/CandidateStatCards';
 import CandidateTable from '../../components/candidates/CandidateTable';
 import candidateService from '../../services/candidateService';
 import { useNavigate } from 'react-router-dom';
+import type { CandidateStats } from '../../models/candidate';
 
 const CandidateList: React.FC = () => {
 	const navigate = useNavigate();
-	const [stats, setStats] = useState<{
-		total: number;
-		male: number;
-		female: number;
-		others: number;
-		today: number;
-		weekly: number[];
-		profiled: number;
-		not_profiled: number;
-		total_counseled: number;
-		counseling_pending: number;
-		counseling_selected: number;
-		counseling_rejected: number;
-	}>({
+	const [stats, setStats] = useState<CandidateStats>({
 		total: 0,
 		male: 0,
 		female: 0,
 		others: 0,
 		today: 0,
 		weekly: [],
-		profiled: 0,
-		not_profiled: 0,
+		screened: 0,
+		not_screened: 0,
 		total_counseled: 0,
 		counseling_pending: 0,
 		counseling_selected: 0,
