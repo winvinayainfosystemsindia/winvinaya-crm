@@ -36,7 +36,9 @@ class CandidateDocumentService:
         file_info = await FileStorageService.save_file(
             file=file,
             candidate_public_id=str(candidate.public_id),
-            document_type=document_type
+            document_type=document_type,
+            candidate_name=candidate.name,
+            candidate_id=candidate.id
         )
         
         # Create document record

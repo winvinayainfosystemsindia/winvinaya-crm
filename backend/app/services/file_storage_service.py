@@ -85,17 +85,25 @@ class FileStorageService:
     async def save_file(
         file: UploadFile,
         candidate_public_id: str,
-        document_type: str
+        document_type: str,
+        candidate_name: str = "unknown",
+        candidate_id: Optional[int] = None
     ) -> dict:
         """
-        Save uploaded file to structured folder
+        Save uploaded file to structured folder:
+        uploads/candidates/{name}_{id}/{document_type}/
         Returns dict with file info: {file_path, file_name, file_size, mime_type}
         """
         # Validate file
         FileStorageService.validate_file(file, document_type)
         
-        # Create folder structure: uploads/candidates/{public_id}/{document_type}/
-        folder_path = FileStorageService.BASE_UPLOAD_DIR / str(candidate_public_id) / document_type
+        # Sanitize candidate name for folder name
+        safe_name = FileStorageService._sanitize_filename(candidate_name).lower()
+        suffix = f"_{candidate_id}" if candidate_id else f"_{candidate_public_id[:8]}"
+        candidate_folder = f"{safe_name}{suffix}"
+        
+        # Create folder structure: uploads/candidates/{candidate_folder}/{document_type}/
+        folder_path = FileStorageService.BASE_UPLOAD_DIR / candidate_folder / document_type
         folder_path.mkdir(parents=True, exist_ok=True)
         
         # Generate unique filename
