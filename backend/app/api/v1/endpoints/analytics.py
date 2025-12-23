@@ -20,7 +20,7 @@ async def get_analytics_dump(
 ):
     """
     Get a full dump of all major tables for analytics (PowerBI).
-    Restricted to Admins.
+    Restricted to Admins with JWT.
     """
     
     # Fetch all data asynchronously
@@ -47,6 +47,76 @@ async def get_analytics_dump(
         "candidate_counselings": jsonable_encoder(candidate_counselings),
         "candidate_documents": jsonable_encoder(candidate_documents),
     }
+
+
+@router.get("/export-db")
+async def export_db_for_power_bi(
+    db: AsyncSession = Depends(deps.get_db),
+    api_key: str = Depends(deps.verify_api_key),
+):
+    """
+    Get a full dump of all major tables for Power BI.
+    Authenticated via X-API-Key header (no token required).
+    """
+    
+    # Fetch all data asynchronously
+    users_result = await db.execute(select(User))
+    users_data = users_result.scalars().all()
+
+    candidates_result = await db.execute(select(Candidate))
+    candidates_data = candidates_result.scalars().all()
+
+    screenings_result = await db.execute(select(CandidateScreening))
+    screenings_data = screenings_result.scalars().all()
+
+    counseling_result = await db.execute(select(CandidateCounseling))
+    counselings_data = counseling_result.scalars().all()
+    
+    documents_result = await db.execute(select(CandidateDocument))
+    documents_data = documents_result.scalars().all()
+    
+    # Convert to JSON-friendly format
+    return {
+        "users": jsonable_encoder(users_data),
+        "candidates": jsonable_encoder(candidates_data),
+        "candidate_screenings": jsonable_encoder(screenings_data),
+        "candidate_counselings": jsonable_encoder(counselings_data),
+        "candidate_documents": jsonable_encoder(documents_data),
+    }
+
+
+@router.get("/export/{table_name}")
+async def export_table_for_power_bi(
+    table_name: str,
+    db: AsyncSession = Depends(deps.get_db),
+    api_key: str = Depends(deps.verify_api_key),
+):
+    """
+    Get a specific table dump for Power BI.
+    Returns a plain list of records.
+    Supported tables: users, candidates, screenings, counselings, documents
+    """
+    from fastapi import HTTPException
+    
+    model_map = {
+        "users": User,
+        "candidates": Candidate,
+        "screenings": CandidateScreening,
+        "counselings": CandidateCounseling,
+        "documents": CandidateDocument,
+    }
+    
+    if table_name not in model_map:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Table '{table_name}' not found. Supported: {', '.join(model_map.keys())}"
+        )
+        
+    model = model_map[table_name]
+    result = await db.execute(select(model))
+    data = result.scalars().all()
+    
+    return jsonable_encoder(data)
 @router.get("/sourcing-overview")
 async def get_sourcing_overview(
     db: AsyncSession = Depends(deps.get_db),

@@ -2,15 +2,32 @@
 
 from typing import Generator, Optional
 from fastapi import Depends, HTTPException, status, Query
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, APIKeyHeader
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.security import decode_token, verify_token_type
+from app.core.config import settings
 from app.models.user import User
 from app.repositories.user_repository import UserRepository
 
 
 security = HTTPBearer(auto_error=False)
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+
+async def verify_api_key(
+    api_key: Optional[str] = Depends(api_key_header),
+) -> str:
+    """
+    Verify the API key for analytics export.
+    Checks X-API-Key header.
+    """
+    if api_key is None or api_key != settings.ANALYTICS_SECRET_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing API Key",
+        )
+    return api_key
 
 
 async def get_current_user(

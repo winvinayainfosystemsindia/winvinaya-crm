@@ -46,6 +46,7 @@ class Settings(BaseSettings):
     
     # Security
     SECRET_KEY: str
+    ANALYTICS_SECRET_KEY: str = "winvinaya-crm-analytics-secret-123" # Default for dev
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
