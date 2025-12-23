@@ -176,6 +176,7 @@ const ScreeningList: React.FC = () => {
 					onSubmit={handleScreeningSubmit}
 					initialData={selectedCandidate?.screening}
 					candidateName={selectedCandidate?.name}
+					candidatePublicId={selectedCandidate?.public_id}
 				/>
 
 				{/* Snackbar for notifications */}
