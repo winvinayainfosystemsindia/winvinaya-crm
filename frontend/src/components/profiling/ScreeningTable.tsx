@@ -23,12 +23,12 @@ import { format, isToday, parseISO } from 'date-fns';
 import candidateService from '../../services/candidateService';
 import type { CandidateListItem } from '../../models/candidate';
 
-interface ProfileTableProps {
-	type: 'unprofiled' | 'profiled';
-	onAction: (action: 'profile' | 'edit', candidate: CandidateListItem) => void;
+interface ScreeningTableProps {
+	type: 'unscreened' | 'screened';
+	onAction: (action: 'screen' | 'edit', candidate: CandidateListItem) => void;
 }
 
-const ProfileTable: React.FC<ProfileTableProps> = ({ type, onAction }) => {
+const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 	const theme = useTheme();
 	const [candidates, setCandidates] = useState<CandidateListItem[]>([]);
 	const [loading, setLoading] = useState(false);
@@ -46,12 +46,15 @@ const ProfileTable: React.FC<ProfileTableProps> = ({ type, onAction }) => {
 	const fetchCandidates = async () => {
 		setLoading(true);
 		try {
-			const fetcher = type === 'unprofiled' ? candidateService.getUnprofiled : candidateService.getProfiled;
+			const fetcher = type === 'unscreened' ? candidateService.getUnscreened : candidateService.getScreened;
 			const response = await fetcher(page * rowsPerPage, rowsPerPage);
-			setCandidates(response);
-			// Mimicking CandidateTable's (imperfect) total count logic for now
-			// ideally backend sends total count
-			setTotalCount(response.length + (page * rowsPerPage) + (response.length === rowsPerPage ? 1 : 0));
+
+			// If response is paginated (items, total), handle it
+			const items = Array.isArray(response) ? response : response.items;
+			const total = Array.isArray(response) ? items.length + (page * rowsPerPage) + (items.length === rowsPerPage ? 1 : 0) : response.total;
+
+			setCandidates(items);
+			setTotalCount(total);
 		} catch (error) {
 			console.error(`Failed to fetch ${type} candidates:`, error);
 		} finally {
@@ -118,7 +121,7 @@ const ProfileTable: React.FC<ProfileTableProps> = ({ type, onAction }) => {
 			{/* Header with Search */}
 			<Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #d5dbdb', bgcolor: '#fafafa' }}>
 				<TextField
-					placeholder={`Search ${type === 'unprofiled' ? 'unprofiled' : 'profiled'} candidates...`}
+					placeholder={`Search ${type === 'unscreened' ? 'unscreened' : 'screened'} candidates...`}
 					value={searchTerm}
 					onChange={handleSearch}
 					size="small"
@@ -145,7 +148,7 @@ const ProfileTable: React.FC<ProfileTableProps> = ({ type, onAction }) => {
 			</Box>
 
 			<TableContainer>
-				<Table sx={{ minWidth: 650 }} aria-label="profile table">
+				<Table sx={{ minWidth: 650 }} aria-label="screening table">
 					<TableHead>
 						<TableRow sx={{ bgcolor: '#fafafa' }}>
 							{[
@@ -210,8 +213,8 @@ const ProfileTable: React.FC<ProfileTableProps> = ({ type, onAction }) => {
 													<Accessible color="primary" fontSize="small" />
 												</Tooltip>
 											)}
-											{type === 'profiled' && (
-												<Tooltip title="Verified Profile">
+											{type === 'screened' && (
+												<Tooltip title="Verified Screening">
 													<VerifiedUser sx={{ color: '#4caf50', fontSize: 20 }} />
 												</Tooltip>
 											)}
@@ -252,18 +255,18 @@ const ProfileTable: React.FC<ProfileTableProps> = ({ type, onAction }) => {
 										</Typography>
 									</TableCell>
 									<TableCell align="right">
-										{type === 'unprofiled' ? (
+										{type === 'unscreened' ? (
 											<Button
 												variant="contained"
 												size="small"
-												onClick={() => onAction('profile', candidate)}
+												onClick={() => onAction('screen', candidate)}
 												sx={{
 													textTransform: 'none',
 													bgcolor: '#1976d2',
 													'&:hover': { bgcolor: '#115293' }
 												}}
 											>
-												Profile
+												Screen
 											</Button>
 										) : (
 											<Button
@@ -273,7 +276,7 @@ const ProfileTable: React.FC<ProfileTableProps> = ({ type, onAction }) => {
 												onClick={() => onAction('edit', candidate)}
 												sx={{ textTransform: 'none' }}
 											>
-												Edit Profile
+												Edit Screening
 											</Button>
 										)}
 									</TableCell>
@@ -304,4 +307,4 @@ const ProfileTable: React.FC<ProfileTableProps> = ({ type, onAction }) => {
 	);
 };
 
-export default ProfileTable;
+export default ScreeningTable;

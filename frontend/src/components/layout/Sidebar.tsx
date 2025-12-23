@@ -151,15 +151,15 @@ const Sidebar: React.FC = () => {
 								</ListItemButton>
 								<ListItemButton
 									sx={{ pl: 9, py: 0.5 }}
-									selected={isActive('/candidates/profiling')}
-									onClick={() => handleNavigate('/candidates/profiling')}
+									selected={isActive('/candidates/screening')}
+									onClick={() => handleNavigate('/candidates/screening')}
 								>
 									<ListItemText
-										primary="Profiling"
+										primary="Screening"
 										primaryTypographyProps={{
 											fontSize: '0.9rem',
-											color: isActive('/candidates/profiling') ? 'primary.main' : '#5f6368',
-											fontWeight: isActive('/candidates/profiling') ? 600 : 400
+											color: isActive('/candidates/screening') ? 'primary.main' : '#5f6368',
+											fontWeight: isActive('/candidates/screening') ? 600 : 400
 										}}
 									/>
 								</ListItemButton>
@@ -261,8 +261,8 @@ const Sidebar: React.FC = () => {
 						</ListItem>
 					</List>
 				</Box>
-			</Box>
-		</Drawer>
+			</Box >
+		</Drawer >
 	);
 };
 

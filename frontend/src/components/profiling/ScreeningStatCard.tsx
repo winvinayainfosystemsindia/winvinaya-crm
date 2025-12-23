@@ -6,7 +6,7 @@ import StatCard from '../dashboard/StatCard';
 import PeopleIcon from '@mui/icons-material/People';
 import WcIcon from '@mui/icons-material/Wc';
 
-const ProfileStatCard: React.FC = () => {
+const ScreeningStatCard: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const { stats, loading, error } = useAppSelector((state) => state.candidates);
 
@@ -46,16 +46,16 @@ const ProfileStatCard: React.FC = () => {
 			</Box>
 			<Box sx={{ flex: '1 1 250px' }}>
 				<StatCard
-					title="Profiled Candidates"
-					count={stats.profiled?.toString() || '0'}
+					title="Screened Candidates"
+					count={stats.screened?.toString() || '0'}
 					icon={<WcIcon fontSize="large" />}
 					color="#2e7d32"
 				/>
 			</Box>
 			<Box sx={{ flex: '1 1 250px' }}>
 				<StatCard
-					title="Not Profiled"
-					count={stats.not_profiled?.toString() || '0'}
+					title="Not Screened"
+					count={stats.not_screened?.toString() || '0'}
 					icon={<PeopleIcon fontSize="large" />}
 					color="#ed6c02"
 				/>
@@ -64,4 +64,4 @@ const ProfileStatCard: React.FC = () => {
 	);
 };
 
-export default ProfileStatCard;
+export default ScreeningStatCard;

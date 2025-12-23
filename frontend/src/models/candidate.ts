@@ -1,30 +1,20 @@
-// Candidate Profile Types
-export interface CandidateProfile {
+// Candidate Screening Types
+export interface CandidateScreening {
 	id: number;
 	candidate_id: number;
-	dob?: string;
-	trained_by_winvinaya: boolean;
-	training_domain?: string;
-	batch_number?: string;
-	training_from?: string;
-	training_to?: string;
-	willing_for_training: boolean;
-	ready_to_relocate: boolean;
-	interested_training?: string;
+	previous_training?: Record<string, any>;
+	documents_upload?: Record<string, any>;
+	skills?: Record<string, any>;
+	others?: Record<string, any>;
 	created_at: string;
 	updated_at: string;
 }
 
-export interface CandidateProfileCreate {
-	dob?: string;
-	trained_by_winvinaya?: boolean;
-	training_domain?: string;
-	batch_number?: string;
-	training_from?: string;
-	training_to?: string;
-	willing_for_training?: boolean;
-	ready_to_relocate?: boolean;
-	interested_training?: string;
+export interface CandidateScreeningCreate {
+	previous_training?: Record<string, any>;
+	documents_upload?: Record<string, any>;
+	skills?: Record<string, any>;
+	others?: Record<string, any>;
 }
 
 // Candidate Document Types
@@ -123,7 +113,7 @@ export interface Candidate {
 	updated_at: string;
 
 	// Optional nested relationships (from with_details=true)
-	profile?: CandidateProfile;
+	screening?: CandidateScreening;
 	documents?: CandidateDocument[];
 	counseling?: CandidateCounseling;
 }
@@ -147,7 +137,7 @@ export interface CandidateListItem {
 	documents_uploaded?: string[];
 }
 
-export interface CandidateCreate extends Omit<Candidate, 'public_id' | 'city' | 'district' | 'state' | 'created_at' | 'updated_at' | 'profile' | 'documents' | 'counseling'> { }
+export interface CandidateCreate extends Omit<Candidate, 'public_id' | 'city' | 'district' | 'state' | 'created_at' | 'updated_at' | 'screening' | 'documents' | 'counseling'> { }
 
 export interface CandidateUpdate {
 	name?: string;
@@ -170,8 +160,8 @@ export interface CandidateStats {
 	others: number;
 	today: number;
 	weekly: number[];
-	profiled: number;
-	not_profiled: number;
+	screened: number;
+	not_screened: number;
 	total_counseled: number;
 	counseling_pending: number;
 	counseling_selected: number;

@@ -1,13 +1,14 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
-import candidateService, { profileService, documentService, counselingService } from '../../services/candidateService';
+import candidateService, { screeningService, documentService, counselingService } from '../../services/candidateService';
 import type {
 	Candidate,
 	CandidateListItem,
 	CandidateCreate,
 	CandidateUpdate,
-	CandidateProfileCreate,
+	CandidateScreeningCreate,
 	CandidateCounselingCreate,
-	CandidateStats
+	CandidateStats,
+	CandidatePaginatedResponse
 } from '../../models/candidate';
 
 interface CandidateState {
@@ -103,29 +104,29 @@ export const deleteCandidate = createAsyncThunk(
 );
 
 // ======================
-// PROFILE OPERATIONS
+// SCREENING OPERATIONS
 // ======================
 
-export const createProfile = createAsyncThunk(
-	'candidates/createProfile',
-	async ({ publicId, profile }: { publicId: string; profile: CandidateProfileCreate }, { rejectWithValue }) => {
+export const createScreening = createAsyncThunk(
+	'candidates/createScreening',
+	async ({ publicId, screening }: { publicId: string; screening: CandidateScreeningCreate }, { rejectWithValue }) => {
 		try {
-			const response = await profileService.create(publicId, profile);
-			return { publicId, profile: response };
+			const response = await screeningService.create(publicId, screening);
+			return { publicId, screening: response };
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to create profile');
+			return rejectWithValue(error.response?.data?.message || 'Failed to create screening');
 		}
 	}
 );
 
-export const updateProfile = createAsyncThunk(
-	'candidates/updateProfile',
-	async ({ publicId, profile }: { publicId: string; profile: Partial<CandidateProfileCreate> }, { rejectWithValue }) => {
+export const updateScreening = createAsyncThunk(
+	'candidates/updateScreening',
+	async ({ publicId, screening }: { publicId: string; screening: Partial<CandidateScreeningCreate> }, { rejectWithValue }) => {
 		try {
-			const response = await profileService.update(publicId, profile);
-			return { publicId, profile: response };
+			const response = await screeningService.update(publicId, screening);
+			return { publicId, screening: response };
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to update profile');
+			return rejectWithValue(error.response?.data?.message || 'Failed to update screening');
 		}
 	}
 );
@@ -247,9 +248,9 @@ const candidateSlice = createSlice({
 				state.loading = true;
 				state.error = null;
 			})
-			.addCase(fetchCandidates.fulfilled, (state, action: PayloadAction<CandidateListItem[]>) => {
+			.addCase(fetchCandidates.fulfilled, (state, action: PayloadAction<CandidatePaginatedResponse>) => {
 				state.loading = false;
-				state.list = action.payload;
+				state.list = action.payload.items;
 			})
 			.addCase(fetchCandidates.rejected, (state, action: PayloadAction<any>) => {
 				state.loading = false;
@@ -290,15 +291,15 @@ const candidateSlice = createSlice({
 				state.list = state.list.filter(c => c.public_id !== action.payload);
 			})
 
-			// Profile operations
-			.addCase(createProfile.fulfilled, (state, action) => {
+			// Screening operations
+			.addCase(createScreening.fulfilled, (state, action) => {
 				if (state.selectedCandidate?.public_id === action.payload.publicId) {
-					state.selectedCandidate.profile = action.payload.profile;
+					state.selectedCandidate.screening = action.payload.screening;
 				}
 			})
-			.addCase(updateProfile.fulfilled, (state, action) => {
+			.addCase(updateScreening.fulfilled, (state, action) => {
 				if (state.selectedCandidate?.public_id === action.payload.publicId) {
-					state.selectedCandidate.profile = action.payload.profile;
+					state.selectedCandidate.screening = action.payload.screening;
 				}
 			})
 

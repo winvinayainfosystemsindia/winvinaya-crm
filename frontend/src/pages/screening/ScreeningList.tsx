@@ -9,12 +9,12 @@ import {
 	Snackbar
 } from '@mui/material';
 import { useAppDispatch } from '../../store/hooks';
-import { fetchCandidateStats, createProfile, updateProfile } from '../../store/slices/candidateSlice';
-import ProfileStatCard from '../../components/profiling/ProfileStatCard';
-import ProfileTable from '../../components/profiling/ProfileTable';
-import ProfileFormDialog from '../../components/profiling/form/ProfileFormDialog';
+import { fetchCandidateStats, createScreening, updateScreening } from '../../store/slices/candidateSlice';
+import ScreeningStatCard from '../../components/profiling/ScreeningStatCard';
+import ScreeningTable from '../../components/profiling/ScreeningTable';
+import ScreeningFormDialog from '../../components/profiling/form/ScreeningFormDialog';
 import candidateService from '../../services/candidateService';
-import type { CandidateListItem, CandidateProfileCreate } from '../../models/candidate';
+import type { CandidateListItem, CandidateScreeningCreate } from '../../models/candidate';
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -28,8 +28,8 @@ function TabPanel(props: TabPanelProps) {
 		<div
 			role="tabpanel"
 			hidden={value !== index}
-			id={`profiling-tabpanel-${index}`}
-			aria-labelledby={`profiling-tab-${index}`}
+			id={`screening-tabpanel-${index}`}
+			aria-labelledby={`screening-tab-${index}`}
 			{...other}
 		>
 			{value === index && <Box sx={{ py: 3 }}>{children}</Box>}
@@ -37,7 +37,7 @@ function TabPanel(props: TabPanelProps) {
 	);
 }
 
-const ProfileList: React.FC = () => {
+const ScreeningList: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const [tabValue, setTabValue] = useState(0);
 	const [dialogOpen, setDialogOpen] = useState(false);
@@ -62,8 +62,8 @@ const ProfileList: React.FC = () => {
 		setTabValue(newValue);
 	};
 
-	const handleAction = async (action: 'profile' | 'edit', candidate: CandidateListItem) => {
-		if (action === 'profile') {
+	const handleAction = async (action: 'screen' | 'edit', candidate: CandidateListItem) => {
+		if (action === 'screen') {
 			setSelectedCandidate(candidate);
 			setDialogOpen(true);
 		} else if (action === 'edit') {
@@ -82,20 +82,20 @@ const ProfileList: React.FC = () => {
 		setSelectedCandidate(null);
 	};
 
-	const handleProfileSubmit = async (profileData: CandidateProfileCreate) => {
+	const handleScreeningSubmit = async (screeningData: CandidateScreeningCreate) => {
 		try {
-			if (selectedCandidate.profile) {
-				// Update existing profile
-				await dispatch(updateProfile({ publicId: selectedCandidate.public_id, profile: profileData })).unwrap();
-				showSnackbar('Profile updated successfully', 'success');
+			if (selectedCandidate.screening) {
+				// Update existing screening
+				await dispatch(updateScreening({ publicId: selectedCandidate.public_id, screening: screeningData })).unwrap();
+				showSnackbar('Screening updated successfully', 'success');
 			} else {
-				// Create new profile
-				await dispatch(createProfile({ publicId: selectedCandidate.public_id, profile: profileData })).unwrap();
-				showSnackbar('Profile created successfully', 'success');
+				// Create new screening
+				await dispatch(createScreening({ publicId: selectedCandidate.public_id, screening: screeningData })).unwrap();
+				showSnackbar('Screening created successfully', 'success');
 			}
 			setRefreshKey(prev => prev + 1); // Trigger refetch of stats and tables
 		} catch (error: any) {
-			showSnackbar(error || 'Failed to save profile', 'error');
+			showSnackbar(error || 'Failed to save screening', 'error');
 		}
 	};
 
@@ -113,15 +113,15 @@ const ProfileList: React.FC = () => {
 							mb: 0.5
 						}}
 					>
-						Candidate Profiling
+						Candidate Screening
 					</Typography>
 					<Typography variant="body2" color="text.secondary">
-						Manage candidate profiles and training details
+						Manage candidate screening and assessment details
 					</Typography>
 				</Box>
 
 				{/* Stats Cards */}
-				<ProfileStatCard />
+				<ScreeningStatCard />
 
 				{/* Tab Navigation */}
 				<Box
@@ -146,35 +146,35 @@ const ProfileList: React.FC = () => {
 							}
 						}}
 					>
-						<Tab label="Not Profiled" />
-						<Tab label="Profiled" />
+						<Tab label="Not Screened" />
+						<Tab label="Screened" />
 					</Tabs>
 
 					{/* Tab Panels */}
 					<Box sx={{ bgcolor: '#ffffff', borderRadius: '0 0 8px 8px' }}>
 						<TabPanel value={tabValue} index={0}>
-							<ProfileTable
-								key={`unprofiled-${refreshKey}`} // Force re-mount on update
-								type="unprofiled"
+							<ScreeningTable
+								key={`unscreened-${refreshKey}`} // Force re-mount on update
+								type="unscreened"
 								onAction={handleAction}
 							/>
 						</TabPanel>
 						<TabPanel value={tabValue} index={1}>
-							<ProfileTable
-								key={`profiled-${refreshKey}`} // Force re-mount on update
-								type="profiled"
+							<ScreeningTable
+								key={`screened-${refreshKey}`} // Force re-mount on update
+								type="screened"
 								onAction={handleAction}
 							/>
 						</TabPanel>
 					</Box>
 				</Box>
 
-				{/* Profile Form Dialog */}
-				<ProfileFormDialog
+				{/* Screening Form Dialog */}
+				<ScreeningFormDialog
 					open={dialogOpen}
 					onClose={handleDialogClose}
-					onSubmit={handleProfileSubmit}
-					initialData={selectedCandidate?.profile}
+					onSubmit={handleScreeningSubmit}
+					initialData={selectedCandidate?.screening}
 					candidateName={selectedCandidate?.name}
 				/>
 
@@ -198,4 +198,4 @@ const ProfileList: React.FC = () => {
 	);
 };
 
-export default ProfileList;
+export default ScreeningList;

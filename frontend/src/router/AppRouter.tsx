@@ -7,7 +7,7 @@ import ProtectedRoute from './ProtectedRoute';
 import MainLayout from '../components/layout/MainLayout';
 import CandidateRegistration from '../pages/Candidates/CandidateRegistration';
 import CandidateList from '../pages/Candidates/CandidateList';
-import ProfileList from '../pages/profiling/ProfileList';
+import ScreeningList from '../pages/screening/ScreeningList';
 import CounselingList from '../pages/counseling/CounselingList';
 import SuccessPage from '../pages/common/SuccessPage';
 import NotFoundPage from '../pages/common/NotFoundPage';
@@ -38,7 +38,7 @@ const AppRouter: React.FC = () => {
 							<Route index element={<CandidateList />} />
 							<Route path="list" element={<CandidateList />} />
 							<Route path="overview" element={<SourcingAnalytics />} />
-							<Route path="profiling" element={<ProfileList />} />
+							<Route path="screening" element={<ScreeningList />} />
 							<Route path="counseling" element={<CounselingList />} />
 							<Route path="documents" element={<DocumentCollectionList />} />
 							<Route path="documents/:id" element={<DocumentCollection />} />

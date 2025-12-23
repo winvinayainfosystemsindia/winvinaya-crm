@@ -4,8 +4,8 @@ import type {
 	CandidateListItem,
 	CandidateCreate,
 	CandidateUpdate,
-	CandidateProfile,
-	CandidateProfileCreate,
+	CandidateScreening,
+	CandidateScreeningCreate,
 	CandidateDocument,
 	CandidateDocumentCreate,
 	CandidateCounseling,
@@ -68,47 +68,47 @@ const candidateService = {
 	},
 
 	/**
-	 * Get unprofiled candidates
+	 * Get unscreened candidates
 	 */
-	getUnprofiled: async (skip = 0, limit = 100): Promise<CandidatePaginatedResponse> => {
-		const response = await api.get<CandidatePaginatedResponse>(`/candidates/unprofiled?skip=${skip}&limit=${limit}`);
+	getUnscreened: async (skip = 0, limit = 100): Promise<CandidatePaginatedResponse> => {
+		const response = await api.get<CandidatePaginatedResponse>(`/candidates/unscreened?skip=${skip}&limit=${limit}`);
 		return response.data;
 	},
 
 	/**
-	 * Get profiled candidates (with profile data)
+	 * Get screened candidates (with screening data)
 	 */
-	getProfiled: async (skip = 0, limit = 100): Promise<CandidateListItem[]> => {
-		const response = await api.get<CandidateListItem[]>(`/candidates/profiled?skip=${skip}&limit=${limit}`);
+	getScreened: async (skip = 0, limit = 100): Promise<CandidateListItem[]> => {
+		const response = await api.get<CandidateListItem[]>(`/candidates/screened?skip=${skip}&limit=${limit}`);
 		return response.data;
 	}
 };
 
 // ======================
-// PROFILE SERVICE
+// SCREENING SERVICE
 // ======================
-export const profileService = {
+export const screeningService = {
 	/**
-	 * Create profile for a candidate
+	 * Create screening for a candidate
 	 */
-	create: async (publicId: string, profile: CandidateProfileCreate): Promise<CandidateProfile> => {
-		const response = await api.post<CandidateProfile>(`/candidates/${publicId}/profile`, profile);
+	create: async (publicId: string, screening: CandidateScreeningCreate): Promise<CandidateScreening> => {
+		const response = await api.post<CandidateScreening>(`/candidates/${publicId}/screening`, screening);
 		return response.data;
 	},
 
 	/**
-	 * Update candidate profile
+	 * Update candidate screening
 	 */
-	update: async (publicId: string, profile: Partial<CandidateProfileCreate>): Promise<CandidateProfile> => {
-		const response = await api.put<CandidateProfile>(`/candidates/${publicId}/profile`, profile);
+	update: async (publicId: string, screening: Partial<CandidateScreeningCreate>): Promise<CandidateScreening> => {
+		const response = await api.put<CandidateScreening>(`/candidates/${publicId}/screening`, screening);
 		return response.data;
 	},
 
 	/**
-	 * Delete candidate profile
+	 * Delete candidate screening
 	 */
 	delete: async (publicId: string): Promise<void> => {
-		await api.delete(`/candidates/${publicId}/profile`);
+		await api.delete(`/candidates/${publicId}/screening`);
 	}
 };
 
