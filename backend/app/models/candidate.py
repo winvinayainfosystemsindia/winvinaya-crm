@@ -43,8 +43,8 @@ class Candidate(BaseModel):
     disability_details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     
     # Relationships (filled by trainers)
-    profile: Mapped["CandidateProfile"] = relationship(
-        "CandidateProfile",
+    screening: Mapped["CandidateScreening"] = relationship(
+        "CandidateScreening",
         back_populates="candidate",
         uselist=False,
         cascade="all, delete-orphan"

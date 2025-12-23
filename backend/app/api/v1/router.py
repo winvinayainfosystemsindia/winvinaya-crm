@@ -2,12 +2,11 @@
 
 from fastapi import APIRouter
 from app.api.v1.endpoints import (
-    auth, 
-    users, 
-    activity_logs, 
+    auth,
+    users,
+    activity_logs,
     candidates,
-    candidate_profile,
-    candidate_documents,
+    candidate_screening,
     candidate_documents,
     candidate_counseling,
     analytics
@@ -22,8 +21,7 @@ router.include_router(auth.router)
 router.include_router(users.router)
 router.include_router(activity_logs.router)
 router.include_router(candidates.router)
-router.include_router(candidate_profile.router)
+router.include_router(candidate_screening.router)
 router.include_router(candidate_documents.router)
 router.include_router(candidate_counseling.router)
 router.include_router(analytics.router)
-
