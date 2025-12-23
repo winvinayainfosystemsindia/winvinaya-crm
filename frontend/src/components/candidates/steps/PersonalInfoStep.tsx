@@ -78,7 +78,6 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                         placeholder="Enter your full name"
                         helperText="As per in Aadhar card"
                         autoComplete="name"
-                        aria-hidden="true"
                     />
                 </Grid>
 
