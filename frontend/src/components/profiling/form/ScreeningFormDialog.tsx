@@ -21,17 +21,20 @@ import {
 	Chip,
 	IconButton,
 	Paper,
-	CircularProgress
+	CircularProgress,
+	Tooltip
 } from '@mui/material';
 import {
 	CloudUpload as CloudUploadIcon,
 	CheckCircle as CheckCircleIcon,
 	RadioButtonUnchecked as UncheckedIcon,
 	Close as CloseIcon,
-	Description as FileIcon
+	Description as FileIcon,
+	Visibility as ViewIcon
 } from '@mui/icons-material';
 import { useAppDispatch } from '../../../store/hooks';
 import { uploadDocument } from '../../../store/slices/candidateSlice';
+import { documentService } from '../../../services/candidateService';
 import type { CandidateScreeningCreate } from '../../../models/candidate';
 
 interface ScreeningFormDialogProps {
@@ -41,6 +44,7 @@ interface ScreeningFormDialogProps {
 	initialData?: any;
 	candidateName?: string;
 	candidatePublicId?: string;
+	existingDocuments?: any[];
 }
 
 interface TabPanelProps {
@@ -76,11 +80,13 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 	onSubmit,
 	initialData,
 	candidateName,
-	candidatePublicId
+	candidatePublicId,
+	existingDocuments
 }) => {
 	const dispatch = useAppDispatch();
 	const [tabValue, setTabValue] = useState(0);
 	const [uploading, setUploading] = useState<Record<string, boolean>>({});
+	const [viewing, setViewing] = useState<Record<string, boolean>>({});
 	const fileInputRefs = {
 		resume: useRef<HTMLInputElement>(null),
 		disability_certificate: useRef<HTMLInputElement>(null),
@@ -103,7 +109,10 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 			degree_qualification: false,
 			resume_filename: '',
 			disability_certificate_filename: '',
-			degree_qualification_filename: ''
+			degree_qualification_filename: '',
+			resume_id: null,
+			disability_certificate_id: null,
+			degree_qualification_id: null
 		},
 		others: {
 			comments: '',
@@ -115,6 +124,19 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 	useEffect(() => {
 		if (open) {
 			setTabValue(0);
+
+			// Extract document info from existingDocuments if provided
+			const docMap: Record<string, any> = {};
+			if (existingDocuments) {
+				existingDocuments.forEach(doc => {
+					const typeKey = doc.document_type === 'degree_certificate' ? 'degree_qualification' : doc.document_type;
+					docMap[typeKey] = {
+						id: doc.id,
+						name: doc.document_name
+					};
+				});
+			}
+
 			if (initialData) {
 				setFormData({
 					previous_training: {
@@ -127,12 +149,15 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 						soft_skills: initialData.skills?.soft_skills ?? []
 					},
 					documents_upload: {
-						resume: initialData.documents_upload?.resume ?? false,
-						disability_certificate: initialData.documents_upload?.disability_certificate ?? false,
-						degree_qualification: initialData.documents_upload?.degree_qualification ?? false,
-						resume_filename: initialData.documents_upload?.resume_filename ?? '',
-						disability_certificate_filename: initialData.documents_upload?.disability_certificate_filename ?? '',
-						degree_qualification_filename: initialData.documents_upload?.degree_qualification_filename ?? ''
+						resume: initialData.documents_upload?.resume || !!docMap.resume,
+						disability_certificate: initialData.documents_upload?.disability_certificate || !!docMap.disability_certificate,
+						degree_qualification: initialData.documents_upload?.degree_qualification || !!docMap.degree_qualification,
+						resume_filename: initialData.documents_upload?.resume_filename || docMap.resume?.name || '',
+						disability_certificate_filename: initialData.documents_upload?.disability_certificate_filename || docMap.disability_certificate?.name || '',
+						degree_qualification_filename: initialData.documents_upload?.degree_qualification_filename || docMap.degree_qualification?.name || '',
+						resume_id: initialData.documents_upload?.resume_id || docMap.resume?.id || null,
+						disability_certificate_id: initialData.documents_upload?.disability_certificate_id || docMap.disability_certificate?.id || null,
+						degree_qualification_id: initialData.documents_upload?.degree_qualification_id || docMap.degree_qualification?.id || null
 					},
 					others: {
 						comments: initialData.others?.comments ?? '',
@@ -140,9 +165,26 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 						ready_to_relocate: initialData.others?.ready_to_relocate ?? false
 					}
 				});
+			} else {
+				// No initial screening, but might have existing documents
+				setFormData(prev => ({
+					...prev,
+					documents_upload: {
+						...prev.documents_upload,
+						resume: !!docMap.resume,
+						disability_certificate: !!docMap.disability_certificate,
+						degree_qualification: !!docMap.degree_qualification,
+						resume_filename: docMap.resume?.name || '',
+						disability_certificate_filename: docMap.disability_certificate?.name || '',
+						degree_qualification_filename: docMap.degree_qualification?.name || '',
+						resume_id: docMap.resume?.id || null,
+						disability_certificate_id: docMap.disability_certificate?.id || null,
+						degree_qualification_id: docMap.degree_qualification?.id || null
+					}
+				}));
 			}
 		}
-	}, [initialData, open]);
+	}, [initialData, open, existingDocuments]);
 
 	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
 		setTabValue(newValue);
@@ -164,7 +206,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 		setUploading(prev => ({ ...prev, [type]: true }));
 		try {
 			const backendType = type === 'degree_qualification' ? 'degree_certificate' : type;
-			await dispatch(uploadDocument({
+			const result: any = await dispatch(uploadDocument({
 				publicId: candidatePublicId,
 				documentType: backendType as any,
 				file: file
@@ -175,13 +217,31 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 				documents_upload: {
 					...prev.documents_upload,
 					[type]: true,
-					[`${type}_filename`]: file.name
+					[`${type}_filename`]: file.name,
+					[`${type}_id`]: result.document.id
 				}
 			}));
 		} catch (error) {
 			console.error('Upload failed:', error);
 		} finally {
 			setUploading(prev => ({ ...prev, [type]: false }));
+		}
+	};
+
+	const handleViewFile = async (type: string) => {
+		const docId = formData.documents_upload?.[`${type}_id` as keyof Record<string, any>];
+		if (!docId) return;
+
+		setViewing(prev => ({ ...prev, [type]: true }));
+		try {
+			const blob = await documentService.download(docId);
+			const url = URL.createObjectURL(blob);
+			window.open(url, '_blank');
+			// Optionally revoke URL after some time, but keeping it open for the tab
+		} catch (error) {
+			console.error('Failed to download file for preview:', error);
+		} finally {
+			setViewing(prev => ({ ...prev, [type]: false }));
 		}
 	};
 
@@ -436,22 +496,36 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 													if (file) handleFileUpload(doc.id, file);
 												}}
 											/>
-											<Button
-												size="small"
-												variant="outlined"
-												startIcon={<CloudUploadIcon />}
-												disabled={uploading[doc.id]}
-												onClick={() => fileInputRefs[doc.id as keyof typeof fileInputRefs].current?.click()}
-												sx={{
-													borderRadius: '2px',
-													textTransform: 'none',
-													borderColor: '#d5dbdb',
-													color: '#16191f',
-													'&:hover': { bgcolor: '#f2f3f3', borderColor: '#545b64' }
-												}}
-											>
-												{formData.documents_upload?.[doc.id] ? 'Re-upload' : 'Upload'}
-											</Button>
+											<Stack direction="row" spacing={1}>
+												{formData.documents_upload?.[doc.id] && (
+													<Tooltip title="Preview Document">
+														<IconButton
+															size="small"
+															onClick={() => handleViewFile(doc.id)}
+															disabled={viewing[doc.id]}
+															sx={{ color: '#0073bb', border: '1px solid #d5dbdb', borderRadius: '2px' }}
+														>
+															{viewing[doc.id] ? <CircularProgress size={20} /> : <ViewIcon fontSize="small" />}
+														</IconButton>
+													</Tooltip>
+												)}
+												<Button
+													size="small"
+													variant="outlined"
+													startIcon={<CloudUploadIcon />}
+													disabled={uploading[doc.id]}
+													onClick={() => fileInputRefs[doc.id as keyof typeof fileInputRefs].current?.click()}
+													sx={{
+														borderRadius: '2px',
+														textTransform: 'none',
+														borderColor: '#d5dbdb',
+														color: '#16191f',
+														'&:hover': { bgcolor: '#f2f3f3', borderColor: '#545b64' }
+													}}
+												>
+													{formData.documents_upload?.[doc.id] ? 'Re-upload' : 'Upload'}
+												</Button>
+											</Stack>
 										</Box>
 									))}
 								</Stack>

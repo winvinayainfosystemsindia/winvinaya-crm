@@ -177,6 +177,7 @@ const ScreeningList: React.FC = () => {
 					initialData={selectedCandidate?.screening}
 					candidateName={selectedCandidate?.name}
 					candidatePublicId={selectedCandidate?.public_id}
+					existingDocuments={selectedCandidate?.documents}
 				/>
 
 				{/* Snackbar for notifications */}
