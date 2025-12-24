@@ -20,12 +20,12 @@ const Home: React.FC = () => {
 	}, [dispatch]);
 
 	return (
-		<Box>
+		<Box sx={{ p: { xs: 1, sm: 0 } }}>
 			<Typography variant="h5" sx={{ mb: 3, fontWeight: 700, color: '#16191f' }}>
 				Dashboard
 			</Typography>
 
-			<Grid container spacing={3} sx={{ mb: 4 }}>
+			<Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mb: 4 }}>
 				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
 					<StatCard
 						title="Total Candidates"
@@ -45,7 +45,7 @@ const Home: React.FC = () => {
 				</Grid>
 			</Grid>
 
-			<Grid container spacing={3}>
+			<Grid container spacing={{ xs: 2, sm: 3 }}>
 				<Grid size={{ xs: 12, md: 8 }}>
 					<RecentActivity />
 				</Grid>

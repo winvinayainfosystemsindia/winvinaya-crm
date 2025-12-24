@@ -6,6 +6,8 @@ import {
 	Typography,
 	Alert,
 	CircularProgress,
+	useMediaQuery,
+	useTheme,
 	FormControlLabel,
 	Switch
 } from '@mui/material';
@@ -20,6 +22,8 @@ interface UserEditFormProps {
 }
 
 const UserEditForm: React.FC<UserEditFormProps> = ({ user, onSuccess, onCancel }) => {
+	const theme = useTheme();
+	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [formData, setFormData] = useState({
@@ -163,12 +167,19 @@ const UserEditForm: React.FC<UserEditFormProps> = ({ user, onSuccess, onCancel }
 					/>
 				</Box>
 
-				<Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
+				<Box sx={{
+					display: 'flex',
+					flexDirection: isMobile ? 'column-reverse' : 'row',
+					gap: 2,
+					justifyContent: 'flex-end',
+					mt: 2
+				}}>
 					<Button
 						variant="outlined"
 						startIcon={<Cancel />}
 						onClick={onCancel}
 						disabled={loading}
+						fullWidth={isMobile}
 					>
 						Cancel
 					</Button>
@@ -177,6 +188,7 @@ const UserEditForm: React.FC<UserEditFormProps> = ({ user, onSuccess, onCancel }
 						variant="contained"
 						startIcon={loading ? <CircularProgress size={20} /> : <Save />}
 						disabled={loading}
+						fullWidth={isMobile}
 						sx={{
 							bgcolor: '#ec7211',
 							'&:hover': {

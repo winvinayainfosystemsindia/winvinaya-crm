@@ -7,6 +7,7 @@ import Footer from './Footer';
 import Breadcrumbs from '../common/Breadcrumbs';
 
 const MainLayout: React.FC = () => {
+
 	return (
 		<Box sx={{ display: 'flex', minHeight: '100vh' }}>
 			<CssBaseline />
@@ -16,15 +17,17 @@ const MainLayout: React.FC = () => {
 				component="main"
 				sx={{
 					flexGrow: 1,
-					p: 3,
+					p: { xs: 2, sm: 3 },
+					width: '100%', // Take full available space
 					transition: (theme) => theme.transitions.create(['margin', 'width'], {
 						easing: theme.transitions.easing.sharp,
 						duration: theme.transitions.duration.leavingScreen,
 					}),
-					mt: '48px', // Offset for dense toolbar
+					mt: '48px',
 					display: 'flex',
 					flexDirection: 'column',
 					minHeight: 'calc(100vh - 48px)',
+					overflowX: 'hidden'
 				}}
 			>
 				<Breadcrumbs />

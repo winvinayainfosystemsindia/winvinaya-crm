@@ -179,15 +179,25 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 	return (
 		<Paper sx={{ border: '1px solid #d5dbdb', boxShadow: 'none', borderRadius: 0 }}>
 			{/* Header with Search and Add Button */}
-			<Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #d5dbdb', bgcolor: '#fafafa' }}>
+			<Box sx={{
+				p: 2,
+				display: 'flex',
+				flexDirection: { xs: 'column', sm: 'row' },
+				justifyContent: 'space-between',
+				alignItems: { xs: 'stretch', sm: 'center' },
+				gap: 2,
+				borderBottom: '1px solid #d5dbdb',
+				bgcolor: '#fafafa'
+			}}>
 				<Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flex: 1 }}>
 					<TextField
 						placeholder="Search candidates..."
 						value={searchTerm}
 						onChange={handleSearch}
 						size="small"
+						fullWidth={true}
 						sx={{
-							width: '300px',
+							maxWidth: { xs: '100%', sm: '300px' },
 							'& .MuiOutlinedInput-root': {
 								bgcolor: 'white',
 								'& fieldset': {
@@ -208,15 +218,36 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 					/>
 				</Box>
 
-				<Box sx={{ display: 'flex', gap: 2 }}>
-					<Tooltip title="Refresh Data">
-						<IconButton
-							onClick={fetchCandidates}
-							disabled={loading}
+				<Box sx={{ display: 'flex', gap: 1, justifyContent: { xs: 'space-between', sm: 'flex-end' } }}>
+					<Box sx={{ display: 'flex', gap: 1 }}>
+						<Tooltip title="Refresh Data">
+							<IconButton
+								onClick={fetchCandidates}
+								disabled={loading}
+								sx={{
+									border: '1px solid #d5dbdb',
+									borderRadius: 1,
+									color: 'text.secondary',
+									'&:hover': {
+										borderColor: theme.palette.primary.main,
+										color: theme.palette.primary.main,
+										bgcolor: 'white'
+									}
+								}}
+							>
+								<Refresh fontSize="small" className={loading ? 'spin-animation' : ''} />
+							</IconButton>
+						</Tooltip>
+
+						<Button
+							variant="outlined"
+							startIcon={<FilterList />}
+							onClick={handleFilterClick}
 							sx={{
-								border: '1px solid #d5dbdb',
-								borderRadius: 1,
+								borderColor: '#d5dbdb',
 								color: 'text.secondary',
+								textTransform: 'none',
+								px: { xs: 1, sm: 2 },
 								'&:hover': {
 									borderColor: theme.palette.primary.main,
 									color: theme.palette.primary.main,
@@ -224,27 +255,9 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 								}
 							}}
 						>
-							<Refresh fontSize="small" className={loading ? 'spin-animation' : ''} />
-						</IconButton>
-					</Tooltip>
-
-					<Button
-						variant="outlined"
-						startIcon={<FilterList />}
-						onClick={handleFilterClick}
-						sx={{
-							borderColor: '#d5dbdb',
-							color: 'text.secondary',
-							textTransform: 'none',
-							'&:hover': {
-								borderColor: theme.palette.primary.main,
-								color: theme.palette.primary.main,
-								bgcolor: 'white'
-							}
-						}}
-					>
-						Filter
-					</Button>
+							Filter
+						</Button>
+					</Box>
 
 					<style>
 						{`
@@ -326,7 +339,6 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 							</Box>
 						</Box>
 					</Popover>
-
 					<Button
 						variant="contained"
 						startIcon={<Add />}
@@ -336,6 +348,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 							color: 'white',
 							textTransform: 'none',
 							fontWeight: 600,
+							px: { xs: 1, sm: 2 },
 							'&:hover': {
 								bgcolor: '#eb5f07',
 							}
@@ -352,17 +365,23 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 					<TableHead>
 						<TableRow sx={{ bgcolor: '#fafafa' }}>
 							{[
-								{ id: 'name', label: 'Name' },
-								{ id: 'email', label: 'Email' },
-								{ id: 'phone', label: 'Phone' },
-								{ id: 'city', label: 'Location' },
-								{ id: 'disability_type', label: 'Disability Type' },
-								{ id: 'created_at', label: 'Registered Date' },
+								{ id: 'name', label: 'Name', hideOnMobile: false },
+								{ id: 'email', label: 'Email', hideOnMobile: true },
+								{ id: 'phone', label: 'Phone', hideOnMobile: true },
+								{ id: 'city', label: 'Location', hideOnMobile: true },
+								{ id: 'disability_type', label: 'Disability', hideOnMobile: false },
+								{ id: 'created_at', label: 'Date', hideOnMobile: true },
 							].map((headCell) => (
 								<TableCell
 									key={headCell.id}
 									sortDirection={orderBy === headCell.id ? order : false}
-									sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem', borderBottom: '2px solid #d5dbdb' }}
+									sx={{
+										fontWeight: 'bold',
+										color: 'text.secondary',
+										fontSize: '0.875rem',
+										borderBottom: '2px solid #d5dbdb',
+										display: headCell.hideOnMobile ? { xs: 'none', md: 'table-cell' } : 'table-cell'
+									}}
 								>
 									<TableSortLabel
 										active={orderBy === headCell.id}
@@ -441,30 +460,30 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 											)}
 										</Box>
 									</TableCell>
-									<TableCell>
+									<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
 										<Typography variant="body2" color="text.secondary">
 											{candidate.email}
 										</Typography>
 									</TableCell>
-									<TableCell>
+									<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
 										<Typography variant="body2" color="text.secondary">
 											{candidate.phone}
 										</Typography>
 									</TableCell>
-									<TableCell>
+									<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
 										<Typography variant="body2" color="text.secondary">
 											{candidate.city}, {candidate.state}
 										</Typography>
 									</TableCell>
 									<TableCell>
-										<Typography variant="body2" color="text.secondary">
+										<Typography variant="body2" color="text.secondary" noWrap sx={{ maxWidth: '120px' }}>
 											{candidate.is_disabled || candidate.disability_type
 												? (candidate.disability_type || 'Unspecified')
 												: 'Non-PwD'
 											}
 										</Typography>
 									</TableCell>
-									<TableCell>
+									<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
 										<Typography variant="body2" color="text.secondary">
 											{formatDate(candidate.created_at)}
 										</Typography>
@@ -505,8 +524,17 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 			</TableContainer>
 
 			{/* Pagination */}
-			<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, borderTop: '1px solid #d5dbdb', bgcolor: '#fafafa' }}>
-				<Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+			<Box sx={{
+				display: 'flex',
+				flexDirection: { xs: 'column', sm: 'row' },
+				justifyContent: 'space-between',
+				alignItems: 'center',
+				p: 2,
+				gap: 2,
+				borderTop: '1px solid #d5dbdb',
+				bgcolor: '#fafafa'
+			}}>
+				<Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 2 }}>
 					<Typography variant="body2" color="text.secondary">
 						Rows per page:
 					</Typography>
@@ -546,6 +574,10 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 						'.MuiTablePagination-toolbar': {
 							paddingLeft: 0,
 							paddingRight: 0,
+							minHeight: '40px'
+						},
+						'.MuiTablePagination-actions': {
+							marginLeft: { xs: 0, sm: 2 }
 						}
 					}}
 				/>

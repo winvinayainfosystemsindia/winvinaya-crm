@@ -119,14 +119,23 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 	return (
 		<Paper sx={{ border: '1px solid #d5dbdb', boxShadow: 'none', borderRadius: 0 }}>
 			{/* Header with Search */}
-			<Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #d5dbdb', bgcolor: '#fafafa' }}>
+			<Box sx={{
+				p: 2,
+				display: 'flex',
+				flexDirection: { xs: 'column', sm: 'row' },
+				justifyContent: 'space-between',
+				alignItems: { xs: 'stretch', sm: 'center' },
+				borderBottom: '1px solid #d5dbdb',
+				bgcolor: '#fafafa'
+			}}>
 				<TextField
 					placeholder={`Search ${type === 'unscreened' ? 'unscreened' : 'screened'} candidates...`}
 					value={searchTerm}
 					onChange={handleSearch}
 					size="small"
+					fullWidth={true}
 					sx={{
-						width: '300px',
+						maxWidth: { xs: '100%', sm: '350px' },
 						'& .MuiOutlinedInput-root': {
 							bgcolor: 'white',
 							'& fieldset': {
@@ -152,16 +161,22 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 					<TableHead>
 						<TableRow sx={{ bgcolor: '#fafafa' }}>
 							{[
-								{ id: 'name', label: 'Name' },
-								{ id: 'email', label: 'Email' },
-								{ id: 'phone', label: 'Phone' },
-								{ id: 'city', label: 'Location' },
-								{ id: 'created_at', label: 'Registered Date' },
+								{ id: 'name', label: 'Name', hideOnMobile: false },
+								{ id: 'email', label: 'Email', hideOnMobile: true },
+								{ id: 'phone', label: 'Phone', hideOnMobile: true },
+								{ id: 'city', label: 'Location', hideOnMobile: true },
+								{ id: 'created_at', label: 'Date', hideOnMobile: true },
 							].map((headCell) => (
 								<TableCell
 									key={headCell.id}
 									sortDirection={orderBy === headCell.id ? order : false}
-									sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem', borderBottom: '2px solid #d5dbdb' }}
+									sx={{
+										fontWeight: 'bold',
+										color: 'text.secondary',
+										fontSize: '0.875rem',
+										borderBottom: '2px solid #d5dbdb',
+										display: headCell.hideOnMobile ? { xs: 'none', md: 'table-cell' } : 'table-cell'
+									}}
 								>
 									<TableSortLabel
 										active={orderBy === headCell.id}
@@ -234,22 +249,22 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 											)}
 										</Box>
 									</TableCell>
-									<TableCell>
+									<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
 										<Typography variant="body2" color="text.secondary">
 											{candidate.email}
 										</Typography>
 									</TableCell>
-									<TableCell>
+									<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
 										<Typography variant="body2" color="text.secondary">
 											{candidate.phone}
 										</Typography>
 									</TableCell>
-									<TableCell>
+									<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
 										<Typography variant="body2" color="text.secondary">
 											{candidate.city}, {candidate.state}
 										</Typography>
 									</TableCell>
-									<TableCell>
+									<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
 										<Typography variant="body2" color="text.secondary">
 											{formatDate(candidate.created_at)}
 										</Typography>
@@ -294,12 +309,20 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 				onPageChange={handleChangePage}
 				rowsPerPage={rowsPerPage}
 				onRowsPerPageChange={handleChangeRowsPerPage}
-				rowsPerPageOptions={[10, 25, 50, 100]}
+				rowsPerPageOptions={[10, 25, 50]}
 				sx={{
 					borderTop: '1px solid #d5dbdb',
 					'.MuiTablePagination-toolbar': {
-						paddingLeft: 2,
-						paddingRight: 2,
+						paddingLeft: { xs: 1, sm: 2 },
+						paddingRight: { xs: 1, sm: 2 },
+						flexWrap: 'wrap',
+						justifyContent: 'center'
+					},
+					'.MuiTablePagination-selectLabel, .MuiTablePagination-input': {
+						display: { xs: 'none', sm: 'block' }
+					},
+					'.MuiTablePagination-actions': {
+						marginLeft: { xs: 1, sm: 2 }
 					}
 				}}
 			/>

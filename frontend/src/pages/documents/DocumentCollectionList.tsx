@@ -14,7 +14,9 @@ import {
 	InputAdornment,
 	Tabs,
 	Tab,
-	Chip
+	Chip,
+	useTheme,
+	useMediaQuery
 } from '@mui/material';
 import {
 	Search as SearchIcon,
@@ -26,6 +28,8 @@ import type { CandidateListItem } from '../../models/candidate';
 
 const DocumentCollectionList: React.FC = () => {
 	const navigate = useNavigate();
+	const theme = useTheme();
+	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const [candidates, setCandidates] = useState<CandidateListItem[]>([]);
 	const [filteredCandidates, setFilteredCandidates] = useState<CandidateListItem[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -154,7 +158,7 @@ const DocumentCollectionList: React.FC = () => {
 	};
 
 	return (
-		<Box sx={{ p: 3 }}>
+		<Box sx={{ p: isMobile ? 2 : 3 }}>
 			<Box sx={{ mb: 4 }}>
 				<Typography variant="h4" component="h1" sx={{ fontWeight: 300, color: '#232f3e', mb: 0.5 }}>
 					Document Collection
@@ -177,7 +181,7 @@ const DocumentCollectionList: React.FC = () => {
 				<Box sx={{ mb: 3 }}>
 					<TextField
 						fullWidth
-						placeholder="Search by name, email, or phone..."
+						placeholder="Search candidates..."
 						value={searchTerm}
 						onChange={handleSearch}
 						InputProps={{
@@ -188,7 +192,7 @@ const DocumentCollectionList: React.FC = () => {
 							),
 						}}
 						size="small"
-						sx={{ maxWidth: 500 }}
+						sx={{ maxWidth: { xs: '100%', sm: 500 } }}
 					/>
 				</Box>
 
@@ -197,9 +201,9 @@ const DocumentCollectionList: React.FC = () => {
 						<TableHead sx={{ bgcolor: '#f5f5f5' }}>
 							<TableRow>
 								<TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
-								<TableCell sx={{ fontWeight: 'bold' }}>Contact</TableCell>
-								<TableCell sx={{ fontWeight: 'bold' }}>Location</TableCell>
-								<TableCell sx={{ fontWeight: 'bold', width: '35%' }}>Documents Status</TableCell>
+								<TableCell sx={{ fontWeight: 'bold', display: { xs: 'none', md: 'table-cell' } }}>Contact</TableCell>
+								<TableCell sx={{ fontWeight: 'bold', display: { xs: 'none', md: 'table-cell' } }}>Location</TableCell>
+								<TableCell sx={{ fontWeight: 'bold', width: { xs: '45%', md: '35%' } }}>Status</TableCell>
 								<TableCell align="right" sx={{ fontWeight: 'bold' }}>Action</TableCell>
 							</TableRow>
 						</TableHead>
@@ -225,8 +229,8 @@ const DocumentCollectionList: React.FC = () => {
 												{candidate.email}
 											</Typography>
 										</TableCell>
-										<TableCell>{candidate.phone}</TableCell>
-										<TableCell>{candidate.city}</TableCell>
+										<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{candidate.phone}</TableCell>
+										<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{candidate.city}</TableCell>
 										<TableCell>
 											{renderDocumentStatus(candidate)}
 										</TableCell>

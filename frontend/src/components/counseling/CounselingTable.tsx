@@ -110,14 +110,23 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 	return (
 		<Paper sx={{ border: '1px solid #d5dbdb', boxShadow: 'none', borderRadius: 0 }}>
 			{/* Header with Search */}
-			<Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #d5dbdb', bgcolor: '#fafafa' }}>
+			<Box sx={{
+				p: 2,
+				display: 'flex',
+				flexDirection: { xs: 'column', sm: 'row' },
+				justifyContent: 'space-between',
+				alignItems: { xs: 'stretch', sm: 'center' },
+				borderBottom: '1px solid #d5dbdb',
+				bgcolor: '#fafafa'
+			}}>
 				<TextField
 					placeholder={`Search candidates...`}
 					value={searchTerm}
 					onChange={handleSearch}
 					size="small"
+					fullWidth={true}
 					sx={{
-						width: '300px',
+						maxWidth: { xs: '100%', sm: '350px' },
 						'& .MuiOutlinedInput-root': {
 							bgcolor: 'white',
 							'& fieldset': {
@@ -144,16 +153,16 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 						<TableRow sx={{ bgcolor: '#fafafa' }}>
 							{(() => {
 								const headers = [
-									{ id: 'name', label: 'Name' },
-									{ id: 'phone', label: 'Phone' },
-									{ id: 'city', label: 'Location' },
-									{ id: 'education_level', label: 'Education' },
-									{ id: 'counseling_status', label: 'Status' },
+									{ id: 'name', label: 'Name', hideOnMobile: false },
+									{ id: 'phone', label: 'Phone', hideOnMobile: true },
+									{ id: 'city', label: 'Location', hideOnMobile: true },
+									{ id: 'education_level', label: 'Education', hideOnMobile: true },
+									{ id: 'counseling_status', label: 'Status', hideOnMobile: false },
 								];
 								if (type === 'counseled') {
 									headers.push(
-										{ id: 'counselor_name', label: 'Counselor' },
-										{ id: 'counseling_date', label: 'Date' }
+										{ id: 'counselor_name', label: 'Counselor', hideOnMobile: true },
+										{ id: 'counseling_date', label: 'Date', hideOnMobile: true }
 									);
 								}
 								return headers;
@@ -161,7 +170,13 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 								<TableCell
 									key={headCell.id}
 									sortDirection={orderBy === headCell.id ? order : false}
-									sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem', borderBottom: '2px solid #d5dbdb' }}
+									sx={{
+										fontWeight: 'bold',
+										color: 'text.secondary',
+										fontSize: '0.875rem',
+										borderBottom: '2px solid #d5dbdb',
+										display: headCell.hideOnMobile ? { xs: 'none', md: 'table-cell' } : 'table-cell'
+									}}
 								>
 									<TableSortLabel
 										active={orderBy === headCell.id}
@@ -218,17 +233,17 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 											</Tooltip>
 										</Box>
 									</TableCell>
-									<TableCell>
+									<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
 										<Typography variant="body2" color="text.secondary">
 											{candidate.phone}
 										</Typography>
 									</TableCell>
-									<TableCell>
+									<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
 										<Typography variant="body2" color="text.secondary">
 											{candidate.city}, {candidate.state}
 										</Typography>
 									</TableCell>
-									<TableCell>
+									<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
 										<Typography variant="body2" color="text.secondary">
 											{candidate.education_level || '-'}
 										</Typography>
@@ -244,8 +259,8 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 									{/* Counselor Name & Date (Only for Counseled) */}
 									{type === 'counseled' && (
 										<>
-											<TableCell>{candidate.counselor_name || '-'}</TableCell>
-											<TableCell>{candidate.counseling_date ? format(new Date(candidate.counseling_date), 'dd MMM yyyy') : '-'}</TableCell>
+											<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{candidate.counselor_name || '-'}</TableCell>
+											<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{candidate.counseling_date ? format(new Date(candidate.counseling_date), 'dd MMM yyyy') : '-'}</TableCell>
 										</>
 									)}
 
@@ -291,12 +306,20 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 				onPageChange={handleChangePage}
 				rowsPerPage={rowsPerPage}
 				onRowsPerPageChange={handleChangeRowsPerPage}
-				rowsPerPageOptions={[10, 25, 50, 100]}
+				rowsPerPageOptions={[10, 25, 50]}
 				sx={{
 					borderTop: '1px solid #d5dbdb',
 					'.MuiTablePagination-toolbar': {
-						paddingLeft: 2,
-						paddingRight: 2,
+						paddingLeft: { xs: 1, sm: 2 },
+						paddingRight: { xs: 1, sm: 2 },
+						flexWrap: 'wrap',
+						justifyContent: 'center'
+					},
+					'.MuiTablePagination-selectLabel, .MuiTablePagination-input': {
+						display: { xs: 'none', sm: 'block' }
+					},
+					'.MuiTablePagination-actions': {
+						marginLeft: { xs: 1, sm: 2 }
 					}
 				}}
 			/>

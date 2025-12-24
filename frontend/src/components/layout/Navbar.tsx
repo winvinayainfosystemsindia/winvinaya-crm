@@ -54,7 +54,7 @@ const Navbar: React.FC = () => {
 						</Badge>
 					</IconButton>
 					{user && (
-						<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', mr: 2 }}>
+						<Box sx={{ display: { xs: 'none', sm: 'flex' }, flexDirection: 'column', alignItems: 'flex-end', mr: 2 }}>
 							<Typography variant="subtitle2" sx={{ lineHeight: 1.2 }}>
 								{user.full_name || user.username}
 							</Typography>

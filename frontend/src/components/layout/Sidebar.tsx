@@ -21,13 +21,18 @@ import {
 	Group as CandidatesIcon
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAppSelector } from '../../store/hooks';
+import { useAppSelector, useAppDispatch } from '../../store/hooks';
+import { useTheme, useMediaQuery } from '@mui/material';
+import { toggleSidebar } from '../../store/slices/uiSlice';
 
 const drawerWidth = 260;
 
 const Sidebar: React.FC = () => {
 	const navigate = useNavigate();
 	const location = useLocation();
+	const dispatch = useAppDispatch();
+	const theme = useTheme();
+	const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 	const open = useAppSelector((state) => state.ui.sidebarOpen);
 	const [candidatesOpen, setCandidatesOpen] = useState(true);
 
@@ -35,13 +40,20 @@ const Sidebar: React.FC = () => {
 
 	const handleNavigate = (path: string) => {
 		navigate(path);
+		if (isMobile) {
+			dispatch(toggleSidebar());
+		}
 	};
 
 	return (
 		<Drawer
-			variant="persistent"
+			variant={isMobile ? 'temporary' : 'persistent'}
 			anchor="left"
 			open={open}
+			onClose={() => dispatch(toggleSidebar())}
+			ModalProps={{
+				keepMounted: true, // Better open performance on mobile.
+			}}
 			sx={{
 				width: open ? drawerWidth : 0,
 				flexShrink: 0,
@@ -52,9 +64,9 @@ const Sidebar: React.FC = () => {
 				'& .MuiDrawer-paper': {
 					width: drawerWidth,
 					boxSizing: 'border-box',
-					top: '48px', // Below dense AppBar
-					height: 'calc(100% - 48px)',
-					backgroundColor: '#f8f9fa', // Lighter background for professional look
+					top: isMobile ? 0 : '48px', // Dense AppBar height
+					height: isMobile ? '100%' : 'calc(100% - 48px)',
+					backgroundColor: '#f8f9fa',
 					borderRight: '1px solid #e0e0e0',
 				},
 			}}

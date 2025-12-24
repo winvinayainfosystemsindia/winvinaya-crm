@@ -9,7 +9,9 @@ import {
   CardActions,
   Chip,
   Alert,
-  CircularProgress
+  CircularProgress,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import {
   CloudUpload as UploadIcon,
@@ -35,6 +37,8 @@ const REQUIRED_DOCUMENTS = [
 const DocumentCollection: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [candidate, setCandidate] = useState<Candidate | null>(null);
   const [documents, setDocuments] = useState<CandidateDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -147,11 +151,11 @@ const DocumentCollection: React.FC = () => {
             {new Date(doc.created_at).toLocaleDateString()}
           </Typography>
         </Box>
-        <Paper variant="outlined" sx={{ p: 1.5, bgcolor: '#f8f9fa', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, overflow: 'hidden' }}>
+        <Paper variant="outlined" sx={{ p: 1.5, bgcolor: '#f8f9fa', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, overflow: 'hidden', minWidth: '150px' }}>
             <FileIcon color="action" fontSize="small" />
             <Box sx={{ overflow: 'hidden' }}>
-              <Typography variant="body2" noWrap title={doc.document_name} sx={{ fontWeight: 500 }}>
+              <Typography variant="body2" noWrap title={doc.document_name} sx={{ fontWeight: 500, maxWidth: '180px' }}>
                 {doc.document_name}
               </Typography>
               <Typography variant="caption" color="text.secondary">
@@ -159,7 +163,7 @@ const DocumentCollection: React.FC = () => {
               </Typography>
             </Box>
           </Box>
-          <Box sx={{ display: 'flex' }}>
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
             <Button
               size="small"
               onClick={() => handlePreview(doc.id)}
@@ -211,7 +215,7 @@ const DocumentCollection: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: isMobile ? 2 : 3 }}>
       <Box sx={{ mb: 4 }}>
         <Button
           startIcon={<ArrowBackIcon />}
@@ -250,7 +254,14 @@ const DocumentCollection: React.FC = () => {
             <Box key={docType.type} sx={{ width: { xs: '100%', md: '50%' }, p: 1.5 }}>
               <Card variant="outlined" sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                 <CardContent sx={{ flexGrow: 1 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
+                  <Box sx={{
+                    display: 'flex',
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    justifyContent: 'space-between',
+                    alignItems: { xs: 'stretch', sm: 'start' },
+                    gap: 2,
+                    mb: 2
+                  }}>
                     <Box>
                       <Typography variant="h6" component="div">
                         {docType.label}
@@ -259,7 +270,9 @@ const DocumentCollection: React.FC = () => {
                         {docType.description}
                       </Typography>
                     </Box>
-                    {getDocumentStatus(docType.type)}
+                    <Box sx={{ alignSelf: { xs: 'flex-start', sm: 'auto' } }}>
+                      {getDocumentStatus(docType.type)}
+                    </Box>
                   </Box>
                 </CardContent>
                 <CardActions sx={{ p: 2, pt: 0 }}>

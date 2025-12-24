@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Container, Typography } from '@mui/material';
+import { Box, Container, Typography, useTheme, useMediaQuery } from '@mui/material';
 import CandidateStatCards from '../../components/candidates/CandidateStatCards';
 import CandidateTable from '../../components/candidates/CandidateTable';
 import candidateService from '../../services/candidateService';
@@ -8,6 +8,8 @@ import type { CandidateStats } from '../../models/candidate';
 
 const CandidateList: React.FC = () => {
 	const navigate = useNavigate();
+	const theme = useTheme();
+	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const [stats, setStats] = useState<CandidateStats>({
 		total: 0,
 		male: 0,
@@ -54,11 +56,11 @@ const CandidateList: React.FC = () => {
 
 	return (
 		<Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
-			<Container maxWidth="xl" sx={{ py: 3 }}>
+			<Container maxWidth="xl" sx={{ py: { xs: 2, sm: 3 }, px: { xs: 1, sm: 2, md: 3 } }}>
 				{/* Page Header */}
 				<Box sx={{ mb: 3 }}>
 					<Typography
-						variant="h4"
+						variant={isMobile ? "h5" : "h4"}
 						component="h1"
 						sx={{
 							fontWeight: 300,

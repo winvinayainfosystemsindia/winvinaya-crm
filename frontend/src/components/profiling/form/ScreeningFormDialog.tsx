@@ -22,7 +22,9 @@ import {
 	IconButton,
 	Paper,
 	CircularProgress,
-	Tooltip
+	Tooltip,
+	useMediaQuery,
+	useTheme
 } from '@mui/material';
 import {
 	CloudUpload as CloudUploadIcon,
@@ -83,6 +85,8 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 	candidatePublicId,
 	existingDocuments
 }) => {
+	const theme = useTheme();
+	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const dispatch = useAppDispatch();
 	const [tabValue, setTabValue] = useState(0);
 	const [uploading, setUploading] = useState<Record<string, boolean>>({});
@@ -322,7 +326,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 					</Tabs>
 				</Box>
 
-				<Box sx={{ px: 4, py: 2 }}>
+				<Box sx={{ px: isMobile ? 2 : 4, py: 2 }}>
 					<TabPanel value={tabValue} index={0}>
 						<Paper elevation={0} sx={awsPanelStyle}>
 							<Typography sx={sectionTitleStyle}>Training Background</Typography>
@@ -458,9 +462,11 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 											key={doc.id}
 											sx={{
 												display: 'flex',
-												alignItems: 'center',
+												flexDirection: isMobile ? 'column' : 'row',
+												alignItems: isMobile ? 'stretch' : 'center',
 												justifyContent: 'space-between',
 												p: 2,
+												gap: isMobile ? 2 : 0,
 												border: '1px solid #eaeded',
 												borderRadius: '2px',
 												bgcolor: formData.documents_upload?.[doc.id] ? '#f1faff' : 'transparent',
@@ -496,7 +502,11 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 													if (file) handleFileUpload(doc.id, file);
 												}}
 											/>
-											<Stack direction="row" spacing={1}>
+											<Stack
+												direction="row"
+												spacing={1}
+												justifyContent={isMobile ? 'flex-end' : 'flex-start'}
+											>
 												{formData.documents_upload?.[doc.id] && (
 													<Tooltip title="Preview Document">
 														<IconButton
@@ -515,6 +525,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 													startIcon={<CloudUploadIcon />}
 													disabled={uploading[doc.id]}
 													onClick={() => fileInputRefs[doc.id as keyof typeof fileInputRefs].current?.click()}
+													fullWidth={isMobile}
 													sx={{
 														borderRadius: '2px',
 														textTransform: 'none',
@@ -534,7 +545,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 							<Paper elevation={0} sx={awsPanelStyle}>
 								<Typography sx={sectionTitleStyle}>Final Review & Remarks</Typography>
 								<Stack spacing={3}>
-									<Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3 }}>
+									<Box sx={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 3 }}>
 										<Box>
 											<FormLabel sx={{ fontSize: '0.875rem', fontWeight: 500, mb: 1, display: 'block' }}>
 												Willing for Training
@@ -582,10 +593,11 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 			</DialogContent>
 
 			<Divider sx={{ borderColor: '#d5dbdb' }} />
-			<DialogActions sx={{ p: 3, bgcolor: '#ffffff' }}>
+			<DialogActions sx={{ p: isMobile ? 2 : 3, bgcolor: '#ffffff', flexDirection: isMobile ? 'column-reverse' : 'row', gap: isMobile ? 1 : 0 }}>
 				<Button
 					onClick={onClose}
 					variant="text"
+					fullWidth={isMobile}
 					sx={{ color: '#16191f', fontWeight: 700, px: 3 }}
 				>
 					Cancel
@@ -593,12 +605,14 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 				<Button
 					onClick={handleSubmit}
 					variant="contained"
+					fullWidth={isMobile}
 					sx={{
 						bgcolor: '#ec7211',
 						color: '#ffffff',
 						px: 4,
 						py: 1,
 						fontWeight: 700,
+						ml: isMobile ? 0 : 1,
 						border: '1px solid #ec7211',
 						'&:hover': { bgcolor: '#eb5f07', borderColor: '#eb5f07' }
 					}}

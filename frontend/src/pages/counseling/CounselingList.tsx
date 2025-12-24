@@ -6,7 +6,9 @@ import {
 	Tabs,
 	Tab,
 	Snackbar,
-	Alert
+	Alert,
+	useTheme,
+	useMediaQuery
 } from '@mui/material';
 import CounselingTable from '../../components/counseling/CounselingTable';
 import CounselingFormDialog from '../../components/counseling/form/CounselingFormDialog';
@@ -38,6 +40,8 @@ function TabPanel(props: TabPanelProps) {
 
 const CounselingList: React.FC = () => {
 	const dispatch = useAppDispatch();
+	const theme = useTheme();
+	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const [tabValue, setTabValue] = useState(0);
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
@@ -122,12 +126,12 @@ const CounselingList: React.FC = () => {
 	};
 
 	return (
-		<Box sx={{ bgcolor: '#f5f5f5', minHeight: '100vh', py: 3 }}>
-			<Container maxWidth="xl">
+		<Box sx={{ bgcolor: '#f5f5f5', minHeight: '100vh', py: isMobile ? 2 : 3 }}>
+			<Container maxWidth="xl" sx={{ px: isMobile ? 1 : { sm: 2, md: 3 } }}>
 				{/* Page Header */}
 				<Box sx={{ mb: 4 }}>
 					<Typography
-						variant="h4"
+						variant={isMobile ? "h5" : "h4"}
 						component="h1"
 						sx={{
 							fontWeight: 300,
