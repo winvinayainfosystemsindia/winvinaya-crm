@@ -13,6 +13,7 @@ from app.schemas.candidate_counseling import (
     CandidateCounselingResponse
 )
 from app.services.candidate_counseling_service import CandidateCounselingService
+from app.utils.activity_tracker import log_create, log_update, log_delete
 
 
 router = APIRouter(tags=["Candidate Counseling"])
@@ -36,11 +37,23 @@ async def create_candidate_counseling(
     Automatically tracks the counselor who created the record.
     """
     service = CandidateCounselingService(db)
-    return await service.create_counseling(
+    counseling = await service.create_counseling(
         public_id, 
         counseling_in,
         counselor_id=current_user.id  # Track who created this
     )
+    
+    # Log the creation
+    await log_create(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="candidate_counseling",
+        resource_id=counseling.id,
+        created_object=counseling
+    )
+    
+    return counseling
 
 
 @router.put(
@@ -60,11 +73,28 @@ async def update_candidate_counseling(
     Updates the counselor who last modified the record.
     """
     service = CandidateCounselingService(db)
-    return await service.update_counseling(
+    
+    # Get before state
+    existing_counseling = await service.get_counseling(public_id)
+    
+    updated_counseling = await service.update_counseling(
         public_id,
         counseling_in,
         counselor_id=current_user.id  # Track who updated this
     )
+    
+    # Log the update
+    await log_update(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="candidate_counseling",
+        resource_id=updated_counseling.id,
+        before=existing_counseling,
+        after=updated_counseling
+    )
+    
+    return updated_counseling
 
 
 @router.delete(
@@ -82,5 +112,18 @@ async def delete_candidate_counseling(
     Delete candidate counseling record (Admin only)
     """
     service = CandidateCounselingService(db)
+    # Get counseling info before deleting
+    counseling = await service.get_counseling(public_id)
+    
     await service.delete_counseling(public_id)
+    
+    # Log the deletion
+    await log_delete(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="candidate_counseling",
+        resource_id=counseling.id
+    )
+    
     return None

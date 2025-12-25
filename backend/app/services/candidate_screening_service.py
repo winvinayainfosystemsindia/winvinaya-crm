@@ -18,6 +18,13 @@ class CandidateScreeningService:
         self.repository = CandidateScreeningRepository(db)
         self.candidate_repo = CandidateRepository(db)
     
+    async def get_screening(self, candidate_public_id: UUID) -> Optional[CandidateScreening]:
+        """Get screening for a candidate"""
+        candidate = await self.candidate_repo.get_by_public_id_with_details(candidate_public_id)
+        if not candidate:
+            return None
+        return candidate.screening
+    
     async def create_screening(
         self, 
         candidate_public_id: UUID, 

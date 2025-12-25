@@ -11,6 +11,7 @@ from app.models.user import User, UserRole
 from app.models.user import User, UserRole
 from app.schemas.candidate import CandidateCreate, CandidateResponse, CandidateUpdate, CandidateListResponse, CandidateStats, CandidatePaginatedResponse
 from app.services.candidate_service import CandidateService
+from app.utils.activity_tracker import log_create, log_update, log_delete
 
 
 router = APIRouter(prefix="/candidates", tags=["Candidates"])
@@ -28,7 +29,19 @@ async def register_candidate(
     """
     # No auth dependency here - public self-registration
     service = CandidateService(db)
-    return await service.create_candidate(candidate_in)
+    candidate = await service.create_candidate(candidate_in)
+    
+    # Log the registration
+    await log_create(
+        db=db,
+        request=request,
+        user_id=None, # Public self-registration
+        resource_type="candidate",
+        resource_id=candidate.id,
+        created_object=candidate
+    )
+    
+    return candidate
 
 
 @router.get("/", response_model=CandidatePaginatedResponse)
@@ -127,7 +140,24 @@ async def update_candidate(
     Update candidate by public_id (UUID) (Admin/Manager only)
     """
     service = CandidateService(db)
-    return await service.update_candidate(public_id, candidate_in)
+    
+    # Get before state
+    existing_candidate = await service.get_candidate(public_id)
+    
+    updated_candidate = await service.update_candidate(public_id, candidate_in)
+    
+    # Log the update
+    await log_update(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="candidate",
+        resource_id=updated_candidate.id,
+        before=existing_candidate,
+        after=updated_candidate
+    )
+    
+    return updated_candidate
 
 
 @router.delete("/{public_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -142,6 +172,19 @@ async def delete_candidate(
     Delete candidate by public_id (UUID) (Admin only)
     """
     service = CandidateService(db)
+    # Get candidate info before deleting for logging if needed
+    candidate = await service.get_candidate(public_id)
+    
     await service.delete_candidate(public_id)
+    
+    # Log the deletion
+    await log_delete(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="candidate",
+        resource_id=candidate.id
+    )
+    
     return None
 

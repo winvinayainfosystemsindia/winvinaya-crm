@@ -13,6 +13,7 @@ from app.schemas.candidate_screening import (
     CandidateScreeningResponse
 )
 from app.services.candidate_screening_service import CandidateScreeningService
+from app.utils.activity_tracker import log_create, log_update, log_delete
 
 
 router = APIRouter(tags=["Candidate Screening"])
@@ -35,7 +36,19 @@ async def create_candidate_screening(
     Create screening for a candidate
     """
     service = CandidateScreeningService(db)
-    return await service.create_screening(public_id, screening_in)
+    screening = await service.create_screening(public_id, screening_in)
+    
+    # Log the creation
+    await log_create(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="candidate_screening",
+        resource_id=screening.id,
+        created_object=screening
+    )
+    
+    return screening
 
 
 @router.put(
@@ -54,7 +67,24 @@ async def update_candidate_screening(
     Update candidate screening
     """
     service = CandidateScreeningService(db)
-    return await service.update_screening(public_id, screening_in)
+    
+    # Get before state
+    existing_screening = await service.get_screening(public_id)
+    
+    updated_screening = await service.update_screening(public_id, screening_in)
+    
+    # Log the update
+    await log_update(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="candidate_screening",
+        resource_id=updated_screening.id,
+        before=existing_screening,
+        after=updated_screening
+    )
+    
+    return updated_screening
 
 
 @router.delete(
@@ -72,5 +102,18 @@ async def delete_candidate_screening(
     Delete candidate screening (Admin only)
     """
     service = CandidateScreeningService(db)
+    # Get screening info before deleting
+    screening = await service.get_screening(public_id)
+    
     await service.delete_screening(public_id)
+    
+    # Log the deletion
+    await log_delete(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="candidate_screening",
+        resource_id=screening.id
+    )
+    
     return None

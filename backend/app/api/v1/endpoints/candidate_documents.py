@@ -16,6 +16,7 @@ from app.schemas.candidate_document import (
 )
 from app.services.candidate_document_service import CandidateDocumentService
 from app.services.file_storage_service import FileStorageService
+from app.utils.activity_tracker import log_create, log_update, log_delete
 
 
 router = APIRouter(tags=["Candidate Documents"])
@@ -43,12 +44,24 @@ async def upload_candidate_document(
     - Creates database record
     """
     service = CandidateDocumentService(db)
-    return await service.upload_document(
+    document = await service.upload_document(
         candidate_public_id=public_id,
         document_type=document_type,
         file=file,
         description=description
     )
+    
+    # Log the upload
+    await log_create(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="candidate_document",
+        resource_id=document.id,
+        created_object=document
+    )
+    
+    return document
 
 
 @router.get(
@@ -140,7 +153,24 @@ async def update_candidate_document(
     Update a candidate document metadata (Trainer only)
     """
     service = CandidateDocumentService(db)
-    return await service.update_document(document_id, document_in)
+    
+    # Get before state
+    existing_document = await service.get_document(document_id)
+    
+    updated_document = await service.update_document(document_id, document_in)
+    
+    # Log the update
+    await log_update(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="candidate_document",
+        resource_id=updated_document.id,
+        before=existing_document,
+        after=updated_document
+    )
+    
+    return updated_document
 
 
 @router.delete(
@@ -158,6 +188,19 @@ async def delete_candidate_document(
     Delete a candidate document and its file (Admin/Manager only)
     """
     service = CandidateDocumentService(db)
+    # Get document info before deletion
+    document = await service.get_document(document_id)
+    
     await service.delete_document(document_id)
+    
+    # Log the deletion
+    await log_delete(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="candidate_document",
+        resource_id=document.id
+    )
+    
     return None
 
