@@ -11,7 +11,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.core.database import AsyncSessionLocal, engine
 from app.models.user import User
 from app.models.candidate import Candidate
-from app.models.candidate_profile import CandidateProfile
+from app.models.candidate_screening import CandidateScreening
 from app.models.candidate_document import CandidateDocument
 from app.models.candidate_counseling import CandidateCounseling
 from app.models.activity_log import ActivityLog
@@ -39,8 +39,8 @@ async def clear_database(include_users: bool = False):
             print("Clearing Candidate Counseling...")
             await session.execute(delete(CandidateCounseling))
             
-            print("Clearing Candidate Profiles...")
-            await session.execute(delete(CandidateProfile))
+            print("Clearing Candidate Screenings...")
+            await session.execute(delete(CandidateScreening))
             
             print("Clearing Candidates...")
             await session.execute(delete(Candidate))
