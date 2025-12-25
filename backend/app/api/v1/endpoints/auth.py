@@ -45,6 +45,7 @@ async def register(
         user_id=user.id,
         resource_type="user",
         resource_id=user.id,
+        created_object=user,
         status_code=201,
     )
     

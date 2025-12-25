@@ -153,6 +153,7 @@ async def create_user(
         user_id=current_user.id,
         resource_type="user",
         resource_id=user.id,
+        created_object=user,
     )
     
     logger.info(f"User created successfully: {user.id}")

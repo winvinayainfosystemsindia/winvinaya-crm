@@ -1,6 +1,7 @@
 """Activity tracking utilities for logging API operations"""
 
 from typing import Optional, Any, Dict
+from datetime import datetime
 from fastapi import Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.activity_log import ActionType
@@ -89,16 +90,62 @@ def get_changes(before: Any, after: Any) -> Optional[Dict[str, Any]]:
     }
 
 
+def extract_safe_metadata(obj: Any) -> Optional[Dict[str, Any]]:
+    """
+    Extract safe metadata from an object, filtering sensitive fields
+    
+    Args:
+        obj: Object to extract metadata from (can be dict or Pydantic model)
+        
+    Returns:
+        Dictionary with safe fields only, or None if no safe fields exist
+    """
+    if obj is None:
+        return None
+    
+    # Convert to dict if needed
+    if hasattr(obj, 'dict'):
+        obj_dict = obj.dict()
+    elif hasattr(obj, '__dict__'):
+        obj_dict = {k: v for k, v in obj.__dict__.items() if not k.startswith('_')}
+    else:
+        obj_dict = obj if isinstance(obj, dict) else {}
+    
+    # Filter out sensitive fields
+    sensitive_fields = {'password', 'hashed_password', 'token', 'secret', 'api_key'}
+    filtered = {}
+    
+    for k, v in obj_dict.items():
+        if k in sensitive_fields:
+            continue
+        
+        # Convert datetime objects to ISO format strings for JSON serialization
+        if isinstance(v, datetime):
+            filtered[k] = v.isoformat()
+        else:
+            filtered[k] = v
+    
+    return filtered if filtered else None
+
+
+
 async def log_create(
     db: AsyncSession,
     request: Request,
     user_id: Optional[int],
     resource_type: str,
     resource_id: int,
+    created_object: Optional[Any] = None,
     status_code: int = 201
 ) -> None:
-    """Log a CREATE action"""
+    """Log a CREATE action with complete object metadata"""
     activity_service = ActivityLogService(db)
+    
+    # Extract metadata from created object for complete audit trail
+    metadata = None
+    if created_object:
+        metadata = extract_safe_metadata(created_object)
+    
     await activity_service.log_activity(
         user_id=user_id,
         action_type=ActionType.CREATE,
@@ -106,6 +153,7 @@ async def log_create(
         method=request.method,
         resource_type=resource_type,
         resource_id=resource_id,
+        changes=metadata,
         ip_address=get_client_ip(request),
         user_agent=get_user_agent(request),
         status_code=status_code,
@@ -148,8 +196,15 @@ async def log_delete(
     resource_id: int,
     status_code: int = 204
 ) -> None:
-    """Log a DELETE action"""
+    """Log a DELETE action with a descriptive message"""
     activity_service = ActivityLogService(db)
+    
+    # Create a simple descriptive message
+    metadata = {
+        "message": f"{resource_type.capitalize()} deleted",
+        "resource_id": resource_id
+    }
+    
     await activity_service.log_activity(
         user_id=user_id,
         action_type=ActionType.DELETE,
@@ -157,6 +212,7 @@ async def log_delete(
         method=request.method,
         resource_type=resource_type,
         resource_id=resource_id,
+        changes=metadata,
         ip_address=get_client_ip(request),
         user_agent=get_user_agent(request),
         status_code=status_code,
@@ -192,14 +248,22 @@ async def log_login(
     user_id: int,
     status_code: int = 200
 ) -> None:
-    """Log a LOGIN action"""
+    """Log a LOGIN action with descriptive message"""
     activity_service = ActivityLogService(db)
+    
+    # Create a simple descriptive message
+    metadata = {
+        "message": "User logged in successfully",
+        "status": "success" if status_code == 200 else "failed"
+    }
+    
     await activity_service.log_activity(
         user_id=user_id,
         action_type=ActionType.LOGIN,
         endpoint=str(request.url.path),
         method=request.method,
         resource_type="auth",
+        changes=metadata,
         ip_address=get_client_ip(request),
         user_agent=get_user_agent(request),
         status_code=status_code,
@@ -212,14 +276,21 @@ async def log_logout(
     user_id: int,
     status_code: int = 200
 ) -> None:
-    """Log a LOGOUT action"""
+    """Log a LOGOUT action with descriptive message"""
     activity_service = ActivityLogService(db)
+    
+    # Create a simple descriptive message
+    metadata = {
+        "message": "User logged out",
+    }
+    
     await activity_service.log_activity(
         user_id=user_id,
         action_type=ActionType.LOGOUT,
         endpoint=str(request.url.path),
         method=request.method,
         resource_type="auth",
+        changes=metadata,
         ip_address=get_client_ip(request),
         user_agent=get_user_agent(request),
         status_code=status_code,
