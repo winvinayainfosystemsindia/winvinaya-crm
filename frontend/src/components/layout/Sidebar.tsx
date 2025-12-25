@@ -26,7 +26,7 @@ import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { useTheme, useMediaQuery } from '@mui/material';
 import { toggleSidebar } from '../../store/slices/uiSlice';
 
-const drawerWidth = 260;
+const drawerWidth = 280;
 
 const Sidebar: React.FC = () => {
 	const navigate = useNavigate();
@@ -141,7 +141,7 @@ const Sidebar: React.FC = () => {
 
 						<Collapse in={candidatesOpen} timeout="auto" unmountOnExit>
 							<List component="div" disablePadding>
-								<ListItemButton
+								{/* <ListItemButton
 									sx={{ pl: 9, py: 0.5 }}
 									selected={isActive('/candidates/overview')}
 									onClick={() => handleNavigate('/candidates/overview')}
@@ -154,7 +154,7 @@ const Sidebar: React.FC = () => {
 											fontWeight: isActive('/candidates/overview') ? 600 : 400
 										}}
 									/>
-								</ListItemButton>
+								</ListItemButton> */}
 								<ListItemButton
 									sx={{ pl: 9, py: 0.5 }}
 									selected={isActive('/candidates') || isActive('/candidates/list')}
