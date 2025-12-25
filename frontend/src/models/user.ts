@@ -1,6 +1,6 @@
 // frontend\src\models\user.ts
 export interface User {
-	id: string;
+	id: number;
 	username: string;
 	email: string;
 	full_name: string;
