@@ -62,6 +62,11 @@ function buildQueryParams(
  * @returns Normalized ActivityLog object
  */
 function mapActivityLogItem(item: any): ActivityLog {
+  // Map backend 'changes' to frontend 'metadata.changes'
+  // Backend sends: { changes: {before: {...}, after: {...}} }
+  // Frontend expects: { metadata: {changes: {before: {...}, after: {...}}} }
+  const metadata = item.metadata || (item.changes ? { changes: item.changes } : null);
+
   return {
     id: item.id,
     userId: item.user_id ?? item.userId ?? null,
@@ -72,7 +77,7 @@ function mapActivityLogItem(item: any): ActivityLog {
     statusCode: item.status_code ?? item.statusCode ?? null,
     ipAddress: item.ip_address ?? item.ipAddress ?? null,
     userAgent: item.user_agent ?? item.userAgent ?? null,
-    metadata: item.metadata ?? null,
+    metadata: metadata,
     createdAt: item.created_at ?? item.createdAt ?? "",
     // Include any extra fields as pass-through
     ...item,
