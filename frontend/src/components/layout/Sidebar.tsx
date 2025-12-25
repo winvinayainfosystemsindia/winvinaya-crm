@@ -18,7 +18,8 @@ import {
 	ManageAccounts as UserIcon,
 	HelpOutline as HelpIcon,
 	Home as HomeIcon,
-	Group as CandidatesIcon
+	Group as CandidatesIcon,
+	Lock as LockIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
@@ -34,6 +35,7 @@ const Sidebar: React.FC = () => {
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 	const open = useAppSelector((state) => state.ui.sidebarOpen);
+	const user = useAppSelector((state) => state.auth.user);
 	const [candidatesOpen, setCandidatesOpen] = useState(true);
 
 	const isActive = (path: string) => location.pathname === path;
@@ -96,12 +98,17 @@ const Sidebar: React.FC = () => {
 							</ListItemButton>
 						</ListItem>
 
-						{/* User Management */}
+						{/* User Management - Admin only */}
 						<ListItem disablePadding>
 							<ListItemButton
 								selected={isActive('/users')}
-								onClick={() => handleNavigate('/users')}
-								sx={{ py: 0.5 }}
+								onClick={() => user?.role === 'admin' && handleNavigate('/users')}
+								disabled={user?.role !== 'admin'}
+								sx={{
+									py: 0.5,
+									opacity: user?.role !== 'admin' ? 0.6 : 1,
+									cursor: user?.role !== 'admin' ? 'not-allowed' : 'pointer'
+								}}
 							>
 								<ListItemIcon sx={{ minWidth: 40, color: isActive('/users') ? 'primary.main' : '#5f6368' }}>
 									<UserIcon />
@@ -114,6 +121,7 @@ const Sidebar: React.FC = () => {
 										color: isActive('/users') ? 'primary.main' : '#202124'
 									}}
 								/>
+								{user?.role !== 'admin' && <LockIcon sx={{ fontSize: 16, color: 'text.disabled' }} />}
 							</ListItemButton>
 						</ListItem>
 
@@ -161,10 +169,18 @@ const Sidebar: React.FC = () => {
 										}}
 									/>
 								</ListItemButton>
+
+								{/* Screening - Admin & Sourcing only */}
 								<ListItemButton
-									sx={{ pl: 9, py: 0.5 }}
+									sx={{
+										pl: 9,
+										py: 0.5,
+										opacity: !['admin', 'sourcing'].includes(user?.role || '') ? 0.6 : 1,
+										cursor: !['admin', 'sourcing'].includes(user?.role || '') ? 'not-allowed' : 'pointer'
+									}}
 									selected={isActive('/candidates/screening')}
-									onClick={() => handleNavigate('/candidates/screening')}
+									onClick={() => ['admin', 'sourcing'].includes(user?.role || '') && handleNavigate('/candidates/screening')}
+									disabled={!['admin', 'sourcing'].includes(user?.role || '')}
 								>
 									<ListItemText
 										primary="Screening"
@@ -174,11 +190,20 @@ const Sidebar: React.FC = () => {
 											fontWeight: isActive('/candidates/screening') ? 600 : 400
 										}}
 									/>
+									{!['admin', 'sourcing'].includes(user?.role || '') && <LockIcon sx={{ fontSize: 14, color: 'text.disabled' }} />}
 								</ListItemButton>
+
+								{/* Counseling - Admin & Trainer only */}
 								<ListItemButton
-									sx={{ pl: 9, py: 0.5 }}
+									sx={{
+										pl: 9,
+										py: 0.5,
+										opacity: !['admin', 'trainer'].includes(user?.role || '') ? 0.6 : 1,
+										cursor: !['admin', 'trainer'].includes(user?.role || '') ? 'not-allowed' : 'pointer'
+									}}
 									selected={isActive('/candidates/counseling')}
-									onClick={() => handleNavigate('/candidates/counseling')}
+									onClick={() => ['admin', 'trainer'].includes(user?.role || '') && handleNavigate('/candidates/counseling')}
+									disabled={!['admin', 'trainer'].includes(user?.role || '')}
 								>
 									<ListItemText
 										primary="Counseling"
@@ -188,11 +213,20 @@ const Sidebar: React.FC = () => {
 											fontWeight: isActive('/candidates/counseling') ? 600 : 400
 										}}
 									/>
+									{!['admin', 'trainer'].includes(user?.role || '') && <LockIcon sx={{ fontSize: 14, color: 'text.disabled' }} />}
 								</ListItemButton>
+
+								{/* Document Collection - Admin & Sourcing only */}
 								<ListItemButton
-									sx={{ pl: 9, py: 0.5 }}
+									sx={{
+										pl: 9,
+										py: 0.5,
+										opacity: !['admin', 'sourcing'].includes(user?.role || '') ? 0.6 : 1,
+										cursor: !['admin', 'sourcing'].includes(user?.role || '') ? 'not-allowed' : 'pointer'
+									}}
 									selected={isActive('/candidates/documents')}
-									onClick={() => handleNavigate('/candidates/documents')}
+									onClick={() => ['admin', 'sourcing'].includes(user?.role || '') && handleNavigate('/candidates/documents')}
+									disabled={!['admin', 'sourcing'].includes(user?.role || '')}
 								>
 									<ListItemText
 										primary="Document Collection"
@@ -202,6 +236,7 @@ const Sidebar: React.FC = () => {
 											fontWeight: isActive('/candidates/documents') ? 600 : 400
 										}}
 									/>
+									{!['admin', 'sourcing'].includes(user?.role || '') && <LockIcon sx={{ fontSize: 14, color: 'text.disabled' }} />}
 								</ListItemButton>
 							</List>
 						</Collapse>
