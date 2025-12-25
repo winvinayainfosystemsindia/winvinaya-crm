@@ -262,6 +262,10 @@ class CandidateStats(BaseModel):
     weekly: List[int] = []
     screened: int
     not_screened: int
+    total_counseled: int = 0
+    counseling_pending: int = 0
+    counseling_selected: int = 0
+    counseling_rejected: int = 0
 
 
 class CandidatePaginatedResponse(BaseModel):
