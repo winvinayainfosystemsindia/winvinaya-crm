@@ -79,7 +79,7 @@ async def update_current_user(
 @rate_limit_medium()
 async def get_user_stats(
     request: Request,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN])),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -166,7 +166,7 @@ async def get_users(
     request: Request,
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(20, ge=1, le=100, description="Maximum number of records to return"),
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN])),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -188,7 +188,7 @@ async def get_users(
 async def get_user(
     request: Request,
     user_id: int,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN])),
     db: AsyncSession = Depends(get_db)
 ):
     """

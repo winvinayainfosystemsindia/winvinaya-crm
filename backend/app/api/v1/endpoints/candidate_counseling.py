@@ -29,7 +29,7 @@ async def create_candidate_counseling(
     request: Request,
     public_id: UUID,
     counseling_in: CandidateCounselingCreate,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.TRAINER])),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -65,7 +65,7 @@ async def update_candidate_counseling(
     request: Request,
     public_id: UUID,
     counseling_in: CandidateCounselingUpdate,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.TRAINER])),
     db: AsyncSession = Depends(get_db)
 ):
     """
