@@ -239,62 +239,14 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 							}
 						}}
 					>
-						<Tab label="1. Counseling Info" />
-						<Tab label="2. Skills Assessment" />
-						<Tab label="3. Interview & Feedback" />
+						<Tab label="1. Skill Assessment" />
+						<Tab label="2. Interview & Feedback" />
+						<Tab label="3. Counseling Info" />
 					</Tabs>
 				</Box>
 
 				<Box sx={{ px: 4, py: 2 }}>
 					<TabPanel value={tabValue} index={0}>
-						<Paper elevation={0} sx={awsPanelStyle}>
-							<Typography sx={sectionTitleStyle}>General Information</Typography>
-							<Grid container spacing={4}>
-								<Grid size={{ xs: 12, md: 6 }}>
-									<TextField
-										label="Counselor Name"
-										fullWidth
-										size="small"
-										variant="outlined"
-										value={formData.counselor_name || ''}
-										onChange={(e) => handleChange('counselor_name', e.target.value)}
-										placeholder="Enter your name"
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
-								</Grid>
-								<Grid size={{ xs: 12, md: 6 }}>
-									<TextField
-										label="Date"
-										type="date"
-										size="small"
-										fullWidth
-										variant="outlined"
-										InputLabelProps={{ shrink: true }}
-										value={formData.counseling_date ? formData.counseling_date.split('T')[0] : ''}
-										onChange={(e) => handleChange('counseling_date', e.target.value)}
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
-								</Grid>
-								<Grid size={{ xs: 12, md: 6 }}>
-									<FormControl fullWidth size="small">
-										<InputLabel>Status</InputLabel>
-										<Select
-											value={formData.status || 'pending'}
-											label="Status"
-											onChange={(e) => handleChange('status', e.target.value)}
-											sx={{ borderRadius: '2px' }}
-										>
-											<MenuItem value="pending">Pending</MenuItem>
-											<MenuItem value="selected">Selected</MenuItem>
-											<MenuItem value="rejected">Rejected</MenuItem>
-										</Select>
-									</FormControl>
-								</Grid>
-							</Grid>
-						</Paper>
-					</TabPanel>
-
-					<TabPanel value={tabValue} index={1}>
 						<Paper elevation={0} sx={awsPanelStyle}>
 							<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
 								<Typography sx={{ ...sectionTitleStyle, mb: 0 }}>Skills Assessment</Typography>
@@ -368,7 +320,7 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 						</Paper>
 					</TabPanel>
 
-					<TabPanel value={tabValue} index={2}>
+					<TabPanel value={tabValue} index={1}>
 						<Stack spacing={3}>
 							<Paper elevation={0} sx={awsPanelStyle}>
 								<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -447,6 +399,54 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 								/>
 							</Paper>
 						</Stack>
+					</TabPanel>
+
+					<TabPanel value={tabValue} index={2}>
+						<Paper elevation={0} sx={awsPanelStyle}>
+							<Typography sx={sectionTitleStyle}>General Information</Typography>
+							<Grid container spacing={4}>
+								<Grid size={{ xs: 12, md: 6 }}>
+									<TextField
+										label="Counselor Name"
+										fullWidth
+										size="small"
+										variant="outlined"
+										value={formData.counselor_name || ''}
+										onChange={(e) => handleChange('counselor_name', e.target.value)}
+										placeholder="Enter your name"
+										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+									/>
+								</Grid>
+								<Grid size={{ xs: 12, md: 6 }}>
+									<TextField
+										label="Date"
+										type="date"
+										size="small"
+										fullWidth
+										variant="outlined"
+										InputLabelProps={{ shrink: true }}
+										value={formData.counseling_date ? formData.counseling_date.split('T')[0] : ''}
+										onChange={(e) => handleChange('counseling_date', e.target.value)}
+										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+									/>
+								</Grid>
+								<Grid size={{ xs: 12, md: 6 }}>
+									<FormControl fullWidth size="small">
+										<InputLabel>Status</InputLabel>
+										<Select
+											value={formData.status || 'pending'}
+											label="Status"
+											onChange={(e) => handleChange('status', e.target.value)}
+											sx={{ borderRadius: '2px' }}
+										>
+											<MenuItem value="pending">Pending</MenuItem>
+											<MenuItem value="selected">Selected</MenuItem>
+											<MenuItem value="rejected">Rejected</MenuItem>
+										</Select>
+									</FormControl>
+								</Grid>
+							</Grid>
+						</Paper>
 					</TabPanel>
 				</Box>
 			</DialogContent>
