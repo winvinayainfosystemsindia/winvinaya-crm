@@ -55,6 +55,18 @@ async def get_training_batches(
     return await service.get_batches(skip=skip, limit=limit)
 
 
+@router.get("/stats")
+async def get_training_batch_stats(
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get training batch statistics
+    """
+    service = TrainingBatchService(db)
+    return await service.get_stats()
+
+
 @router.get("/{public_id}", response_model=TrainingBatchResponse)
 async def get_training_batch(
     public_id: UUID,

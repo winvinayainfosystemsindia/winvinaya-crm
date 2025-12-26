@@ -41,3 +41,13 @@ class TrainingBatchService:
         """Delete a training batch"""
         batch = await self.get_batch_by_public_id(public_id)
         return await self.repository.delete(batch.id)
+
+    async def get_stats(self) -> dict:
+        """Get training batch statistics"""
+        batches = await self.repository.get_multi(limit=1000)
+        return {
+            "total": len(batches),
+            "planned": len([b for b in batches if b.status == "planned"]),
+            "running": len([b for b in batches if b.status == "running"]),
+            "closed": len([b for b in batches if b.status == "closed"])
+        }
