@@ -6,6 +6,7 @@ interface TrainingState {
 	batches: TrainingBatch[];
 	stats: TrainingStats | null;
 	allocations: CandidateAllocation[];
+	eligibleCandidates: { public_id: string, name: string, email: string, phone: string }[];
 	loading: boolean;
 	error: string | null;
 }
@@ -14,6 +15,7 @@ const initialState: TrainingState = {
 	batches: [],
 	stats: null,
 	allocations: [],
+	eligibleCandidates: [],
 	loading: false,
 	error: null,
 };
@@ -68,12 +70,74 @@ export const updateTrainingBatch = createAsyncThunk(
 
 export const fetchAllocations = createAsyncThunk(
 	'training/fetchAllocations',
-	async (batchId: number | undefined, { rejectWithValue }) => {
+	async (batchPublicId: string, { rejectWithValue }) => {
 		try {
-			const response = await trainingService.getAllocations(batchId);
-			return response.items;
+			console.log('[fetchAllocations] Fetching allocations for batch:', batchPublicId);
+			const response = await trainingService.getAllocations(batchPublicId);
+			console.log('[fetchAllocations] Response received:', response.length, 'allocations');
+			if (response.length > 0) {
+				console.log('[fetchAllocations] First allocation:', response[0]);
+			}
+			return response;
 		} catch (error: any) {
+			console.error('[fetchAllocations] Error:', error);
 			return rejectWithValue(error.response?.data?.message || 'Failed to fetch allocations');
+		}
+	}
+);
+
+export const fetchEligibleCandidates = createAsyncThunk(
+	'training/fetchEligibleCandidates',
+	async (_, { rejectWithValue }) => {
+		try {
+			const response = await trainingService.getEligibleCandidates();
+			return response;
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.message || 'Failed to fetch eligible candidates');
+		}
+	}
+);
+
+export const allocateCandidate = createAsyncThunk(
+	'training/allocateCandidate',
+	async ({ batchId, candidateId, batchPublicId, candidatePublicId }: { batchId: number, candidateId: number, batchPublicId?: string, candidatePublicId?: string }, { rejectWithValue, dispatch }) => {
+		try {
+			const response = await trainingService.allocateCandidate({
+				batch_id: batchId,
+				candidate_id: candidateId,
+				batch_public_id: batchPublicId,
+				candidate_public_id: candidatePublicId
+			});
+			// If allocation successful, we might need to refresh stats and batches because status might have changed
+			dispatch(fetchTrainingStats());
+			dispatch(fetchTrainingBatches({}));
+			return response;
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.message || 'Failed to allocate candidate');
+		}
+	}
+);
+
+export const removeAllocation = createAsyncThunk(
+	'training/removeAllocation',
+	async (publicId: string, { rejectWithValue }) => {
+		try {
+			await trainingService.removeAllocation(publicId);
+			return publicId;
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.message || 'Failed to remove allocation');
+		}
+	}
+);
+
+export const updateAllocationStatus = createAsyncThunk(
+	'training/updateAllocationStatus',
+	async ({ publicId, status }: { publicId: string, status: string }, { rejectWithValue }) => {
+		try {
+			const response = await trainingService.updateAllocation(publicId, { status: { current: status } });
+			return response;
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.message || 'Failed to update allocation status');
 		}
 	}
 );
@@ -124,6 +188,38 @@ const trainingSlice = createSlice({
 				if (index !== -1) {
 					state.batches[index] = action.payload;
 				}
+			})
+			// Allocations
+			.addCase(fetchAllocations.pending, (state) => {
+				state.loading = true;
+			})
+			.addCase(fetchAllocations.fulfilled, (state, action: PayloadAction<CandidateAllocation[]>) => {
+				state.loading = false;
+				state.allocations = action.payload;
+			})
+			.addCase(fetchAllocations.rejected, (state, action: PayloadAction<any>) => {
+				state.loading = false;
+				state.error = action.payload;
+			})
+			// Eligible Candidates
+			.addCase(fetchEligibleCandidates.fulfilled, (state, action: PayloadAction<any[]>) => {
+				state.eligibleCandidates = action.payload;
+			})
+			// Allocate
+			.addCase(allocateCandidate.fulfilled, (state, action: PayloadAction<CandidateAllocation>) => {
+				state.allocations.push(action.payload);
+				// Remove from eligible list
+				state.eligibleCandidates = state.eligibleCandidates.filter(c => c.public_id !== action.payload.candidate?.public_id);
+			})
+			// Update Status
+			.addCase(updateAllocationStatus.fulfilled, (state, action: PayloadAction<CandidateAllocation>) => {
+				const index = state.allocations.findIndex(a => a.public_id === action.payload.public_id);
+				if (index !== -1) {
+					state.allocations[index] = action.payload;
+				}
+			})
+			.addCase(removeAllocation.fulfilled, (state, action: PayloadAction<string>) => {
+				state.allocations = state.allocations.filter(a => a.public_id !== action.payload);
 			});
 	},
 });

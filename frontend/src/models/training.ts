@@ -21,8 +21,15 @@ export interface CandidateAllocation {
 	candidate_id: number;
 	status: any;
 	others: any;
+	created_at: string;
+	updated_at: string;
 	batch?: TrainingBatch;
-	candidate?: any;
+	candidate?: {
+		public_id: string;
+		name: string;
+		email: string;
+		phone: string;
+	};
 }
 
 export interface TrainingStats {

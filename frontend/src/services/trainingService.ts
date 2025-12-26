@@ -22,14 +22,28 @@ const trainingService = {
 		return response.data;
 	},
 
-	getAllocations: async (batchId?: number) => {
-		const url = batchId ? `/candidate-allocations/?batch_id=${batchId}` : '/candidate-allocations/';
-		const response = await api.get<{ items: CandidateAllocation[], total: number }>(url);
+	getAllocations: async (batchPublicId: string) => {
+		const response = await api.get<CandidateAllocation[]>(`/candidate-allocations/batch/${batchPublicId}`);
 		return response.data;
 	},
 
-	allocateCandidate: async (data: Partial<CandidateAllocation>) => {
+	getEligibleCandidates: async () => {
+		const response = await api.get<{ public_id: string, name: string, email: string, phone: string }[]>('/candidate-allocations/eligible');
+		return response.data;
+	},
+
+	allocateCandidate: async (data: { batch_id: number; candidate_id: number; batch_public_id?: string; candidate_public_id?: string; status?: any; others?: any }) => {
 		const response = await api.post<CandidateAllocation>('/candidate-allocations/', data);
+		return response.data;
+	},
+
+	updateAllocation: async (publicId: string, data: Partial<CandidateAllocation>) => {
+		const response = await api.put<CandidateAllocation>(`/candidate-allocations/${publicId}`, data);
+		return response.data;
+	},
+
+	removeAllocation: async (publicId: string) => {
+		const response = await api.delete(`/candidate-allocations/${publicId}`);
 		return response.data;
 	}
 };
