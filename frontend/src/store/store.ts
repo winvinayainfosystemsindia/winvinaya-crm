@@ -4,6 +4,7 @@ import authReducer from './slices/authSlice';
 import candidateReducer from './slices/candidateSlice';
 import activityLogReducer from './slices/activityLogSlice';
 import userReducer from './slices/userSlice';
+import trainingReducer from './slices/trainingSlice';
 
 export const store = configureStore({
 	reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
 		candidates: candidateReducer,
 		activityLogs: activityLogReducer,
 		users: userReducer,
+		training: trainingReducer,
 	},
 });
 
