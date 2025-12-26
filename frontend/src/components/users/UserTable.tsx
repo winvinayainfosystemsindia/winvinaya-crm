@@ -42,7 +42,7 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 	const [loading, setLoading] = useState(false);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(10);
+	const [rowsPerPage, setRowsPerPage] = useState(5);
 	const [totalCount, setTotalCount] = useState(0);
 
 	useEffect(() => {
@@ -258,6 +258,7 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 											label={user.role.toUpperCase()}
 											color={getRoleColor(user.role)}
 											size="small"
+											variant={'outlined'}
 											sx={{ fontWeight: 600, fontSize: '0.75rem' }}
 										/>
 									</TableCell>
@@ -337,6 +338,7 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 								}
 							}}
 						>
+							<MenuItem value={5}>5</MenuItem>
 							<MenuItem value={10}>10</MenuItem>
 							<MenuItem value={25}>25</MenuItem>
 							<MenuItem value={50}>50</MenuItem>
