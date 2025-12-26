@@ -9,6 +9,8 @@ import CandidateRegistration from '../pages/Candidates/CandidateRegistration';
 import CandidateList from '../pages/Candidates/CandidateList';
 import ScreeningList from '../pages/screening/ScreeningList';
 import CounselingList from '../pages/counseling/CounselingList';
+import TrainingBatchList from '../pages/training/TrainingBatchList';
+import CandidateAllocation from '../pages/training/CandidateAllocation';
 import SuccessPage from '../pages/common/SuccessPage';
 import NotFoundPage from '../pages/common/NotFoundPage';
 import MaintenancePage from '../pages/common/MaintenancePage';
@@ -42,6 +44,11 @@ const AppRouter: React.FC = () => {
 							<Route path="counseling" element={<CounselingList />} />
 							<Route path="documents" element={<DocumentCollectionList />} />
 							<Route path="documents/:id" element={<DocumentCollection />} />
+						</Route>
+
+						<Route path="training">
+							<Route path="batches" element={<TrainingBatchList />} />
+							<Route path="allocation" element={<CandidateAllocation />} />
 						</Route>
 
 						{/* Add more protected routes here */}

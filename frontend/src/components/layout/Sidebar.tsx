@@ -20,6 +20,7 @@ import {
 	Home as HomeIcon,
 	Group as CandidatesIcon,
 	Lock as LockIcon,
+	School as SchoolIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
@@ -37,6 +38,7 @@ const Sidebar: React.FC = () => {
 	const open = useAppSelector((state) => state.ui.sidebarOpen);
 	const user = useAppSelector((state) => state.auth.user);
 	const [candidatesOpen, setCandidatesOpen] = useState(true);
+	const [trainingOpen, setTrainingOpen] = useState(false);
 
 	const isActive = (path: string) => location.pathname === path;
 
@@ -237,6 +239,54 @@ const Sidebar: React.FC = () => {
 										}}
 									/>
 									{!['admin', 'sourcing'].includes(user?.role || '') && <LockIcon sx={{ fontSize: 14, color: 'text.disabled' }} />}
+								</ListItemButton>
+							</List>
+						</Collapse>
+
+						{/* Training Group */}
+						<ListItem disablePadding>
+							<ListItemButton onClick={() => setTrainingOpen(!trainingOpen)} sx={{ py: 0.5 }}>
+								<ListItemIcon sx={{ minWidth: 40, color: '#5f6368' }}>
+									<SchoolIcon />
+								</ListItemIcon>
+								<ListItemText
+									primary="Training"
+									primaryTypographyProps={{ fontSize: '0.95rem', fontWeight: 500, color: '#202124' }}
+								/>
+								{trainingOpen ? <ExpandLess sx={{ color: '#5f6368' }} /> : <ExpandMore sx={{ color: '#5f6368' }} />}
+							</ListItemButton>
+						</ListItem>
+
+						<Collapse in={trainingOpen} timeout="auto" unmountOnExit>
+							<List component="div" disablePadding>
+								<ListItemButton
+									sx={{ pl: 9, py: 0.5 }}
+									selected={isActive('/training/batches')}
+									onClick={() => handleNavigate('/training/batches')}
+								>
+									<ListItemText
+										primary="Training Batch"
+										primaryTypographyProps={{
+											fontSize: '0.9rem',
+											color: isActive('/training/batches') ? 'primary.main' : '#5f6368',
+											fontWeight: isActive('/training/batches') ? 600 : 400
+										}}
+									/>
+								</ListItemButton>
+
+								<ListItemButton
+									sx={{ pl: 9, py: 0.5 }}
+									selected={isActive('/training/allocation')}
+									onClick={() => handleNavigate('/training/allocation')}
+								>
+									<ListItemText
+										primary="Candidate batch allocation"
+										primaryTypographyProps={{
+											fontSize: '0.9rem',
+											color: isActive('/training/allocation') ? 'primary.main' : '#5f6368',
+											fontWeight: isActive('/training/allocation') ? 600 : 400
+										}}
+									/>
 								</ListItemButton>
 							</List>
 						</Collapse>
