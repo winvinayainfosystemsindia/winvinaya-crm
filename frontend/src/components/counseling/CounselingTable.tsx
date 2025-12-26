@@ -266,7 +266,7 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 
 									{/* Actions */}
 									<TableCell align="right">
-										{type === 'pending' ? (
+										{(type === 'pending' && !candidate.counseling_status) ? (
 											<Button
 												variant="contained"
 												size="small"
@@ -288,7 +288,7 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 												onClick={() => onAction('edit', candidate)}
 												sx={{ textTransform: 'none' }}
 											>
-												Edit
+												{type === 'pending' ? 'Edit Draft' : 'Edit'}
 											</Button>
 										)}
 									</TableCell>
