@@ -51,7 +51,24 @@ async def get_batch_allocations(
     Get all candidate allocations for a specific batch
     """
     service = CandidateAllocationService(db)
-    return await service.get_allocations_by_batch(batch_public_id)
+    allocations = await service.get_allocations_by_batch(batch_public_id)
+    
+    # Debug logging (safe - doesn't access relationships)
+    print(f"[DEBUG] Found {len(allocations)} allocations for batch {batch_public_id}")
+    
+    return allocations
+
+
+@router.get("/eligible", response_model=List[dict])
+async def get_eligible_candidates(
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.SOURCING, UserRole.TRAINER])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get all candidates eligible for training (selected in counseling and not in active training)
+    """
+    service = CandidateAllocationService(db)
+    return await service.get_eligible_candidates()
 
 
 @router.put("/{public_id}", response_model=CandidateAllocationResponse)

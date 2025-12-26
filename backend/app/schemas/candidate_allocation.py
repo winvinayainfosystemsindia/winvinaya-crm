@@ -7,15 +7,16 @@ from pydantic import BaseModel
 
 
 class CandidateAllocationBase(BaseModel):
-    batch_id: int
-    candidate_id: int
+    batch_id: Optional[int] = None
+    candidate_id: Optional[int] = None
     status: Optional[dict] = None # Status info per candidate
     others: Optional[dict] = None
 
 
 class CandidateAllocationCreate(CandidateAllocationBase):
     """Schema for creating a candidate allocation"""
-    pass
+    batch_public_id: Optional[uuid.UUID] = None
+    candidate_public_id: Optional[uuid.UUID] = None
 
 
 class CandidateAllocationUpdate(BaseModel):
@@ -26,6 +27,25 @@ class CandidateAllocationUpdate(BaseModel):
     others: Optional[dict] = None
 
 
+class CandidateMini(BaseModel):
+    public_id: uuid.UUID
+    name: str
+    email: str
+    phone: str
+
+    class Config:
+        from_attributes = True
+
+
+class BatchMini(BaseModel):
+    public_id: uuid.UUID
+    batch_name: str
+    status: str
+
+    class Config:
+        from_attributes = True
+
+
 class CandidateAllocationResponse(CandidateAllocationBase):
     """Schema for candidate allocation response"""
     id: int
@@ -33,5 +53,9 @@ class CandidateAllocationResponse(CandidateAllocationBase):
     created_at: datetime
     updated_at: datetime
     
+    # Nested data
+    candidate: Optional[CandidateMini] = None
+    batch: Optional[BatchMini] = None
+
     class Config:
         from_attributes = True
