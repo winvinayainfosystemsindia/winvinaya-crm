@@ -1,0 +1,38 @@
+"""Training Batch model"""
+
+import uuid
+from sqlalchemy import String, JSON
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.dialects.postgresql import UUID
+from app.models.base import BaseModel
+
+
+class TrainingBatch(BaseModel):
+    """Training Batch database model"""
+    
+    __tablename__ = "training_batches"
+    
+    # Public UUID for external API (security)
+    public_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        unique=True,
+        index=True,
+        nullable=False,
+        default=uuid.uuid4,
+    )
+    
+    batch_name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    courses: Mapped[dict | list | None] = mapped_column(JSON, nullable=True) # JSON list of courses
+    duration: Mapped[dict | None] = mapped_column(JSON, nullable=True) # JSON with start/end/weeks
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="planned", index=True)
+    other: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    
+    # Relationships
+    allocations: Mapped[list["CandidateAllocation"]] = relationship(
+        "CandidateAllocation",
+        back_populates="batch",
+        cascade="all, delete-orphan"
+    )
+    
+    def __repr__(self) -> str:
+        return f"<TrainingBatch(id={self.id}, public_id={self.public_id}, batch_name={self.batch_name})>"
