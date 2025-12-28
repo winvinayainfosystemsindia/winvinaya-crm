@@ -23,7 +23,8 @@ import {
 } from '@mui/material';
 import { Search, Edit, Accessible, VerifiedUser, AssignmentTurnedIn } from '@mui/icons-material';
 import { format } from 'date-fns';
-import candidateService from '../../services/candidateService';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchScreenedCandidates } from '../../store/slices/candidateSlice';
 import type { CandidateListItem } from '../../models/candidate';
 
 interface CounselingTableProps {
@@ -34,20 +35,27 @@ interface CounselingTableProps {
 
 const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refreshKey }) => {
 	const theme = useTheme();
-	const [candidates, setCandidates] = useState<CandidateListItem[]>([]);
-	const [loading, setLoading] = useState(false);
+	const dispatch = useAppDispatch();
+	const { list: candidates, loading, total: totalCount } = useAppSelector((state) => state.candidates);
+
 	const [searchTerm, setSearchTerm] = useState('');
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(5);
 	const [order, setOrder] = useState<'asc' | 'desc'>('desc');
 	const [orderBy, setOrderBy] = useState<keyof CandidateListItem>('created_at');
 
-	const [totalCount, setTotalCount] = useState(0);
 	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
-	useEffect(() => {
-		fetchCandidates();
-	}, [page, rowsPerPage, type, refreshKey, debouncedSearchTerm, order, orderBy]);
+	const fetchCandidatesData = async () => {
+		dispatch(fetchScreenedCandidates({
+			skip: page * rowsPerPage,
+			limit: rowsPerPage,
+			counselingStatus: type,
+			search: debouncedSearchTerm,
+			sortBy: orderBy,
+			sortOrder: order
+		}));
+	};
 
 	// Debounce search term
 	useEffect(() => {
@@ -58,29 +66,9 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 		return () => clearTimeout(timer);
 	}, [searchTerm]);
 
-	const fetchCandidates = async () => {
-		setLoading(true);
-		try {
-			// Both tabs rely on 'profiled' candidates list, but filtered by counseling status on the server
-			// Now using full server-side pagination, search, and sorting
-			const response = await candidateService.getProfiled(
-				page * rowsPerPage,
-				rowsPerPage,
-				type,
-				debouncedSearchTerm,
-				undefined, // documentStatus
-				orderBy,
-				order
-			);
-
-			setCandidates(response.items);
-			setTotalCount(response.total);
-		} catch (error) {
-			console.error(`Failed to fetch ${type} candidates:`, error);
-		} finally {
-			setLoading(false);
-		}
-	};
+	useEffect(() => {
+		fetchCandidatesData();
+	}, [page, rowsPerPage, type, refreshKey, debouncedSearchTerm, order, orderBy]);
 
 	const handleChangePage = (_event: unknown, newPage: number) => {
 		setPage(newPage);
