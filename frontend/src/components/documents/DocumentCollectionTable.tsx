@@ -23,7 +23,8 @@ import {
 } from '@mui/material';
 import { Search, CloudUpload as UploadIcon, Accessible, VerifiedUser } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import candidateService from '../../services/candidateService';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchScreenedCandidates } from '../../store/slices/candidateSlice';
 import type { CandidateListItem } from '../../models/candidate';
 
 interface DocumentCollectionTableProps {
@@ -33,52 +34,32 @@ interface DocumentCollectionTableProps {
 const DocumentCollectionTable: React.FC<DocumentCollectionTableProps> = ({ type }) => {
 	const theme = useTheme();
 	const navigate = useNavigate();
-	const [candidates, setCandidates] = useState<CandidateListItem[]>([]);
-	const [loading, setLoading] = useState(false);
+	const dispatch = useAppDispatch();
+	const { list: candidates, loading, total: totalCount } = useAppSelector((state) => state.candidates);
+
 	const [searchTerm, setSearchTerm] = useState('');
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(5);
-	const [totalCount, setTotalCount] = useState(0);
 	const [order, setOrder] = useState<'asc' | 'desc'>('desc');
 	const [orderBy, setOrderBy] = useState<keyof CandidateListItem>('created_at');
 
 	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
-	useEffect(() => {
-		fetchCandidates();
-	}, [page, rowsPerPage, type, debouncedSearchTerm, order, orderBy]);
-
-	// Debounce search term
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			setDebouncedSearchTerm(searchTerm);
-		}, 500);
-
-		return () => clearTimeout(timer);
-	}, [searchTerm]);
-
-	const fetchCandidates = async () => {
-		setLoading(true);
-		try {
-			// document_status maps directly to backend logic
-			const response = await candidateService.getScreened(
-				page * rowsPerPage,
-				rowsPerPage,
-				'selected',
-				debouncedSearchTerm,
-				type,
-				orderBy,
-				order
-			);
-
-			setCandidates(response.items);
-			setTotalCount(response.total);
-		} catch (error) {
-			console.error(`Failed to fetch ${type} document candidates:`, error);
-		} finally {
-			setLoading(false);
-		}
+	const fetchCandidatesData = async () => {
+		dispatch(fetchScreenedCandidates({
+			skip: page * rowsPerPage,
+			limit: rowsPerPage,
+			counselingStatus: 'selected',
+			search: debouncedSearchTerm,
+			documentStatus: type,
+			sortBy: orderBy,
+			sortOrder: order
+		}));
 	};
+
+	useEffect(() => {
+		fetchCandidatesData();
+	}, [page, rowsPerPage, type, debouncedSearchTerm, order, orderBy]);
 
 	const handleChangePage = (_event: unknown, newPage: number) => {
 		setPage(newPage);
@@ -99,6 +80,15 @@ const DocumentCollectionTable: React.FC<DocumentCollectionTableProps> = ({ type 
 		setOrder(isAsc ? 'desc' : 'asc');
 		setOrderBy(property);
 	};
+
+	// Debounce search term
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setDebouncedSearchTerm(searchTerm);
+		}, 500);
+
+		return () => clearTimeout(timer);
+	}, [searchTerm]);
 
 	// Helper to render document status chips
 	const renderStatusChips = (candidate: CandidateListItem) => {

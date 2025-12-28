@@ -22,9 +22,10 @@ import {
   Download as DownloadIcon
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
-import candidateService, { documentService } from '../../services/candidateService';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchCandidateById, fetchDocuments, uploadDocument, deleteDocument, clearError } from '../../store/slices/candidateSlice';
 import authService from '../../services/authService';
-import type { Candidate, CandidateDocument } from '../../models/candidate';
+
 
 const REQUIRED_DOCUMENTS = [
   { type: 'resume', label: 'Resume', description: 'Updated CV/Resume' },
@@ -38,35 +39,20 @@ const DocumentCollection: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const theme = useTheme();
+  const dispatch = useAppDispatch();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const [candidate, setCandidate] = useState<Candidate | null>(null);
-  const [documents, setDocuments] = useState<CandidateDocument[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { selectedCandidate: candidate, loading, error } = useAppSelector((state) => state.candidates);
+  const documents = candidate?.documents || [];
+
   const [uploading, setUploading] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [candidateData, docsData] = await Promise.all([
-          candidateService.getById(id!),
-          documentService.getAll(id!)
-        ]);
-        setCandidate(candidateData);
-        setDocuments(docsData);
-      } catch (err) {
-        console.error('Error fetching data:', err);
-        setError('Failed to load candidate data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (id) {
-      fetchData();
+      dispatch(fetchCandidateById({ publicId: id, withDetails: true }));
+      dispatch(fetchDocuments(id));
     }
-  }, [id]);
+  }, [id, dispatch]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: string) => {
     const file = event.target.files?.[0];
@@ -74,19 +60,14 @@ const DocumentCollection: React.FC = () => {
 
     try {
       setUploading(type);
-      setError(null);
-      // Explicitly case type to match the expected union type
+      setLocalError(null);
       const docType = type as 'resume' | 'disability_certificate' | '10th_certificate' | '12th_certificate' | 'degree_certificate' | 'other';
-      await documentService.upload(id, docType, file);
-      // Refresh documents
-      const docs = await documentService.getAll(id);
-      setDocuments(docs);
-    } catch (err) {
+      await dispatch(uploadDocument({ publicId: id, documentType: docType, file })).unwrap();
+    } catch (err: any) {
       console.error('Upload error:', err);
-      setError('Failed to upload document. Please check file type and size.');
+      setLocalError(err || 'Failed to upload document. Please check file type and size.');
     } finally {
       setUploading(null);
-      // Reset input
       event.target.value = '';
     }
   };
@@ -95,11 +76,10 @@ const DocumentCollection: React.FC = () => {
     if (!window.confirm('Are you sure you want to delete this document?')) return;
 
     try {
-      await documentService.delete(documentId);
-      setDocuments(documents.filter(d => d.id !== documentId));
-    } catch (err) {
+      await dispatch(deleteDocument({ publicId: id!, documentId })).unwrap();
+    } catch (err: any) {
       console.error('Delete error:', err);
-      setError('Failed to delete document');
+      setLocalError(err || 'Failed to delete document');
     }
   };
 
@@ -195,7 +175,7 @@ const DocumentCollection: React.FC = () => {
     );
   };
 
-  if (loading) {
+  if (loading && !candidate) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <CircularProgress />
@@ -206,7 +186,9 @@ const DocumentCollection: React.FC = () => {
   if (!candidate) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error">Candidate not found</Alert>
+        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {localError && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setLocalError(null)}>{localError}</Alert>}
+        <Typography variant="h6">Candidate not found</Typography>
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/candidates/documents')} sx={{ mt: 2 }}>
           Back to List
         </Button>
@@ -241,7 +223,7 @@ const DocumentCollection: React.FC = () => {
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => dispatch(clearError())}>
           {error}
         </Alert>
       )}
