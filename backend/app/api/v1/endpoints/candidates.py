@@ -50,6 +50,7 @@ async def get_candidates(
     request: Request,
     skip: int = 0,
     limit: int = 100,
+    search: str = None,
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING])),
     db: AsyncSession = Depends(get_db)
 ):
@@ -58,7 +59,7 @@ async def get_candidates(
     Returns simplified candidate list without nested relationships.
     """
     service = CandidateService(db)
-    return await service.get_candidates(skip=skip, limit=limit)
+    return await service.get_candidates(skip=skip, limit=limit, search=search)
 
 
 @router.get("/stats", response_model=CandidateStats)

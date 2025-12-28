@@ -49,15 +49,26 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 	const [order, setOrder] = useState<'asc' | 'desc'>('desc');
 	const [orderBy, setOrderBy] = useState<keyof CandidateListItem>('created_at');
 
+	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
 	// Initial fetch and fetch on pagination change
 	useEffect(() => {
 		fetchCandidates();
-	}, [page, rowsPerPage]);
+	}, [page, rowsPerPage, debouncedSearchTerm]);
+
+	// Debounce search term
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setDebouncedSearchTerm(searchTerm);
+		}, 500);
+
+		return () => clearTimeout(timer);
+	}, [searchTerm]);
 
 	const fetchCandidates = async () => {
 		setLoading(true);
 		try {
-			const response = await candidateService.getAll(page * rowsPerPage, rowsPerPage);
+			const response = await candidateService.getAll(page * rowsPerPage, rowsPerPage, debouncedSearchTerm);
 			setCandidates(response.items);
 			setTotalCount(response.total);
 		} catch (error) {
@@ -128,22 +139,16 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 	const uniqueEducation = Array.from(new Set(candidates.map(c => c.education_level).filter(Boolean))) as string[];
 	const uniqueCities = Array.from(new Set(candidates.map(c => c.city).filter(Boolean))) as string[];
 
-	// Sorting and Filtering logic
+	// Filtering logic (now strictly for specific category filters if any remain, or just sorting)
+	// Search is handled by the backend
 	const filteredCandidates = candidates
 		.filter(candidate => {
-			const matchesSearch =
-				candidate.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-				candidate.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-				candidate.phone.includes(searchTerm) ||
-				candidate.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-				(candidate.disability_type?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
-
 			const matchesFilters =
 				(filters.disability_type.length === 0 || filters.disability_type.includes(candidate.disability_type || '')) &&
 				(filters.education_level.length === 0 || filters.education_level.includes(candidate.education_level || '')) &&
 				(filters.city.length === 0 || filters.city.includes(candidate.city));
 
-			return matchesSearch && matchesFilters;
+			return matchesFilters;
 		})
 		.sort((a, b) => {
 			const isAsc = order === 'asc';

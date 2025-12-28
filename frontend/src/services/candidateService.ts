@@ -20,8 +20,9 @@ const candidateService = {
 	/**
 	 * Get all candidates (simplified list)
 	 */
-	getAll: async (skip = 0, limit = 100): Promise<CandidatePaginatedResponse> => {
-		const response = await api.get<CandidatePaginatedResponse>(`/candidates/?skip=${skip}&limit=${limit}`);
+	getAll: async (skip = 0, limit = 100, search?: string): Promise<CandidatePaginatedResponse> => {
+		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
+		const response = await api.get<CandidatePaginatedResponse>(`/candidates/?skip=${skip}&limit=${limit}${searchParam}`);
 		return response.data;
 	},
 

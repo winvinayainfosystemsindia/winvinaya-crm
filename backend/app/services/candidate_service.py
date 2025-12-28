@@ -78,9 +78,9 @@ class CandidateService:
             raise HTTPException(status_code=404, detail="Candidate not found")
         return candidate
 
-    async def get_candidates(self, skip: int = 0, limit: int = 100) -> dict:
-        """Get list of candidates with total count"""
-        items, total = await self.repository.get_multi(skip=skip, limit=limit)
+    async def get_candidates(self, skip: int = 0, limit: int = 100, search: Optional[str] = None) -> dict:
+        """Get list of candidates with total count, supporting optional search"""
+        items, total = await self.repository.get_multi(skip=skip, limit=limit, search=search)
         return {"items": items, "total": total}
 
     async def update_candidate(self, public_id: UUID, candidate_in: CandidateUpdate) -> Candidate:

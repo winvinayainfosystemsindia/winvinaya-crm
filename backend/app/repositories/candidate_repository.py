@@ -48,8 +48,9 @@ class CandidateRepository(BaseRepository[Candidate]):
         )
         return result.scalars().first()
 
-    async def get_multi(self, skip: int = 0, limit: int = 100, include_deleted: bool = False):
-        """Get multiples candidates with counseling loaded for list view"""
+    async def get_multi(self, skip: int = 0, limit: int = 100, include_deleted: bool = False, search: Optional[str] = None):
+        """Get multiples candidates with counseling loaded for list view, with optional search filtering"""
+        from sqlalchemy import or_
         stmt = (
             select(Candidate)
             .outerjoin(Candidate.counseling)
@@ -63,11 +64,23 @@ class CandidateRepository(BaseRepository[Candidate]):
         if not include_deleted:
             stmt = stmt.where(Candidate.is_deleted == False) 
         
-        # Count total matching records WITHOUT offset/limit
-        count_stmt = select(func.count(Candidate.id))
+        # Base count query
+        count_stmt = select(func.count(Candidate.id)).select_from(Candidate)
         if not include_deleted:
             count_stmt = count_stmt.where(Candidate.is_deleted == False)
         
+        # Apply search filters if provided
+        if search:
+            search_filter = or_(
+                Candidate.name.ilike(f"%{search}%"),
+                Candidate.email.ilike(f"%{search}%"),
+                Candidate.phone.ilike(f"%{search}%"),
+                Candidate.city.ilike(f"%{search}%")
+            )
+            stmt = stmt.where(search_filter)
+            count_stmt = count_stmt.where(search_filter)
+        
+        # Count total matching records
         count_result = await self.db.execute(count_stmt)
         total = count_result.scalar() or 0
         
