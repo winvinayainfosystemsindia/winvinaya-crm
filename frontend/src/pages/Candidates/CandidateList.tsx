@@ -22,7 +22,10 @@ const CandidateList: React.FC = () => {
 		total_counseled: 0,
 		counseling_pending: 0,
 		counseling_selected: 0,
-		counseling_rejected: 0
+		counseling_rejected: 0,
+		docs_total: 0,
+		docs_completed: 0,
+		docs_pending: 0
 	});
 
 	useEffect(() => {

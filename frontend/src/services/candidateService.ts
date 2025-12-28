@@ -79,17 +79,18 @@ const candidateService = {
 	/**
 	 * Get screened candidates (with screening data)
 	 */
-	getScreened: async (skip = 0, limit = 100, counselingStatus?: string, search?: string): Promise<CandidatePaginatedResponse> => {
+	getScreened: async (skip = 0, limit = 100, counselingStatus?: string, search?: string, documentStatus?: string): Promise<CandidatePaginatedResponse> => {
 		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
-		const response = await api.get<CandidatePaginatedResponse>(`/candidates/screened?skip=${skip}&limit=${limit}${counselingStatus ? `&counseling_status=${counselingStatus}` : ''}${searchParam}`);
+		const docStatusParam = documentStatus ? `&document_status=${documentStatus}` : '';
+		const response = await api.get<CandidatePaginatedResponse>(`/candidates/screened?skip=${skip}&limit=${limit}${counselingStatus ? `&counseling_status=${counselingStatus}` : ''}${docStatusParam}${searchParam}`);
 		return response.data;
 	},
 
 	/**
 	 * Get profiled candidates (alias for getScreened for backward compatibility)
 	 */
-	getProfiled: async (skip = 0, limit = 100, counselingStatus?: string, search?: string): Promise<CandidatePaginatedResponse> => {
-		return candidateService.getScreened(skip, limit, counselingStatus, search);
+	getProfiled: async (skip = 0, limit = 100, counselingStatus?: string, search?: string, documentStatus?: string): Promise<CandidatePaginatedResponse> => {
+		return candidateService.getScreened(skip, limit, counselingStatus, search, documentStatus);
 	}
 };
 

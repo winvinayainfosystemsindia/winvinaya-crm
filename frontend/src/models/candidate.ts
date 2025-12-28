@@ -182,6 +182,9 @@ export interface CandidateStats {
 	counseling_pending: number;
 	counseling_selected: number;
 	counseling_rejected: number;
+	docs_total: number;
+	docs_completed: number;
+	docs_pending: number;
 }
 
 export interface CandidatePaginatedResponse {
