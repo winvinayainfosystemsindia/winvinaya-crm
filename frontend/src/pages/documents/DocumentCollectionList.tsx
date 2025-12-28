@@ -72,12 +72,17 @@ const DocumentCollectionList: React.FC = () => {
 		// 2. Tab Filter
 		const isComplete = (c: CandidateListItem) => {
 			const docs = c.documents_uploaded || [];
-			const hasResume = docs.includes('resume');
-			const hasDisability = docs.includes('disability_certificate');
-			// Check for at least one education document
-			const hasEducation = docs.some(d => ['10th_certificate', '12th_certificate', 'degree_certificate'].includes(d));
+			const baseDocs = (
+				docs.includes('resume') &&
+				docs.includes('10th_certificate') &&
+				docs.includes('12th_certificate') &&
+				docs.includes('degree_certificate')
+			);
 
-			return hasResume && hasDisability && hasEducation;
+			if (c.is_disabled) {
+				return baseDocs && docs.includes('disability_certificate');
+			}
+			return baseDocs;
 		};
 
 		if (tabValue === 0) {
@@ -110,24 +115,23 @@ const DocumentCollectionList: React.FC = () => {
 		if (docs.includes('resume')) collected.push('Resume');
 		else pending.push('Resume');
 
-		// Check Disability
-		if (docs.includes('disability_certificate')) collected.push('Disability Cert');
-		else pending.push('Disability Cert');
-
-		// Check Education (Any one is sufficient for "started" but ideally want all applicable)
-		// For simple display, if ANY education doc is present, we mark Education as collected?
-		// Or specific. Let's list specific education docs collected
-		const eduDocs = docs.filter(d => ['10th_certificate', '12th_certificate', 'degree_certificate'].includes(d));
-		if (eduDocs.length > 0) {
-			// Map codes to labels
-			eduDocs.forEach(d => {
-				if (d === '10th_certificate') collected.push('10th');
-				if (d === '12th_certificate') collected.push('12th');
-				if (d === 'degree_certificate') collected.push('Degree');
-			});
-		} else {
-			pending.push('Education Proof');
+		// Check Disability (Only if disabled)
+		if (candidate.is_disabled) {
+			if (docs.includes('disability_certificate')) collected.push('Disability Cert');
+			else pending.push('Disability Cert');
 		}
+
+		// Check 10th
+		if (docs.includes('10th_certificate')) collected.push('10th');
+		else pending.push('10th');
+
+		// Check 12th
+		if (docs.includes('12th_certificate')) collected.push('12th');
+		else pending.push('12th');
+
+		// Check Degree
+		if (docs.includes('degree_certificate')) collected.push('Degree');
+		else pending.push('Degree');
 
 		return (
 			<Box>
