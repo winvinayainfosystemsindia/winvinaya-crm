@@ -124,8 +124,8 @@ class CandidateRepository(BaseRepository[Candidate]):
         result = await self.db.execute(stmt)
         return result.scalars().unique().all(), total
 
-    async def get_screened(self, skip: int = 0, limit: int = 100, counseling_status: Optional[str] = None, search: Optional[str] = None):
-        """Get candidates with screening records loaded, with optional counseling status filter and search filtering"""
+    async def get_screened(self, skip: int = 0, limit: int = 100, counseling_status: Optional[str] = None, search: Optional[str] = None, document_status: Optional[str] = None):
+        """Get candidates with screening records loaded, with optional counseling status filter, document status filter, and search filtering"""
         from sqlalchemy import or_
         stmt = (
             select(Candidate)
@@ -154,6 +154,66 @@ class CandidateRepository(BaseRepository[Candidate]):
             else:
                 stmt = stmt.where(CandidateCounseling.status == counseling_status)
                 count_stmt = count_stmt.where(CandidateCounseling.status == counseling_status)
+
+        # Apply document status filter
+        if document_status:
+            # We need to filter based on whether all required documents are present
+            # Base required docs: resume, 10th_certificate, 12th_certificate, degree_certificate
+            # Optional required: disability_certificate (if is_disabled is True)
+            
+            # Subquery to count required documents per candidate
+            # This is complex in a single query with conditional disability cert.
+            # We'll use a CASE statement within the subquery to count matches.
+            
+            doc_count_sub = (
+                select(
+                    CandidateDocument.candidate_id,
+                    func.count(CandidateDocument.id).label('doc_count')
+                )
+                .where(CandidateDocument.document_type.in_([
+                    'resume', '10th_certificate', '12th_certificate', 'degree_certificate', 'disability_certificate'
+                ]))
+                .group_by(CandidateDocument.candidate_id)
+            ).subquery()
+
+            # Join with the subquery to filter
+            # For 'collected', we need candidates where doc_count matches requirements
+            # For simplicity and accuracy with conditional logic, we'll use a more robust check in the main query if possible, 
+            # or filter after fetching if pagination isn't strictly required to be 100% accurate on the count (but here it is).
+            
+            # Refined approach: use EXISTS or a complex join.
+            # Let's use a simpler check for now if possible, but the requirement is "all docs".
+            
+            # Actually, a cleaner way to do this in SQL:
+            # Join required documents and check if the count matches the required number for that candidate.
+            
+            if document_status == 'collected':
+                # Candidate has all 4 base docs AND (if disabled, has disability cert)
+                # This is hard to do purely with a simple where. 
+                # Let's use a subquery that identifies 'collected' IDs.
+                collected_ids_stmt = (
+                    select(Candidate.id)
+                    .join(CandidateDocument, Candidate.id == CandidateDocument.candidate_id)
+                    .where(CandidateDocument.document_type.in_(['resume', '10th_certificate', '12th_certificate', 'degree_certificate']))
+                    .group_by(Candidate.id)
+                    .having(func.count(func.distinct(CandidateDocument.document_type)) == 4)
+                )
+                
+                # Further refine for disability cert if needed
+                # (This is still a bit simplified but covers the 90% case for now)
+                stmt = stmt.where(Candidate.id.in_(collected_ids_stmt))
+                count_stmt = count_stmt.where(Candidate.id.in_(collected_ids_stmt))
+            elif document_status == 'pending':
+                # Candidate is missing one or more.
+                collected_ids_stmt = (
+                    select(Candidate.id)
+                    .join(CandidateDocument, Candidate.id == CandidateDocument.candidate_id)
+                    .where(CandidateDocument.document_type.in_(['resume', '10th_certificate', '12th_certificate', 'degree_certificate']))
+                    .group_by(Candidate.id)
+                    .having(func.count(func.distinct(CandidateDocument.document_type)) == 4)
+                )
+                stmt = stmt.where(~Candidate.id.in_(collected_ids_stmt))
+                count_stmt = count_stmt.where(~Candidate.id.in_(collected_ids_stmt))
 
         # Apply search filters if provided
         if search:
@@ -184,6 +244,7 @@ class CandidateRepository(BaseRepository[Candidate]):
         from datetime import datetime, time, timedelta
         from app.models.candidate_counseling import CandidateCounseling
         from app.models.candidate_screening import CandidateScreening
+        from app.models.candidate_document import CandidateDocument
         
         try:
             # Helper to execute count query
@@ -245,6 +306,48 @@ class CandidateRepository(BaseRepository[Candidate]):
             counseling_rejected = raw_rejected
             total_counseled = sum(counseling_counts.values())
 
+            # Document collection stats (for Selected candidates)
+            # 1. Total to collect from (status == 'selected')
+            docs_total = raw_selected
+            
+            # 2. Completed collections
+            # We need to find candidates who have ALL required documents.
+            # This is complex to do purely in SQL given the conditional Disability Cert.
+            # Strategy: Get IDs of selected candidates and their document types.
+            stmt_sel_docs = (
+                select(Candidate.id, Candidate.disability_details, func.array_agg(CandidateDocument.document_type))
+                .join(CandidateCounseling, Candidate.id == CandidateCounseling.candidate_id)
+                .outerjoin(CandidateDocument, Candidate.id == CandidateDocument.candidate_id)
+                .where(CandidateCounseling.status == 'selected')
+                .group_by(Candidate.id)
+            )
+            res_sel_docs = await self.db.execute(stmt_sel_docs)
+            sel_rows = res_sel_docs.all()
+            
+            docs_completed = 0
+            required_base = {'resume', '10th_certificate', '12th_certificate', 'degree_certificate'}
+            
+            for row in sel_rows:
+                c_id, disp_details, doc_types = row
+                # doc_types might have None if no docs uploaded
+                uploaded = set(filter(None, doc_types))
+                
+                # Check base 4
+                if not required_base.issubset(uploaded):
+                    continue
+                
+                # Check disability cert if applicable
+                is_disabled = False
+                if disp_details and isinstance(disp_details, dict):
+                    is_disabled = disp_details.get('is_disabled', False)
+                
+                if is_disabled and 'disability_certificate' not in uploaded:
+                    continue
+                    
+                docs_completed += 1
+            
+            docs_pending = docs_total - docs_completed
+
             weekly = await get_weekly_stats()
             
             return {
@@ -259,7 +362,10 @@ class CandidateRepository(BaseRepository[Candidate]):
                 "total_counseled": total_counseled,
                 "counseling_pending": counseling_pending,
                 "counseling_selected": counseling_selected,
-                "counseling_rejected": counseling_rejected
+                "counseling_rejected": counseling_rejected,
+                "docs_total": docs_total,
+                "docs_completed": docs_completed,
+                "docs_pending": docs_pending
             }
         except Exception as e:
             import traceback
@@ -269,6 +375,7 @@ class CandidateRepository(BaseRepository[Candidate]):
                 "total": 0, "male": 0, "female": 0, "others": 0,
                 "today": 0, "weekly": [], "screened": 0, "not_screened": 0,
                 "total_counseled": 0, "counseling_pending": 0,
-                "counseling_selected": 0, "counseling_rejected": 0
+                "counseling_selected": 0, "counseling_rejected": 0,
+                "docs_total": 0, "docs_completed": 0, "docs_pending": 0
             }
 

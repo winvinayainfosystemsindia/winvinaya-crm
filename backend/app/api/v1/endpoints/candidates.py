@@ -100,6 +100,7 @@ async def get_screened_candidates(
     skip: int = 0,
     limit: int = 100,
     counseling_status: str = None, # 'pending' or 'counseled'
+    document_status: str = None, # 'pending' or 'collected'
     search: str = None,
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING])),
     db: AsyncSession = Depends(get_db)
@@ -109,7 +110,7 @@ async def get_screened_candidates(
     Returns list with basic candidate info.
     """
     service = CandidateService(db)
-    return await service.get_screened_candidates(skip=skip, limit=limit, counseling_status=counseling_status, search=search)
+    return await service.get_screened_candidates(skip=skip, limit=limit, counseling_status=counseling_status, search=search, document_status=document_status)
 
 
 

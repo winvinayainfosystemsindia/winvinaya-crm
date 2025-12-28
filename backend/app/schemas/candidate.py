@@ -256,6 +256,9 @@ class CandidateStats(BaseModel):
     counseling_pending: int = 0
     counseling_selected: int = 0
     counseling_rejected: int = 0
+    docs_total: int = 0
+    docs_completed: int = 0
+    docs_pending: int = 0
 
 
 class CandidatePaginatedResponse(BaseModel):
