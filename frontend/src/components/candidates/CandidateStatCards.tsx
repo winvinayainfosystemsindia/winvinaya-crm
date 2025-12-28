@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent, Typography, Box, useTheme } from '@mui/material';
-import { People, Today, PieChart, Man, Woman, Transgender, CloudUpload } from '@mui/icons-material';
+import { People, Today, PieChart, Man, Woman, Transgender } from '@mui/icons-material';
 import { SparkLineChart } from '@mui/x-charts';
 import type { CandidateStats } from '../../models/candidate';
 
@@ -139,45 +139,6 @@ const CandidateStatCards: React.FC<CandidateStatCardsProps> = ({ stats }) => {
 								</Box>
 							</Box>
 							<Today sx={{ fontSize: 40, color: 'action.disabled' }} />
-						</Box>
-					</CardContent>
-				</Card>
-			</Box>
-
-			{/* Card 4: Document Collection */}
-			<Box sx={{ flex: '1 1 300px', minWidth: 250 }}>
-				<Card sx={cardStyle}>
-					<CardContent>
-						<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-							<Box>
-								<Typography variant="subtitle2" color="textSecondary" fontWeight="bold">
-									Document Collection
-								</Typography>
-								<Typography variant="h3" sx={{ mt: 2, fontWeight: 300, color: theme.palette.warning.main }}>
-									{stats.docs_completed} / {stats.docs_total}
-								</Typography>
-								<Box sx={{ mt: 1, display: 'flex', alignItems: 'center', height: 40 }}>
-									<Box sx={{
-										width: '100%',
-										height: 8,
-										bgcolor: '#f1f1f1',
-										borderRadius: 4,
-										overflow: 'hidden',
-										position: 'relative'
-									}}>
-										<Box sx={{
-											width: `${stats.docs_total > 0 ? (stats.docs_completed / stats.docs_total) * 100 : 0}%`,
-											height: '100%',
-											bgcolor: theme.palette.warning.main,
-											transition: 'width 1s ease-in-out'
-										}} />
-									</Box>
-								</Box>
-								<Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block', fontWeight: 'bold' }}>
-									{stats.docs_pending} Pending Collections
-								</Typography>
-							</Box>
-							<CloudUpload sx={{ fontSize: 40, color: 'action.disabled' }} />
 						</Box>
 					</CardContent>
 				</Card>
