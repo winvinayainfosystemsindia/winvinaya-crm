@@ -54,7 +54,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 	// Initial fetch and fetch on pagination change
 	useEffect(() => {
 		fetchCandidates();
-	}, [page, rowsPerPage, debouncedSearchTerm]);
+	}, [page, rowsPerPage, debouncedSearchTerm, order, orderBy]);
 
 	// Debounce search term
 	useEffect(() => {
@@ -68,7 +68,13 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 	const fetchCandidates = async () => {
 		setLoading(true);
 		try {
-			const response = await candidateService.getAll(page * rowsPerPage, rowsPerPage, debouncedSearchTerm);
+			const response = await candidateService.getAll(
+				page * rowsPerPage,
+				rowsPerPage,
+				debouncedSearchTerm,
+				orderBy,
+				order
+			);
 			setCandidates(response.items);
 			setTotalCount(response.total);
 		} catch (error) {
@@ -139,31 +145,16 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 	const uniqueEducation = Array.from(new Set(candidates.map(c => c.education_level).filter(Boolean))) as string[];
 	const uniqueCities = Array.from(new Set(candidates.map(c => c.city).filter(Boolean))) as string[];
 
-	// Filtering logic (now strictly for specific category filters if any remain, or just sorting)
-	// Search is handled by the backend
-	const filteredCandidates = candidates
-		.filter(candidate => {
-			const matchesFilters =
-				(filters.disability_type.length === 0 || filters.disability_type.includes(candidate.disability_type || '')) &&
-				(filters.education_level.length === 0 || filters.education_level.includes(candidate.education_level || '')) &&
-				(filters.city.length === 0 || filters.city.includes(candidate.city));
+	// Filtering logic (now strictly for specific category filters)
+	// Sorting and Search are handled by the backend
+	const filteredCandidates = candidates.filter(candidate => {
+		const matchesFilters =
+			(filters.disability_type.length === 0 || filters.disability_type.includes(candidate.disability_type || '')) &&
+			(filters.education_level.length === 0 || filters.education_level.includes(candidate.education_level || '')) &&
+			(filters.city.length === 0 || filters.city.includes(candidate.city));
 
-			return matchesFilters;
-		})
-		.sort((a, b) => {
-			const isAsc = order === 'asc';
-			if (orderBy === 'created_at') {
-				return isAsc
-					? new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-					: new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-			}
-			const aValue = (a[orderBy] as string | number) ?? '';
-			const bValue = (b[orderBy] as string | number) ?? '';
-
-			if (aValue < bValue) return isAsc ? -1 : 1;
-			if (aValue > bValue) return isAsc ? 1 : -1;
-			return 0;
-		});
+		return matchesFilters;
+	});
 
 	const formatDate = (dateString: string) => {
 		try {

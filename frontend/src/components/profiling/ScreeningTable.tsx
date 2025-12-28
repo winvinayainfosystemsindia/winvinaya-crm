@@ -46,7 +46,7 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 
 	useEffect(() => {
 		fetchCandidates();
-	}, [page, rowsPerPage, type, debouncedSearchTerm]);
+	}, [page, rowsPerPage, type, debouncedSearchTerm, order, orderBy]);
 
 	// Debounce search term
 	useEffect(() => {
@@ -61,8 +61,22 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 		setLoading(true);
 		try {
 			const response = type === 'unscreened'
-				? await candidateService.getUnscreened(page * rowsPerPage, rowsPerPage, debouncedSearchTerm)
-				: await candidateService.getScreened(page * rowsPerPage, rowsPerPage, undefined, debouncedSearchTerm);
+				? await candidateService.getUnscreened(
+					page * rowsPerPage,
+					rowsPerPage,
+					debouncedSearchTerm,
+					orderBy,
+					order
+				)
+				: await candidateService.getScreened(
+					page * rowsPerPage,
+					rowsPerPage,
+					undefined,
+					debouncedSearchTerm,
+					undefined,
+					orderBy,
+					order
+				);
 
 			// If response is paginated (items, total), handle it
 			const items = Array.isArray(response) ? response : response.items;
@@ -105,22 +119,8 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 		}
 	};
 
-	// Sorting logic (Search is handled by backend)
-	const filteredCandidates = candidates
-		.sort((a, b) => {
-			const isAsc = order === 'asc';
-			if (orderBy === 'created_at') {
-				return isAsc
-					? new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-					: new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-			}
-			const aValue = (a[orderBy] as string | number) ?? '';
-			const bValue = (b[orderBy] as string | number) ?? '';
-
-			if (aValue < bValue) return isAsc ? -1 : 1;
-			if (aValue > bValue) return isAsc ? 1 : -1;
-			return 0;
-		});
+	// Sorting and Search are handled by backend
+	const filteredCandidates = candidates;
 
 	return (
 		<Paper sx={{ border: '1px solid #d5dbdb', boxShadow: 'none', borderRadius: '8px', overflow: 'hidden' }}>

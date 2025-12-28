@@ -51,6 +51,8 @@ async def get_candidates(
     skip: int = 0,
     limit: int = 100,
     search: str = None,
+    sort_by: str = None,
+    sort_order: str = "desc",
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING])),
     db: AsyncSession = Depends(get_db)
 ):
@@ -59,7 +61,7 @@ async def get_candidates(
     Returns simplified candidate list without nested relationships.
     """
     service = CandidateService(db)
-    return await service.get_candidates(skip=skip, limit=limit, search=search)
+    return await service.get_candidates(skip=skip, limit=limit, search=search, sort_by=sort_by, sort_order=sort_order)
 
 
 @router.get("/stats", response_model=CandidateStats)
@@ -83,6 +85,8 @@ async def get_unscreened_candidates(
     skip: int = 0,
     limit: int = 100,
     search: str = None,
+    sort_by: str = None,
+    sort_order: str = "desc",
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING])),
     db: AsyncSession = Depends(get_db)
 ):
@@ -90,7 +94,7 @@ async def get_unscreened_candidates(
     Get list of candidates without screening records (Restricted)
     """
     service = CandidateService(db)
-    return await service.get_unscreened_candidates(skip=skip, limit=limit, search=search)
+    return await service.get_unscreened_candidates(skip=skip, limit=limit, search=search, sort_by=sort_by, sort_order=sort_order)
 
 
 @router.get("/screened", response_model=CandidatePaginatedResponse)
@@ -102,6 +106,8 @@ async def get_screened_candidates(
     counseling_status: str = None, # 'pending' or 'counseled'
     document_status: str = None, # 'pending' or 'collected'
     search: str = None,
+    sort_by: str = None,
+    sort_order: str = "desc",
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING])),
     db: AsyncSession = Depends(get_db)
 ):
@@ -110,7 +116,7 @@ async def get_screened_candidates(
     Returns list with basic candidate info.
     """
     service = CandidateService(db)
-    return await service.get_screened_candidates(skip=skip, limit=limit, counseling_status=counseling_status, search=search, document_status=document_status)
+    return await service.get_screened_candidates(skip=skip, limit=limit, counseling_status=counseling_status, search=search, document_status=document_status, sort_by=sort_by, sort_order=sort_order)
 
 
 

@@ -48,8 +48,8 @@ class CandidateRepository(BaseRepository[Candidate]):
         )
         return result.scalars().first()
 
-    async def get_multi(self, skip: int = 0, limit: int = 100, include_deleted: bool = False, search: Optional[str] = None):
-        """Get multiples candidates with counseling loaded for list view, with optional search filtering"""
+    async def get_multi(self, skip: int = 0, limit: int = 100, include_deleted: bool = False, search: Optional[str] = None, sort_by: Optional[str] = None, sort_order: str = "desc"):
+        """Get multiples candidates with counseling loaded for list view, with optional search filtering and sorting"""
         from sqlalchemy import or_
         stmt = (
             select(Candidate)
@@ -84,13 +84,27 @@ class CandidateRepository(BaseRepository[Candidate]):
         count_result = await self.db.execute(count_stmt)
         total = count_result.scalar() or 0
         
+        # Apply sorting
+        if sort_by:
+            # Handle sorting by fields that might be in relationships or complex
+            # For now, focus on main Candidate fields
+            if hasattr(Candidate, sort_by):
+                column = getattr(Candidate, sort_by)
+                if sort_order.lower() == "asc":
+                    stmt = stmt.order_by(column.asc())
+                else:
+                    stmt = stmt.order_by(column.desc())
+        else:
+            # Default sorting
+            stmt = stmt.order_by(Candidate.created_at.desc())
+
         # Now apply pagination for the data fetch
         stmt = stmt.offset(skip).limit(limit)
         result = await self.db.execute(stmt)
         return result.scalars().unique().all(), total
 
-    async def get_unscreened(self, skip: int = 0, limit: int = 100, search: Optional[str] = None):
-        """Get candidates without screening records, with optional search filtering"""
+    async def get_unscreened(self, skip: int = 0, limit: int = 100, search: Optional[str] = None, sort_by: Optional[str] = None, sort_order: str = "desc"):
+        """Get candidates without screening records, with optional search filtering and sorting"""
         from sqlalchemy import or_
         stmt = (
             select(Candidate)
@@ -119,13 +133,24 @@ class CandidateRepository(BaseRepository[Candidate]):
         count_result = await self.db.execute(count_stmt)
         total = count_result.scalar() or 0
         
+        # Apply sorting
+        if sort_by:
+            if hasattr(Candidate, sort_by):
+                column = getattr(Candidate, sort_by)
+                if sort_order.lower() == "asc":
+                    stmt = stmt.order_by(column.asc())
+                else:
+                    stmt = stmt.order_by(column.desc())
+        else:
+            stmt = stmt.order_by(Candidate.created_at.desc())
+
         # Apply pagination
         stmt = stmt.offset(skip).limit(limit)
         result = await self.db.execute(stmt)
         return result.scalars().unique().all(), total
 
-    async def get_screened(self, skip: int = 0, limit: int = 100, counseling_status: Optional[str] = None, search: Optional[str] = None, document_status: Optional[str] = None):
-        """Get candidates with screening records loaded, with optional counseling status filter, document status filter, and search filtering"""
+    async def get_screened(self, skip: int = 0, limit: int = 100, counseling_status: Optional[str] = None, search: Optional[str] = None, document_status: Optional[str] = None, sort_by: Optional[str] = None, sort_order: str = "desc"):
+        """Get candidates with screening records loaded, with optional counseling status filter, document status filter, search filtering, and sorting"""
         from sqlalchemy import or_
         stmt = (
             select(Candidate)
@@ -230,6 +255,17 @@ class CandidateRepository(BaseRepository[Candidate]):
         count_result = await self.db.execute(count_stmt)
         total = count_result.scalar() or 0
         
+        # Apply sorting
+        if sort_by:
+            if hasattr(Candidate, sort_by):
+                column = getattr(Candidate, sort_by)
+                if sort_order.lower() == "asc":
+                    stmt = stmt.order_by(column.asc())
+                else:
+                    stmt = stmt.order_by(column.desc())
+        else:
+            stmt = stmt.order_by(Candidate.created_at.desc())
+
         # Apply pagination
         stmt = stmt.offset(skip).limit(limit)
         result = await self.db.execute(stmt)

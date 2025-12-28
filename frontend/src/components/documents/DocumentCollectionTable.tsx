@@ -46,7 +46,7 @@ const DocumentCollectionTable: React.FC<DocumentCollectionTableProps> = ({ type 
 
 	useEffect(() => {
 		fetchCandidates();
-	}, [page, rowsPerPage, type, debouncedSearchTerm]);
+	}, [page, rowsPerPage, type, debouncedSearchTerm, order, orderBy]);
 
 	// Debounce search term
 	useEffect(() => {
@@ -66,7 +66,9 @@ const DocumentCollectionTable: React.FC<DocumentCollectionTableProps> = ({ type 
 				rowsPerPage,
 				'selected',
 				debouncedSearchTerm,
-				type
+				type,
+				orderBy,
+				order
 			);
 
 			setCandidates(response.items);

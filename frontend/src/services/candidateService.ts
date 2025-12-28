@@ -20,9 +20,10 @@ const candidateService = {
 	/**
 	 * Get all candidates (simplified list)
 	 */
-	getAll: async (skip = 0, limit = 100, search?: string): Promise<CandidatePaginatedResponse> => {
+	getAll: async (skip = 0, limit = 100, search?: string, sortBy?: string, sortOrder: 'asc' | 'desc' = 'desc'): Promise<CandidatePaginatedResponse> => {
 		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
-		const response = await api.get<CandidatePaginatedResponse>(`/candidates/?skip=${skip}&limit=${limit}${searchParam}`);
+		const sortParam = sortBy ? `&sort_by=${sortBy}&sort_order=${sortOrder}` : '';
+		const response = await api.get<CandidatePaginatedResponse>(`/candidates/?skip=${skip}&limit=${limit}${searchParam}${sortParam}`);
 		return response.data;
 	},
 
@@ -70,27 +71,29 @@ const candidateService = {
 	/**
 	 * Get unscreened candidates
 	 */
-	getUnscreened: async (skip = 0, limit = 100, search?: string): Promise<CandidatePaginatedResponse> => {
+	getUnscreened: async (skip = 0, limit = 100, search?: string, sortBy?: string, sortOrder: 'asc' | 'desc' = 'desc'): Promise<CandidatePaginatedResponse> => {
 		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
-		const response = await api.get<CandidatePaginatedResponse>(`/candidates/unscreened?skip=${skip}&limit=${limit}${searchParam}`);
+		const sortParam = sortBy ? `&sort_by=${sortBy}&sort_order=${sortOrder}` : '';
+		const response = await api.get<CandidatePaginatedResponse>(`/candidates/unscreened?skip=${skip}&limit=${limit}${searchParam}${sortParam}`);
 		return response.data;
 	},
 
 	/**
 	 * Get screened candidates (with screening data)
 	 */
-	getScreened: async (skip = 0, limit = 100, counselingStatus?: string, search?: string, documentStatus?: string): Promise<CandidatePaginatedResponse> => {
+	getScreened: async (skip = 0, limit = 100, counselingStatus?: string, search?: string, documentStatus?: string, sortBy?: string, sortOrder: 'asc' | 'desc' = 'desc'): Promise<CandidatePaginatedResponse> => {
 		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
 		const docStatusParam = documentStatus ? `&document_status=${documentStatus}` : '';
-		const response = await api.get<CandidatePaginatedResponse>(`/candidates/screened?skip=${skip}&limit=${limit}${counselingStatus ? `&counseling_status=${counselingStatus}` : ''}${docStatusParam}${searchParam}`);
+		const sortParam = sortBy ? `&sort_by=${sortBy}&sort_order=${sortOrder}` : '';
+		const response = await api.get<CandidatePaginatedResponse>(`/candidates/screened?skip=${skip}&limit=${limit}${counselingStatus ? `&counseling_status=${counselingStatus}` : ''}${docStatusParam}${searchParam}${sortParam}`);
 		return response.data;
 	},
 
 	/**
 	 * Get profiled candidates (alias for getScreened for backward compatibility)
 	 */
-	getProfiled: async (skip = 0, limit = 100, counselingStatus?: string, search?: string, documentStatus?: string): Promise<CandidatePaginatedResponse> => {
-		return candidateService.getScreened(skip, limit, counselingStatus, search, documentStatus);
+	getProfiled: async (skip = 0, limit = 100, counselingStatus?: string, search?: string, documentStatus?: string, sortBy?: string, sortOrder: 'asc' | 'desc' = 'desc'): Promise<CandidatePaginatedResponse> => {
+		return candidateService.getScreened(skip, limit, counselingStatus, search, documentStatus, sortBy, sortOrder);
 	}
 };
 

@@ -47,7 +47,7 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 
 	useEffect(() => {
 		fetchCandidates();
-	}, [page, rowsPerPage, type, refreshKey, debouncedSearchTerm]);
+	}, [page, rowsPerPage, type, refreshKey, debouncedSearchTerm, order, orderBy]);
 
 	// Debounce search term
 	useEffect(() => {
@@ -62,8 +62,16 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 		setLoading(true);
 		try {
 			// Both tabs rely on 'profiled' candidates list, but filtered by counseling status on the server
-			// Now using full server-side pagination and search
-			const response = await candidateService.getProfiled(page * rowsPerPage, rowsPerPage, type, debouncedSearchTerm);
+			// Now using full server-side pagination, search, and sorting
+			const response = await candidateService.getProfiled(
+				page * rowsPerPage,
+				rowsPerPage,
+				type,
+				debouncedSearchTerm,
+				undefined, // documentStatus
+				orderBy,
+				order
+			);
 
 			setCandidates(response.items);
 			setTotalCount(response.total);
@@ -94,22 +102,8 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 		setOrderBy(property);
 	};
 
-	// Sorting logic (Search is handled by backend)
-	const filteredCandidates = [...candidates]
-		.sort((a, b) => {
-			const isAsc = order === 'asc';
-			if (orderBy === 'created_at') {
-				return isAsc
-					? new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-					: new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-			}
-			const aValue = (a[orderBy] as string | number) ?? '';
-			const bValue = (b[orderBy] as string | number) ?? '';
-
-			if (aValue < bValue) return isAsc ? -1 : 1;
-			if (aValue > bValue) return isAsc ? 1 : -1;
-			return 0;
-		});
+	// Sorting and Search are handled by backend
+	const filteredCandidates = candidates;
 
 
 	return (
