@@ -140,7 +140,6 @@ const ScreeningList: React.FC = () => {
 						value={tabValue}
 						onChange={handleTabChange}
 						sx={{
-							borderBottom: '1px solid #e0e0e0',
 							px: 2,
 							'& .MuiTab-root': {
 								textTransform: 'none',
@@ -153,25 +152,23 @@ const ScreeningList: React.FC = () => {
 						<Tab label="Not Screened" />
 						<Tab label="Screened" />
 					</Tabs>
-
-					{/* Tab Panels */}
-					<Box sx={{ bgcolor: '#ffffff', borderRadius: '0 0 8px 8px' }}>
-						<TabPanel value={tabValue} index={0}>
-							<ScreeningTable
-								key={`unscreened-${refreshKey}`} // Force re-mount on update
-								type="unscreened"
-								onAction={handleAction}
-							/>
-						</TabPanel>
-						<TabPanel value={tabValue} index={1}>
-							<ScreeningTable
-								key={`screened-${refreshKey}`} // Force re-mount on update
-								type="screened"
-								onAction={handleAction}
-							/>
-						</TabPanel>
-					</Box>
 				</Box>
+
+				{/* Tab Panels */}
+				<TabPanel value={tabValue} index={0}>
+					<ScreeningTable
+						key={`unscreened-${refreshKey}`} // Force re-mount on update
+						type="unscreened"
+						onAction={handleAction}
+					/>
+				</TabPanel>
+				<TabPanel value={tabValue} index={1}>
+					<ScreeningTable
+						key={`screened-${refreshKey}`} // Force re-mount on update
+						type="screened"
+						onAction={handleAction}
+					/>
+				</TabPanel>
 
 				{/* Screening Form Dialog */}
 				<ScreeningFormDialog

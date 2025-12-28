@@ -16,7 +16,10 @@ import {
 	useTheme,
 	Tooltip,
 	Chip,
-	TableSortLabel
+	TableSortLabel,
+	FormControl,
+	Select,
+	MenuItem
 } from '@mui/material';
 import { Search, Edit, Accessible, VerifiedUser } from '@mui/icons-material';
 import { format, isToday, parseISO } from 'date-fns';
@@ -34,7 +37,7 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 	const [loading, setLoading] = useState(false);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(10);
+	const [rowsPerPage, setRowsPerPage] = useState(5);
 	const [totalCount, setTotalCount] = useState(0);
 	const [order, setOrder] = useState<'asc' | 'desc'>('desc');
 	const [orderBy, setOrderBy] = useState<keyof CandidateListItem>('created_at');
@@ -120,7 +123,7 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 		});
 
 	return (
-		<Paper sx={{ border: '1px solid #d5dbdb', boxShadow: 'none', borderRadius: 0 }}>
+		<Paper sx={{ border: '1px solid #d5dbdb', boxShadow: 'none', borderRadius: '8px', overflow: 'hidden' }}>
 			{/* Header with Search */}
 			<Box sx={{
 				p: 2,
@@ -305,30 +308,65 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 				</Table>
 			</TableContainer>
 
-			<TablePagination
-				component="div"
-				count={totalCount}
-				page={page}
-				onPageChange={handleChangePage}
-				rowsPerPage={rowsPerPage}
-				onRowsPerPageChange={handleChangeRowsPerPage}
-				rowsPerPageOptions={[10, 25, 50]}
-				sx={{
-					borderTop: '1px solid #d5dbdb',
-					'.MuiTablePagination-toolbar': {
-						paddingLeft: { xs: 1, sm: 2 },
-						paddingRight: { xs: 1, sm: 2 },
-						flexWrap: 'wrap',
-						justifyContent: 'center'
-					},
-					'.MuiTablePagination-selectLabel, .MuiTablePagination-input': {
-						display: { xs: 'none', sm: 'block' }
-					},
-					'.MuiTablePagination-actions': {
-						marginLeft: { xs: 1, sm: 2 }
-					}
-				}}
-			/>
+			{/* Pagination */}
+			<Box sx={{
+				display: 'flex',
+				flexDirection: { xs: 'column', sm: 'row' },
+				justifyContent: 'space-between',
+				alignItems: 'center',
+				p: 2,
+				gap: 2,
+				borderTop: '1px solid #d5dbdb',
+				bgcolor: '#fafafa'
+			}}>
+				<Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 2 }}>
+					<Typography variant="body2" color="text.secondary">
+						Rows per page:
+					</Typography>
+					<FormControl size="small">
+						<Select
+							value={rowsPerPage}
+							onChange={(e) => handleChangeRowsPerPage(e as any)}
+							sx={{
+								height: '32px',
+								'& .MuiOutlinedInput-notchedOutline': {
+									borderColor: '#d5dbdb',
+								},
+								'&:hover .MuiOutlinedInput-notchedOutline': {
+									borderColor: theme.palette.primary.main,
+								}
+							}}
+						>
+							<MenuItem value={5}>5</MenuItem>
+							<MenuItem value={10}>10</MenuItem>
+							<MenuItem value={25}>25</MenuItem>
+							<MenuItem value={50}>50</MenuItem>
+							<MenuItem value={100}>100</MenuItem>
+						</Select>
+					</FormControl>
+				</Box>
+
+				<TablePagination
+					component="div"
+					count={totalCount}
+					page={page}
+					onPageChange={handleChangePage}
+					rowsPerPage={rowsPerPage}
+					onRowsPerPageChange={handleChangeRowsPerPage}
+					rowsPerPageOptions={[]}
+					sx={{
+						border: 'none',
+						'.MuiTablePagination-toolbar': {
+							paddingLeft: 0,
+							paddingRight: 0,
+							minHeight: '40px'
+						},
+						'.MuiTablePagination-actions': {
+							marginLeft: { xs: 0, sm: 2 }
+						}
+					}}
+				/>
+			</Box>
 		</Paper>
 	);
 };
