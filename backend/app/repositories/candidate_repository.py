@@ -89,8 +89,9 @@ class CandidateRepository(BaseRepository[Candidate]):
         result = await self.db.execute(stmt)
         return result.scalars().unique().all(), total
 
-    async def get_unscreened(self, skip: int = 0, limit: int = 100):
-        """Get candidates without screening records"""
+    async def get_unscreened(self, skip: int = 0, limit: int = 100, search: Optional[str] = None):
+        """Get candidates without screening records, with optional search filtering"""
+        from sqlalchemy import or_
         stmt = (
             select(Candidate)
             .outerjoin(Candidate.screening)
@@ -101,8 +102,20 @@ class CandidateRepository(BaseRepository[Candidate]):
             )
         )
         
-        # Count total unscreened
+        # Base count query
         count_stmt = select(func.count(Candidate.id)).outerjoin(Candidate.screening).where(CandidateScreening.id.is_(None))
+        
+        # Apply search filters if provided
+        if search:
+            search_filter = or_(
+                Candidate.name.ilike(f"%{search}%"),
+                Candidate.email.ilike(f"%{search}%"),
+                Candidate.phone.ilike(f"%{search}%"),
+                Candidate.city.ilike(f"%{search}%")
+            )
+            stmt = stmt.where(search_filter)
+            count_stmt = count_stmt.where(search_filter)
+
         count_result = await self.db.execute(count_stmt)
         total = count_result.scalar() or 0
         
@@ -111,8 +124,9 @@ class CandidateRepository(BaseRepository[Candidate]):
         result = await self.db.execute(stmt)
         return result.scalars().unique().all(), total
 
-    async def get_screened(self, skip: int = 0, limit: int = 100, counseling_status: Optional[str] = None):
-        """Get candidates with screening records loaded, with optional counseling status filter"""
+    async def get_screened(self, skip: int = 0, limit: int = 100, counseling_status: Optional[str] = None, search: Optional[str] = None):
+        """Get candidates with screening records loaded, with optional counseling status filter and search filtering"""
+        from sqlalchemy import or_
         stmt = (
             select(Candidate)
             .join(Candidate.screening)
@@ -140,6 +154,17 @@ class CandidateRepository(BaseRepository[Candidate]):
             else:
                 stmt = stmt.where(CandidateCounseling.status == counseling_status)
                 count_stmt = count_stmt.where(CandidateCounseling.status == counseling_status)
+
+        # Apply search filters if provided
+        if search:
+            search_filter = or_(
+                Candidate.name.ilike(f"%{search}%"),
+                Candidate.email.ilike(f"%{search}%"),
+                Candidate.phone.ilike(f"%{search}%"),
+                Candidate.city.ilike(f"%{search}%")
+            )
+            stmt = stmt.where(search_filter)
+            count_stmt = count_stmt.where(search_filter)
 
         # Count total screened (with filter)
         count_result = await self.db.execute(count_stmt)

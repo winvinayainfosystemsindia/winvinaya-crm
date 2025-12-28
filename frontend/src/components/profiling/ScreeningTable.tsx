@@ -39,15 +39,27 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 	const [order, setOrder] = useState<'asc' | 'desc'>('desc');
 	const [orderBy, setOrderBy] = useState<keyof CandidateListItem>('created_at');
 
+	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
 	useEffect(() => {
 		fetchCandidates();
-	}, [page, rowsPerPage, type]);
+	}, [page, rowsPerPage, type, debouncedSearchTerm]);
+
+	// Debounce search term
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setDebouncedSearchTerm(searchTerm);
+		}, 500);
+
+		return () => clearTimeout(timer);
+	}, [searchTerm]);
 
 	const fetchCandidates = async () => {
 		setLoading(true);
 		try {
-			const fetcher = type === 'unscreened' ? candidateService.getUnscreened : candidateService.getScreened;
-			const response = await fetcher(page * rowsPerPage, rowsPerPage);
+			const response = type === 'unscreened'
+				? await candidateService.getUnscreened(page * rowsPerPage, rowsPerPage, debouncedSearchTerm)
+				: await candidateService.getScreened(page * rowsPerPage, rowsPerPage, undefined, debouncedSearchTerm);
 
 			// If response is paginated (items, total), handle it
 			const items = Array.isArray(response) ? response : response.items;
@@ -90,17 +102,8 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 		}
 	};
 
-	// Client-side filtering on the retained page (matching CandidateTable behavior)
+	// Sorting logic (Search is handled by backend)
 	const filteredCandidates = candidates
-		.filter(candidate => {
-			const search = searchTerm.toLowerCase();
-			return (
-				candidate.name.toLowerCase().includes(search) ||
-				candidate.email.toLowerCase().includes(search) ||
-				candidate.phone.includes(search) ||
-				candidate.city.toLowerCase().includes(search)
-			);
-		})
 		.sort((a, b) => {
 			const isAsc = order === 'asc';
 			if (orderBy === 'created_at') {

@@ -82,6 +82,7 @@ async def get_unscreened_candidates(
     request: Request,
     skip: int = 0,
     limit: int = 100,
+    search: str = None,
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING])),
     db: AsyncSession = Depends(get_db)
 ):
@@ -89,7 +90,7 @@ async def get_unscreened_candidates(
     Get list of candidates without screening records (Restricted)
     """
     service = CandidateService(db)
-    return await service.get_unscreened_candidates(skip=skip, limit=limit)
+    return await service.get_unscreened_candidates(skip=skip, limit=limit, search=search)
 
 
 @router.get("/screened", response_model=CandidatePaginatedResponse)
@@ -99,6 +100,7 @@ async def get_screened_candidates(
     skip: int = 0,
     limit: int = 100,
     counseling_status: str = None, # 'pending' or 'counseled'
+    search: str = None,
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING])),
     db: AsyncSession = Depends(get_db)
 ):
@@ -107,7 +109,7 @@ async def get_screened_candidates(
     Returns list with basic candidate info.
     """
     service = CandidateService(db)
-    return await service.get_screened_candidates(skip=skip, limit=limit, counseling_status=counseling_status)
+    return await service.get_screened_candidates(skip=skip, limit=limit, counseling_status=counseling_status, search=search)
 
 
 

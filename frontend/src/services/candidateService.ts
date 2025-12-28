@@ -70,16 +70,18 @@ const candidateService = {
 	/**
 	 * Get unscreened candidates
 	 */
-	getUnscreened: async (skip = 0, limit = 100): Promise<CandidatePaginatedResponse> => {
-		const response = await api.get<CandidatePaginatedResponse>(`/candidates/unscreened?skip=${skip}&limit=${limit}`);
+	getUnscreened: async (skip = 0, limit = 100, search?: string): Promise<CandidatePaginatedResponse> => {
+		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
+		const response = await api.get<CandidatePaginatedResponse>(`/candidates/unscreened?skip=${skip}&limit=${limit}${searchParam}`);
 		return response.data;
 	},
 
 	/**
 	 * Get screened candidates (with screening data)
 	 */
-	getScreened: async (skip = 0, limit = 100, counselingStatus?: string): Promise<CandidatePaginatedResponse> => {
-		const response = await api.get<CandidatePaginatedResponse>(`/candidates/screened?skip=${skip}&limit=${limit}${counselingStatus ? `&counseling_status=${counselingStatus}` : ''}`);
+	getScreened: async (skip = 0, limit = 100, counselingStatus?: string, search?: string): Promise<CandidatePaginatedResponse> => {
+		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
+		const response = await api.get<CandidatePaginatedResponse>(`/candidates/screened?skip=${skip}&limit=${limit}${counselingStatus ? `&counseling_status=${counselingStatus}` : ''}${searchParam}`);
 		return response.data;
 	},
 
