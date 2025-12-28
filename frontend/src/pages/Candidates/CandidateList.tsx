@@ -1,16 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Box, Container, Typography, useTheme, useMediaQuery } from '@mui/material';
 import CandidateStatCards from '../../components/candidates/CandidateStatCards';
 import CandidateTable from '../../components/candidates/CandidateTable';
-import candidateService from '../../services/candidateService';
 import { useNavigate } from 'react-router-dom';
-import type { CandidateStats } from '../../models/candidate';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchCandidateStats } from '../../store/slices/candidateSlice';
 
 const CandidateList: React.FC = () => {
 	const navigate = useNavigate();
+	const dispatch = useAppDispatch();
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-	const [stats, setStats] = useState<CandidateStats>({
+
+	const { stats } = useAppSelector((state) => state.candidates);
+
+	useEffect(() => {
+		dispatch(fetchCandidateStats());
+	}, [dispatch]);
+
+	const defaultStats = {
 		total: 0,
 		male: 0,
 		female: 0,
@@ -26,19 +34,6 @@ const CandidateList: React.FC = () => {
 		docs_total: 0,
 		docs_completed: 0,
 		docs_pending: 0
-	});
-
-	useEffect(() => {
-		fetchStats();
-	}, []);
-
-	const fetchStats = async () => {
-		try {
-			const data = await candidateService.getStats();
-			setStats(data);
-		} catch (error) {
-			console.error('Failed to fetch candidate stats:', error);
-		}
 	};
 
 	const handleAddCandidate = () => {
@@ -79,7 +74,7 @@ const CandidateList: React.FC = () => {
 				</Box>
 
 				{/* Stat Cards Section */}
-				<CandidateStatCards stats={stats} />
+				<CandidateStatCards stats={stats || defaultStats} />
 
 				{/* Candidate Table */}
 				<CandidateTable

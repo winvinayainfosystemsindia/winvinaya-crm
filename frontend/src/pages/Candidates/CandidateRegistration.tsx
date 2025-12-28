@@ -8,19 +8,21 @@ import {
     Typography,
 } from '@mui/material';
 import CandidateRegistrationForm from '../../components/candidates/CandidateRegistrationForm';
-import candidateService from '../../services/candidateService';
+import { useAppDispatch } from '../../store/hooks';
+import { createCandidate } from '../../store/slices/candidateSlice';
 import type { CandidateCreate } from '../../models/candidate';
 
 const CandidateRegistration: React.FC = () => {
     const navigate = useNavigate();
+    const dispatch = useAppDispatch();
     const [showSuccess, setShowSuccess] = useState(false);
     const [showError, setShowError] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
 
     const handleSubmit = async (data: CandidateCreate) => {
         try {
-            // Call the API to create the candidate
-            const createdCandidate = await candidateService.create(data);
+            // Call the API to create the candidate via Redux
+            const createdCandidate = await dispatch(createCandidate(data)).unwrap();
 
             // Show success message
             setShowSuccess(true);

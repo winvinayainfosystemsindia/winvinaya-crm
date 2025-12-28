@@ -13,6 +13,7 @@ import type {
 
 interface CandidateState {
 	list: CandidateListItem[];
+	total: number;
 	selectedCandidate: Candidate | null;
 	stats: CandidateStats | null;
 	loading: boolean;
@@ -21,6 +22,7 @@ interface CandidateState {
 
 const initialState: CandidateState = {
 	list: [],
+	total: 0,
 	selectedCandidate: null,
 	stats: null,
 	loading: false,
@@ -45,9 +47,19 @@ export const fetchCandidateStats = createAsyncThunk(
 
 export const fetchCandidates = createAsyncThunk(
 	'candidates/fetchAll',
-	async (_, { rejectWithValue }) => {
+	async (
+		params: {
+			skip?: number;
+			limit?: number;
+			search?: string;
+			sortBy?: string;
+			sortOrder?: 'asc' | 'desc';
+		} | void = {},
+		{ rejectWithValue }
+	) => {
 		try {
-			const response = await candidateService.getAll();
+			const { skip, limit, search, sortBy, sortOrder } = params || {};
+			const response = await candidateService.getAll(skip, limit, search, sortBy, sortOrder);
 			return response;
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.message || 'Failed to fetch candidates');
@@ -251,6 +263,7 @@ const candidateSlice = createSlice({
 			.addCase(fetchCandidates.fulfilled, (state, action: PayloadAction<CandidatePaginatedResponse>) => {
 				state.loading = false;
 				state.list = action.payload.items;
+				state.total = action.payload.total;
 			})
 			.addCase(fetchCandidates.rejected, (state, action: PayloadAction<any>) => {
 				state.loading = false;

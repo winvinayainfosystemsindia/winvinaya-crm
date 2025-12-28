@@ -29,7 +29,8 @@ import {
 	Stack
 } from '@mui/material';
 import { format, isToday, parseISO } from 'date-fns';
-import candidateService from '../../services/candidateService';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchCandidates } from '../../store/slices/candidateSlice';
 import type { CandidateListItem } from '../../models/candidate';
 
 interface CandidateTableProps {
@@ -40,21 +41,25 @@ interface CandidateTableProps {
 
 const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditCandidate, onViewCandidate }) => {
 	const theme = useTheme();
-	const [candidates, setCandidates] = useState<CandidateListItem[]>([]);
-	const [loading, setLoading] = useState(false);
+	const dispatch = useAppDispatch();
+	const { list: candidates, loading, total: totalCount } = useAppSelector((state) => state.candidates);
+
 	const [searchTerm, setSearchTerm] = useState('');
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(5);
-	const [totalCount, setTotalCount] = useState(0);
 	const [order, setOrder] = useState<'asc' | 'desc'>('desc');
 	const [orderBy, setOrderBy] = useState<keyof CandidateListItem>('created_at');
-
 	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
-	// Initial fetch and fetch on pagination change
-	useEffect(() => {
-		fetchCandidates();
-	}, [page, rowsPerPage, debouncedSearchTerm, order, orderBy]);
+	const fetchCandidatesData = async () => {
+		dispatch(fetchCandidates({
+			skip: page * rowsPerPage,
+			limit: rowsPerPage,
+			search: debouncedSearchTerm,
+			sortBy: orderBy,
+			sortOrder: order
+		}));
+	};
 
 	// Debounce search term
 	useEffect(() => {
@@ -65,24 +70,10 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 		return () => clearTimeout(timer);
 	}, [searchTerm]);
 
-	const fetchCandidates = async () => {
-		setLoading(true);
-		try {
-			const response = await candidateService.getAll(
-				page * rowsPerPage,
-				rowsPerPage,
-				debouncedSearchTerm,
-				orderBy,
-				order
-			);
-			setCandidates(response.items);
-			setTotalCount(response.total);
-		} catch (error) {
-			console.error('Failed to fetch candidates:', error);
-		} finally {
-			setLoading(false);
-		}
-	};
+	// Initial fetch and fetch on pagination change
+	useEffect(() => {
+		fetchCandidatesData();
+	}, [page, rowsPerPage, debouncedSearchTerm, order, orderBy]);
 
 	const handleChangePage = (_event: unknown, newPage: number) => {
 		setPage(newPage);
@@ -218,7 +209,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 					<Box sx={{ display: 'flex', gap: 1 }}>
 						<Tooltip title="Refresh Data">
 							<IconButton
-								onClick={fetchCandidates}
+								onClick={fetchCandidatesData}
 								disabled={loading}
 								sx={{
 									border: '1px solid #d5dbdb',
