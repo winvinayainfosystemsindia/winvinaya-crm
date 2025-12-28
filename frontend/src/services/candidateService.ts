@@ -88,8 +88,8 @@ const candidateService = {
 	/**
 	 * Get profiled candidates (alias for getScreened for backward compatibility)
 	 */
-	getProfiled: async (skip = 0, limit = 100, counselingStatus?: string): Promise<CandidatePaginatedResponse> => {
-		return candidateService.getScreened(skip, limit, counselingStatus);
+	getProfiled: async (skip = 0, limit = 100, counselingStatus?: string, search?: string): Promise<CandidatePaginatedResponse> => {
+		return candidateService.getScreened(skip, limit, counselingStatus, search);
 	}
 };
 

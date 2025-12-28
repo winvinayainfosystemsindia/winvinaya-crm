@@ -35,21 +35,35 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 	const [loading, setLoading] = useState(false);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(10);
+	const [rowsPerPage, setRowsPerPage] = useState(5);
 	const [order, setOrder] = useState<'asc' | 'desc'>('desc');
 	const [orderBy, setOrderBy] = useState<keyof CandidateListItem>('created_at');
 
+	const [totalCount, setTotalCount] = useState(0);
+	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
 	useEffect(() => {
 		fetchCandidates();
-	}, [page, rowsPerPage, type, refreshKey]);
+	}, [page, rowsPerPage, type, refreshKey, debouncedSearchTerm]);
+
+	// Debounce search term
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setDebouncedSearchTerm(searchTerm);
+		}, 500);
+
+		return () => clearTimeout(timer);
+	}, [searchTerm]);
 
 	const fetchCandidates = async () => {
 		setLoading(true);
 		try {
 			// Both tabs rely on 'profiled' candidates list, but filtered by counseling status on the server
-			const response = await candidateService.getProfiled(page * rowsPerPage, rowsPerPage * 5, type);
+			// Now using full server-side pagination and search
+			const response = await candidateService.getProfiled(page * rowsPerPage, rowsPerPage, type, debouncedSearchTerm);
 
 			setCandidates(response.items);
+			setTotalCount(response.total);
 		} catch (error) {
 			console.error(`Failed to fetch ${type} candidates:`, error);
 		} finally {
@@ -77,17 +91,8 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 		setOrderBy(property);
 	};
 
-	// Client-side filtering on the retained page 
-	const processedCandidates = candidates
-		.filter(candidate => {
-			const search = searchTerm.toLowerCase();
-			return (
-				candidate.name.toLowerCase().includes(search) ||
-				candidate.email.toLowerCase().includes(search) ||
-				candidate.phone.includes(search) ||
-				candidate.city.toLowerCase().includes(search)
-			);
-		})
+	// Sorting logic (Search is handled by backend)
+	const filteredCandidates = [...candidates]
 		.sort((a, b) => {
 			const isAsc = order === 'asc';
 			if (orderBy === 'created_at') {
@@ -102,9 +107,6 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 			if (aValue > bValue) return isAsc ? 1 : -1;
 			return 0;
 		});
-
-	// Pagination on filtered list
-	const paginatedCandidates = processedCandidates.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
 
 	return (
@@ -199,14 +201,14 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 									<Typography color="text.secondary">Loading...</Typography>
 								</TableCell>
 							</TableRow>
-						) : paginatedCandidates.length === 0 ? (
+						) : filteredCandidates.length === 0 ? (
 							<TableRow>
 								<TableCell colSpan={6} align="center" sx={{ py: 4 }}>
 									<Typography color="text.secondary">No candidates found</Typography>
 								</TableCell>
 							</TableRow>
 						) : (
-							paginatedCandidates.map((candidate) => (
+							filteredCandidates.map((candidate) => (
 								<TableRow
 									key={candidate.public_id}
 									sx={{
@@ -301,12 +303,12 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 
 			<TablePagination
 				component="div"
-				count={processedCandidates.length}
+				count={totalCount}
 				page={page}
 				onPageChange={handleChangePage}
 				rowsPerPage={rowsPerPage}
 				onRowsPerPageChange={handleChangeRowsPerPage}
-				rowsPerPageOptions={[10, 25, 50]}
+				rowsPerPageOptions={[5, 10, 25, 50]}
 				sx={{
 					borderTop: '1px solid #d5dbdb',
 					'.MuiTablePagination-toolbar': {
