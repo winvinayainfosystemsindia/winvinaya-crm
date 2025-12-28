@@ -149,105 +149,95 @@ class CandidateListResponse(BaseModel):
         disability_type = None
         education_level = None
         counseling_status = None
+        counselor_name = None
+        counseling_date = None
         documents_uploaded = []
         
-        # Helper to extract from dict or object
-        def get_attr(obj, key, default=None):
+        # Helper to extract from dict or object safely
+        def get_val(obj, key, default=None):
             if isinstance(obj, dict):
                 return obj.get(key, default)
             return getattr(obj, key, default)
-        
-        # Helper to check if a relationship is loaded (for ORM objects)
-        def is_relationship_loaded(obj, relationship_name):
-            if isinstance(obj, dict):
-                return True  # Dict always has all keys available
-            try:
-                from sqlalchemy.inspect import inspect as sqla_inspect
-                state = sqla_inspect(obj)
-                return relationship_name not in state.unloaded
-            except:
-                return False  # If we can't inspect, assume not loaded
 
         # 1. Disability Data
-        details = get_attr(data, 'disability_details')
+        details = get_val(data, 'disability_details')
         if details and isinstance(details, dict):
             is_disabled = details.get('is_disabled', False)
             disability_type = details.get('disability_type')
 
-        # 2. Education Data (Determine highest level)
-        edu_details = get_attr(data, 'education_details')
+        # 2. Education Data
+        edu_details = get_val(data, 'education_details')
         if edu_details and isinstance(edu_details, dict):
             degrees = edu_details.get('degrees', [])
             if degrees and len(degrees) > 0:
-                # Simplification: take first degree name as education level
-                education_level = degrees[0].get('degree_name', "Graduate/Post-Graduate")
+                education_level = degrees[0].get('degree_name')
 
-        # 3. Counseling Status - more robust access using helper
-        counselor_name = None
-        counseling_date = None
-        
-        # Try to get counseling record directly or via relationship using helper
-        counseling = get_attr(data, 'counseling', None)
-        if counseling:
-            counseling_status = get_attr(counseling, 'status', None)
-            counseling_date = get_attr(counseling, 'counseling_date', None)
-            
-            # Use direct field as primary/fallback for counselor name
-            counselor_name = get_attr(counseling, 'counselor_name', None)
-            
-            # If counselor object is available, prefer its full_name
-            try:
-                counselor = get_attr(counseling, 'counselor', None)
-                if counselor:
-                    # Accessing full_name might fail if not loaded, get_attr handles it
-                    fname = get_attr(counselor, 'full_name', None)
-                    if fname:
-                        counselor_name = fname
-            except:
-                pass # Fallback to counselor_name string already set
-
-        # 4. Documents - only access if loaded
-        if is_relationship_loaded(data, 'documents'):
-            documents = get_attr(data, 'documents')
-            if documents:
-                 # documents is a list of objects or dicts
-                 documents_uploaded = [get_attr(d, 'document_type') for d in documents]
-
+        # 3. Counseling Data (Relationship)
+        # Check if counseling is loaded (ORM) or present (dict)
+        counseling = None
         if isinstance(data, dict):
-            data['is_disabled'] = is_disabled
-            data['disability_type'] = disability_type
-            data['education_level'] = education_level
-            data['counseling_status'] = counseling_status
-            data['counselor_name'] = counselor_name
-            data['counseling_date'] = counseling_date
-            data['documents_uploaded'] = documents_uploaded
+            counseling = data.get('counseling')
+        elif hasattr(data, '__dict__') and 'counseling' in data.__dict__:
+            counseling = data.counseling
+
+        if counseling:
+            counseling_status = get_val(counseling, 'status')
+            counseling_date = get_val(counseling, 'counseling_date')
+            counselor_name = get_val(counseling, 'counselor_name')
+            
+            # Nested counselor name
+            counselor = None
+            if isinstance(counseling, dict):
+                counselor = counseling.get('counselor')
+            elif hasattr(counseling, '__dict__') and 'counselor' in counseling.__dict__:
+                counselor = counseling.counselor
+            
+            if counselor:
+                fname = get_val(counselor, 'full_name')
+                if fname:
+                    counselor_name = fname
+
+        # 4. Documents (Relationship)
+        docs_list = None
+        if isinstance(data, dict):
+            docs_list = data.get('documents')
+        elif hasattr(data, '__dict__') and 'documents' in data.__dict__:
+            docs_list = data.documents
+
+        if docs_list:
+            documents_uploaded = [get_val(d, 'document_type') for d in docs_list]
+
+        # 5. Build response dict
+        if isinstance(data, dict):
+            data.update({
+                'is_disabled': is_disabled,
+                'disability_type': disability_type,
+                'education_level': education_level,
+                'counseling_status': counseling_status,
+                'counselor_name': counselor_name,
+                'counseling_date': counseling_date,
+                'documents_uploaded': documents_uploaded
+            })
             return data
             
-        # If it's an object (ORM), convert to dict to inject our calculated fields
-        if hasattr(data, '__dict__'):
-            try:
-                obj_dict = {
-                    'public_id': data.public_id,
-                    'name': data.name,
-                    'email': data.email,
-                    'phone': data.phone,
-                    'city': data.city,
-                    'district': data.district,
-                    'state': data.state,
-                    'created_at': data.created_at,
-                    'is_disabled': is_disabled,
-                    'disability_type': disability_type,
-                    'education_level': education_level,
-                    'counseling_status': counseling_status,
-                    'counselor_name': counselor_name,
-                    'counseling_date': counseling_date,
-                    'documents_uploaded': documents_uploaded
-                }
-                return obj_dict
-            except Exception:
-                return data
-                
-        return data
+        # For ORM objects, create a complete dict
+        return {
+            'public_id': get_val(data, 'public_id'),
+            'name': get_val(data, 'name'),
+            'email': get_val(data, 'email'),
+            'phone': get_val(data, 'phone'),
+            'city': get_val(data, 'city'),
+            'district': get_val(data, 'district'),
+            'state': get_val(data, 'state'),
+            'created_at': get_val(data, 'created_at'),
+            'is_disabled': is_disabled,
+            'disability_type': disability_type,
+            'education_level': education_level,
+            'counseling_status': counseling_status,
+            'counselor_name': counselor_name,
+            'counseling_date': counseling_date,
+            'documents_uploaded': documents_uploaded
+        }
 
     class Config:
         from_attributes = True
