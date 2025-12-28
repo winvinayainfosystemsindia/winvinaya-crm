@@ -23,30 +23,43 @@ import {
 } from '@mui/material';
 import { Search, Edit, Accessible, VerifiedUser } from '@mui/icons-material';
 import { format, isToday, parseISO } from 'date-fns';
-import candidateService from '../../services/candidateService';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchUnscreenedCandidates, fetchScreenedCandidates } from '../../store/slices/candidateSlice';
 import type { CandidateListItem } from '../../models/candidate';
 
 interface ScreeningTableProps {
 	type: 'unscreened' | 'screened';
-	onAction: (action: 'screen' | 'edit', candidate: CandidateListItem) => void;
+	onAction: (action: 'edit' | 'screen', candidate: CandidateListItem) => void;
 }
 
 const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 	const theme = useTheme();
-	const [candidates, setCandidates] = useState<CandidateListItem[]>([]);
-	const [loading, setLoading] = useState(false);
+	const dispatch = useAppDispatch();
+	const { list: candidates, loading, total: totalCount } = useAppSelector((state) => state.candidates);
+
 	const [searchTerm, setSearchTerm] = useState('');
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(5);
-	const [totalCount, setTotalCount] = useState(0);
 	const [order, setOrder] = useState<'asc' | 'desc'>('desc');
 	const [orderBy, setOrderBy] = useState<keyof CandidateListItem>('created_at');
 
 	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
-	useEffect(() => {
-		fetchCandidates();
-	}, [page, rowsPerPage, type, debouncedSearchTerm, order, orderBy]);
+	const fetchCandidatesData = async () => {
+		const params = {
+			skip: page * rowsPerPage,
+			limit: rowsPerPage,
+			search: debouncedSearchTerm,
+			sortBy: orderBy,
+			sortOrder: order
+		};
+
+		if (type === 'unscreened') {
+			dispatch(fetchUnscreenedCandidates(params));
+		} else {
+			dispatch(fetchScreenedCandidates(params));
+		}
+	};
 
 	// Debounce search term
 	useEffect(() => {
@@ -57,39 +70,10 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 		return () => clearTimeout(timer);
 	}, [searchTerm]);
 
-	const fetchCandidates = async () => {
-		setLoading(true);
-		try {
-			const response = type === 'unscreened'
-				? await candidateService.getUnscreened(
-					page * rowsPerPage,
-					rowsPerPage,
-					debouncedSearchTerm,
-					orderBy,
-					order
-				)
-				: await candidateService.getScreened(
-					page * rowsPerPage,
-					rowsPerPage,
-					undefined,
-					debouncedSearchTerm,
-					undefined,
-					orderBy,
-					order
-				);
-
-			// If response is paginated (items, total), handle it
-			const items = Array.isArray(response) ? response : response.items;
-			const total = Array.isArray(response) ? items.length + (page * rowsPerPage) + (items.length === rowsPerPage ? 1 : 0) : response.total;
-
-			setCandidates(items);
-			setTotalCount(total);
-		} catch (error) {
-			console.error(`Failed to fetch ${type} candidates:`, error);
-		} finally {
-			setLoading(false);
-		}
-	};
+	// Initial fetch and fetch on pagination change
+	useEffect(() => {
+		fetchCandidatesData();
+	}, [page, rowsPerPage, type, debouncedSearchTerm, order, orderBy]);
 
 	const handleChangePage = (_event: unknown, newPage: number) => {
 		setPage(newPage);

@@ -11,11 +11,10 @@ import {
 	useMediaQuery
 } from '@mui/material';
 import { useAppDispatch } from '../../store/hooks';
-import { fetchCandidateStats, createScreening, updateScreening } from '../../store/slices/candidateSlice';
+import { fetchCandidateStats, createScreening, updateScreening, fetchCandidateById } from '../../store/slices/candidateSlice';
 import ScreeningStatCard from '../../components/profiling/ScreeningStatCard';
 import ScreeningTable from '../../components/profiling/ScreeningTable';
 import ScreeningFormDialog from '../../components/profiling/form/ScreeningFormDialog';
-import candidateService from '../../services/candidateService';
 import type { CandidateListItem, CandidateScreeningCreate } from '../../models/candidate';
 
 interface TabPanelProps {
@@ -72,7 +71,7 @@ const ScreeningList: React.FC = () => {
 			setDialogOpen(true);
 		} else if (action === 'edit') {
 			try {
-				const fullCandidate = await candidateService.getById(candidate.public_id, true);
+				const fullCandidate = await dispatch(fetchCandidateById({ publicId: candidate.public_id, withDetails: true })).unwrap();
 				setSelectedCandidate(fullCandidate);
 				setDialogOpen(true);
 			} catch (error) {

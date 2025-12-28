@@ -67,6 +67,52 @@ export const fetchCandidates = createAsyncThunk(
 	}
 );
 
+export const fetchUnscreenedCandidates = createAsyncThunk(
+	'candidates/fetchUnscreened',
+	async (
+		params: {
+			skip?: number;
+			limit?: number;
+			search?: string;
+			sortBy?: string;
+			sortOrder?: 'asc' | 'desc';
+		} | void = {},
+		{ rejectWithValue }
+	) => {
+		try {
+			const { skip, limit, search, sortBy, sortOrder } = params || {};
+			const response = await candidateService.getUnscreened(skip, limit, search, sortBy, sortOrder);
+			return response;
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.message || 'Failed to fetch unscreened candidates');
+		}
+	}
+);
+
+export const fetchScreenedCandidates = createAsyncThunk(
+	'candidates/fetchScreened',
+	async (
+		params: {
+			skip?: number;
+			limit?: number;
+			counselingStatus?: string;
+			search?: string;
+			documentStatus?: string;
+			sortBy?: string;
+			sortOrder?: 'asc' | 'desc';
+		} | void = {},
+		{ rejectWithValue }
+	) => {
+		try {
+			const { skip, limit, counselingStatus, search, documentStatus, sortBy, sortOrder } = params || {};
+			const response = await candidateService.getScreened(skip, limit, counselingStatus, search, documentStatus, sortBy, sortOrder);
+			return response;
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.message || 'Failed to fetch screened candidates');
+		}
+	}
+);
+
 export const fetchCandidateById = createAsyncThunk(
 	'candidates/fetchById',
 	async ({ publicId, withDetails = true }: { publicId: string; withDetails?: boolean }, { rejectWithValue }) => {
@@ -266,6 +312,34 @@ const candidateSlice = createSlice({
 				state.total = action.payload.total;
 			})
 			.addCase(fetchCandidates.rejected, (state, action: PayloadAction<any>) => {
+				state.loading = false;
+				state.error = action.payload;
+			})
+			// Fetch unscreened
+			.addCase(fetchUnscreenedCandidates.pending, (state) => {
+				state.loading = true;
+				state.error = null;
+			})
+			.addCase(fetchUnscreenedCandidates.fulfilled, (state, action: PayloadAction<CandidatePaginatedResponse>) => {
+				state.loading = false;
+				state.list = action.payload.items;
+				state.total = action.payload.total;
+			})
+			.addCase(fetchUnscreenedCandidates.rejected, (state, action: PayloadAction<any>) => {
+				state.loading = false;
+				state.error = action.payload;
+			})
+			// Fetch screened
+			.addCase(fetchScreenedCandidates.pending, (state) => {
+				state.loading = true;
+				state.error = null;
+			})
+			.addCase(fetchScreenedCandidates.fulfilled, (state, action: PayloadAction<CandidatePaginatedResponse>) => {
+				state.loading = false;
+				state.list = action.payload.items;
+				state.total = action.payload.total;
+			})
+			.addCase(fetchScreenedCandidates.rejected, (state, action: PayloadAction<any>) => {
 				state.loading = false;
 				state.error = action.payload;
 			})
