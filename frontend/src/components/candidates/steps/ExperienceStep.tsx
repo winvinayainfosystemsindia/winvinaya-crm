@@ -35,13 +35,42 @@ const ExperienceStep: React.FC<ExperienceStepProps> = ({
         });
     };
 
-    const handleTextChange = (field: keyof NonNullable<CandidateCreate['work_experience']>) => (
-        event: React.ChangeEvent<HTMLInputElement>
-    ) => {
+    const handleExperienceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const val = event.target.value;
+
+        // Allow empty string for clearing
+        if (val === '') {
+            onChange({
+                work_experience: {
+                    ...formData.work_experience!,
+                    year_of_experience: '',
+                },
+            });
+            return;
+        }
+
+        // Basic numeric and decimal point validation
+        // Allows digits and at most one decimal point
+        if (!/^\d*\.?\d*$/.test(val)) return;
+
+        const parts = val.split('.');
+
+        // Limit to 2 decimal places
+        if (parts.length > 1 && parts[1].length > 2) return;
+
+        // Validate months (decimal part) if present
+        if (parts.length > 1 && parts[1].length > 0) {
+            const monthsString = parts[1];
+            const months = parseInt(monthsString, 10);
+
+            // Constraint: decimal part should not exceed 12
+            if (months > 11) return;
+        }
+
         onChange({
             work_experience: {
                 ...formData.work_experience!,
-                [field]: event.target.value,
+                year_of_experience: val,
             },
         });
     };
@@ -101,8 +130,25 @@ const ExperienceStep: React.FC<ExperienceStepProps> = ({
                             />
 
                             {formData.work_experience?.is_experienced && (
-                                <Box sx={{ mt: 2, pl: 4 }}>
+                                <Box sx={{ mt: 2 }}>
                                     <Grid container spacing={3}>
+                                        <Grid size={{ xs: 12, md: 6 }}>
+                                            <TextField
+                                                fullWidth
+                                                required={formData.work_experience?.is_experienced}
+                                                label="Years of Experience"
+                                                value={formData.work_experience?.year_of_experience || ''}
+                                                onChange={handleExperienceChange}
+                                                variant="outlined"
+                                                placeholder="e.g. 2.05 (2 years 5 months)"
+                                                helperText="Format: Years.Months (Months should be between 0 and 12, max 2 digits after decimal)"
+                                                slotProps={{
+                                                    htmlInput: {
+                                                        inputMode: 'decimal',
+                                                    }
+                                                }}
+                                            />
+                                        </Grid>
                                         <Grid size={{ xs: 12 }}>
                                             <FormControlLabel
                                                 control={
@@ -126,18 +172,7 @@ const ExperienceStep: React.FC<ExperienceStepProps> = ({
                                                 sx={{ ml: 0 }}
                                             />
                                         </Grid>
-                                        <Grid size={{ xs: 12, md: 6 }}>
-                                            <TextField
-                                                fullWidth
-                                                required={formData.work_experience?.is_experienced}
-                                                label="Years of Experience"
-                                                value={formData.work_experience?.year_of_experience || ''}
-                                                onChange={handleTextChange('year_of_experience')}
-                                                variant="outlined"
-                                                placeholder="e.g. 2 years"
-                                                helperText="Please specify your total work experience"
-                                            />
-                                        </Grid>
+
                                     </Grid>
                                 </Box>
                             )}

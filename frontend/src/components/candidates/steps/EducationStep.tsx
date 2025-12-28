@@ -113,7 +113,7 @@ const EducationStep: React.FC<EducationStepProps> = ({
                             color: theme.palette.primary.main,
                         }}
                     >
-                        Degrees / Higher Education
+                        Highest Qualification
                     </Typography>
                     <Button
                         startIcon={<AddIcon />}
@@ -213,7 +213,7 @@ const EducationStep: React.FC<EducationStepProps> = ({
                                     <TextField
                                         fullWidth
                                         type="number"
-                                        label="Percentage/CGPA"
+                                        label="Overall Percentage"
                                         value={degree.percentage}
                                         onChange={handleDegreeChange(index, 'percentage')}
                                         variant="outlined"
