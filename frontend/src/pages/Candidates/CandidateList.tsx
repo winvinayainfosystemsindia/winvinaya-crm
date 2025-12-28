@@ -48,8 +48,7 @@ const CandidateList: React.FC = () => {
 	};
 
 	const handleViewCandidate = (id: string) => {
-		console.log('View candidate', id);
-		// TODO: Implement view functionality or navigation
+		navigate(`/candidates/${id}`);
 	};
 
 	return (
