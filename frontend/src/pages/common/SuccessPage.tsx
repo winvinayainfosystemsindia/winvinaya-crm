@@ -21,7 +21,7 @@ const SuccessPage: React.FC = () => {
 	const actionPath = state?.actionPath || '/candidate-registration';
 
 	return (
-		<Container maxWidth="sm" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
+		<Container component="main" maxWidth="sm" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
 			<Paper
 				elevation={0}
 				sx={{
@@ -33,11 +33,12 @@ const SuccessPage: React.FC = () => {
 					borderRadius: 4,
 				}}
 			>
-				<CheckCircleIcon color="success" sx={{ fontSize: 80, mb: 3 }} />
+				<CheckCircleIcon color="success" sx={{ fontSize: 80, mb: 3 }} aria-hidden="true" />
 
 				<Typography variant="h4" component="h1" gutterBottom align="center" fontWeight="bold">
 					{title}
 				</Typography>
+
 
 				<Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 4, whiteSpace: 'pre-line' }}>
 					{message}

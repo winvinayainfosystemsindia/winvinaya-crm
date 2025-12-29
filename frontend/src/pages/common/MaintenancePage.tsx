@@ -11,7 +11,7 @@ const MaintenancePage: React.FC = () => {
 	const theme = useTheme();
 
 	return (
-		<Container maxWidth="sm" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+		<Container component="main" maxWidth="sm" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
 			<Paper
 				elevation={0}
 				sx={{
@@ -24,11 +24,12 @@ const MaintenancePage: React.FC = () => {
 					backgroundColor: theme.palette.background.default,
 				}}
 			>
-				<BuildIcon color="warning" sx={{ fontSize: 80, mb: 3 }} />
+				<BuildIcon color="warning" sx={{ fontSize: 80, mb: 3 }} aria-hidden="true" />
 
 				<Typography variant="h4" component="h1" gutterBottom align="center" fontWeight="bold">
 					Under Maintenance
 				</Typography>
+
 
 				<Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 3 }}>
 					We apologize for the inconvenience. We are currently performing some scheduled maintenance to improve our services.

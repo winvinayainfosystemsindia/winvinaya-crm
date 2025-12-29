@@ -14,7 +14,7 @@ const NotFoundPage: React.FC = () => {
 	const navigate = useNavigate();
 
 	return (
-		<Container maxWidth="md" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
+		<Container component="main" maxWidth="md" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
 			<Box
 				component="img"
 				src="https://illustrations.popsy.co/amber/falling.svg" // Placeholder or use a local asset if available. Using an icon for now to be safe.
@@ -26,16 +26,18 @@ const NotFoundPage: React.FC = () => {
 					display: 'none' // Hidden for now, relying on Icon
 				}}
 				alt="404 Illustration"
+				aria-hidden="true"
 			/>
-			<ErrorIcon color="error" sx={{ fontSize: 100, mb: 2, opacity: 0.5 }} />
+			<ErrorIcon color="error" sx={{ fontSize: 100, mb: 2, opacity: 0.5 }} aria-hidden="true" />
 
-			<Typography variant="h1" component="h1" gutterBottom sx={{ fontWeight: 900, color: theme.palette.text.secondary }}>
+			<Typography variant="h1" component="div" gutterBottom sx={{ fontWeight: 900, color: theme.palette.text.secondary }}>
 				404
 			</Typography>
 
-			<Typography variant="h4" component="h2" gutterBottom align="center" fontWeight="bold">
+			<Typography variant="h4" component="h1" gutterBottom align="center" fontWeight="bold">
 				Page Not Found
 			</Typography>
+
 
 			<Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 5, maxWidth: 500 }}>
 				Oops! The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
