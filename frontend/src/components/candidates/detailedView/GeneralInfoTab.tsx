@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, Paper, Box } from '@mui/material';
+import { Grid, Paper, Box, Typography } from '@mui/material';
 import {
 	Person as PersonIcon,
 	AccessibilityNew as AccessibilityIcon,
@@ -57,7 +57,7 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({ candidate }) => {
 						</Grid>
 					</Grid>
 
-					<Box sx={{ my: 4 }}>
+					<Box sx={{ mt: 4 }}>
 						<SectionHeader title="Disability Information" icon={<AccessibilityIcon />} />
 						<Grid container spacing={3}>
 							<Grid size={{ xs: 12, sm: 6 }}>
@@ -68,6 +68,42 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({ candidate }) => {
 								<InfoRow label="Percentage" value={candidate.disability_details?.disability_percentage ? `${candidate.disability_details.disability_percentage}%` : '-'} />
 							</Grid>
 						</Grid>
+					</Box>
+
+					<Box sx={{ mt: 4 }}>
+						<SectionHeader title="Educational Qualifications" icon={<SchoolIcon />} />
+						{candidate.education_details?.degrees && candidate.education_details.degrees.length > 0 ? (
+							<Grid container spacing={3}>
+								{candidate.education_details.degrees.map((edu, index) => (
+									<Grid size={{ xs: 12, sm: 12 }} key={index}>
+										<Box sx={{
+											p: 2,
+											mb: index < (candidate.education_details?.degrees?.length || 0) - 1 ? 2 : 0,
+											bgcolor: '#f8f9f9',
+											border: '1px solid #eaeded'
+										}}>
+											<Grid container spacing={2}>
+												<Grid size={{ xs: 12, sm: 6 }}>
+													<InfoRow
+														label="Degree & Specialization"
+														value={`${edu.degree_name}${edu.specialization ? ` - ${edu.specialization}` : ''}`}
+													/>
+													<InfoRow label="College/University" value={edu.college_name} />
+												</Grid>
+												<Grid size={{ xs: 12, sm: 6 }}>
+													<InfoRow label="Year of Passing" value={edu.year_of_passing} />
+													<InfoRow label="Percentage/CGPA" value={edu.percentage ? `${edu.percentage}%` : '-'} />
+												</Grid>
+											</Grid>
+										</Box>
+									</Grid>
+								))}
+							</Grid>
+						) : (
+							<Typography variant="body2" sx={{ color: '#545b64', fontStyle: 'italic' }}>
+								No education details provided
+							</Typography>
+						)}
 					</Box>
 				</Paper>
 			</Grid>
@@ -98,9 +134,14 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({ candidate }) => {
 						boxShadow: '0 1px 1px 0 rgba(0,28,36,0.1)'
 					}}
 				>
-					<SectionHeader title="Education & Experience" icon={<SchoolIcon />} />
-					<InfoRow label="Work Experience" value={candidate.work_experience?.is_experienced ? 'Experienced' : 'Fresher'} />
-					<InfoRow label="Currently Employed" value={candidate.work_experience?.currently_employed ? 'Yes' : 'No'} />
+					<SectionHeader title="Experience Overview" icon={<SchoolIcon />} />
+					<InfoRow label="Experience Status" value={candidate.work_experience?.is_experienced ? 'Experienced' : 'Fresher'} />
+					{candidate.work_experience?.is_experienced && (
+						<>
+							<InfoRow label="Years of Experience" value={candidate.work_experience?.year_of_experience} />
+							<InfoRow label="Currently Employed" value={candidate.work_experience?.currently_employed ? 'Yes' : 'No'} />
+						</>
+					)}
 				</Paper>
 			</Grid>
 		</Grid>
