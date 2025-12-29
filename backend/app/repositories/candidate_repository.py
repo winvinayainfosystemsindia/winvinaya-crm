@@ -48,8 +48,20 @@ class CandidateRepository(BaseRepository[Candidate]):
         )
         return result.scalars().first()
 
-    async def get_multi(self, skip: int = 0, limit: int = 100, include_deleted: bool = False, search: Optional[str] = None, sort_by: Optional[str] = None, sort_order: str = "desc"):
-        """Get multiples candidates with counseling loaded for list view, with optional search filtering and sorting"""
+    async def get_multi(
+        self, 
+        skip: int = 0, 
+        limit: int = 100, 
+        include_deleted: bool = False, 
+        search: Optional[str] = None, 
+        sort_by: Optional[str] = None, 
+        sort_order: str = "desc",
+        disability_types: Optional[list] = None,
+        education_levels: Optional[list] = None,
+        cities: Optional[list] = None,
+        counseling_status: Optional[str] = None
+    ):
+        """Get multiples candidates with counseling loaded for list view, with optional search filtering, category filters, and sorting"""
         from sqlalchemy import or_
         stmt = (
             select(Candidate)
@@ -57,15 +69,13 @@ class CandidateRepository(BaseRepository[Candidate]):
             .options(
                 joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor)
             )
-            .offset(skip)
-            .limit(limit)
         )
         
         if not include_deleted:
             stmt = stmt.where(Candidate.is_deleted == False) 
         
         # Base count query
-        count_stmt = select(func.count(Candidate.id)).select_from(Candidate)
+        count_stmt = select(func.count(Candidate.id)).select_from(Candidate).outerjoin(Candidate.counseling)
         if not include_deleted:
             count_stmt = count_stmt.where(Candidate.is_deleted == False)
         
@@ -79,6 +89,42 @@ class CandidateRepository(BaseRepository[Candidate]):
             )
             stmt = stmt.where(search_filter)
             count_stmt = count_stmt.where(search_filter)
+        
+        # Apply category filters
+        if disability_types and len(disability_types) > 0:
+            # Filter by disability_type in JSON field
+            disability_filters = []
+            for d_type in disability_types:
+                if d_type:
+                    disability_filters.append(
+                        Candidate.disability_details['disability_type'].as_string() == d_type
+                    )
+            if disability_filters:
+                stmt = stmt.where(or_(*disability_filters))
+                count_stmt = count_stmt.where(or_(*disability_filters))
+        
+        if education_levels and len(education_levels) > 0:
+            # Filter by education level (degree name) in JSON field
+            education_filters = []
+            for edu_level in education_levels:
+                if edu_level:
+                    # For JSON arrays, we can use contains with a string check 
+                    # but it's better to cast to string if it's a generic JSON column
+                    education_filters.append(
+                        Candidate.education_details['degrees'].as_string().ilike(f"%{edu_level}%")
+                    )
+            if education_filters:
+                stmt = stmt.where(or_(*education_filters))
+                count_stmt = count_stmt.where(or_(*education_filters))
+
+        
+        if cities and len(cities) > 0:
+            stmt = stmt.where(Candidate.city.in_(cities))
+            count_stmt = count_stmt.where(Candidate.city.in_(cities))
+        
+        if counseling_status:
+            stmt = stmt.where(CandidateCounseling.status == counseling_status)
+            count_stmt = count_stmt.where(CandidateCounseling.status == counseling_status)
         
         # Count total matching records
         count_result = await self.db.execute(count_stmt)
@@ -102,6 +148,7 @@ class CandidateRepository(BaseRepository[Candidate]):
         stmt = stmt.offset(skip).limit(limit)
         result = await self.db.execute(stmt)
         return result.scalars().unique().all(), total
+
 
     async def get_unscreened(self, skip: int = 0, limit: int = 100, search: Optional[str] = None, sort_by: Optional[str] = None, sort_order: str = "desc"):
         """Get candidates without screening records, with optional search filtering and sorting"""
@@ -414,4 +461,64 @@ class CandidateRepository(BaseRepository[Candidate]):
                 "counseling_selected": 0, "counseling_rejected": 0,
                 "docs_total": 0, "docs_completed": 0, "docs_pending": 0
             }
+
+    async def get_filter_options(self) -> dict:
+        """Get all unique values for filterable fields across all candidates"""
+        try:
+            # Get unique disability types
+            stmt_disability = select(Candidate.disability_details).where(Candidate.disability_details.isnot(None))
+            result_disability = await self.db.execute(stmt_disability)
+            disability_types = set()
+            for row in result_disability.scalars().all():
+                if row and isinstance(row, dict):
+                    disability_type = row.get('disability_type')
+                    if disability_type:
+                        disability_types.add(disability_type)
+            
+            # Get unique education levels (from degree names)
+            stmt_education = select(Candidate.education_details).where(Candidate.education_details.isnot(None))
+            result_education = await self.db.execute(stmt_education)
+            education_levels = set()
+            for row in result_education.scalars().all():
+                if row and isinstance(row, dict):
+                    degrees = row.get('degrees', [])
+                    for degree in degrees:
+                        if isinstance(degree, dict):
+                            degree_name = degree.get('degree_name')
+                            if degree_name:
+                                education_levels.add(degree_name)
+            
+            # Get unique cities
+            stmt_cities = select(func.distinct(Candidate.city)).where(
+                Candidate.city.isnot(None),
+                Candidate.city != ''
+            )
+            result_cities = await self.db.execute(stmt_cities)
+            cities = sorted([city for city in result_cities.scalars().all() if city])
+            
+            # Get unique counseling statuses
+            stmt_counseling = select(func.distinct(CandidateCounseling.status)).where(
+                CandidateCounseling.status.isnot(None)
+            )
+            result_counseling = await self.db.execute(stmt_counseling)
+            counseling_statuses = sorted([status for status in result_counseling.scalars().all() if status])
+            
+            return {
+                "disability_types": sorted(list(disability_types)),
+                "education_levels": sorted(list(education_levels)),
+                "cities": cities,
+                "counseling_statuses": counseling_statuses
+            }
+        except Exception as e:
+            import traceback
+            print(f"Error getting filter options: {e}")
+            print(traceback.format_exc())
+            return {
+                "disability_types": [],
+                "education_levels": [],
+                "cities": [],
+                "counseling_statuses": []
+            }
+
+
 

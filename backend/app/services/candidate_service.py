@@ -78,10 +78,32 @@ class CandidateService:
             raise HTTPException(status_code=404, detail="Candidate not found")
         return candidate
 
-    async def get_candidates(self, skip: int = 0, limit: int = 100, search: Optional[str] = None, sort_by: Optional[str] = None, sort_order: str = "desc") -> dict:
-        """Get list of candidates with total count, supporting optional search and sorting"""
-        items, total = await self.repository.get_multi(skip=skip, limit=limit, search=search, sort_by=sort_by, sort_order=sort_order)
+    async def get_candidates(
+        self, 
+        skip: int = 0, 
+        limit: int = 100, 
+        search: Optional[str] = None, 
+        sort_by: Optional[str] = None, 
+        sort_order: str = "desc",
+        disability_types: Optional[list] = None,
+        education_levels: Optional[list] = None,
+        cities: Optional[list] = None,
+        counseling_status: Optional[str] = None
+    ) -> dict:
+        """Get list of candidates with total count, supporting optional search, filters, and sorting"""
+        items, total = await self.repository.get_multi(
+            skip=skip, 
+            limit=limit, 
+            search=search, 
+            sort_by=sort_by, 
+            sort_order=sort_order,
+            disability_types=disability_types,
+            education_levels=education_levels,
+            cities=cities,
+            counseling_status=counseling_status
+        )
         return {"items": items, "total": total}
+
 
     async def update_candidate(self, public_id: UUID, candidate_in: CandidateUpdate) -> Candidate:
         """Update candidate by public_id"""
@@ -125,5 +147,9 @@ class CandidateService:
         """Get list of candidates with screening records with total count, supporting optional search, document status filter, and sorting"""
         items, total = await self.repository.get_screened(skip=skip, limit=limit, counseling_status=counseling_status, search=search, document_status=document_status, sort_by=sort_by, sort_order=sort_order)
         return {"items": items, "total": total}
+
+    async def get_filter_options(self) -> dict:
+        """Get all unique values for filterable fields"""
+        return await self.repository.get_filter_options()
 
 

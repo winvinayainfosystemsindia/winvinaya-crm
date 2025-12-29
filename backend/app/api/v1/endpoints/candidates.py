@@ -53,15 +53,54 @@ async def get_candidates(
     search: str = None,
     sort_by: str = None,
     sort_order: str = "desc",
+    disability_types: str = None,  # Comma-separated list
+    education_levels: str = None,  # Comma-separated list
+    cities: str = None,  # Comma-separated list
+    counseling_status: str = None,
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING])),
     db: AsyncSession = Depends(get_db)
 ):
     """
     Get list of candidates (Restricted)
     Returns simplified candidate list without nested relationships.
+    Supports filtering by disability_types, education_levels, cities, and counseling_status.
+    """
+    # Parse comma-separated filters into lists
+    disability_types_list = disability_types.split(',') if disability_types else None
+    education_levels_list = education_levels.split(',') if education_levels else None
+    cities_list = cities.split(',') if cities else None
+    
+    service = CandidateService(db)
+    return await service.get_candidates(
+        skip=skip, 
+        limit=limit, 
+        search=search, 
+        sort_by=sort_by, 
+        sort_order=sort_order,
+        disability_types=disability_types_list,
+        education_levels=education_levels_list,
+        cities=cities_list,
+        counseling_status=counseling_status
+    )
+
+
+
+
+
+@router.get("/filter-options")
+@rate_limit_medium()
+async def get_filter_options(
+    request: Request,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get all unique values for filterable fields (Restricted)
+    Returns disability types, education levels, cities, and counseling statuses
+    from ALL candidates in the database (not just current page)
     """
     service = CandidateService(db)
-    return await service.get_candidates(skip=skip, limit=limit, search=search, sort_by=sort_by, sort_order=sort_order)
+    return await service.get_filter_options()
 
 
 @router.get("/stats", response_model=CandidateStats)
