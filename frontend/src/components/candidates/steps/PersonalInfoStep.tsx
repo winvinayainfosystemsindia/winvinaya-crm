@@ -28,8 +28,15 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     const handleChange = (field: keyof CandidateCreate) => (
         event: React.ChangeEvent<HTMLInputElement>
     ) => {
+        const value = event.target.value;
+        // Allow only digits for phone and pincode fields
+        if (['phone', 'whatsapp_number', 'pincode'].includes(field)) {
+            if (value !== '' && !/^\d+$/.test(value)) {
+                return;
+            }
+        }
         onChange({
-            [field]: event.target.value,
+            [field]: value,
         });
     };
 
@@ -44,10 +51,17 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     const handleGuardianChange = (field: keyof NonNullable<CandidateCreate['guardian_details']>) => (
         event: any
     ) => {
+        const value = event.target.value;
+        // Allow only digits for phone field
+        if (field === 'parent_phone') {
+            if (value !== '' && !/^\d+$/.test(value)) {
+                return;
+            }
+        }
         onChange({
             guardian_details: {
                 ...formData.guardian_details,
-                [field]: event.target.value,
+                [field]: value,
             },
         });
     };
@@ -162,8 +176,12 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                         value={formData.whatsapp_number}
                         onChange={handleChange('whatsapp_number')}
                         variant="outlined"
-                        placeholder="Optional"
+                        placeholder="10-digit mobile number"
                         helperText="For quick communication"
+                        inputProps={{
+                            maxLength: 10,
+                            'aria-label': '10-digit whatsapp number'
+                        }}
                     />
                 </Grid>
 
@@ -216,6 +234,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                         >
                             <MenuItem value="Father">Father</MenuItem>
                             <MenuItem value="Mother">Mother</MenuItem>
+                            <MenuItem value="Spouse">Spouse</MenuItem>
                             <MenuItem value="Guardian">Guardian</MenuItem>
                             <MenuItem value="Brother">Brother</MenuItem>
                             <MenuItem value="Sister">Sister</MenuItem>
@@ -230,7 +249,11 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                         value={formData.guardian_details?.parent_phone || ''}
                         onChange={handleGuardianChange('parent_phone')}
                         variant="outlined"
-                        placeholder="Optional"
+                        placeholder="10-digit mobile number"
+                        inputProps={{
+                            maxLength: 10,
+                            'aria-label': '10-digit guardian mobile number'
+                        }}
                     />
                 </Grid>
             </Grid>

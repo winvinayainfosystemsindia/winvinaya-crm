@@ -34,10 +34,24 @@ const EducationStep: React.FC<EducationStepProps> = ({
     const handleDegreeChange = (index: number, field: keyof Degree) => (
         event: React.ChangeEvent<HTMLInputElement>
     ) => {
+        let value: string | number = event.target.value;
+
+        // Handle percentage validation
+        if (field === 'percentage') {
+            const numValue = parseFloat(value as string);
+            if (!isNaN(numValue)) {
+                if (numValue > 100) value = 100;
+                else if (numValue < 0) value = 0;
+                else value = numValue;
+            } else if (value === '') {
+                value = 0;
+            }
+        }
+
         const updatedDegrees = [...(formData.education_details?.degrees || [])];
         updatedDegrees[index] = {
             ...updatedDegrees[index],
-            [field]: event.target.value,
+            [field]: value,
         };
         onChange({
             education_details: {
@@ -151,7 +165,6 @@ const EducationStep: React.FC<EducationStepProps> = ({
                             <Grid container spacing={3}>
                                 <Grid size={{ xs: 12, md: 4 }}>
                                     <Autocomplete
-                                        freeSolo
                                         options={degrees}
                                         value={degree.degree_name}
                                         onChange={handleDegreeAutocompleteChange(index, 'degree_name')}
@@ -161,7 +174,7 @@ const EducationStep: React.FC<EducationStepProps> = ({
                                                 fullWidth
                                                 label="Degree Name"
                                                 variant="outlined"
-                                                placeholder="e.g., B.Tech, B.Sc, etc."
+                                                placeholder="Select Degree"
                                             />
                                         )}
                                     />
@@ -218,6 +231,11 @@ const EducationStep: React.FC<EducationStepProps> = ({
                                         onChange={handleDegreeChange(index, 'percentage')}
                                         variant="outlined"
                                         InputProps={{ endAdornment: '%' }}
+                                        inputProps={{
+                                            min: 0,
+                                            max: 100,
+                                            step: "0.01"
+                                        }}
                                     />
                                 </Grid>
                             </Grid>

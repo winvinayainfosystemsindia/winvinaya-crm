@@ -54,6 +54,10 @@ const ExperienceStep: React.FC<ExperienceStepProps> = ({
         if (!/^\d*\.?\d*$/.test(val)) return;
 
         const parts = val.split('.');
+        const years = parseInt(parts[0], 10);
+
+        // Constraint: years should not exceed 50
+        if (years > 50) return;
 
         // Limit to 2 decimal places
         if (parts.length > 1 && parts[1].length > 2) return;
@@ -141,7 +145,7 @@ const ExperienceStep: React.FC<ExperienceStepProps> = ({
                                                 onChange={handleExperienceChange}
                                                 variant="outlined"
                                                 placeholder="e.g. 2.05 (2 years 5 months)"
-                                                helperText="Format: Years.Months (Months should be between 0 and 12, max 2 digits after decimal)"
+                                                helperText="Format: Years.Months (Max 50 years, Months should be between 0 and 12)"
                                                 slotProps={{
                                                     htmlInput: {
                                                         inputMode: 'decimal',

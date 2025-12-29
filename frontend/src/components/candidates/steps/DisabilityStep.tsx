@@ -49,11 +49,17 @@ const DisabilityStep: React.FC<DisabilityStepProps> = ({
     };
 
     const handlePercentageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const val = parseInt(event.target.value);
+        let val = parseInt(event.target.value);
+        if (!isNaN(val)) {
+            if (val > 100) val = 100;
+            else if (val < 0) val = 0;
+        } else {
+            val = 0;
+        }
         onChange({
             disability_details: {
                 ...formData.disability_details!,
-                disability_percentage: isNaN(val) ? 0 : val,
+                disability_percentage: val,
             },
         });
     };
