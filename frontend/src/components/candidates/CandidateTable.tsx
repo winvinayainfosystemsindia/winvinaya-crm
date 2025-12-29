@@ -21,7 +21,7 @@ import {
 	Tooltip,
 	Chip,
 	TableSortLabel,
-	Popover
+	Badge
 } from '@mui/material';
 import { Search, Add, Edit, Visibility, Accessible, FilterList, Refresh } from '@mui/icons-material';
 import {
@@ -32,6 +32,8 @@ import { format, isToday, parseISO } from 'date-fns';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchCandidates } from '../../store/slices/candidateSlice';
 import type { CandidateListItem } from '../../models/candidate';
+import FilterDrawer, { type FilterField } from '../common/FilterDrawer';
+import candidateService from '../../services/candidateService';
 
 interface CandidateTableProps {
 	onAddCandidate?: () => void;
@@ -51,14 +53,46 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 	const [orderBy, setOrderBy] = useState<keyof CandidateListItem>('created_at');
 	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
+	// Filter state - must be declared before fetchCandidatesData
+	const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+	const [filters, setFilters] = useState({
+		disability_type: [] as string[],
+		education_level: [] as string[],
+		city: [] as string[],
+		counseling_status: '' as string
+	});
+	const [filterOptions, setFilterOptions] = useState<{
+		disability_types: string[];
+		education_levels: string[];
+		cities: string[];
+		counseling_statuses: string[];
+	}>({ disability_types: [], education_levels: [], cities: [], counseling_statuses: [] });
+
 	const fetchCandidatesData = async () => {
-		dispatch(fetchCandidates({
+		// Build filter query parameters
+		const filterParams: any = {
 			skip: page * rowsPerPage,
 			limit: rowsPerPage,
 			search: debouncedSearchTerm,
 			sortBy: orderBy,
 			sortOrder: order
-		}));
+		};
+
+		// Add filter parameters if they have values
+		if (filters.disability_type.length > 0) {
+			filterParams.disability_types = filters.disability_type.join(',');
+		}
+		if (filters.education_level.length > 0) {
+			filterParams.education_levels = filters.education_level.join(',');
+		}
+		if (filters.city.length > 0) {
+			filterParams.cities = filters.city.join(',');
+		}
+		if (filters.counseling_status) {
+			filterParams.counseling_status = filters.counseling_status;
+		}
+
+		dispatch(fetchCandidates(filterParams));
 	};
 
 	// Debounce search term
@@ -73,7 +107,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 	// Initial fetch and fetch on pagination change
 	useEffect(() => {
 		fetchCandidatesData();
-	}, [page, rowsPerPage, debouncedSearchTerm, order, orderBy]);
+	}, [page, rowsPerPage, debouncedSearchTerm, order, orderBy, filters]);
 
 	const handleChangePage = (_event: unknown, newPage: number) => {
 		setPage(newPage);
@@ -95,57 +129,84 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 		setOrderBy(property);
 	};
 
-	const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-	const [filters, setFilters] = useState({
-		disability_type: [] as string[],
-		education_level: [] as string[],
-		city: [] as string[]
-	});
+	// Fetch filter options on component mount
+	useEffect(() => {
+		const fetchFilterOptions = async () => {
+			try {
+				const options = await candidateService.getFilterOptions();
+				setFilterOptions(options);
+			} catch (error) {
+				console.error('Failed to fetch filter options:', error);
+			}
+		};
+		fetchFilterOptions();
+	}, []);
 
-	const handleFilterClick = (event: React.MouseEvent<HTMLElement>) => {
-		setAnchorEl(event.currentTarget);
+	const handleFilterOpen = () => {
+		setFilterDrawerOpen(true);
 	};
 
 	const handleFilterClose = () => {
-		setAnchorEl(null);
+		setFilterDrawerOpen(false);
 	};
 
-	const handleFilterChange = (field: keyof typeof filters, value: string) => {
-		setFilters(prev => {
-			const current = prev[field];
-			const newValues = current.includes(value)
-				? current.filter(item => item !== value)
-				: [...current, value];
-			return { ...prev, [field]: newValues };
-		});
+	const handleFilterChange = (key: string, value: any) => {
+		setFilters(prev => ({ ...prev, [key]: value }));
+	};
+
+	const applyFilters = () => {
 		setPage(0);
+		handleFilterClose();
 	};
 
 	const clearFilters = () => {
 		setFilters({
 			disability_type: [],
 			education_level: [],
-			city: []
+			city: [],
+			counseling_status: ''
 		});
 		setPage(0);
-		handleFilterClose();
 	};
 
-	// Unique values for filters
-	const uniqueDisabilities = Array.from(new Set(candidates.map(c => c.disability_type).filter(Boolean))) as string[];
-	const uniqueEducation = Array.from(new Set(candidates.map(c => c.education_level).filter(Boolean))) as string[];
-	const uniqueCities = Array.from(new Set(candidates.map(c => c.city).filter(Boolean))) as string[];
+	// Calculate active filter count
+	const activeFilterCount = (
+		filters.disability_type.length +
+		filters.education_level.length +
+		filters.city.length +
+		(filters.counseling_status ? 1 : 0)
+	);
 
-	// Filtering logic (now strictly for specific category filters)
-	// Sorting and Search are handled by the backend
-	const filteredCandidates = candidates.filter(candidate => {
-		const matchesFilters =
-			(filters.disability_type.length === 0 || filters.disability_type.includes(candidate.disability_type || '')) &&
-			(filters.education_level.length === 0 || filters.education_level.includes(candidate.education_level || '')) &&
-			(filters.city.length === 0 || filters.city.includes(candidate.city));
+	// Configure filter fields for FilterDrawer
+	const filterFields: FilterField[] = [
+		{
+			key: 'disability_type',
+			label: 'Disability Type',
+			type: 'multi-select',
+			options: filterOptions.disability_types.map(type => ({ value: type, label: type }))
+		},
+		{
+			key: 'education_level',
+			label: 'Education/Degree',
+			type: 'multi-select',
+			options: filterOptions.education_levels.map(edu => ({ value: edu, label: edu }))
+		},
+		{
+			key: 'counseling_status',
+			label: 'Counseling Status',
+			type: 'single-select',
+			options: filterOptions.counseling_statuses.map(status => ({ value: status, label: status.charAt(0).toUpperCase() + status.slice(1) }))
+		},
+		{
+			key: 'city',
+			label: 'Location (City)',
+			type: 'multi-select',
+			options: filterOptions.cities.map(city => ({ value: city, label: city }))
+		}
+	];
 
-		return matchesFilters;
-	});
+	// No client-side filtering needed - all filtering is done server-side
+	const filteredCandidates = candidates;
 
 	const formatDate = (dateString: string) => {
 		try {
@@ -226,24 +287,26 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 							</IconButton>
 						</Tooltip>
 
-						<Button
-							variant="outlined"
-							startIcon={<FilterList />}
-							onClick={handleFilterClick}
-							sx={{
-								borderColor: '#d5dbdb',
-								color: 'text.secondary',
-								textTransform: 'none',
-								px: { xs: 1, sm: 2 },
-								'&:hover': {
-									borderColor: theme.palette.primary.main,
-									color: theme.palette.primary.main,
-									bgcolor: 'white'
-								}
-							}}
-						>
-							Filter
-						</Button>
+						<Badge badgeContent={activeFilterCount} color="primary">
+							<Button
+								variant="outlined"
+								startIcon={<FilterList />}
+								onClick={handleFilterOpen}
+								sx={{
+									borderColor: '#d5dbdb',
+									color: 'text.secondary',
+									textTransform: 'none',
+									px: { xs: 1, sm: 2 },
+									'&:hover': {
+										borderColor: theme.palette.primary.main,
+										color: theme.palette.primary.main,
+										bgcolor: 'white'
+									}
+								}}
+							>
+								Filter
+							</Button>
+						</Badge>
 					</Box>
 
 					<style>
@@ -258,74 +321,16 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 						`}
 					</style>
 
-					<Popover
-						open={Boolean(anchorEl)}
-						anchorEl={anchorEl}
+					{/* Reusable Filter Drawer */}
+					<FilterDrawer
+						open={filterDrawerOpen}
 						onClose={handleFilterClose}
-						anchorOrigin={{
-							vertical: 'bottom',
-							horizontal: 'right',
-						}}
-						transformOrigin={{
-							vertical: 'top',
-							horizontal: 'right',
-						}}
-					>
-						<Box sx={{ p: 2, width: 300 }}>
-							<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-								<Typography variant="subtitle1" fontWeight="bold">Filters</Typography>
-								<Button size="small" onClick={clearFilters}>Clear all</Button>
-							</Box>
-
-							{/* Disability Type Filter */}
-							<Typography variant="body2" fontWeight="bold" sx={{ mt: 2, mb: 1 }}>Disability Type</Typography>
-							<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-								{uniqueDisabilities.map((type) => (
-									<Chip
-										key={type}
-										label={type}
-										size="small"
-										onClick={() => handleFilterChange('disability_type', type)}
-										color={filters.disability_type.includes(type) ? 'primary' : 'default'}
-										variant={filters.disability_type.includes(type) ? 'filled' : 'outlined'}
-										sx={{ cursor: 'pointer' }}
-									/>
-								))}
-							</Box>
-
-							{/* Education Level Filter */}
-							<Typography variant="body2" fontWeight="bold" sx={{ mt: 2, mb: 1 }}>Education/Degree</Typography>
-							<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-								{uniqueEducation.map((edu) => (
-									<Chip
-										key={edu}
-										label={edu}
-										size="small"
-										onClick={() => handleFilterChange('education_level', edu)}
-										color={filters.education_level.includes(edu) ? 'primary' : 'default'}
-										variant={filters.education_level.includes(edu) ? 'filled' : 'outlined'}
-										sx={{ cursor: 'pointer' }}
-									/>
-								))}
-							</Box>
-
-							{/* City Filter */}
-							<Typography variant="body2" fontWeight="bold" sx={{ mt: 2, mb: 1 }}>City</Typography>
-							<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-								{uniqueCities.slice(0, 10).map((city) => (
-									<Chip
-										key={city}
-										label={city}
-										size="small"
-										onClick={() => handleFilterChange('city', city)}
-										color={filters.city.includes(city) ? 'primary' : 'default'}
-										variant={filters.city.includes(city) ? 'filled' : 'outlined'}
-										sx={{ cursor: 'pointer' }}
-									/>
-								))}
-							</Box>
-						</Box>
-					</Popover>
+						fields={filterFields}
+						activeFilters={filters}
+						onFilterChange={handleFilterChange}
+						onClearFilters={clearFilters}
+						onApplyFilters={applyFilters}
+					/>
 					<Button
 						variant="contained"
 						startIcon={<Add />}

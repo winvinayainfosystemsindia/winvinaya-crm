@@ -20,10 +20,27 @@ const candidateService = {
 	/**
 	 * Get all candidates (simplified list)
 	 */
-	getAll: async (skip = 0, limit = 100, search?: string, sortBy?: string, sortOrder: 'asc' | 'desc' = 'desc'): Promise<CandidatePaginatedResponse> => {
+	getAll: async (
+		skip = 0,
+		limit = 100,
+		search?: string,
+		sortBy?: string,
+		sortOrder: 'asc' | 'desc' = 'desc',
+		disabilityTypes?: string,
+		educationLevels?: string,
+		cities?: string,
+		counselingStatus?: string
+	): Promise<CandidatePaginatedResponse> => {
 		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
 		const sortParam = sortBy ? `&sort_by=${sortBy}&sort_order=${sortOrder}` : '';
-		const response = await api.get<CandidatePaginatedResponse>(`/candidates/?skip=${skip}&limit=${limit}${searchParam}${sortParam}`);
+		const filterParams = [
+			disabilityTypes ? `&disability_types=${encodeURIComponent(disabilityTypes)}` : '',
+			educationLevels ? `&education_levels=${encodeURIComponent(educationLevels)}` : '',
+			cities ? `&cities=${encodeURIComponent(cities)}` : '',
+			counselingStatus ? `&counseling_status=${encodeURIComponent(counselingStatus)}` : ''
+		].join('');
+
+		const response = await api.get<CandidatePaginatedResponse>(`/candidates/?skip=${skip}&limit=${limit}${searchParam}${sortParam}${filterParams}`);
 		return response.data;
 	},
 
@@ -94,6 +111,19 @@ const candidateService = {
 	 */
 	getProfiled: async (skip = 0, limit = 100, counselingStatus?: string, search?: string, documentStatus?: string, sortBy?: string, sortOrder: 'asc' | 'desc' = 'desc'): Promise<CandidatePaginatedResponse> => {
 		return candidateService.getScreened(skip, limit, counselingStatus, search, documentStatus, sortBy, sortOrder);
+	},
+
+	/**
+	 * Get filter options for all candidates
+	 */
+	getFilterOptions: async (): Promise<{
+		disability_types: string[];
+		education_levels: string[];
+		cities: string[];
+		counseling_statuses: string[];
+	}> => {
+		const response = await api.get('/candidates/filter-options');
+		return response.data;
 	}
 };
 

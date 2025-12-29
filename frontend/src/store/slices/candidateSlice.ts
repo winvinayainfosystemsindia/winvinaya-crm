@@ -54,12 +54,36 @@ export const fetchCandidates = createAsyncThunk(
 			search?: string;
 			sortBy?: string;
 			sortOrder?: 'asc' | 'desc';
+			disability_types?: string;
+			education_levels?: string;
+			cities?: string;
+			counseling_status?: string;
 		} | void = {},
 		{ rejectWithValue }
 	) => {
 		try {
-			const { skip, limit, search, sortBy, sortOrder } = params || {};
-			const response = await candidateService.getAll(skip, limit, search, sortBy, sortOrder);
+			const {
+				skip,
+				limit,
+				search,
+				sortBy,
+				sortOrder,
+				disability_types,
+				education_levels,
+				cities,
+				counseling_status
+			} = params || {};
+			const response = await candidateService.getAll(
+				skip,
+				limit,
+				search,
+				sortBy,
+				sortOrder,
+				disability_types,
+				education_levels,
+				cities,
+				counseling_status
+			);
 			return response;
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.message || 'Failed to fetch candidates');
