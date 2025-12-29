@@ -10,9 +10,12 @@ interface StatCardProps {
 }
 
 const StatCard: React.FC<StatCardProps> = ({ title, count, icon, color, subtitle }) => (
-	<Card sx={{ height: '100%', borderLeft: `5px solid ${color}` }}>
+	<Card
+		sx={{ height: '100%', borderLeft: `5px solid ${color}` }}
+		aria-label={`${title}: ${count}${subtitle ? `. ${subtitle}` : ''}`}
+	>
 		<CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-			<Box>
+			<Box aria-hidden="true">
 				<Typography color="textSecondary" gutterBottom variant="overline" sx={{ fontWeight: 'bold', display: 'block' }}>
 					{title}
 				</Typography>
@@ -25,11 +28,15 @@ const StatCard: React.FC<StatCardProps> = ({ title, count, icon, color, subtitle
 					</Typography>
 				)}
 			</Box>
-			<Box sx={{ color: color, p: 1, borderRadius: '50%', backgroundColor: `${color}20` }}>
+			<Box
+				sx={{ color: color, p: 1, borderRadius: '50%', backgroundColor: `${color}20` }}
+				aria-hidden="true"
+			>
 				{icon}
 			</Box>
 		</CardContent>
 	</Card>
 );
+
 
 export default StatCard;

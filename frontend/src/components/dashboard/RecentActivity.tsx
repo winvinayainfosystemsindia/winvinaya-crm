@@ -98,6 +98,8 @@ const RecentActivity: React.FC<RecentActivityProps> = ({
   return (
     <Paper
       elevation={0}
+      component="section"
+      aria-labelledby="recent-activity-title"
       sx={{
         width: '100%',
         mb: 2,
@@ -120,6 +122,8 @@ const RecentActivity: React.FC<RecentActivityProps> = ({
       >
         <Typography
           variant="subtitle1"
+          id="recent-activity-title"
+          component="h2"
           sx={{
             fontWeight: 'bold',
             color: '#232f3e',
@@ -128,6 +132,7 @@ const RecentActivity: React.FC<RecentActivityProps> = ({
         >
           Recent Activity
         </Typography>
+
         <Tooltip title="Refresh Activity">
           <IconButton
             size="small"

@@ -20,10 +20,11 @@ const Home: React.FC = () => {
 	}, [dispatch]);
 
 	return (
-		<Box sx={{ p: { xs: 1, sm: 0 } }}>
-			<Typography variant="h5" sx={{ mb: 3, fontWeight: 700, color: '#16191f' }}>
+		<Box component="main" sx={{ p: { xs: 1, sm: 0 } }}>
+			<Typography variant="h5" component="h1" sx={{ mb: 3, fontWeight: 700, color: '#16191f' }}>
 				Dashboard
 			</Typography>
+
 
 			<Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mb: 4 }}>
 				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
