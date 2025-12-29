@@ -150,8 +150,18 @@ class CandidateRepository(BaseRepository[Candidate]):
         return result.scalars().unique().all(), total
 
 
-    async def get_unscreened(self, skip: int = 0, limit: int = 100, search: Optional[str] = None, sort_by: Optional[str] = None, sort_order: str = "desc"):
-        """Get candidates without screening records, with optional search filtering and sorting"""
+    async def get_unscreened(
+        self, 
+        skip: int = 0, 
+        limit: int = 100, 
+        search: Optional[str] = None, 
+        sort_by: Optional[str] = None, 
+        sort_order: str = "desc",
+        disability_types: Optional[list] = None,
+        education_levels: Optional[list] = None,
+        cities: Optional[list] = None
+    ):
+        """Get candidates without screening records, with optional search filtering, category filters, and sorting"""
         from sqlalchemy import or_
         stmt = (
             select(Candidate)
@@ -177,6 +187,62 @@ class CandidateRepository(BaseRepository[Candidate]):
             stmt = stmt.where(search_filter)
             count_stmt = count_stmt.where(search_filter)
 
+        # Apply category filters
+        if disability_types and len(disability_types) > 0:
+            disability_filters = []
+            for d_type in disability_types:
+                if d_type:
+                    disability_filters.append(
+                        Candidate.disability_details['disability_type'].as_string() == d_type
+                    )
+            if disability_filters:
+                stmt = stmt.where(or_(*disability_filters))
+                count_stmt = count_stmt.where(or_(*disability_filters))
+        
+        if education_levels and len(education_levels) > 0:
+            education_filters = []
+            for edu_level in education_levels:
+                if edu_level:
+                    education_filters.append(
+                        Candidate.education_details['degrees'].as_string().ilike(f"%{edu_level}%")
+                    )
+            if education_filters:
+                stmt = stmt.where(or_(*education_filters))
+                count_stmt = count_stmt.where(or_(*education_filters))
+        
+        if cities and len(cities) > 0:
+            stmt = stmt.where(Candidate.city.in_(cities))
+            count_stmt = count_stmt.where(Candidate.city.in_(cities))
+
+
+        # Apply category filters
+        if disability_types and len(disability_types) > 0:
+            disability_filters = []
+            for d_type in disability_types:
+                if d_type:
+                    disability_filters.append(
+                        Candidate.disability_details['disability_type'].as_string() == d_type
+                    )
+            if disability_filters:
+                stmt = stmt.where(or_(*disability_filters))
+                count_stmt = count_stmt.where(or_(*disability_filters))
+        
+        if education_levels and len(education_levels) > 0:
+            education_filters = []
+            for edu_level in education_levels:
+                if edu_level:
+                    education_filters.append(
+                        Candidate.education_details['degrees'].as_string().ilike(f"%{edu_level}%")
+                    )
+            if education_filters:
+                stmt = stmt.where(or_(*education_filters))
+                count_stmt = count_stmt.where(or_(*education_filters))
+        
+        if cities and len(cities) > 0:
+            stmt = stmt.where(Candidate.city.in_(cities))
+            count_stmt = count_stmt.where(Candidate.city.in_(cities))
+
+
         count_result = await self.db.execute(count_stmt)
         total = count_result.scalar() or 0
         
@@ -196,8 +262,21 @@ class CandidateRepository(BaseRepository[Candidate]):
         result = await self.db.execute(stmt)
         return result.scalars().unique().all(), total
 
-    async def get_screened(self, skip: int = 0, limit: int = 100, counseling_status: Optional[str] = None, search: Optional[str] = None, document_status: Optional[str] = None, sort_by: Optional[str] = None, sort_order: str = "desc"):
-        """Get candidates with screening records loaded, with optional counseling status filter, document status filter, search filtering, and sorting"""
+    async def get_screened(
+        self, 
+        skip: int = 0, 
+        limit: int = 100, 
+        counseling_status: Optional[str] = None, 
+        search: Optional[str] = None, 
+        document_status: Optional[str] = None, 
+        sort_by: Optional[str] = None, 
+        sort_order: str = "desc",
+        disability_types: Optional[list] = None,
+        education_levels: Optional[list] = None,
+        cities: Optional[list] = None
+    ):
+        """Get candidates with screening records loaded, with optional counseling status filter, document status filter, search filtering, category filters, and sorting"""
+
         from sqlalchemy import or_
         stmt = (
             select(Candidate)
@@ -297,6 +376,34 @@ class CandidateRepository(BaseRepository[Candidate]):
             )
             stmt = stmt.where(search_filter)
             count_stmt = count_stmt.where(search_filter)
+
+        # Apply category filters
+        if disability_types and len(disability_types) > 0:
+            disability_filters = []
+            for d_type in disability_types:
+                if d_type:
+                    disability_filters.append(
+                        Candidate.disability_details['disability_type'].as_string() == d_type
+                    )
+            if disability_filters:
+                stmt = stmt.where(or_(*disability_filters))
+                count_stmt = count_stmt.where(or_(*disability_filters))
+        
+        if education_levels and len(education_levels) > 0:
+            education_filters = []
+            for edu_level in education_levels:
+                if edu_level:
+                    education_filters.append(
+                        Candidate.education_details['degrees'].as_string().ilike(f"%{edu_level}%")
+                    )
+            if education_filters:
+                stmt = stmt.where(or_(*education_filters))
+                count_stmt = count_stmt.where(or_(*education_filters))
+        
+        if cities and len(cities) > 0:
+            stmt = stmt.where(Candidate.city.in_(cities))
+            count_stmt = count_stmt.where(Candidate.city.in_(cities))
+
 
         # Count total screened (with filter)
         count_result = await self.db.execute(count_stmt)

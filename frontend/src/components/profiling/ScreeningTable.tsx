@@ -21,11 +21,15 @@ import {
 	Select,
 	MenuItem
 } from '@mui/material';
-import { Search, Edit, Accessible, VerifiedUser } from '@mui/icons-material';
+import { FilterList, Search, Edit, Accessible, VerifiedUser } from '@mui/icons-material';
 import { format, isToday, parseISO } from 'date-fns';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchUnscreenedCandidates, fetchScreenedCandidates } from '../../store/slices/candidateSlice';
+import { candidateService } from '../../services/candidateService';
+import FilterDrawer, { type FilterField } from '../common/FilterDrawer';
 import type { CandidateListItem } from '../../models/candidate';
+
+
 
 interface ScreeningTableProps {
 	type: 'unscreened' | 'screened';
@@ -45,21 +49,120 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 
 	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
+	// Filter state
+	const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+	const [filters, setFilters] = useState<Record<string, any>>({
+		disability_types: [],
+		education_levels: [],
+		cities: [],
+		counseling_status: ''
+	});
+	const [filterOptions, setFilterOptions] = useState({
+		disability_types: [] as string[],
+		education_levels: [] as string[],
+		cities: [] as string[],
+		counseling_statuses: [] as string[]
+	});
+
+	// Dynamic filter fields based on type
+	const filterFields: FilterField[] = [
+		{
+			key: 'disability_types',
+			label: 'Disability Type',
+			type: 'multi-select',
+			options: filterOptions.disability_types.map(val => ({ value: val, label: val }))
+		},
+		{
+			key: 'education_levels',
+			label: 'Education Level',
+			type: 'multi-select',
+			options: filterOptions.education_levels.map(val => ({ value: val, label: val }))
+		},
+		{
+			key: 'cities',
+			label: 'City',
+			type: 'multi-select',
+			options: filterOptions.cities.map(val => ({ value: val, label: val }))
+		}
+	];
+
+	if (type === 'screened') {
+		filterFields.push({
+			key: 'counseling_status',
+			label: 'Counseling Status',
+			type: 'single-select',
+			options: filterOptions.counseling_statuses.map(val => ({ value: val, label: val }))
+		});
+	}
+
+	const handleFilterChange = (key: string, value: any) => {
+		setFilters(prev => ({
+			...prev,
+			[key]: value
+		}));
+	};
+
+	const handleClearFilters = () => {
+		setFilters({
+			disability_types: [],
+			education_levels: [],
+			cities: [],
+			counseling_status: ''
+		});
+		setPage(0);
+	};
+
+	const handleApplyFilters = () => {
+		setFilterDrawerOpen(false);
+		setPage(0);
+		fetchCandidatesData();
+	};
+
+	const activeFilterCount = filterFields.reduce((count, field) => {
+		const value = filters[field.key];
+		if (field.type === 'multi-select') {
+			return count + (Array.isArray(value) ? value.length : 0);
+		} else {
+			return count + (value ? 1 : 0);
+		}
+	}, 0);
+
+	const fetchFilterOptions = async () => {
+		try {
+			const options = await candidateService.getFilterOptions();
+			setFilterOptions(options);
+		} catch (error) {
+			console.error('Failed to fetch filter options:', error);
+		}
+	};
+
+	useEffect(() => {
+		fetchFilterOptions();
+	}, []);
+
 	const fetchCandidatesData = async () => {
 		const params = {
 			skip: page * rowsPerPage,
 			limit: rowsPerPage,
 			search: debouncedSearchTerm,
 			sortBy: orderBy,
-			sortOrder: order
+			sortOrder: order,
+			disability_types: filters.disability_types?.join(',') || '',
+			education_levels: filters.education_levels?.join(',') || '',
+			cities: filters.cities?.join(',') || ''
 		};
 
 		if (type === 'unscreened') {
 			dispatch(fetchUnscreenedCandidates(params));
 		} else {
-			dispatch(fetchScreenedCandidates(params));
+			dispatch(fetchScreenedCandidates({
+				...params,
+				counselingStatus: filters.counseling_status
+			}));
 		}
 	};
+
+
 
 	// Debounce search term
 	useEffect(() => {
@@ -73,7 +176,8 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 	// Initial fetch and fetch on pagination change
 	useEffect(() => {
 		fetchCandidatesData();
-	}, [page, rowsPerPage, type, debouncedSearchTerm, order, orderBy]);
+	}, [page, rowsPerPage, type, debouncedSearchTerm, order, orderBy, filters]);
+
 
 	const handleChangePage = (_event: unknown, newPage: number) => {
 		setPage(newPage);
@@ -144,7 +248,63 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 						),
 					}}
 				/>
+				<Box sx={{ display: 'flex', gap: 1, mt: { xs: 1, sm: 0 } }}>
+					<Button
+						variant="outlined"
+						startIcon={
+							<Box sx={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+								<FilterList fontSize="small" />
+								{activeFilterCount > 0 && (
+									<Box
+										sx={{
+											position: 'absolute',
+											top: -6,
+											right: -10,
+											bgcolor: theme.palette.primary.main,
+											color: 'white',
+											borderRadius: '50%',
+											width: 16,
+											height: 16,
+											fontSize: '0.65rem',
+											display: 'flex',
+											alignItems: 'center',
+											justifyContent: 'center',
+											fontWeight: 'bold',
+											border: '1px solid white'
+										}}
+									>
+										{activeFilterCount}
+									</Box>
+								)}
+							</Box>
+						}
+						onClick={() => setFilterDrawerOpen(true)}
+						sx={{
+							textTransform: 'none',
+							color: '#232f3e',
+							borderColor: '#d5dbdb',
+							'&:hover': {
+								borderColor: '#232f3e',
+								bgcolor: '#f5f8fa'
+							}
+						}}
+					>
+						Filters
+					</Button>
+				</Box>
 			</Box>
+
+			<FilterDrawer
+				open={filterDrawerOpen}
+				onClose={() => setFilterDrawerOpen(false)}
+				fields={filterFields}
+				activeFilters={filters}
+				onFilterChange={handleFilterChange}
+				onClearFilters={handleClearFilters}
+				onApplyFilters={handleApplyFilters}
+			/>
+
+
 
 			<TableContainer>
 				<Table sx={{ minWidth: 650 }} aria-label="screening table">

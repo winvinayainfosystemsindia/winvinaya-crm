@@ -16,7 +16,7 @@ import type {
 // ======================
 // CANDIDATE SERVICE
 // ======================
-const candidateService = {
+export const candidateService = {
 	/**
 	 * Get all candidates (simplified list)
 	 */
@@ -88,21 +88,53 @@ const candidateService = {
 	/**
 	 * Get unscreened candidates
 	 */
-	getUnscreened: async (skip = 0, limit = 100, search?: string, sortBy?: string, sortOrder: 'asc' | 'desc' = 'desc'): Promise<CandidatePaginatedResponse> => {
+	getUnscreened: async (
+		skip = 0,
+		limit = 100,
+		search?: string,
+		sortBy?: string,
+		sortOrder: 'asc' | 'desc' = 'desc',
+		disabilityTypes?: string,
+		educationLevels?: string,
+		cities?: string
+	): Promise<CandidatePaginatedResponse> => {
 		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
 		const sortParam = sortBy ? `&sort_by=${sortBy}&sort_order=${sortOrder}` : '';
-		const response = await api.get<CandidatePaginatedResponse>(`/candidates/unscreened?skip=${skip}&limit=${limit}${searchParam}${sortParam}`);
+		const filterParams = [
+			disabilityTypes ? `&disability_types=${encodeURIComponent(disabilityTypes)}` : '',
+			educationLevels ? `&education_levels=${encodeURIComponent(educationLevels)}` : '',
+			cities ? `&cities=${encodeURIComponent(cities)}` : ''
+		].join('');
+
+		const response = await api.get<CandidatePaginatedResponse>(`/candidates/unscreened?skip=${skip}&limit=${limit}${searchParam}${sortParam}${filterParams}`);
 		return response.data;
 	},
 
 	/**
 	 * Get screened candidates (with screening data)
 	 */
-	getScreened: async (skip = 0, limit = 100, counselingStatus?: string, search?: string, documentStatus?: string, sortBy?: string, sortOrder: 'asc' | 'desc' = 'desc'): Promise<CandidatePaginatedResponse> => {
+	getScreened: async (
+		skip = 0,
+		limit = 100,
+		counselingStatus?: string,
+		search?: string,
+		documentStatus?: string,
+		sortBy?: string,
+		sortOrder: 'asc' | 'desc' = 'desc',
+		disabilityTypes?: string,
+		educationLevels?: string,
+		cities?: string
+	): Promise<CandidatePaginatedResponse> => {
 		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
 		const docStatusParam = documentStatus ? `&document_status=${documentStatus}` : '';
 		const sortParam = sortBy ? `&sort_by=${sortBy}&sort_order=${sortOrder}` : '';
-		const response = await api.get<CandidatePaginatedResponse>(`/candidates/screened?skip=${skip}&limit=${limit}${counselingStatus ? `&counseling_status=${counselingStatus}` : ''}${docStatusParam}${searchParam}${sortParam}`);
+		const filterParams = [
+			disabilityTypes ? `&disability_types=${encodeURIComponent(disabilityTypes)}` : '',
+			educationLevels ? `&education_levels=${encodeURIComponent(educationLevels)}` : '',
+			cities ? `&cities=${encodeURIComponent(cities)}` : ''
+		].join('');
+
+		const response = await api.get<CandidatePaginatedResponse>(`/candidates/screened?skip=${skip}&limit=${limit}${counselingStatus ? `&counseling_status=${counselingStatus}` : ''}${docStatusParam}${searchParam}${sortParam}${filterParams}`);
 		return response.data;
 	},
 

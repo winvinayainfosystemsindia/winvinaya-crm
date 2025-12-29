@@ -100,12 +100,33 @@ export const fetchUnscreenedCandidates = createAsyncThunk(
 			search?: string;
 			sortBy?: string;
 			sortOrder?: 'asc' | 'desc';
+			disability_types?: string;
+			education_levels?: string;
+			cities?: string;
 		} | void = {},
 		{ rejectWithValue }
 	) => {
 		try {
-			const { skip, limit, search, sortBy, sortOrder } = params || {};
-			const response = await candidateService.getUnscreened(skip, limit, search, sortBy, sortOrder);
+			const {
+				skip,
+				limit,
+				search,
+				sortBy,
+				sortOrder,
+				disability_types,
+				education_levels,
+				cities
+			} = params || {};
+			const response = await candidateService.getUnscreened(
+				skip,
+				limit,
+				search,
+				sortBy,
+				sortOrder,
+				disability_types,
+				education_levels,
+				cities
+			);
 			return response;
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.message || 'Failed to fetch unscreened candidates');
@@ -124,12 +145,37 @@ export const fetchScreenedCandidates = createAsyncThunk(
 			documentStatus?: string;
 			sortBy?: string;
 			sortOrder?: 'asc' | 'desc';
+			disability_types?: string;
+			education_levels?: string;
+			cities?: string;
 		} | void = {},
 		{ rejectWithValue }
 	) => {
 		try {
-			const { skip, limit, counselingStatus, search, documentStatus, sortBy, sortOrder } = params || {};
-			const response = await candidateService.getScreened(skip, limit, counselingStatus, search, documentStatus, sortBy, sortOrder);
+			const {
+				skip,
+				limit,
+				counselingStatus,
+				search,
+				documentStatus,
+				sortBy,
+				sortOrder,
+				disability_types,
+				education_levels,
+				cities
+			} = params || {};
+			const response = await candidateService.getScreened(
+				skip,
+				limit,
+				counselingStatus,
+				search,
+				documentStatus,
+				sortBy,
+				sortOrder,
+				disability_types,
+				education_levels,
+				cities
+			);
 			return response;
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.message || 'Failed to fetch screened candidates');

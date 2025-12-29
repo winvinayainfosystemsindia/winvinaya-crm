@@ -126,14 +126,32 @@ async def get_unscreened_candidates(
     search: str = None,
     sort_by: str = None,
     sort_order: str = "desc",
+    disability_types: str = None,
+    education_levels: str = None,
+    cities: str = None,
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING])),
+
     db: AsyncSession = Depends(get_db)
 ):
     """
     Get list of candidates without screening records (Restricted)
     """
+    disability_types_list = disability_types.split(',') if disability_types else None
+    education_levels_list = education_levels.split(',') if education_levels else None
+    cities_list = cities.split(',') if cities else None
+
     service = CandidateService(db)
-    return await service.get_unscreened_candidates(skip=skip, limit=limit, search=search, sort_by=sort_by, sort_order=sort_order)
+    return await service.get_unscreened_candidates(
+        skip=skip, 
+        limit=limit, 
+        search=search, 
+        sort_by=sort_by, 
+        sort_order=sort_order,
+        disability_types=disability_types_list,
+        education_levels=education_levels_list,
+        cities=cities_list
+    )
+
 
 
 @router.get("/screened", response_model=CandidatePaginatedResponse)
@@ -147,6 +165,9 @@ async def get_screened_candidates(
     search: str = None,
     sort_by: str = None,
     sort_order: str = "desc",
+    disability_types: str = None,
+    education_levels: str = None,
+    cities: str = None,
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING])),
     db: AsyncSession = Depends(get_db)
 ):
@@ -154,8 +175,24 @@ async def get_screened_candidates(
     Get list of candidates with screening records (Restricted)
     Returns list with basic candidate info.
     """
+    disability_types_list = disability_types.split(',') if disability_types else None
+    education_levels_list = education_levels.split(',') if education_levels else None
+    cities_list = cities.split(',') if cities else None
+
     service = CandidateService(db)
-    return await service.get_screened_candidates(skip=skip, limit=limit, counseling_status=counseling_status, search=search, document_status=document_status, sort_by=sort_by, sort_order=sort_order)
+    return await service.get_screened_candidates(
+        skip=skip, 
+        limit=limit, 
+        counseling_status=counseling_status, 
+        search=search, 
+        document_status=document_status, 
+        sort_by=sort_by, 
+        sort_order=sort_order,
+        disability_types=disability_types_list,
+        education_levels=education_levels_list,
+        cities=cities_list
+    )
+
 
 
 
