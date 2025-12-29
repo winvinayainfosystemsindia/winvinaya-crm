@@ -42,7 +42,7 @@ const UserManagement: React.FC = () => {
 	};
 
 	return (
-		<Box sx={{ bgcolor: 'background.default' }}>
+		<Box component="main" sx={{ bgcolor: 'background.default' }}>
 			<Container maxWidth="xl" sx={{ py: 3 }}>
 				{/* Page Header */}
 				<Box sx={{ mb: 3 }}>
@@ -63,15 +63,19 @@ const UserManagement: React.FC = () => {
 				</Box>
 
 				{/* Stat Cards */}
-				<UserStatCards key={`stats-${refreshKey}`} />
+				<Box component="section" aria-label="User Statistics Overview">
+					<UserStatCards key={`stats-${refreshKey}`} />
+				</Box>
 
 				{/* User Table */}
-				<UserTable
-					key={`table-${refreshKey}`}
-					onAddUser={handleAddUser}
-					onEditUser={handleEditUser}
-					onViewUser={handleViewUser}
-				/>
+				<Box component="section" aria-label="User Directory">
+					<UserTable
+						key={`table-${refreshKey}`}
+						onAddUser={handleAddUser}
+						onEditUser={handleEditUser}
+						onViewUser={handleViewUser}
+					/>
+				</Box>
 
 				{/* User Form Dialog */}
 				<Dialog
@@ -79,6 +83,7 @@ const UserManagement: React.FC = () => {
 					onClose={handleCloseDialog}
 					maxWidth="sm"
 					fullWidth
+					aria-labelledby="user-dialog-title"
 					PaperProps={{
 						sx: {
 							borderRadius: 0,
@@ -106,6 +111,7 @@ const UserManagement: React.FC = () => {
 			</Container>
 		</Box>
 	);
+
 };
 
 export default UserManagement;

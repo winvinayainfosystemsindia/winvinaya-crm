@@ -19,8 +19,10 @@ import {
 	FormControl,
 	Typography,
 	useMediaQuery,
-	useTheme
+	useTheme,
+	CircularProgress
 } from '@mui/material';
+
 import { Search, Add, Edit, Visibility } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { useAppSelector } from '../../store/hooks';
@@ -212,11 +214,14 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 							</TableCell>
 						</TableRow>
 					</TableHead>
-					<TableBody>
+					<TableBody aria-busy={loading}>
 						{loading ? (
 							<TableRow>
 								<TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-									<Typography color="text.secondary">Loading users...</Typography>
+									<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+										<CircularProgress size={24} />
+										<Typography color="text.secondary">Loading users...</Typography>
+									</Box>
 								</TableCell>
 							</TableRow>
 						) : filteredUsers.length === 0 ? (
@@ -260,6 +265,7 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 											size="small"
 											variant={'outlined'}
 											sx={{ fontWeight: 600, fontSize: '0.75rem' }}
+											aria-label={`Role: ${user.role}`}
 										/>
 									</TableCell>
 									<TableCell sx={{ display: isMobile ? 'none' : 'table-cell' }}>
@@ -269,6 +275,7 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 											size="small"
 											variant={user.is_active ? 'filled' : 'outlined'}
 											sx={{ fontWeight: 600, fontSize: '0.75rem', minWidth: 70 }}
+											aria-label={`Status: ${user.is_active ? 'Active' : 'Inactive'}`}
 										/>
 									</TableCell>
 									<TableCell sx={{ display: isMedium ? 'none' : 'table-cell' }}>
@@ -281,6 +288,8 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 											<IconButton
 												size="small"
 												onClick={() => onViewUser?.(user)}
+												aria-label={`View details for ${user.full_name || user.username}`}
+												title="View User"
 												sx={{
 													color: 'text.secondary',
 													'&:hover': { color: 'primary.main' }
@@ -292,6 +301,8 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 												<IconButton
 													size="small"
 													onClick={() => onEditUser?.(user)}
+													aria-label={`Edit ${user.full_name || user.username}`}
+													title="Edit User"
 													sx={{
 														color: 'text.secondary',
 														'&:hover': { color: 'warning.main' }
@@ -306,6 +317,7 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 							))
 						)}
 					</TableBody>
+
 				</Table>
 			</TableContainer>
 

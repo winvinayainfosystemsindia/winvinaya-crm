@@ -28,20 +28,20 @@ const UserView: React.FC<UserViewProps> = ({ user }) => {
 
 	return (
 		<Box sx={{ p: 3 }}>
-			<Typography variant="h5" sx={{ mb: 3, fontWeight: 500 }}>
+			<Typography variant="h5" id="user-dialog-title" sx={{ mb: 3, fontWeight: 500 }} component="h2">
 				User Details
 			</Typography>
 
-			<Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+			<Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }} role="region" aria-label="User Information">
 				<InfoRow label="Full Name" value={user.full_name || '-'} />
 
-				<Divider sx={{ my: 1 }} />
+				<Divider sx={{ my: 1 }} aria-hidden="true" />
 
 				<InfoRow label="Username" value={user.username} />
 
 				<InfoRow label="Email" value={user.email} />
 
-				<Divider sx={{ my: 1 }} />
+				<Divider sx={{ my: 1 }} aria-hidden="true" />
 
 				<InfoRow
 					label="Role"
@@ -55,6 +55,7 @@ const UserView: React.FC<UserViewProps> = ({ user }) => {
 							}
 							size="small"
 							sx={{ fontWeight: 600 }}
+							aria-label={`Role: ${user.role}`}
 						/>
 					}
 				/>
@@ -68,11 +69,12 @@ const UserView: React.FC<UserViewProps> = ({ user }) => {
 							size="small"
 							variant={user.is_active ? 'filled' : 'outlined'}
 							sx={{ fontWeight: 600 }}
+							aria-label={`Status: ${user.is_active ? 'Active' : 'Inactive'}`}
 						/>
 					}
 				/>
 
-				<Divider sx={{ my: 1 }} />
+				<Divider sx={{ my: 1 }} aria-hidden="true" />
 
 				<InfoRow label="Email Verified" value={user.is_verified ? 'Yes' : 'No'} />
 
@@ -81,6 +83,7 @@ const UserView: React.FC<UserViewProps> = ({ user }) => {
 				<InfoRow label="Last Updated" value={formatDate(user.updated_at)} />
 			</Box>
 		</Box>
+
 	);
 };
 

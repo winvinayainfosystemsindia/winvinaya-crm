@@ -70,10 +70,10 @@ const UserStatCards: React.FC = () => {
 		<Box sx={{ display: 'flex', gap: 3, mb: 3, flexWrap: 'wrap' }}>
 			{/* Total Users Card */}
 			<Box sx={{ flex: '1 1 300px', minWidth: 300 }}>
-				<Card sx={cardStyle}>
+				<Card sx={cardStyle} aria-label={`Total Users: ${stats.total}`}>
 					<CardContent sx={{ p: 2 }}>
 						<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-							<Box>
+							<Box aria-hidden="true">
 								<Typography variant="subtitle2" color="textSecondary" sx={{ fontWeight: 'bold', fontSize: '0.9rem', mb: 1 }}>
 									Total Users
 								</Typography>
@@ -83,7 +83,7 @@ const UserStatCards: React.FC = () => {
 									</Typography>
 								</Box>
 							</Box>
-							<People sx={{ fontSize: 40, color: theme.palette.primary.light, opacity: 0.5 }} />
+							<People sx={{ fontSize: 40, color: theme.palette.primary.light, opacity: 0.5 }} aria-hidden="true" />
 						</Box>
 					</CardContent>
 				</Card>
@@ -91,14 +91,14 @@ const UserStatCards: React.FC = () => {
 
 			{/* Users by Role Card */}
 			<Box sx={{ flex: '1 1 300px', minWidth: 300 }}>
-				<Card sx={cardStyle}>
+				<Card sx={cardStyle} aria-label={`Users by Role. Total: ${stats.total}`}>
 					<CardContent sx={{ p: 2 }}>
 						<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
 							<Box sx={{ width: '100%' }}>
-								<Typography variant="subtitle2" color="textSecondary" sx={{ fontWeight: 'bold', fontSize: '0.9rem', mb: 1 }}>
+								<Typography variant="subtitle2" color="textSecondary" sx={{ fontWeight: 'bold', fontSize: '0.9rem', mb: 1 }} aria-hidden="true">
 									Users by Role
 								</Typography>
-								<Box sx={{ display: 'flex', alignItems: 'baseline', mt: 1 }}>
+								<Box sx={{ display: 'flex', alignItems: 'baseline', mt: 1 }} aria-hidden="true">
 									<Typography variant="h3" component="div" sx={{ fontWeight: 300, color: theme.palette.secondary.main }}>
 										{(stats.total || 0).toLocaleString()}
 									</Typography>
@@ -108,6 +108,7 @@ const UserStatCards: React.FC = () => {
 										component="button"
 										variant="body2"
 										onClick={handleRoleOpen}
+										aria-label="View role distribution"
 										sx={{
 											fontWeight: 'bold',
 											color: theme.palette.primary.main,
@@ -121,7 +122,7 @@ const UserStatCards: React.FC = () => {
 									</Link>
 								</Box>
 							</Box>
-							<SupervisorAccount sx={{ fontSize: 40, color: theme.palette.primary.light, opacity: 0.5 }} />
+							<SupervisorAccount sx={{ fontSize: 40, color: theme.palette.primary.light, opacity: 0.5 }} aria-hidden="true" />
 						</Box>
 
 						<Popover
@@ -146,7 +147,7 @@ const UserStatCards: React.FC = () => {
 								}
 							}}
 						>
-							<Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 'bold', color: theme.palette.secondary.main }}>
+							<Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 'bold', color: theme.palette.secondary.main }} component="h3">
 								Role Distribution
 							</Typography>
 							<Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
@@ -180,27 +181,27 @@ const UserStatCards: React.FC = () => {
 
 			{/* Active/Inactive Card */}
 			<Box sx={{ flex: '1 1 300px', minWidth: 300 }}>
-				<Card sx={cardStyle}>
+				<Card sx={cardStyle} aria-label={`User Status. Active: ${stats.active}, Inactive: ${stats.inactive}`}>
 					<CardContent sx={{ p: 2 }}>
-						<Typography variant="subtitle2" color="textSecondary" sx={{ fontWeight: 'bold', fontSize: '0.9rem', mb: 1 }}>
+						<Typography variant="subtitle2" color="textSecondary" sx={{ fontWeight: 'bold', fontSize: '0.9rem', mb: 1 }} aria-hidden="true">
 							User Status
 						</Typography>
 						<Box sx={{ mt: 2 }}>
 							<Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-								<CheckCircle sx={{ color: 'success.main', mr: 1, fontSize: 20 }} />
+								<CheckCircle sx={{ color: 'success.main', mr: 1, fontSize: 20 }} aria-hidden="true" />
 								<Box sx={{ flexGrow: 1 }}>
-									<Typography variant="body2" color="textSecondary">Active Users</Typography>
+									<Typography variant="body2" color="textSecondary" aria-hidden="true">Active Users</Typography>
 								</Box>
-								<Typography variant="h6" sx={{ fontWeight: 600 }}>
+								<Typography variant="h6" sx={{ fontWeight: 600 }} aria-hidden="true">
 									{stats.active}
 								</Typography>
 							</Box>
 							<Box sx={{ display: 'flex', alignItems: 'center' }}>
-								<Cancel sx={{ color: 'error.main', mr: 1, fontSize: 20 }} />
+								<Cancel sx={{ color: 'error.main', mr: 1, fontSize: 20 }} aria-hidden="true" />
 								<Box sx={{ flexGrow: 1 }}>
-									<Typography variant="body2" color="textSecondary">Inactive Users</Typography>
+									<Typography variant="body2" color="textSecondary" aria-hidden="true">Inactive Users</Typography>
 								</Box>
-								<Typography variant="h6" sx={{ fontWeight: 600 }}>
+								<Typography variant="h6" sx={{ fontWeight: 600 }} aria-hidden="true">
 									{stats.inactive}
 								</Typography>
 							</Box>
@@ -208,6 +209,7 @@ const UserStatCards: React.FC = () => {
 					</CardContent>
 				</Card>
 			</Box>
+
 		</Box>
 	);
 };

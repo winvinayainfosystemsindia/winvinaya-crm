@@ -70,7 +70,7 @@ const UserEditForm: React.FC<UserEditFormProps> = ({ user, onSuccess, onCancel }
 
 	return (
 		<Box component="form" onSubmit={handleSubmit} sx={{ p: 3 }}>
-			<Typography variant="h5" sx={{ mb: 1, fontWeight: 500 }}>
+			<Typography variant="h5" id="user-dialog-title" sx={{ mb: 1, fontWeight: 500 }} component="h2">
 				Edit User
 			</Typography>
 			<Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
@@ -78,27 +78,27 @@ const UserEditForm: React.FC<UserEditFormProps> = ({ user, onSuccess, onCancel }
 			</Typography>
 
 			{error && (
-				<Alert severity="error" sx={{ mb: 2 }}>
+				<Alert severity="error" sx={{ mb: 2 }} role="alert" aria-live="assertive">
 					{error}
 				</Alert>
 			)}
 
 			<Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
 				{/* User Info Display */}
-				<Box sx={{ bgcolor: '#f5f5f5', p: 2, borderRadius: 1 }}>
-					<Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+				<Box sx={{ bgcolor: '#f5f5f5', p: 2, borderRadius: 1 }} role="region" aria-label="User Information">
+					<Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: 600 }} component="div">
 						USERNAME
 					</Typography>
 					<Typography variant="body1" sx={{ fontWeight: 500 }}>
 						{user.username}
 					</Typography>
-					<Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, mb: 0.5 }}>
+					<Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, mb: 0.5, fontWeight: 600 }} component="div">
 						EMAIL
 					</Typography>
 					<Typography variant="body1" sx={{ fontWeight: 500 }}>
 						{user.email}
 					</Typography>
-					<Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, mb: 0.5 }}>
+					<Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, mb: 0.5, fontWeight: 600 }} component="div">
 						ROLE
 					</Typography>
 					<Typography variant="body1" sx={{ fontWeight: 500, textTransform: 'capitalize' }}>
@@ -107,7 +107,7 @@ const UserEditForm: React.FC<UserEditFormProps> = ({ user, onSuccess, onCancel }
 				</Box>
 
 				{/* Password Change */}
-				<Typography variant="subtitle2" sx={{ mt: 1, fontWeight: 600 }}>
+				<Typography variant="subtitle2" sx={{ mt: 1, fontWeight: 600 }} component="h3">
 					Change Password (Optional)
 				</Typography>
 
@@ -140,7 +140,7 @@ const UserEditForm: React.FC<UserEditFormProps> = ({ user, onSuccess, onCancel }
 
 				{/* Status Toggle */}
 				<Box sx={{ mt: 1 }}>
-					<Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+					<Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }} component="h3">
 						User Status
 					</Typography>
 					<FormControlLabel
@@ -150,6 +150,7 @@ const UserEditForm: React.FC<UserEditFormProps> = ({ user, onSuccess, onCancel }
 								onChange={(e) => handleChange('is_active', e.target.checked)}
 								disabled={loading}
 								color="success"
+								inputProps={{ 'aria-label': `User is currently ${formData.is_active ? 'Active' : 'Inactive'}` }}
 							/>
 						}
 						label={
@@ -180,15 +181,18 @@ const UserEditForm: React.FC<UserEditFormProps> = ({ user, onSuccess, onCancel }
 						onClick={onCancel}
 						disabled={loading}
 						fullWidth={isMobile}
+						aria-label="Cancel editing"
 					>
 						Cancel
 					</Button>
 					<Button
 						type="submit"
 						variant="contained"
-						startIcon={loading ? <CircularProgress size={20} /> : <Save />}
+						startIcon={loading ? <CircularProgress size={20} color="inherit" aria-hidden="true" /> : <Save />}
 						disabled={loading}
 						fullWidth={isMobile}
+						aria-busy={loading}
+						aria-label={loading ? 'Saving Changes' : 'Save Changes'}
 						sx={{
 							bgcolor: '#ec7211',
 							'&:hover': {
@@ -201,6 +205,7 @@ const UserEditForm: React.FC<UserEditFormProps> = ({ user, onSuccess, onCancel }
 				</Box>
 			</Box>
 		</Box>
+
 	);
 };
 

@@ -59,12 +59,12 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({ onSuccess, onCancel }) 
 
 	return (
 		<Box component="form" onSubmit={handleSubmit} sx={{ p: 3 }}>
-			<Typography variant="h5" sx={{ mb: 3, fontWeight: 500 }}>
+			<Typography variant="h5" id="user-dialog-title" sx={{ mb: 3, fontWeight: 500 }} component="h2">
 				Add New User
 			</Typography>
 
 			{error && (
-				<Alert severity="error" sx={{ mb: 2 }}>
+				<Alert severity="error" sx={{ mb: 2 }} role="alert" aria-live="assertive">
 					{error}
 				</Alert>
 			)}
@@ -77,6 +77,7 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({ onSuccess, onCancel }) 
 					required
 					fullWidth
 					disabled={loading}
+					inputProps={{ 'aria-required': 'true' }}
 				/>
 
 				<TextField
@@ -87,6 +88,7 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({ onSuccess, onCancel }) 
 					required
 					fullWidth
 					disabled={loading}
+					inputProps={{ 'aria-required': 'true' }}
 				/>
 
 				<TextField
@@ -97,6 +99,7 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({ onSuccess, onCancel }) 
 					fullWidth
 					disabled={loading}
 					helperText="3-100 characters"
+					inputProps={{ 'aria-required': 'true' }}
 				/>
 
 				<TextField
@@ -108,14 +111,17 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({ onSuccess, onCancel }) 
 					fullWidth
 					disabled={loading}
 					helperText="Min 8 characters, must contain uppercase, lowercase, and digit"
+					inputProps={{ 'aria-required': 'true' }}
 				/>
 
 				<FormControl fullWidth required disabled={loading}>
-					<InputLabel>Role</InputLabel>
+					<InputLabel id="role-select-label">Role</InputLabel>
 					<Select
+						labelId="role-select-label"
 						value={formData.role}
 						label="Role"
 						onChange={(e) => handleChange('role', e.target.value)}
+						inputProps={{ 'aria-required': 'true' }}
 					>
 						<MenuItem value="admin">Admin</MenuItem>
 						<MenuItem value="manager">Manager</MenuItem>
@@ -139,15 +145,18 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({ onSuccess, onCancel }) 
 						onClick={onCancel}
 						disabled={loading}
 						fullWidth={isMobile}
+						aria-label="Cancel user creation"
 					>
 						Cancel
 					</Button>
 					<Button
 						type="submit"
 						variant="contained"
-						startIcon={loading ? <CircularProgress size={20} /> : <Save />}
+						startIcon={loading ? <CircularProgress size={20} color="inherit" aria-hidden="true" /> : <Save />}
 						disabled={loading}
 						fullWidth={isMobile}
+						aria-busy={loading}
+						aria-label={loading ? 'Creating User' : 'Create User'}
 						sx={{
 							bgcolor: '#ec7211',
 							'&:hover': {
@@ -160,6 +169,7 @@ const UserCreateForm: React.FC<UserCreateFormProps> = ({ onSuccess, onCancel }) 
 				</Box>
 			</Box>
 		</Box>
+
 	);
 };
 
