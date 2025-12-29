@@ -21,7 +21,9 @@ import {
 	Group as CandidatesIcon,
 	Lock as LockIcon,
 	School as SchoolIcon,
+	Assessment as AssessmentIcon,
 } from '@mui/icons-material';
+
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { useTheme, useMediaQuery } from '@mui/material';
@@ -338,12 +340,33 @@ const Sidebar: React.FC = () => {
 					<List>
 						<ListItem disablePadding>
 							<ListItemButton
+								selected={isActive('/reports')}
+								onClick={() => handleNavigate('/reports')}
+								sx={{ py: 0.5 }}
+								aria-current={isActive('/reports') ? 'page' : undefined}
+							>
+								<ListItemIcon sx={{ minWidth: 40, color: isActive('/reports') ? 'primary.main' : '#5f6368' }}>
+									<AssessmentIcon aria-hidden="true" />
+								</ListItemIcon>
+								<ListItemText
+									primary="Reports"
+									primaryTypographyProps={{
+										fontSize: '0.95rem',
+										fontWeight: isActive('/reports') ? 600 : 500,
+										color: isActive('/reports') ? 'primary.main' : '#202124'
+									}}
+								/>
+							</ListItemButton>
+						</ListItem>
+						<ListItem disablePadding>
+							<ListItemButton
 								selected={isActive('/settings')}
 								onClick={() => handleNavigate('/settings')}
 								sx={{ py: 0.5 }}
+								aria-current={isActive('/settings') ? 'page' : undefined}
 							>
 								<ListItemIcon sx={{ minWidth: 40, color: isActive('/settings') ? 'primary.main' : '#5f6368' }}>
-									<SettingsIcon />
+									<SettingsIcon aria-hidden="true" />
 								</ListItemIcon>
 								<ListItemText
 									primary="Settings"
@@ -355,6 +378,7 @@ const Sidebar: React.FC = () => {
 								/>
 							</ListItemButton>
 						</ListItem>
+
 						<ListItem disablePadding>
 							<ListItemButton
 								selected={isActive('/support')}

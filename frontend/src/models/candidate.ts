@@ -138,8 +138,12 @@ export interface Candidate {
 export interface CandidateListItem {
 	public_id: string;
 	name: string;
+	gender: string;
 	email: string;
 	phone: string;
+	whatsapp_number?: string;
+	dob?: string;
+	pincode: string;
 	city: string;
 	district: string;
 	state: string;
@@ -147,11 +151,14 @@ export interface CandidateListItem {
 	is_disabled?: boolean;
 	disability_type?: string;
 	education_level?: string;
+	screening_status?: string;
 	counseling_status?: string;
 	counselor_name?: string;
+
 	counseling_date?: string;
 	documents_uploaded?: string[];
 }
+
 
 export interface CandidateCreate extends Omit<Candidate, 'public_id' | 'city' | 'district' | 'state' | 'created_at' | 'updated_at' | 'screening' | 'documents' | 'counseling'> { }
 

@@ -127,8 +127,12 @@ class CandidateListResponse(BaseModel):
     """Simplified response for list endpoints"""
     public_id: UUID
     name: str
-    email: Any  # Relaxed type to handle possible None or non-email strings temporarily
+    gender: str
+    email: Any
     phone: str
+    whatsapp_number: Optional[str] = None
+    dob: Optional[date] = None
+    pincode: str
     city: str
     district: str
     state: str
@@ -136,6 +140,7 @@ class CandidateListResponse(BaseModel):
     is_disabled: bool = False
     disability_type: Optional[str] = None
     education_level: Optional[str] = None
+    screening_status: str = "Pending"
     counseling_status: Optional[str] = None
     counselor_name: Optional[str] = None
     counseling_date: Optional[datetime] = None
@@ -148,6 +153,7 @@ class CandidateListResponse(BaseModel):
         is_disabled = False
         disability_type = None
         education_level = None
+        screening_status = "Pending"
         counseling_status = None
         counselor_name = None
         counseling_date = None
@@ -172,8 +178,17 @@ class CandidateListResponse(BaseModel):
             if degrees and len(degrees) > 0:
                 education_level = degrees[0].get('degree_name')
 
-        # 3. Counseling Data (Relationship)
-        # Check if counseling is loaded (ORM) or present (dict)
+        # 3. Screening Data
+        screening = None
+        if isinstance(data, dict):
+            screening = data.get('screening')
+        elif hasattr(data, '__dict__') and 'screening' in data.__dict__:
+            screening = data.screening
+        
+        if screening:
+            screening_status = "Completed"
+
+        # 4. Counseling Data (Relationship)
         counseling = None
         if isinstance(data, dict):
             counseling = data.get('counseling')
@@ -185,7 +200,6 @@ class CandidateListResponse(BaseModel):
             counseling_date = get_val(counseling, 'counseling_date')
             counselor_name = get_val(counseling, 'counselor_name')
             
-            # Nested counselor name
             counselor = None
             if isinstance(counseling, dict):
                 counselor = counseling.get('counselor')
@@ -197,7 +211,7 @@ class CandidateListResponse(BaseModel):
                 if fname:
                     counselor_name = fname
 
-        # 4. Documents (Relationship)
+        # 5. Documents (Relationship)
         docs_list = None
         if isinstance(data, dict):
             docs_list = data.get('documents')
@@ -207,12 +221,13 @@ class CandidateListResponse(BaseModel):
         if docs_list:
             documents_uploaded = [get_val(d, 'document_type') for d in docs_list]
 
-        # 5. Build response dict
+        # 6. Build response dict
         if isinstance(data, dict):
             data.update({
                 'is_disabled': is_disabled,
                 'disability_type': disability_type,
                 'education_level': education_level,
+                'screening_status': screening_status,
                 'counseling_status': counseling_status,
                 'counselor_name': counselor_name,
                 'counseling_date': counseling_date,
@@ -224,8 +239,12 @@ class CandidateListResponse(BaseModel):
         return {
             'public_id': get_val(data, 'public_id'),
             'name': get_val(data, 'name'),
+            'gender': get_val(data, 'gender'),
             'email': get_val(data, 'email'),
             'phone': get_val(data, 'phone'),
+            'whatsapp_number': get_val(data, 'whatsapp_number'),
+            'dob': get_val(data, 'dob'),
+            'pincode': get_val(data, 'pincode'),
             'city': get_val(data, 'city'),
             'district': get_val(data, 'district'),
             'state': get_val(data, 'state'),
@@ -233,11 +252,14 @@ class CandidateListResponse(BaseModel):
             'is_disabled': is_disabled,
             'disability_type': disability_type,
             'education_level': education_level,
+            'screening_status': screening_status,
             'counseling_status': counseling_status,
             'counselor_name': counselor_name,
             'counseling_date': counseling_date,
             'documents_uploaded': documents_uploaded
         }
+
+
 
     class Config:
         from_attributes = True

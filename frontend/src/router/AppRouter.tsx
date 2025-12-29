@@ -17,7 +17,7 @@ import MaintenancePage from '../pages/common/MaintenancePage';
 import DocumentCollectionList from '../pages/documents/DocumentCollectionList';
 import DocumentCollection from '../pages/documents/DocumentCollection';
 import CandidateDetail from '../pages/Candidates/CandidateDetail';
-// const SourcingAnalytics = React.lazy(() => import('../pages/analytics/SourcingAnalytics'));
+import Reports from '../pages/reports/Reports';
 
 const AppRouter: React.FC = () => {
 	return (
@@ -36,8 +36,10 @@ const AppRouter: React.FC = () => {
 						<Route path="/" element={<Navigate to="/dashboard" replace />} />
 						<Route path="dashboard" element={<Home />} />
 						<Route path="users" element={<UserManagement />} />
+						<Route path="reports" element={<Reports />} />
 
 						<Route path="candidates">
+
 							<Route index element={<CandidateList />} />
 							<Route path="list" element={<CandidateList />} />
 							{/* <Route path="overview" element={<SourcingAnalytics />} /> */}

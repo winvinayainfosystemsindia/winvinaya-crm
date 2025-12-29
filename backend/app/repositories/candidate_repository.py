@@ -65,11 +65,15 @@ class CandidateRepository(BaseRepository[Candidate]):
         from sqlalchemy import or_
         stmt = (
             select(Candidate)
+            .outerjoin(Candidate.screening)
             .outerjoin(Candidate.counseling)
             .options(
+                joinedload(Candidate.screening),
+                selectinload(Candidate.documents),
                 joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor)
             )
         )
+
         
         if not include_deleted:
             stmt = stmt.where(Candidate.is_deleted == False) 
