@@ -85,9 +85,10 @@ const Sidebar: React.FC = () => {
 								selected={isActive('/dashboard')}
 								onClick={() => handleNavigate('/dashboard')}
 								sx={{ py: 0.5 }}
+								aria-current={isActive('/dashboard') ? 'page' : undefined}
 							>
 								<ListItemIcon sx={{ minWidth: 40, color: isActive('/dashboard') ? 'primary.main' : '#5f6368' }}>
-									<HomeIcon />
+									<HomeIcon aria-hidden="true" />
 								</ListItemIcon>
 								<ListItemText
 									primary="Home"
@@ -100,12 +101,14 @@ const Sidebar: React.FC = () => {
 							</ListItemButton>
 						</ListItem>
 
+
 						{/* User Management - Admin only */}
 						<ListItem disablePadding>
 							<ListItemButton
 								selected={isActive('/users')}
 								onClick={() => user?.role === 'admin' && handleNavigate('/users')}
 								disabled={user?.role !== 'admin'}
+								aria-current={isActive('/users') ? 'page' : undefined}
 								sx={{
 									py: 0.5,
 									opacity: user?.role !== 'admin' ? 0.6 : 1,
@@ -113,7 +116,7 @@ const Sidebar: React.FC = () => {
 								}}
 							>
 								<ListItemIcon sx={{ minWidth: 40, color: isActive('/users') ? 'primary.main' : '#5f6368' }}>
-									<UserIcon />
+									<UserIcon aria-hidden="true" />
 								</ListItemIcon>
 								<ListItemText
 									primary="User Management"
@@ -123,25 +126,32 @@ const Sidebar: React.FC = () => {
 										color: isActive('/users') ? 'primary.main' : '#202124'
 									}}
 								/>
-								{user?.role !== 'admin' && <LockIcon sx={{ fontSize: 16, color: 'text.disabled' }} />}
+								{user?.role !== 'admin' && <LockIcon sx={{ fontSize: 16, color: 'text.disabled' }} aria-hidden="true" />}
 							</ListItemButton>
 						</ListItem>
 
+
 						{/* Candidates Group */}
 						<ListItem disablePadding>
-							<ListItemButton onClick={() => setCandidatesOpen(!candidatesOpen)} sx={{ py: 0.5 }}>
+							<ListItemButton
+								onClick={() => setCandidatesOpen(!candidatesOpen)}
+								sx={{ py: 0.5 }}
+								aria-expanded={candidatesOpen}
+								aria-controls="candidates-nav-list"
+							>
 								<ListItemIcon sx={{ minWidth: 40, color: '#5f6368' }}>
-									<CandidatesIcon />
+									<CandidatesIcon aria-hidden="true" />
 								</ListItemIcon>
 								<ListItemText
 									primary="Candidate Management"
 									primaryTypographyProps={{ fontSize: '0.95rem', fontWeight: 500, color: '#202124' }}
 								/>
-								{candidatesOpen ? <ExpandLess sx={{ color: '#5f6368' }} /> : <ExpandMore sx={{ color: '#5f6368' }} />}
+								{candidatesOpen ? <ExpandLess sx={{ color: '#5f6368' }} aria-hidden="true" /> : <ExpandMore sx={{ color: '#5f6368' }} aria-hidden="true" />}
 							</ListItemButton>
 						</ListItem>
 
-						<Collapse in={candidatesOpen} timeout="auto" unmountOnExit>
+						<Collapse in={candidatesOpen} timeout="auto" unmountOnExit id="candidates-nav-list">
+
 							<List component="div" disablePadding>
 								{/* <ListItemButton
 									sx={{ pl: 9, py: 0.5 }}
@@ -229,6 +239,7 @@ const Sidebar: React.FC = () => {
 									selected={isActive('/candidates/documents')}
 									onClick={() => ['admin', 'sourcing'].includes(user?.role || '') && handleNavigate('/candidates/documents')}
 									disabled={!['admin', 'sourcing'].includes(user?.role || '')}
+									aria-current={isActive('/candidates/documents') ? 'page' : undefined}
 								>
 									<ListItemText
 										primary="Document Collection"
@@ -238,27 +249,34 @@ const Sidebar: React.FC = () => {
 											fontWeight: isActive('/candidates/documents') ? 600 : 400
 										}}
 									/>
-									{!['admin', 'sourcing'].includes(user?.role || '') && <LockIcon sx={{ fontSize: 14, color: 'text.disabled' }} />}
+									{!['admin', 'sourcing'].includes(user?.role || '') && <LockIcon sx={{ fontSize: 14, color: 'text.disabled' }} aria-hidden="true" />}
 								</ListItemButton>
 							</List>
 						</Collapse>
 
+
 						{/* Training Group */}
 						<ListItem disablePadding>
-							<ListItemButton onClick={() => setTrainingOpen(!trainingOpen)} sx={{ py: 0.5 }}>
+							<ListItemButton
+								onClick={() => setTrainingOpen(!trainingOpen)}
+								sx={{ py: 0.5 }}
+								aria-expanded={trainingOpen}
+								aria-controls="training-nav-list"
+							>
 								<ListItemIcon sx={{ minWidth: 40, color: '#5f6368' }}>
-									<SchoolIcon />
+									<SchoolIcon aria-hidden="true" />
 								</ListItemIcon>
 								<ListItemText
 									primary="Training"
 									primaryTypographyProps={{ fontSize: '0.95rem', fontWeight: 500, color: '#202124' }}
 								/>
-								{trainingOpen ? <ExpandLess sx={{ color: '#5f6368' }} /> : <ExpandMore sx={{ color: '#5f6368' }} />}
+								{trainingOpen ? <ExpandLess sx={{ color: '#5f6368' }} aria-hidden="true" /> : <ExpandMore sx={{ color: '#5f6368' }} aria-hidden="true" />}
 							</ListItemButton>
 						</ListItem>
 
-						<Collapse in={trainingOpen} timeout="auto" unmountOnExit>
+						<Collapse in={trainingOpen} timeout="auto" unmountOnExit id="training-nav-list">
 							<List component="div" disablePadding>
+
 								<ListItemButton
 									sx={{ pl: 9, py: 0.5 }}
 									selected={isActive('/training/batches')}

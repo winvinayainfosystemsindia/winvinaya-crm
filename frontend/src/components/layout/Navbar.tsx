@@ -29,16 +29,16 @@ const Navbar: React.FC = () => {
 	};
 
 	return (
-		<AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, backgroundColor: '#232f3e' }}>
+		<AppBar position="fixed" component="nav" aria-label="Main Navigation" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, backgroundColor: '#232f3e' }}>
 			<Toolbar variant="dense">
 				<IconButton
 					color="inherit"
-					aria-label="open drawer"
+					aria-label="Toggle sidebar navigation"
 					edge="start"
 					onClick={() => dispatch(toggleSidebar())}
 					sx={{ mr: 2 }}
 				>
-					<MenuIcon />
+					<MenuIcon aria-hidden="true" />
 				</IconButton>
 				<Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontSize: '1rem', fontWeight: 700 }}>
 					WinVinaya Console
@@ -46,13 +46,14 @@ const Navbar: React.FC = () => {
 				<Box sx={{ display: 'flex', alignItems: 'center' }}>
 					<IconButton
 						size="large"
-						aria-label="show 17 new notifications"
+						aria-label="You have 4 new notifications"
 						color="inherit"
 					>
 						<Badge badgeContent={4} color="error">
-							<NotificationsIcon />
+							<NotificationsIcon aria-hidden="true" />
 						</Badge>
 					</IconButton>
+
 					{user && (
 						<Box sx={{ display: { xs: 'none', sm: 'flex' }, flexDirection: 'column', alignItems: 'flex-end', mr: 2 }}>
 							<Typography variant="subtitle2" sx={{ lineHeight: 1.2 }}>
