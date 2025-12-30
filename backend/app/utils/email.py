@@ -1,6 +1,7 @@
 """Email Utility for sending professional HTML emails"""
 
 import logging
+import os
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import List, Optional, Any
@@ -88,12 +89,17 @@ async def send_email(
 ) -> bool:
     """Generic function to send HTML emails via SMTP"""
     
-    if not settings.SMTP_HOST or not settings.SMTP_USER or not settings.SMTP_PASSWORD:
-        logger.warning("SMTP settings are not configured. Email not sent.")
-        return False
+    # Configuration with fallbacks
+    smtp_host = settings.SMTP_HOST or "s.mail25.info"
+    smtp_port = settings.SMTP_PORT or 587
+    smtp_user = settings.SMTP_USER or "no-reply@winvinaya.com"
+    smtp_password = settings.SMTP_PASSWORD or "Admin##2025@"
+    from_email = settings.EMAILS_FROM_EMAIL or "no-reply@winvinaya.com"
+    from_name = settings.EMAILS_FROM_NAME or "winvinaya"
+    smtp_tls = settings.SMTP_TLS if settings.SMTP_TLS is not None else True
 
     message = MIMEMultipart("alternative")
-    message["From"] = f"{settings.EMAILS_FROM_NAME} <{settings.EMAILS_FROM_EMAIL}>"
+    message["From"] = f"{from_name} <{from_email}>"
     message["To"] = to_email
     message["Subject"] = subject
     
@@ -105,18 +111,18 @@ async def send_email(
     # Determine TLS strategy
     # Port 465 usually uses implicit TLS (use_tls=True)
     # Port 587 usually uses explicit TLS (start_tls=True)
-    use_tls = settings.SMTP_TLS and settings.SMTP_PORT == 465
-    start_tls = settings.SMTP_TLS and settings.SMTP_PORT != 465
+    use_tls_strategy = smtp_tls and smtp_port == 465
+    start_tls_strategy = smtp_tls and smtp_port != 465
 
     try:
         await aiosmtplib.send(
             message,
-            hostname=settings.SMTP_HOST,
-            port=settings.SMTP_PORT,
-            username=settings.SMTP_USER,
-            password=settings.SMTP_PASSWORD,
-            use_tls=use_tls,
-            start_tls=start_tls,
+            hostname=smtp_host,
+            port=smtp_port,
+            username=smtp_user,
+            password=smtp_password,
+            use_tls=use_tls_strategy,
+            start_tls=start_tls_strategy,
         )
         logger.info(f"Email sent successfully to {to_email}")
         return True
