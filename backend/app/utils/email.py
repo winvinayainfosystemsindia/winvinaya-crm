@@ -160,7 +160,7 @@ def get_candidate_template(name: str) -> str:
                 <p>Best regards,<br>The WinVinaya Team</p>
             </div>
             <div class="footer">
-                &copy; 2025 WinVinaya Foundation. All rights reserved.<br>
+                &copy; 2025 WinVinaya. All rights reserved.<br>
                 This is an automated message, please do not reply.
             </div>
         </div>
@@ -188,12 +188,12 @@ def get_sourcing_team_template(candidate: Any) -> str:
     </head>
     <body>
         <div class="container">
-            <div class="header" style="background-color: #0073bb;">
-                <h1>New Candidate Registration</h1>
+            <div class="header">
+                <h1>New Registration</h1>
             </div>
             <div class="content">
                 <h2>Candidate Details</h2>
-                <p>A new candidate has just registered on the WinVinaya CRM portal. Here are the details:</p>
+                <p>A new candidate has just registered on the WinVinaya CRM portal. Here are the registration details:</p>
                 <table class="details-table">
                     <tr>
                         <th>Name</th>
@@ -212,11 +212,13 @@ def get_sourcing_team_template(candidate: Any) -> str:
                         <td>{disability_type}</td>
                     </tr>
                 </table>
-                <p>Please review the full profile in the CRM dashboard.</p>
-                <a href="https://crm.winvinaya.com/candidates" class="button" style="background-color: #0073bb;">View in CRM</a>
+                <p>Please review the full profile and initiate the screening process in the CRM dashboard.</p>
+                <div style="text-align: center;">
+                    <a href="https://crm.winvinaya.com/candidates" class="button">View in CRM Dashboard</a>
+                </div>
             </div>
             <div class="footer">
-                &copy; 2025 WinVinaya Foundation | Internal Notification
+                &copy; 2025 WinVinaya | Internal Sourcing Notification
             </div>
         </div>
     </body>
