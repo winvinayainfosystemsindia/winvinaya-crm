@@ -18,6 +18,12 @@ interface CandidateState {
 	stats: CandidateStats | null;
 	loading: boolean;
 	error: string | null;
+	filterOptions: {
+		disability_types: string[];
+		education_levels: string[];
+		cities: string[];
+		counseling_statuses: string[];
+	};
 }
 
 const initialState: CandidateState = {
@@ -27,6 +33,12 @@ const initialState: CandidateState = {
 	stats: null,
 	loading: false,
 	error: null,
+	filterOptions: {
+		disability_types: [],
+		education_levels: [],
+		cities: [],
+		counseling_statuses: []
+	}
 };
 
 // ======================
@@ -179,6 +191,18 @@ export const fetchScreenedCandidates = createAsyncThunk(
 			return response;
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.message || 'Failed to fetch screened candidates');
+		}
+	}
+);
+
+export const fetchFilterOptions = createAsyncThunk(
+	'candidates/fetchFilterOptions',
+	async (_, { rejectWithValue }) => {
+		try {
+			const response = await candidateService.getFilterOptions();
+			return response;
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.message || 'Failed to fetch filter options');
 		}
 	}
 );
@@ -412,6 +436,11 @@ const candidateSlice = createSlice({
 			.addCase(fetchScreenedCandidates.rejected, (state, action: PayloadAction<any>) => {
 				state.loading = false;
 				state.error = action.payload;
+			})
+
+			// Fetch filter options
+			.addCase(fetchFilterOptions.fulfilled, (state, action) => {
+				state.filterOptions = action.payload;
 			})
 
 			// Fetch single candidate

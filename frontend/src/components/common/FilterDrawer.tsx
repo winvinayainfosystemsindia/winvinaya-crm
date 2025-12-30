@@ -107,7 +107,13 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
 			</Box>
 
 			{/* Filter Content */}
-			<Box sx={{ flex: 1, overflow: 'auto', p: 2.5 }}>
+			<Box sx={{
+				flex: 1,
+				overflowY: 'auto',
+				p: 2.5,
+				height: '100%',
+				'overscrollBehavior': 'contain' // Prevents scroll leakage to background
+			}}>
 				{fields.map((field, index) => (
 					<Box
 						key={field.key}
