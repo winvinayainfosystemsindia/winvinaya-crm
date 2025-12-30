@@ -109,12 +109,14 @@ async def send_email(
     message.attach(MIMEText(html_content, "html"))
 
     # Determine TLS strategy
-    # Port 465 usually uses implicit TLS (use_tls=True)
-    # Port 587 usually uses explicit TLS (start_tls=True)
     use_tls_strategy = smtp_tls and smtp_port == 465
     start_tls_strategy = smtp_tls and smtp_port != 465
 
     try:
+        # Debug log for credentials (masked)
+        pass_hint = f"{smtp_password[:2]}...{smtp_password[-1]}" if len(smtp_password) > 2 else "***"
+        logger.info(f"Attempting SMTP send: {smtp_host}:{smtp_port} as {smtp_user} (Pass: {pass_hint})")
+        
         await aiosmtplib.send(
             message,
             hostname=smtp_host,
@@ -126,6 +128,9 @@ async def send_email(
         )
         logger.info(f"Email sent successfully to {to_email}")
         return True
+    except aiosmtplib.SMTPAuthenticationError as e:
+        logger.error(f"Authentication failed for {smtp_user} at {smtp_host}: {str(e)}")
+        return False
     except Exception as e:
         logger.error(f"Failed to send email to {to_email}: {str(e)}")
         return False
