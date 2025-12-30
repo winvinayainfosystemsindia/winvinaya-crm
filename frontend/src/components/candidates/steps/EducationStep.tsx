@@ -78,6 +78,23 @@ const EducationStep: React.FC<EducationStepProps> = ({
         });
     };
 
+    const handleDegreeInputChange = (index: number, field: keyof Degree) => (
+        _event: any,
+        newInputValue: string
+    ) => {
+        const updatedDegrees = [...(formData.education_details?.degrees || [])];
+        updatedDegrees[index] = {
+            ...updatedDegrees[index],
+            [field]: newInputValue || '',
+        };
+        onChange({
+            education_details: {
+                ...formData.education_details!,
+                degrees: updatedDegrees,
+            },
+        });
+    };
+
     const addDegree = () => {
         const newDegree: Degree = {
             degree_name: '',
@@ -185,6 +202,7 @@ const EducationStep: React.FC<EducationStepProps> = ({
                                         options={specializations}
                                         value={degree.specialization}
                                         onChange={handleDegreeAutocompleteChange(index, 'specialization')}
+                                        onInputChange={handleDegreeInputChange(index, 'specialization')}
                                         renderInput={(params) => (
                                             <TextField
                                                 {...params}
@@ -202,6 +220,7 @@ const EducationStep: React.FC<EducationStepProps> = ({
                                         options={colleges}
                                         value={degree.college_name}
                                         onChange={handleDegreeAutocompleteChange(index, 'college_name')}
+                                        onInputChange={handleDegreeInputChange(index, 'college_name')}
                                         renderInput={(params) => (
                                             <TextField
                                                 {...params}
