@@ -2,16 +2,16 @@
 
 from typing import List
 from uuid import UUID
-from fastapi import APIRouter, Depends, status, Request
+from fastapi import APIRouter, Depends, status, Request, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.rate_limiter import rate_limit_medium
 from app.api.deps import require_roles
 from app.models.user import User, UserRole
-from app.models.user import User, UserRole
 from app.schemas.candidate import CandidateCreate, CandidateResponse, CandidateUpdate, CandidateListResponse, CandidateStats, CandidatePaginatedResponse
 from app.services.candidate_service import CandidateService
 from app.utils.activity_tracker import log_create, log_update, log_delete
+from app.utils.email import send_registration_emails
 
 
 router = APIRouter(prefix="/candidates", tags=["Candidates"])
@@ -22,6 +22,7 @@ router = APIRouter(prefix="/candidates", tags=["Candidates"])
 async def register_candidate(
     request: Request,
     candidate_in: CandidateCreate,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -30,6 +31,9 @@ async def register_candidate(
     # No auth dependency here - public self-registration
     service = CandidateService(db)
     candidate = await service.create_candidate(candidate_in)
+    
+    # Send registration emails in background
+    background_tasks.add_task(send_registration_emails, candidate)
     
     # Log the registration
     await log_create(
