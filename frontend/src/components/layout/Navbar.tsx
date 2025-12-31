@@ -14,18 +14,29 @@ import { logoutUser } from '../../store/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
 
 import GlobalSearch from './GlobalSearch';
+import NotificationPopover from './NotificationPopover';
+
 const Navbar: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
 	const { user } = useAppSelector((state) => state.auth);
+	const { unreadCount } = useAppSelector((state) => state.notifications);
 	const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-
+	const [notifAnchorEl, setNotifAnchorEl] = React.useState<null | HTMLElement>(null);
 	const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
 		setAnchorEl(event.currentTarget);
 	};
 
+	const handleNotifMenu = (event: React.MouseEvent<HTMLElement>) => {
+		setNotifAnchorEl(event.currentTarget);
+	};
+
 	const handleClose = () => {
 		setAnchorEl(null);
+	};
+
+	const handleNotifClose = () => {
+		setNotifAnchorEl(null);
 	};
 
 	const handleLogout = () => {
@@ -53,16 +64,23 @@ const Navbar: React.FC = () => {
 				<GlobalSearch />
 				<Box sx={{ flexGrow: 1 }} />
 				<Box sx={{ display: 'flex', alignItems: 'center' }}>
+
 					<IconButton
 						size="large"
-						aria-label="You have 4 new notifications"
+						aria-label={`You have ${unreadCount} new notifications`}
 						color="inherit"
+						onClick={handleNotifMenu}
 						sx={{ mr: 1, '&:hover': { backgroundColor: alpha('#ffffff', 0.1) } }}
 					>
-						<Badge badgeContent={4} color="error">
+						<Badge badgeContent={unreadCount} color="error">
 							<NotificationsIcon aria-hidden="true" />
 						</Badge>
 					</IconButton>
+
+					<NotificationPopover
+						anchorEl={notifAnchorEl}
+						onClose={handleNotifClose}
+					/>
 
 					{user && (
 						<Button

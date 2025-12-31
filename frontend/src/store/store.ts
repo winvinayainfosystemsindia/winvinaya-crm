@@ -5,6 +5,7 @@ import candidateReducer from './slices/candidateSlice';
 import activityLogReducer from './slices/activityLogSlice';
 import userReducer from './slices/userSlice';
 import trainingReducer from './slices/trainingSlice';
+import notificationReducer from './slices/notificationSlice';
 
 export const store = configureStore({
 	reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
 		activityLogs: activityLogReducer,
 		users: userReducer,
 		training: trainingReducer,
+		notifications: notificationReducer,
 	},
 });
 
