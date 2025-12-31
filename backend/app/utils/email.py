@@ -13,71 +13,92 @@ logger = logging.getLogger(__name__)
 # Base Style for AWS-like professional emails
 BASE_STYLE = """
     body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         line-height: 1.6;
-        color: #333333;
+        color: #16191f;
         margin: 0;
         padding: 0;
-        background-color: #f9f9f9;
+        background-color: #f2f3f3;
     }
     .container {
         max-width: 600px;
-        margin: 20px auto;
+        margin: 40px auto;
         background: #ffffff;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
+        border-radius: 2px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         overflow: hidden;
     }
     .header {
         background-color: #232f3e;
         color: #ffffff;
-        padding: 20px;
-        text-align: center;
+        padding: 24px 40px;
+        text-align: left;
     }
     .header h1 {
         margin: 0;
-        font-size: 24px;
-        font-weight: 500;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
     }
     .content {
-        padding: 30px;
+        padding: 40px;
     }
     .content h2 {
-        color: #232f3e;
+        color: #16191f;
         margin-top: 0;
+        font-size: 24px;
+        font-weight: 600;
+    }
+    .summary-box {
+        background-color: #f8f9fa;
+        border-left: 4px solid #ff9900;
+        padding: 20px;
+        margin: 25px 0;
     }
     .details-table {
         width: 100%;
         border-collapse: collapse;
-        margin: 20px 0;
+        margin: 25px 0;
     }
     .details-table th, .details-table td {
-        padding: 12px;
+        padding: 14px 10px;
         text-align: left;
-        border-bottom: 1px solid #eeeeee;
+        border-bottom: 1px solid #eaeded;
     }
     .details-table th {
-        background-color: #f8f8f8;
+        color: #545b64;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
         width: 35%;
-        color: #666666;
+    }
+    .details-table td {
+        font-weight: 500;
+        color: #16191f;
     }
     .footer {
-        background-color: #f4f4f4;
-        padding: 20px;
+        background-color: #fafafa;
+        padding: 24px 40px;
         text-align: center;
-        font-size: 12px;
-        color: #888888;
-        border-top: 1px solid #e0e0e0;
+        font-size: 13px;
+        color: #545b64;
+        border-top: 1px solid #eaeded;
+    }
+    .button-container {
+        text-align: center;
+        margin: 35px 0 10px 0;
     }
     .button {
         display: inline-block;
-        padding: 12px 24px;
+        padding: 12px 32px;
         background-color: #ff9900;
-        color: #ffffff;
+        color: #ffffff !important;
         text-decoration: none;
-        border-radius: 4px;
-        font-weight: bold;
-        margin-top: 20px;
+        border-radius: 2px;
+        font-weight: 700;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 """
 
@@ -172,11 +193,11 @@ def get_candidate_template(name: str) -> str:
 def get_sourcing_team_template(candidate: Any) -> str:
     """HTML template for sourcing team notification email"""
     # Extract disability type safely
-    disability_type = "Not specified"
+    disability_type = "N/A"
     if hasattr(candidate, 'disability_details') and candidate.disability_details:
-        disability_type = candidate.disability_details.get('disability_type', "Not specified")
+        disability_type = candidate.disability_details.get('disability_type') or "N/A"
     elif isinstance(candidate, dict) and 'disability_details' in candidate:
-        disability_type = candidate['disability_details'].get('disability_type', "Not specified")
+        disability_type = candidate['disability_details'].get('disability_type') or "N/A"
 
     return f"""
     <!DOCTYPE html>
@@ -189,32 +210,37 @@ def get_sourcing_team_template(candidate: Any) -> str:
     <body>
         <div class="container">
             <div class="header">
-                <h1>New Registration</h1>
+                <h1>NEW CANDIDATE ALERT</h1>
             </div>
             <div class="content">
-                <h2>Candidate Details</h2>
-                <p>A new candidate has just registered on the WinVinaya CRM portal. Here are the registration details:</p>
+                <h2>Registration Details</h2>
+                <p>A new candidate has successfully registered on the WinVinaya CRM portal.</p>
+                
+                <div class="summary-box">
+                    <strong>Action Required:</strong> Please review the candidacy and initiate the screening/counseling workflow.
+                </div>
+
                 <table class="details-table">
                     <tr>
-                        <th>Name</th>
+                        <th>Candidate Name</th>
                         <td>{candidate.name}</td>
                     </tr>
                     <tr>
-                        <th>Email</th>
+                        <th>Email Address</th>
                         <td>{candidate.email}</td>
                     </tr>
                     <tr>
-                        <th>Phone</th>
+                        <th>Phone Number</th>
                         <td>{candidate.phone}</td>
                     </tr>
                     <tr>
-                        <th>Disability Type</th>
+                        <th>Disability Status</th>
                         <td>{disability_type}</td>
                     </tr>
                 </table>
-                <p>Please review the full profile and initiate the screening process in the CRM dashboard.</p>
-                <div style="text-align: center;">
-                    <a href="https://crm.winvinaya.com/candidates" class="button">View in CRM Dashboard</a>
+                
+                <div class="button-container">
+                    <a href="https://crm.winvinaya.com/candidates" class="button">View CRM Dashboard</a>
                 </div>
             </div>
             <div class="footer">
