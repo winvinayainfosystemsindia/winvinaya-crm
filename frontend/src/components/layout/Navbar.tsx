@@ -1,13 +1,19 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, IconButton, Box, Badge, Menu, MenuItem } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import AccountCircle from '@mui/icons-material/AccountCircle';
+import { AppBar, Toolbar, Typography, IconButton, Box, Badge, Menu, MenuItem, Button, Divider, alpha, ListItemIcon, ListItemText } from '@mui/material';
+import {
+	Menu as MenuIcon,
+	Notifications as NotificationsIcon,
+	AccountCircle,
+	KeyboardArrowDown as ArrowDownIcon,
+	ExitToApp as LogoutIcon,
+	Person as ProfileIcon
+} from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { toggleSidebar } from '../../store/slices/uiSlice';
 import { logoutUser } from '../../store/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
 
+import GlobalSearch from './GlobalSearch';
 const Navbar: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
@@ -40,14 +46,18 @@ const Navbar: React.FC = () => {
 				>
 					<MenuIcon aria-hidden="true" />
 				</IconButton>
-				<Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontSize: '1rem', fontWeight: 700 }}>
+				<Typography variant="h6" noWrap component="div" sx={{ display: { xs: 'none', md: 'block' }, fontSize: '1rem', fontWeight: 400, mr: 2 }}>
 					WinVinaya Console
 				</Typography>
+
+				<GlobalSearch />
+				<Box sx={{ flexGrow: 1 }} />
 				<Box sx={{ display: 'flex', alignItems: 'center' }}>
 					<IconButton
 						size="large"
 						aria-label="You have 4 new notifications"
 						color="inherit"
+						sx={{ mr: 1, '&:hover': { backgroundColor: alpha('#ffffff', 0.1) } }}
 					>
 						<Badge badgeContent={4} color="error">
 							<NotificationsIcon aria-hidden="true" />
@@ -55,31 +65,36 @@ const Navbar: React.FC = () => {
 					</IconButton>
 
 					{user && (
-						<Box sx={{ display: { xs: 'none', sm: 'flex' }, flexDirection: 'column', alignItems: 'flex-end', mr: 2 }}>
-							<Typography variant="subtitle2" sx={{ lineHeight: 1.2 }}>
+						<Button
+							color="inherit"
+							onClick={handleMenu}
+							endIcon={<ArrowDownIcon />}
+							sx={{
+								textTransform: 'none',
+								px: 1.5,
+								py: 0.5,
+								height: '40px',
+								borderRadius: '4px',
+								'&:hover': {
+									backgroundColor: alpha('#ffffff', 0.1),
+								},
+								display: 'flex',
+								alignItems: 'center',
+								gap: 1
+							}}
+						>
+							<AccountCircle fontSize="medium" />
+							<Typography variant="subtitle2" sx={{ display: { xs: 'none', sm: 'block' }, fontWeight: 400 }}>
 								{user.full_name || user.username}
 							</Typography>
-							<Typography variant="caption" sx={{ opacity: 0.8 }}>
-								{user.email}
-							</Typography>
-						</Box>
+						</Button>
 					)}
-					<IconButton
-						size="large"
-						edge="end"
-						aria-label="account of current user"
-						aria-controls="menu-appbar"
-						aria-haspopup="true"
-						onClick={handleMenu}
-						color="inherit"
-					>
-						<AccountCircle />
-					</IconButton>
+
 					<Menu
 						id="menu-appbar"
 						anchorEl={anchorEl}
 						anchorOrigin={{
-							vertical: 'top',
+							vertical: 'bottom',
 							horizontal: 'right',
 						}}
 						keepMounted
@@ -89,9 +104,42 @@ const Navbar: React.FC = () => {
 						}}
 						open={Boolean(anchorEl)}
 						onClose={handleClose}
+						PaperProps={{
+							elevation: 4,
+							sx: {
+								width: 280,
+								mt: 1.5,
+								borderRadius: '4px',
+								overflow: 'hidden',
+								'& .MuiList-root': { py: 0 }
+							}
+						}}
 					>
-						<MenuItem onClick={handleClose}>Profile</MenuItem>
-						<MenuItem onClick={handleLogout}>Logout</MenuItem>
+						<Box sx={{ p: 2, backgroundColor: '#f8f9fa' }}>
+							<Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#232f3e', lineHeight: 1.2 }}>
+								{user?.full_name || user?.username}
+							</Typography>
+							<Typography variant="body2" sx={{ color: '#545b64', mt: 0.5 }}>
+								{user?.email}
+							</Typography>
+							<Typography variant="caption" sx={{ display: 'block', mt: 1, textTransform: 'uppercase', fontWeight: 700, color: '#ec7211' }}>
+								{user?.role} Role
+							</Typography>
+						</Box>
+						<Divider />
+						<MenuItem onClick={handleClose} sx={{ py: 1.5 }}>
+							<ListItemIcon>
+								<ProfileIcon fontSize="small" />
+							</ListItemIcon>
+							<ListItemText primary="Account Settings" primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }} />
+						</MenuItem>
+						<Divider />
+						<MenuItem onClick={handleLogout} sx={{ py: 1.5, color: '#d13212' }}>
+							<ListItemIcon>
+								<LogoutIcon fontSize="small" sx={{ color: '#d13212' }} />
+							</ListItemIcon>
+							<ListItemText primary="Sign Out" primaryTypographyProps={{ variant: 'body2', fontWeight: 700 }} />
+						</MenuItem>
 					</Menu>
 				</Box>
 			</Toolbar>
