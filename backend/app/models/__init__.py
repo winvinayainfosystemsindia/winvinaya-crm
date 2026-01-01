@@ -8,6 +8,7 @@ from app.models.candidate_document import CandidateDocument
 from app.models.candidate_counseling import CandidateCounseling
 from app.models.training_batch import TrainingBatch
 from app.models.candidate_allocation import CandidateAllocation
+from app.models.dynamic_field import DynamicField
 
 __all__ = [
     "User",
@@ -20,5 +21,6 @@ __all__ = [
     "CandidateCounseling",
     "TrainingBatch",
     "CandidateAllocation",
+    "DynamicField",
 ]
 
