@@ -10,7 +10,7 @@ from app.models.ticket import Ticket, TicketMessage, TicketStatus, TicketPriorit
 from app.models.user import User, UserRole
 from app.schemas.ticket import Ticket as TicketSchema, TicketCreate, TicketUpdate, TicketMessage as TicketMessageSchema, TicketMessageCreate
 
-router = APIRouter()
+router = APIRouter(prefix="/tickets", tags=["Tickets"])
 
 
 async def generate_ticket_number(db: AsyncSession) -> str:
