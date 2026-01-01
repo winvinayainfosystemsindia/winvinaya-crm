@@ -9,6 +9,7 @@ from app.models.candidate_counseling import CandidateCounseling
 from app.models.training_batch import TrainingBatch
 from app.models.candidate_allocation import CandidateAllocation
 from app.models.dynamic_field import DynamicField
+from app.models.ticket import Ticket, TicketMessage, TicketStatus, TicketPriority, TicketCategory
 
 __all__ = [
     "User",
@@ -22,5 +23,10 @@ __all__ = [
     "TrainingBatch",
     "CandidateAllocation",
     "DynamicField",
+    "Ticket",
+    "TicketMessage",
+    "TicketStatus",
+    "TicketPriority",
+    "TicketCategory",
 ]
 

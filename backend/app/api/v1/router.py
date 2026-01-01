@@ -12,7 +12,8 @@ from app.api.v1.endpoints import (
     analytics,
     training_batches,
     candidate_allocations,
-    settings
+    settings,
+    tickets
 )
 
 
@@ -30,4 +31,5 @@ router.include_router(candidate_counseling.router)
 router.include_router(analytics.router)
 router.include_router(training_batches.router)
 router.include_router(candidate_allocations.router)
-router.include_router(settings.router)
+router.include_router(settings.router, prefix="/settings", tags=["Settings"])
+router.include_router(tickets.router, prefix="/tickets", tags=["Tickets"])
