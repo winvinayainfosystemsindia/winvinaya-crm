@@ -5,6 +5,7 @@ export interface User {
 	full_name?: string;
 	is_active: boolean;
 	is_verified: boolean;
+	is_superuser?: boolean;
 	role: string;
 	created_at: string;
 	updated_at: string;

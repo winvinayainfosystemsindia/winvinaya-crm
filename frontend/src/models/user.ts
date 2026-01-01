@@ -6,6 +6,7 @@ export interface User {
 	full_name: string;
 	is_active: boolean;
 	is_verified: boolean;
+	is_superuser?: boolean;
 	role: 'admin' | 'manager' | 'sourcing' | 'placement' | 'trainer';
 	created_at?: string;
 	updated_at?: string;
