@@ -182,6 +182,24 @@ const ScreeningTab: React.FC<ScreeningTabProps> = ({ candidate }) => {
 								label="Internal Notes"
 								value={screening.others?.comments || 'No internal notes provided'}
 							/>
+
+							{screening.others && Object.keys(screening.others).filter(k => !['willing_for_training', 'ready_to_relocate', 'comments'].includes(k)).length > 0 && (
+								<>
+									<Divider sx={{ my: 3, borderStyle: 'dashed' }} />
+									<Typography variant="caption" sx={{ color: '#545b64', fontWeight: 600, textTransform: 'uppercase', mb: 1.5, display: 'block' }}>
+										Custom Fields
+									</Typography>
+									{Object.entries(screening.others)
+										.filter(([key]) => !['willing_for_training', 'ready_to_relocate', 'comments'].includes(key))
+										.map(([key, value]) => (
+											<InfoRow
+												key={key}
+												label={key.replace(/_/g, ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+												value={Array.isArray(value) ? value.join(', ') : (typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value))}
+											/>
+										))}
+								</>
+							)}
 						</Box>
 					</Box>
 				</Grid>

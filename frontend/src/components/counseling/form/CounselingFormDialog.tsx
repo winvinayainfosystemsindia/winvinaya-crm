@@ -17,12 +17,22 @@ import {
 	Select,
 	FormControl,
 	InputLabel,
-	Autocomplete
+	Autocomplete,
+	Tabs,
+	Tab,
+	CircularProgress,
+	FormLabel,
+	RadioGroup,
+	FormControlLabel,
+	Radio,
+	FormGroup,
+	Checkbox
 } from '@mui/material';
 import { Delete, Add, Close as CloseIcon } from '@mui/icons-material';
 import { useAppSelector } from '../../../store/hooks';
 import type { CandidateCounselingCreate, CounselingSkill, CounselingQuestion } from '../../../models/candidate';
-import { Tabs, Tab } from '@mui/material';
+import { settingsService } from '../../../services/settingsService';
+import type { DynamicField } from '../../../services/settingsService';
 
 const COMMON_SKILLS = [
 	'Communication',
@@ -83,13 +93,17 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 }) => {
 	const user = useAppSelector((state) => state.auth.user);
 	const [tabValue, setTabValue] = useState(0);
+	const [dynamicFields, setDynamicFields] = useState<DynamicField[]>([]);
+	const [loadingFields, setLoadingFields] = useState(false);
+
 	const [formData, setFormData] = useState<CandidateCounselingCreate>({
 		skills: [],
 		feedback: '',
 		questions: [],
 		status: 'pending',
 		counselor_name: '',
-		counseling_date: new Date().toISOString().split('T')[0]
+		counseling_date: new Date().toISOString().split('T')[0],
+		others: {}
 	});
 
 	useEffect(() => {
@@ -100,6 +114,7 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 					...initialData,
 					skills: initialData.skills || [],
 					questions: initialData.questions || [],
+					others: initialData.others || {},
 					counseling_date: initialData.counseling_date ? initialData.counseling_date.split('T')[0] : new Date().toISOString().split('T')[0]
 				});
 			} else {
@@ -114,9 +129,24 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 					questions: defaultQuestions,
 					status: 'pending',
 					counselor_name: user ? (user.full_name || user.username) : '',
-					counseling_date: new Date().toISOString().split('T')[0]
+					counseling_date: new Date().toISOString().split('T')[0],
+					others: {}
 				});
 			}
+
+			// Load dynamic fields
+			const loadDynamicFields = async () => {
+				setLoadingFields(true);
+				try {
+					const fields = await settingsService.getFields('counseling');
+					setDynamicFields(fields);
+				} catch (error) {
+					console.error('Failed to load dynamic fields:', error);
+				} finally {
+					setLoadingFields(false);
+				}
+			};
+			loadDynamicFields();
 		}
 	}, [initialData, open, user]);
 
@@ -126,6 +156,16 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 
 	const handleChange = (field: keyof CandidateCounselingCreate, value: any) => {
 		setFormData((prev) => ({ ...prev, [field]: value }));
+	};
+
+	const handleUpdateOtherField = (name: string, value: any) => {
+		setFormData((prev: any) => ({
+			...prev,
+			others: {
+				...prev.others,
+				[name]: value
+			}
+		}));
 	};
 
 	const handleAddSkill = () => {
@@ -186,6 +226,109 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 		borderRadius: '2px',
 		p: 3,
 		bgcolor: '#ffffff'
+	};
+
+	const renderDynamicFields = () => {
+		if (loadingFields) return <CircularProgress size={24} sx={{ my: 2 }} />;
+		if (dynamicFields.length === 0) return null;
+
+		return (
+			<Box sx={{ mt: 4 }}>
+				<Typography sx={sectionTitleStyle}>Additional Counseling Details</Typography>
+				<Stack spacing={3}>
+					{dynamicFields.map(field => (
+						<Box key={field.id}>
+							{field.field_type === 'text' && (
+								<TextField
+									label={field.label}
+									fullWidth
+									size="small"
+									required={field.is_required}
+									value={formData.others?.[field.name] || ''}
+									onChange={(e) => handleUpdateOtherField(field.name, e.target.value)}
+									sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+								/>
+							)}
+							{field.field_type === 'textarea' && (
+								<TextField
+									label={field.label}
+									fullWidth
+									multiline
+									rows={3}
+									required={field.is_required}
+									value={formData.others?.[field.name] || ''}
+									onChange={(e) => handleUpdateOtherField(field.name, e.target.value)}
+									sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+								/>
+							)}
+							{field.field_type === 'number' && (
+								<TextField
+									label={field.label}
+									fullWidth
+									size="small"
+									type="number"
+									required={field.is_required}
+									value={formData.others?.[field.name] || ''}
+									onChange={(e) => handleUpdateOtherField(field.name, e.target.value)}
+									sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+								/>
+							)}
+							{field.field_type === 'phone_number' && (
+								<TextField
+									label={field.label}
+									fullWidth
+									size="small"
+									required={field.is_required}
+									value={formData.others?.[field.name] || ''}
+									onChange={(e) => handleUpdateOtherField(field.name, e.target.value)}
+									sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+								/>
+							)}
+							{(field.field_type === 'single_choice') && (
+								<FormControl component="fieldset" required={field.is_required}>
+									<FormLabel sx={{ fontSize: '0.875rem', color: '#545b64', fontWeight: 500 }}>{field.label}</FormLabel>
+									<RadioGroup
+										row
+										value={formData.others?.[field.name] || ''}
+										onChange={(e) => handleUpdateOtherField(field.name, e.target.value)}
+									>
+										{field.options?.map(opt => (
+											<FormControlLabel key={opt} value={opt} control={<Radio size="small" />} label={opt} />
+										))}
+									</RadioGroup>
+								</FormControl>
+							)}
+							{field.field_type === 'multiple_choice' && (
+								<FormControl component="fieldset" required={field.is_required}>
+									<FormLabel sx={{ fontSize: '0.875rem', color: '#545b64', fontWeight: 500 }}>{field.label}</FormLabel>
+									<FormGroup row>
+										{field.options?.map(opt => (
+											<FormControlLabel
+												key={opt}
+												control={
+													<Checkbox
+														size="small"
+														checked={(formData.others?.[field.name] || []).includes(opt)}
+														onChange={(e) => {
+															const prev = formData.others?.[field.name] || [];
+															const next = e.target.checked
+																? [...prev, opt]
+																: prev.filter((v: string) => v !== opt);
+															handleUpdateOtherField(field.name, next);
+														}}
+													/>
+												}
+												label={opt}
+											/>
+										))}
+									</FormGroup>
+								</FormControl>
+							)}
+						</Box>
+					))}
+				</Stack>
+			</Box>
+		);
 	};
 
 	return (
@@ -284,6 +427,7 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 															label="Skill Name"
 															size="small"
 															fullWidth
+															required
 															sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
 														/>
 													)}
@@ -402,51 +546,58 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 					</TabPanel>
 
 					<TabPanel value={tabValue} index={2}>
-						<Paper elevation={0} sx={awsPanelStyle}>
-							<Typography sx={sectionTitleStyle}>General Information</Typography>
-							<Grid container spacing={4}>
-								<Grid size={{ xs: 12, md: 6 }}>
-									<TextField
-										label="Counselor Name"
-										fullWidth
-										size="small"
-										variant="outlined"
-										value={formData.counselor_name || ''}
-										onChange={(e) => handleChange('counselor_name', e.target.value)}
-										placeholder="Enter your name"
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
+						<Stack spacing={3}>
+							<Paper elevation={0} sx={awsPanelStyle}>
+								<Typography sx={sectionTitleStyle}>General Information</Typography>
+								<Grid container spacing={4}>
+									<Grid size={{ xs: 12, md: 6 }}>
+										<TextField
+											label="Counselor Name"
+											fullWidth
+											size="small"
+											variant="outlined"
+											value={formData.counselor_name || ''}
+											onChange={(e) => handleChange('counselor_name', e.target.value)}
+											placeholder="Enter your name"
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										/>
+									</Grid>
+									<Grid size={{ xs: 12, md: 6 }}>
+										<TextField
+											label="Date"
+											type="date"
+											size="small"
+											fullWidth
+											variant="outlined"
+											InputLabelProps={{ shrink: true }}
+											value={formData.counseling_date ? formData.counseling_date.split('T')[0] : ''}
+											onChange={(e) => handleChange('counseling_date', e.target.value)}
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										/>
+									</Grid>
+									<Grid size={{ xs: 12, md: 6 }}>
+										<FormControl fullWidth size="small">
+											<InputLabel>Status</InputLabel>
+											<Select
+												value={formData.status || 'pending'}
+												label="Status"
+												onChange={(e) => handleChange('status', e.target.value)}
+												sx={{ borderRadius: '2px' }}
+											>
+												<MenuItem value="pending">Pending</MenuItem>
+												<MenuItem value="selected">Selected</MenuItem>
+												<MenuItem value="rejected">Rejected</MenuItem>
+											</Select>
+										</FormControl>
+									</Grid>
 								</Grid>
-								<Grid size={{ xs: 12, md: 6 }}>
-									<TextField
-										label="Date"
-										type="date"
-										size="small"
-										fullWidth
-										variant="outlined"
-										InputLabelProps={{ shrink: true }}
-										value={formData.counseling_date ? formData.counseling_date.split('T')[0] : ''}
-										onChange={(e) => handleChange('counseling_date', e.target.value)}
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
-								</Grid>
-								<Grid size={{ xs: 12, md: 6 }}>
-									<FormControl fullWidth size="small">
-										<InputLabel>Status</InputLabel>
-										<Select
-											value={formData.status || 'pending'}
-											label="Status"
-											onChange={(e) => handleChange('status', e.target.value)}
-											sx={{ borderRadius: '2px' }}
-										>
-											<MenuItem value="pending">Pending</MenuItem>
-											<MenuItem value="selected">Selected</MenuItem>
-											<MenuItem value="rejected">Rejected</MenuItem>
-										</Select>
-									</FormControl>
-								</Grid>
-							</Grid>
-						</Paper>
+							</Paper>
+
+							{/* Dynamic Fields Section */}
+							<Paper elevation={0} sx={awsPanelStyle}>
+								{renderDynamicFields()}
+							</Paper>
+						</Stack>
 					</TabPanel>
 				</Box>
 			</DialogContent>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Paper, Grid, Typography, Chip, Box, Stack } from '@mui/material';
+import { Paper, Grid, Typography, Chip, Box, Stack, Divider } from '@mui/material';
 import {
 	Psychology as PsychologyIcon,
 	Pending as PendingIcon,
@@ -156,6 +156,22 @@ const CounselingTab: React.FC<CounselingTabProps> = ({ candidate }) => {
 								value={counseling.counseling_date ? format(new Date(counseling.counseling_date), 'MMMM dd, yyyy') : '-'}
 								icon={<EventIcon sx={{ fontSize: 16 }} />}
 							/>
+
+							{counseling.others && Object.keys(counseling.others).length > 0 && (
+								<>
+									<Divider sx={{ my: 2, borderColor: 'rgba(0,0,0,0.05)' }} />
+									<Typography variant="caption" sx={{ color: '#545b64', fontWeight: 700, textTransform: 'uppercase', mb: 1, display: 'block' }}>
+										Additional Details
+									</Typography>
+									{Object.entries(counseling.others).map(([key, value]) => (
+										<InfoRow
+											key={key}
+											label={key.replace(/_/g, ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+											value={Array.isArray(value) ? value.join(', ') : (typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value))}
+										/>
+									))}
+								</>
+							)}
 						</Box>
 					</Grid>
 				</Grid>

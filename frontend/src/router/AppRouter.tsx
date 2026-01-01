@@ -18,6 +18,7 @@ import DocumentCollectionList from '../pages/documents/DocumentCollectionList';
 import DocumentCollection from '../pages/documents/DocumentCollection';
 import CandidateDetail from '../pages/Candidates/CandidateDetail';
 import Reports from '../pages/reports/Reports';
+import Settings from '../pages/settings/Settings';
 
 const AppRouter: React.FC = () => {
 	return (
@@ -37,6 +38,7 @@ const AppRouter: React.FC = () => {
 						<Route path="dashboard" element={<Home />} />
 						<Route path="users" element={<UserManagement />} />
 						<Route path="reports" element={<Reports />} />
+						<Route path="settings" element={<Settings />} />
 
 						<Route path="candidates">
 
