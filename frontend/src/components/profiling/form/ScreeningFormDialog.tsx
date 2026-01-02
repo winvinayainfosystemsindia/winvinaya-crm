@@ -322,7 +322,6 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 							<TabPanel value={tabValue} index={2}>
 								<DocumentsRemarksTab
 									formData={formData}
-									onUpdateField={handleUpdateField}
 									onUpdateOtherField={handleUpdateOtherField}
 									onFileUpload={handleFileUpload}
 									onViewFile={handleViewFile}

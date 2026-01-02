@@ -17,7 +17,7 @@ import {
 import { Close as CloseIcon } from '@mui/icons-material';
 import { useAppSelector, useAppDispatch } from '../../../store/hooks';
 import { fetchFields } from '../../../store/slices/settingsSlice';
-import type { CandidateCounselingCreate, CounselingSkill } from '../../../models/candidate';
+import type { CandidateCounselingCreate } from '../../../models/candidate';
 
 // Tabs
 import SkillAssessmentTab from './tabs/SkillAssessmentTab';

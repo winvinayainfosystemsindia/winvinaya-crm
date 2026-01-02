@@ -26,7 +26,6 @@ import type { DynamicField } from '../../../../services/settingsService';
 
 interface DocumentsRemarksTabProps {
 	formData: any;
-	onUpdateField: (section: string, field: string, value: any) => void;
 	onUpdateOtherField: (name: string, value: any) => void;
 	onFileUpload: (type: string, file: File) => void;
 	onViewFile: (type: string) => void;
@@ -37,7 +36,6 @@ interface DocumentsRemarksTabProps {
 
 const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 	formData,
-	onUpdateField,
 	onUpdateOtherField,
 	onFileUpload,
 	onViewFile,
