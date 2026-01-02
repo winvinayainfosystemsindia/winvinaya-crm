@@ -5,39 +5,24 @@ import {
 	DialogContent,
 	DialogActions,
 	Button,
-	TextField,
-	FormControlLabel,
 	Typography,
 	Box,
-	Stack,
 	Tabs,
 	Tab,
-	Radio,
-	RadioGroup,
-	FormControl,
-	FormLabel,
-	Autocomplete,
-	Chip,
 	IconButton,
-	CircularProgress,
-	Tooltip,
-	Checkbox,
-	FormGroup
+	CircularProgress
 } from '@mui/material';
-import {
-	CloudUpload as CloudUploadIcon,
-	CheckCircle as CheckCircleIcon,
-	RadioButtonUnchecked as UncheckedIcon,
-	Close as CloseIcon,
-	Description as FileIcon,
-	Visibility as ViewIcon
-} from '@mui/icons-material';
-import { useAppDispatch } from '../../../store/hooks';
+import { Close as CloseIcon } from '@mui/icons-material';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { uploadDocument } from '../../../store/slices/candidateSlice';
+import { fetchFields } from '../../../store/slices/settingsSlice';
 import { documentService } from '../../../services/candidateService';
-import { settingsService } from '../../../services/settingsService';
-import type { DynamicField } from '../../../services/settingsService';
 import type { CandidateScreeningCreate } from '../../../models/candidate';
+
+// Tabs
+import BackgroundTrainingTab from './tabs/BackgroundTrainingTab';
+import SkillsTab from './tabs/SkillsTab';
+import DocumentsRemarksTab from './tabs/DocumentsRemarksTab';
 
 interface ScreeningFormDialogProps {
 	open: boolean;
@@ -85,15 +70,13 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 	candidatePublicId,
 	existingDocuments
 }) => {
-	// theme removed as it was unused
 	const dispatch = useAppDispatch();
+	const dynamicFields = useAppSelector(state => state.settings.fields.screening || []);
+	const loadingFields = useAppSelector(state => state.settings.loading);
+
 	const [tabValue, setTabValue] = useState(0);
 	const [uploading, setUploading] = useState<Record<string, boolean>>({});
 	const [viewing, setViewing] = useState<Record<string, boolean>>({});
-	// fileInputRefs removed as they were unused
-
-	const [dynamicFields, setDynamicFields] = useState<DynamicField[]>([]);
-	const [loadingFields, setLoadingFields] = useState(false);
 
 	const [formData, setFormData] = useState<CandidateScreeningCreate>({
 		previous_training: {
@@ -126,8 +109,8 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 	useEffect(() => {
 		if (open) {
 			setTabValue(0);
+			dispatch(fetchFields('screening'));
 
-			// Extract document info from existingDocuments if provided
 			const docMap: Record<string, any> = {};
 			if (existingDocuments) {
 				existingDocuments.forEach(doc => {
@@ -169,7 +152,6 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 					}
 				});
 			} else {
-				// No initial screening, but might have existing documents
 				setFormData({
 					previous_training: {
 						attended_any_training: false,
@@ -198,28 +180,14 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 					}
 				});
 			}
-
-			// Load dynamic fields
-			const loadDynamicFields = async () => {
-				setLoadingFields(true);
-				try {
-					const fields = await settingsService.getFields('screening');
-					setDynamicFields(fields);
-				} catch (error) {
-					console.error('Failed to load dynamic fields:', error);
-				} finally {
-					setLoadingFields(false);
-				}
-			};
-			loadDynamicFields();
 		}
-	}, [initialData, open, existingDocuments]);
+	}, [initialData, open, existingDocuments, dispatch]);
 
 	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
 		setTabValue(newValue);
 	};
 
-	const handleUpdateField = (section: keyof CandidateScreeningCreate, field: string, value: any) => {
+	const handleUpdateField = (section: string, field: string, value: any) => {
 		setFormData((prev: any) => ({
 			...prev,
 			[section]: {
@@ -268,7 +236,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 	};
 
 	const handleViewFile = async (type: string) => {
-		const docId = formData.documents_upload?.[`${type}_id` as keyof Record<string, any>];
+		const docId = (formData.documents_upload as any)?.[`${type}_id`];
 		if (!docId) return;
 
 		setViewing(prev => ({ ...prev, [type]: true }));
@@ -276,7 +244,6 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 			const blob = await documentService.download(docId);
 			const url = URL.createObjectURL(blob);
 			window.open(url, '_blank');
-			// Optionally revoke URL after some time, but keeping it open for the tab
 		} catch (error) {
 			console.error('Failed to download file for preview:', error);
 		} finally {
@@ -287,125 +254,6 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 	const handleSubmit = () => {
 		onSubmit(formData);
 		onClose();
-	};
-
-	const sectionTitleStyle = {
-		fontWeight: 700,
-		fontSize: '0.875rem',
-		color: '#545b64',
-		mb: 2,
-		textTransform: 'uppercase' as const,
-		letterSpacing: '0.025em'
-	};
-
-	const awsPanelStyle = {
-		border: '1px solid #d5dbdb',
-		borderRadius: '2px',
-		p: 3,
-		bgcolor: '#ffffff'
-	};
-
-	const renderDynamicFields = () => {
-		if (loadingFields) return <CircularProgress size={24} sx={{ my: 2 }} />;
-		if (dynamicFields.length === 0) return null;
-
-		return (
-			<Box sx={{ mt: 3 }}>
-				<Typography sx={sectionTitleStyle}>Additional Information</Typography>
-				<Stack spacing={3}>
-					{dynamicFields.map(field => (
-						<Box key={field.id}>
-							{field.field_type === 'text' && (
-								<TextField
-									label={field.label}
-									fullWidth
-									size="small"
-									required={field.is_required}
-									value={formData.others?.[field.name] || ''}
-									onChange={(e) => handleUpdateOtherField(field.name, e.target.value)}
-									sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-								/>
-							)}
-							{field.field_type === 'textarea' && (
-								<TextField
-									label={field.label}
-									fullWidth
-									multiline
-									rows={3}
-									required={field.is_required}
-									value={formData.others?.[field.name] || ''}
-									onChange={(e) => handleUpdateOtherField(field.name, e.target.value)}
-									sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-								/>
-							)}
-							{field.field_type === 'number' && (
-								<TextField
-									label={field.label}
-									fullWidth
-									size="small"
-									type="number"
-									required={field.is_required}
-									value={formData.others?.[field.name] || ''}
-									onChange={(e) => handleUpdateOtherField(field.name, e.target.value)}
-									sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-								/>
-							)}
-							{field.field_type === 'phone_number' && (
-								<TextField
-									label={field.label}
-									fullWidth
-									size="small"
-									required={field.is_required}
-									value={formData.others?.[field.name] || ''}
-									onChange={(e) => handleUpdateOtherField(field.name, e.target.value)}
-									sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-								/>
-							)}
-							{(field.field_type === 'single_choice') && (
-								<FormControl component="fieldset" required={field.is_required}>
-									<FormLabel sx={{ fontSize: '0.875rem', color: '#545b64', fontWeight: 500 }}>{field.label}</FormLabel>
-									<RadioGroup
-										row
-										value={formData.others?.[field.name] || ''}
-										onChange={(e) => handleUpdateOtherField(field.name, e.target.value)}
-									>
-										{field.options?.map(opt => (
-											<FormControlLabel key={opt} value={opt} control={<Radio size="small" />} label={opt} />
-										))}
-									</RadioGroup>
-								</FormControl>
-							)}
-							{field.field_type === 'multiple_choice' && (
-								<FormControl component="fieldset" required={field.is_required}>
-									<FormLabel sx={{ fontSize: '0.875rem', color: '#545b64', fontWeight: 500 }}>{field.label}</FormLabel>
-									<FormGroup row>
-										{field.options?.map(opt => (
-											<FormControlLabel
-												key={opt}
-												control={
-													<Checkbox
-														size="small"
-														checked={(formData.others?.[field.name] || []).includes(opt)}
-														onChange={(e) => {
-															const prev = formData.others?.[field.name] || [];
-															const next = e.target.checked
-																? [...prev, opt]
-																: prev.filter((v: string) => v !== opt);
-															handleUpdateOtherField(field.name, next);
-														}}
-													/>
-												}
-												label={opt}
-											/>
-										))}
-									</FormGroup>
-								</FormControl>
-							)}
-						</Box>
-					))}
-				</Stack>
-			</Box>
-		);
 	};
 
 	return (
@@ -450,206 +298,41 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 				</Box>
 
 				<Box sx={{ p: 3 }}>
-					{/* Tab 1: Background & Training */}
-					<TabPanel value={tabValue} index={0}>
-						<Box sx={awsPanelStyle}>
-							<Typography sx={sectionTitleStyle}>Training Info</Typography>
-							<Stack spacing={3}>
-								<FormControl component="fieldset">
-									<FormLabel sx={{ fontSize: '0.875rem', mb: 1 }}>Have you attended any training previously?</FormLabel>
-									<RadioGroup
-										row
-										value={formData.previous_training?.attended_any_training ? 'yes' : 'no'}
-										onChange={(e) => handleUpdateField('previous_training', 'attended_any_training', e.target.value === 'yes')}
-									>
-										<FormControlLabel value="yes" control={<Radio size="small" />} label="Yes" />
-										<FormControlLabel value="no" control={<Radio size="small" />} label="No" />
-									</RadioGroup>
-								</FormControl>
-
-								{formData.previous_training?.attended_any_training && (
-									<TextField
-										label="Training Details"
-										placeholder="Mention coarse name, institute, etc."
-										fullWidth
-										multiline
-										rows={2}
-										size="small"
-										value={formData.previous_training?.training_details}
-										onChange={(e) => handleUpdateField('previous_training', 'training_details', e.target.value)}
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
-								)}
-
-								<FormControlLabel
-									control={
-										<Checkbox
-											size="small"
-											checked={formData.previous_training?.is_winvinaya_student}
-											onChange={(e) => handleUpdateField('previous_training', 'is_winvinaya_student', e.target.checked)}
-										/>
-									}
-									label={<Typography variant="body2">Are you a WinVinaya Student?</Typography>}
+					{loadingFields && tabValue === 2 ? (
+						<Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+							<CircularProgress size={24} sx={{ color: '#ec7211' }} />
+						</Box>
+					) : (
+						<>
+							<TabPanel value={tabValue} index={0}>
+								<BackgroundTrainingTab
+									formData={formData}
+									onUpdateField={handleUpdateField}
 								/>
-							</Stack>
-						</Box>
-					</TabPanel>
+							</TabPanel>
 
-					{/* Tab 2: Skills */}
-					<TabPanel value={tabValue} index={1}>
-						<Box sx={awsPanelStyle}>
-							<Typography sx={sectionTitleStyle}>Skill Assessment</Typography>
-							<Stack spacing={4}>
-								<Box>
-									<FormLabel sx={{ fontSize: '0.875rem', color: '#545b64', fontWeight: 500, mb: 1, display: 'block' }}>Technical Skills</FormLabel>
-									<Autocomplete
-										multiple
-										freeSolo
-										options={COMMON_SKILLS}
-										value={formData.skills?.technical_skills || []}
-										onChange={(_e, newValue) => handleUpdateField('skills', 'technical_skills', newValue)}
-										renderTags={(value, getTagProps) =>
-											value.map((option, index) => (
-												<Chip variant="outlined" label={option} {...getTagProps({ index })} size="small" sx={{ borderRadius: '2px' }} />
-											))
-										}
-										renderInput={(params) => (
-											<TextField {...params} placeholder="Add skills (e.g. Python, SQL)" size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }} />
-										)}
-									/>
-								</Box>
+							<TabPanel value={tabValue} index={1}>
+								<SkillsTab
+									formData={formData}
+									onUpdateField={handleUpdateField}
+									commonSkills={COMMON_SKILLS}
+								/>
+							</TabPanel>
 
-								<Box>
-									<FormLabel sx={{ fontSize: '0.875rem', color: '#545b64', fontWeight: 500, mb: 1, display: 'block' }}>Soft Skills</FormLabel>
-									<Autocomplete
-										multiple
-										freeSolo
-										options={['Communication', 'Teamwork', 'Punctuality', 'Problem Solving']}
-										value={formData.skills?.soft_skills || []}
-										onChange={(_e, newValue) => handleUpdateField('skills', 'soft_skills', newValue)}
-										renderTags={(value, getTagProps) =>
-											value.map((option, index) => (
-												<Chip variant="outlined" label={option} {...getTagProps({ index })} size="small" sx={{ borderRadius: '2px' }} />
-											))
-										}
-										renderInput={(params) => (
-											<TextField {...params} placeholder="Add soft skills" size="small" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }} />
-										)}
-									/>
-								</Box>
-							</Stack>
-						</Box>
-					</TabPanel>
-
-					{/* Tab 3: Documents & Remarks */}
-					<TabPanel value={tabValue} index={2}>
-						<Stack spacing={3}>
-							<Box sx={awsPanelStyle}>
-								<Typography sx={sectionTitleStyle}>Document Verification</Typography>
-								<Stack spacing={2}>
-									{[
-										{ label: 'Resume', key: 'resume' },
-										{ label: 'Disability Certificate', key: 'disability_certificate' },
-										{ label: 'Degree/Education Certificate', key: 'degree_qualification' }
-									].map((doc) => (
-										<Box key={doc.key} sx={{ borderBottom: '1px solid #eaeded', pb: 2, '&:last-child': { borderBottom: 'none', pb: 0 } }}>
-											<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-												<Typography variant="body2" sx={{ fontWeight: 500 }}>{doc.label}</Typography>
-												{formData.documents_upload?.[doc.key as keyof Record<string, any>] ? (
-													<Stack direction="row" spacing={1} alignItems="center">
-														<Typography variant="caption" sx={{ color: '#1d8102', display: 'flex', alignItems: 'center' }}>
-															<CheckCircleIcon fontSize="inherit" sx={{ mr: 0.5 }} /> Verified
-														</Typography>
-														<Tooltip title="View Document">
-															<IconButton size="small" onClick={() => handleViewFile(doc.key)} disabled={viewing[doc.key]}>
-																{viewing[doc.key] ? <CircularProgress size={16} /> : <ViewIcon fontSize="small" />}
-															</IconButton>
-														</Tooltip>
-													</Stack>
-												) : (
-													<Typography variant="caption" sx={{ color: '#d13212', display: 'flex', alignItems: 'center' }}>
-														<UncheckedIcon fontSize="inherit" sx={{ mr: 0.5 }} /> Pending
-													</Typography>
-												)}
-											</Box>
-
-											<Stack direction="row" spacing={2} alignItems="center">
-												<Button
-													component="label"
-													variant="outlined"
-													size="small"
-													startIcon={uploading[doc.key] ? <CircularProgress size={16} color="inherit" /> : <CloudUploadIcon />}
-													disabled={uploading[doc.key]}
-													sx={{ textTransform: 'none', borderRadius: '2px', borderColor: '#d5dbdb', color: '#545b64' }}
-												>
-													{uploading[doc.key] ? 'Uploading...' : 'Upload File'}
-													<input
-														type="file"
-														hidden
-														onChange={(e) => {
-															if (e.target.files?.[0]) handleFileUpload(doc.key, e.target.files[0]);
-														}}
-													/>
-												</Button>
-												{formData.documents_upload?.[`${doc.key}_filename` as keyof Record<string, any>] && (
-													<Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
-														<FileIcon fontSize="inherit" sx={{ mr: 0.5 }} />
-														{formData.documents_upload[`${doc.key}_filename` as keyof Record<string, any>]}
-													</Typography>
-												)}
-											</Stack>
-										</Box>
-									))}
-								</Stack>
-							</Box>
-
-							{/* Dynamic Fields Section */}
-							{renderDynamicFields()}
-
-							<Box sx={awsPanelStyle}>
-								<Typography sx={sectionTitleStyle}>Final Verdict</Typography>
-								<Stack spacing={3}>
-									<Stack direction="row" spacing={4}>
-										<FormControl component="fieldset">
-											<FormLabel sx={{ fontSize: '0.875rem', mb: 1 }}>Willing for Training?</FormLabel>
-											<RadioGroup
-												row
-												value={formData.others?.willing_for_training ? 'yes' : 'no'}
-												onChange={(e) => handleUpdateOtherField('willing_for_training', e.target.value === 'yes')}
-											>
-												<FormControlLabel value="yes" control={<Radio size="small" />} label="Yes" />
-												<FormControlLabel value="no" control={<Radio size="small" />} label="No" />
-											</RadioGroup>
-										</FormControl>
-
-										<FormControl component="fieldset">
-											<FormLabel sx={{ fontSize: '0.875rem', mb: 1 }}>Ready to Relocate?</FormLabel>
-											<RadioGroup
-												row
-												value={formData.others?.ready_to_relocate ? 'yes' : 'no'}
-												onChange={(e) => handleUpdateOtherField('ready_to_relocate', e.target.value === 'yes')}
-											>
-												<FormControlLabel value="yes" control={<Radio size="small" />} label="Yes" />
-												<FormControlLabel value="no" control={<Radio size="small" />} label="No" />
-											</RadioGroup>
-										</FormControl>
-									</Stack>
-
-									<TextField
-										label="Screening Comments"
-										placeholder="Add any additional observations..."
-										fullWidth
-										multiline
-										rows={3}
-										size="small"
-										value={formData.others?.comments}
-										onChange={(e) => handleUpdateOtherField('comments', e.target.value)}
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
-								</Stack>
-							</Box>
-						</Stack>
-					</TabPanel>
+							<TabPanel value={tabValue} index={2}>
+								<DocumentsRemarksTab
+									formData={formData}
+									onUpdateField={handleUpdateField}
+									onUpdateOtherField={handleUpdateOtherField}
+									onFileUpload={handleFileUpload}
+									onViewFile={handleViewFile}
+									uploading={uploading}
+									viewing={viewing}
+									dynamicFields={dynamicFields}
+								/>
+							</TabPanel>
+						</>
+					)}
 				</Box>
 			</DialogContent>
 

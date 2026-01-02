@@ -5,46 +5,28 @@ import {
 	DialogContent,
 	DialogActions,
 	Button,
-	TextField,
 	Typography,
 	Box,
 	Stack,
-	MenuItem,
 	IconButton,
-	Paper,
-	Divider,
-	Grid,
-	Select,
-	FormControl,
-	InputLabel,
-	Autocomplete,
 	Tabs,
 	Tab,
 	CircularProgress,
-	FormLabel,
-	RadioGroup,
-	FormControlLabel,
-	Radio,
-	FormGroup,
-	Checkbox
+	Divider
 } from '@mui/material';
-import { Delete, Add, Close as CloseIcon } from '@mui/icons-material';
-import { useAppSelector } from '../../../store/hooks';
-import type { CandidateCounselingCreate, CounselingSkill, CounselingQuestion } from '../../../models/candidate';
-import { settingsService } from '../../../services/settingsService';
-import type { DynamicField } from '../../../services/settingsService';
+import { Close as CloseIcon } from '@mui/icons-material';
+import { useAppSelector, useAppDispatch } from '../../../store/hooks';
+import { fetchFields } from '../../../store/slices/settingsSlice';
+import type { CandidateCounselingCreate, CounselingSkill } from '../../../models/candidate';
+
+// Tabs
+import SkillAssessmentTab from './tabs/SkillAssessmentTab';
+import InterviewFeedbackTab from './tabs/InterviewFeedbackTab';
+import CounselingInfoTab from './tabs/CounselingInfoTab';
 
 const COMMON_SKILLS = [
-	'Communication',
-	'Computer Basics',
-	'Typing',
-	'English',
-	'MS Excel',
-	'MS Word',
-	'MS PowerPoint',
-	'Data Entry',
-	'Accounting',
-	'Tally'
+	'Communication', 'Computer Basics', 'Typing', 'English', 'MS Excel',
+	'MS Word', 'MS PowerPoint', 'Data Entry', 'Accounting', 'Tally'
 ];
 
 const PREDEFINED_QUESTIONS = [
@@ -91,10 +73,12 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 	initialData,
 	candidateName
 }) => {
+	const dispatch = useAppDispatch();
 	const user = useAppSelector((state) => state.auth.user);
+	const dynamicFields = useAppSelector(state => state.settings.fields.counseling || []);
+	const loadingFields = useAppSelector(state => state.settings.loading);
+
 	const [tabValue, setTabValue] = useState(0);
-	const [dynamicFields, setDynamicFields] = useState<DynamicField[]>([]);
-	const [loadingFields, setLoadingFields] = useState(false);
 
 	const [formData, setFormData] = useState<CandidateCounselingCreate>({
 		skills: [],
@@ -109,6 +93,8 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 	useEffect(() => {
 		if (open) {
 			setTabValue(0);
+			dispatch(fetchFields('counseling'));
+
 			if (initialData) {
 				setFormData({
 					...initialData,
@@ -118,8 +104,7 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 					counseling_date: initialData.counseling_date ? initialData.counseling_date.split('T')[0] : new Date().toISOString().split('T')[0]
 				});
 			} else {
-				// Initialize with empty questions
-				const defaultQuestions: CounselingQuestion[] = PREDEFINED_QUESTIONS.map(q => ({
+				const defaultQuestions = PREDEFINED_QUESTIONS.map(q => ({
 					question: q,
 					answer: ''
 				}));
@@ -133,28 +118,14 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 					others: {}
 				});
 			}
-
-			// Load dynamic fields
-			const loadDynamicFields = async () => {
-				setLoadingFields(true);
-				try {
-					const fields = await settingsService.getFields('counseling');
-					setDynamicFields(fields);
-				} catch (error) {
-					console.error('Failed to load dynamic fields:', error);
-				} finally {
-					setLoadingFields(false);
-				}
-			};
-			loadDynamicFields();
 		}
-	}, [initialData, open, user]);
+	}, [initialData, open, user, dispatch]);
 
 	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
 		setTabValue(newValue);
 	};
 
-	const handleChange = (field: keyof CandidateCounselingCreate, value: any) => {
+	const handleChange = (field: string, value: any) => {
 		setFormData((prev) => ({ ...prev, [field]: value }));
 	};
 
@@ -179,15 +150,15 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 		handleChange('skills', newSkills);
 	};
 
-	const handleSkillChange = (index: number, field: keyof CounselingSkill, value: string) => {
-		const newSkills = [...(formData.skills || [])];
+	const handleSkillChange = (index: number, field: string, value: any) => {
+		const newSkills: any = [...(formData.skills || [])];
 		newSkills[index] = { ...newSkills[index], [field]: value };
 		handleChange('skills', newSkills);
 	};
 
-	const handleQuestionChange = (index: number, value: string) => {
-		const newQuestions = [...(formData.questions || [])];
-		newQuestions[index] = { ...newQuestions[index], answer: value };
+	const handleQuestionChange = (index: number, field: string, value: string) => {
+		const newQuestions: any = [...(formData.questions || [])];
+		newQuestions[index] = { ...newQuestions[index], [field]: value };
 		handleChange('questions', newQuestions);
 	};
 
@@ -211,126 +182,6 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 		onClose();
 	};
 
-	// Professional AWS-like styles
-	const sectionTitleStyle = {
-		fontWeight: 700,
-		fontSize: '0.875rem',
-		color: '#545b64',
-		mb: 2,
-		textTransform: 'uppercase' as const,
-		letterSpacing: '0.025em'
-	};
-
-	const awsPanelStyle = {
-		border: '1px solid #d5dbdb',
-		borderRadius: '2px',
-		p: 3,
-		bgcolor: '#ffffff'
-	};
-
-	const renderDynamicFields = () => {
-		if (loadingFields) return <CircularProgress size={24} sx={{ my: 2 }} />;
-		if (dynamicFields.length === 0) return null;
-
-		return (
-			<Box sx={{ mt: 4 }}>
-				<Typography sx={sectionTitleStyle}>Additional Counseling Details</Typography>
-				<Stack spacing={3}>
-					{dynamicFields.map(field => (
-						<Box key={field.id}>
-							{field.field_type === 'text' && (
-								<TextField
-									label={field.label}
-									fullWidth
-									size="small"
-									required={field.is_required}
-									value={formData.others?.[field.name] || ''}
-									onChange={(e) => handleUpdateOtherField(field.name, e.target.value)}
-									sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-								/>
-							)}
-							{field.field_type === 'textarea' && (
-								<TextField
-									label={field.label}
-									fullWidth
-									multiline
-									rows={3}
-									required={field.is_required}
-									value={formData.others?.[field.name] || ''}
-									onChange={(e) => handleUpdateOtherField(field.name, e.target.value)}
-									sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-								/>
-							)}
-							{field.field_type === 'number' && (
-								<TextField
-									label={field.label}
-									fullWidth
-									size="small"
-									type="number"
-									required={field.is_required}
-									value={formData.others?.[field.name] || ''}
-									onChange={(e) => handleUpdateOtherField(field.name, e.target.value)}
-									sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-								/>
-							)}
-							{field.field_type === 'phone_number' && (
-								<TextField
-									label={field.label}
-									fullWidth
-									size="small"
-									required={field.is_required}
-									value={formData.others?.[field.name] || ''}
-									onChange={(e) => handleUpdateOtherField(field.name, e.target.value)}
-									sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-								/>
-							)}
-							{(field.field_type === 'single_choice') && (
-								<FormControl component="fieldset" required={field.is_required}>
-									<FormLabel sx={{ fontSize: '0.875rem', color: '#545b64', fontWeight: 500 }}>{field.label}</FormLabel>
-									<RadioGroup
-										row
-										value={formData.others?.[field.name] || ''}
-										onChange={(e) => handleUpdateOtherField(field.name, e.target.value)}
-									>
-										{field.options?.map(opt => (
-											<FormControlLabel key={opt} value={opt} control={<Radio size="small" />} label={opt} />
-										))}
-									</RadioGroup>
-								</FormControl>
-							)}
-							{field.field_type === 'multiple_choice' && (
-								<FormControl component="fieldset" required={field.is_required}>
-									<FormLabel sx={{ fontSize: '0.875rem', color: '#545b64', fontWeight: 500 }}>{field.label}</FormLabel>
-									<FormGroup row>
-										{field.options?.map(opt => (
-											<FormControlLabel
-												key={opt}
-												control={
-													<Checkbox
-														size="small"
-														checked={(formData.others?.[field.name] || []).includes(opt)}
-														onChange={(e) => {
-															const prev = formData.others?.[field.name] || [];
-															const next = e.target.checked
-																? [...prev, opt]
-																: prev.filter((v: string) => v !== opt);
-															handleUpdateOtherField(field.name, next);
-														}}
-													/>
-												}
-												label={opt}
-											/>
-										))}
-									</FormGroup>
-								</FormControl>
-							)}
-						</Box>
-					))}
-				</Stack>
-			</Box>
-		);
-	};
-
 	return (
 		<Dialog
 			open={open}
@@ -349,11 +200,11 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 			<DialogTitle sx={{ bgcolor: '#232f3e', color: '#ffffff', py: 2 }}>
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
 					<Box>
-						<Typography variant="h6" sx={{ fontSize: '1.25rem' }}>
+						<Typography variant="h6" sx={{ fontSize: '1.25rem', fontWeight: 700 }}>
 							{initialData ? 'Edit Candidate Counseling' : 'New Candidate Counseling'}
 						</Typography>
 						{candidateName && (
-							<Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }}>
+							<Typography variant="caption" sx={{ color: '#aab7b8' }}>
 								{candidateName}
 							</Typography>
 						)}
@@ -389,216 +240,42 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 				</Box>
 
 				<Box sx={{ px: 4, py: 2 }}>
-					<TabPanel value={tabValue} index={0}>
-						<Paper elevation={0} sx={awsPanelStyle}>
-							<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-								<Typography sx={{ ...sectionTitleStyle, mb: 0 }}>Skills Assessment</Typography>
-								<Button
-									variant="outlined"
-									size="small"
-									startIcon={<Add />}
-									onClick={handleAddSkill}
-									sx={{
-										borderRadius: '2px',
-										textTransform: 'none',
-										borderColor: '#d5dbdb',
-										color: '#16191f',
-										'&:hover': { bgcolor: '#f2f3f3', borderColor: '#545b64' }
-									}}
-								>
-									Add Skill
-								</Button>
-							</Box>
-							<Divider sx={{ mb: 3 }} />
-							{formData.skills && formData.skills.length > 0 ? (
-								<Stack spacing={2}>
-									{formData.skills.map((skill, index) => (
-										<Grid container spacing={2} key={index} alignItems="center">
-											<Grid size={{ xs: 12, md: 6 }}>
-												<Autocomplete
-													freeSolo
-													options={COMMON_SKILLS}
-													value={skill.name}
-													onChange={(_e, val) => handleSkillChange(index, 'name', val || '')}
-													onInputChange={(_e, val) => handleSkillChange(index, 'name', val)}
-													renderInput={(params) => (
-														<TextField
-															{...params}
-															label="Skill Name"
-															size="small"
-															fullWidth
-															required
-															sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-														/>
-													)}
-												/>
-											</Grid>
-											<Grid size={{ xs: 10, md: 5 }}>
-												<FormControl fullWidth size="small">
-													<InputLabel>Level</InputLabel>
-													<Select
-														value={skill.level}
-														label="Level"
-														onChange={(e) => handleSkillChange(index, 'level', e.target.value as any)}
-														sx={{ borderRadius: '2px' }}
-													>
-														<MenuItem value="Beginner">Beginner</MenuItem>
-														<MenuItem value="Intermediate">Intermediate</MenuItem>
-														<MenuItem value="Advanced">Advanced</MenuItem>
-													</Select>
-												</FormControl>
-											</Grid>
-											<Grid size={{ xs: 2, md: 1 }}>
-												<IconButton color="error" size="small" onClick={() => handleRemoveSkill(index)}>
-													<Delete fontSize="small" />
-												</IconButton>
-											</Grid>
-										</Grid>
-									))}
-								</Stack>
-							) : (
-								<Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', py: 1 }}>
-									No skills added yet. Click 'Add Skill' to start assessment.
-								</Typography>
-							)}
-						</Paper>
-					</TabPanel>
-
-					<TabPanel value={tabValue} index={1}>
-						<Stack spacing={3}>
-							<Paper elevation={0} sx={awsPanelStyle}>
-								<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-									<Typography sx={{ ...sectionTitleStyle, mb: 0 }}>Interview & Questions</Typography>
-									<Button
-										variant="outlined"
-										size="small"
-										startIcon={<Add />}
-										onClick={handleAddQuestion}
-										sx={{
-											borderRadius: '2px',
-											textTransform: 'none',
-											borderColor: '#d5dbdb',
-											color: '#16191f',
-											'&:hover': { bgcolor: '#f2f3f3', borderColor: '#545b64' }
-										}}
-									>
-										Add Custom Question
-									</Button>
-								</Box>
-								<Divider sx={{ mb: 3 }} />
-								<Stack spacing={3}>
-									{formData.questions?.map((q, index) => (
-										<Box key={index}>
-											<Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1, alignItems: 'center' }}>
-												<TextField
-													variant="standard"
-													fullWidth
-													placeholder="Question"
-													value={q.question}
-													onChange={(e) => {
-														const newQs = [...(formData.questions || [])];
-														newQs[index].question = e.target.value;
-														handleChange('questions', newQs);
-													}}
-													InputProps={{
-														disableUnderline: q.question !== '',
-														sx: { fontWeight: 600, fontSize: '0.875rem', color: '#16191f' }
-													}}
-												/>
-												<IconButton size="small" onClick={() => handleRemoveQuestion(index)} sx={{ ml: 1 }}>
-													<Delete fontSize="small" />
-												</IconButton>
-											</Box>
-											<TextField
-												multiline
-												rows={2}
-												fullWidth
-												size="small"
-												variant="outlined"
-												value={q.answer}
-												onChange={(e) => handleQuestionChange(index, e.target.value)}
-												placeholder="Enter candidate's response..."
-												sx={{
-													'& .MuiOutlinedInput-root': { borderRadius: '2px', bgcolor: '#fafafa' }
-												}}
-											/>
-										</Box>
-									))}
-								</Stack>
-							</Paper>
-
-							<Paper elevation={0} sx={awsPanelStyle}>
-								<Typography sx={sectionTitleStyle}>Training/Placement Recommendation</Typography>
-								<TextField
-									multiline
-									rows={4}
-									fullWidth
-									variant="outlined"
-									value={formData.feedback || ''}
-									onChange={(e) => handleChange('feedback', e.target.value)}
-									placeholder="Summarize your observations and recommended suitable training path..."
-									sx={{
-										'& .MuiOutlinedInput-root': { borderRadius: '2px', bgcolor: '#fafafa' }
-									}}
+					{loadingFields && tabValue === 2 ? (
+						<Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+							<CircularProgress size={24} sx={{ color: '#ec7211' }} />
+						</Box>
+					) : (
+						<>
+							<TabPanel value={tabValue} index={0}>
+								<SkillAssessmentTab
+									formData={formData}
+									onAddSkill={handleAddSkill}
+									onRemoveSkill={handleRemoveSkill}
+									onSkillChange={handleSkillChange}
+									commonSkills={COMMON_SKILLS}
 								/>
-							</Paper>
-						</Stack>
-					</TabPanel>
+							</TabPanel>
 
-					<TabPanel value={tabValue} index={2}>
-						<Stack spacing={3}>
-							<Paper elevation={0} sx={awsPanelStyle}>
-								<Typography sx={sectionTitleStyle}>General Information</Typography>
-								<Grid container spacing={4}>
-									<Grid size={{ xs: 12, md: 6 }}>
-										<TextField
-											label="Counselor Name"
-											fullWidth
-											size="small"
-											variant="outlined"
-											value={formData.counselor_name || ''}
-											onChange={(e) => handleChange('counselor_name', e.target.value)}
-											placeholder="Enter your name"
-											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-										/>
-									</Grid>
-									<Grid size={{ xs: 12, md: 6 }}>
-										<TextField
-											label="Date"
-											type="date"
-											size="small"
-											fullWidth
-											variant="outlined"
-											InputLabelProps={{ shrink: true }}
-											value={formData.counseling_date ? formData.counseling_date.split('T')[0] : ''}
-											onChange={(e) => handleChange('counseling_date', e.target.value)}
-											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-										/>
-									</Grid>
-									<Grid size={{ xs: 12, md: 6 }}>
-										<FormControl fullWidth size="small">
-											<InputLabel>Status</InputLabel>
-											<Select
-												value={formData.status || 'pending'}
-												label="Status"
-												onChange={(e) => handleChange('status', e.target.value)}
-												sx={{ borderRadius: '2px' }}
-											>
-												<MenuItem value="pending">Pending</MenuItem>
-												<MenuItem value="selected">Selected</MenuItem>
-												<MenuItem value="rejected">Rejected</MenuItem>
-											</Select>
-										</FormControl>
-									</Grid>
-								</Grid>
-							</Paper>
+							<TabPanel value={tabValue} index={1}>
+								<InterviewFeedbackTab
+									formData={formData}
+									onAddQuestion={handleAddQuestion}
+									onRemoveQuestion={handleRemoveQuestion}
+									onQuestionChange={handleQuestionChange}
+									onFeedbackChange={(val) => handleChange('feedback', val)}
+								/>
+							</TabPanel>
 
-							{/* Dynamic Fields Section */}
-							<Paper elevation={0} sx={awsPanelStyle}>
-								{renderDynamicFields()}
-							</Paper>
-						</Stack>
-					</TabPanel>
+							<TabPanel value={tabValue} index={2}>
+								<CounselingInfoTab
+									formData={formData}
+									onFieldChange={handleChange}
+									onUpdateOtherField={handleUpdateOtherField}
+									dynamicFields={dynamicFields}
+								/>
+							</TabPanel>
+						</>
+					)}
 				</Box>
 			</DialogContent>
 
@@ -607,7 +284,7 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 				<Button
 					onClick={onClose}
 					variant="text"
-					sx={{ color: '#16191f', fontWeight: 700, px: 3, textTransform: 'none' }}
+					sx={{ color: '#545b64', fontWeight: 700, px: 3, textTransform: 'none' }}
 				>
 					Cancel
 				</Button>
