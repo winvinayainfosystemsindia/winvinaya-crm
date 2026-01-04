@@ -8,6 +8,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import StatCard from '../components/dashboard/StatCard';
 import RecentActivity from '../components/dashboard/RecentActivity';
 import SystemStatus from '../components/dashboard/SystemStatus';
+import RegistrationLinkModal from '../components/dashboard/RegistrationLinkModal';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { fetchCandidates } from '../store/slices/candidateSlice';
 
@@ -21,9 +22,12 @@ const Home: React.FC = () => {
 
 	return (
 		<Box component="main" sx={{ p: { xs: 1, sm: 0 } }}>
-			<Typography variant="h5" component="h1" sx={{ mb: 3, fontWeight: 700, color: '#16191f' }}>
-				Dashboard
-			</Typography>
+			<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+				<Typography variant="h5" component="h1" sx={{ fontWeight: 700, color: '#16191f' }}>
+					Dashboard
+				</Typography>
+				<RegistrationLinkModal />
+			</Box>
 
 
 			<Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mb: 4 }}>
