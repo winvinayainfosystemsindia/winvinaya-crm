@@ -10,6 +10,11 @@ from app.models.candidate import Candidate
 from app.models.candidate_screening import CandidateScreening
 from app.models.candidate_counseling import CandidateCounseling
 from app.models.candidate_document import CandidateDocument
+from app.models.activity_log import ActivityLog
+from app.models.candidate_allocation import CandidateAllocation
+from app.models.training_batch import TrainingBatch
+from app.models.dynamic_field import DynamicField
+from app.models.ticket import Ticket
 
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
@@ -24,20 +29,16 @@ async def get_analytics_dump(
     """
     
     # Fetch all data asynchronously
-    users_result = await db.execute(select(User))
-    users = users_result.scalars().all()
-
-    candidates_result = await db.execute(select(Candidate))
-    candidates = candidates_result.scalars().all()
-
-    screenings_result = await db.execute(select(CandidateScreening))
-    candidate_screenings = screenings_result.scalars().all()
-
-    counseling_result = await db.execute(select(CandidateCounseling))
-    candidate_counselings = counseling_result.scalars().all()
-    
-    documents_result = await db.execute(select(CandidateDocument))
-    candidate_documents = documents_result.scalars().all()
+    users = (await db.execute(select(User))).scalars().all()
+    candidates = (await db.execute(select(Candidate))).scalars().all()
+    candidate_screenings = (await db.execute(select(CandidateScreening))).scalars().all()
+    candidate_counselings = (await db.execute(select(CandidateCounseling))).scalars().all()
+    candidate_documents = (await db.execute(select(CandidateDocument))).scalars().all()
+    activity_logs = (await db.execute(select(ActivityLog))).scalars().all()
+    candidate_allocations = (await db.execute(select(CandidateAllocation))).scalars().all()
+    training_batches = (await db.execute(select(TrainingBatch))).scalars().all()
+    dynamic_fields = (await db.execute(select(DynamicField))).scalars().all()
+    tickets = (await db.execute(select(Ticket))).scalars().all()
     
     # Convert to JSON-friendly format
     return {
@@ -46,6 +47,11 @@ async def get_analytics_dump(
         "candidate_screenings": jsonable_encoder(candidate_screenings),
         "candidate_counselings": jsonable_encoder(candidate_counselings),
         "candidate_documents": jsonable_encoder(candidate_documents),
+        "activity_logs": jsonable_encoder(activity_logs),
+        "candidate_allocations": jsonable_encoder(candidate_allocations),
+        "training_batches": jsonable_encoder(training_batches),
+        "dynamic_fields": jsonable_encoder(dynamic_fields),
+        "tickets": jsonable_encoder(tickets),
     }
 
 
@@ -60,20 +66,16 @@ async def export_db_for_power_bi(
     """
     
     # Fetch all data asynchronously
-    users_result = await db.execute(select(User))
-    users_data = users_result.scalars().all()
-
-    candidates_result = await db.execute(select(Candidate))
-    candidates_data = candidates_result.scalars().all()
-
-    screenings_result = await db.execute(select(CandidateScreening))
-    screenings_data = screenings_result.scalars().all()
-
-    counseling_result = await db.execute(select(CandidateCounseling))
-    counselings_data = counseling_result.scalars().all()
-    
-    documents_result = await db.execute(select(CandidateDocument))
-    documents_data = documents_result.scalars().all()
+    users_data = (await db.execute(select(User))).scalars().all()
+    candidates_data = (await db.execute(select(Candidate))).scalars().all()
+    screenings_data = (await db.execute(select(CandidateScreening))).scalars().all()
+    counselings_data = (await db.execute(select(CandidateCounseling))).scalars().all()
+    documents_data = (await db.execute(select(CandidateDocument))).scalars().all()
+    activity_logs_data = (await db.execute(select(ActivityLog))).scalars().all()
+    allocations_data = (await db.execute(select(CandidateAllocation))).scalars().all()
+    batches_data = (await db.execute(select(TrainingBatch))).scalars().all()
+    fields_data = (await db.execute(select(DynamicField))).scalars().all()
+    tickets_data = (await db.execute(select(Ticket))).scalars().all()
     
     # Convert to JSON-friendly format
     return {
@@ -82,6 +84,11 @@ async def export_db_for_power_bi(
         "candidate_screenings": jsonable_encoder(screenings_data),
         "candidate_counselings": jsonable_encoder(counselings_data),
         "candidate_documents": jsonable_encoder(documents_data),
+        "activity_logs": jsonable_encoder(activity_logs_data),
+        "candidate_allocations": jsonable_encoder(allocations_data),
+        "training_batches": jsonable_encoder(batches_data),
+        "dynamic_fields": jsonable_encoder(fields_data),
+        "tickets": jsonable_encoder(tickets_data),
     }
 
 
@@ -104,6 +111,11 @@ async def export_table_for_power_bi(
         "screenings": CandidateScreening,
         "counselings": CandidateCounseling,
         "documents": CandidateDocument,
+        "activity_logs": ActivityLog,
+        "allocations": CandidateAllocation,
+        "batches": TrainingBatch,
+        "fields": DynamicField,
+        "tickets": Ticket,
     }
     
     if table_name not in model_map:
@@ -117,6 +129,7 @@ async def export_table_for_power_bi(
     data = result.scalars().all()
     
     return jsonable_encoder(data)
+
 @router.get("/sourcing-overview")
 async def get_sourcing_overview(
     db: AsyncSession = Depends(deps.get_db),
