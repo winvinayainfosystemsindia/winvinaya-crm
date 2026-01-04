@@ -1,7 +1,7 @@
 """User Pydantic schemas for validation"""
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, EmailStr, Field, validator
 from app.models.user import UserRole
 
@@ -101,4 +101,7 @@ class PaginatedResponse(BaseModel):
     page: int
     page_size: int
     total_pages: int
-    items: list
+    items: List[UserResponse]
+
+    class Config:
+        from_attributes = True

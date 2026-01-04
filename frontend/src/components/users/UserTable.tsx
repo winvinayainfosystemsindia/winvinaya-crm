@@ -23,7 +23,7 @@ import {
 	CircularProgress
 } from '@mui/material';
 
-import { Search, Add, Edit, Visibility } from '@mui/icons-material';
+import { Search, Add, Edit, Visibility, Delete } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { useAppSelector } from '../../store/hooks';
 import userService from '../../services/userService';
@@ -33,9 +33,10 @@ interface UserTableProps {
 	onAddUser?: () => void;
 	onEditUser?: (user: User) => void;
 	onViewUser?: (user: User) => void;
+	onDeleteUser?: (user: User) => void;
 }
 
-const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser }) => {
+const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser, onDeleteUser }) => {
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const isMedium = useMediaQuery(theme.breakpoints.down('md'));
@@ -55,8 +56,8 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 		setLoading(true);
 		try {
 			const response = await userService.getAll(page * rowsPerPage, rowsPerPage);
-			setUsers(response);
-			setTotalCount(response.length + (page * rowsPerPage));
+			setUsers(response.items);
+			setTotalCount(response.total);
 		} catch (error) {
 			console.error('Failed to fetch users:', error);
 		} finally {
@@ -264,7 +265,7 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 											color={getRoleColor(user.role)}
 											size="small"
 											variant={'outlined'}
-											sx={{ fontWeight: 600, fontSize: '0.75rem' }}
+											sx={{ fontWeight: 600, borderRadius: 0, fontSize: '0.75rem' }}
 											aria-label={`Role: ${user.role}`}
 										/>
 									</TableCell>
@@ -274,7 +275,7 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 											color={user.is_active ? 'success' : 'default'}
 											size="small"
 											variant={user.is_active ? 'filled' : 'outlined'}
-											sx={{ fontWeight: 600, fontSize: '0.75rem', minWidth: 70 }}
+											sx={{ fontWeight: 600, borderRadius: 0, fontSize: '0.75rem', minWidth: 70 }}
 											aria-label={`Status: ${user.is_active ? 'Active' : 'Inactive'}`}
 										/>
 									</TableCell>
@@ -298,18 +299,32 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 												<Visibility fontSize="small" />
 											</IconButton>
 											{currentUser?.role === 'admin' && (
-												<IconButton
-													size="small"
-													onClick={() => onEditUser?.(user)}
-													aria-label={`Edit ${user.full_name || user.username}`}
-													title="Edit User"
-													sx={{
-														color: 'text.secondary',
-														'&:hover': { color: 'warning.main' }
-													}}
-												>
-													<Edit fontSize="small" />
-												</IconButton>
+												<>
+													<IconButton
+														size="small"
+														onClick={() => onEditUser?.(user)}
+														aria-label={`Edit ${user.full_name || user.username}`}
+														title="Edit User"
+														sx={{
+															color: 'text.secondary',
+															'&:hover': { color: 'warning.main' }
+														}}
+													>
+														<Edit fontSize="small" />
+													</IconButton>
+													<IconButton
+														size="small"
+														onClick={() => onDeleteUser?.(user)}
+														aria-label={`Delete ${user.full_name || user.username}`}
+														title="Delete User"
+														sx={{
+															color: 'text.secondary',
+															'&:hover': { color: 'error.main' }
+														}}
+													>
+														<Delete fontSize="small" />
+													</IconButton>
+												</>
 											)}
 										</Box>
 									</TableCell>

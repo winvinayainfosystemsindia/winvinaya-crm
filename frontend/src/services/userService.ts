@@ -4,8 +4,8 @@ import type { User, UserCreate, UserUpdate } from '../models/user';
 
 const userService = {
     // Get all users with pagination
-    getAll: async (skip = 0, limit = 100): Promise<User[]> => {
-        const response = await api.get<User[]>('/users/', {
+    getAll: async (skip = 0, limit = 100): Promise<{ items: User[], total: number }> => {
+        const response = await api.get<{ items: User[], total: number }>('/users/', {
             params: { skip, limit }
         });
         return response.data;

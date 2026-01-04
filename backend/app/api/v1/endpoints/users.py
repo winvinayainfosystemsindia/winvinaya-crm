@@ -7,7 +7,7 @@ from app.core.database import get_db
 from app.core.rate_limiter import rate_limit_medium
 from app.api.deps import get_current_user, require_roles
 from app.models.user import User, UserRole
-from app.schemas.user import UserResponse, UserUpdate, PaginationParams, UserCreate
+from app.schemas.user import UserResponse, UserUpdate, PaginationParams, UserCreate, PaginatedResponse
 from app.services.user_service import UserService
 from app.utils.activity_tracker import log_update, log_delete, log_create
 from loguru import logger
@@ -92,13 +92,19 @@ async def get_user_stats(
     """
     logger.info(f"Fetching user stats by {current_user.role.value} {current_user.email}")
     
-    from sqlalchemy import select, func
-    from app.models.user import User
+    user_service = UserService(db)
     
     # Get total count
-    total_query = select(func.count(User.id)).where(User.is_deleted == False)
-    total_result = await db.execute(total_query)
-    total = total_result.scalar() or 0
+    total = await user_service.repository.count()
+    
+    # Get active count
+    from sqlalchemy import select, func
+    active_query = select(func.count(User.id)).where(
+        User.is_deleted == False,
+        User.is_active == True
+    )
+    active_result = await db.execute(active_query)
+    active = active_result.scalar() or 0
     
     # Get count by role
     role_query = select(User.role, func.count(User.id)).where(
@@ -106,14 +112,6 @@ async def get_user_stats(
     ).group_by(User.role)
     role_result = await db.execute(role_query)
     role_counts = {role.value: count for role, count in role_result.all()}
-    
-    # Get active/inactive counts
-    active_query = select(func.count(User.id)).where(
-        User.is_deleted == False,
-        User.is_active == True
-    )
-    active_result = await db.execute(active_query)
-    active = active_result.scalar() or 0
     
     inactive = total - active
     
@@ -160,7 +158,7 @@ async def create_user(
     return user
 
 
-@router.get("/", response_model=List[UserResponse])
+@router.get("/", response_model=PaginatedResponse)
 @rate_limit_medium()
 async def get_users(
     request: Request,
@@ -180,7 +178,16 @@ async def get_users(
     user_service = UserService(db)
     users = await user_service.get_users(skip=skip, limit=limit)
     
-    return users
+    # Get total count for pagination
+    total = await user_service.repository.count()
+    
+    return PaginatedResponse(
+        items=users,
+        total=total,
+        page=(skip // limit) + 1,
+        page_size=limit,
+        total_pages=(total + limit - 1) // limit
+    )
 
 
 @router.get("/{user_id}", response_model=UserResponse)

@@ -13,6 +13,7 @@ class UserRole(str, enum.Enum):
     SOURCING = "sourcing"
     PLACEMENT = "placement"
     TRAINER = "trainer"
+    COUNSELOR = "counselor"
 
 
 class User(BaseModel):
