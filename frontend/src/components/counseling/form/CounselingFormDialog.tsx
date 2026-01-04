@@ -204,9 +204,7 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 							{initialData ? 'Edit Candidate Counseling' : 'New Candidate Counseling'}
 						</Typography>
 						{candidateName && (
-							<Typography variant="caption" sx={{ color: '#aab7b8' }}>
-								{candidateName}
-							</Typography>
+							<Typography variant="caption" sx={{ fontSize: '1rem', color: '#aab7b8' }}>Name: {candidateName}</Typography>
 						)}
 					</Box>
 					<IconButton onClick={onClose} sx={{ color: '#ffffff' }}>

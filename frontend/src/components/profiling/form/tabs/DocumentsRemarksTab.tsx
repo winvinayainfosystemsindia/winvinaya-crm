@@ -4,22 +4,23 @@ import {
 	Typography,
 	Stack,
 	Button,
-	IconButton,
-	Tooltip,
 	CircularProgress,
 	TextField,
 	FormControl,
 	FormLabel,
 	RadioGroup,
 	FormControlLabel,
-	Radio
+	Radio,
+	Paper,
+	Divider,
+	Chip
 } from '@mui/material';
 import {
 	CloudUpload as CloudUploadIcon,
 	CheckCircle as CheckCircleIcon,
-	RadioButtonUnchecked as UncheckedIcon,
-	Description as FileIcon,
-	Visibility as ViewIcon
+	Visibility as ViewIcon,
+	DeleteOutline as DeleteIcon,
+	ErrorOutline as ErrorIcon
 } from '@mui/icons-material';
 import DynamicFieldRenderer from '../../../common/DynamicFieldRenderer';
 import type { DynamicField } from '../../../../services/settingsService';
@@ -29,6 +30,7 @@ interface DocumentsRemarksTabProps {
 	onUpdateOtherField: (name: string, value: any) => void;
 	onFileUpload: (type: string, file: File) => void;
 	onViewFile: (type: string) => void;
+	onRemoveFile: (type: string) => void;
 	uploading: Record<string, boolean>;
 	viewing: Record<string, boolean>;
 	dynamicFields: DynamicField[];
@@ -39,101 +41,202 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 	onUpdateOtherField,
 	onFileUpload,
 	onViewFile,
+	onRemoveFile,
 	uploading,
 	viewing,
 	dynamicFields
 }) => {
-	const sectionTitleStyle = {
-		fontWeight: 700,
-		fontSize: '0.875rem',
-		color: '#545b64',
-		mb: 2,
-		textTransform: 'uppercase' as const,
-		letterSpacing: '0.025em'
-	};
 
-	const awsPanelStyle = {
-		border: '1px solid #d5dbdb',
-		borderRadius: '2px',
-		p: 3,
-		bgcolor: '#ffffff'
+	const renderDocumentItem = (label: string, key: string) => {
+		const isUploaded = formData.documents_upload?.[key];
+		const fileName = (formData.documents_upload as any)?.[`${key}_filename`];
+		const isUploading = uploading[key];
+		const isViewing = viewing[key];
+
+		return (
+			<Paper
+				elevation={0}
+				sx={{
+					p: 2,
+					border: '1px solid',
+					borderColor: isUploaded ? '#879596' : '#d5dbdb',
+					bgcolor: isUploaded ? '#fafffa' : '#ffffff',
+					borderRadius: 0,
+					display: 'flex',
+					flexDirection: 'column',
+					gap: 2
+				}}
+			>
+				<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+					<Box>
+						<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e' }}>
+							{label}
+						</Typography>
+						{isUploaded ? (
+							<Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+								<CheckCircleIcon sx={{ fontSize: 16, color: '#1d8102' }} />
+								<Typography variant="caption" sx={{ color: '#1d8102', fontWeight: 600 }}>
+									Uploaded
+								</Typography>
+								<Typography variant="caption" sx={{ color: '#545b64' }}>
+									• {fileName}
+								</Typography>
+							</Stack>
+						) : (
+							<Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+								<ErrorIcon sx={{ fontSize: 16, color: '#545b64' }} />
+								<Typography variant="caption" sx={{ color: '#545b64' }}>
+									No document uploaded
+								</Typography>
+							</Stack>
+						)}
+					</Box>
+					<Box>
+						{isUploaded ? (
+							<Chip
+								label="Verified"
+								size="small"
+								sx={{
+									bgcolor: '#dff3d8',
+									color: '#1d8102',
+									borderRadius: 0,
+									fontWeight: 700,
+									fontSize: '0.75rem',
+									border: '1px solid #cce8c5'
+								}}
+							/>
+						) : (
+							<Chip
+								label="Required"
+								size="small"
+								sx={{
+									bgcolor: '#f2f3f3',
+									color: '#545b64',
+									borderRadius: 0,
+									fontWeight: 700,
+									fontSize: '0.75rem',
+									border: '1px solid #d5dbdb'
+								}}
+							/>
+						)}
+					</Box>
+				</Box>
+
+				<Divider sx={{ borderColor: '#eaeded' }} />
+
+				<Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+					<Button
+						component="label"
+						variant="outlined"
+						size="small"
+						disabled={isUploading}
+						startIcon={isUploading ? <CircularProgress size={16} /> : <CloudUploadIcon />}
+						sx={{
+							textTransform: 'none',
+							fontWeight: 700,
+							color: '#545b64',
+							border: '1px solid #d5dbdb',
+							borderRadius: 0,
+							'&:hover': { bgcolor: '#f2f3f3', borderColor: '#879596' }
+						}}
+					>
+						{isUploading ? 'Uploading...' : (isUploaded ? 'Replace File' : 'Choose File')}
+						<input
+							type="file"
+							hidden
+							onChange={(e) => {
+								if (e.target.files?.[0]) onFileUpload(key, e.target.files[0]);
+							}}
+						/>
+					</Button>
+
+					{isUploaded && (
+						<>
+							<Button
+								variant="outlined"
+								size="small"
+								startIcon={isViewing ? <CircularProgress size={16} /> : <ViewIcon />}
+								onClick={() => onViewFile(key)}
+								disabled={isViewing}
+								sx={{
+									textTransform: 'none',
+									fontWeight: 700,
+									color: '#545b64',
+									border: '1px solid #d5dbdb',
+									borderRadius: 0,
+									'&:hover': { bgcolor: '#f2f3f3', borderColor: '#879596' }
+								}}
+							>
+								View
+							</Button>
+							<Button
+								variant="outlined"
+								size="small"
+								startIcon={<DeleteIcon />}
+								onClick={() => onRemoveFile(key)}
+								sx={{
+									textTransform: 'none',
+									fontWeight: 700,
+									color: '#d91d11',
+									border: '1px solid #d5dbdb',
+									borderRadius: 0,
+									'&:hover': { bgcolor: '#fdf3f2', borderColor: '#d91d11' }
+								}}
+							>
+								Remove
+							</Button>
+						</>
+					)}
+				</Box>
+			</Paper>
+		);
 	};
 
 	return (
-		<Stack spacing={3}>
-			<Box sx={awsPanelStyle}>
-				<Typography sx={sectionTitleStyle}>Document Verification</Typography>
-				<Stack spacing={2}>
-					{[
-						{ label: 'Resume', key: 'resume' },
-						{ label: 'Disability Certificate', key: 'disability_certificate' },
-						{ label: 'Degree/Education Certificate', key: 'degree_qualification' }
-					].map((doc) => (
-						<Box key={doc.key} sx={{ borderBottom: '1px solid #eaeded', pb: 2, '&:last-child': { borderBottom: 'none', pb: 0 } }}>
-							<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-								<Typography variant="body2" sx={{ fontWeight: 500 }}>{doc.label}</Typography>
-								{formData.documents_upload?.[doc.key] ? (
-									<Stack direction="row" spacing={1} alignItems="center">
-										<Typography variant="caption" sx={{ color: '#1d8102', display: 'flex', alignItems: 'center' }}>
-											<CheckCircleIcon fontSize="inherit" sx={{ mr: 0.5 }} /> Verified
-										</Typography>
-										<Tooltip title="View Document">
-											<IconButton size="small" onClick={() => onViewFile(doc.key)} disabled={viewing[doc.key]}>
-												{viewing[doc.key] ? <CircularProgress size={16} /> : <ViewIcon fontSize="small" />}
-											</IconButton>
-										</Tooltip>
-									</Stack>
-								) : (
-									<Typography variant="caption" sx={{ color: '#d13212', display: 'flex', alignItems: 'center' }}>
-										<UncheckedIcon fontSize="inherit" sx={{ mr: 0.5 }} /> Pending
-									</Typography>
-								)}
-							</Box>
+		<Stack spacing={4}>
+			{/* Document Verification Section */}
+			<Box>
+				<Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#232f3e', mb: 2 }}>
+					Document Verification
+				</Typography>
+				<Typography variant="body2" sx={{ color: '#545b64', mb: 2 }}>
+					Upload and verify required candidate documents. Accepted formats: PDF, JPG, PNG (Max 5MB).
+				</Typography>
 
-							<Stack direction="row" spacing={2} alignItems="center">
-								<Button
-									component="label"
-									variant="outlined"
-									size="small"
-									startIcon={uploading[doc.key] ? <CircularProgress size={16} color="inherit" /> : <CloudUploadIcon />}
-									disabled={uploading[doc.key]}
-									sx={{ textTransform: 'none', borderRadius: '2px', borderColor: '#d5dbdb', color: '#545b64' }}
-								>
-									{uploading[doc.key] ? 'Uploading...' : 'Upload File'}
-									<input
-										type="file"
-										hidden
-										onChange={(e) => {
-											if (e.target.files?.[0]) onFileUpload(doc.key, e.target.files[0]);
-										}}
-									/>
-								</Button>
-								{(formData.documents_upload as any)?.[`${doc.key}_filename`] && (
-									<Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
-										<FileIcon fontSize="inherit" sx={{ mr: 0.5 }} />
-										{(formData.documents_upload as any)[`${doc.key}_filename`]}
-									</Typography>
-								)}
-							</Stack>
-						</Box>
-					))}
-				</Stack>
+				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+					{renderDocumentItem('Resume', 'resume')}
+					{renderDocumentItem('Disability Certificate', 'disability_certificate')}
+					{renderDocumentItem('Degree / Education Certificate', 'degree_qualification')}
+				</Box>
 			</Box>
 
-			<Box sx={awsPanelStyle}>
-				<DynamicFieldRenderer
-					fields={dynamicFields}
-					formData={formData.others}
-					onUpdateField={onUpdateOtherField}
-				/>
-			</Box>
+			{/* Additional Fields Section */}
+			{dynamicFields.length > 0 && (
+				<Box>
+					<Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#232f3e', mb: 2 }}>
+						Additional Information
+					</Typography>
+					<Paper elevation={0} sx={{ p: 3, border: '1px solid #d5dbdb', borderRadius: 0 }}>
+						<DynamicFieldRenderer
+							fields={dynamicFields}
+							formData={formData.others}
+							onUpdateField={onUpdateOtherField}
+						/>
+					</Paper>
+				</Box>
+			)}
 
-			<Box sx={awsPanelStyle}>
-				<Typography sx={sectionTitleStyle}>Final Verdict</Typography>
-				<Stack spacing={3}>
-					<Stack direction="row" spacing={4}>
+			{/* Final Verdict Section */}
+			<Box>
+				<Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#232f3e', mb: 2 }}>
+					Final Verdict & Comments
+				</Typography>
+				<Paper elevation={0} sx={{ p: 3, border: '1px solid #d5dbdb', borderRadius: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+					<Stack direction={{ xs: 'column', sm: 'row' }} spacing={4}>
 						<FormControl component="fieldset">
-							<FormLabel sx={{ fontSize: '0.875rem', mb: 1, color: '#545b64', fontWeight: 500 }}>Willing for Training?</FormLabel>
+							<FormLabel sx={{ fontSize: '0.875rem', mb: 0.5, color: '#232f3e', fontWeight: 600 }}>
+								Willing for Training?
+							</FormLabel>
 							<RadioGroup
 								row
 								value={formData.others?.willing_for_training ? 'yes' : 'no'}
@@ -153,7 +256,9 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 						</FormControl>
 
 						<FormControl component="fieldset">
-							<FormLabel sx={{ fontSize: '0.875rem', mb: 1, color: '#545b64', fontWeight: 500 }}>Ready to Relocate?</FormLabel>
+							<FormLabel sx={{ fontSize: '0.875rem', mb: 0.5, color: '#232f3e', fontWeight: 600 }}>
+								Ready to Relocate?
+							</FormLabel>
 							<RadioGroup
 								row
 								value={formData.others?.ready_to_relocate ? 'yes' : 'no'}
@@ -173,18 +278,29 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 						</FormControl>
 					</Stack>
 
-					<TextField
-						label="Screening Comments"
-						placeholder="Add any additional observations..."
-						fullWidth
-						multiline
-						rows={3}
-						size="small"
-						value={formData.others?.comments}
-						onChange={(e) => onUpdateOtherField('comments', e.target.value)}
-						sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-					/>
-				</Stack>
+					<Box>
+						<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 1 }}>
+							Screening Comments
+						</Typography>
+						<TextField
+							placeholder="Add detailed observations, strengths, and areas for improvement..."
+							fullWidth
+							multiline
+							minRows={3}
+							size="small"
+							value={formData.others?.comments}
+							onChange={(e) => onUpdateOtherField('comments', e.target.value)}
+							sx={{
+								'& .MuiOutlinedInput-root': {
+									borderRadius: 0,
+									'& fieldset': { borderColor: '#d5dbdb' },
+									'&:hover fieldset': { borderColor: '#879596' },
+									'&.Mui-focused fieldset': { borderColor: '#ec7211' }
+								}
+							}}
+						/>
+					</Box>
+				</Paper>
 			</Box>
 		</Stack>
 	);

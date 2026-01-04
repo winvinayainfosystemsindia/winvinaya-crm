@@ -251,6 +251,18 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 		}
 	};
 
+	const handleRemoveFile = (type: string) => {
+		setFormData((prev: any) => ({
+			...prev,
+			documents_upload: {
+				...prev.documents_upload,
+				[type]: false,
+				[`${type}_filename`]: '',
+				[`${type}_id`]: null
+			}
+		}));
+	};
+
 	const handleSubmit = () => {
 		onSubmit(formData);
 		onClose();
@@ -267,7 +279,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 			<DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: '#232f3e', color: '#ffffff', py: 2 }}>
 				<Box>
 					<Typography variant="h6" sx={{ fontWeight: 700 }}>Candidate Screening</Typography>
-					<Typography variant="caption" sx={{ color: '#aab7b8' }}>{candidateName || 'New Candidate'}</Typography>
+					<Typography variant="caption" sx={{ fontSize: '1rem', color: '#aab7b8' }}>Name: {candidateName || 'New Candidate'}</Typography>
 				</Box>
 				<IconButton onClick={onClose} size="small" sx={{ color: '#ffffff' }}>
 					<CloseIcon />
@@ -325,6 +337,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 									onUpdateOtherField={handleUpdateOtherField}
 									onFileUpload={handleFileUpload}
 									onViewFile={handleViewFile}
+									onRemoveFile={handleRemoveFile}
 									uploading={uploading}
 									viewing={viewing}
 									dynamicFields={dynamicFields}
