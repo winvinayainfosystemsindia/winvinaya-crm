@@ -330,23 +330,6 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onEditCandidate, onView
 						onClearFilters={clearFilters}
 						onApplyFilters={applyFilters}
 					/>
-					{/* <Button
-						variant="contained"
-						startIcon={<Add />}
-						onClick={onAddCandidate}
-						sx={{
-							bgcolor: '#ec7211',
-							color: 'white',
-							textTransform: 'none',
-							fontWeight: 600,
-							px: { xs: 1, sm: 2 },
-							'&:hover': {
-								bgcolor: '#eb5f07',
-							}
-						}}
-					>
-						Add Candidate
-					</Button> */}
 				</Box>
 			</Box>
 

@@ -94,11 +94,8 @@ const CandidateDetail: React.FC = () => {
 				<Box sx={{ bgcolor: '#232f3e', color: 'white', px: 3, py: 2 }}>
 					<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
 						<Box>
-							<Typography variant="h4" sx={{ fontWeight: 600, fontSize: '1.75rem', mb: 0.5 }}>
+							<Typography variant="h4" sx={{ fontWeight: 500, fontSize: '1.75rem', mb: 0.5 }}>
 								{candidate.name}
-							</Typography>
-							<Typography variant="body2" sx={{ color: '#aab7b8', fontStyle: 'italic' }}>
-								ID: {candidate.public_id}
 							</Typography>
 						</Box>
 						<Stack direction="row" spacing={1.5}>
