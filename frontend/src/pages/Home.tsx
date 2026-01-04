@@ -36,13 +36,13 @@ const Home: React.FC = () => {
 					/>
 				</Grid>
 				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-					<StatCard title="Active Interviews" count="45" icon={<WorkIcon fontSize="large" />} color="#ed6c02" />
+					<StatCard title="Active Interviews" count="0" icon={<WorkIcon fontSize="large" />} color="#ed6c02" />
 				</Grid>
 				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-					<StatCard title="Partner Companies" count="86" icon={<BusinessIcon fontSize="large" />} color="#2e7d32" />
+					<StatCard title="Partner Companies" count="0" icon={<BusinessIcon fontSize="large" />} color="#2e7d32" />
 				</Grid>
 				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-					<StatCard title="Total Placements" count="312" icon={<CheckCircleIcon fontSize="large" />} color="#9c27b0" />
+					<StatCard title="Total Placements" count="0" icon={<CheckCircleIcon fontSize="large" />} color="#9c27b0" />
 				</Grid>
 			</Grid>
 
