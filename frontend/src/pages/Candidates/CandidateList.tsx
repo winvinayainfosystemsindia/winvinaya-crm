@@ -36,12 +36,6 @@ const CandidateList: React.FC = () => {
 		docs_pending: 0
 	};
 
-	const handleAddCandidate = () => {
-		// For now, navigate to the existing registration page
-		// Or ideally open a dialog for admin creation
-		navigate('/candidate-registration');
-	};
-
 	const handleEditCandidate = (id: string) => {
 		console.log('Edit candidate', id);
 		// TODO: Implement edit functionality or navigation
@@ -77,7 +71,6 @@ const CandidateList: React.FC = () => {
 
 				{/* Candidate Table */}
 				<CandidateTable
-					onAddCandidate={handleAddCandidate}
 					onEditCandidate={handleEditCandidate}
 					onViewCandidate={handleViewCandidate}
 				/>

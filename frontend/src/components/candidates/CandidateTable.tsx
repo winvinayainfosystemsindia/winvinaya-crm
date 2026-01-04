@@ -23,7 +23,7 @@ import {
 	TableSortLabel,
 	Badge
 } from '@mui/material';
-import { Search, Add, Edit, Visibility, Accessible, FilterList, Refresh } from '@mui/icons-material';
+import { Search, Edit, Visibility, Accessible, FilterList, Refresh } from '@mui/icons-material';
 import {
 	CircularProgress,
 	Stack
@@ -36,12 +36,11 @@ import FilterDrawer, { type FilterField } from '../common/FilterDrawer';
 import candidateService from '../../services/candidateService';
 
 interface CandidateTableProps {
-	onAddCandidate?: () => void;
 	onEditCandidate?: (candidateId: string) => void;
 	onViewCandidate?: (candidateId: string) => void;
 }
 
-const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditCandidate, onViewCandidate }) => {
+const CandidateTable: React.FC<CandidateTableProps> = ({ onEditCandidate, onViewCandidate }) => {
 	const theme = useTheme();
 	const dispatch = useAppDispatch();
 	const { list: candidates, loading, total: totalCount } = useAppSelector((state) => state.candidates);
@@ -331,7 +330,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 						onClearFilters={clearFilters}
 						onApplyFilters={applyFilters}
 					/>
-					<Button
+					{/* <Button
 						variant="contained"
 						startIcon={<Add />}
 						onClick={onAddCandidate}
@@ -347,7 +346,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onAddCandidate, onEditC
 						}}
 					>
 						Add Candidate
-					</Button>
+					</Button> */}
 				</Box>
 			</Box>
 
