@@ -361,8 +361,13 @@ const Sidebar: React.FC = () => {
 						<ListItem disablePadding>
 							<ListItemButton
 								selected={isActive('/settings')}
-								onClick={() => handleNavigate('/settings')}
-								sx={{ py: 0.5 }}
+								onClick={() => user?.role === 'admin' && handleNavigate('/settings')}
+								disabled={user?.role !== 'admin'}
+								sx={{
+									py: 0.5,
+									opacity: user?.role !== 'admin' ? 0.6 : 1,
+									cursor: user?.role !== 'admin' ? 'not-allowed' : 'pointer'
+								}}
 								aria-current={isActive('/settings') ? 'page' : undefined}
 							>
 								<ListItemIcon sx={{ minWidth: 40, color: isActive('/settings') ? 'primary.main' : '#5f6368' }}>
@@ -376,6 +381,7 @@ const Sidebar: React.FC = () => {
 										color: isActive('/settings') ? 'primary.main' : '#202124'
 									}}
 								/>
+								{user?.role !== 'admin' && <LockIcon sx={{ fontSize: 16, color: 'text.disabled' }} aria-hidden="true" />}
 							</ListItemButton>
 						</ListItem>
 
