@@ -51,6 +51,7 @@ const CounselingInfoTab: React.FC<CounselingInfoTabProps> = ({
 						<TextField
 							label="Counselor Name"
 							fullWidth
+							disabled
 							size="small"
 							variant="outlined"
 							value={formData.counselor_name || ''}
@@ -63,6 +64,7 @@ const CounselingInfoTab: React.FC<CounselingInfoTabProps> = ({
 						<TextField
 							label="Date"
 							type="date"
+							disabled
 							size="small"
 							fullWidth
 							variant="outlined"
