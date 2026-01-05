@@ -4,12 +4,14 @@ import type { User } from '../../models/user';
 
 interface UserState {
 	users: User[];
+	totalCount: number;
 	loading: boolean;
 	error: string | null;
 }
 
 const initialState: UserState = {
 	users: [],
+	totalCount: 0,
 	loading: false,
 	error: null,
 };
@@ -41,9 +43,10 @@ const userSlice = createSlice({
 				state.loading = true;
 				state.error = null;
 			})
-			.addCase(fetchUsers.fulfilled, (state, action: PayloadAction<User[]>) => {
+			.addCase(fetchUsers.fulfilled, (state, action: PayloadAction<{ items: User[]; total: number }>) => {
 				state.loading = false;
-				state.users = action.payload;
+				state.users = action.payload.items;
+				state.totalCount = action.payload.total;
 			})
 			.addCase(fetchUsers.rejected, (state, action: PayloadAction<any>) => {
 				state.loading = false;
