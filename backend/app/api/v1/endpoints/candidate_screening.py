@@ -29,7 +29,7 @@ async def create_candidate_screening(
     request: Request,
     public_id: UUID,
     screening_in: CandidateScreeningCreate,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.SOURCING])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.SOURCING, UserRole.MANAGER])),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -60,7 +60,7 @@ async def update_candidate_screening(
     request: Request,
     public_id: UUID,
     screening_in: CandidateScreeningUpdate,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.SOURCING])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.SOURCING, UserRole.MANAGER])),
     db: AsyncSession = Depends(get_db)
 ):
     """
