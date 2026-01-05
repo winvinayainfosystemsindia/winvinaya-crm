@@ -189,12 +189,12 @@ const Sidebar: React.FC = () => {
 									sx={{
 										pl: 9,
 										py: 0.5,
-										opacity: !['admin', 'sourcing'].includes(user?.role || '') ? 0.6 : 1,
-										cursor: !['admin', 'sourcing'].includes(user?.role || '') ? 'not-allowed' : 'pointer'
+										opacity: !['admin', 'sourcing', 'manager'].includes(user?.role || '') ? 0.6 : 1,
+										cursor: !['admin', 'sourcing', 'manager'].includes(user?.role || '') ? 'not-allowed' : 'pointer'
 									}}
 									selected={isActive('/candidates/screening')}
-									onClick={() => ['admin', 'sourcing'].includes(user?.role || '') && handleNavigate('/candidates/screening')}
-									disabled={!['admin', 'sourcing'].includes(user?.role || '')}
+									onClick={() => ['admin', 'sourcing', 'manager'].includes(user?.role || '') && handleNavigate('/candidates/screening')}
+									disabled={!['admin', 'sourcing', 'manager'].includes(user?.role || '')}
 								>
 									<ListItemText
 										primary="Screening"
@@ -212,12 +212,12 @@ const Sidebar: React.FC = () => {
 									sx={{
 										pl: 9,
 										py: 0.5,
-										opacity: !['admin', 'trainer'].includes(user?.role || '') ? 0.6 : 1,
-										cursor: !['admin', 'trainer'].includes(user?.role || '') ? 'not-allowed' : 'pointer'
+										opacity: !['admin', 'trainer', 'manager'].includes(user?.role || '') ? 0.6 : 1,
+										cursor: !['admin', 'trainer', 'manager'].includes(user?.role || '') ? 'not-allowed' : 'pointer'
 									}}
 									selected={isActive('/candidates/counseling')}
-									onClick={() => ['admin', 'trainer'].includes(user?.role || '') && handleNavigate('/candidates/counseling')}
-									disabled={!['admin', 'trainer'].includes(user?.role || '')}
+									onClick={() => ['admin', 'trainer', 'manager'].includes(user?.role || '') && handleNavigate('/candidates/counseling')}
+									disabled={!['admin', 'trainer', 'manager'].includes(user?.role || '')}
 								>
 									<ListItemText
 										primary="Counseling"
@@ -235,12 +235,12 @@ const Sidebar: React.FC = () => {
 									sx={{
 										pl: 9,
 										py: 0.5,
-										opacity: !['admin', 'sourcing'].includes(user?.role || '') ? 0.6 : 1,
-										cursor: !['admin', 'sourcing'].includes(user?.role || '') ? 'not-allowed' : 'pointer'
+										opacity: !['admin', 'sourcing', 'manager'].includes(user?.role || '') ? 0.6 : 1,
+										cursor: !['admin', 'sourcing', 'manager'].includes(user?.role || '') ? 'not-allowed' : 'pointer'
 									}}
 									selected={isActive('/candidates/documents')}
-									onClick={() => ['admin', 'sourcing'].includes(user?.role || '') && handleNavigate('/candidates/documents')}
-									disabled={!['admin', 'sourcing'].includes(user?.role || '')}
+									onClick={() => ['admin', 'sourcing', 'manager'].includes(user?.role || '') && handleNavigate('/candidates/documents')}
+									disabled={!['admin', 'sourcing', 'manager'].includes(user?.role || '')}
 									aria-current={isActive('/candidates/documents') ? 'page' : undefined}
 								>
 									<ListItemText
