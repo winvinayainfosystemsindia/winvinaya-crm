@@ -122,10 +122,23 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                         value={formData.dob}
                         onChange={handleChange('dob')}
                         variant="outlined"
-                        InputLabelProps={{ shrink: true }}
                         autoComplete="bday"
+                        InputLabelProps={{ shrink: true }}
+                        inputProps={{
+                            'aria-label': 'Date of Birth',
+                            'aria-describedby': 'dob-helper',
+                        }}
+                        helperText="You can type the date or use the calendar"
+                        FormHelperTextProps={{ id: 'dob-helper' }}
+                        sx={{
+                            '& input': {
+                                fontSize: '1.1rem',       // bigger text
+                                padding: '14px',          // larger touch target
+                            }
+                        }}
                     />
                 </Grid>
+
 
                 <Grid size={{ xs: 12 }}>
                     <Divider sx={{ my: 2 }} />
