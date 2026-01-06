@@ -8,7 +8,7 @@ from app.core.database import get_db
 from app.core.rate_limiter import rate_limit_medium
 from app.api.deps import require_roles
 from app.models.user import User, UserRole
-from app.schemas.candidate import CandidateCreate, CandidateResponse, CandidateUpdate, CandidateListResponse, CandidateStats, CandidatePaginatedResponse
+from app.schemas.candidate import CandidateCreate, CandidateResponse, CandidateUpdate, CandidateListResponse, CandidateStats, CandidatePaginatedResponse, CandidateCheck
 from app.services.candidate_service import CandidateService
 from app.utils.activity_tracker import log_create, log_update, log_delete
 from app.utils.email import send_registration_emails
@@ -46,6 +46,26 @@ async def register_candidate(
     )
     
     return candidate
+
+
+@router.post("/check-availability")
+@rate_limit_medium()
+async def check_candidate_availability(
+    request: Request,
+    check_in: CandidateCheck,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Check if email/phone are available and validate pincode (Public access)
+    """
+    service = CandidateService(db)
+    # This will raise HTTPException if invalid/duplicate
+    address_details = await service.validate_personal_info(
+        check_in.email, 
+        check_in.phone, 
+        check_in.pincode
+    )
+    return {"status": "available", "address": address_details}
 
 
 @router.get("/", response_model=CandidatePaginatedResponse)

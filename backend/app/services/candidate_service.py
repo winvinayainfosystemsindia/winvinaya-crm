@@ -17,25 +17,34 @@ class CandidateService:
         self.db = db
         self.repository = CandidateRepository(db)
 
-    async def create_candidate(self, candidate_in: CandidateCreate) -> Candidate:
-        """Create a new candidate with automated address fetch"""
-        
+    async def validate_personal_info(self, email: str, phone: str, pincode: str) -> dict:
+        """Validate email, phone availability and pincode existence"""
         # Check existing email
-        if await self.repository.get_by_email(candidate_in.email):
+        if await self.repository.get_by_email(email):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email already registered"
             )
 
         # Check existing phone
-        if await self.repository.get_by_phone(candidate_in.phone):
+        if await self.repository.get_by_phone(phone):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Phone number already registered"
             )
 
         # Fetch address details from pincode
-        address_details = await get_pincode_details(candidate_in.pincode)
+        return await get_pincode_details(pincode)
+
+    async def create_candidate(self, candidate_in: CandidateCreate) -> Candidate:
+        """Create a new candidate with automated address fetch"""
+        
+        # Validate personal info and get address details
+        address_details = await self.validate_personal_info(
+            candidate_in.email, 
+            candidate_in.phone, 
+            candidate_in.pincode
+        )
         
         # Prepare data
         candidate_data = candidate_in.model_dump()

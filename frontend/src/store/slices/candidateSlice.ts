@@ -52,7 +52,7 @@ export const fetchCandidateStats = createAsyncThunk(
 			const response = await candidateService.getStats();
 			return response;
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to fetch candidate stats');
+			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to fetch candidate stats');
 		}
 	}
 );
@@ -98,7 +98,7 @@ export const fetchCandidates = createAsyncThunk(
 			);
 			return response;
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to fetch candidates');
+			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to fetch candidates');
 		}
 	}
 );
@@ -141,7 +141,7 @@ export const fetchUnscreenedCandidates = createAsyncThunk(
 			);
 			return response;
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to fetch unscreened candidates');
+			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to fetch unscreened candidates');
 		}
 	}
 );
@@ -190,7 +190,7 @@ export const fetchScreenedCandidates = createAsyncThunk(
 			);
 			return response;
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to fetch screened candidates');
+			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to fetch screened candidates');
 		}
 	}
 );
@@ -202,7 +202,7 @@ export const fetchFilterOptions = createAsyncThunk(
 			const response = await candidateService.getFilterOptions();
 			return response;
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to fetch filter options');
+			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to fetch filter options');
 		}
 	}
 );
@@ -214,7 +214,7 @@ export const fetchCandidateById = createAsyncThunk(
 			const response = await candidateService.getById(publicId, withDetails);
 			return response;
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to fetch candidate');
+			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to fetch candidate');
 		}
 	}
 );
@@ -226,7 +226,7 @@ export const createCandidate = createAsyncThunk(
 			const response = await candidateService.create(candidate);
 			return response;
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to create candidate');
+			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to create candidate');
 		}
 	}
 );
@@ -238,7 +238,7 @@ export const updateCandidate = createAsyncThunk(
 			const response = await candidateService.update(publicId, data);
 			return response;
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to update candidate');
+			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to update candidate');
 		}
 	}
 );
@@ -250,7 +250,7 @@ export const deleteCandidate = createAsyncThunk(
 			await candidateService.delete(publicId);
 			return publicId;
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to delete candidate');
+			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to delete candidate');
 		}
 	}
 );
@@ -266,7 +266,7 @@ export const createScreening = createAsyncThunk(
 			const response = await screeningService.create(publicId, screening);
 			return { publicId, screening: response };
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to create screening');
+			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to create screening');
 		}
 	}
 );
@@ -278,7 +278,7 @@ export const updateScreening = createAsyncThunk(
 			const response = await screeningService.update(publicId, screening);
 			return { publicId, screening: response };
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to update screening');
+			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to update screening');
 		}
 	}
 );
@@ -307,7 +307,7 @@ export const uploadDocument = createAsyncThunk(
 			const response = await documentService.upload(publicId, documentType, file, description);
 			return { publicId, document: response };
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to upload document');
+			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to upload document');
 		}
 	}
 );
@@ -319,7 +319,7 @@ export const fetchDocuments = createAsyncThunk(
 			const response = await documentService.getAll(publicId);
 			return { publicId, documents: response };
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to fetch documents');
+			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to fetch documents');
 		}
 	}
 );
@@ -331,7 +331,7 @@ export const deleteDocument = createAsyncThunk(
 			await documentService.delete(documentId);
 			return { publicId, documentId };
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to delete document');
+			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to delete document');
 		}
 	}
 );
@@ -347,7 +347,7 @@ export const createCounseling = createAsyncThunk(
 			const response = await counselingService.create(publicId, counseling);
 			return { publicId, counseling: response };
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to create counseling record');
+			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to create counseling record');
 		}
 	}
 );
@@ -359,7 +359,7 @@ export const updateCounseling = createAsyncThunk(
 			const response = await counselingService.update(publicId, counseling);
 			return { publicId, counseling: response };
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to update counseling record');
+			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to update counseling record');
 		}
 	}
 );

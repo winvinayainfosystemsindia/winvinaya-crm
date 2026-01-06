@@ -28,6 +28,7 @@ import { useTheme } from '@mui/material/styles';
 import PersonalInfoStep from './steps/PersonalInfoStep';
 import EducationStep from './steps/EducationStep';
 import ExperienceStep from './steps/ExperienceStep';
+import candidateService from '../../services/candidateService';
 import DisabilityStep from './steps/DisabilityStep';
 import ReviewStep from './steps/ReviewStep';
 
@@ -177,11 +178,44 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
         return errors;
     };
 
-    const handleNext = () => {
+    const handleNext = async () => {
         const stepErrors = validateStep(activeStep);
         const isValid = Object.keys(stepErrors).length === 0;
 
         if (isValid) {
+            // Early backend validation for Step 0 (Personal Info)
+            if (activeStep === 0) {
+                setIsSubmitting(true);
+                setSubmitError(null);
+                try {
+                    await candidateService.checkAvailability(
+                        formData.email,
+                        formData.phone,
+                        formData.pincode
+                    );
+                } catch (error: any) {
+                    const detail = error?.response?.data?.detail || error?.message || 'Validation failed';
+                    const backendErrors: Record<string, string> = {};
+
+                    if (detail.includes('Email already registered')) {
+                        backendErrors.email = 'This email is already registered';
+                    } else if (detail.includes('Phone number already registered')) {
+                        backendErrors.phone = 'This phone number is already registered';
+                    } else if (detail.includes('Invalid pincode') || detail.includes('No details found for this pincode')) {
+                        backendErrors.pincode = 'Please enter a valid pincode';
+                    } else {
+                        setSubmitError(detail);
+                    }
+
+                    if (Object.keys(backendErrors).length > 0) {
+                        setFieldErrors(backendErrors);
+                    }
+                    return; // Stop navigation
+                } finally {
+                    setIsSubmitting(false);
+                }
+            }
+
             setCompletedSteps(prev => new Set(prev).add(activeStep));
             setErrorSteps(prev => {
                 const next = new Set(prev);
@@ -297,8 +331,45 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
 
             // Mark all steps as completed
             setCompletedSteps(new Set(steps.map((_, index) => index)));
-        } catch (error) {
-            setSubmitError(error instanceof Error ? error.message : 'Submission failed');
+        } catch (error: any) {
+            let message = 'Submission failed';
+            let detail = '';
+
+            if (error?.response?.data?.detail) {
+                detail = error.response.data.detail;
+            } else if (typeof error === 'string') {
+                detail = error;
+            } else if (error instanceof Error) {
+                detail = error.message;
+            }
+
+            if (detail) {
+                message = detail;
+                // Map specific backend errors to fields
+                const newFieldErrors: Record<string, string> = {};
+                let shouldGoToStep0 = false;
+
+                if (detail.includes('Email already registered')) {
+                    newFieldErrors.email = 'This email is already registered';
+                    shouldGoToStep0 = true;
+                } else if (detail.includes('Phone number already registered')) {
+                    newFieldErrors.phone = 'This phone number is already registered';
+                    shouldGoToStep0 = true;
+                } else if (detail.includes('Invalid pincode') || detail.includes('No details found for this pincode')) {
+                    newFieldErrors.pincode = 'Please enter a valid pincode';
+                    shouldGoToStep0 = true;
+                }
+
+                if (Object.keys(newFieldErrors).length > 0) {
+                    setFieldErrors(newFieldErrors);
+                    if (shouldGoToStep0) {
+                        setActiveStep(0);
+                        setErrorSteps(new Set([0]));
+                    }
+                }
+            }
+
+            setSubmitError(message);
         } finally {
             setIsSubmitting(false);
         }
@@ -553,7 +624,14 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
                         <Button
                             onClick={handleNext}
                             variant="contained"
-                            endIcon={<CheckCircleIcon />}
+                            disabled={isSubmitting}
+                            endIcon={
+                                isSubmitting && activeStep === 0 ? (
+                                    <CircularProgress size={20} color="inherit" />
+                                ) : (
+                                    <CheckCircleIcon />
+                                )
+                            }
                             sx={{
                                 backgroundColor: theme.palette.primary.main,
                                 '&:hover': {
@@ -561,7 +639,7 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
                                 },
                             }}
                         >
-                            Next
+                            {isSubmitting && activeStep === 0 ? 'Validating...' : 'Next'}
                         </Button>
                     )}
                 </Box>

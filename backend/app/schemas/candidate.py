@@ -59,6 +59,12 @@ class CandidateCreate(CandidateBase):
     pass
 
 
+class CandidateCheck(BaseModel):
+    email: EmailStr
+    phone: str
+    pincode: str
+
+
 class CandidateUpdate(BaseModel):
     name: Optional[str] = None
     gender: Optional[str] = None

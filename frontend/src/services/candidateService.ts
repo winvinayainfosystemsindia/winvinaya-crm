@@ -156,6 +156,14 @@ export const candidateService = {
 	}> => {
 		const response = await api.get('/candidates/filter-options');
 		return response.data;
+	},
+
+	/**
+	 * Check if email/phone are available and validate pincode
+	 */
+	checkAvailability: async (email: string, phone: string, pincode: string): Promise<{ status: string; address: any }> => {
+		const response = await api.post('/candidates/check-availability', { email, phone, pincode });
+		return response.data;
 	}
 };
 
