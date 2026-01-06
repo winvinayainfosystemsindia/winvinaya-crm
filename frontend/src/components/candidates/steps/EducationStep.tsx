@@ -23,11 +23,13 @@ import { colleges } from '../../../data/College';
 interface EducationStepProps {
     formData: CandidateCreate;
     onChange: (data: Partial<CandidateCreate>) => void;
+    errors?: Record<string, string>;
 }
 
 const EducationStep: React.FC<EducationStepProps> = ({
     formData,
     onChange,
+    errors = {},
 }) => {
     const theme = useTheme();
 
@@ -138,19 +140,27 @@ const EducationStep: React.FC<EducationStepProps> = ({
 
             <Box>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-                    <Typography
-                        variant="subtitle1"
-                        sx={{
-                            color: theme.palette.primary.main,
-                        }}
-                    >
-                        Highest Qualification
-                    </Typography>
+                    <Box>
+                        <Typography
+                            variant="subtitle1"
+                            sx={{
+                                color: theme.palette.primary.main,
+                            }}
+                        >
+                            Highest Qualification
+                        </Typography>
+                        {errors.degrees && (
+                            <Typography variant="caption" color="error" role="alert">
+                                {errors.degrees}
+                            </Typography>
+                        )}
+                    </Box>
                     <Button
                         startIcon={<AddIcon />}
                         onClick={addDegree}
                         variant="outlined"
                         size="small"
+                        aria-label="Add educational qualification"
                     >
                         Add Degree
                     </Button>
@@ -161,7 +171,17 @@ const EducationStep: React.FC<EducationStepProps> = ({
                         <Paper
                             key={index}
                             variant="outlined"
-                            sx={{ p: 3, position: 'relative' }}
+                            sx={{
+                                p: 3,
+                                position: 'relative',
+                                borderColor: (
+                                    errors[`degree_${index}_name`] ||
+                                    errors[`degree_${index}_specialization`] ||
+                                    errors[`degree_${index}_college`] ||
+                                    errors[`degree_${index}_year`] ||
+                                    errors[`degree_${index}_percentage`]
+                                ) ? theme.palette.error.main : theme.palette.divider
+                            }}
                             role="region"
                             aria-label={`Educational Qualification ${index + 1}`}
                         >
@@ -192,6 +212,14 @@ const EducationStep: React.FC<EducationStepProps> = ({
                                                 label="Degree Name"
                                                 variant="outlined"
                                                 placeholder="Select Degree"
+                                                required
+                                                error={!!errors[`degree_${index}_name`]}
+                                                helperText={errors[`degree_${index}_name`]}
+                                                inputProps={{
+                                                    ...params.inputProps,
+                                                    'aria-invalid': !!errors[`degree_${index}_name`],
+                                                    'aria-required': 'true',
+                                                }}
                                             />
                                         )}
                                     />
@@ -210,6 +238,14 @@ const EducationStep: React.FC<EducationStepProps> = ({
                                                 label="Specialization"
                                                 variant="outlined"
                                                 placeholder="e.g., Computer Science"
+                                                required
+                                                error={!!errors[`degree_${index}_specialization`]}
+                                                helperText={errors[`degree_${index}_specialization`]}
+                                                inputProps={{
+                                                    ...params.inputProps,
+                                                    'aria-invalid': !!errors[`degree_${index}_specialization`],
+                                                    'aria-required': 'true',
+                                                }}
                                             />
                                         )}
                                     />
@@ -227,6 +263,14 @@ const EducationStep: React.FC<EducationStepProps> = ({
                                                 fullWidth
                                                 label="College/University"
                                                 variant="outlined"
+                                                required
+                                                error={!!errors[`degree_${index}_college`]}
+                                                helperText={errors[`degree_${index}_college`]}
+                                                inputProps={{
+                                                    ...params.inputProps,
+                                                    'aria-invalid': !!errors[`degree_${index}_college`],
+                                                    'aria-required': 'true',
+                                                }}
                                             />
                                         )}
                                     />
@@ -239,6 +283,13 @@ const EducationStep: React.FC<EducationStepProps> = ({
                                         value={degree.year_of_passing}
                                         onChange={handleDegreeChange(index, 'year_of_passing')}
                                         variant="outlined"
+                                        required
+                                        error={!!errors[`degree_${index}_year`]}
+                                        helperText={errors[`degree_${index}_year`]}
+                                        inputProps={{
+                                            'aria-invalid': !!errors[`degree_${index}_year`],
+                                            'aria-required': 'true',
+                                        }}
                                     />
                                 </Grid>
                                 <Grid size={{ xs: 12, md: 4 }}>
@@ -249,11 +300,16 @@ const EducationStep: React.FC<EducationStepProps> = ({
                                         value={degree.percentage}
                                         onChange={handleDegreeChange(index, 'percentage')}
                                         variant="outlined"
+                                        required
                                         InputProps={{ endAdornment: '%' }}
+                                        error={!!errors[`degree_${index}_percentage`]}
+                                        helperText={errors[`degree_${index}_percentage`]}
                                         inputProps={{
                                             min: 0,
                                             max: 100,
-                                            step: "0.01"
+                                            step: "0.01",
+                                            'aria-invalid': !!errors[`degree_${index}_percentage`],
+                                            'aria-required': 'true',
                                         }}
                                     />
                                 </Grid>
@@ -268,10 +324,11 @@ const EducationStep: React.FC<EducationStepProps> = ({
                                 p: 4,
                                 textAlign: 'center',
                                 backgroundColor: theme.palette.background.default,
+                                borderColor: errors.degrees ? theme.palette.error.main : theme.palette.divider,
                             }}
                         >
-                            <Typography color="text.secondary">
-                                No degrees added yet. Click "Add Degree" to add your qualifications.
+                            <Typography color={errors.degrees ? "error" : "text.secondary"} aria-live="polite">
+                                {errors.degrees || 'No degrees added yet. Click "Add Degree" to add your qualifications.'}
                             </Typography>
                         </Paper>
                     )}

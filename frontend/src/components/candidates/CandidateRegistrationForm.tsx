@@ -111,43 +111,75 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
         ...initialFormData,
         ...initialData,
     });
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
 
     // Validation functions for each step
-    const validateStep = (step: number): boolean => {
+    const validateStep = (step: number): Record<string, string> => {
+        const errors: Record<string, string> = {};
         switch (step) {
             case 0: // Personal Info
-                return !!(
-                    formData.name &&
-                    formData.email &&
-                    formData.phone &&
-                    formData.gender &&
-                    formData.pincode &&
-                    formData.dob &&
-                    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) &&
-                    /^\d{10}$/.test(formData.phone.replace(/\D/g, ''))
-                );
+                if (!formData.name) errors.name = 'Full name is required';
+                if (!formData.gender) errors.gender = 'Gender is required';
+                if (!formData.dob) errors.dob = 'Date of birth is required';
+                if (!formData.email) {
+                    errors.email = 'Email address is required';
+                } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+                    errors.email = 'Please enter a valid email address';
+                }
+                if (!formData.phone) {
+                    errors.phone = 'Phone number is required';
+                } else if (!/^\d{10}$/.test(formData.phone.replace(/\D/g, ''))) {
+                    errors.phone = 'Please enter a valid 10-digit phone number';
+                }
+                if (!formData.pincode) {
+                    errors.pincode = 'Pincode is required';
+                } else if (!/^\d{6}$/.test(formData.pincode)) {
+                    errors.pincode = 'Please enter a valid 6-digit pincode';
+                }
+                break;
             case 1: // Education
-                return (formData.education_details?.degrees?.length ?? 0) > 0;
+                if (!formData.education_details?.degrees || formData.education_details.degrees.length === 0) {
+                    errors.degrees = 'Please add at least one educational qualification';
+                } else {
+                    formData.education_details.degrees.forEach((degree, index) => {
+                        if (!degree.degree_name) errors[`degree_${index}_name`] = 'Degree name is required';
+                        if (!degree.specialization) errors[`degree_${index}_specialization`] = 'Specialization is required';
+                        if (!degree.college_name) errors[`degree_${index}_college`] = 'College name is required';
+                        if (!degree.year_of_passing) errors[`degree_${index}_year`] = 'Year of passing is required';
+                        if (degree.percentage === undefined || degree.percentage === null || degree.percentage < 0 || degree.percentage > 100) {
+                            errors[`degree_${index}_percentage`] = 'Percentage must be between 0 and 100';
+                        }
+                    });
+                }
+                break;
             case 2: // Experience
-                // Always valid - all fields optional
-                return true;
+                if (formData.work_experience?.is_experienced) {
+                    if (!formData.work_experience.year_of_experience) {
+                        errors.year_of_experience = 'Years of experience is required';
+                    }
+                }
+                break;
             case 3: // Disability
                 if (formData.disability_details?.is_disabled) {
-                    return !!(
-                        formData.disability_details.disability_type &&
-                        (formData.disability_details.disability_percentage ?? 0) > 0
-                    );
+                    if (!formData.disability_details.disability_type) {
+                        errors.disability_type = 'Disability type is required';
+                    }
+                    if (formData.disability_details.disability_percentage === undefined ||
+                        formData.disability_details.disability_percentage === null ||
+                        formData.disability_details.disability_percentage <= 0) {
+                        errors.disability_percentage = 'Disability percentage must be greater than 0';
+                    }
                 }
-                return true;
-            default:
-                return true;
+                break;
         }
+        return errors;
     };
 
     const handleNext = () => {
-        const isValid = validateStep(activeStep);
+        const stepErrors = validateStep(activeStep);
+        const isValid = Object.keys(stepErrors).length === 0;
 
         if (isValid) {
             setCompletedSteps(prev => new Set(prev).add(activeStep));
@@ -156,16 +188,19 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
                 next.delete(activeStep);
                 return next;
             });
+            setFieldErrors({});
             setActiveStep((prevStep) => prevStep + 1);
             setSubmitError(null);
         } else {
             setErrorSteps(prev => new Set(prev).add(activeStep));
-            setSubmitError('Please fill all required fields correctly before proceeding.');
+            setFieldErrors(stepErrors);
+            setSubmitError('Please fix the errors in the form before proceeding.');
         }
     };
 
     const handleBack = () => {
         setActiveStep((prevStep) => prevStep - 1);
+        setFieldErrors({});
         setSubmitError(null);
     };
 
@@ -173,6 +208,7 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
         // Allow navigation to completed steps or previous steps
         if (step < activeStep || completedSteps.has(step)) {
             setActiveStep(step);
+            setFieldErrors({});
             setSubmitError(null);
         }
     };
@@ -223,6 +259,11 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
 
             return updated;
         });
+
+        // Clear field errors when data changes
+        if (Object.keys(fieldErrors).length > 0) {
+            setFieldErrors({});
+        }
     };
 
     const handleSubmit = async () => {
@@ -231,15 +272,22 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
 
         try {
             // Validate all steps
-            const allValid = steps.every((_, index) => validateStep(index));
+            let firstInvalidStep = -1;
+            const allStepErrors: Record<number, Record<string, string>> = {};
 
-            if (!allValid) {
-                const invalidSteps = steps
-                    .map((_, index) => index)
-                    .filter(index => !validateStep(index));
-                setErrorSteps(new Set(invalidSteps));
-                setActiveStep(invalidSteps[0]);
-                throw new Error('Please complete all required fields before submitting.');
+            for (let i = 0; i < steps.length - 1; i++) {
+                const errors = validateStep(i);
+                if (Object.keys(errors).length > 0) {
+                    allStepErrors[i] = errors;
+                    if (firstInvalidStep === -1) firstInvalidStep = i;
+                }
+            }
+
+            if (firstInvalidStep !== -1) {
+                setErrorSteps(new Set(Object.keys(allStepErrors).map(Number)));
+                setActiveStep(firstInvalidStep);
+                setFieldErrors(allStepErrors[firstInvalidStep]);
+                throw new Error('Please fix the errors in the form before submitting.');
             }
 
             // Submit the form
@@ -260,6 +308,7 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
         const baseProps = {
             formData,
             onChange: handleFormDataChange,
+            errors: fieldErrors,
         };
 
         switch (step) {

@@ -17,18 +17,27 @@ import type { CandidateCreate } from '../../../models/candidate';
 interface PersonalInfoStepProps {
     formData: CandidateCreate;
     onChange: (data: Partial<CandidateCreate>) => void;
+    errors?: Record<string, string>;
 }
 
 const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     formData,
     onChange,
+    errors = {},
 }) => {
     const theme = useTheme();
 
     const handleChange = (field: keyof CandidateCreate) => (
         event: React.ChangeEvent<HTMLInputElement>
     ) => {
-        const value = event.target.value;
+        let value = event.target.value;
+
+        // Name field filtering: No numbers or special characters allowed
+        if (field === 'name') {
+            // Allow only letters, spaces, and dots (for initials)
+            value = value.replace(/[^a-zA-Z\s.]/g, '');
+        }
+
         // Allow only digits for phone and pincode fields
         if (['phone', 'whatsapp_number', 'pincode'].includes(field)) {
             if (value !== '' && !/^\d+$/.test(value)) {
@@ -90,26 +99,33 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                         onChange={handleChange('name')}
                         variant="outlined"
                         placeholder="Enter your full name"
-                        helperText="As per in Aadhar card"
+                        error={!!errors.name}
+                        helperText={errors.name || "As per in Aadhar card (Letters only)"}
                         autoComplete="name"
+                        inputProps={{
+                            'aria-invalid': !!errors.name,
+                            'aria-required': 'true',
+                        }}
                     />
                 </Grid>
 
                 <Grid size={{ xs: 12, md: 6 }}>
-                    <FormControl fullWidth required>
+                    <FormControl fullWidth required error={!!errors.gender}>
                         <InputLabel id="gender-label">Gender</InputLabel>
                         <Select
                             labelId="gender-label"
+                            id="gender-select"
                             value={formData.gender}
                             label="Gender"
                             onChange={handleSelectChange('gender')}
+                            aria-labelledby="gender-label"
                         >
                             <MenuItem value="male">Male</MenuItem>
                             <MenuItem value="female">Female</MenuItem>
                             <MenuItem value="other">Other</MenuItem>
                             <MenuItem value="prefer_not_to_say">Prefer not to say</MenuItem>
                         </Select>
-                        <FormHelperText>Select your gender</FormHelperText>
+                        <FormHelperText>{errors.gender || "Select your gender"}</FormHelperText>
                     </FormControl>
                 </Grid>
 
@@ -124,6 +140,12 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                         variant="outlined"
                         InputLabelProps={{ shrink: true }}
                         autoComplete="bday"
+                        error={!!errors.dob}
+                        helperText={errors.dob || ""}
+                        inputProps={{
+                            'aria-invalid': !!errors.dob,
+                            'aria-required': 'true',
+                        }}
                     />
                 </Grid>
 
@@ -147,8 +169,13 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                         onChange={handleChange('email')}
                         variant="outlined"
                         placeholder="your.email@example.com"
-                        helperText="We'll send important updates to this email"
+                        error={!!errors.email}
+                        helperText={errors.email || "We'll send important updates to this email"}
                         autoComplete="email"
+                        inputProps={{
+                            'aria-invalid': !!errors.email,
+                            'aria-required': 'true',
+                        }}
                     />
                 </Grid>
 
@@ -161,9 +188,13 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                         onChange={handleChange('phone')}
                         variant="outlined"
                         placeholder="10-digit mobile number"
+                        error={!!errors.phone}
+                        helperText={errors.phone || ""}
                         inputProps={{
                             maxLength: 10,
-                            'aria-label': '10-digit mobile number'
+                            'aria-label': '10-digit mobile number',
+                            'aria-invalid': !!errors.phone,
+                            'aria-required': 'true',
                         }}
                         autoComplete="tel"
                     />
@@ -194,9 +225,13 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                         onChange={handleChange('pincode')}
                         variant="outlined"
                         placeholder="6-digit pincode"
+                        error={!!errors.pincode}
+                        helperText={errors.pincode || ""}
                         inputProps={{
                             maxLength: 6,
-                            'aria-label': '6-digit pincode'
+                            'aria-label': '6-digit pincode',
+                            'aria-invalid': !!errors.pincode,
+                            'aria-required': 'true',
                         }}
                         autoComplete="postal-code"
                     />

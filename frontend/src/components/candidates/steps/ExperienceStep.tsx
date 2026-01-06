@@ -16,11 +16,13 @@ import { Work as WorkIcon } from '@mui/icons-material';
 interface ExperienceStepProps {
     formData: CandidateCreate;
     onChange: (data: Partial<CandidateCreate>) => void;
+    errors?: Record<string, string>;
 }
 
 const ExperienceStep: React.FC<ExperienceStepProps> = ({
     formData,
     onChange,
+    errors = {},
 }) => {
     const theme = useTheme();
 
@@ -105,7 +107,7 @@ const ExperienceStep: React.FC<ExperienceStepProps> = ({
                     <Box
                         sx={{
                             p: 3,
-                            border: `1px solid ${theme.palette.divider}`,
+                            border: `1px solid ${errors.year_of_experience ? theme.palette.error.main : theme.palette.divider}`,
                             borderRadius: 2,
                             backgroundColor: theme.palette.background.default,
                         }}
@@ -145,10 +147,13 @@ const ExperienceStep: React.FC<ExperienceStepProps> = ({
                                                 onChange={handleExperienceChange}
                                                 variant="outlined"
                                                 placeholder="e.g. 2.05 (2 years 5 months)"
-                                                helperText="Format: Years.Months (Max 50 years, Months should be between 0 and 12)"
+                                                error={!!errors.year_of_experience}
+                                                helperText={errors.year_of_experience || "Format: Years.Months (Max 50 years, Months should be between 0 and 11)"}
                                                 slotProps={{
                                                     htmlInput: {
                                                         inputMode: 'decimal',
+                                                        'aria-invalid': !!errors.year_of_experience,
+                                                        'aria-required': 'true',
                                                     }
                                                 }}
                                             />

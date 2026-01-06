@@ -19,11 +19,13 @@ import { disabilityTypes } from '../../../data/Disabilities';
 interface DisabilityStepProps {
     formData: CandidateCreate;
     onChange: (data: Partial<CandidateCreate>) => void;
+    errors?: Record<string, string>;
 }
 
 const DisabilityStep: React.FC<DisabilityStepProps> = ({
     formData,
     onChange,
+    errors = {},
 }) => {
     const theme = useTheme();
 
@@ -92,7 +94,7 @@ const DisabilityStep: React.FC<DisabilityStepProps> = ({
                     <Box
                         sx={{
                             p: 3,
-                            border: `1px solid ${theme.palette.divider}`,
+                            border: `1px solid ${errors.disability_type || errors.disability_percentage ? theme.palette.error.main : theme.palette.divider}`,
                             borderRadius: 2,
                             backgroundColor: theme.palette.background.default,
                         }}
@@ -124,8 +126,7 @@ const DisabilityStep: React.FC<DisabilityStepProps> = ({
                 {formData.disability_details?.is_disabled && (
                     <>
                         <Grid size={{ xs: 12, md: 6 }}>
-                            <FormControl fullWidth required>
-                                {/* <InputLabel>Type of Disability</InputLabel> */}
+                            <FormControl fullWidth required error={!!errors.disability_type}>
                                 <Autocomplete
                                     freeSolo
                                     options={disabilityTypes}
@@ -137,12 +138,17 @@ const DisabilityStep: React.FC<DisabilityStepProps> = ({
                                             fullWidth
                                             label="Type of Disability"
                                             variant="outlined"
-                                            helperText="Select or type the type of disability"
+                                            error={!!errors.disability_type}
+                                            helperText={errors.disability_type || "Select or type the type of disability"}
                                             required
+                                            inputProps={{
+                                                ...params.inputProps,
+                                                'aria-invalid': !!errors.disability_type,
+                                                'aria-required': 'true',
+                                            }}
                                         />
                                     )}
                                 />
-                                {/* <FormHelperText>Select the type of disability</FormHelperText> */}
                             </FormControl>
                         </Grid>
 
@@ -154,8 +160,14 @@ const DisabilityStep: React.FC<DisabilityStepProps> = ({
                                 value={formData.disability_details?.disability_percentage || ''}
                                 onChange={handlePercentageChange}
                                 variant="outlined"
-                                inputProps={{ min: 0, max: 100 }}
-                                helperText="Enter percentage from 0 to 100"
+                                inputProps={{
+                                    min: 0,
+                                    max: 100,
+                                    'aria-invalid': !!errors.disability_percentage,
+                                    'aria-required': 'true',
+                                }}
+                                error={!!errors.disability_percentage}
+                                helperText={errors.disability_percentage || "Enter percentage from 0 to 100"}
                                 required
                             />
                             <Stack direction="row" justifyContent="space-between" sx={{ mt: 1, px: 1 }}>
