@@ -312,8 +312,9 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 						<TableRow sx={{ bgcolor: '#fafafa' }}>
 							{[
 								{ id: 'name', label: 'Name', hideOnMobile: false },
-								{ id: 'email', label: 'Email', hideOnMobile: true },
 								{ id: 'phone', label: 'Phone', hideOnMobile: true },
+								{ id: 'disability_type', label: 'Disability', hideOnMobile: true },
+								{ id: 'education_level', label: 'Education', hideOnMobile: true },
 								{ id: 'city', label: 'Location', hideOnMobile: true },
 								{ id: 'created_at', label: 'Date', hideOnMobile: true },
 							].map((headCell) => (
@@ -401,12 +402,17 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 									</TableCell>
 									<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
 										<Typography variant="body2" color="text.secondary">
-											{candidate.email}
+											{candidate.phone}
 										</Typography>
 									</TableCell>
 									<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
 										<Typography variant="body2" color="text.secondary">
-											{candidate.phone}
+											{candidate.disability_type || 'Non-PwD'}
+										</Typography>
+									</TableCell>
+									<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+										<Typography variant="body2" color="text.secondary">
+											{candidate.education_level || '-'}
 										</Typography>
 									</TableCell>
 									<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>

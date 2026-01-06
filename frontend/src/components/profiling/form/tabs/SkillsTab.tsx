@@ -64,9 +64,13 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 						renderInput={(params) => (
 							<TextField
 								{...params}
-								placeholder="Add skills (e.g. Python, SQL)"
+								placeholder="Type a technical skill and press Enter"
 								size="small"
 								sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+								inputProps={{
+									...params.inputProps,
+									'aria-label': 'Type a technical skill and press Enter to add'
+								}}
 							/>
 						)}
 					/>
@@ -74,7 +78,7 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 
 				<Box>
 					<FormLabel sx={{ fontSize: '0.875rem', color: '#545b64', fontWeight: 500, mb: 1, display: 'block' }}>
-						Soft Skills
+						Additional Skills/Soft Skills
 					</FormLabel>
 					<Autocomplete
 						multiple
@@ -96,9 +100,13 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 						renderInput={(params) => (
 							<TextField
 								{...params}
-								placeholder="Add soft skills"
+								placeholder="Type a soft skill and press Enter"
 								size="small"
 								sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+								inputProps={{
+									...params.inputProps,
+									'aria-label': 'Type a soft skill and press Enter to add'
+								}}
 							/>
 						)}
 					/>
