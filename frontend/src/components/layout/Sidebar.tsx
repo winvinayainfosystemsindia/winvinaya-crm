@@ -204,7 +204,7 @@ const Sidebar: React.FC = () => {
 											fontWeight: isActive('/candidates/screening') ? 600 : 400
 										}}
 									/>
-									{!['admin', 'sourcing'].includes(user?.role || '') && <LockIcon sx={{ fontSize: 14, color: 'text.disabled' }} />}
+									{!['admin', 'sourcing', 'manager'].includes(user?.role || '') && <LockIcon sx={{ fontSize: 14, color: 'text.disabled' }} />}
 								</ListItemButton>
 
 								{/* Counseling - Admin & Trainer only */}
@@ -227,7 +227,7 @@ const Sidebar: React.FC = () => {
 											fontWeight: isActive('/candidates/counseling') ? 600 : 400
 										}}
 									/>
-									{!['admin', 'trainer'].includes(user?.role || '') && <LockIcon sx={{ fontSize: 14, color: 'text.disabled' }} />}
+									{!['admin', 'trainer', 'manager'].includes(user?.role || '') && <LockIcon sx={{ fontSize: 14, color: 'text.disabled' }} />}
 								</ListItemButton>
 
 								{/* Document Collection - Admin & Sourcing only */}
@@ -251,7 +251,7 @@ const Sidebar: React.FC = () => {
 											fontWeight: isActive('/candidates/documents') ? 600 : 400
 										}}
 									/>
-									{!['admin', 'sourcing'].includes(user?.role || '') && <LockIcon sx={{ fontSize: 14, color: 'text.disabled' }} aria-hidden="true" />}
+									{!['admin', 'sourcing', 'manager'].includes(user?.role || '') && <LockIcon sx={{ fontSize: 14, color: 'text.disabled' }} aria-hidden="true" />}
 								</ListItemButton>
 							</List>
 						</Collapse>
