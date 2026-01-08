@@ -34,7 +34,10 @@ import {
 	School as SchoolIcon,
 	Dashboard as DashboardIcon,
 	People as PeopleIcon,
-	AssignmentInd as AssignmentIcon
+	AssignmentInd as AssignmentIcon,
+	EventAvailable as AttendanceIcon,
+	Assessment as AssessmentTabIcon,
+	Psychology as MockInterviewIcon
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import {
@@ -45,6 +48,9 @@ import {
 } from '../../store/slices/trainingSlice';
 import type { TrainingBatch } from '../../models/training';
 import AllocateCandidateDialog from '../../components/training/form/AllocateCandidateDialog';
+import AttendanceTracker from '../../components/training/extensions/AttendanceTracker';
+import AssessmentTracker from '../../components/training/extensions/AssessmentTracker';
+import MockInterviewManager from '../../components/training/extensions/MockInterviewManager';
 import { useSnackbar } from 'notistack';
 
 const ALLOCATION_STATUSES = [
@@ -268,7 +274,10 @@ const CandidateAllocation: React.FC = () => {
 							>
 								<Tab icon={<DashboardIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Batch Dashboard" id="allocation-tab-0" />
 								<Tab icon={<PeopleIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Managed Candidates" id="allocation-tab-1" />
-								<Tab icon={<AssignmentIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Add New Allocation" id="allocation-tab-2" />
+								<Tab icon={<AttendanceIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Daily Attendance" id="allocation-tab-2" />
+								<Tab icon={<AssessmentTabIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Weekly Assessments" id="allocation-tab-3" />
+								<Tab icon={<MockInterviewIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Mock Interviews" id="allocation-tab-4" />
+								<Tab icon={<AssignmentIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Add New Allocation" id="allocation-tab-5" />
 							</Tabs>
 						</Box>
 
@@ -425,6 +434,18 @@ const CandidateAllocation: React.FC = () => {
 						</TabPanel>
 
 						<TabPanel value={tabValue} index={2}>
+							<AttendanceTracker batch={selectedBatch} allocations={allocations} />
+						</TabPanel>
+
+						<TabPanel value={tabValue} index={3}>
+							<AssessmentTracker batch={selectedBatch} allocations={allocations} />
+						</TabPanel>
+
+						<TabPanel value={tabValue} index={4}>
+							<MockInterviewManager batch={selectedBatch} allocations={allocations} />
+						</TabPanel>
+
+						<TabPanel value={tabValue} index={5}>
 							<Paper sx={{ p: 6, textAlign: 'center', border: '2px dashed #d5dbdb', borderRadius: '4px', bgcolor: 'transparent' }}>
 								<PersonAddIcon sx={{ fontSize: 48, color: '#d5dbdb', mb: 2 }} />
 								<Typography variant="h6" gutterBottom>Enroll More Candidates</Typography>

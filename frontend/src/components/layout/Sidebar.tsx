@@ -20,7 +20,7 @@ import {
 	Home as HomeIcon,
 	Group as CandidatesIcon,
 	Lock as LockIcon,
-	// School as SchoolIcon,
+	School as SchoolIcon,
 	Assessment as AssessmentIcon,
 } from '@mui/icons-material';
 
@@ -40,7 +40,7 @@ const Sidebar: React.FC = () => {
 	const open = useAppSelector((state) => state.ui.sidebarOpen);
 	const user = useAppSelector((state) => state.auth.user);
 	const [candidatesOpen, setCandidatesOpen] = useState(true);
-	// const [trainingOpen, setTrainingOpen] = useState(false);
+	const [trainingOpen, setTrainingOpen] = useState(false);
 
 	const isActive = (path: string) => location.pathname === path;
 
@@ -258,7 +258,7 @@ const Sidebar: React.FC = () => {
 
 
 						{/* Training Group */}
-						{/* <ListItem disablePadding>
+						<ListItem disablePadding>
 							<ListItemButton
 								onClick={() => setTrainingOpen(!trainingOpen)}
 								sx={{ py: 0.5 }}
@@ -274,9 +274,9 @@ const Sidebar: React.FC = () => {
 								/>
 								{trainingOpen ? <ExpandLess sx={{ color: '#5f6368' }} aria-hidden="true" /> : <ExpandMore sx={{ color: '#5f6368' }} aria-hidden="true" />}
 							</ListItemButton>
-						</ListItem> */}
+						</ListItem>
 
-						{/* <Collapse in={trainingOpen} timeout="auto" unmountOnExit id="training-nav-list">
+						<Collapse in={trainingOpen} timeout="auto" unmountOnExit id="training-nav-list">
 							<List component="div" disablePadding>
 
 								<ListItemButton
@@ -309,7 +309,7 @@ const Sidebar: React.FC = () => {
 									/>
 								</ListItemButton>
 							</List>
-						</Collapse> */}
+						</Collapse>
 
 						{/* Company */}
 						{/* <ListItem disablePadding>

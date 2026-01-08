@@ -38,3 +38,34 @@ export interface TrainingStats {
 	closed: number;
 	planned: number;
 }
+
+export interface TrainingAttendance {
+	id?: number;
+	batch_id: number;
+	candidate_id: number;
+	date: string;
+	status: 'present' | 'absent' | 'late' | 'half_day';
+	remarks: string | null;
+}
+
+export interface TrainingAssessment {
+	id?: number;
+	batch_id: number;
+	candidate_id: number;
+	assessment_name: string;
+	marks_obtained: number;
+	max_marks: number;
+	assessment_date: string;
+}
+
+export interface TrainingMockInterview {
+	id?: number;
+	batch_id: number;
+	candidate_id: number;
+	interviewer_name: string | null;
+	interview_date: string;
+	questions: { question: string; answer: string }[] | null;
+	feedback: string | null;
+	overall_rating: number | null;
+	status: 'pending' | 'cleared' | 're-test' | 'rejected';
+}

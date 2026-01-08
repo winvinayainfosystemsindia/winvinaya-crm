@@ -13,7 +13,8 @@ from app.api.v1.endpoints import (
     training_batches,
     candidate_allocations,
     settings,
-    tickets
+    tickets,
+    training_extensions
 )
 
 
@@ -33,3 +34,4 @@ router.include_router(training_batches.router)
 router.include_router(candidate_allocations.router)
 router.include_router(settings.router)
 router.include_router(tickets.router)
+router.include_router(training_extensions.router)

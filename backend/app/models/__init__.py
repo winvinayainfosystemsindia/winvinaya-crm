@@ -8,6 +8,9 @@ from app.models.candidate_document import CandidateDocument
 from app.models.candidate_counseling import CandidateCounseling
 from app.models.training_batch import TrainingBatch
 from app.models.candidate_allocation import CandidateAllocation
+from app.models.training_attendance import TrainingAttendance
+from app.models.training_assessment import TrainingAssessment
+from app.models.training_mock_interview import TrainingMockInterview
 from app.models.dynamic_field import DynamicField
 from app.models.ticket import Ticket, TicketMessage, TicketStatus, TicketPriority, TicketCategory
 
@@ -22,6 +25,9 @@ __all__ = [
     "CandidateCounseling",
     "TrainingBatch",
     "CandidateAllocation",
+    "TrainingAttendance",
+    "TrainingAssessment",
+    "TrainingMockInterview",
     "DynamicField",
     "Ticket",
     "TicketMessage",
