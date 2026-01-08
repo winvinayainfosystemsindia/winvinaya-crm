@@ -17,10 +17,12 @@ import {
 	FormControl,
 	InputLabel,
 	Autocomplete,
-	Chip
+	Chip,
+	Box
 } from '@mui/material';
-import { Close as CloseIcon } from '@mui/icons-material';
+import { Close as CloseIcon, Info as InfoIcon, Event as EventIcon, School as SchoolIcon, Assignment as AssignmentIcon } from '@mui/icons-material';
 import type { TrainingBatch } from '../../../models/training';
+import { disabilityTypes } from '../../../data/Disabilities';
 
 interface TrainingBatchFormDialogProps {
 	open: boolean;
@@ -50,6 +52,9 @@ const TrainingBatchFormDialog: React.FC<TrainingBatchFormDialogProps> = ({
 	const [formData, setFormData] = useState<Partial<TrainingBatch>>({
 		batch_name: '',
 		courses: [],
+		disability_type: '',
+		start_date: new Date().toISOString().split('T')[0],
+		approx_close_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
 		duration: {
 			start_date: new Date().toISOString().split('T')[0],
 			end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -77,7 +82,10 @@ const TrainingBatchFormDialog: React.FC<TrainingBatchFormDialogProps> = ({
 			} else {
 				setFormData({
 					batch_name: '',
+					disability_type: '',
 					courses: [],
+					start_date: new Date().toISOString().split('T')[0],
+					approx_close_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
 					duration: {
 						start_date: new Date().toISOString().split('T')[0],
 						end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -111,10 +119,16 @@ const TrainingBatchFormDialog: React.FC<TrainingBatchFormDialogProps> = ({
 			};
 
 			if (field === 'start_date' || field === 'end_date') {
-				newDuration.weeks = calculateWeeks(newDuration.start_date, newDuration.end_date);
+				const start = field === 'start_date' ? value : newDuration.start_date;
+				const end = field === 'end_date' ? value : newDuration.end_date;
+				newDuration.weeks = calculateWeeks(start, end);
 			}
 
-			return { ...prev, duration: newDuration };
+			const topLevelUpdates: any = {};
+			if (field === 'start_date') topLevelUpdates.start_date = value;
+			if (field === 'end_date') topLevelUpdates.approx_close_date = value;
+
+			return { ...prev, duration: newDuration, ...topLevelUpdates };
 		});
 	};
 
@@ -168,7 +182,10 @@ const TrainingBatchFormDialog: React.FC<TrainingBatchFormDialogProps> = ({
 			<DialogContent sx={{ p: 4, bgcolor: '#f2f3f3', mt: 2 }}>
 				<Stack spacing={3}>
 					<Paper elevation={0} sx={awsPanelStyle}>
-						<Typography sx={sectionTitleStyle}>General Configuration</Typography>
+						<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+							<AssignmentIcon sx={{ color: '#545b64', fontSize: 20 }} />
+							<Typography sx={{ ...sectionTitleStyle, mb: 0 }}>General Configuration</Typography>
+						</Stack>
 						<Stack spacing={3}>
 							<TextField
 								label="Batch Name"
@@ -181,52 +198,81 @@ const TrainingBatchFormDialog: React.FC<TrainingBatchFormDialogProps> = ({
 								sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
 							/>
 
-							<Autocomplete
-								multiple
-								freeSolo
-								options={COURSES}
-								value={formData.courses || []}
-								onChange={(_e, val) => handleChange('courses', val)}
-								renderInput={(params) => (
-									<TextField
-										{...params}
-										label="Select or Enter Courses"
-										size="small"
-										placeholder="Type and press Enter..."
-										variant="outlined"
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
-								)}
-								renderTags={(tagValue, getTagProps) =>
-									tagValue.map((option, index) => (
-										<Chip
-											label={option}
-											{...getTagProps({ index })}
-											size="small"
-											sx={{ borderRadius: '2px', bgcolor: '#e1f5fe' }}
-										/>
-									))
-								}
-							/>
-
 							<FormControl fullWidth size="small">
-								<InputLabel>Status</InputLabel>
+								<Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 1 }}>
+									<InfoIcon sx={{ color: '#879196', fontSize: 14 }} />
+									<Typography variant="caption" color="textSecondary">Target Candidate Disability</Typography>
+								</Stack>
 								<Select
-									value={formData.status}
-									label="Status"
-									onChange={(e) => handleChange('status', e.target.value)}
+									value={formData.disability_type || ''}
+									displayEmpty
+									onChange={(e) => handleChange('disability_type', e.target.value)}
+									renderValue={(selected) => selected || <Typography color="text.disabled">Select Disability Type</Typography>}
 									sx={{ borderRadius: '2px' }}
 								>
-									<MenuItem value="planned">Planned</MenuItem>
-									<MenuItem value="running">Running</MenuItem>
-									<MenuItem value="closed">Closed</MenuItem>
+									{disabilityTypes.map((type) => (
+										<MenuItem key={type} value={type}>{type}</MenuItem>
+									))}
 								</Select>
 							</FormControl>
+
+							<Box>
+								<Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 1 }}>
+									<SchoolIcon sx={{ color: '#879196', fontSize: 14 }} />
+									<Typography variant="caption" color="textSecondary">Associated Courses</Typography>
+								</Stack>
+								<Autocomplete
+									multiple
+									freeSolo
+									options={COURSES}
+									value={formData.courses || []}
+									onChange={(_e, val) => handleChange('courses', val)}
+									renderInput={(params) => (
+										<TextField
+											{...params}
+											label="Select or Enter Courses"
+											size="small"
+											placeholder="Type and press Enter..."
+											variant="outlined"
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										/>
+									)}
+									renderTags={(tagValue, getTagProps) =>
+										tagValue.map((option, index) => (
+											<Chip
+												label={option}
+												{...getTagProps({ index })}
+												size="small"
+												sx={{ borderRadius: '2px', bgcolor: '#e1f5fe' }}
+											/>
+										))
+									}
+								/>
+							</Box>
+
+							<Box sx={{ mt: 1 }}>
+								<FormControl fullWidth size="small">
+									<InputLabel>Operational Status</InputLabel>
+									<Select
+										value={formData.status}
+										label="Operational Status"
+										onChange={(e) => handleChange('status', e.target.value)}
+										sx={{ borderRadius: '2px' }}
+									>
+										<MenuItem value="planned">Planned (Recruitment Phase)</MenuItem>
+										<MenuItem value="running">Running (Active Training)</MenuItem>
+										<MenuItem value="closed">Closed (Completed)</MenuItem>
+									</Select>
+								</FormControl>
+							</Box>
 						</Stack>
 					</Paper>
 
 					<Paper elevation={0} sx={awsPanelStyle}>
-						<Typography sx={sectionTitleStyle}>Schedule & Duration</Typography>
+						<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+							<EventIcon sx={{ color: '#545b64', fontSize: 20 }} />
+							<Typography sx={{ ...sectionTitleStyle, mb: 0 }}>Schedule & Duration</Typography>
+						</Stack>
 						<Grid container spacing={3}>
 							<Grid size={{ xs: 12, md: 6 }}>
 								<TextField

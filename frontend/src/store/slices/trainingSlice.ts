@@ -8,6 +8,7 @@ interface TrainingState {
 	allocations: CandidateAllocation[];
 	eligibleCandidates: { public_id: string, name: string, email: string, phone: string }[];
 	loading: boolean;
+	total: number;
 	error: string | null;
 }
 
@@ -17,6 +18,7 @@ const initialState: TrainingState = {
 	allocations: [],
 	eligibleCandidates: [],
 	loading: false,
+	total: 0,
 	error: null,
 };
 
@@ -34,9 +36,9 @@ export const fetchTrainingStats = createAsyncThunk(
 
 export const fetchTrainingBatches = createAsyncThunk(
 	'training/fetchBatches',
-	async ({ skip, limit }: { skip?: number, limit?: number } = {}, { rejectWithValue }) => {
+	async (params: any = {}, { rejectWithValue }) => {
 		try {
-			const response = await trainingService.getBatches(skip, limit);
+			const response = await trainingService.getBatches(params);
 			return response;
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.message || 'Failed to fetch training batches');
@@ -64,6 +66,18 @@ export const updateTrainingBatch = createAsyncThunk(
 			return response;
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.message || 'Failed to update training batch');
+		}
+	}
+);
+
+export const extendTrainingBatch = createAsyncThunk(
+	'training/extendBatch',
+	async ({ publicId, new_close_date, reason }: { publicId: string, new_close_date: string, reason?: string }, { rejectWithValue }) => {
+		try {
+			const response = await trainingService.extendBatch(publicId, { new_close_date, reason });
+			return response;
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.message || 'Failed to extend training batch');
 		}
 	}
 );
@@ -142,6 +156,18 @@ export const updateAllocationStatus = createAsyncThunk(
 	}
 );
 
+export const deleteTrainingBatch = createAsyncThunk(
+	'training/deleteBatch',
+	async (publicId: string, { rejectWithValue }) => {
+		try {
+			await trainingService.deleteBatch(publicId);
+			return publicId;
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.message || 'Failed to delete training batch');
+		}
+	}
+);
+
 const trainingSlice = createSlice({
 	name: 'training',
 	initialState,
@@ -168,9 +194,10 @@ const trainingSlice = createSlice({
 			.addCase(fetchTrainingBatches.pending, (state) => {
 				state.loading = true;
 			})
-			.addCase(fetchTrainingBatches.fulfilled, (state, action: PayloadAction<TrainingBatch[]>) => {
+			.addCase(fetchTrainingBatches.fulfilled, (state, action: PayloadAction<{ items: TrainingBatch[], total: number }>) => {
 				state.loading = false;
-				state.batches = action.payload;
+				state.batches = action.payload.items;
+				state.total = action.payload.total;
 			})
 			.addCase(fetchTrainingBatches.rejected, (state, action: PayloadAction<any>) => {
 				state.loading = false;
@@ -183,6 +210,14 @@ const trainingSlice = createSlice({
 			})
 			// Update
 			.addCase(updateTrainingBatch.fulfilled, (state, action: PayloadAction<TrainingBatch>) => {
+				state.loading = false;
+				const index = state.batches.findIndex(b => b.public_id === action.payload.public_id);
+				if (index !== -1) {
+					state.batches[index] = action.payload;
+				}
+			})
+			// Extend
+			.addCase(extendTrainingBatch.fulfilled, (state, action: PayloadAction<TrainingBatch>) => {
 				state.loading = false;
 				const index = state.batches.findIndex(b => b.public_id === action.payload.public_id);
 				if (index !== -1) {
@@ -220,6 +255,11 @@ const trainingSlice = createSlice({
 			})
 			.addCase(removeAllocation.fulfilled, (state, action: PayloadAction<string>) => {
 				state.allocations = state.allocations.filter(a => a.public_id !== action.payload);
+			})
+			.addCase(deleteTrainingBatch.fulfilled, (state, action: PayloadAction<string>) => {
+				state.loading = false;
+				state.batches = state.batches.filter(b => b.public_id !== action.payload);
+				state.total -= 1;
 			});
 	},
 });

@@ -2,8 +2,22 @@ import api from './api';
 import type { TrainingBatch, TrainingStats, CandidateAllocation } from '../models/training';
 
 const trainingService = {
-	getBatches: async (skip: number = 0, limit: number = 100) => {
-		const response = await api.get<TrainingBatch[]>(`/training-batches/?skip=${skip}&limit=${limit}`);
+	getBatches: async (params: any = {}) => {
+		const query = new URLSearchParams();
+		if (params.skip !== undefined) query.append('skip', params.skip.toString());
+		if (params.limit !== undefined) query.append('limit', params.limit.toString());
+		if (params.search) query.append('search', params.search);
+		if (params.sortBy) query.append('sort_by', params.sortBy);
+		if (params.sortOrder) query.append('sort_order', params.sortOrder);
+		if (params.status) query.append('status', params.status);
+		if (params.disability_types) query.append('disability_types', params.disability_types);
+
+		const response = await api.get<{ items: TrainingBatch[], total: number }>(`/training-batches/?${query.toString()}`);
+		return response.data;
+	},
+
+	deleteBatch: async (publicId: string) => {
+		const response = await api.delete(`/training-batches/${publicId}`);
 		return response.data;
 	},
 
@@ -19,6 +33,11 @@ const trainingService = {
 
 	updateBatch: async (publicId: string, data: Partial<TrainingBatch>) => {
 		const response = await api.put<TrainingBatch>(`/training-batches/${publicId}`, data);
+		return response.data;
+	},
+
+	extendBatch: async (publicId: string, data: { new_close_date: string; reason?: string }) => {
+		const response = await api.post<TrainingBatch>(`/training-batches/${publicId}/extend`, data);
 		return response.data;
 	},
 

@@ -2,8 +2,12 @@ export interface TrainingBatch {
 	id: number;
 	public_id: string;
 	batch_name: string;
+	disability_type?: string;
+	start_date?: string;
+	approx_close_date?: string;
+	total_extension_days?: number;
 	courses: string[] | null;
-	duration: {
+	duration?: {
 		start_date: string;
 		end_date: string;
 		weeks: number;
@@ -12,6 +16,18 @@ export interface TrainingBatch {
 	other: any;
 	created_at: string;
 	updated_at: string;
+	extensions?: TrainingBatchExtension[];
+}
+
+export interface TrainingBatchExtension {
+	id: number;
+	public_id: string;
+	batch_id: number;
+	previous_close_date: string;
+	new_close_date: string;
+	extension_days: number;
+	reason: string | null;
+	created_at: string;
 }
 
 export interface CandidateAllocation {
