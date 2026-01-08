@@ -1,9 +1,10 @@
 """Training Batch model"""
 
 import uuid
-from sqlalchemy import String, JSON
+from sqlalchemy import String, JSON, Date, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
+from datetime import date
 from app.models.base import BaseModel
 
 
@@ -22,6 +23,11 @@ class TrainingBatch(BaseModel):
     )
     
     batch_name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    disability_type: Mapped[str] = mapped_column(String(255), nullable=True)
+    start_date: Mapped[date] = mapped_column(Date, nullable=True)
+    approx_close_date: Mapped[date] = mapped_column(Date, nullable=True)
+    total_extension_days: Mapped[int] = mapped_column(Integer, default=0)
+    
     courses: Mapped[dict | list | None] = mapped_column(JSON, nullable=True) # JSON list of courses
     duration: Mapped[dict | None] = mapped_column(JSON, nullable=True) # JSON with start/end/weeks
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="planned", index=True)
@@ -30,6 +36,12 @@ class TrainingBatch(BaseModel):
     # Relationships
     allocations: Mapped[list["CandidateAllocation"]] = relationship(
         "CandidateAllocation",
+        back_populates="batch",
+        cascade="all, delete-orphan"
+    )
+    
+    extensions: Mapped[list["TrainingBatchExtension"]] = relationship(
+        "TrainingBatchExtension",
         back_populates="batch",
         cascade="all, delete-orphan"
     )

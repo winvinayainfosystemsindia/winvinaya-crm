@@ -1,12 +1,14 @@
 """Training Batch Service"""
 
+from datetime import date
 from typing import List, Optional
 from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.training_batch import TrainingBatch
-from app.schemas.training_batch import TrainingBatchCreate, TrainingBatchUpdate
+from app.schemas.training_batch import TrainingBatchCreate, TrainingBatchUpdate, TrainingBatchExtend
 from app.repositories.training_batch_repository import TrainingBatchRepository
+from app.repositories.training_batch_extension_repository import TrainingBatchExtensionRepository
 
 
 class TrainingBatchService:
@@ -15,10 +17,41 @@ class TrainingBatchService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.repository = TrainingBatchRepository(db)
+        self.extension_repository = TrainingBatchExtensionRepository(db)
     
-    async def get_batches(self, skip: int = 0, limit: int = 100) -> List[TrainingBatch]:
-        """Get all training batches"""
-        return await self.repository.get_multi(skip=skip, limit=limit)
+    async def get_batches(
+        self, 
+        skip: int = 0, 
+        limit: int = 100,
+        search: Optional[str] = None,
+        status: Optional[str] = None,
+        disability_types: Optional[List[str]] = None,
+        sort_by: str = "created_at",
+        sort_order: str = "desc"
+    ) -> List[TrainingBatch]:
+        """Get all training batches with advanced filtering"""
+        return await self.repository.get_multi(
+            skip=skip, 
+            limit=limit,
+            search=search,
+            status=status,
+            disability_types=disability_types,
+            sort_by=sort_by,
+            sort_order=sort_order
+        )
+
+    async def get_total_count(
+        self,
+        search: Optional[str] = None,
+        status: Optional[str] = None,
+        disability_types: Optional[List[str]] = None
+    ) -> int:
+        """Get total count of batches for pagination"""
+        return await self.repository.count(
+            search=search,
+            status=status,
+            disability_types=disability_types
+        )
     
     async def get_batch_by_public_id(self, public_id: UUID) -> Optional[TrainingBatch]:
         """Get a batch by public ID"""
@@ -41,6 +74,58 @@ class TrainingBatchService:
         """Delete a training batch"""
         batch = await self.get_batch_by_public_id(public_id)
         return await self.repository.delete(batch.id)
+
+    async def extend_batch(self, public_id: UUID, extend_in: TrainingBatchExtend) -> TrainingBatch:
+        """Extend a training batch end date and record history"""
+        batch = await self.get_batch_by_public_id(public_id)
+        
+        current_close_date = batch.approx_close_date or (batch.duration.get('end_date') if batch.duration else None)
+        if isinstance(current_close_date, str):
+            current_close_date = date.fromisoformat(current_close_date)
+            
+        new_close_date = extend_in.new_close_date
+        
+        if current_close_date and new_close_date <= current_close_date:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"New close date ({new_close_date}) must be after current close date ({current_close_date})"
+            )
+        
+        # Calculate extension days for this specific extension
+        diff = 0
+        if current_close_date:
+            diff = (new_close_date - current_close_date).days
+            
+        # Create extension history record
+        extension_data = {
+            "batch_id": batch.id,
+            "previous_close_date": current_close_date,
+            "new_close_date": new_close_date,
+            "extension_days": diff,
+            "reason": extend_in.reason
+        }
+        await self.extension_repository.create(extension_data)
+        
+        # Update batch total extension days and end date
+        current_extension_total = batch.total_extension_days or 0
+        new_extension_total = current_extension_total + diff
+            
+        update_data = {
+            "approx_close_date": new_close_date,
+            "total_extension_days": new_extension_total
+        }
+        
+        # Also update duration JSON if it exists to keep it in sync
+        if batch.duration:
+            new_duration = dict(batch.duration)
+            new_duration['end_date'] = new_close_date.isoformat()
+            # Recalculate weeks if possible
+            if 'start_date' in new_duration:
+                s = date.fromisoformat(new_duration['start_date'])
+                new_duration['weeks'] = (new_close_date - s).days // 7
+            update_data["duration"] = new_duration
+        
+        return await self.repository.update(batch.id, update_data)
 
     async def get_stats(self) -> dict:
         """Get training batch statistics"""

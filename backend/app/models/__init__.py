@@ -7,6 +7,7 @@ from app.models.candidate_screening import CandidateScreening
 from app.models.candidate_document import CandidateDocument
 from app.models.candidate_counseling import CandidateCounseling
 from app.models.training_batch import TrainingBatch
+from app.models.training_batch_extension import TrainingBatchExtension
 from app.models.candidate_allocation import CandidateAllocation
 from app.models.training_attendance import TrainingAttendance
 from app.models.training_assessment import TrainingAssessment
@@ -24,6 +25,7 @@ __all__ = [
     "CandidateDocument",
     "CandidateCounseling",
     "TrainingBatch",
+    "TrainingBatchExtension",
     "CandidateAllocation",
     "TrainingAttendance",
     "TrainingAssessment",
