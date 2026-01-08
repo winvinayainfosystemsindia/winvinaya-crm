@@ -117,7 +117,7 @@ const MockInterviewManager: React.FC<MockInterviewManagerProps> = ({ batch, allo
 					const lastInterview = candidateInterviews.length > 0 ? candidateInterviews[candidateInterviews.length - 1] : null;
 
 					return (
-						<Grid item xs={12} md={6} lg={4} key={allocation.id}>
+						<Grid size={{ xs: 12, md: 6, lg: 4 }} key={allocation.id}>
 							<Card variant="outlined" sx={{ borderRadius: '2px', height: '100%', position: 'relative' }}>
 								<CardContent>
 									<Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
@@ -185,7 +185,7 @@ const MockInterviewManager: React.FC<MockInterviewManagerProps> = ({ batch, allo
 				<DialogTitle>Mock Interview Record - {selectedCandidate?.candidate?.name}</DialogTitle>
 				<DialogContent dividers>
 					<Grid container spacing={3}>
-						<Grid item xs={12} md={6}>
+						<Grid size={{ xs: 12, md: 6 }}>
 							<TextField
 								fullWidth
 								label="Interviewer Name"
@@ -194,7 +194,7 @@ const MockInterviewManager: React.FC<MockInterviewManagerProps> = ({ batch, allo
 								onChange={(e) => setForm(prev => ({ ...prev, interviewer_name: e.target.value }))}
 							/>
 						</Grid>
-						<Grid item xs={12} md={6}>
+						<Grid size={{ xs: 12, md: 6 }}>
 							<TextField
 								select
 								fullWidth
@@ -208,14 +208,14 @@ const MockInterviewManager: React.FC<MockInterviewManagerProps> = ({ batch, allo
 								<MenuItem value="rejected">Rejected</MenuItem>
 							</TextField>
 						</Grid>
-						<Grid item xs={12} md={4}>
+						<Grid size={{ xs: 12, md: 4 }}>
 							<Typography variant="subtitle2" gutterBottom>Overall Rating</Typography>
 							<Rating
 								value={form.overall_rating}
 								onChange={(_, val) => setForm(prev => ({ ...prev, overall_rating: val || 0 }))}
 							/>
 						</Grid>
-						<Grid item xs={12}>
+						<Grid size={{ xs: 12 }}>
 							<TextField
 								fullWidth
 								multiline
@@ -226,7 +226,7 @@ const MockInterviewManager: React.FC<MockInterviewManagerProps> = ({ batch, allo
 							/>
 						</Grid>
 
-						<Grid item xs={12}>
+						<Grid size={{ xs: 12 }}>
 							<Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
 								<InterviewIcon sx={{ color: '#007eb9' }} /> Questions & Evaluation
 							</Typography>
