@@ -6,24 +6,28 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
-class CandidateAllocationBase(BaseModel):
+class TrainingCandidateAllocationBase(BaseModel):
     batch_id: Optional[int] = None
     candidate_id: Optional[int] = None
     status: Optional[dict] = None # Status info per candidate
+    is_dropout: bool = False
+    dropout_remark: Optional[str] = None
     others: Optional[dict] = None
 
 
-class CandidateAllocationCreate(CandidateAllocationBase):
+class TrainingCandidateAllocationCreate(TrainingCandidateAllocationBase):
     """Schema for creating a candidate allocation"""
     batch_public_id: Optional[uuid.UUID] = None
     candidate_public_id: Optional[uuid.UUID] = None
 
 
-class CandidateAllocationUpdate(BaseModel):
+class TrainingCandidateAllocationUpdate(BaseModel):
     """Schema for updating a candidate allocation"""
     batch_id: Optional[int] = None
     candidate_id: Optional[int] = None
     status: Optional[dict] = None
+    is_dropout: Optional[bool] = None
+    dropout_remark: Optional[str] = None
     others: Optional[dict] = None
 
 
@@ -46,7 +50,7 @@ class BatchMini(BaseModel):
         from_attributes = True
 
 
-class CandidateAllocationResponse(CandidateAllocationBase):
+class TrainingCandidateAllocationResponse(TrainingCandidateAllocationBase):
     """Schema for candidate allocation response"""
     id: int
     public_id: uuid.UUID

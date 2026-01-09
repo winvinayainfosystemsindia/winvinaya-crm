@@ -41,28 +41,37 @@ const trainingService = {
 		return response.data;
 	},
 
-	getAllocations: async (batchPublicId: string) => {
-		const response = await api.get<CandidateAllocation[]>(`/candidate-allocations/batch/${batchPublicId}`);
+	getAllocations: async (batchPublicId: string, params: any = {}) => {
+		const query = new URLSearchParams();
+		if (params.search) query.append('search', params.search);
+		if (params.is_dropout !== undefined) query.append('is_dropout', params.is_dropout.toString());
+		if (params.sortBy) query.append('sort_by', params.sortBy);
+		if (params.sortOrder) query.append('sort_order', params.sortOrder);
+
+		const response = await api.get<CandidateAllocation[]>(`/training-candidate-allocations/batch/${batchPublicId}?${query.toString()}`);
 		return response.data;
 	},
 
-	getEligibleCandidates: async () => {
-		const response = await api.get<{ public_id: string, name: string, email: string, phone: string }[]>('/candidate-allocations/eligible');
+	getEligibleCandidates: async (batchPublicId?: string) => {
+		const url = batchPublicId
+			? `/training-candidate-allocations/eligible?batch_public_id=${batchPublicId}`
+			: '/training-candidate-allocations/eligible';
+		const response = await api.get<{ public_id: string, name: string, email: string, phone: string, disability_type?: string }[]>(url);
 		return response.data;
 	},
 
 	allocateCandidate: async (data: { batch_id: number; candidate_id: number; batch_public_id?: string; candidate_public_id?: string; status?: any; others?: any }) => {
-		const response = await api.post<CandidateAllocation>('/candidate-allocations/', data);
+		const response = await api.post<CandidateAllocation>('/training-candidate-allocations/', data);
 		return response.data;
 	},
 
 	updateAllocation: async (publicId: string, data: Partial<CandidateAllocation>) => {
-		const response = await api.put<CandidateAllocation>(`/candidate-allocations/${publicId}`, data);
+		const response = await api.put<CandidateAllocation>(`/training-candidate-allocations/${publicId}`, data);
 		return response.data;
 	},
 
 	removeAllocation: async (publicId: string) => {
-		const response = await api.delete(`/candidate-allocations/${publicId}`);
+		const response = await api.delete(`/training-candidate-allocations/${publicId}`);
 		return response.data;
 	}
 };

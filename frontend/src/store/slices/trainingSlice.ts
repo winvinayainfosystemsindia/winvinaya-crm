@@ -6,7 +6,7 @@ interface TrainingState {
 	batches: TrainingBatch[];
 	stats: TrainingStats | null;
 	allocations: CandidateAllocation[];
-	eligibleCandidates: { public_id: string, name: string, email: string, phone: string }[];
+	eligibleCandidates: { public_id: string, name: string, email: string, phone: string, disability_type?: string }[];
 	loading: boolean;
 	total: number;
 	error: string | null;
@@ -84,17 +84,11 @@ export const extendTrainingBatch = createAsyncThunk(
 
 export const fetchAllocations = createAsyncThunk(
 	'training/fetchAllocations',
-	async (batchPublicId: string, { rejectWithValue }) => {
+	async ({ batchPublicId, params }: { batchPublicId: string, params?: any }, { rejectWithValue }) => {
 		try {
-			console.log('[fetchAllocations] Fetching allocations for batch:', batchPublicId);
-			const response = await trainingService.getAllocations(batchPublicId);
-			console.log('[fetchAllocations] Response received:', response.length, 'allocations');
-			if (response.length > 0) {
-				console.log('[fetchAllocations] First allocation:', response[0]);
-			}
+			const response = await trainingService.getAllocations(batchPublicId, params);
 			return response;
 		} catch (error: any) {
-			console.error('[fetchAllocations] Error:', error);
 			return rejectWithValue(error.response?.data?.message || 'Failed to fetch allocations');
 		}
 	}
@@ -102,12 +96,27 @@ export const fetchAllocations = createAsyncThunk(
 
 export const fetchEligibleCandidates = createAsyncThunk(
 	'training/fetchEligibleCandidates',
-	async (_, { rejectWithValue }) => {
+	async (batchPublicId: string | undefined, { rejectWithValue }) => {
 		try {
-			const response = await trainingService.getEligibleCandidates();
+			const response = await trainingService.getEligibleCandidates(batchPublicId);
 			return response;
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.message || 'Failed to fetch eligible candidates');
+		}
+	}
+);
+
+export const markAsDropout = createAsyncThunk(
+	'training/markAsDropout',
+	async ({ publicId, remark }: { publicId: string, remark: string }, { rejectWithValue }) => {
+		try {
+			const response = await trainingService.updateAllocation(publicId, {
+				is_dropout: true,
+				dropout_remark: remark
+			});
+			return response;
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.message || 'Failed to mark as dropout');
 		}
 	}
 );
@@ -248,6 +257,12 @@ const trainingSlice = createSlice({
 			})
 			// Update Status
 			.addCase(updateAllocationStatus.fulfilled, (state, action: PayloadAction<CandidateAllocation>) => {
+				const index = state.allocations.findIndex(a => a.public_id === action.payload.public_id);
+				if (index !== -1) {
+					state.allocations[index] = action.payload;
+				}
+			})
+			.addCase(markAsDropout.fulfilled, (state, action: PayloadAction<CandidateAllocation>) => {
 				const index = state.allocations.findIndex(a => a.public_id === action.payload.public_id);
 				if (index !== -1) {
 					state.allocations[index] = action.payload;

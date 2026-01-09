@@ -289,6 +289,7 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 									{ id: 'phone', label: 'Phone', hideOnMobile: true },
 									{ id: 'city', label: 'Location', hideOnMobile: true },
 									{ id: 'education_level', label: 'Education', hideOnMobile: true },
+									{ id: 'disability_type', label: 'Disability', hideOnMobile: true },
 									{ id: 'counseling_status', label: 'Status', hideOnMobile: false },
 								];
 								if (type === 'counseled') {
@@ -378,6 +379,11 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 									<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
 										<Typography variant="body2" color="text.secondary">
 											{candidate.education_level || '-'}
+										</Typography>
+									</TableCell>
+									<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+										<Typography variant="body2" color="text.secondary">
+											{candidate.disability_type || '-'}
 										</Typography>
 									</TableCell>
 									{/* Status Column */}

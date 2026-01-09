@@ -36,6 +36,8 @@ export interface CandidateAllocation {
 	batch_id: number;
 	candidate_id: number;
 	status: any;
+	is_dropout: boolean;
+	dropout_remark: string | null;
 	others: any;
 	created_at: string;
 	updated_at: string;

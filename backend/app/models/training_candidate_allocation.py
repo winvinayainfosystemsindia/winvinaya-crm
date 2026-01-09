@@ -1,16 +1,16 @@
 """Candidate Allocation model"""
 
 import uuid
-from sqlalchemy import Integer, ForeignKey, JSON
+from sqlalchemy import Integer, ForeignKey, JSON, Boolean, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.models.base import BaseModel
 
 
-class CandidateAllocation(BaseModel):
-    """Candidate Allocation database model - links candidates to batches"""
+class TrainingCandidateAllocation(BaseModel):
+    """Training Candidate Allocation database model - links candidates to batches"""
     
-    __tablename__ = "candidate_allocations"
+    __tablename__ = "training_candidate_allocations"
     
     # Public UUID for external API (security)
     public_id: Mapped[uuid.UUID] = mapped_column(
@@ -36,6 +36,8 @@ class CandidateAllocation(BaseModel):
     )
     
     status: Mapped[dict | None] = mapped_column(JSON, nullable=True) # Status info per candidate
+    is_dropout: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    dropout_remark: Mapped[str | None] = mapped_column(String(500), nullable=True)
     others: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     
     # Relationships
@@ -43,4 +45,4 @@ class CandidateAllocation(BaseModel):
     candidate: Mapped["Candidate"] = relationship("Candidate")
     
     def __repr__(self) -> str:
-        return f"<CandidateAllocation(id={self.id}, public_id={self.public_id}, batch_id={self.batch_id}, candidate_id={self.candidate_id})>"
+        return f"<TrainingCandidateAllocation(id={self.id}, public_id={self.public_id}, batch_id={self.batch_id}, candidate_id={self.candidate_id})>"

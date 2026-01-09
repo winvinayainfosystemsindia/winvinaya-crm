@@ -19,7 +19,8 @@ import {
 	Checkbox,
 	Paper,
 	CircularProgress,
-	Alert
+	Alert,
+	Chip
 } from '@mui/material';
 import { Close as CloseIcon, Search as SearchIcon } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
@@ -51,10 +52,10 @@ const AllocateCandidateDialog: React.FC<AllocateCandidateDialogProps> = ({
 
 	useEffect(() => {
 		if (open) {
-			dispatch(fetchEligibleCandidates());
+			dispatch(fetchEligibleCandidates(batchPublicId));
 			setSelectedCandidates([]);
 		}
-	}, [open, dispatch]);
+	}, [open, batchPublicId, dispatch]);
 
 	const filteredCandidates = eligibleCandidates.filter(c =>
 		c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -96,7 +97,7 @@ const AllocateCandidateDialog: React.FC<AllocateCandidateDialogProps> = ({
 
 			// Explicitly refresh the allocations list
 			if (batchPublicId) {
-				await dispatch(fetchAllocations(batchPublicId));
+				await dispatch(fetchAllocations({ batchPublicId })).unwrap();
 			}
 
 			// Also refresh eligible candidates
@@ -179,8 +180,8 @@ const AllocateCandidateDialog: React.FC<AllocateCandidateDialogProps> = ({
 										/>
 									</TableCell>
 									<TableCell sx={{ bgcolor: '#f8f9fa', fontWeight: 600 }}>Name</TableCell>
-									<TableCell sx={{ bgcolor: '#f8f9fa', fontWeight: 600 }}>Email</TableCell>
-									<TableCell sx={{ bgcolor: '#f8f9fa', fontWeight: 600 }}>Phone</TableCell>
+									<TableCell sx={{ bgcolor: '#f8f9fa', fontWeight: 600 }}>Disability</TableCell>
+									<TableCell sx={{ bgcolor: '#f8f9fa', fontWeight: 600 }}>Contact Info</TableCell>
 								</TableRow>
 							</TableHead>
 							<TableBody>
@@ -199,8 +200,18 @@ const AllocateCandidateDialog: React.FC<AllocateCandidateDialogProps> = ({
 											/>
 										</TableCell>
 										<TableCell>{candidate.name}</TableCell>
-										<TableCell>{candidate.email}</TableCell>
-										<TableCell>{candidate.phone}</TableCell>
+										<TableCell>
+											<Chip
+												label={candidate.disability_type || 'N/A'}
+												size="small"
+												variant="outlined"
+												sx={{ borderRadius: '2px', fontWeight: 500 }}
+											/>
+										</TableCell>
+										<TableCell>
+											<Typography variant="body2">{candidate.email}</Typography>
+											<Typography variant="caption" color="text.secondary">{candidate.phone}</Typography>
+										</TableCell>
 									</TableRow>
 								))}
 							</TableBody>

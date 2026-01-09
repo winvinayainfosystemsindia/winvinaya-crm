@@ -34,8 +34,8 @@ class TrainingBatch(BaseModel):
     other: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     
     # Relationships
-    allocations: Mapped[list["CandidateAllocation"]] = relationship(
-        "CandidateAllocation",
+    allocations: Mapped[list["TrainingCandidateAllocation"]] = relationship(
+        "TrainingCandidateAllocation",
         back_populates="batch",
         cascade="all, delete-orphan"
     )

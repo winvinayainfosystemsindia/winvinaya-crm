@@ -11,7 +11,7 @@ from app.models.candidate_screening import CandidateScreening
 from app.models.candidate_counseling import CandidateCounseling
 from app.models.candidate_document import CandidateDocument
 from app.models.activity_log import ActivityLog
-from app.models.candidate_allocation import CandidateAllocation
+from app.models.training_candidate_allocation import TrainingCandidateAllocation
 from app.models.training_batch import TrainingBatch
 from app.models.dynamic_field import DynamicField
 from app.models.ticket import Ticket
@@ -35,7 +35,7 @@ async def get_analytics_dump(
     candidate_counselings = (await db.execute(select(CandidateCounseling))).scalars().all()
     candidate_documents = (await db.execute(select(CandidateDocument))).scalars().all()
     activity_logs = (await db.execute(select(ActivityLog))).scalars().all()
-    candidate_allocations = (await db.execute(select(CandidateAllocation))).scalars().all()
+    candidate_allocations = (await db.execute(select(TrainingCandidateAllocation))).scalars().all()
     training_batches = (await db.execute(select(TrainingBatch))).scalars().all()
     dynamic_fields = (await db.execute(select(DynamicField))).scalars().all()
     tickets = (await db.execute(select(Ticket))).scalars().all()
@@ -72,7 +72,7 @@ async def export_db_for_power_bi(
     counselings_data = (await db.execute(select(CandidateCounseling))).scalars().all()
     documents_data = (await db.execute(select(CandidateDocument))).scalars().all()
     activity_logs_data = (await db.execute(select(ActivityLog))).scalars().all()
-    allocations_data = (await db.execute(select(CandidateAllocation))).scalars().all()
+    allocations_data = (await db.execute(select(TrainingCandidateAllocation))).scalars().all()
     batches_data = (await db.execute(select(TrainingBatch))).scalars().all()
     fields_data = (await db.execute(select(DynamicField))).scalars().all()
     tickets_data = (await db.execute(select(Ticket))).scalars().all()
@@ -112,7 +112,7 @@ async def export_table_for_power_bi(
         "counselings": CandidateCounseling,
         "documents": CandidateDocument,
         "activity_logs": ActivityLog,
-        "allocations": CandidateAllocation,
+        "allocations": TrainingCandidateAllocation,
         "batches": TrainingBatch,
         "fields": DynamicField,
         "tickets": Ticket,
