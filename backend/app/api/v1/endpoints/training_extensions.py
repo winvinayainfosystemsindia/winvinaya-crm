@@ -9,6 +9,7 @@ from app.models.user import User, UserRole
 from app.schemas.training_attendance import TrainingAttendanceCreate, TrainingAttendanceResponse
 from app.schemas.training_assessment import TrainingAssessmentCreate, TrainingAssessmentResponse
 from app.schemas.training_mock_interview import TrainingMockInterviewCreate, TrainingMockInterviewResponse
+from app.schemas.training_batch_event import TrainingBatchEventCreate, TrainingBatchEventResponse
 from app.services.training_extension_service import TrainingExtensionService
 from app.utils.activity_tracker import log_create
 
@@ -98,3 +99,35 @@ async def get_mock_interviews(
 ):
     service = TrainingExtensionService(db)
     return await service.get_mock_interviews(batch_id)
+
+
+# Batch Events (Holidays)
+@router.post("/events", response_model=TrainingBatchEventResponse, status_code=status.HTTP_201_CREATED)
+async def create_batch_event(
+    event_in: TrainingBatchEventCreate,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER])),
+    db: AsyncSession = Depends(get_db)
+):
+    service = TrainingExtensionService(db)
+    return await service.create_batch_event(event_in)
+
+
+@router.get("/events/{batch_id}", response_model=List[TrainingBatchEventResponse])
+async def get_batch_events(
+    batch_id: int,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER])),
+    db: AsyncSession = Depends(get_db)
+):
+    service = TrainingExtensionService(db)
+    return await service.get_batch_events(batch_id)
+
+
+@router.delete("/events/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_batch_event(
+    event_id: int,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER])),
+    db: AsyncSession = Depends(get_db)
+):
+    service = TrainingExtensionService(db)
+    await service.delete_batch_event(event_id)
+    return None

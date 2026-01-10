@@ -1,5 +1,5 @@
 import api from './api';
-import type { TrainingAttendance, TrainingAssessment, TrainingMockInterview } from '../models/training';
+import type { TrainingAttendance, TrainingAssessment, TrainingMockInterview, TrainingBatchEvent } from '../models/training';
 
 const trainingExtensionService = {
 	// Attendance
@@ -32,6 +32,22 @@ const trainingExtensionService = {
 
 	createMockInterview: async (data: TrainingMockInterview) => {
 		const response = await api.post<TrainingMockInterview>('/training-extensions/mock-interviews', data);
+		return response.data;
+	},
+
+	// Batch Events (Holidays)
+	getBatchEvents: async (batchId: number) => {
+		const response = await api.get<TrainingBatchEvent[]>(`/training-extensions/events/${batchId}`);
+		return response.data;
+	},
+
+	createBatchEvent: async (data: TrainingBatchEvent) => {
+		const response = await api.post<TrainingBatchEvent>('/training-extensions/events', data);
+		return response.data;
+	},
+
+	deleteBatchEvent: async (eventId: number) => {
+		const response = await api.delete(`/training-extensions/events/${eventId}`);
 		return response.data;
 	},
 };

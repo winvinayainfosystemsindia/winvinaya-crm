@@ -392,7 +392,7 @@ const TrainingTable: React.FC<TrainingTableProps> = ({ refreshKey }) => {
 														return (
 															<Box key={i} sx={{ mb: i === (batch.extensions?.length || 0) - 1 ? 0 : 1, borderLeft: '2px solid #ec7211', pl: 1 }}>
 																<Typography variant="caption" sx={{ display: 'block', fontWeight: 600 }}>
-																	{isValid(extDate) ? format(extDate, 'dd MMM yyyy') : ext.new_close_date} (+{ext.extension_days}d)
+																	{isValid(extDate) ? format(extDate, 'dd MMM yyyy') : ext.new_close_date} ({ext.extension_days >= 0 ? '+' : ''}{ext.extension_days}d)
 																</Typography>
 																<Typography variant="caption" sx={{ fontStyle: 'italic' }}>
 																	{ext.reason || 'No reason provided'}
@@ -403,9 +403,15 @@ const TrainingTable: React.FC<TrainingTableProps> = ({ refreshKey }) => {
 												</Box>
 											} arrow>
 												<Chip
-													label={`+${batch.total_extension_days} days`}
+													label={batch.total_extension_days && batch.total_extension_days > 0
+														? `${batch.total_extension_days} days extended`
+														: batch.total_extension_days && batch.total_extension_days < 0
+															? `${Math.abs(batch.total_extension_days)} days reduced`
+															: batch.total_extension_days === 0
+																? 'Original date'
+																: `${batch.total_extension_days} days extended`}
 													size="small"
-													color="warning"
+													color={batch.total_extension_days && batch.total_extension_days > 0 ? "warning" : "info"}
 													variant="outlined"
 													sx={{ cursor: 'help' }}
 												/>

@@ -300,7 +300,7 @@ const Sidebar: React.FC = () => {
 									onClick={() => handleNavigate('/training/allocation')}
 								>
 									<ListItemText
-										primary="Candidate batch allocation"
+										primary="Batch allocation manager"
 										primaryTypographyProps={{
 											fontSize: '0.9rem',
 											color: isActive('/training/allocation') ? 'primary.main' : '#5f6368',

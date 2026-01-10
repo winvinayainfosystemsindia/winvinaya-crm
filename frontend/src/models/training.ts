@@ -66,6 +66,15 @@ export interface TrainingAttendance {
 	remarks: string | null;
 }
 
+export interface TrainingBatchEvent {
+	id?: number;
+	batch_id: number;
+	date: string;
+	event_type: 'holiday' | 'event';
+	title: string;
+	description: string | null;
+}
+
 export interface TrainingAssessment {
 	id?: number;
 	batch_id: number;

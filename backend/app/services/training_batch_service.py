@@ -79,19 +79,33 @@ class TrainingBatchService:
         """Extend a training batch end date and record history"""
         batch = await self.get_batch_by_public_id(public_id)
         
+        # Get the original end date. If not explicitly stored, use the duration start_date + weeks
+        # or the most reliable original date we have.
+        # For simplicity, if we have extensions, the previous_close_date of the FIRST extension is the original.
+        original_close_date = None
+        if batch.extensions:
+            # Sort by creation to find the first one
+            sorted_extensions = sorted(batch.extensions, key=lambda x: x.created_at)
+            original_close_date = sorted_extensions[0].previous_close_date
+        
         current_close_date = batch.approx_close_date or (batch.duration.get('end_date') if batch.duration else None)
         if isinstance(current_close_date, str):
             current_close_date = date.fromisoformat(current_close_date)
             
+        if not original_close_date:
+            original_close_date = current_close_date
+
         new_close_date = extend_in.new_close_date
         
-        if current_close_date and new_close_date <= current_close_date:
+        # Ensure new date is not before start date
+        start_date = batch.start_date or (date.fromisoformat(batch.duration.get('start_date')) if batch.duration and batch.duration.get('start_date') else None)
+        if start_date and new_close_date < start_date:
             raise HTTPException(
-                status_code=400, 
-                detail=f"New close date ({new_close_date}) must be after current close date ({current_close_date})"
+                status_code=400,
+                detail=f"New close date ({new_close_date}) cannot be before start date ({start_date})"
             )
         
-        # Calculate extension days for this specific extension
+        # Calculate extension days for this specific record relative to CURRENT close date
         diff = 0
         if current_close_date:
             diff = (new_close_date - current_close_date).days
@@ -106,9 +120,10 @@ class TrainingBatchService:
         }
         await self.extension_repository.create(extension_data)
         
-        # Update batch total extension days and end date
-        current_extension_total = batch.total_extension_days or 0
-        new_extension_total = current_extension_total + diff
+        # Update batch total extension days relative to ORIGINAL close date
+        new_extension_total = 0
+        if original_close_date:
+            new_extension_total = (new_close_date - original_close_date).days
             
         update_data = {
             "approx_close_date": new_close_date,
