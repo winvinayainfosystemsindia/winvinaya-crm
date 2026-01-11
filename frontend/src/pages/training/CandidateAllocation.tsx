@@ -209,7 +209,7 @@ const CandidateAllocation: React.FC = () => {
 
 					<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
 						<Box>
-							<Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5, letterSpacing: '-0.02em', fontSize: isMobile ? '1.5rem' : '2rem' }}>
+							<Typography variant="h4" sx={{ fontWeight: 300, mb: 0.5, letterSpacing: '-0.02em', fontSize: isMobile ? '1.5rem' : '2rem' }}>
 								{tabValue === 1 ? 'Candidate Allocation' : tabValue === 2 ? 'Attendance Tracker' : tabValue === 3 ? 'Assessment Matrix' : 'Mock Interview Console'}
 							</Typography>
 							<Typography variant="body2" sx={{ color: '#aab7bd', maxWidth: 600 }}>
