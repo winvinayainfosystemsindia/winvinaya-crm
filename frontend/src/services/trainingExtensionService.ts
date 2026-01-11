@@ -24,6 +24,16 @@ const trainingExtensionService = {
 		return response.data;
 	},
 
+	updateBulkAssessments: async (data: TrainingAssessment[]) => {
+		const response = await api.post<TrainingAssessment[]>('/training-extensions/assessments/bulk', data);
+		return response.data;
+	},
+
+	deleteAssessment: async (batchId: number, assessmentName: string) => {
+		const response = await api.delete(`/training-extensions/assessments/${batchId}/${encodeURIComponent(assessmentName)}`);
+		return response.data;
+	},
+
 	// Mock Interviews
 	getMockInterviews: async (batchId: number) => {
 		const response = await api.get<TrainingMockInterview[]>(`/training-extensions/mock-interviews/${batchId}`);

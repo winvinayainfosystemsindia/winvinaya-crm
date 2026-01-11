@@ -1,34 +1,19 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-	Box,
-	Paper,
-	Typography,
-	Table,
-	TableBody,
-	TableCell,
-	TableContainer,
-	TableHead,
-	TableRow,
-	TextField,
-	Button,
-	CircularProgress,
-	Stack,
-	MenuItem,
-	Select,
-	FormControl,
-	InputLabel,
-	Dialog,
-	DialogTitle,
-	DialogContent,
-	DialogActions
-} from '@mui/material';
-import {
-	Add as AddIcon,
-	Save as SaveIcon,
-} from '@mui/icons-material';
+import { Box, Paper, CircularProgress, Typography } from '@mui/material';
 import { format } from 'date-fns';
+import { useSnackbar } from 'notistack';
 import trainingExtensionService from '../../../services/trainingExtensionService';
+import userService from '../../../services/userService';
 import type { TrainingBatch, CandidateAllocation, TrainingAssessment } from '../../../models/training';
+import type { User } from '../../../models/user';
+
+import { useAppSelector } from '../../../store/hooks';
+
+// Sub-components
+import AssessmentHeader from '../assessment/AssessmentHeader';
+import AssessmentConfigPanel from '../assessment/AssessmentConfigPanel';
+import AssessmentMatrix from '../assessment/AssessmentMatrix';
+import AssessmentFormDialog from '../assessment/AssessmentFormDialog';
 
 interface AssessmentTrackerProps {
 	batch: TrainingBatch;
@@ -36,28 +21,70 @@ interface AssessmentTrackerProps {
 }
 
 const AssessmentTracker: React.FC<AssessmentTrackerProps> = ({ batch, allocations }) => {
+	const { enqueueSnackbar } = useSnackbar();
+	const user = useAppSelector((state) => state.auth.user);
 	const [loading, setLoading] = useState(false);
 	const [saving, setSaving] = useState(false);
 	const [assessments, setAssessments] = useState<TrainingAssessment[]>([]);
-	const [activeAssessmentName, setActiveAssessmentName] = useState('Week 1 - Assessment');
+	const [trainers, setTrainers] = useState<User[]>([]);
+
+	// Form state for creating/editing an assessment event
+	const [activeAssessmentName, setActiveAssessmentName] = useState('');
+	const [activeDate, setActiveDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+	const [activeMaxMarks, setActiveMaxMarks] = useState(100);
+	const [activeCourses, setActiveCourses] = useState<string[]>([]);
+	const [activeTrainerId, setActiveTrainerId] = useState<number | ''>('');
+	const [activeDescription, setActiveDescription] = useState('');
+
 	const [dialogOpen, setDialogOpen] = useState(false);
-	const [newAssessmentName, setNewAssessmentName] = useState('');
 
 	useEffect(() => {
-		fetchAssessments();
+		fetchData();
 	}, [batch.id]);
 
-	const fetchAssessments = async () => {
+	const fetchData = async () => {
 		setLoading(true);
 		try {
-			const data = await trainingExtensionService.getAssessments(batch.id);
-			setAssessments(data);
-			const names = Array.from(new Set(data.map(a => a.assessment_name)));
-			if (names.length > 0) setActiveAssessmentName(names[0]);
+			const [assessmentData, userData] = await Promise.all([
+				trainingExtensionService.getAssessments(batch.id),
+				userService.getAll(0, 100)
+			]);
+
+			setAssessments(assessmentData);
+			setTrainers(userData.items.filter(u => u.role === 'trainer' || u.role === 'admin' || u.role === 'manager'));
+
+			const names = Array.from(new Set(assessmentData.map(a => a.assessment_name)));
+			if (names.length > 0) {
+				handleSelectAssessment(names[0], assessmentData);
+			} else {
+				setActiveAssessmentName('New Assessment');
+				if (batch.courses && batch.courses.length > 0) setActiveCourses([batch.courses[0]]);
+				// Set default trainer to current user if they are a trainer/admin
+				if (user && (user.role === 'trainer' || user.role === 'admin' || user.role === 'manager')) {
+					setActiveTrainerId(user.id);
+				}
+			}
 		} catch (error) {
-			console.error('Failed to fetch assessments', error);
+			console.error('Failed to fetch data', error);
+			enqueueSnackbar('Failed to load assessment data', { variant: 'error' });
 		} finally {
 			setLoading(false);
+		}
+	};
+
+	const handleSelectAssessment = (name: string, data: TrainingAssessment[] = assessments) => {
+		setActiveAssessmentName(name);
+		const firstMatch = data.find(a => a.assessment_name === name);
+		if (firstMatch) {
+			setActiveDate(firstMatch.assessment_date);
+			// For Sum logic: max_marks stored is Total Max.
+			// So per-course max = max_marks / number of courses
+			const coursesCount = Array.isArray(firstMatch.course_name) ? firstMatch.course_name.length : (firstMatch.course_name ? 1 : 1);
+			setActiveMaxMarks(firstMatch.max_marks / (coursesCount || 1));
+
+			setActiveCourses(Array.isArray(firstMatch.course_name) ? firstMatch.course_name : (firstMatch.course_name ? [firstMatch.course_name as any] : []));
+			setActiveTrainerId(firstMatch.trainer_id || '');
+			setActiveDescription(firstMatch.description || '');
 		}
 	};
 
@@ -65,154 +92,205 @@ const AssessmentTracker: React.FC<AssessmentTrackerProps> = ({ batch, allocation
 		return Array.from(new Set(assessments.map(a => a.assessment_name)));
 	}, [assessments]);
 
-	const getMark = (candidateId: number) => {
-		return assessments.find(a => a.candidate_id === candidateId && a.assessment_name === activeAssessmentName);
-	};
-
-	const handleMarkChange = (candidateId: number, value: string) => {
-		const marks = parseFloat(value) || 0;
+	const handleMarkChange = (candidateId: number, field: keyof TrainingAssessment | 'remarks' | 'course_mark', value: any, courseName?: string) => {
 		setAssessments(prev => {
 			const existingIdx = prev.findIndex(a => a.candidate_id === candidateId && a.assessment_name === activeAssessmentName);
+			const updated = [...prev];
+
 			if (existingIdx >= 0) {
-				const updated = [...prev];
-				updated[existingIdx] = { ...updated[existingIdx], marks_obtained: marks };
-				return updated;
+				if (field === 'remarks') {
+					updated[existingIdx] = {
+						...updated[existingIdx],
+						others: { ...(updated[existingIdx].others || {}), remarks: value }
+					};
+				} else if (field === 'course_mark' && courseName) {
+					const currentCourseMarks = updated[existingIdx].course_marks || {};
+					const newCourseMarks = { ...currentCourseMarks, [courseName]: value };
+					// Calculate SUM: sum of all course marks
+					const totalMarks = Object.values(newCourseMarks).reduce((sum, m) => sum + (m as number), 0);
+					updated[existingIdx] = {
+						...updated[existingIdx],
+						course_marks: newCourseMarks,
+						marks_obtained: totalMarks
+					};
+				} else {
+					updated[existingIdx] = { ...updated[existingIdx], [field]: value };
+				}
 			} else {
-				return [...prev, {
+				const newRecord: TrainingAssessment = {
 					batch_id: batch.id,
 					candidate_id: candidateId,
 					assessment_name: activeAssessmentName,
-					marks_obtained: marks,
-					max_marks: 100,
-					assessment_date: format(new Date(), 'yyyy-MM-dd')
-				}];
+					assessment_date: activeDate,
+					marks_obtained: 0,
+					max_marks: activeMaxMarks,
+					course_name: activeCourses,
+					trainer_id: activeTrainerId || undefined,
+					description: activeDescription,
+					submission_date: format(new Date(), 'yyyy-MM-dd'),
+					course_marks: {}
+				};
+
+				if (field === 'remarks') {
+					newRecord.others = { remarks: value };
+				} else if (field === 'course_mark' && courseName) {
+					newRecord.course_marks = { [courseName]: value };
+					newRecord.marks_obtained = value;
+				} else {
+					(newRecord as any)[field] = value;
+				}
+				updated.push(newRecord);
 			}
+			return updated;
 		});
 	};
 
-	const handleAddAssessment = () => {
-		if (newAssessmentName.trim()) {
-			setActiveAssessmentName(newAssessmentName.trim());
-			setDialogOpen(false);
-			setNewAssessmentName('');
-		}
-	};
-
 	const handleSave = async () => {
+		if (!activeAssessmentName) {
+			enqueueSnackbar('Assessment name is required', { variant: 'warning' });
+			return;
+		}
+
 		setSaving(true);
 		try {
-			const currentMarks = assessments.filter(a => a.assessment_name === activeAssessmentName);
-			for (const mark of currentMarks) {
-				await trainingExtensionService.createAssessment(mark);
-			}
+			// Prepare data for bulk update
+			const assessmentsToSave = allocations.map(allocation => {
+				const existing = assessments.find(a => a.candidate_id === allocation.candidate_id && a.assessment_name === activeAssessmentName);
+				return {
+					batch_id: batch.id,
+					candidate_id: allocation.candidate_id,
+					assessment_name: activeAssessmentName,
+					assessment_date: activeDate,
+					// Store TOTAL Max Marks = per_course_max * num_courses
+					max_marks: activeMaxMarks * (activeCourses.length || 1),
+					course_name: activeCourses,
+					trainer_id: activeTrainerId || undefined,
+					description: activeDescription,
+					course_marks: existing?.course_marks || {},
+					marks_obtained: existing?.marks_obtained || 0,
+					submission_date: existing?.submission_date || activeDate,
+					others: existing?.others || {}
+				};
+			});
+
+			await trainingExtensionService.updateBulkAssessments(assessmentsToSave as any);
+			enqueueSnackbar('Assessments saved successfully', { variant: 'success' });
+			fetchData();
 		} catch (error) {
 			console.error('Failed to save assessments', error);
+			enqueueSnackbar('Failed to save assessments', { variant: 'error' });
 		} finally {
 			setSaving(false);
 		}
 	};
 
-	if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}><CircularProgress /></Box>;
+	const handleDeleteAssessment = async () => {
+		if (!activeAssessmentName) return;
+		if (!window.confirm(`Are you sure you want to delete the assessment "${activeAssessmentName}"? This will remove all marks for all students.`)) return;
+
+		setSaving(true);
+		try {
+			await trainingExtensionService.deleteAssessment(batch.id, activeAssessmentName);
+			enqueueSnackbar('Assessment deleted successfully', { variant: 'success' });
+			setActiveAssessmentName('');
+			fetchData();
+		} catch (error) {
+			console.error('Failed to delete assessment', error);
+			enqueueSnackbar('Failed to delete assessment', { variant: 'error' });
+		} finally {
+			setSaving(false);
+		}
+	};
+
+	const handleCreateNew = () => {
+		setActiveAssessmentName('');
+		setActiveDescription('');
+
+		// Default trainer to current user
+		if (user && (user.role === 'trainer' || user.role === 'admin' || user.role === 'manager')) {
+			setActiveTrainerId(user.id);
+		} else {
+			setActiveTrainerId('');
+		}
+
+		setActiveCourses([]);
+		setDialogOpen(true);
+	};
+
+	const handleDialogSubmit = (data: {
+		assessmentName: string;
+		courses: string[];
+		description: string;
+		date: string;
+		maxMarks: number;
+	}) => {
+		setActiveAssessmentName(data.assessmentName);
+		setActiveCourses(data.courses);
+		setActiveDescription(data.description);
+		setActiveDate(data.date);
+		setActiveMaxMarks(data.maxMarks);
+	};
+
+	if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}><CircularProgress thickness={2} size={40} /></Box>;
 
 	return (
-		<Box>
-			<Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-				<Stack direction="row" spacing={2} alignItems="center">
-					<FormControl size="small" sx={{ minWidth: 250 }}>
-						<InputLabel>Select Assessment</InputLabel>
-						<Select
-							value={activeAssessmentName}
-							label="Select Assessment"
-							onChange={(e) => setActiveAssessmentName(e.target.value)}
-						>
-							{assessmentNames.length === 0 && <MenuItem value={activeAssessmentName}>{activeAssessmentName}</MenuItem>}
-							{assessmentNames.map(name => (
-								<MenuItem key={name} value={name}>{name}</MenuItem>
-							))}
-						</Select>
-					</FormControl>
-					<Button
-						variant="outlined"
-						startIcon={<AddIcon />}
-						onClick={() => setDialogOpen(true)}
-						sx={{ textTransform: 'none' }}
-					>
-						New Assessment
-					</Button>
-				</Stack>
-				<Button
-					variant="contained"
-					startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
-					onClick={handleSave}
-					disabled={saving}
-					sx={{ bgcolor: '#007eb9', '&:hover': { bgcolor: '#00679a' } }}
-				>
-					{saving ? 'Saving...' : 'Save All Marks'}
-				</Button>
-			</Box>
+		<Box sx={{ p: 0 }}>
+			{/* Top Header Section */}
+			<Paper elevation={0} sx={{ p: 3, mb: 3, border: '1px solid #eaeded', borderRadius: '4px', bgcolor: 'white' }}>
+				<Typography variant="h6" sx={{ fontSize: '1.25rem', fontWeight: 800, color: '#232f3e', mb: 2 }}>
+					Weekly Assessments
+				</Typography>
+				<Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+					Manage and track student performance across courses for {batch.batch_name}
+				</Typography>
 
-			<TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 1 }}>
-				<Table>
-					<TableHead sx={{ bgcolor: '#f8f9fa' }}>
-						<TableRow>
-							<TableCell sx={{ fontWeight: 700 }}>Student Name</TableCell>
-							<TableCell sx={{ fontWeight: 700 }}>Assessment Name</TableCell>
-							<TableCell sx={{ fontWeight: 700 }} align="center">Marks Obtained</TableCell>
-							<TableCell sx={{ fontWeight: 700 }} align="center">Max Marks</TableCell>
-							<TableCell sx={{ fontWeight: 700 }} align="center">Percentage</TableCell>
-						</TableRow>
-					</TableHead>
-					<TableBody>
-						{allocations.map(allocation => {
-							const record = getMark(allocation.candidate_id);
-							const percentage = record ? (record.marks_obtained / record.max_marks) * 100 : 0;
+				<AssessmentHeader
+					assessmentNames={assessmentNames}
+					activeAssessmentName={activeAssessmentName}
+					onSelectAssessment={handleSelectAssessment}
+					onCreateNew={handleCreateNew}
+					onSave={handleSave}
+					onDelete={handleDeleteAssessment}
+					saving={saving}
+				/>
 
-							return (
-								<TableRow key={allocation.id} hover>
-									<TableCell sx={{ fontWeight: 600 }}>{allocation.candidate?.name}</TableCell>
-									<TableCell color="text.secondary">{activeAssessmentName}</TableCell>
-									<TableCell align="center">
-										<TextField
-											type="number"
-											size="small"
-											value={record?.marks_obtained ?? ''}
-											onChange={(e) => handleMarkChange(allocation.candidate_id, e.target.value)}
-											sx={{ width: 80, '& input': { textAlign: 'center' } }}
-										/>
-									</TableCell>
-									<TableCell align="center">
-										<Typography variant="body2">{record?.max_marks || 100}</Typography>
-									</TableCell>
-									<TableCell align="center">
-										<Typography variant="body2" sx={{ fontWeight: 700, color: percentage >= 70 ? '#2e7d32' : percentage >= 40 ? '#fb8c00' : '#d32f2f' }}>
-											{percentage.toFixed(1)}%
-										</Typography>
-									</TableCell>
-								</TableRow>
-							);
-						})}
-					</TableBody>
-				</Table>
-			</TableContainer>
-
-			<Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
-				<DialogTitle>Create New Assessment</DialogTitle>
-				<DialogContent sx={{ minWidth: 400, pt: 2 }}>
-					<TextField
-						fullWidth
-						autoFocus
-						label="Assessment Name"
-						placeholder="e.g. Week 2 - Technical Skills"
-						value={newAssessmentName}
-						onChange={(e) => setNewAssessmentName(e.target.value)}
-						sx={{ mt: 1 }}
+				{activeAssessmentName && (
+					<AssessmentConfigPanel
+						assessmentName={activeAssessmentName}
+						date={activeDate}
+						courses={activeCourses}
+						trainerId={activeTrainerId}
+						maxMarks={activeMaxMarks}
+						description={activeDescription}
+						batch={batch}
+						trainers={trainers}
+						onDateChange={setActiveDate}
+						onCoursesChange={setActiveCourses}
+						onTrainerChange={setActiveTrainerId}
+						onMaxMarksChange={setActiveMaxMarks}
+						onDescriptionChange={setActiveDescription}
 					/>
-				</DialogContent>
-				<DialogActions>
-					<Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-					<Button onClick={handleAddAssessment} variant="contained" disabled={!newAssessmentName.trim()}>Create</Button>
-				</DialogActions>
-			</Dialog>
+				)}
+			</Paper>
+
+			{/* Matrix Section */}
+			<AssessmentMatrix
+				allocations={allocations}
+				assessments={assessments}
+				activeAssessmentName={activeAssessmentName}
+				activeCourses={activeCourses}
+				activeMaxMarks={activeMaxMarks}
+				activeDate={activeDate}
+				onMarkChange={handleMarkChange}
+			/>
+
+			{/* New Assessment Dialog */}
+			<AssessmentFormDialog
+				open={dialogOpen}
+				onClose={() => setDialogOpen(false)}
+				onSubmit={handleDialogSubmit}
+				batch={batch}
+			/>
 		</Box>
 	);
 };

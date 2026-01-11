@@ -59,6 +59,16 @@ async def create_assessment(
     return assessment
 
 
+@router.post("/assessments/bulk", response_model=List[TrainingAssessmentResponse])
+async def update_bulk_assessments(
+    assessments_in: List[TrainingAssessmentCreate],
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER])),
+    db: AsyncSession = Depends(get_db)
+):
+    service = TrainingExtensionService(db)
+    return await service.update_bulk_assessments(assessments_in)
+
+
 @router.get("/assessments/{batch_id}", response_model=List[TrainingAssessmentResponse])
 async def get_assessments(
     batch_id: int,
@@ -67,6 +77,17 @@ async def get_assessments(
 ):
     service = TrainingExtensionService(db)
     return await service.get_assessments(batch_id)
+
+
+@router.delete("/assessments/{batch_id}/{assessment_name}", status_code=status.HTTP_200_OK)
+async def delete_assessments_by_name(
+    batch_id: int,
+    assessment_name: str,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER])),
+    db: AsyncSession = Depends(get_db)
+):
+    service = TrainingExtensionService(db)
+    return await service.delete_assessments_by_name(batch_id, assessment_name)
 
 
 # Mock Interviews

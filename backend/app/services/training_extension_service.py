@@ -68,6 +68,40 @@ class TrainingExtensionService:
     async def create_assessment(self, assessment_in: TrainingAssessmentCreate):
         return await self.assessment_repo.create(assessment_in.model_dump())
 
+    async def update_bulk_assessments(self, assessments_in: List[TrainingAssessmentCreate]):
+        records = []
+        for ass in assessments_in:
+            # Check if record exists for this candidate/batch/date/name
+            query = select(self.assessment_repo.model).where(
+                self.assessment_repo.model.batch_id == ass.batch_id,
+                self.assessment_repo.model.candidate_id == ass.candidate_id,
+                self.assessment_repo.model.assessment_name == ass.assessment_name,
+                self.assessment_repo.model.is_deleted == False
+            )
+            # Auto-calculate marks_obtained if course_marks is provided
+            if ass.course_marks:
+                ass.marks_obtained = sum(ass.course_marks.values())
+
+            existing = (await self.db.execute(query)).scalar_one_or_none()
+            if existing:
+                record = await self.assessment_repo.update(existing.id, ass.model_dump(exclude={"batch_id", "candidate_id", "assessment_name"}))
+            else:
+                record = await self.assessment_repo.create(ass.model_dump())
+            records.append(record)
+        return records
+
+    async def delete_assessments_by_name(self, batch_id: int, assessment_name: str):
+        """Delete all assessment records for a given assessment name in a batch"""
+        from sqlalchemy import update
+        query = update(self.assessment_repo.model).where(
+            self.assessment_repo.model.batch_id == batch_id,
+            self.assessment_repo.model.assessment_name == assessment_name,
+            self.assessment_repo.model.is_deleted == False
+        ).values(is_deleted=True)
+        await self.db.execute(query)
+        await self.db.commit()
+        return {"message": f"Assessment '{assessment_name}' deleted successfully"}
+
     # Mock Interviews
     async def get_mock_interviews(self, batch_id: int):
         query = select(self.mock_interview_repo.model).where(
