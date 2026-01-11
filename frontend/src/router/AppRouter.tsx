@@ -10,6 +10,7 @@ import CandidateList from '../pages/Candidates/CandidateList';
 import ScreeningList from '../pages/screening/ScreeningList';
 import CounselingList from '../pages/counseling/CounselingList';
 import TrainingBatchList from '../pages/training/TrainingBatchList';
+import TrainingBatchDetail from '../pages/training/TrainingBatchDetail';
 import CandidateAllocation from '../pages/training/CandidateAllocation';
 import SuccessPage from '../pages/common/SuccessPage';
 import NotFoundPage from '../pages/common/NotFoundPage';
@@ -56,6 +57,7 @@ const AppRouter: React.FC = () => {
 
 						<Route path="training">
 							<Route path="batches" element={<TrainingBatchList />} />
+							<Route path="batches/:id" element={<TrainingBatchDetail />} />
 							<Route path="allocation" element={<CandidateAllocation />} />
 						</Route>
 

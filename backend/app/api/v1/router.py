@@ -4,17 +4,18 @@ from fastapi import APIRouter
 from app.api.v1.endpoints import (
     auth,
     users,
-    activity_logs,
     candidates,
-    candidate_screening,
     candidate_documents,
     candidate_counseling,
-    analytics,
+    candidate_screening,
     training_batches,
+    training_extensions,
     training_candidate_allocations,
-    settings,
     tickets,
-    training_extensions
+    settings,
+    activity_logs,
+    analytics,
+    mock_interviews
 )
 
 
@@ -29,6 +30,7 @@ router.include_router(candidates.router)
 router.include_router(candidate_screening.router)
 router.include_router(candidate_documents.router)
 router.include_router(candidate_counseling.router)
+router.include_router(mock_interviews.router, prefix="/mock-interviews", tags=["Mock Interviews"])
 router.include_router(analytics.router)
 router.include_router(training_batches.router)
 router.include_router(training_candidate_allocations.router)

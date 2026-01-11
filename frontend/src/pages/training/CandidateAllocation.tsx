@@ -34,7 +34,7 @@ import type { TrainingBatch } from '../../models/training';
 import AllocateCandidateDialog from '../../components/training/form/AllocateCandidateDialog';
 import AttendanceTracker from '../../components/training/extensions/AttendanceTracker';
 import AssessmentTracker from '../../components/training/extensions/AssessmentTracker';
-import MockInterviewManager from '../../components/training/extensions/MockInterviewManager';
+import MockInterviewList from '../../components/training/mock-interview/MockInterviewList';
 import BatchSelectionHeader from '../../components/training/BatchSelectionHeader';
 import CandidateAllocationTable from '../../components/training/CandidateAllocationTable';
 import DropoutDialog from '../../components/training/form/DropoutDialog';
@@ -280,7 +280,7 @@ const CandidateAllocation: React.FC = () => {
 						</TabPanel>
 
 						<TabPanel value={tabValue} index={4}>
-							<MockInterviewManager batch={selectedBatch} allocations={allocations} />
+							<MockInterviewList batchId={selectedBatch.id} />
 						</TabPanel>
 
 						<TabPanel value={tabValue} index={5}>

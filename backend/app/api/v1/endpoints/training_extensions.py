@@ -8,7 +8,7 @@ from app.api.deps import require_roles
 from app.models.user import User, UserRole
 from app.schemas.training_attendance import TrainingAttendanceCreate, TrainingAttendanceResponse
 from app.schemas.training_assessment import TrainingAssessmentCreate, TrainingAssessmentResponse
-from app.schemas.training_mock_interview import TrainingMockInterviewCreate, TrainingMockInterviewResponse
+from app.schemas.training_mock_interview import TrainingMockInterviewCreate, TrainingMockInterviewUpdate, TrainingMockInterviewResponse
 from app.schemas.training_batch_event import TrainingBatchEventCreate, TrainingBatchEventResponse
 from app.services.training_extension_service import TrainingExtensionService
 from app.utils.activity_tracker import log_create
@@ -112,14 +112,83 @@ async def create_mock_interview(
     return mock
 
 
-@router.get("/mock-interviews/{batch_id}", response_model=List[TrainingMockInterviewResponse])
-async def get_mock_interviews(
+@router.get("/mock-interviews/batch/{batch_id}", response_model=List[TrainingMockInterviewResponse])
+async def get_mock_interviews_by_batch(
     batch_id: int,
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER])),
     db: AsyncSession = Depends(get_db)
 ):
     service = TrainingExtensionService(db)
     return await service.get_mock_interviews(batch_id)
+
+
+@router.get("/mock-interviews/{id}", response_model=TrainingMockInterviewResponse)
+async def get_mock_interview(
+    id: int,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER])),
+    db: AsyncSession = Depends(get_db)
+):
+    service = TrainingExtensionService(db)
+    mock = await service.get_mock_interview(id)
+    if not mock:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Mock interview not found")
+    return mock
+
+
+@router.put("/mock-interviews/{id}", response_model=TrainingMockInterviewResponse)
+async def update_mock_interview(
+    request: Request,
+    id: int,
+    mock_in: TrainingMockInterviewUpdate,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER])),
+    db: AsyncSession = Depends(get_db)
+):
+    service = TrainingExtensionService(db)
+    
+    # Fetch current object before update for logging
+    original_mock = await service.get_mock_interview(id)
+    if not original_mock:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Mock interview not found")
+        
+    mock = await service.update_mock_interview(id, mock_in)
+    
+    from app.utils.activity_tracker import log_update
+    await log_update(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="training_mock_interview",
+        resource_id=id,
+        before=original_mock,
+        after=mock
+    )
+    return mock
+
+
+@router.delete("/mock-interviews/{id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_mock_interview(
+    request: Request,
+    id: int,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER])),
+    db: AsyncSession = Depends(get_db)
+):
+    service = TrainingExtensionService(db)
+    success = await service.delete_mock_interview(id)
+    if not success:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Mock interview not found")
+    
+    from app.utils.activity_tracker import log_delete
+    await log_delete(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="training_mock_interview",
+        resource_id=id
+    )
+    return None
 
 
 # Batch Events (Holidays)

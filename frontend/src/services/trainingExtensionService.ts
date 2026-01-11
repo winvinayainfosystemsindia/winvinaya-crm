@@ -36,7 +36,7 @@ const trainingExtensionService = {
 
 	// Mock Interviews
 	getMockInterviews: async (batchId: number) => {
-		const response = await api.get<TrainingMockInterview[]>(`/training-extensions/mock-interviews/${batchId}`);
+		const response = await api.get<TrainingMockInterview[]>(`/training-extensions/mock-interviews/batch/${batchId}`);
 		return response.data;
 	},
 

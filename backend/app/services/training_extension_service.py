@@ -104,15 +104,19 @@ class TrainingExtensionService:
 
     # Mock Interviews
     async def get_mock_interviews(self, batch_id: int):
-        query = select(self.mock_interview_repo.model).where(
-            self.mock_interview_repo.model.batch_id == batch_id,
-            self.mock_interview_repo.model.is_deleted == False
-        )
-        result = await self.db.execute(query)
-        return result.scalars().all()
+        return await self.mock_interview_repo.get_by_batch_id(batch_id)
+
+    async def get_mock_interview(self, id: int):
+        return await self.mock_interview_repo.get(id)
 
     async def create_mock_interview(self, mock_in: TrainingMockInterviewCreate):
         return await self.mock_interview_repo.create(mock_in.model_dump())
+
+    async def update_mock_interview(self, id: int, mock_in: TrainingMockInterviewUpdate):
+        return await self.mock_interview_repo.update(id, mock_in.model_dump(exclude_unset=True))
+
+    async def delete_mock_interview(self, id: int):
+        return await self.mock_interview_repo.delete(id)
 
     # Batch Events (Holidays)
     async def get_batch_events(self, batch_id: int):

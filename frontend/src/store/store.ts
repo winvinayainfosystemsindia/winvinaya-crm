@@ -7,18 +7,24 @@ import userReducer from './slices/userSlice';
 import trainingReducer from './slices/trainingSlice';
 import notificationReducer from './slices/notificationSlice';
 import settingsReducer from './slices/settingsSlice';
+import mockInterviewReducer from './slices/mockInterviewSlice';
 
 export const store = configureStore({
 	reducer: {
-		ui: uiReducer,
 		auth: authReducer,
+		ui: uiReducer,
+		training: trainingReducer,
 		candidates: candidateReducer,
 		activityLogs: activityLogReducer,
 		users: userReducer,
-		training: trainingReducer,
-		notifications: notificationReducer,
 		settings: settingsReducer,
+		notifications: notificationReducer,
+		mockInterviews: mockInterviewReducer,
 	},
+	middleware: (getDefaultMiddleware) =>
+		getDefaultMiddleware({
+			serializableCheck: false,
+		}),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

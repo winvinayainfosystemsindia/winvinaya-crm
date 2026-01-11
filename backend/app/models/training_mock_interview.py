@@ -1,7 +1,7 @@
 """Training Mock Interview model"""
 
 from datetime import datetime
-from sqlalchemy import Integer, ForeignKey, String, Text, DateTime, JSON
+from sqlalchemy import Integer, ForeignKey, String, Text, DateTime, JSON, Float
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
 
@@ -26,12 +26,14 @@ class TrainingMockInterview(BaseModel):
     )
     
     interviewer_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    interview_date: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    interview_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
     
     # Structured data
     questions: Mapped[dict | list | None] = mapped_column(JSON, nullable=True) # List of {question, answer}
+    skills: Mapped[dict | list | None] = mapped_column(JSON, nullable=True) # List of {skill_name, level, rating}
+    others: Mapped[dict | list | None] = mapped_column(JSON, nullable=True) # Extra dynamic fields
     feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
-    overall_rating: Mapped[int | None] = mapped_column(Integer, nullable=True) # e.g., 1-5
+    overall_rating: Mapped[float | None] = mapped_column(Float, nullable=True) # e.g., 1-10
     
     status: Mapped[str] = mapped_column(
         String(20), 
