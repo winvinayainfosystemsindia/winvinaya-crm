@@ -11,6 +11,7 @@ export const useMockInterviewList = (batchId: number) => {
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [searchTerm, setSearchTerm] = useState('');
+	const [filterCandidateId, setFilterCandidateId] = useState<number | null>(null);
 	const [isFormOpen, setIsFormOpen] = useState(false);
 	const [viewMode, setViewMode] = useState(false);
 
@@ -58,11 +59,32 @@ export const useMockInterviewList = (batchId: number) => {
 	}, [dispatch]);
 
 	const filteredInterviews = useMemo(() => {
-		return mockInterviews.filter(interview =>
-			interview.interviewer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			interview.status.toLowerCase().includes(searchTerm.toLowerCase())
-		);
-	}, [mockInterviews, searchTerm]);
+		return mockInterviews.filter(interview => {
+			const matchesSearch = interview.interviewer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+				interview.status.toLowerCase().includes(searchTerm.toLowerCase());
+			const matchesCandidate = filterCandidateId ? interview.candidate_id === filterCandidateId : true;
+			return matchesSearch && matchesCandidate;
+		});
+	}, [mockInterviews, searchTerm, filterCandidateId]);
+
+	const stats = useMemo(() => {
+		const total = mockInterviews.length;
+		const cleared = mockInterviews.filter(i => i.status === 'cleared').length;
+		const absent = mockInterviews.filter(i => i.status === 'absent').length;
+		const uniqueCandidates = new Set(mockInterviews.filter(i => i.status !== 'absent').map(i => i.candidate_id)).size;
+		const ratedInterviews = mockInterviews.filter(i => i.overall_rating !== undefined && i.overall_rating !== null);
+		const avgRating = ratedInterviews.length > 0
+			? ratedInterviews.reduce((sum, i) => sum + (i.overall_rating || 0), 0) / ratedInterviews.length
+			: 0;
+
+		return {
+			total,
+			cleared,
+			absent,
+			uniqueCandidates,
+			avgRating: avgRating.toFixed(1)
+		};
+	}, [mockInterviews]);
 
 	return {
 		mockInterviews: filteredInterviews,
@@ -70,9 +92,12 @@ export const useMockInterviewList = (batchId: number) => {
 		page,
 		rowsPerPage,
 		searchTerm,
+		filterCandidateId,
 		isFormOpen,
 		viewMode,
+		stats,
 		setSearchTerm,
+		setFilterCandidateId,
 		setIsFormOpen,
 		handleRefresh,
 		handleChangePage,

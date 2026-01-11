@@ -40,7 +40,7 @@ class TrainingMockInterview(BaseModel):
         nullable=False, 
         default="pending",
         index=True
-    ) # pending, cleared, re-test, rejected
+    ) # pending, cleared, re-test, rejected, absent
     
     # Relationships
     batch: Mapped["TrainingBatch"] = relationship("TrainingBatch")

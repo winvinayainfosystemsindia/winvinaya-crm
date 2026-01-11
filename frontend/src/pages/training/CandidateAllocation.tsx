@@ -193,7 +193,7 @@ const CandidateAllocation: React.FC = () => {
 			case 3:
 				return <AssessmentTracker batch={selectedBatch} allocations={allocations} />;
 			case 4:
-				return <MockInterviewList batchId={selectedBatch.id} />;
+				return <MockInterviewList batchId={selectedBatch.id} allocations={allocations} />;
 			default:
 				return <Typography>Please select a valid module from the sidebar.</Typography>;
 		}

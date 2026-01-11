@@ -104,35 +104,36 @@ const MockInterviewFormMetadata: React.FC<MockInterviewFormMetadataProps> = memo
 						<MenuItem value="cleared">Cleared / Recommended</MenuItem>
 						<MenuItem value="re-test">Require Re-assessment</MenuItem>
 						<MenuItem value="rejected">Not Recommended</MenuItem>
+						<MenuItem value="absent">Absent / Not Attended</MenuItem>
 					</TextField>
 				</Stack>
 			</Box>
 
 			<Paper variant="outlined" sx={{ p: 3, borderRadius: '4px', bgcolor: '#f1faff', border: '1px solid #d1e9ff' }}>
 				<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-					<Typography variant="body2" sx={{ fontWeight: 700, color: PRIMARY_BLUE }}>
-						OVERALL SCORE
+					<Typography variant="body2" sx={{ fontWeight: 700, color: formData.status === 'absent' ? '#879196' : PRIMARY_BLUE }}>
+						{formData.status === 'absent' ? 'NO SCORE (ABSENT)' : 'OVERALL SCORE'}
 					</Typography>
-					<Tooltip title="Aggregated proficiency score across all assessed areas">
-						<HelpIcon sx={{ fontSize: 16, color: PRIMARY_BLUE, opacity: 0.7 }} />
+					<Tooltip title={formData.status === 'absent' ? 'Candidate was absent, no proficiency score recorded' : 'Aggregated proficiency score across all assessed areas'}>
+						<HelpIcon sx={{ fontSize: 16, color: formData.status === 'absent' ? '#879196' : PRIMARY_BLUE, opacity: 0.7 }} />
 					</Tooltip>
 				</Stack>
 				<Box sx={{ textAlign: 'center' }}>
-					<Typography variant="h2" sx={{ fontWeight: 800, color: PRIMARY_BLUE }}>
-						{formData.overall_rating}
-						<Typography component="span" variant="h6" color="text.secondary" sx={{ ml: 1 }}>/ 10</Typography>
+					<Typography variant="h2" sx={{ fontWeight: 800, color: formData.status === 'absent' ? '#879196' : PRIMARY_BLUE }}>
+						{formData.status === 'absent' ? '--' : formData.overall_rating}
+						{formData.status !== 'absent' && <Typography component="span" variant="h6" color="text.secondary" sx={{ ml: 1 }}>/ 10</Typography>}
 					</Typography>
 					<Slider
-						value={formData.overall_rating || 0}
+						value={formData.status === 'absent' ? 0 : (formData.overall_rating || 0)}
 						min={0}
 						max={10}
 						step={0.5}
 						onChange={(_, v) => onChange('overall_rating', v)}
-						disabled={viewMode}
+						disabled={viewMode || formData.status === 'absent'}
 						sx={{
 							mt: 2,
 							width: '90%',
-							color: PRIMARY_BLUE,
+							color: formData.status === 'absent' ? '#879196' : PRIMARY_BLUE,
 							'& .MuiSlider-thumb': {
 								'&:hover, &.Mui-focusVisible': {
 									boxShadow: `0px 0px 0px 8px rgba(0, 126, 185, 0.16)`,

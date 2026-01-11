@@ -19,7 +19,7 @@ export interface MockInterview {
 	skills?: Skill[];
 	feedback?: string;
 	overall_rating?: number;
-	status: 'pending' | 'cleared' | 're-test' | 'rejected';
+	status: 'pending' | 'cleared' | 're-test' | 'rejected' | 'absent';
 	created_at: string;
 	updated_at: string;
 }
