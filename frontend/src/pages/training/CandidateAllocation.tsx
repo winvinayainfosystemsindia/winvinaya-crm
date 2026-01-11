@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
 	Box,
 	Container,
@@ -73,8 +74,18 @@ const CandidateAllocation: React.FC = () => {
 	const { enqueueSnackbar } = useSnackbar();
 
 	const { batches, allocations, loading } = useAppSelector((state) => state.training);
+	const location = useLocation();
 	const [selectedBatch, setSelectedBatch] = useState<TrainingBatch | null>(null);
 	const [tabValue, setTabValue] = useState(0);
+
+	useEffect(() => {
+		const params = new URLSearchParams(location.search);
+		const tab = params.get('tab');
+		if (tab !== null) {
+			setTabValue(parseInt(tab));
+		}
+	}, [location]);
+
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 	const [searchQuery, setSearchQuery] = useState('');

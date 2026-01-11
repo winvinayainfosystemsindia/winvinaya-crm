@@ -296,15 +296,60 @@ const Sidebar: React.FC = () => {
 
 								<ListItemButton
 									sx={{ pl: 9, py: 0.5 }}
-									selected={isActive('/training/allocation')}
-									onClick={() => handleNavigate('/training/allocation')}
+									selected={location.pathname === '/training/allocation' && (new URLSearchParams(location.search).get('tab') === '1' || !new URLSearchParams(location.search).get('tab'))}
+									onClick={() => handleNavigate('/training/allocation?tab=1')}
 								>
 									<ListItemText
-										primary="Batch allocation manager"
+										primary="Candidate allocation"
 										primaryTypographyProps={{
 											fontSize: '0.9rem',
-											color: isActive('/training/allocation') ? 'primary.main' : '#5f6368',
-											fontWeight: isActive('/training/allocation') ? 600 : 400
+											color: (location.pathname === '/training/allocation' && (new URLSearchParams(location.search).get('tab') === '1' || !new URLSearchParams(location.search).get('tab'))) ? 'primary.main' : '#5f6368',
+											fontWeight: (location.pathname === '/training/allocation' && (new URLSearchParams(location.search).get('tab') === '1' || !new URLSearchParams(location.search).get('tab'))) ? 600 : 400
+										}}
+									/>
+								</ListItemButton>
+
+								<ListItemButton
+									sx={{ pl: 9, py: 0.5 }}
+									selected={location.pathname === '/training/allocation' && new URLSearchParams(location.search).get('tab') === '2'}
+									onClick={() => handleNavigate('/training/allocation?tab=2')}
+								>
+									<ListItemText
+										primary="Attendance"
+										primaryTypographyProps={{
+											fontSize: '0.9rem',
+											color: (location.pathname === '/training/allocation' && new URLSearchParams(location.search).get('tab') === '2') ? 'primary.main' : '#5f6368',
+											fontWeight: (location.pathname === '/training/allocation' && new URLSearchParams(location.search).get('tab') === '2') ? 600 : 400
+										}}
+									/>
+								</ListItemButton>
+
+								<ListItemButton
+									sx={{ pl: 9, py: 0.5 }}
+									selected={location.pathname === '/training/allocation' && new URLSearchParams(location.search).get('tab') === '3'}
+									onClick={() => handleNavigate('/training/allocation?tab=3')}
+								>
+									<ListItemText
+										primary="Assessment"
+										primaryTypographyProps={{
+											fontSize: '0.9rem',
+											color: (location.pathname === '/training/allocation' && new URLSearchParams(location.search).get('tab') === '3') ? 'primary.main' : '#5f6368',
+											fontWeight: (location.pathname === '/training/allocation' && new URLSearchParams(location.search).get('tab') === '3') ? 600 : 400
+										}}
+									/>
+								</ListItemButton>
+
+								<ListItemButton
+									sx={{ pl: 9, py: 0.5 }}
+									selected={location.pathname === '/training/allocation' && new URLSearchParams(location.search).get('tab') === '4'}
+									onClick={() => handleNavigate('/training/allocation?tab=4')}
+								>
+									<ListItemText
+										primary="Mock interview"
+										primaryTypographyProps={{
+											fontSize: '0.9rem',
+											color: (location.pathname === '/training/allocation' && new URLSearchParams(location.search).get('tab') === '4') ? 'primary.main' : '#5f6368',
+											fontWeight: (location.pathname === '/training/allocation' && new URLSearchParams(location.search).get('tab') === '4') ? 600 : 400
 										}}
 									/>
 								</ListItemButton>
