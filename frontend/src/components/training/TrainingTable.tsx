@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
 	Box,
 	Paper,
@@ -42,7 +41,6 @@ interface TrainingTableProps {
 
 const TrainingTable: React.FC<TrainingTableProps> = ({ refreshKey }) => {
 	const theme = useTheme();
-	const navigate = useNavigate();
 	const dispatch = useAppDispatch();
 	const { batches, loading, total: totalCount } = useAppSelector((state) => state.training);
 	const user = useAppSelector((state) => state.auth.user);
@@ -356,8 +354,7 @@ const TrainingTable: React.FC<TrainingTableProps> = ({ refreshKey }) => {
 									<TableCell>
 										<Typography
 											variant="body2"
-											sx={{ fontWeight: 500, cursor: 'pointer', color: 'primary.main', textDecoration: 'underline' }}
-											onClick={() => navigate(`/training/batches/${batch.id}`)}
+											sx={{ fontWeight: 500, color: 'primary.main' }}
 										>
 											{batch.batch_name}
 										</Typography>
