@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
 import { fetchAllocations } from '../../store/slices/trainingSlice';
-import { type AppDispatch } from '../../store/store';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import {
 	Box,
 	Container,
@@ -18,7 +17,8 @@ import MockInterviewList from '../../components/training/mock-interview/MockInte
 const TrainingBatchDetail: React.FC = () => {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
-	const dispatch = useDispatch<AppDispatch>();
+	const dispatch = useAppDispatch();
+	const { allocations } = useAppSelector((state) => state.training);
 	const [tabIndex, setTabIndex] = useState(0);
 
 	useEffect(() => {
@@ -101,7 +101,10 @@ const TrainingBatchDetail: React.FC = () => {
 				)}
 
 				{tabIndex === 1 && (
-					<MockInterviewList batchId={parsedId || 1} />
+					<MockInterviewList
+						batchId={parsedId || 1}
+						allocations={allocations}
+					/>
 				)}
 
 				{tabIndex === 2 && (
