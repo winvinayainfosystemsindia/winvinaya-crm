@@ -3,12 +3,10 @@ import {
 	Box,
 	Paper,
 	Typography,
-	Stack,
-	Button
+	Stack
 } from '@mui/material';
 import {
-	InfoOutlined as InfoIcon,
-	HistoryRounded as HistoryIcon
+	InfoOutlined as InfoIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import type { TrainingAttendance } from '../../../models/training';
@@ -58,15 +56,6 @@ const AttendanceLegend: React.FC<AttendanceLegendProps> = ({
 					• You can only mark attendance within the <strong>Batch Duration</strong>.
 				</Typography>
 			</Paper>
-
-			<Button
-				variant="outlined"
-				fullWidth
-				startIcon={<HistoryIcon />}
-				sx={{ textTransform: 'none', borderColor: '#d5dbdb', color: '#545b64', py: 1 }}
-			>
-				View Attendance Report
-			</Button>
 		</Stack>
 	);
 };
