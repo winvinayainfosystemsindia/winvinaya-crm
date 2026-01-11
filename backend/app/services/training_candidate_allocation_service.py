@@ -80,6 +80,24 @@ class TrainingCandidateAllocationService:
         result = await self.db.execute(query)
         return list(result.scalars().all())
     
+    async def get_allocations_by_candidate(self, candidate_public_id: UUID) -> List[TrainingCandidateAllocation]:
+        """Get all allocations for a candidate (current and historical)"""
+        # Verify the candidate exists
+        candidate = await self.candidate_repo.get_by_public_id(candidate_public_id)
+        if not candidate:
+            raise HTTPException(status_code=404, detail="Candidate not found")
+        
+        # Build query to get all allocations ordered by creation date (newest first)
+        query = select(TrainingCandidateAllocation).where(
+            TrainingCandidateAllocation.candidate_id == candidate.id,
+            TrainingCandidateAllocation.is_deleted == False
+        ).options(
+            joinedload(TrainingCandidateAllocation.batch)
+        ).order_by(desc(TrainingCandidateAllocation.created_at))
+        
+        result = await self.db.execute(query)
+        return list(result.scalars().all())
+    
     async def allocate_candidate(self, allocation_in: TrainingCandidateAllocationCreate) -> TrainingCandidateAllocation:
         """Allocate a candidate to a batch with disability matching logic"""
         # Resolve batch

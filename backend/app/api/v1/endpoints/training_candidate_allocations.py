@@ -70,6 +70,20 @@ async def get_batch_allocations(
     return allocations
 
 
+@router.get("/candidate/{candidate_public_id}", response_model=List[TrainingCandidateAllocationResponse])
+async def get_candidate_allocations(
+    candidate_public_id: UUID,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.COUNSELOR])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get all allocations for a specific candidate (current and historical)
+    """
+    service = TrainingCandidateAllocationService(db)
+    allocations = await service.get_allocations_by_candidate(candidate_public_id)
+    return allocations
+
+
 @router.get("/eligible", response_model=List[dict])
 async def get_eligible_candidates(
     batch_public_id: Optional[UUID] = Query(None),

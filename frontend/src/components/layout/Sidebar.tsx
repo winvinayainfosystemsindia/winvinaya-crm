@@ -269,7 +269,7 @@ const Sidebar: React.FC = () => {
 									<SchoolIcon aria-hidden="true" />
 								</ListItemIcon>
 								<ListItemText
-									primary="Training"
+									primary="Training Management"
 									primaryTypographyProps={{ fontSize: '0.95rem', fontWeight: 500, color: '#202124' }}
 								/>
 								{trainingOpen ? <ExpandLess sx={{ color: '#5f6368' }} aria-hidden="true" /> : <ExpandMore sx={{ color: '#5f6368' }} aria-hidden="true" />}

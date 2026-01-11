@@ -1,6 +1,7 @@
 """Training Assessment Endpoints"""
 
 from typing import List
+from uuid import UUID
 from fastapi import APIRouter, Depends, status, Request, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
@@ -101,3 +102,14 @@ async def delete_assessments_by_name(
     )
     
     return result
+@router.get("/candidate/{public_id}", response_model=List[TrainingAssessmentResponse])
+async def get_candidate_assessments(
+    public_id: UUID,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.COUNSELOR])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get all assessment records for a specific candidate across all batches.
+    """
+    service = TrainingExtensionService(db)
+    return await service.get_assessments_by_candidate(public_id)

@@ -2,8 +2,10 @@
 
 from typing import List, Any
 from datetime import date
+from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from app.models.candidate import Candidate
 from app.repositories.training_attendance_repository import TrainingAttendanceRepository
 from app.repositories.training_assessment_repository import TrainingAssessmentRepository
 from app.repositories.training_mock_interview_repository import TrainingMockInterviewRepository
@@ -38,6 +40,17 @@ class TrainingExtensionService:
         result = await self.db.execute(query)
         return result.scalars().all()
 
+    async def get_attendance_by_candidate(self, public_id: UUID):
+        from sqlalchemy.orm import selectinload
+        query = select(self.attendance_repo.model).join(Candidate).options(
+            selectinload(self.attendance_repo.model.batch)
+        ).where(
+            Candidate.public_id == public_id,
+            self.attendance_repo.model.is_deleted == False
+        ).order_by(self.attendance_repo.model.date.desc())
+        result = await self.db.execute(query)
+        return result.scalars().all()
+
     async def update_bulk_attendance(self, attendance_list: List[TrainingAttendanceCreate]):
         records = []
         for att in attendance_list:
@@ -62,6 +75,17 @@ class TrainingExtensionService:
             self.assessment_repo.model.batch_id == batch_id,
             self.assessment_repo.model.is_deleted == False
         )
+        result = await self.db.execute(query)
+        return result.scalars().all()
+
+    async def get_assessments_by_candidate(self, public_id: UUID):
+        from sqlalchemy.orm import selectinload
+        query = select(self.assessment_repo.model).join(Candidate).options(
+            selectinload(self.assessment_repo.model.batch)
+        ).where(
+            Candidate.public_id == public_id,
+            self.assessment_repo.model.is_deleted == False
+        ).order_by(self.assessment_repo.model.created_at.desc())
         result = await self.db.execute(query)
         return result.scalars().all()
 
@@ -102,9 +126,19 @@ class TrainingExtensionService:
         await self.db.commit()
         return {"message": f"Assessment '{assessment_name}' deleted successfully", "batch_id": batch_id, "assessment_name": assessment_name}
 
-    # Mock Interviews
     async def get_mock_interviews(self, batch_id: int):
         return await self.mock_interview_repo.get_by_batch_id(batch_id)
+
+    async def get_mock_interviews_by_candidate(self, public_id: UUID):
+        from sqlalchemy.orm import selectinload
+        query = select(self.mock_interview_repo.model).join(Candidate).options(
+            selectinload(self.mock_interview_repo.model.batch)
+        ).where(
+            Candidate.public_id == public_id,
+            self.mock_interview_repo.model.is_deleted == False
+        ).order_by(self.mock_interview_repo.model.interview_date.desc())
+        result = await self.db.execute(query)
+        return result.scalars().all()
 
     async def get_mock_interview(self, id: int):
         return await self.mock_interview_repo.get(id)

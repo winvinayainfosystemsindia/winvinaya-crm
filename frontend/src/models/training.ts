@@ -64,6 +64,7 @@ export interface TrainingAttendance {
 	date: string;
 	status: 'present' | 'absent' | 'late' | 'half_day';
 	remarks: string | null;
+	batch?: TrainingBatch; // Eager loaded batch info
 }
 
 export interface TrainingBatchEvent {
@@ -89,6 +90,7 @@ export interface TrainingAssessment {
 	assessment_date: string;
 	submission_date?: string;
 	others?: any;
+	batch?: TrainingBatch; // Eager loaded batch info
 }
 
 export interface TrainingMockInterview {
@@ -100,5 +102,6 @@ export interface TrainingMockInterview {
 	questions: { question: string; answer: string }[] | null;
 	feedback: string | null;
 	overall_rating: number | null;
-	status: 'pending' | 'cleared' | 're-test' | 'rejected';
+	status: 'pending' | 'cleared' | 're-test' | 'rejected' | 'absent';
+	batch?: TrainingBatch; // Eager loaded batch info
 }

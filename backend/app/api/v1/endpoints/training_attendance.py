@@ -1,6 +1,7 @@
 """Training Attendance Endpoints"""
 
 from typing import List
+from uuid import UUID
 from fastapi import APIRouter, Depends, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
@@ -53,3 +54,14 @@ async def get_attendance(
     """
     service = TrainingExtensionService(db)
     return await service.get_attendance(batch_id)
+@router.get("/candidate/{public_id}", response_model=List[TrainingAttendanceResponse])
+async def get_candidate_attendance(
+    public_id: UUID,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.COUNSELOR])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get all attendance records for a specific candidate across all batches.
+    """
+    service = TrainingExtensionService(db)
+    return await service.get_attendance_by_candidate(public_id)

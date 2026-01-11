@@ -60,6 +60,26 @@ const trainingExtensionService = {
 		const response = await api.delete(`/training-extensions/events/${eventId}`);
 		return response.data;
 	},
+	// Candidate specific data
+	getCandidateAttendance: async (publicId: string) => {
+		const response = await api.get<TrainingAttendance[]>(`/training-extensions/attendance/candidate/${publicId}`);
+		return response.data;
+	},
+
+	getCandidateAssessments: async (publicId: string) => {
+		const response = await api.get<TrainingAssessment[]>(`/training-extensions/assessments/candidate/${publicId}`);
+		return response.data;
+	},
+
+	getCandidateMockInterviews: async (publicId: string) => {
+		const response = await api.get<TrainingMockInterview[]>(`/training-extensions/mock-interviews/candidate/${publicId}`);
+		return response.data;
+	},
+
+	getCandidateAllocations: async (publicId: string) => {
+		const response = await api.get<any[]>(`/training-candidate-allocations/candidate/${publicId}`);
+		return response.data;
+	},
 };
 
 export default trainingExtensionService;
