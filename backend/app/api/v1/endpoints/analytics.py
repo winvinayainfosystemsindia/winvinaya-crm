@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, case
 from sqlalchemy.orm import selectinload
@@ -15,11 +15,13 @@ from app.models.training_candidate_allocation import TrainingCandidateAllocation
 from app.models.training_batch import TrainingBatch
 from app.models.dynamic_field import DynamicField
 from app.models.ticket import Ticket
+from app.utils.activity_tracker import log_read
 
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
 @router.get("/full-dump")
 async def get_analytics_dump(
+    request: Request,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.require_roles([UserRole.ADMIN])),
 ):
@@ -27,6 +29,7 @@ async def get_analytics_dump(
     Get a full dump of all major tables for analytics (PowerBI).
     Restricted to Admins with JWT.
     """
+    await log_read(db, request, current_user.id, "analytics_full_dump")
     
     # Fetch all data asynchronously
     users = (await db.execute(select(User))).scalars().all()

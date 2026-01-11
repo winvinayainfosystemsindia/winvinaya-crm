@@ -9,13 +9,15 @@ from app.api.v1.endpoints import (
     candidate_counseling,
     candidate_screening,
     training_batches,
-    training_extensions,
+    training_attendance,
+    training_assessments,
+    training_events,
+    training_mock_interviews,
     training_candidate_allocations,
     tickets,
     settings,
     activity_logs,
-    analytics,
-    mock_interviews
+    analytics
 )
 
 
@@ -30,10 +32,13 @@ router.include_router(candidates.router)
 router.include_router(candidate_screening.router)
 router.include_router(candidate_documents.router)
 router.include_router(candidate_counseling.router)
-router.include_router(mock_interviews.router, prefix="/mock-interviews", tags=["Mock Interviews"])
 router.include_router(analytics.router)
 router.include_router(training_batches.router)
 router.include_router(training_candidate_allocations.router)
 router.include_router(settings.router)
 router.include_router(tickets.router)
-router.include_router(training_extensions.router)
+router.include_router(training_attendance.router, prefix="/training-extensions")
+router.include_router(training_assessments.router, prefix="/training-extensions")
+router.include_router(training_events.router, prefix="/training-extensions")
+router.include_router(training_mock_interviews.router, prefix="/training-extensions")
+

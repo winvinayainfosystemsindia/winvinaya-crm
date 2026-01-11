@@ -100,7 +100,7 @@ class TrainingExtensionService:
         ).values(is_deleted=True)
         await self.db.execute(query)
         await self.db.commit()
-        return {"message": f"Assessment '{assessment_name}' deleted successfully"}
+        return {"message": f"Assessment '{assessment_name}' deleted successfully", "batch_id": batch_id, "assessment_name": assessment_name}
 
     # Mock Interviews
     async def get_mock_interviews(self, batch_id: int):
@@ -129,6 +129,9 @@ class TrainingExtensionService:
 
     async def create_batch_event(self, event_in: TrainingBatchEventCreate):
         return await self.event_repo.create(event_in.model_dump())
+
+    async def get_batch_event(self, event_id: int):
+        return await self.event_repo.get(event_id)
 
     async def delete_batch_event(self, event_id: int):
         return await self.event_repo.delete(event_id)

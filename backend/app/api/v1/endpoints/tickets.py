@@ -1,9 +1,10 @@
 from datetime import datetime
 from typing import Any, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
+from app.utils.activity_tracker import log_create, log_update
 
 from app.api import deps
 from app.models.ticket import Ticket, TicketMessage, TicketStatus, TicketPriority, TicketCategory
@@ -39,6 +40,7 @@ async def generate_ticket_number(db: AsyncSession) -> str:
 async def create_ticket(
     *,
     db: AsyncSession = Depends(deps.get_db),
+    request: Request,
     ticket_in: TicketCreate,
     current_user: User = Depends(deps.get_current_active_user),
 ) -> Any:
@@ -57,7 +59,18 @@ async def create_ticket(
     # Re-fetch with selectinload to avoid lazy-loading issues
     query = select(Ticket).where(Ticket.id == ticket.id).options(selectinload(Ticket.messages))
     result = await db.execute(query)
-    return result.scalars().first()
+    ticket_obj = result.scalars().first()
+    
+    await log_create(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="ticket",
+        resource_id=ticket_obj.id,
+        created_object=ticket_obj
+    )
+    
+    return ticket_obj
 
 
 @router.get("/", response_model=List[TicketSchema])
@@ -99,6 +112,7 @@ async def read_ticket(
 async def update_ticket(
     *,
     db: AsyncSession = Depends(deps.get_db),
+    request: Request,
     id: int,
     ticket_in: TicketUpdate,
     current_user: User = Depends(deps.get_current_active_user),
@@ -126,13 +140,26 @@ async def update_ticket(
     # Re-fetch with selectinload to avoid lazy-loading issues
     query = select(Ticket).where(Ticket.id == id).options(selectinload(Ticket.messages))
     result = await db.execute(query)
-    return result.scalars().first()
+    updated_ticket = result.scalars().first()
+    
+    await log_update(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="ticket",
+        resource_id=id,
+        before=ticket,
+        after=updated_ticket
+    )
+    
+    return updated_ticket
 
 
 @router.post("/{id}/messages", response_model=TicketMessageSchema)
 async def create_ticket_message(
     *,
     db: AsyncSession = Depends(deps.get_db),
+    request: Request,
     id: int,
     message_in: TicketMessageCreate,
     current_user: User = Depends(deps.get_current_active_user),
@@ -154,4 +181,14 @@ async def create_ticket_message(
     db.add(message)
     await db.commit()
     await db.refresh(message)
+    
+    await log_create(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="ticket_message",
+        resource_id=message.id,
+        created_object=message
+    )
+    
     return message

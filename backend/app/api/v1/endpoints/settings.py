@@ -1,5 +1,6 @@
 from typing import Any, List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
+from app.utils.activity_tracker import log_create, log_update, log_delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -29,6 +30,7 @@ async def get_fields(
 async def create_field(
     *,
     db: AsyncSession = Depends(get_db),
+    request: Request,
     field_in: DynamicFieldCreate,
     current_user: Any = Depends(require_roles([UserRole.ADMIN])),
 ) -> Any:
@@ -41,13 +43,25 @@ async def create_field(
     if any(f.name == field_in.name for f in existing):
         raise HTTPException(status_code=400, detail=f"Field with name '{field_in.name}' already exists for {field_in.entity_type}")
     
-    return await repo.create(field_in.model_dump())
+    field = await repo.create(field_in.model_dump())
+    
+    await log_create(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="dynamic_field",
+        resource_id=field.id,
+        created_object=field
+    )
+    
+    return field
 
 
 @router.put("/{id}", response_model=DynamicFieldResponse)
 async def update_field(
     *,
     db: AsyncSession = Depends(get_db),
+    request: Request,
     id: int,
     field_in: DynamicFieldUpdate,
     current_user: Any = Depends(require_roles([UserRole.ADMIN])),
@@ -61,13 +75,26 @@ async def update_field(
         raise HTTPException(status_code=404, detail="Field not found")
     
     update_data = field_in.model_dump(exclude_unset=True)
-    return await repo.update(id, update_data)
+    updated_field = await repo.update(id, update_data)
+    
+    await log_update(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="dynamic_field",
+        resource_id=id,
+        before=field,
+        after=updated_field
+    )
+    
+    return updated_field
 
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_field(
     *,
     db: AsyncSession = Depends(get_db),
+    request: Request,
     id: int,
     current_user: Any = Depends(require_roles([UserRole.ADMIN])),
 ):
@@ -82,5 +109,13 @@ async def delete_field(
     
     if not field.is_deleted:
         await repo.delete(id)
+        
+        await log_delete(
+            db=db,
+            request=request,
+            user_id=current_user.id,
+            resource_type="dynamic_field",
+            resource_id=id
+        )
         
     return None

@@ -116,7 +116,18 @@ async def create_candidate_document(
     Use /upload endpoint for automatic file upload instead
     """
     service = CandidateDocumentService(db)
-    return await service.create_document(public_id, document_in)
+    document = await service.create_document(public_id, document_in)
+    
+    await log_create(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="candidate_document",
+        resource_id=document.id,
+        created_object=document
+    )
+    
+    return document
 
 
 @router.get(
