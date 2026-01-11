@@ -193,6 +193,20 @@ export const useAssessment = (batch: TrainingBatch, allocations: CandidateAlloca
 		}
 	};
 
+	const stats = useMemo(() => {
+		if (!activeAssessmentName) return { totalAssessments: assessmentNames.length, submittedCount: 0, pendingCount: allocations.length };
+
+		const currentAssessments = assessments.filter(a => a.assessment_name === activeAssessmentName);
+		const submittedCount = currentAssessments.length;
+		const pendingCount = Math.max(0, allocations.length - submittedCount);
+
+		return {
+			totalAssessments: assessmentNames.length,
+			submittedCount,
+			pendingCount
+		};
+	}, [assessmentNames.length, activeAssessmentName, assessments, allocations.length]);
+
 	return {
 		loading,
 		saving,
@@ -205,6 +219,7 @@ export const useAssessment = (batch: TrainingBatch, allocations: CandidateAlloca
 		activeTrainerId,
 		activeDescription,
 		assessmentNames,
+		stats,
 		setActiveDate,
 		setActiveCourses,
 		setActiveTrainerId,
