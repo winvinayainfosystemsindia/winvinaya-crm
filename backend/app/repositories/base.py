@@ -1,7 +1,7 @@
 """Base repository with generic CRUD operations"""
 
 from typing import TypeVar, Generic, Type, Optional, List, Any
-from sqlalchemy import select, update, delete, func
+from sqlalchemy import select, update, delete, func, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.base import BaseModel
 
@@ -26,6 +26,19 @@ class BaseRepository(Generic[ModelType]):
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
     
+    async def get_by_fields(self, include_deleted: bool = False, **fields) -> List[ModelType]:
+        """Get records by multiple field filters"""
+        query = select(self.model)
+        for field, value in fields.items():
+            if hasattr(self.model, field):
+                query = query.where(getattr(self.model, field) == value)
+        
+        if not include_deleted:
+            query = query.where(self.model.is_deleted == False)
+            
+        result = await self.db.execute(query)
+        return list(result.scalars().all())
+
     async def get_multi(
         self,
         skip: int = 0,
@@ -49,6 +62,16 @@ class BaseRepository(Generic[ModelType]):
         await self.db.flush()
         await self.db.refresh(db_obj)
         return db_obj
+
+    async def bulk_create(self, objects: List[dict[str, Any]]) -> List[ModelType]:
+        """Efficiently create multiple records in one roundtrip"""
+        if not objects:
+            return []
+        
+        query = insert(self.model).values(objects).returning(self.model)
+        result = await self.db.execute(query)
+        await self.db.flush()
+        return list(result.scalars().all())
     
     async def update(
         self,
@@ -67,6 +90,27 @@ class BaseRepository(Generic[ModelType]):
         result = await self.db.execute(query)
         await self.db.flush()
         return result.scalar_one_or_none()
+
+    async def bulk_update(self, updates: List[dict[str, Any]]) -> List[ModelType]:
+        """Efficiently update multiple records in one roundtrip."""
+        if not updates:
+            return []
+        
+        def _do_bulk_update(session):
+            session.bulk_update_mappings(self.model, updates)
+            
+        await self.db.run_sync(_do_bulk_update)
+        await self.db.flush()
+        
+        # To return the updated objects, we need to fetch them.
+        # Assuming 'id' is the primary key.
+        updated_ids = [item['id'] for item in updates if 'id' in item]
+        if not updated_ids:
+            return []
+        
+        query = select(self.model).where(self.model.id.in_(updated_ids))
+        result = await self.db.execute(query)
+        return list(result.scalars().all())
     
     async def delete(self, id: int, soft: bool = True) -> bool:
         """Delete a record (soft delete by default)"""

@@ -25,6 +25,35 @@ class TrainingBatchRepository(BaseRepository[TrainingBatch]):
         result = await self.db.execute(query)
         return result.unique().scalar_one_or_none()
 
+    def _apply_filters(
+        self,
+        query,
+        include_deleted: bool = False,
+        search: Optional[str] = None,
+        status: Optional[str] = None,
+        disability_types: Optional[List[str]] = None
+    ):
+        """Internal helper to apply common filters to queries"""
+        if not include_deleted:
+            query = query.where(self.model.is_deleted == False)
+        
+        if search:
+            search_filter = f"%{search}%"
+            query = query.where(
+                or_(
+                    self.model.batch_name.ilike(search_filter),
+                    self.model.disability_type.ilike(search_filter)
+                )
+            )
+            
+        if status:
+            query = query.where(self.model.status == status)
+            
+        if disability_types:
+            query = query.where(self.model.disability_type.in_(disability_types))
+            
+        return query
+
     async def get_multi(
         self,
         skip: int = 0,
@@ -41,26 +70,13 @@ class TrainingBatchRepository(BaseRepository[TrainingBatch]):
             joinedload(self.model.extensions)
         )
         
-        if not include_deleted:
-            query = query.where(self.model.is_deleted == False)
-        
-        # Search filter
-        if search:
-            search_filter = f"%{search}%"
-            query = query.where(
-                or_(
-                    self.model.batch_name.ilike(search_filter),
-                    self.model.disability_type.ilike(search_filter)
-                )
-            )
-            
-        # Status filter
-        if status:
-            query = query.where(self.model.status == status)
-            
-        # Disability types filter
-        if disability_types:
-            query = query.where(self.model.disability_type.in_(disability_types))
+        query = self._apply_filters(
+            query, 
+            include_deleted=include_deleted, 
+            search=search, 
+            status=status, 
+            disability_types=disability_types
+        )
             
         # Sorting
         sort_column = getattr(self.model, sort_by, self.model.created_at)
@@ -84,52 +100,31 @@ class TrainingBatchRepository(BaseRepository[TrainingBatch]):
         from sqlalchemy import func
         query = select(func.count()).select_from(self.model)
         
-        if not include_deleted:
-            query = query.where(self.model.is_deleted == False)
-            
-        if search:
-            search_filter = f"%{search}%"
-            query = query.where(
-                or_(
-                    self.model.batch_name.ilike(search_filter),
-                    self.model.disability_type.ilike(search_filter)
-                )
-            )
-            
-        if status:
-            query = query.where(self.model.status == status)
-            
-        if disability_types:
-            query = query.where(self.model.disability_type.in_(disability_types))
+        query = self._apply_filters(
+            query, 
+            include_deleted=include_deleted, 
+            search=search, 
+            status=status, 
+            disability_types=disability_types
+        )
             
         result = await self.db.execute(query)
         return result.scalar_one()
 
     async def create(self, obj_in: dict[str, Any]) -> TrainingBatch:
         """Create a new batch and return with extensions loaded"""
-        db_obj = self.model(**obj_in)
-        self.db.add(db_obj)
-        await self.db.flush()
+        db_obj = await super().create(obj_in)
         
-        # Fetch with extensions to avoid lazy loading issues during serialization
-        query = select(self.model).options(
-            joinedload(self.model.extensions)
-        ).where(self.model.id == db_obj.id)
-        
-        result = await self.db.execute(query)
-        return result.unique().scalar_one()
+        # Reload with extensions
+        return await self.get_by_public_id(db_obj.public_id)
 
     async def update(self, id: int, obj_in: dict[str, Any]) -> Optional[TrainingBatch]:
         """Update and return with extensions loaded"""
-        query_update = (
-            update(self.model)
-            .where(self.model.id == id)
-            .where(self.model.is_deleted == False)
-            .values(**obj_in)
-        )
-        await self.db.execute(query_update)
-        await self.db.flush()
-        
+        db_obj = await super().update(id, obj_in)
+        if not db_obj:
+            return None
+            
+        # Reload with extensions
         query_select = select(self.model).options(
             joinedload(self.model.extensions)
         ).where(self.model.id == id)
