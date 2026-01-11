@@ -80,9 +80,15 @@ export interface TrainingAssessment {
 	batch_id: number;
 	candidate_id: number;
 	assessment_name: string;
+	description?: string;
+	course_name?: string[];
+	course_marks?: Record<string, number>;
+	trainer_id?: number;
 	marks_obtained: number;
 	max_marks: number;
 	assessment_date: string;
+	submission_date?: string;
+	others?: any;
 }
 
 export interface TrainingMockInterview {
