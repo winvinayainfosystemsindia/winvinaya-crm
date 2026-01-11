@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import {
 	Box,
 	Paper,
@@ -8,7 +8,7 @@ import {
 	Fade,
 	Chip
 } from '@mui/material';
-import type { TrainingBatch } from '../../models/training';
+import type { TrainingBatch } from '../../../models/training';
 
 interface BatchSelectionHeaderProps {
 	batches: TrainingBatch[];
@@ -19,7 +19,7 @@ interface BatchSelectionHeaderProps {
 	getStatusColor: (status: string) => string;
 }
 
-const BatchSelectionHeader: React.FC<BatchSelectionHeaderProps> = ({
+const BatchSelectionHeader: React.FC<BatchSelectionHeaderProps> = memo(({
 	batches,
 	selectedBatch,
 	onBatchChange,
@@ -95,6 +95,8 @@ const BatchSelectionHeader: React.FC<BatchSelectionHeaderProps> = ({
 			)}
 		</Paper>
 	);
-};
+});
+
+BatchSelectionHeader.displayName = 'BatchSelectionHeader';
 
 export default BatchSelectionHeader;

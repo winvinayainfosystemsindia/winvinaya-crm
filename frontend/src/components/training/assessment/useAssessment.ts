@@ -1,26 +1,13 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Box, Paper, CircularProgress, Typography } from '@mui/material';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { format } from 'date-fns';
 import { useSnackbar } from 'notistack';
 import trainingExtensionService from '../../../services/trainingExtensionService';
 import userService from '../../../services/userService';
 import type { TrainingBatch, CandidateAllocation, TrainingAssessment } from '../../../models/training';
 import type { User } from '../../../models/user';
-
 import { useAppSelector } from '../../../store/hooks';
 
-// Sub-components
-import AssessmentHeader from '../assessment/AssessmentHeader';
-import AssessmentConfigPanel from '../assessment/AssessmentConfigPanel';
-import AssessmentMatrix from '../assessment/AssessmentMatrix';
-import AssessmentFormDialog from '../assessment/AssessmentFormDialog';
-
-interface AssessmentTrackerProps {
-	batch: TrainingBatch;
-	allocations: CandidateAllocation[];
-}
-
-const AssessmentTracker: React.FC<AssessmentTrackerProps> = ({ batch, allocations }) => {
+export const useAssessment = (batch: TrainingBatch, allocations: CandidateAllocation[]) => {
 	const { enqueueSnackbar } = useSnackbar();
 	const user = useAppSelector((state) => state.auth.user);
 	const [loading, setLoading] = useState(false);
@@ -36,13 +23,7 @@ const AssessmentTracker: React.FC<AssessmentTrackerProps> = ({ batch, allocation
 	const [activeTrainerId, setActiveTrainerId] = useState<number | ''>('');
 	const [activeDescription, setActiveDescription] = useState('');
 
-	const [dialogOpen, setDialogOpen] = useState(false);
-
-	useEffect(() => {
-		fetchData();
-	}, [batch.id]);
-
-	const fetchData = async () => {
+	const fetchData = useCallback(async () => {
 		setLoading(true);
 		try {
 			const [assessmentData, userData] = await Promise.all([
@@ -55,11 +36,21 @@ const AssessmentTracker: React.FC<AssessmentTrackerProps> = ({ batch, allocation
 
 			const names = Array.from(new Set(assessmentData.map(a => a.assessment_name)));
 			if (names.length > 0) {
-				handleSelectAssessment(names[0], assessmentData);
+				// We use a local function or memoized logic for initial selection
+				const name = names[0];
+				const firstMatch = assessmentData.find(a => a.assessment_name === name);
+				if (firstMatch) {
+					setActiveAssessmentName(name);
+					setActiveDate(firstMatch.assessment_date);
+					const coursesCount = Array.isArray(firstMatch.course_name) ? firstMatch.course_name.length : (firstMatch.course_name ? 1 : 1);
+					setActiveMaxMarks(firstMatch.max_marks / (coursesCount || 1));
+					setActiveCourses(Array.isArray(firstMatch.course_name) ? firstMatch.course_name : (firstMatch.course_name ? [firstMatch.course_name as any] : []));
+					setActiveTrainerId(firstMatch.trainer_id || '');
+					setActiveDescription(firstMatch.description || '');
+				}
 			} else {
 				setActiveAssessmentName('New Assessment');
 				if (batch.courses && batch.courses.length > 0) setActiveCourses([batch.courses[0]]);
-				// Set default trainer to current user if they are a trainer/admin
 				if (user && (user.role === 'trainer' || user.role === 'admin' || user.role === 'manager')) {
 					setActiveTrainerId(user.id);
 				}
@@ -70,29 +61,32 @@ const AssessmentTracker: React.FC<AssessmentTrackerProps> = ({ batch, allocation
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, [batch.id, batch.courses, user, enqueueSnackbar]);
 
-	const handleSelectAssessment = (name: string, data: TrainingAssessment[] = assessments) => {
+	useEffect(() => {
+		if (batch.id) {
+			fetchData();
+		}
+	}, [batch.id, fetchData]);
+
+	const handleSelectAssessment = useCallback((name: string) => {
 		setActiveAssessmentName(name);
-		const firstMatch = data.find(a => a.assessment_name === name);
+		const firstMatch = assessments.find(a => a.assessment_name === name);
 		if (firstMatch) {
 			setActiveDate(firstMatch.assessment_date);
-			// For Sum logic: max_marks stored is Total Max.
-			// So per-course max = max_marks / number of courses
 			const coursesCount = Array.isArray(firstMatch.course_name) ? firstMatch.course_name.length : (firstMatch.course_name ? 1 : 1);
 			setActiveMaxMarks(firstMatch.max_marks / (coursesCount || 1));
-
 			setActiveCourses(Array.isArray(firstMatch.course_name) ? firstMatch.course_name : (firstMatch.course_name ? [firstMatch.course_name as any] : []));
 			setActiveTrainerId(firstMatch.trainer_id || '');
 			setActiveDescription(firstMatch.description || '');
 		}
-	};
+	}, [assessments]);
 
 	const assessmentNames = useMemo(() => {
 		return Array.from(new Set(assessments.map(a => a.assessment_name)));
 	}, [assessments]);
 
-	const handleMarkChange = (candidateId: number, field: keyof TrainingAssessment | 'remarks' | 'course_mark', value: any, courseName?: string) => {
+	const handleMarkChange = useCallback((candidateId: number, field: keyof TrainingAssessment | 'remarks' | 'course_mark', value: any, courseName?: string) => {
 		setAssessments(prev => {
 			const existingIdx = prev.findIndex(a => a.candidate_id === candidateId && a.assessment_name === activeAssessmentName);
 			const updated = [...prev];
@@ -106,7 +100,6 @@ const AssessmentTracker: React.FC<AssessmentTrackerProps> = ({ batch, allocation
 				} else if (field === 'course_mark' && courseName) {
 					const currentCourseMarks = updated[existingIdx].course_marks || {};
 					const newCourseMarks = { ...currentCourseMarks, [courseName]: value };
-					// Calculate SUM: sum of all course marks
 					const totalMarks = Object.values(newCourseMarks).reduce((sum, m) => sum + (m as number), 0);
 					updated[existingIdx] = {
 						...updated[existingIdx],
@@ -143,7 +136,7 @@ const AssessmentTracker: React.FC<AssessmentTrackerProps> = ({ batch, allocation
 			}
 			return updated;
 		});
-	};
+	}, [activeAssessmentName, activeDate, activeMaxMarks, activeCourses, activeTrainerId, activeDescription, batch.id]);
 
 	const handleSave = async () => {
 		if (!activeAssessmentName) {
@@ -153,7 +146,6 @@ const AssessmentTracker: React.FC<AssessmentTrackerProps> = ({ batch, allocation
 
 		setSaving(true);
 		try {
-			// Prepare data for bulk update
 			const assessmentsToSave = allocations.map(allocation => {
 				const existing = assessments.find(a => a.candidate_id === allocation.candidate_id && a.assessment_name === activeAssessmentName);
 				return {
@@ -161,7 +153,6 @@ const AssessmentTracker: React.FC<AssessmentTrackerProps> = ({ batch, allocation
 					candidate_id: allocation.candidate_id,
 					assessment_name: activeAssessmentName,
 					assessment_date: activeDate,
-					// Store TOTAL Max Marks = per_course_max * num_courses
 					max_marks: activeMaxMarks * (activeCourses.length || 1),
 					course_name: activeCourses,
 					trainer_id: activeTrainerId || undefined,
@@ -202,97 +193,27 @@ const AssessmentTracker: React.FC<AssessmentTrackerProps> = ({ batch, allocation
 		}
 	};
 
-	const handleCreateNew = () => {
-		setActiveAssessmentName('');
-		setActiveDescription('');
-
-		// Default trainer to current user
-		if (user && (user.role === 'trainer' || user.role === 'admin' || user.role === 'manager')) {
-			setActiveTrainerId(user.id);
-		} else {
-			setActiveTrainerId('');
-		}
-
-		setActiveCourses([]);
-		setDialogOpen(true);
+	return {
+		loading,
+		saving,
+		assessments,
+		trainers,
+		activeAssessmentName,
+		activeDate,
+		activeMaxMarks,
+		activeCourses,
+		activeTrainerId,
+		activeDescription,
+		assessmentNames,
+		setActiveDate,
+		setActiveCourses,
+		setActiveTrainerId,
+		setActiveMaxMarks,
+		setActiveDescription,
+		handleSelectAssessment,
+		handleMarkChange,
+		handleSave,
+		handleDeleteAssessment,
+		setActiveAssessmentName
 	};
-
-	const handleDialogSubmit = (data: {
-		assessmentName: string;
-		courses: string[];
-		description: string;
-		date: string;
-		maxMarks: number;
-	}) => {
-		setActiveAssessmentName(data.assessmentName);
-		setActiveCourses(data.courses);
-		setActiveDescription(data.description);
-		setActiveDate(data.date);
-		setActiveMaxMarks(data.maxMarks);
-	};
-
-	if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}><CircularProgress thickness={2} size={40} /></Box>;
-
-	return (
-		<Box sx={{ p: 0 }}>
-			{/* Top Header Section */}
-			<Paper elevation={0} sx={{ p: 3, mb: 3, border: '1px solid #eaeded', borderRadius: '4px', bgcolor: 'white' }}>
-				<Typography variant="h6" sx={{ fontSize: '1.25rem', fontWeight: 800, color: '#232f3e', mb: 2 }}>
-					Weekly Assessments
-				</Typography>
-				<Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-					Manage and track student performance across courses for {batch.batch_name}
-				</Typography>
-
-				<AssessmentHeader
-					assessmentNames={assessmentNames}
-					activeAssessmentName={activeAssessmentName}
-					onSelectAssessment={handleSelectAssessment}
-					onCreateNew={handleCreateNew}
-					onSave={handleSave}
-					onDelete={handleDeleteAssessment}
-					saving={saving}
-				/>
-
-				{activeAssessmentName && (
-					<AssessmentConfigPanel
-						assessmentName={activeAssessmentName}
-						date={activeDate}
-						courses={activeCourses}
-						trainerId={activeTrainerId}
-						maxMarks={activeMaxMarks}
-						description={activeDescription}
-						batch={batch}
-						trainers={trainers}
-						onDateChange={setActiveDate}
-						onCoursesChange={setActiveCourses}
-						onTrainerChange={setActiveTrainerId}
-						onMaxMarksChange={setActiveMaxMarks}
-						onDescriptionChange={setActiveDescription}
-					/>
-				)}
-			</Paper>
-
-			{/* Matrix Section */}
-			<AssessmentMatrix
-				allocations={allocations}
-				assessments={assessments}
-				activeAssessmentName={activeAssessmentName}
-				activeCourses={activeCourses}
-				activeMaxMarks={activeMaxMarks}
-				activeDate={activeDate}
-				onMarkChange={handleMarkChange}
-			/>
-
-			{/* New Assessment Dialog */}
-			<AssessmentFormDialog
-				open={dialogOpen}
-				onClose={() => setDialogOpen(false)}
-				onSubmit={handleDialogSubmit}
-				batch={batch}
-			/>
-		</Box>
-	);
 };
-
-export default AssessmentTracker;

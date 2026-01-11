@@ -1,11 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, memo } from 'react';
 import { Box } from '@mui/material';
-import StatCard from '../dashboard/StatCard';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { fetchTrainingStats } from '../../store/slices/trainingSlice';
+import StatCard from '../../dashboard/StatCard';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import { fetchTrainingStats } from '../../../store/slices/trainingSlice';
 import { BatchPrediction, PlayArrow, DoneAll, EventNote } from '@mui/icons-material';
 
-const TrainingStatsComponent: React.FC = () => {
+const TrainingStats: React.FC = memo(() => {
 	const dispatch = useAppDispatch();
 	const { stats } = useAppSelector((state) => state.training);
 
@@ -51,6 +51,8 @@ const TrainingStatsComponent: React.FC = () => {
 			</Box>
 		</Box>
 	);
-};
+});
 
-export default TrainingStatsComponent;
+TrainingStats.displayName = 'TrainingStats';
+
+export default TrainingStats;

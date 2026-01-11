@@ -32,11 +32,11 @@ import {
 } from '../../store/slices/trainingSlice';
 import type { TrainingBatch } from '../../models/training';
 import AllocateCandidateDialog from '../../components/training/form/AllocateCandidateDialog';
-import AttendanceTracker from '../../components/training/extensions/AttendanceTracker';
-import AssessmentTracker from '../../components/training/extensions/AssessmentTracker';
+import AttendanceTracker from '../../components/training/attendance/AttendanceTracker';
+import AssessmentTracker from '../../components/training/assessment/AssessmentTracker';
 import MockInterviewList from '../../components/training/mock-interview/MockInterviewList';
-import BatchSelectionHeader from '../../components/training/BatchSelectionHeader';
-import CandidateAllocationTable from '../../components/training/CandidateAllocationTable';
+import BatchSelectionHeader from '../../components/training/common/BatchSelectionHeader';
+import CandidateAllocationTable from '../../components/training/allocation/CandidateAllocationTable';
 import DropoutDialog from '../../components/training/form/DropoutDialog';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { useSnackbar } from 'notistack';
