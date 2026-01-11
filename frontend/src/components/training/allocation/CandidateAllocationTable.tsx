@@ -14,11 +14,14 @@ import {
 	Select,
 	MenuItem,
 	TextField,
-	InputAdornment
+	InputAdornment,
+	Button,
+	Stack
 } from '@mui/material';
 import {
 	Search as SearchIcon,
-	People as PeopleIcon
+	People as PeopleIcon,
+	PersonAdd as PersonAddIcon
 } from '@mui/icons-material';
 import type { CandidateAllocation } from '../../../models/training';
 import CandidateAllocationTableRow from './CandidateAllocationTableRow';
@@ -51,6 +54,7 @@ interface CandidateAllocationTableProps {
 	updatingStatusId: string | null;
 	onStatusChange: (publicId: string, status: string) => void;
 	onRemove: (publicId: string, name: string) => void;
+	onAddClick: () => void;
 }
 
 const CandidateAllocationTable: React.FC<CandidateAllocationTableProps> = memo(({
@@ -62,48 +66,90 @@ const CandidateAllocationTable: React.FC<CandidateAllocationTableProps> = memo((
 	onFilterChange,
 	updatingStatusId,
 	onStatusChange,
-	onRemove
+	onRemove,
+	onAddClick
 }) => {
 	return (
 		<Box>
-			{/* Filter and Search Bar */}
-			<Box sx={{ mb: 2, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-				<TextField
-					placeholder="Search candidates..."
-					size="small"
-					value={searchQuery}
-					onChange={(e) => onSearchChange(e.target.value)}
-					sx={{ flexGrow: 1, maxWidth: 400, bgcolor: 'white' }}
-					InputProps={{
-						startAdornment: (
-							<InputAdornment position="start">
-								<SearchIcon fontSize="small" />
-							</InputAdornment>
-						),
-					}}
-				/>
-				<FormControl size="small" sx={{ minWidth: 200 }}>
-					<Select
-						value={filterDropout}
-						onChange={(e) => onFilterChange(e.target.value as any)}
-						sx={{ bgcolor: 'white' }}
-					>
-						<MenuItem value="all">All Candidates</MenuItem>
-						<MenuItem value={false as any}>Active Only</MenuItem>
-						<MenuItem value={true as any}>Dropouts Only</MenuItem>
-					</Select>
-				</FormControl>
-			</Box>
+			{/* Command Bar */}
+			<Paper
+				elevation={0}
+				sx={{
+					p: 2,
+					mb: 3,
+					bgcolor: 'white',
+					border: '1px solid #d5dbdb',
+					borderRadius: '2px',
+					display: 'flex',
+					justifyContent: 'space-between',
+					alignItems: 'center',
+					flexWrap: 'wrap',
+					gap: 2
+				}}
+			>
+				<Box sx={{ display: 'flex', gap: 2, flexGrow: 1, maxWidth: 800 }}>
+					<TextField
+						placeholder="Search candidates by name, email or ID..."
+						size="small"
+						value={searchQuery}
+						onChange={(e) => onSearchChange(e.target.value)}
+						sx={{ flexGrow: 1, bgcolor: '#fbfbfb' }}
+						InputProps={{
+							startAdornment: (
+								<InputAdornment position="start">
+									<SearchIcon fontSize="small" sx={{ color: '#545b64' }} />
+								</InputAdornment>
+							),
+							sx: { borderRadius: '2px', height: 36, fontSize: '0.875rem' }
+						}}
+					/>
+					<FormControl size="small" sx={{ minWidth: 180 }}>
+						<Select
+							value={filterDropout}
+							onChange={(e) => onFilterChange(e.target.value as any)}
+							sx={{ bgcolor: '#fbfbfb', borderRadius: '2px', height: 36, fontSize: '0.875rem' }}
+						>
+							<MenuItem value="all">Filter: All Candidates</MenuItem>
+							<MenuItem value={false as any}>Filter: Active Only</MenuItem>
+							<MenuItem value={true as any}>Filter: Dropouts Only</MenuItem>
+						</Select>
+					</FormControl>
+				</Box>
 
-			<TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #d5dbdb', borderRadius: '4px' }}>
+				<Stack direction="row" spacing={2} alignItems="center">
+					<Typography variant="body2" sx={{ fontWeight: 700, color: '#545b64', mr: 1 }}>
+						{allocations.length} {allocations.length === 1 ? 'candidate' : 'candidates'}
+					</Typography>
+					<Button
+						variant="contained"
+						startIcon={<PersonAddIcon />}
+						onClick={onAddClick}
+						sx={{
+							bgcolor: '#ec7211',
+							color: '#ffffff',
+							textTransform: 'none',
+							fontWeight: 700,
+							px: 3,
+							'&:hover': { bgcolor: '#eb5f07' },
+							boxShadow: 'none',
+							borderRadius: '2px',
+							height: 36
+						}}
+					>
+						Enroll Candidate
+					</Button>
+				</Stack>
+			</Paper>
+
+			<TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #d5dbdb', borderRadius: '2px' }}>
 				<Table>
 					<TableHead>
 						<TableRow sx={{ bgcolor: '#f8f9fa' }}>
-							<TableCell sx={{ fontWeight: 700, py: 2 }}>Candidate Name</TableCell>
-							<TableCell sx={{ fontWeight: 700 }}>Contact Info</TableCell>
-							<TableCell sx={{ fontWeight: 700 }}>Allocation Date</TableCell>
-							<TableCell sx={{ fontWeight: 700 }}>Current Status</TableCell>
-							<TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
+							<TableCell sx={{ fontWeight: 700, py: 1.5, color: '#545b64', fontSize: '0.75rem', textTransform: 'uppercase' }}>Candidate Name</TableCell>
+							<TableCell sx={{ fontWeight: 700, color: '#545b64', fontSize: '0.75rem', textTransform: 'uppercase' }}>Contact Info</TableCell>
+							<TableCell sx={{ fontWeight: 700, color: '#545b64', fontSize: '0.75rem', textTransform: 'uppercase' }}>Allocation Date</TableCell>
+							<TableCell sx={{ fontWeight: 700, color: '#545b64', fontSize: '0.75rem', textTransform: 'uppercase' }}>Current Status</TableCell>
+							<TableCell align="right" sx={{ fontWeight: 700, color: '#545b64', fontSize: '0.75rem', textTransform: 'uppercase' }}>Actions</TableCell>
 						</TableRow>
 					</TableHead>
 					<TableBody>
@@ -118,9 +164,9 @@ const CandidateAllocationTable: React.FC<CandidateAllocationTableProps> = memo((
 							<TableRow>
 								<TableCell colSpan={5} align="center" sx={{ py: 10 }}>
 									<Box sx={{ opacity: 0.5 }}>
-										<PeopleIcon sx={{ fontSize: 64, mb: 1 }} />
-										<Typography variant="h6">No candidates in this batch</Typography>
-										<Typography variant="body2">Use the "Add New Allocation" tab to enroll candidates.</Typography>
+										<PeopleIcon sx={{ fontSize: 48, mb: 1, color: '#d5dbdb' }} />
+										<Typography variant="h6" sx={{ fontWeight: 600, color: '#232f3e' }}>No candidates found</Typography>
+										<Typography variant="body2">Try adjusting your search or filters, or enroll a new candidate.</Typography>
 									</Box>
 								</TableCell>
 							</TableRow>

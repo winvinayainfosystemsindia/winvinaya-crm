@@ -7,21 +7,13 @@ import {
 	useTheme,
 	useMediaQuery,
 	Paper,
-	Tabs,
-	Tab,
-	Grid,
+	Stack,
 	Divider,
-	Button,
 	Chip,
 } from '@mui/material';
 import {
-	PersonAdd as PersonAddIcon,
 	School as SchoolIcon,
-	Dashboard as DashboardIcon,
-	People as PeopleIcon,
-	EventAvailable as AttendanceIcon,
-	Assessment as AssessmentTabIcon,
-	Psychology as MockInterviewIcon,
+	Schedule as ScheduleIcon,
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import {
@@ -42,30 +34,32 @@ import DropoutDialog from '../../components/training/form/DropoutDialog';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { useSnackbar } from 'notistack';
 
-interface TabPanelProps {
-	children?: React.ReactNode;
-	index: number;
-	value: number;
-}
-
-const TabPanel = (props: TabPanelProps) => {
-	const { children, value, index, ...other } = props;
-	return (
-		<div
-			role="tabpanel"
-			hidden={value !== index}
-			id={`allocation-tabpanel-${index}`}
-			aria-labelledby={`allocation-tab-${index}`}
-			{...other}
-		>
-			{value === index && (
-				<Box sx={{ py: 3 }}>
-					{children}
-				</Box>
-			)}
-		</div>
-	);
-};
+// Focused Module Components
+const AllocationModule: React.FC<any> = ({
+	allocations,
+	loading,
+	searchQuery,
+	setSearchQuery,
+	filterDropout,
+	setFilterDropout,
+	updatingStatus,
+	handleStatusChange,
+	handleRemoveClick,
+	setDialogOpen
+}) => (
+	<CandidateAllocationTable
+		allocations={allocations}
+		loading={loading}
+		searchQuery={searchQuery}
+		onSearchChange={setSearchQuery}
+		filterDropout={filterDropout}
+		onFilterChange={setFilterDropout}
+		updatingStatusId={updatingStatus}
+		onStatusChange={handleStatusChange}
+		onRemove={handleRemoveClick}
+		onAddClick={() => setDialogOpen(true)}
+	/>
+);
 
 const CandidateAllocation: React.FC = () => {
 	const theme = useTheme();
@@ -113,7 +107,6 @@ const CandidateAllocation: React.FC = () => {
 
 	const handleBatchChange = (newValue: TrainingBatch | null) => {
 		setSelectedBatch(newValue);
-		setTabValue(newValue ? 1 : 0);
 	};
 
 	const getStatusColor = (status: string) => {
@@ -176,190 +169,169 @@ const CandidateAllocation: React.FC = () => {
 		}
 	};
 
+	const renderModule = () => {
+		if (!selectedBatch) return null;
+
+		switch (tabValue) {
+			case 1:
+				return (
+					<AllocationModule
+						allocations={allocations}
+						loading={loading}
+						searchQuery={searchQuery}
+						setSearchQuery={setSearchQuery}
+						filterDropout={filterDropout}
+						setFilterDropout={setFilterDropout}
+						updatingStatus={updatingStatus}
+						handleStatusChange={handleStatusChange}
+						handleRemoveClick={handleRemoveClick}
+						setDialogOpen={setDialogOpen}
+					/>
+				);
+			case 2:
+				return <AttendanceTracker batch={selectedBatch} allocations={allocations} />;
+			case 3:
+				return <AssessmentTracker batch={selectedBatch} allocations={allocations} />;
+			case 4:
+				return <MockInterviewList batchId={selectedBatch.id} />;
+			default:
+				return <Typography>Please select a valid module from the sidebar.</Typography>;
+		}
+	};
+
 	return (
-		<Box sx={{ bgcolor: '#f5f5f5', minHeight: '100vh', py: isMobile ? 2 : 3 }}>
-			<Container maxWidth="xl" sx={{ px: isMobile ? 1 : { sm: 2, md: 3 } }}>
-				{/* Page Header */}
-				<Box sx={{ mb: 4 }}>
-					<Typography variant={isMobile ? "h5" : "h4"} component="h1" sx={{ fontWeight: 300, color: '#232f3e', mb: 0.5 }}>
-						Batch Allocation Manager
-					</Typography>
-					<Typography variant="body2" color="text.secondary">
-						Experience-driven candidate assignment and progress tracking
-					</Typography>
-				</Box>
+		<Box sx={{ bgcolor: '#f2f3f3', minHeight: '100vh' }}>
+			{/* Professional AWS Service Header */}
+			<Box sx={{ bgcolor: '#232f3e', color: 'white', pt: 2, pb: 4, mb: 0 }}>
+				<Container maxWidth="xl">
+					{/* Professional Breadcrumbs */}
 
-				{/* Batch Selection Strip */}
-				<BatchSelectionHeader
-					batches={batches}
-					selectedBatch={selectedBatch}
-					onBatchChange={handleBatchChange}
-					allocationCount={allocations.length}
-					isMobile={isMobile}
-					getStatusColor={getStatusColor}
-				/>
 
-				{selectedBatch ? (
-					<Box>
-						<Box sx={{ borderBottom: 1, borderColor: '#eaeded' }}>
-							<Tabs
-								value={tabValue}
-								onChange={(_e, val) => setTabValue(val)}
-								aria-label="batch management tabs"
-								variant={isMobile ? "scrollable" : "standard"}
-								scrollButtons="auto"
-								sx={{
-									'& .MuiTab-root': {
-										textTransform: 'none',
-										fontWeight: 600,
-										fontSize: '0.95rem',
-										minWidth: isMobile ? 120 : 160,
-										color: '#545b64',
-										'&.Mui-selected': { color: '#007eb9' }
-									},
-									'& .MuiTabs-indicator': { backgroundColor: '#007eb9', height: 3 }
-								}}
-							>
-								<Tab icon={<DashboardIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Batch Dashboard" />
-								<Tab icon={<PeopleIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Managed Candidates" />
-								<Tab icon={<AttendanceIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Daily Attendance" />
-								<Tab icon={<AssessmentTabIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Weekly Assessments" />
-								<Tab icon={<MockInterviewIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Mock Interviews" />
-								<Tab icon={<PersonAddIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Add New Allocation" />
-							</Tabs>
+					<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
+						<Box>
+							<Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5, letterSpacing: '-0.02em', fontSize: isMobile ? '1.5rem' : '2rem' }}>
+								{tabValue === 1 ? 'Candidate Allocation' : tabValue === 2 ? 'Attendance Tracker' : tabValue === 3 ? 'Assessment Matrix' : 'Mock Interview Console'}
+							</Typography>
+							<Typography variant="body2" sx={{ color: '#aab7bd', maxWidth: 600 }}>
+								Manage and monitor {tabValue === 1 ? 'candidate enrollments and lifecycle' : tabValue === 2 ? 'daily attendance records' : tabValue === 3 ? 'weekly assessment performance' : 'candidate interview readiness'} with enterprise-grade precision.
+							</Typography>
 						</Box>
-
-						<TabPanel value={tabValue} index={0}>
-							<Grid container spacing={4}>
-								<Grid size={{ xs: 12, md: 8 }}>
-									<Paper variant="outlined" sx={{ p: 4, borderRadius: '4px' }}>
-										<Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>Batch Details</Typography>
-										<Divider sx={{ mb: 3 }} />
-										<Grid container spacing={3}>
-											<Grid size={{ xs: 12, sm: 6 }}>
-												<Typography variant="caption" color="text.secondary">COURSES OFFERED</Typography>
-												<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
-													{Array.isArray(selectedBatch.courses) ? selectedBatch.courses.map(c => (
-														<Chip key={c} label={c} size="small" variant="outlined" />
-													)) : <Typography variant="body2">None</Typography>}
-												</Box>
-											</Grid>
-											<Grid size={{ xs: 12, sm: 6 }}>
-												<Typography variant="caption" color="text.secondary">TRAINING DURATION</Typography>
-												<Typography variant="body1" sx={{ mt: 1, fontWeight: 500 }}>
-													{selectedBatch.duration?.weeks} Weeks ({selectedBatch.duration?.start_date} to {selectedBatch.duration?.end_date})
-												</Typography>
-											</Grid>
-										</Grid>
-									</Paper>
-								</Grid>
-								<Grid size={{ xs: 12, md: 4 }}>
-									<Paper variant="outlined" sx={{ p: 4, borderRadius: '4px', textAlign: 'center', bgcolor: '#f8f9fa' }}>
-										<Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>Enrollment Summary</Typography>
-										<Box sx={{ py: 3 }}>
-											<Typography variant="h2" sx={{ fontWeight: 800, color: '#ff9900' }}>{allocations.length}</Typography>
-											<Typography variant="body2" color="text.secondary">Total Active Candidates</Typography>
-										</Box>
-										<Button variant="outlined" fullWidth onClick={() => setTabValue(1)} sx={{ textTransform: 'none', mt: 2 }}>
-											View All Candidates
-										</Button>
-									</Paper>
-								</Grid>
-							</Grid>
-						</TabPanel>
-
-						<TabPanel value={tabValue} index={1}>
-							<CandidateAllocationTable
-								allocations={allocations}
-								loading={loading}
-								searchQuery={searchQuery}
-								onSearchChange={setSearchQuery}
-								filterDropout={filterDropout}
-								onFilterChange={setFilterDropout}
-								updatingStatusId={updatingStatus}
-								onStatusChange={handleStatusChange}
-								onRemove={handleRemoveClick}
+						<Box sx={{ minWidth: 320 }}>
+							<BatchSelectionHeader
+								batches={batches}
+								selectedBatch={selectedBatch}
+								onBatchChange={handleBatchChange}
 							/>
-						</TabPanel>
-
-						<TabPanel value={tabValue} index={2}>
-							<AttendanceTracker batch={selectedBatch} allocations={allocations} />
-						</TabPanel>
-
-						<TabPanel value={tabValue} index={3}>
-							<AssessmentTracker batch={selectedBatch} allocations={allocations} />
-						</TabPanel>
-
-						<TabPanel value={tabValue} index={4}>
-							<MockInterviewList batchId={selectedBatch.id} />
-						</TabPanel>
-
-						<TabPanel value={tabValue} index={5}>
-							<Paper sx={{ p: 6, textAlign: 'center', border: '2px dashed #d5dbdb', borderRadius: '4px', bgcolor: 'transparent' }}>
-								<PersonAddIcon sx={{ fontSize: 48, color: '#d5dbdb', mb: 2 }} />
-								<Typography variant="h6" gutterBottom>Enroll More Candidates</Typography>
-								<Typography variant="body2" color="text.secondary" sx={{ mb: 3, maxWidth: 450, mx: 'auto' }}>
-									Enroll single or multiple candidates who have completed counseling and are ready for training.
-								</Typography>
-								<Button
-									variant="contained"
-									size="large"
-									onClick={() => setDialogOpen(true)}
-									sx={{
-										bgcolor: '#00a1c9',
-										'&:hover': { bgcolor: '#007eb9' },
-										textTransform: 'none',
-										fontWeight: 600,
-										px: 4
-									}}
-								>
-									Start Enrollment Process
-								</Button>
-							</Paper>
-						</TabPanel>
+						</Box>
 					</Box>
-				) : (
-					<Paper sx={{ p: 10, textAlign: 'center', border: '1px solid #d5dbdb', boxShadow: 'none', borderRadius: '4px', mt: 4 }}>
-						<SchoolIcon sx={{ fontSize: 80, color: '#eaeded', mb: 3 }} />
-						<Typography variant="h5" color="#232f3e" sx={{ fontWeight: 600 }} gutterBottom>
+
+					{selectedBatch && (
+						<Paper
+							elevation={0}
+							sx={{
+								bgcolor: 'rgba(255, 255, 255, 0.05)',
+								borderRadius: '2px',
+								p: 2,
+								border: '1px solid rgba(255, 255, 255, 0.1)',
+								display: 'flex',
+								flexWrap: 'wrap',
+								gap: 4
+							}}
+						>
+							<Box>
+								<Typography variant="caption" sx={{ color: '#aab7bd', display: 'block', mb: 0.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+									Active Batch
+								</Typography>
+								<Typography variant="body2" sx={{ fontWeight: 600, color: 'white' }}>{selectedBatch.batch_name}</Typography>
+							</Box>
+							<Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+							<Box>
+								<Typography variant="caption" sx={{ color: '#aab7bd', display: 'block', mb: 0.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+									Status
+								</Typography>
+								<Chip
+									label={selectedBatch.status.toUpperCase()}
+									size="small"
+									sx={{
+										height: 20,
+										fontSize: '0.65rem',
+										fontWeight: 900,
+										bgcolor: getStatusColor(selectedBatch.status),
+										color: 'white',
+										borderRadius: '2px'
+									}}
+								/>
+							</Box>
+							<Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+							<Box>
+								<Typography variant="caption" sx={{ color: '#aab7bd', display: 'block', mb: 0.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+									Schedule
+								</Typography>
+								<Stack direction="row" spacing={1} alignItems="center">
+									<ScheduleIcon sx={{ fontSize: 14, color: '#aab7bd' }} />
+									<Typography variant="body2" sx={{ color: 'white' }}>{selectedBatch.duration?.weeks} Weeks</Typography>
+								</Stack>
+							</Box>
+							<Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+							<Box>
+								<Typography variant="caption" sx={{ color: '#aab7bd', display: 'block', mb: 0.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+									Enrollment
+								</Typography>
+								<Typography variant="body2" sx={{ fontWeight: 600, color: 'white' }}>{allocations.length} Candidates</Typography>
+							</Box>
+						</Paper>
+					)}
+				</Container>
+			</Box>
+
+			<Container maxWidth="xl" sx={{ py: 4 }}>
+				{!selectedBatch ? (
+					<Paper elevation={0} sx={{ p: 10, textAlign: 'center', border: '1px solid #d5dbdb', borderRadius: '2px' }}>
+						<SchoolIcon sx={{ fontSize: 80, color: '#d5dbdb', mb: 3 }} />
+						<Typography variant="h5" sx={{ fontWeight: 700, color: '#232f3e' }} gutterBottom>
 							No Training Batch Selected
 						</Typography>
-						<Typography color="text.secondary" sx={{ maxWidth: 500, mx: 'auto', mb: 4 }}>
-							To manage candidate allocations, status updates, and enrollments, please select an active training batch from the dropdown above.
+						<Typography color="text.secondary" sx={{ maxWidth: 500, mx: 'auto' }}>
+							Please select an active training batch from the header console to begin managing allocations, attendance, or assessments.
 						</Typography>
 					</Paper>
+				) : (
+					<Box>
+						{renderModule()}
+					</Box>
 				)}
 
-				{/* Dialogs */}
-				{selectedBatch && (
-					<AllocateCandidateDialog
-						open={dialogOpen}
-						onClose={() => setDialogOpen(false)}
-						batchId={selectedBatch.id}
-						batchPublicId={selectedBatch.public_id}
-						batchName={selectedBatch.batch_name}
-					/>
-				)}
-
-				<DropoutDialog
-					open={dropoutDialogOpen}
-					onClose={() => setDropoutDialogOpen(false)}
-					onConfirm={handleConfirmDropout}
-					remark={dropoutRemark}
-					onRemarkChange={setDropoutRemark}
-					submitting={updatingStatus !== null}
-				/>
-
-				<ConfirmDialog
-					open={confirmOpen}
-					title="Remove Candidate"
-					message={`Are you sure you want to remove ${confirmData?.name} from this batch? This action cannot be undone.`}
-					confirmText="Remove"
-					severity="error"
-					onClose={() => setConfirmOpen(false)}
-					onConfirm={handleConfirmRemove}
-				/>
 			</Container>
+
+			{/* Dialogs */}
+			{selectedBatch && (
+				<AllocateCandidateDialog
+					open={dialogOpen}
+					onClose={() => setDialogOpen(false)}
+					batchId={selectedBatch.id}
+					batchPublicId={selectedBatch.public_id}
+					batchName={selectedBatch.batch_name}
+				/>
+			)}
+
+			<DropoutDialog
+				open={dropoutDialogOpen}
+				onClose={() => setDropoutDialogOpen(false)}
+				onConfirm={handleConfirmDropout}
+				remark={dropoutRemark}
+				onRemarkChange={setDropoutRemark}
+				submitting={updatingStatus !== null}
+			/>
+
+			<ConfirmDialog
+				open={confirmOpen}
+				title="Remove Candidate"
+				message={`Are you sure you want to remove ${confirmData?.name} from this batch? This action cannot be undone.`}
+				confirmText="Remove"
+				severity="error"
+				onClose={() => setConfirmOpen(false)}
+				onConfirm={handleConfirmRemove}
+			/>
 		</Box>
 	);
 };

@@ -1,12 +1,9 @@
 import React, { memo } from 'react';
 import {
 	Box,
-	Paper,
 	Typography,
 	Autocomplete,
-	TextField,
-	Fade,
-	Chip
+	TextField
 } from '@mui/material';
 import type { TrainingBatch } from '../../../models/training';
 
@@ -14,86 +11,78 @@ interface BatchSelectionHeaderProps {
 	batches: TrainingBatch[];
 	selectedBatch: TrainingBatch | null;
 	onBatchChange: (batch: TrainingBatch | null) => void;
-	allocationCount: number;
-	isMobile: boolean;
-	getStatusColor: (status: string) => string;
 }
 
 const BatchSelectionHeader: React.FC<BatchSelectionHeaderProps> = memo(({
 	batches,
 	selectedBatch,
 	onBatchChange,
-	allocationCount,
-	isMobile,
-	getStatusColor
 }) => {
 	return (
-		<Paper
-			elevation={0}
-			sx={{
-				p: 3,
-				mb: 4,
-				borderRadius: '4px',
-				border: '1px solid #d5dbdb',
-				display: 'flex',
-				flexDirection: isMobile ? 'column' : 'row',
-				alignItems: isMobile ? 'stretch' : 'center',
-				gap: 3,
-				background: 'linear-gradient(to right, #ffffff, #fcfcfc)'
-			}}
-		>
-			<Box sx={{ flexGrow: 1 }}>
-				<Typography variant="caption" sx={{ fontWeight: 700, color: '#545b64', display: 'block', mb: 1, textTransform: 'uppercase' }}>
-					Select Training Batch
-				</Typography>
-				<Autocomplete
-					options={batches}
-					getOptionLabel={(option) => option.batch_name}
-					value={selectedBatch}
-					onChange={(_e, newValue) => onBatchChange(newValue)}
-					renderInput={(params) => (
-						<TextField
-							{...params}
-							placeholder="Search by batch name..."
-							size="medium"
-							sx={{
-								bgcolor: 'white',
-								'& .MuiOutlinedInput-root': {
-									borderRadius: '2px',
-									'& fieldset': { borderColor: '#d5dbdb' }
-								}
-							}}
-						/>
-					)}
-					sx={{ width: '100%', maxWidth: 600 }}
-				/>
-			</Box>
-
-			{selectedBatch && (
-				<Fade in={!!selectedBatch}>
-					<Box sx={{ display: 'flex', gap: 4, px: isMobile ? 0 : 4, borderLeft: isMobile ? 'none' : '1px solid #eaeded' }}>
-						<Box>
-							<Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}>STATUS</Typography>
-							<Chip
-								label={selectedBatch.status.toUpperCase()}
-								size="small"
-								sx={{
-									bgcolor: getStatusColor(selectedBatch.status),
-									color: 'white',
-									fontWeight: 700,
-									borderRadius: '2px',
-									height: 24
-								}}
-							/>
-						</Box>
-						<Box>
-							<Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: 600 }}>ENROLLMENT</Typography>
-							<Typography variant="h5" sx={{ fontWeight: 700, color: '#232f3e' }}>{allocationCount}</Typography>
-						</Box>
-					</Box>
-				</Fade>
-			)}
-		</Paper>
+		<Box sx={{ width: '100%', maxWidth: 320 }}>
+			<Typography
+				variant="caption"
+				sx={{
+					fontWeight: 800,
+					color: '#aab7bd',
+					display: 'block',
+					mb: 0.75,
+					textTransform: 'uppercase',
+					letterSpacing: '0.05em',
+					fontSize: '0.65rem'
+				}}
+			>
+				Select Training Batch
+			</Typography>
+			<Autocomplete
+				options={batches}
+				getOptionLabel={(option) => option.batch_name}
+				value={selectedBatch}
+				onChange={(_e, newValue) => onBatchChange(newValue)}
+				size="small"
+				renderInput={(params) => (
+					<TextField
+						{...params}
+						placeholder="Search batches..."
+						variant="outlined"
+						sx={{
+							'& .MuiOutlinedInput-root': {
+								color: 'white',
+								fontSize: '0.875rem',
+								fontWeight: 500,
+								bgcolor: 'rgba(255, 255, 255, 0.05)',
+								borderRadius: '2px',
+								transition: 'all 0.2s ease',
+								height: 36,
+								'& fieldset': {
+									borderColor: 'rgba(255, 255, 255, 0.2)',
+									borderWidth: '1px'
+								},
+								'&:hover fieldset': {
+									borderColor: 'rgba(255, 255, 255, 0.4)'
+								},
+								'&.Mui-focused fieldset': {
+									borderColor: '#ff9900',
+									borderWidth: '1px'
+								},
+							},
+							'& .MuiAutocomplete-input': {
+								py: 0
+							},
+							'& .MuiInputBase-input::placeholder': {
+								color: 'rgba(255, 255, 255, 0.4)',
+								opacity: 1
+							}
+						}}
+					/>
+				)}
+				sx={{
+					width: '100%',
+					'& .MuiAutocomplete-popupIndicator': { color: 'rgba(255, 255, 255, 0.6)' },
+					'& .MuiAutocomplete-clearIndicator': { color: 'rgba(255, 255, 255, 0.6)' }
+				}}
+			/>
+		</Box>
 	);
 });
 

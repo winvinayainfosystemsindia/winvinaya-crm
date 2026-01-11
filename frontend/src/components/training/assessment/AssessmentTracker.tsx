@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Paper, CircularProgress, Typography } from '@mui/material';
+import { Box, Paper, CircularProgress } from '@mui/material';
 import type { TrainingBatch, CandidateAllocation } from '../../../models/training';
 import { useAssessment } from './useAssessment';
 
@@ -66,15 +66,8 @@ const AssessmentTracker: React.FC<AssessmentTrackerProps> = ({ batch, allocation
 
 	return (
 		<Box sx={{ p: 0 }}>
-			{/* Top Header Section */}
-			<Paper elevation={0} sx={{ p: 3, mb: 3, border: '1px solid #eaeded', borderRadius: '4px', bgcolor: 'white' }}>
-				<Typography variant="h6" sx={{ fontSize: '1.25rem', fontWeight: 800, color: '#232f3e', mb: 2 }}>
-					Weekly Assessments
-				</Typography>
-				<Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-					Manage and track student performance across courses for {batch.batch_name}
-				</Typography>
-
+			{/* Matrix Section */}
+			<Paper elevation={0} sx={{ p: 3, mb: 3, border: '1px solid #d5dbdb', borderRadius: '2px', bgcolor: 'white' }}>
 				<AssessmentHeader
 					assessmentNames={assessmentNames}
 					activeAssessmentName={activeAssessmentName}
@@ -104,7 +97,6 @@ const AssessmentTracker: React.FC<AssessmentTrackerProps> = ({ batch, allocation
 				)}
 			</Paper>
 
-			{/* Matrix Section */}
 			<AssessmentMatrix
 				allocations={allocations}
 				assessments={assessments}

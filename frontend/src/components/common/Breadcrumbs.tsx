@@ -22,22 +22,34 @@ const breadcrumbNameMap: { [key: string]: { name: string; icon?: React.ReactNode
 
 const Breadcrumbs: React.FC = () => {
 	const location = useLocation();
+	const queryParams = new URLSearchParams(location.search);
+	const tab = queryParams.get('tab');
 
 	// Split the path into segments, filtering out empty strings
 	const pathnames = location.pathname.split('/').filter((x) => x);
 
-	// If we are on the dashboard (home) or root, and there are no other segments, 
-	// we might not want to show breadcrumbs or just show nothing.
-	// Adjust logic based on preference. 
 	if (pathnames.length === 0) {
 		return null;
 	}
 
+	const getTrainingModuleName = (tabValue: string | null) => {
+		switch (tabValue) {
+			case '1': return 'Allocation';
+			case '2': return 'Attendance';
+			case '3': return 'Assessment';
+			case '4': return 'Mock Interview';
+			default: return 'Allocation';
+		}
+	};
+
 	return (
-		<Box sx={{ mb: 2 }}>
+		<Box sx={{ mb: 2, mt: 0.5 }}>
 			<MuiBreadcrumbs
-				separator={<NavigateNextIcon fontSize="small" />}
+				separator={<NavigateNextIcon sx={{ fontSize: 14, color: '#879196' }} />}
 				aria-label="breadcrumb"
+				sx={{
+					'& .MuiBreadcrumbs-ol': { alignItems: 'center' }
+				}}
 			>
 				{/* Always show Home link with icon */}
 				<Link
@@ -45,9 +57,16 @@ const Breadcrumbs: React.FC = () => {
 					underline="hover"
 					color="inherit"
 					to="/dashboard"
-					sx={{ display: 'flex', alignItems: 'center' }}
+					sx={{
+						display: 'flex',
+						alignItems: 'center',
+						color: '#545b64',
+						fontSize: '0.8125rem',
+						fontWeight: 500,
+						'&:hover': { color: '#007eb9' }
+					}}
 				>
-					<HomeIcon sx={{ fontSize: 16, mr: 0.5 }} />
+					<HomeIcon sx={{ fontSize: 16, mr: 0.5, color: '#879196' }} />
 					Home
 				</Link>
 
@@ -57,8 +76,13 @@ const Breadcrumbs: React.FC = () => {
 
 					// Use map or fallback to title case
 					const breadcrumbInfo = breadcrumbNameMap[value];
-					const name = breadcrumbInfo?.name || value.charAt(0).toUpperCase() + value.slice(1).replace(/-/g, ' ');
+					let name = breadcrumbInfo?.name || value.charAt(0).toUpperCase() + value.slice(1).replace(/-/g, ' ');
 					const icon = breadcrumbInfo?.icon;
+
+					// Specialty logic for training allocation/sub-modules
+					if (value === 'allocation' && pathnames.includes('training')) {
+						name = getTrainingModuleName(tab);
+					}
 
 					// Skip "dashboard" if it's in the path since we have "Home" pointing to it
 					if (value === 'dashboard') {
@@ -66,7 +90,16 @@ const Breadcrumbs: React.FC = () => {
 					}
 
 					return last ? (
-						<Typography color="text.primary" key={to} sx={{ fontWeight: 500, display: 'flex', alignItems: 'center' }}>
+						<Typography
+							key={to}
+							sx={{
+
+								display: 'flex',
+								alignItems: 'center',
+								fontSize: '16',
+								color: '#879196'
+							}}
+						>
 							{icon}
 							{name}
 						</Typography>
@@ -74,10 +107,16 @@ const Breadcrumbs: React.FC = () => {
 						<Link
 							component={RouterLink}
 							underline="hover"
-							color="inherit"
 							to={to}
 							key={to}
-							sx={{ display: 'flex', alignItems: 'center' }}
+							sx={{
+								display: 'flex',
+								alignItems: 'center',
+								color: '#545b64',
+								fontSize: '0.8125rem',
+								fontWeight: 500,
+								'&:hover': { color: '#007eb9' }
+							}}
 						>
 							{icon}
 							{name}

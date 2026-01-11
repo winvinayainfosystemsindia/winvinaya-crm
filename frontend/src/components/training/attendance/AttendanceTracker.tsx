@@ -15,9 +15,7 @@ import {
 	AccessTime as LateIcon,
 	Contrast as HalfDayIcon,
 	EventBusy as HolidayIcon,
-	EventAvailable as EventIcon,
-	AssessmentOutlined as ReportIcon,
-	EditCalendarOutlined as EditIcon
+	EventAvailable as EventIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import type { TrainingBatch, CandidateAllocation } from '../../../models/training';
@@ -69,23 +67,26 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 
 	return (
 		<Box>
-			<Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+			<Box sx={{ borderBottom: '1px solid #eaeded', mb: 3 }}>
 				<Tabs
 					value={activeTab}
 					onChange={(_, v) => setActiveTab(v)}
 					sx={{
+						minHeight: 40,
 						'& .MuiTab-root': {
 							textTransform: 'none',
-							fontWeight: 600,
-							minHeight: 48,
-							color: '#545b64'
+							fontWeight: 700,
+							fontSize: '0.875rem',
+							minHeight: 40,
+							color: '#545b64',
+							px: 3,
+							'&.Mui-selected': { color: '#007eb9' }
 						},
-						'& .Mui-selected': { color: '#007eb9 !important' },
-						'& .MuiTabs-indicator': { bgcolor: '#007eb9' }
+						'& .MuiTabs-indicator': { bgcolor: '#007eb9', height: 3 }
 					}}
 				>
-					<Tab icon={<EditIcon fontSize="small" />} iconPosition="start" label="Attendance Tracker" value="tracker" />
-					<Tab icon={<ReportIcon fontSize="small" />} iconPosition="start" label="Attendance Report" value="report" />
+					<Tab label="Attendance Tool" value="tracker" />
+					<Tab label="Consolidated Report" value="report" />
 				</Tabs>
 			</Box>
 
