@@ -59,3 +59,15 @@ class TrainingBatchPaginatedResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class TrainingBatchMini(BaseModel):
+    public_id: uuid.UUID
+    batch_name: str
+    status: str
+    disability_type: Optional[str] = None
+    start_date: Optional[date] = None
+    approx_close_date: Optional[date] = None
+
+    class Config:
+        from_attributes = True

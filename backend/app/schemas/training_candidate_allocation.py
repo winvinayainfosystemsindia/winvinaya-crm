@@ -2,7 +2,7 @@
 
 import uuid
 from typing import Optional, List, Any
-from datetime import datetime
+from datetime import datetime, date
 from pydantic import BaseModel
 
 
@@ -41,14 +41,7 @@ class CandidateMini(BaseModel):
         from_attributes = True
 
 
-class BatchMini(BaseModel):
-    public_id: uuid.UUID
-    batch_name: str
-    status: str
-
-    class Config:
-        from_attributes = True
-
+from app.schemas.training_batch import TrainingBatchMini
 
 class TrainingCandidateAllocationResponse(TrainingCandidateAllocationBase):
     """Schema for candidate allocation response"""
@@ -59,7 +52,7 @@ class TrainingCandidateAllocationResponse(TrainingCandidateAllocationBase):
     
     # Nested data
     candidate: Optional[CandidateMini] = None
-    batch: Optional[BatchMini] = None
+    batch: Optional[TrainingBatchMini] = None
 
     class Config:
         from_attributes = True

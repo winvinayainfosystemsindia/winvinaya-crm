@@ -37,7 +37,10 @@ class TrainingAssessmentUpdate(BaseModel):
     others: Optional[dict] = None
 
 
+from app.schemas.training_batch import TrainingBatchMini
+
 class TrainingAssessmentResponse(TrainingAssessmentBase):
     id: int
+    batch: Optional[TrainingBatchMini] = None
     
     model_config = ConfigDict(from_attributes=True)

@@ -42,9 +42,12 @@ class TrainingMockInterviewUpdate(BaseModel):
     status: Optional[str] = None
 
 
+from app.schemas.training_batch import TrainingBatchMini
+
 class TrainingMockInterviewResponse(TrainingMockInterviewBase):
     id: int
     created_at: datetime
     updated_at: datetime
+    batch: Optional[TrainingBatchMini] = None
     
     model_config = ConfigDict(from_attributes=True)

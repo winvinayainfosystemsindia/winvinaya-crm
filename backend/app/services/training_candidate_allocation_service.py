@@ -92,7 +92,8 @@ class TrainingCandidateAllocationService:
             TrainingCandidateAllocation.candidate_id == candidate.id,
             TrainingCandidateAllocation.is_deleted == False
         ).options(
-            joinedload(TrainingCandidateAllocation.batch)
+            joinedload(TrainingCandidateAllocation.batch),
+            selectinload(TrainingCandidateAllocation.candidate)
         ).order_by(desc(TrainingCandidateAllocation.created_at))
         
         result = await self.db.execute(query)
