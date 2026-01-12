@@ -5,6 +5,7 @@ from datetime import date
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from app.models.candidate import Candidate
 from app.repositories.training_attendance_repository import TrainingAttendanceRepository
 from app.repositories.training_assessment_repository import TrainingAssessmentRepository
@@ -28,7 +29,9 @@ class TrainingExtensionService:
 
     # Attendance
     async def get_attendance(self, batch_id: int, start_date: date = None, end_date: date = None):
-        query = select(self.attendance_repo.model).where(
+        query = select(self.attendance_repo.model).options(
+            selectinload(self.attendance_repo.model.batch)
+        ).where(
             self.attendance_repo.model.batch_id == batch_id,
             self.attendance_repo.model.is_deleted == False
         )
@@ -41,7 +44,6 @@ class TrainingExtensionService:
         return result.scalars().all()
 
     async def get_attendance_by_candidate(self, public_id: UUID):
-        from sqlalchemy.orm import selectinload
         query = select(self.attendance_repo.model).join(Candidate).options(
             selectinload(self.attendance_repo.model.batch)
         ).where(
@@ -67,11 +69,20 @@ class TrainingExtensionService:
             else:
                 record = await self.attendance_repo.create(att.model_dump())
             records.append(record)
-        return records
+        
+        # Re-fetch with batch to avoid session error during serialization
+        ids = [r.id for r in records]
+        query = select(self.attendance_repo.model).options(
+            selectinload(self.attendance_repo.model.batch)
+        ).where(self.attendance_repo.model.id.in_(ids))
+        result = await self.db.execute(query)
+        return result.scalars().all()
 
     # Assessments
     async def get_assessments(self, batch_id: int):
-        query = select(self.assessment_repo.model).where(
+        query = select(self.assessment_repo.model).options(
+            selectinload(self.assessment_repo.model.batch)
+        ).where(
             self.assessment_repo.model.batch_id == batch_id,
             self.assessment_repo.model.is_deleted == False
         )
@@ -79,7 +90,6 @@ class TrainingExtensionService:
         return result.scalars().all()
 
     async def get_assessments_by_candidate(self, public_id: UUID):
-        from sqlalchemy.orm import selectinload
         query = select(self.assessment_repo.model).join(Candidate).options(
             selectinload(self.assessment_repo.model.batch)
         ).where(
@@ -90,7 +100,12 @@ class TrainingExtensionService:
         return result.scalars().all()
 
     async def create_assessment(self, assessment_in: TrainingAssessmentCreate):
-        return await self.assessment_repo.create(assessment_in.model_dump())
+        record = await self.assessment_repo.create(assessment_in.model_dump())
+        # Re-fetch with batch
+        query = select(self.assessment_repo.model).options(
+            selectinload(self.assessment_repo.model.batch)
+        ).where(self.assessment_repo.model.id == record.id)
+        return (await self.db.execute(query)).scalar_one()
 
     async def update_bulk_assessments(self, assessments_in: List[TrainingAssessmentCreate]):
         records = []
@@ -112,7 +127,14 @@ class TrainingExtensionService:
             else:
                 record = await self.assessment_repo.create(ass.model_dump())
             records.append(record)
-        return records
+        
+        # Re-fetch with batch
+        ids = [r.id for r in records]
+        query = select(self.assessment_repo.model).options(
+            selectinload(self.assessment_repo.model.batch)
+        ).where(self.assessment_repo.model.id.in_(ids))
+        result = await self.db.execute(query)
+        return result.scalars().all()
 
     async def delete_assessments_by_name(self, batch_id: int, assessment_name: str):
         """Delete all assessment records for a given assessment name in a batch"""
@@ -130,7 +152,6 @@ class TrainingExtensionService:
         return await self.mock_interview_repo.get_by_batch_id(batch_id)
 
     async def get_mock_interviews_by_candidate(self, public_id: UUID):
-        from sqlalchemy.orm import selectinload
         query = select(self.mock_interview_repo.model).join(Candidate).options(
             selectinload(self.mock_interview_repo.model.batch)
         ).where(
@@ -144,10 +165,22 @@ class TrainingExtensionService:
         return await self.mock_interview_repo.get(id)
 
     async def create_mock_interview(self, mock_in: TrainingMockInterviewCreate):
-        return await self.mock_interview_repo.create(mock_in.model_dump())
+        record = await self.mock_interview_repo.create(mock_in.model_dump())
+        # Re-fetch with batch
+        query = select(self.mock_interview_repo.model).options(
+            selectinload(self.mock_interview_repo.model.batch)
+        ).where(self.mock_interview_repo.model.id == record.id)
+        return (await self.db.execute(query)).scalar_one()
 
     async def update_mock_interview(self, id: int, mock_in: TrainingMockInterviewUpdate):
-        return await self.mock_interview_repo.update(id, mock_in.model_dump(exclude_unset=True))
+        record = await self.mock_interview_repo.update(id, mock_in.model_dump(exclude_unset=True))
+        if not record:
+            return None
+        # Re-fetch with batch
+        query = select(self.mock_interview_repo.model).options(
+            selectinload(self.mock_interview_repo.model.batch)
+        ).where(self.mock_interview_repo.model.id == record.id)
+        return (await self.db.execute(query)).scalar_one()
 
     async def delete_mock_interview(self, id: int):
         return await self.mock_interview_repo.delete(id)

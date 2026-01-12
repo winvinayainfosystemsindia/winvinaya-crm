@@ -18,7 +18,10 @@ class TrainingMockInterviewRepository(BaseRepository[TrainingMockInterview]):
         from sqlalchemy.orm import selectinload
         query = (
             select(self.model)
-            .options(selectinload(self.model.candidate))
+            .options(
+                selectinload(self.model.candidate),
+                selectinload(self.model.batch)
+            )
             .where(self.model.batch_id == batch_id)
             .where(self.model.is_deleted == False)
             .order_by(desc(self.model.created_at))
