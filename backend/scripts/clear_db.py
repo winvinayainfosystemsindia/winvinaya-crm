@@ -48,31 +48,77 @@ async def clear_database(engine_to_use, include_users: bool = False):
     # Import models locally to prevent early validation crashes
     from app.models.user import User
     from app.models.candidate import Candidate
-    from app.models.candidate_profile import CandidateProfile
+    from app.models.candidate_screening import CandidateScreening
     from app.models.candidate_document import CandidateDocument
     from app.models.candidate_counseling import CandidateCounseling
     from app.models.activity_log import ActivityLog
+    # New models
+    from app.models.training_attendance import TrainingAttendance
+    from app.models.training_assessment import TrainingAssessment
+    from app.models.training_mock_interview import TrainingMockInterview
+    from app.models.training_batch_event import TrainingBatchEvent
+    from app.models.training_candidate_allocation import TrainingCandidateAllocation
+    from app.models.training_batch import TrainingBatch
+    from app.models.training_batch_extension import TrainingBatchExtension
+    from app.models.ticket import Ticket, TicketMessage
+    from app.core.config import settings
+
+    # Safety check for environment
+    allowed_envs = ["development", "qa"]
+    current_env = settings.ENVIRONMENT.lower()
+    if current_env not in allowed_envs:
+        print(f"CRITICAL ERROR: Attempting to clear database in '{current_env}' environment.")
+        print(f"This script is strictly allowed only in {allowed_envs} environments.")
+        sys.exit(1)
+
+    print(f"Environment Check Passed: {current_env}")
 
     SessionLocal = async_sessionmaker(engine_to_use, expire_on_commit=False)
     
     async with SessionLocal() as session:
         try:
             # Order of deletion matters because of foreign keys
+            
+            # 1. Ticket System (Refers to Users)
+            print("Clearing Ticket Messages & Tickets...")
+            await session.execute(delete(TicketMessage))
+            await session.execute(delete(Ticket))
+
+            # 2. Training Extensions (Refers to Batches & Candidates)
+            print("Clearing Training Extensions (Attendance, Assessments, Interviews, Events)...")
+            await session.execute(delete(TrainingAttendance))
+            await session.execute(delete(TrainingAssessment))
+            await session.execute(delete(TrainingMockInterview))
+            await session.execute(delete(TrainingBatchEvent))
+            await session.execute(delete(TrainingBatchExtension))
+
+            # 3. Allocations (Refers to Batches & Candidates)
+            print("Clearing Candidate Allocations...")
+            await session.execute(delete(TrainingCandidateAllocation))
+
+            # 4. Batches (Refers to nothing/Users)
+            print("Clearing Training Batches...")
+            await session.execute(delete(TrainingBatch))
+
+            # 5. Activity Logs (Refers to Users)
             print("Clearing Activity Logs...")
             await session.execute(delete(ActivityLog))
             
+            # 6. Candidate Data (Refers to Candidates)
             print("Clearing Candidate Documents...")
             await session.execute(delete(CandidateDocument))
             
             print("Clearing Candidate Counseling...")
             await session.execute(delete(CandidateCounseling))
             
-            print("Clearing Candidate Profiles...")
-            await session.execute(delete(CandidateProfile))
+            print("Clearing Candidate Screenings...")
+            await session.execute(delete(CandidateScreening))
             
+            # 7. Candidates
             print("Clearing Candidates...")
             await session.execute(delete(Candidate))
             
+            # 8. Users (Optional)
             if include_users:
                 print("Clearing Users (excluding superusers)...")
                 await session.execute(delete(User).where(User.is_superuser == False))
