@@ -180,11 +180,13 @@ class TrainingCandidateAllocationService:
                 target_disability = batch.disability_type
 
         # Subquery for active allocations
-        active_allocation_exists = select(TrainingCandidateAllocation.id).where(
+        # Only consider allocations in active batches (planned, running, extended) as blocking
+        active_allocation_exists = select(TrainingCandidateAllocation.id).join(TrainingBatch).where(
             and_(
                 TrainingCandidateAllocation.candidate_id == Candidate.id,
                 TrainingCandidateAllocation.is_deleted == False,
-                TrainingCandidateAllocation.is_dropout == False
+                TrainingCandidateAllocation.is_dropout == False,
+                TrainingBatch.status.in_(['planned', 'running', 'extended'])
             )
         ).exists()
 

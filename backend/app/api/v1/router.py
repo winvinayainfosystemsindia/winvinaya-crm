@@ -17,7 +17,8 @@ from app.api.v1.endpoints import (
     tickets,
     settings,
     activity_logs,
-    analytics
+    analytics,
+    migration
 )
 
 
@@ -41,4 +42,5 @@ router.include_router(training_attendance.router, prefix="/training-extensions")
 router.include_router(training_assessments.router, prefix="/training-extensions")
 router.include_router(training_events.router, prefix="/training-extensions")
 router.include_router(training_mock_interviews.router, prefix="/training-extensions")
+router.include_router(migration.router)
 

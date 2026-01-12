@@ -21,6 +21,7 @@ import CandidateDetail from '../pages/Candidates/CandidateDetail';
 import Reports from '../pages/reports/Reports';
 import Settings from '../pages/settings/Settings';
 import Support from '../pages/support/Support';
+import MigrationPanel from '../pages/admin/MigrationPanel';
 
 const AppRouter: React.FC = () => {
 	return (
@@ -60,6 +61,8 @@ const AppRouter: React.FC = () => {
 							<Route path="batches/:id" element={<TrainingBatchDetail />} />
 							<Route path="allocation" element={<CandidateAllocation />} />
 						</Route>
+
+						<Route path="admin/migration" element={<MigrationPanel />} />
 
 						{/* Add more protected routes here */}
 					</Route>

@@ -67,14 +67,48 @@ class TrainingBatchService:
     async def update_batch(self, public_id: UUID, batch_in: TrainingBatchUpdate) -> TrainingBatch:
         """Update a training batch"""
         batch = await self.get_batch_by_public_id(public_id)
+        
+        # Get old status for comparison
+        old_status = batch.status
         update_data = batch_in.model_dump(exclude_unset=True)
+        new_status = update_data.get("status", old_status)
+        
+        # If batch is being closed, mark all non-dropout allocations as completed
+        if old_status != "closed" and new_status == "closed":
+            await self._complete_batch_allocations(batch.id)
+        
+        # Update batch
         return await self.repository.update(batch.id, update_data)
     
     async def delete_batch(self, public_id: UUID) -> bool:
         """Delete a training batch"""
         batch = await self.get_batch_by_public_id(public_id)
         return await self.repository.delete(batch.id)
-
+    
+    async def _complete_batch_allocations(self, batch_id: int):
+        """Mark all non-dropout allocations as completed when batch closes"""
+        from app.models.training_candidate_allocation import TrainingCandidateAllocation
+        from sqlalchemy import select
+        from datetime import datetime
+        
+        query = select(TrainingCandidateAllocation).where(
+            TrainingCandidateAllocation.batch_id == batch_id,
+            TrainingCandidateAllocation.is_deleted == False,
+            TrainingCandidateAllocation.is_dropout == False
+        )
+        result = await self.db.execute(query)
+        allocations = result.scalars().all()
+        
+        for allocation in allocations:
+            # Update status to completed
+            if allocation.status:
+                allocation.status["current"] = "completed"
+            else:
+                allocation.status = {"current": "completed"}
+            allocation.status["completed_at"] = datetime.now().isoformat()
+        
+        await self.db.commit()
+    
     async def extend_batch(self, public_id: UUID, extend_in: TrainingBatchExtend) -> TrainingBatch:
         """Extend a training batch end date and record history"""
         batch = await self.get_batch_by_public_id(public_id)

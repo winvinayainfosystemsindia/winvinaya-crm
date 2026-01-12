@@ -22,6 +22,7 @@ import {
 	Lock as LockIcon,
 	School as SchoolIcon,
 	Assessment as AssessmentIcon,
+	Storage as StorageIcon,
 } from '@mui/icons-material';
 
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -429,6 +430,30 @@ const Sidebar: React.FC = () => {
 								{user?.role !== 'admin' && <LockIcon sx={{ fontSize: 16, color: 'text.disabled' }} aria-hidden="true" />}
 							</ListItemButton>
 						</ListItem>
+
+						{/* Migration - Admin only */}
+						{user?.role === 'admin' && (
+							<ListItem disablePadding>
+								<ListItemButton
+									selected={isActive('/admin/migration')}
+									onClick={() => handleNavigate('/admin/migration')}
+									sx={{ py: 0.5 }}
+									aria-current={isActive('/admin/migration') ? 'page' : undefined}
+								>
+									<ListItemIcon sx={{ minWidth: 40, color: isActive('/admin/migration') ? 'primary.main' : '#5f6368' }}>
+										<StorageIcon aria-hidden="true" />
+									</ListItemIcon>
+									<ListItemText
+										primary="Data Migration"
+										primaryTypographyProps={{
+											fontSize: '0.95rem',
+											fontWeight: isActive('/admin/migration') ? 600 : 500,
+											color: isActive('/admin/migration') ? 'primary.main' : '#202124'
+										}}
+									/>
+								</ListItemButton>
+							</ListItem>
+						)}
 
 						<ListItem disablePadding>
 							<ListItemButton

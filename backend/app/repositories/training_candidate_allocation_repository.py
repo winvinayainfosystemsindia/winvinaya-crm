@@ -48,7 +48,7 @@ class TrainingCandidateAllocationRepository(BaseRepository[TrainingCandidateAllo
         return list(result.scalars().all())
 
     async def get_active_allocations_by_candidate(self, candidate_id: int) -> List[TrainingCandidateAllocation]:
-        """Expert query: Get active allocations with batch status filtering"""
+        """Get allocations where batch is truly active (not closed/completed)"""
         from app.models.training_batch import TrainingBatch
         from sqlalchemy.orm import joinedload
         
@@ -57,7 +57,8 @@ class TrainingCandidateAllocationRepository(BaseRepository[TrainingCandidateAllo
         ).where(
             self.model.candidate_id == candidate_id,
             self.model.is_deleted == False,
-            TrainingBatch.status.in_(["planned", "ongoing"]) # Professional definition of active
+            self.model.is_dropout == False,  # Exclude dropouts
+            TrainingBatch.status.in_(["planned", "running", "ongoing"])  # Only truly active batches
         )
         result = await self.db.execute(query)
         return list(result.scalars().all())
