@@ -181,10 +181,7 @@ class CandidateRepository(BaseRepository[Candidate]):
             select(Candidate)
             .outerjoin(Candidate.screening)
             .outerjoin(Candidate.counseling)
-            .where(or_(
-                CandidateScreening.id.is_(None),
-                CandidateScreening.status != 'Completed'
-            ))
+            .where(CandidateScreening.id.is_(None))
             .options(
                 joinedload(Candidate.screening),
                 joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor)
@@ -192,10 +189,7 @@ class CandidateRepository(BaseRepository[Candidate]):
         )
         
         # Base count query
-        count_stmt = select(func.count(Candidate.id)).outerjoin(Candidate.screening).where(or_(
-            CandidateScreening.id.is_(None),
-            CandidateScreening.status != 'Completed'
-        ))
+        count_stmt = select(func.count(Candidate.id)).outerjoin(Candidate.screening).where(CandidateScreening.id.is_(None))
         
         # Apply screening status filter if provided
         if screening_status:
@@ -306,7 +300,7 @@ class CandidateRepository(BaseRepository[Candidate]):
             select(Candidate)
             .join(Candidate.screening)
             .outerjoin(Candidate.counseling)
-            .where(CandidateScreening.status == 'Completed')
+            .where(CandidateScreening.id.isnot(None))
             .options(
                 joinedload(Candidate.screening),
                 selectinload(Candidate.documents),
@@ -315,7 +309,7 @@ class CandidateRepository(BaseRepository[Candidate]):
         )
         
         # Base count statement for screened candidates
-        count_stmt = select(func.count(Candidate.id)).join(Candidate.screening).outerjoin(Candidate.counseling).where(CandidateScreening.status == 'Completed')
+        count_stmt = select(func.count(Candidate.id)).join(Candidate.screening).outerjoin(Candidate.counseling).where(CandidateScreening.id.isnot(None))
         
         # Apply screening status filter if provided (though mostly would be 'Completed' based on logic above)
         if screening_status:
@@ -503,8 +497,8 @@ class CandidateRepository(BaseRepository[Candidate]):
             today_start = datetime.combine(datetime.now().date(), time.min)
             today_count = await get_count(Candidate.created_at >= today_start)
             
-            # Screening stats - count only candidates with 'Completed' status
-            stmt_screened = select(func.count(CandidateScreening.id)).where(CandidateScreening.status == 'Completed')
+            # Screening stats - count all candidates with ANY screening record
+            stmt_screened = select(func.count(CandidateScreening.id))
             result_screened = await self.db.execute(stmt_screened)
             screened = result_screened.scalar() or 0
             

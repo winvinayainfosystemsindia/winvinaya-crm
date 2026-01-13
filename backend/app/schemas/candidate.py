@@ -193,7 +193,7 @@ class CandidateListResponse(BaseModel):
         
         if screening:
             status_val = get_val(screening, 'status')
-            screening_status = status_val if status_val else "Completed"
+            screening_status = status_val if status_val else "Pending"
 
         # 4. Counseling Data (Relationship)
         counseling = None
