@@ -97,7 +97,8 @@ class CandidateService:
         disability_types: Optional[list] = None,
         education_levels: Optional[list] = None,
         cities: Optional[list] = None,
-        counseling_status: Optional[str] = None
+        counseling_status: Optional[str] = None,
+        is_experienced: Optional[bool] = None
     ) -> dict:
         """Get list of candidates with total count, supporting optional search, filters, and sorting"""
         items, total = await self.repository.get_multi(
@@ -109,7 +110,8 @@ class CandidateService:
             disability_types=disability_types,
             education_levels=education_levels,
             cities=cities,
-            counseling_status=counseling_status
+            counseling_status=counseling_status,
+            is_experienced=is_experienced
         )
         return {"items": items, "total": total}
 
@@ -157,7 +159,9 @@ class CandidateService:
         disability_types: Optional[list] = None,
         education_levels: Optional[list] = None,
         cities: Optional[list] = None,
-        screening_status: Optional[str] = None
+        screening_status: Optional[str] = None,
+        is_experienced: Optional[bool] = None,
+        counseling_status: Optional[str] = None
     ) -> dict:
         """Get list of candidates without screening records with total count, supporting optional search, filters and sorting"""
         items, total = await self.repository.get_unscreened(
@@ -169,7 +173,9 @@ class CandidateService:
             disability_types=disability_types,
             education_levels=education_levels,
             cities=cities,
-            screening_status=screening_status
+            screening_status=screening_status,
+            is_experienced=is_experienced,
+            counseling_status=counseling_status
         )
         return {"items": items, "total": total}
 
@@ -186,7 +192,8 @@ class CandidateService:
         disability_types: Optional[list] = None,
         education_levels: Optional[list] = None,
         cities: Optional[list] = None,
-        screening_status: Optional[str] = None
+        screening_status: Optional[str] = None,
+        is_experienced: Optional[bool] = None
     ) -> dict:
         """Get list of candidates with screening records with total count, supporting optional search, filters, document status filter, and sorting"""
         items, total = await self.repository.get_screened(
@@ -200,7 +207,8 @@ class CandidateService:
             disability_types=disability_types,
             education_levels=education_levels,
             cities=cities,
-            screening_status=screening_status
+            screening_status=screening_status,
+            is_experienced=is_experienced
         )
         return {"items": items, "total": total}
 

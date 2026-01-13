@@ -73,6 +73,7 @@ export const fetchCandidates = createAsyncThunk(
 			cities?: string;
 			counseling_status?: string;
 			screening_status?: string;
+			is_experienced?: boolean;
 		} | void = {},
 		{ rejectWithValue }
 	) => {
@@ -87,7 +88,8 @@ export const fetchCandidates = createAsyncThunk(
 				education_levels,
 				cities,
 				counseling_status,
-				screening_status
+				screening_status,
+				is_experienced
 			} = params || {};
 			const response = await candidateService.getAll(
 				skip,
@@ -99,7 +101,8 @@ export const fetchCandidates = createAsyncThunk(
 				education_levels,
 				cities,
 				counseling_status,
-				screening_status
+				screening_status,
+				is_experienced
 			);
 			return response;
 		} catch (error: any) {
@@ -121,6 +124,8 @@ export const fetchUnscreenedCandidates = createAsyncThunk(
 			education_levels?: string;
 			cities?: string;
 			screening_status?: string;
+			is_experienced?: boolean;
+			counseling_status?: string;
 		} | void = {},
 		{ rejectWithValue }
 	) => {
@@ -134,7 +139,9 @@ export const fetchUnscreenedCandidates = createAsyncThunk(
 				disability_types,
 				education_levels,
 				cities,
-				screening_status
+				screening_status,
+				is_experienced,
+				counseling_status
 			} = params || {};
 			const response = await candidateService.getUnscreened(
 				skip,
@@ -145,7 +152,9 @@ export const fetchUnscreenedCandidates = createAsyncThunk(
 				disability_types,
 				education_levels,
 				cities,
-				screening_status
+				screening_status,
+				is_experienced,
+				counseling_status
 			);
 			return response;
 		} catch (error: any) {
@@ -169,6 +178,7 @@ export const fetchScreenedCandidates = createAsyncThunk(
 			education_levels?: string;
 			cities?: string;
 			screening_status?: string;
+			is_experienced?: boolean;
 		} | void = {},
 		{ rejectWithValue }
 	) => {
@@ -184,7 +194,8 @@ export const fetchScreenedCandidates = createAsyncThunk(
 				disability_types,
 				education_levels,
 				cities,
-				screening_status
+				screening_status,
+				is_experienced
 			} = params || {};
 			const response = await candidateService.getScreened(
 				skip,
@@ -197,7 +208,8 @@ export const fetchScreenedCandidates = createAsyncThunk(
 				disability_types,
 				education_levels,
 				cities,
-				screening_status
+				screening_status,
+				is_experienced
 			);
 			return response;
 		} catch (error: any) {

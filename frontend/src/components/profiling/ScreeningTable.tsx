@@ -56,7 +56,8 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 		education_levels: [],
 		cities: [],
 		counseling_status: '',
-		screening_status: ''
+		screening_status: '',
+		is_experienced: ''
 	});
 	const [filterOptions, setFilterOptions] = useState({
 		disability_types: [] as string[],
@@ -88,14 +89,22 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 		}
 	];
 
-	if (type === 'screened') {
-		filterFields.push({
-			key: 'counseling_status',
-			label: 'Counseling Status',
-			type: 'single-select',
-			options: (filterOptions.counseling_statuses || []).map(val => ({ value: val, label: val }))
-		});
-	}
+	filterFields.push({
+		key: 'counseling_status',
+		label: 'Counseling Status',
+		type: 'single-select',
+		options: (filterOptions.counseling_statuses || []).map(val => ({ value: val, label: val }))
+	});
+
+	filterFields.push({
+		key: 'is_experienced',
+		label: 'Work Experience',
+		type: 'single-select',
+		options: [
+			{ value: 'false', label: 'Fresher' },
+			{ value: 'true', label: 'Experienced' }
+		]
+	});
 
 	filterFields.push({
 		key: 'screening_status',
@@ -105,9 +114,17 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 	});
 
 	const handleFilterChange = (key: string, value: any) => {
+		// Convert experience values back to boolean/null
+		let finalValue = value;
+		if (key === 'is_experienced') {
+			if (value === 'false') finalValue = false;
+			else if (value === 'true') finalValue = true;
+			else if (value === '') finalValue = '';
+		}
+
 		setFilters(prev => ({
 			...prev,
-			[key]: value
+			[key]: finalValue
 		}));
 	};
 
@@ -117,7 +134,8 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 			education_levels: [],
 			cities: [],
 			counseling_status: '',
-			screening_status: ''
+			screening_status: '',
+			is_experienced: ''
 		});
 		setPage(0);
 	};
@@ -159,13 +177,15 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 			sortOrder: order,
 			disability_types: filters.disability_types?.join(',') || '',
 			education_levels: filters.education_levels?.join(',') || '',
-			cities: filters.cities?.join(',') || ''
+			cities: filters.cities?.join(',') || '',
+			is_experienced: filters.is_experienced === '' ? undefined : filters.is_experienced
 		};
 
 		if (type === 'unscreened') {
 			dispatch(fetchUnscreenedCandidates({
 				...params,
-				screening_status: filters.screening_status
+				screening_status: filters.screening_status,
+				counseling_status: filters.counseling_status
 			}));
 		} else {
 			dispatch(fetchScreenedCandidates({

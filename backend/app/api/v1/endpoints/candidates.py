@@ -81,6 +81,7 @@ async def get_candidates(
     education_levels: str = None,  # Comma-separated list
     cities: str = None,  # Comma-separated list
     counseling_status: str = None,
+    is_experienced: bool = None,
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
     db: AsyncSession = Depends(get_db)
 ):
@@ -104,7 +105,8 @@ async def get_candidates(
         disability_types=disability_types_list,
         education_levels=education_levels_list,
         cities=cities_list,
-        counseling_status=counseling_status
+        counseling_status=counseling_status,
+        is_experienced=is_experienced
     )
 
 
@@ -154,6 +156,8 @@ async def get_unscreened_candidates(
     education_levels: str = None,
     cities: str = None,
     screening_status: str = None,
+    is_experienced: bool = None,
+    counseling_status: str = None,
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
 
     db: AsyncSession = Depends(get_db)
@@ -175,7 +179,9 @@ async def get_unscreened_candidates(
         disability_types=disability_types_list,
         education_levels=education_levels_list,
         cities=cities_list,
-        screening_status=screening_status
+        screening_status=screening_status,
+        is_experienced=is_experienced,
+        counseling_status=counseling_status
     )
 
 
@@ -195,6 +201,7 @@ async def get_screened_candidates(
     education_levels: str = None,
     cities: str = None,
     screening_status: str = None,
+    is_experienced: bool = None,
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
     db: AsyncSession = Depends(get_db)
 ):
@@ -218,7 +225,8 @@ async def get_screened_candidates(
         disability_types=disability_types_list,
         education_levels=education_levels_list,
         cities=cities_list,
-        screening_status=screening_status
+        screening_status=screening_status,
+        is_experienced=is_experienced
     )
 
 

@@ -59,7 +59,8 @@ class CandidateRepository(BaseRepository[Candidate]):
         disability_types: Optional[list] = None,
         education_levels: Optional[list] = None,
         cities: Optional[list] = None,
-        counseling_status: Optional[str] = None
+        counseling_status: Optional[str] = None,
+        is_experienced: Optional[bool] = None
     ):
         """Get multiples candidates with counseling loaded for list view, with optional search filtering, category filters, and sorting"""
         from sqlalchemy import or_
@@ -130,6 +131,11 @@ class CandidateRepository(BaseRepository[Candidate]):
             stmt = stmt.where(CandidateCounseling.status == counseling_status)
             count_stmt = count_stmt.where(CandidateCounseling.status == counseling_status)
         
+        if is_experienced is not None:
+            is_exp_val = 'true' if is_experienced else 'false'
+            stmt = stmt.where(Candidate.work_experience['is_experienced'].as_string() == is_exp_val)
+            count_stmt = count_stmt.where(Candidate.work_experience['is_experienced'].as_string() == is_exp_val)
+        
         # Count total matching records
         count_result = await self.db.execute(count_stmt)
         total = count_result.scalar() or 0
@@ -164,7 +170,9 @@ class CandidateRepository(BaseRepository[Candidate]):
         disability_types: Optional[list] = None,
         education_levels: Optional[list] = None,
         cities: Optional[list] = None,
-        screening_status: Optional[str] = None
+        screening_status: Optional[str] = None,
+        is_experienced: Optional[bool] = None,
+        counseling_status: Optional[str] = None
     ):
         """Get candidates without screening records or with non-completed screening, with optional search filtering, category filters, and sorting"""
         from sqlalchemy import or_
@@ -236,33 +244,25 @@ class CandidateRepository(BaseRepository[Candidate]):
             stmt = stmt.where(Candidate.city.in_(cities))
             count_stmt = count_stmt.where(Candidate.city.in_(cities))
 
+        # Apply Counseling Status filters
+        if counseling_status:
+            if counseling_status.lower() == 'pending':
+                # No counseling record OR status is 'pending'
+                stmt = stmt.where(or_(CandidateCounseling.id.is_(None), CandidateCounseling.status == 'pending'))
+                count_stmt = count_stmt.outerjoin(Candidate.counseling).where(or_(CandidateCounseling.id.is_(None), CandidateCounseling.status == 'pending'))
+            elif counseling_status.lower() == 'counseled':
+                # Has counseling record AND status is 'selected' or 'rejected'
+                stmt = stmt.where(CandidateCounseling.status.in_(['selected', 'rejected']))
+                count_stmt = count_stmt.outerjoin(Candidate.counseling).where(CandidateCounseling.status.in_(['selected', 'rejected']))
+            else:
+                # Specific status (selected, rejected, etc.)
+                stmt = stmt.where(CandidateCounseling.status == counseling_status)
+                count_stmt = count_stmt.outerjoin(Candidate.counseling).where(CandidateCounseling.status == counseling_status)
 
-        # Apply category filters
-        if disability_types and len(disability_types) > 0:
-            disability_filters = []
-            for d_type in disability_types:
-                if d_type:
-                    disability_filters.append(
-                        Candidate.disability_details['disability_type'].as_string() == d_type
-                    )
-            if disability_filters:
-                stmt = stmt.where(or_(*disability_filters))
-                count_stmt = count_stmt.where(or_(*disability_filters))
-        
-        if education_levels and len(education_levels) > 0:
-            education_filters = []
-            for edu_level in education_levels:
-                if edu_level:
-                    education_filters.append(
-                        Candidate.education_details['degrees'].as_string().ilike(f"%{edu_level}%")
-                    )
-            if education_filters:
-                stmt = stmt.where(or_(*education_filters))
-                count_stmt = count_stmt.where(or_(*education_filters))
-        
-        if cities and len(cities) > 0:
-            stmt = stmt.where(Candidate.city.in_(cities))
-            count_stmt = count_stmt.where(Candidate.city.in_(cities))
+        if is_experienced is not None:
+            is_exp_val = 'true' if is_experienced else 'false'
+            stmt = stmt.where(Candidate.work_experience['is_experienced'].as_string() == is_exp_val)
+            count_stmt = count_stmt.where(Candidate.work_experience['is_experienced'].as_string() == is_exp_val)
 
 
         count_result = await self.db.execute(count_stmt)
@@ -296,7 +296,8 @@ class CandidateRepository(BaseRepository[Candidate]):
         disability_types: Optional[list] = None,
         education_levels: Optional[list] = None,
         cities: Optional[list] = None,
-        screening_status: Optional[str] = None
+        screening_status: Optional[str] = None,
+        is_experienced: Optional[bool] = None
     ):
         """Get candidates with 'Completed' screening records loaded, with optional counseling status filter, document status filter, search filtering, category filters, and sorting"""
 
@@ -428,10 +429,14 @@ class CandidateRepository(BaseRepository[Candidate]):
             if education_filters:
                 stmt = stmt.where(or_(*education_filters))
                 count_stmt = count_stmt.where(or_(*education_filters))
-        
         if cities and len(cities) > 0:
             stmt = stmt.where(Candidate.city.in_(cities))
             count_stmt = count_stmt.where(Candidate.city.in_(cities))
+
+        if is_experienced is not None:
+            is_exp_val = 'true' if is_experienced else 'false'
+            stmt = stmt.where(Candidate.work_experience['is_experienced'].as_string() == is_exp_val)
+            count_stmt = count_stmt.where(Candidate.work_experience['is_experienced'].as_string() == is_exp_val)
 
 
         # Count total screened (with filter)

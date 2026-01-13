@@ -22,7 +22,7 @@ import {
 	MenuItem
 } from '@mui/material';
 import { format } from 'date-fns';
-import { FilterList, Search, Edit, Accessible, VerifiedUser, AssignmentTurnedIn } from '@mui/icons-material';
+import { FilterList, Search, Edit, Accessible, VerifiedUser, AssignmentTurnedIn, CheckCircle, Cancel, WatchLater, HelpOutline } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchScreenedCandidates } from '../../store/slices/candidateSlice';
 import { candidateService } from '../../services/candidateService';
@@ -55,7 +55,8 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 		disability_types: [],
 		education_levels: [],
 		cities: [],
-		counseling_status: ''
+		counseling_status: '',
+		is_experienced: ''
 	});
 	const [filterOptions, setFilterOptions] = useState({
 		disability_types: [] as string[],
@@ -83,13 +84,42 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 			label: 'City',
 			type: 'multi-select',
 			options: filterOptions.cities.map(val => ({ value: val, label: val }))
+		},
+		{
+			key: 'is_experienced',
+			label: 'Work Experience',
+			type: 'single-select',
+			options: [
+				{ value: 'false', label: 'Fresher' },
+				{ value: 'true', label: 'Experienced' }
+			]
 		}
 	];
 
+	if (type === 'counseled') {
+		filterFields.push({
+			key: 'counseling_status',
+			label: 'Counseling Status',
+			type: 'single-select',
+			options: [
+				{ value: 'selected', label: 'Selected' },
+				{ value: 'rejected', label: 'Rejected' }
+			]
+		});
+	}
+
 	const handleFilterChange = (key: string, value: any) => {
+		// Convert experience values back to boolean/null
+		let finalValue = value;
+		if (key === 'is_experienced') {
+			if (value === 'false') finalValue = false;
+			else if (value === 'true') finalValue = true;
+			else if (value === '') finalValue = '';
+		}
+
 		setFilters(prev => ({
 			...prev,
-			[key]: value
+			[key]: finalValue
 		}));
 	};
 
@@ -98,7 +128,8 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 			disability_types: [],
 			education_levels: [],
 			cities: [],
-			counseling_status: ''
+			counseling_status: '',
+			is_experienced: ''
 		});
 		setPage(0);
 	};
@@ -135,13 +166,14 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 		dispatch(fetchScreenedCandidates({
 			skip: page * rowsPerPage,
 			limit: rowsPerPage,
-			counselingStatus: type,
+			counselingStatus: filters.counseling_status || type,
 			search: debouncedSearchTerm,
 			sortBy: orderBy,
 			sortOrder: order,
 			disability_types: filters.disability_types?.join(',') || '',
 			education_levels: filters.education_levels?.join(',') || '',
-			cities: filters.cities?.join(',') || ''
+			cities: filters.cities?.join(',') || '',
+			is_experienced: filters.is_experienced === '' ? undefined : filters.is_experienced
 		}));
 	};
 
@@ -388,10 +420,30 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 									</TableCell>
 									{/* Status Column */}
 									<TableCell>
-										{candidate.counseling_status === 'selected' && <Chip label="Selected" color="success" size="small" />}
-										{candidate.counseling_status === 'rejected' && <Chip label="Rejected" color="error" size="small" />}
-										{candidate.counseling_status === 'pending' && <Chip label="Pending" color="warning" size="small" />}
-										{!candidate.counseling_status && <Chip label="Not Started" size="small" />}
+										<Chip
+											label={(candidate.counseling_status || 'Pending').toUpperCase()}
+											size="small"
+											icon={
+												candidate.counseling_status === 'selected' ? <CheckCircle /> :
+													candidate.counseling_status === 'rejected' ? <Cancel /> :
+														candidate.counseling_status === 'pending' ? <WatchLater /> :
+															<HelpOutline />
+											}
+											sx={{
+												fontWeight: 700,
+												borderRadius: 1,
+												bgcolor:
+													candidate.counseling_status === 'selected' ? '#2e7d32' :
+														candidate.counseling_status === 'rejected' ? '#d32f2f' :
+															candidate.counseling_status === 'pending' ? '#ed6c02' :
+																'#757575',
+												color: '#ffffff',
+												'& .MuiChip-icon': {
+													color: 'inherit',
+													fontSize: 16
+												}
+											}}
+										/>
 									</TableCell>
 
 									{/* Counselor Name & Date (Only for Counseled) */}
