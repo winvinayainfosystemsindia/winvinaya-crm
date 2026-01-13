@@ -19,7 +19,8 @@ import {
 	CircularProgress,
 	Chip,
 	IconButton,
-	Divider
+	Divider,
+	Autocomplete
 } from '@mui/material';
 import {
 	Add as AddIcon,
@@ -41,6 +42,7 @@ const Settings: React.FC = () => {
 	const [editingField, setEditingField] = useState<DynamicField | null>(null);
 	const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 	const [fieldToDelete, setFieldToDelete] = useState<DynamicField | null>(null);
+	const [optionInputValue, setOptionInputValue] = useState('');
 
 	const [newField, setNewField] = useState<DynamicFieldCreate>({
 		entity_type: 'screening',
@@ -106,6 +108,7 @@ const Settings: React.FC = () => {
 				order: fields.length
 			});
 		}
+		setOptionInputValue('');
 		setDialogOpen(true);
 	};
 
@@ -349,15 +352,51 @@ const Settings: React.FC = () => {
 						</TextField>
 
 						{(newField.field_type === 'single_choice' || newField.field_type === 'multiple_choice') && (
-							<TextField
-								label="Options (Comma separated)"
-								fullWidth
-								size="small"
-								multiline
-								rows={2}
-								placeholder="Option 1, Option 2, Option 3"
-								value={Array.isArray(newField.options) ? newField.options.join(', ') : ''}
-								onChange={(e) => setNewField({ ...newField, options: e.target.value.split(',').map(s => s.trim()).filter(s => s) })}
+							<Autocomplete
+								multiple
+								freeSolo
+								options={[]}
+								value={newField.options || []}
+								inputValue={optionInputValue}
+								onInputChange={(_e, newInputValue) => {
+									setOptionInputValue(newInputValue);
+								}}
+								onChange={(_e, newValue) => {
+									setNewField({ ...newField, options: newValue as string[] });
+								}}
+								renderTags={(value: string[], getTagProps) =>
+									value.map((option: string, index: number) => (
+										<Chip
+											variant="outlined"
+											label={option}
+											{...getTagProps({ index })}
+											size="small"
+											sx={{ borderRadius: '2px' }}
+										/>
+									))
+								}
+								renderInput={(params) => (
+									<TextField
+										{...params}
+										label="Options"
+										placeholder="Type and press Enter or Comma"
+										size="small"
+										helperText="Press Enter or Comma after each option"
+										onKeyDown={(e) => {
+											if (e.key === ',') {
+												e.preventDefault();
+												const val = optionInputValue.trim();
+												if (val && !newField.options?.includes(val)) {
+													setNewField({
+														...newField,
+														options: [...(newField.options || []), val]
+													});
+													setOptionInputValue('');
+												}
+											}
+										}}
+									/>
+								)}
 							/>
 						)}
 
