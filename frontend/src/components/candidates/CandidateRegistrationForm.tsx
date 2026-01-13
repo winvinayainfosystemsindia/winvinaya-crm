@@ -139,6 +139,19 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
                 } else if (!/^\d{6}$/.test(formData.pincode)) {
                     errors.pincode = 'Please enter a valid 6-digit pincode';
                 }
+
+                // Mandatory Guardian Details Validation
+                if (!formData.guardian_details?.parent_name) {
+                    errors.parent_name = 'Parent/Guardian name is required';
+                }
+                if (!formData.guardian_details?.relationship) {
+                    errors.relationship = 'Relationship is required';
+                }
+                if (!formData.guardian_details?.parent_phone) {
+                    errors.parent_phone = 'Parent/Guardian phone is required';
+                } else if (!/^\d{10}$/.test(formData.guardian_details.parent_phone.replace(/\D/g, ''))) {
+                    errors.parent_phone = 'Please enter a valid 10-digit phone number';
+                }
                 break;
             case 1: // Education
                 if (!formData.education_details?.degrees || formData.education_details.degrees.length === 0) {

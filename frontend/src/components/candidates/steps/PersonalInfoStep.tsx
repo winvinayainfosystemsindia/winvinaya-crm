@@ -253,23 +253,30 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                         variant="subtitle1"
                         sx={{ mb: 2, color: theme.palette.text.secondary }}
                     >
-                        Parent/Guardian Information (Optional)
+                        Parent/Guardian Information
                     </Typography>
                 </Grid>
 
                 <Grid size={{ xs: 12, md: 4 }}>
                     <TextField
+                        required
                         fullWidth
                         label="Parent/Guardian Name"
                         value={formData.guardian_details?.parent_name || ''}
                         onChange={handleGuardianChange('parent_name')}
                         variant="outlined"
-                        placeholder="Optional"
+                        placeholder="Enter parent/guardian name"
+                        error={!!errors.parent_name}
+                        helperText={errors.parent_name || "Name of parent or guardian"}
+                        inputProps={{
+                            'aria-invalid': !!errors.parent_name,
+                            'aria-required': 'true',
+                        }}
                     />
                 </Grid>
 
                 <Grid size={{ xs: 12, md: 4 }}>
-                    <FormControl fullWidth>
+                    <FormControl fullWidth required error={!!errors.relationship}>
                         <InputLabel id="guardian-relationship-label" htmlFor="guardian-relationship-select">Relationship</InputLabel>
                         <Select
                             labelId="guardian-relationship-label"
@@ -277,6 +284,10 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                             value={formData.guardian_details?.relationship || ''}
                             label="Relationship"
                             onChange={handleGuardianChange('relationship')}
+                            inputProps={{
+                                'aria-required': 'true',
+                                'aria-invalid': !!errors.relationship,
+                            }}
                             MenuProps={{
                                 disablePortal: true,
                                 disableScrollLock: true,
@@ -289,20 +300,26 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                             <MenuItem value="Brother">Brother</MenuItem>
                             <MenuItem value="Sister">Sister</MenuItem>
                         </Select>
+                        <FormHelperText>{errors.relationship || "Select relationship"}</FormHelperText>
                     </FormControl>
                 </Grid>
 
                 <Grid size={{ xs: 12, md: 4 }}>
                     <TextField
+                        required
                         fullWidth
                         label="Parent/Guardian Phone"
                         value={formData.guardian_details?.parent_phone || ''}
                         onChange={handleGuardianChange('parent_phone')}
                         variant="outlined"
                         placeholder="10-digit mobile number"
+                        error={!!errors.parent_phone}
+                        helperText={errors.parent_phone || "Contact number of parent/guardian"}
                         inputProps={{
                             maxLength: 10,
-                            'aria-label': '10-digit guardian mobile number'
+                            'aria-label': '10-digit guardian mobile number',
+                            'aria-invalid': !!errors.parent_phone,
+                            'aria-required': 'true',
                         }}
                     />
                 </Grid>
