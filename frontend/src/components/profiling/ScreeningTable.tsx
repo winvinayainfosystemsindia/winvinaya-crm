@@ -55,13 +55,15 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 		disability_types: [],
 		education_levels: [],
 		cities: [],
-		counseling_status: ''
+		counseling_status: '',
+		screening_status: ''
 	});
 	const [filterOptions, setFilterOptions] = useState({
 		disability_types: [] as string[],
 		education_levels: [] as string[],
 		cities: [] as string[],
-		counseling_statuses: [] as string[]
+		counseling_statuses: [] as string[],
+		screening_statuses: [] as string[]
 	});
 
 	// Dynamic filter fields based on type
@@ -70,19 +72,19 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 			key: 'disability_types',
 			label: 'Disability Type',
 			type: 'multi-select',
-			options: filterOptions.disability_types.map(val => ({ value: val, label: val }))
+			options: (filterOptions.disability_types || []).map(val => ({ value: val, label: val }))
 		},
 		{
 			key: 'education_levels',
 			label: 'Education Level',
 			type: 'multi-select',
-			options: filterOptions.education_levels.map(val => ({ value: val, label: val }))
+			options: (filterOptions.education_levels || []).map(val => ({ value: val, label: val }))
 		},
 		{
 			key: 'cities',
 			label: 'City',
 			type: 'multi-select',
-			options: filterOptions.cities.map(val => ({ value: val, label: val }))
+			options: (filterOptions.cities || []).map(val => ({ value: val, label: val }))
 		}
 	];
 
@@ -91,9 +93,16 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 			key: 'counseling_status',
 			label: 'Counseling Status',
 			type: 'single-select',
-			options: filterOptions.counseling_statuses.map(val => ({ value: val, label: val }))
+			options: (filterOptions.counseling_statuses || []).map(val => ({ value: val, label: val }))
 		});
 	}
+
+	filterFields.push({
+		key: 'screening_status',
+		label: 'Screening Status',
+		type: 'single-select',
+		options: (filterOptions.screening_statuses || []).map(val => ({ value: val, label: val }))
+	});
 
 	const handleFilterChange = (key: string, value: any) => {
 		setFilters(prev => ({
@@ -107,7 +116,8 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 			disability_types: [],
 			education_levels: [],
 			cities: [],
-			counseling_status: ''
+			counseling_status: '',
+			screening_status: ''
 		});
 		setPage(0);
 	};
@@ -153,11 +163,15 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 		};
 
 		if (type === 'unscreened') {
-			dispatch(fetchUnscreenedCandidates(params));
+			dispatch(fetchUnscreenedCandidates({
+				...params,
+				screening_status: filters.screening_status
+			}));
 		} else {
 			dispatch(fetchScreenedCandidates({
 				...params,
-				counselingStatus: filters.counseling_status
+				counselingStatus: filters.counseling_status,
+				screening_status: filters.screening_status
 			}));
 		}
 	};
@@ -317,6 +331,7 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 								{ id: 'education_level', label: 'Education', hideOnMobile: true },
 								{ id: 'city', label: 'Location', hideOnMobile: true },
 								{ id: 'created_at', label: 'Date', hideOnMobile: true },
+								{ id: 'screening_status', label: 'Status', hideOnMobile: false },
 							].map((headCell) => (
 								<TableCell
 									key={headCell.id}
@@ -346,13 +361,13 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 					<TableBody>
 						{loading ? (
 							<TableRow>
-								<TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+								<TableCell colSpan={8} align="center" sx={{ py: 4 }}>
 									<Typography color="text.secondary">Loading...</Typography>
 								</TableCell>
 							</TableRow>
 						) : filteredCandidates.length === 0 ? (
 							<TableRow>
-								<TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+								<TableCell colSpan={8} align="center" sx={{ py: 4 }}>
 									<Typography color="text.secondary">No candidates found</Typography>
 								</TableCell>
 							</TableRow>
@@ -424,6 +439,30 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 										<Typography variant="body2" color="text.secondary">
 											{formatDate(candidate.created_at)}
 										</Typography>
+									</TableCell>
+									<TableCell>
+										<Chip
+											label={candidate.screening_status}
+											size="small"
+											sx={{
+												height: 24,
+												fontSize: '0.75rem',
+												fontWeight: 700,
+												borderRadius: 1,
+												bgcolor:
+													candidate.screening_status === 'Screening Completed' ? '#e8f5e9' :
+														candidate.screening_status === 'Not Connected' || candidate.screening_status === 'Not Answered' ? '#ffebee' :
+															candidate.screening_status === 'In Progress' ? '#e3f2fd' :
+																candidate.screening_status === 'Follow-up Required' ? '#fff3e0' :
+																	'#f5f5f5',
+												color:
+													candidate.screening_status === 'Screening Completed' ? '#2e7d32' :
+														candidate.screening_status === 'Not Connected' || candidate.screening_status === 'Not Answered' ? '#d32f2f' :
+															candidate.screening_status === 'In Progress' ? '#1976d2' :
+																candidate.screening_status === 'Follow-up Required' ? '#ed6c02' :
+																	'#757575',
+											}}
+										/>
 									</TableCell>
 									<TableCell align="right">
 										{type === 'unscreened' ? (

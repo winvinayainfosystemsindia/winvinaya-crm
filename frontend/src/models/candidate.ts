@@ -2,6 +2,7 @@
 export interface CandidateScreening {
 	id: number;
 	candidate_id: number;
+	status?: string;
 	previous_training?: Record<string, any>;
 	documents_upload?: Record<string, any>;
 	skills?: Record<string, any>;
@@ -11,6 +12,7 @@ export interface CandidateScreening {
 }
 
 export interface CandidateScreeningCreate {
+	status?: string;
 	previous_training?: Record<string, any>;
 	documents_upload?: Record<string, any>;
 	skills?: Record<string, any>;

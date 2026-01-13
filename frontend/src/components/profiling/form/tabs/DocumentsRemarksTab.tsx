@@ -13,7 +13,9 @@ import {
 	Radio,
 	Paper,
 	Divider,
-	Chip
+	Chip,
+	Select,
+	MenuItem
 } from '@mui/material';
 import {
 	CloudUpload as CloudUploadIcon,
@@ -28,6 +30,7 @@ import type { DynamicField } from '../../../../services/settingsService';
 interface DocumentsRemarksTabProps {
 	formData: any;
 	onUpdateOtherField: (name: string, value: any) => void;
+	onUpdateStatus: (value: string) => void;
 	onFileUpload: (type: string, file: File) => void;
 	onViewFile: (type: string) => void;
 	onRemoveFile: (type: string) => void;
@@ -39,6 +42,7 @@ interface DocumentsRemarksTabProps {
 const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 	formData,
 	onUpdateOtherField,
+	onUpdateStatus,
 	onFileUpload,
 	onViewFile,
 	onRemoveFile,
@@ -232,6 +236,7 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 					Final Verdict & Comments
 				</Typography>
 				<Paper elevation={0} sx={{ p: 3, border: '1px solid #d5dbdb', borderRadius: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+
 					<Stack direction={{ xs: 'column', sm: 'row' }} spacing={4}>
 						<FormControl component="fieldset">
 							<FormLabel sx={{ fontSize: '0.875rem', mb: 0.5, color: '#232f3e', fontWeight: 600 }}>
@@ -277,6 +282,42 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 							</RadioGroup>
 						</FormControl>
 					</Stack>
+
+					{/* Screening Status */}
+					<Box>
+						<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 1 }}>
+							Screening Status
+						</Typography>
+						<FormControl fullWidth size="small">
+							<Select
+								id="screening-status"
+								value={formData.status || ''}
+								onChange={(e) => onUpdateStatus(e.target.value)}
+								sx={{
+									borderRadius: 0,
+									'& .MuiOutlinedInput-notchedOutline': {
+										borderColor: '#d5dbdb'
+									},
+									'&:hover .MuiOutlinedInput-notchedOutline': {
+										borderColor: '#879596'
+									},
+									'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+										borderColor: '#ec7211'
+									}
+								}}
+							>
+								<MenuItem value="">
+									<em>Not Set</em>
+								</MenuItem>
+								<MenuItem value="Not Connected">Not Connected</MenuItem>
+								<MenuItem value="Not Answered">Not Answered</MenuItem>
+								<MenuItem value="Completed">Completed</MenuItem>
+								<MenuItem value="Pending">Pending</MenuItem>
+								<MenuItem value="In Progress">In Progress</MenuItem>
+								<MenuItem value="Follow-up Required">Follow-up Required</MenuItem>
+							</Select>
+						</FormControl>
+					</Box>
 
 					<Box>
 						<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 1 }}>

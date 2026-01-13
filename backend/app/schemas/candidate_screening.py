@@ -8,6 +8,7 @@ from pydantic import BaseModel
 # Screening Schemas
 
 class CandidateScreeningBase(BaseModel):
+    status: Optional[str] = None
     previous_training: Optional[dict[str, Any]] = None
     documents_upload: Optional[dict[str, Any]] = None
     skills: Optional[dict[str, Any]] = None
@@ -21,6 +22,7 @@ class CandidateScreeningCreate(CandidateScreeningBase):
 
 class CandidateScreeningUpdate(BaseModel):
     """Schema for updating candidate screening"""
+    status: Optional[str] = None
     previous_training: Optional[dict[str, Any]] = None
     documents_upload: Optional[dict[str, Any]] = None
     skills: Optional[dict[str, Any]] = None

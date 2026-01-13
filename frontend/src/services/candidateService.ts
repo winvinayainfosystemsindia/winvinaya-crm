@@ -29,7 +29,8 @@ export const candidateService = {
 		disabilityTypes?: string,
 		educationLevels?: string,
 		cities?: string,
-		counselingStatus?: string
+		counselingStatus?: string,
+		screeningStatus?: string
 	): Promise<CandidatePaginatedResponse> => {
 		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
 		const sortParam = sortBy ? `&sort_by=${sortBy}&sort_order=${sortOrder}` : '';
@@ -37,7 +38,8 @@ export const candidateService = {
 			disabilityTypes ? `&disability_types=${encodeURIComponent(disabilityTypes)}` : '',
 			educationLevels ? `&education_levels=${encodeURIComponent(educationLevels)}` : '',
 			cities ? `&cities=${encodeURIComponent(cities)}` : '',
-			counselingStatus ? `&counseling_status=${encodeURIComponent(counselingStatus)}` : ''
+			counselingStatus ? `&counseling_status=${encodeURIComponent(counselingStatus)}` : '',
+			screeningStatus ? `&screening_status=${encodeURIComponent(screeningStatus)}` : ''
 		].join('');
 
 		const response = await api.get<CandidatePaginatedResponse>(`/candidates/?skip=${skip}&limit=${limit}${searchParam}${sortParam}${filterParams}`);
@@ -96,14 +98,16 @@ export const candidateService = {
 		sortOrder: 'asc' | 'desc' = 'desc',
 		disabilityTypes?: string,
 		educationLevels?: string,
-		cities?: string
+		cities?: string,
+		screeningStatus?: string
 	): Promise<CandidatePaginatedResponse> => {
 		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
 		const sortParam = sortBy ? `&sort_by=${sortBy}&sort_order=${sortOrder}` : '';
 		const filterParams = [
 			disabilityTypes ? `&disability_types=${encodeURIComponent(disabilityTypes)}` : '',
 			educationLevels ? `&education_levels=${encodeURIComponent(educationLevels)}` : '',
-			cities ? `&cities=${encodeURIComponent(cities)}` : ''
+			cities ? `&cities=${encodeURIComponent(cities)}` : '',
+			screeningStatus ? `&screening_status=${encodeURIComponent(screeningStatus)}` : ''
 		].join('');
 
 		const response = await api.get<CandidatePaginatedResponse>(`/candidates/unscreened?skip=${skip}&limit=${limit}${searchParam}${sortParam}${filterParams}`);
@@ -123,7 +127,8 @@ export const candidateService = {
 		sortOrder: 'asc' | 'desc' = 'desc',
 		disabilityTypes?: string,
 		educationLevels?: string,
-		cities?: string
+		cities?: string,
+		screeningStatus?: string
 	): Promise<CandidatePaginatedResponse> => {
 		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
 		const docStatusParam = documentStatus ? `&document_status=${documentStatus}` : '';
@@ -131,7 +136,8 @@ export const candidateService = {
 		const filterParams = [
 			disabilityTypes ? `&disability_types=${encodeURIComponent(disabilityTypes)}` : '',
 			educationLevels ? `&education_levels=${encodeURIComponent(educationLevels)}` : '',
-			cities ? `&cities=${encodeURIComponent(cities)}` : ''
+			cities ? `&cities=${encodeURIComponent(cities)}` : '',
+			screeningStatus ? `&screening_status=${encodeURIComponent(screeningStatus)}` : ''
 		].join('');
 
 		const response = await api.get<CandidatePaginatedResponse>(`/candidates/screened?skip=${skip}&limit=${limit}${counselingStatus ? `&counseling_status=${counselingStatus}` : ''}${docStatusParam}${searchParam}${sortParam}${filterParams}`);
@@ -153,6 +159,7 @@ export const candidateService = {
 		education_levels: string[];
 		cities: string[];
 		counseling_statuses: string[];
+		screening_statuses: string[];
 	}> => {
 		const response = await api.get('/candidates/filter-options');
 		return response.data;

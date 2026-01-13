@@ -153,6 +153,7 @@ async def get_unscreened_candidates(
     disability_types: str = None,
     education_levels: str = None,
     cities: str = None,
+    screening_status: str = None,
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING])),
 
     db: AsyncSession = Depends(get_db)
@@ -173,7 +174,8 @@ async def get_unscreened_candidates(
         sort_order=sort_order,
         disability_types=disability_types_list,
         education_levels=education_levels_list,
-        cities=cities_list
+        cities=cities_list,
+        screening_status=screening_status
     )
 
 
@@ -192,6 +194,7 @@ async def get_screened_candidates(
     disability_types: str = None,
     education_levels: str = None,
     cities: str = None,
+    screening_status: str = None,
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING])),
     db: AsyncSession = Depends(get_db)
 ):
@@ -214,7 +217,8 @@ async def get_screened_candidates(
         sort_order=sort_order,
         disability_types=disability_types_list,
         education_levels=education_levels_list,
-        cities=cities_list
+        cities=cities_list,
+        screening_status=screening_status
     )
 
 

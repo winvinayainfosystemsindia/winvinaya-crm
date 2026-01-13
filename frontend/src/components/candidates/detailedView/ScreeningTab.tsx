@@ -6,7 +6,11 @@ import {
 	AssignmentInd as AssignmentIndIcon,
 	HistoryEdu as TrainingIcon,
 	VerifiedUser as VerifiedIcon,
-	AddBox as ExtraIcon
+	AddBox as ExtraIcon,
+	Autorenew as InProgressIcon,
+	Schedule as FollowUpIcon,
+	HighlightOff as NotAnsweredIcon,
+	Info as DefaultIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { InfoRow, SectionHeader } from './DetailedViewCommon';
@@ -78,13 +82,36 @@ const ScreeningTab: React.FC<ScreeningTabProps> = ({ candidate }) => {
 			}}
 		>
 			<SectionHeader title="Screening Assessment" icon={<AssignmentIndIcon />}>
-				<Chip
-					icon={<CheckCircleIcon />}
-					label="COMPLETED"
-					color="success"
-					size="small"
-					sx={{ fontWeight: 700, borderRadius: 1 }}
-				/>
+				<Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+					{screening.status && (
+						<Chip
+							label={screening.status.toUpperCase()}
+							size="small"
+							icon={
+								screening.status === 'Completed' ? <CheckCircleIcon /> :
+									screening.status === 'Not Connected' || screening.status === 'Not Answered' ? <NotAnsweredIcon /> :
+										screening.status === 'In Progress' ? <InProgressIcon /> :
+											screening.status === 'Follow-up Required' ? <FollowUpIcon /> :
+												<DefaultIcon />
+							}
+							sx={{
+								fontWeight: 700,
+								borderRadius: 1,
+								bgcolor:
+									screening.status === 'Completed' ? '#2e7d32' :
+										screening.status === 'Not Connected' || screening.status === 'Not Answered' ? '#d32f2f' :
+											screening.status === 'In Progress' ? '#1976d2' :
+												screening.status === 'Follow-up Required' ? '#ed6c02' :
+													'#757575',
+								color: '#ffffff',
+								'& .MuiChip-icon': {
+									color: 'inherit',
+									fontSize: 16
+								}
+							}}
+						/>
+					)}
+				</Box>
 			</SectionHeader>
 
 			<Grid container spacing={4}>

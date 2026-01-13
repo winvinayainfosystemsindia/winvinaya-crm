@@ -71,7 +71,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 	existingDocuments
 }) => {
 	const dispatch = useAppDispatch();
-	const dynamicFields = useAppSelector(state => state.settings.fields.screening || []);
+	const dynamicFields = useAppSelector(state => state.settings.fields.screening) || [];
 	const loadingFields = useAppSelector(state => state.settings.loading);
 
 	const [tabValue, setTabValue] = useState(0);
@@ -79,6 +79,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 	const [viewing, setViewing] = useState<Record<string, boolean>>({});
 
 	const [formData, setFormData] = useState<CandidateScreeningCreate>({
+		status: '',
 		previous_training: {
 			attended_any_training: false,
 			training_details: '',
@@ -124,6 +125,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 
 			if (initialData) {
 				setFormData({
+					status: initialData.status || '',
 					previous_training: {
 						attended_any_training: initialData.previous_training?.attended_any_training ?? false,
 						training_details: initialData.previous_training?.training_details ?? '',
@@ -153,6 +155,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 				});
 			} else {
 				setFormData({
+					status: '',
 					previous_training: {
 						attended_any_training: false,
 						training_details: '',
@@ -335,6 +338,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 								<DocumentsRemarksTab
 									formData={formData}
 									onUpdateOtherField={handleUpdateOtherField}
+									onUpdateStatus={(value) => setFormData(prev => ({ ...prev, status: value }))}
 									onFileUpload={handleFileUpload}
 									onViewFile={handleViewFile}
 									onRemoveFile={handleRemoveFile}

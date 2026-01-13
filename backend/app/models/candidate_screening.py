@@ -1,6 +1,6 @@
 """Candidate Screening model for trainer-filled screening data"""
 
-from sqlalchemy import Integer, ForeignKey, JSON
+from sqlalchemy import Integer, ForeignKey, JSON, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
 
@@ -18,6 +18,9 @@ class CandidateScreening(BaseModel):
         nullable=False,
         index=True
     )
+    
+    # Status field for screening process
+    status: Mapped[str | None] = mapped_column(String(100), nullable=True)
     
     # Screening Data (JSON fields)
     previous_training: Mapped[dict | None] = mapped_column(JSON, nullable=True)

@@ -23,6 +23,7 @@ interface CandidateState {
 		education_levels: string[];
 		cities: string[];
 		counseling_statuses: string[];
+		screening_statuses: string[];
 	};
 }
 
@@ -37,7 +38,8 @@ const initialState: CandidateState = {
 		disability_types: [],
 		education_levels: [],
 		cities: [],
-		counseling_statuses: []
+		counseling_statuses: [],
+		screening_statuses: []
 	}
 };
 
@@ -70,6 +72,7 @@ export const fetchCandidates = createAsyncThunk(
 			education_levels?: string;
 			cities?: string;
 			counseling_status?: string;
+			screening_status?: string;
 		} | void = {},
 		{ rejectWithValue }
 	) => {
@@ -83,7 +86,8 @@ export const fetchCandidates = createAsyncThunk(
 				disability_types,
 				education_levels,
 				cities,
-				counseling_status
+				counseling_status,
+				screening_status
 			} = params || {};
 			const response = await candidateService.getAll(
 				skip,
@@ -94,7 +98,8 @@ export const fetchCandidates = createAsyncThunk(
 				disability_types,
 				education_levels,
 				cities,
-				counseling_status
+				counseling_status,
+				screening_status
 			);
 			return response;
 		} catch (error: any) {
@@ -115,6 +120,7 @@ export const fetchUnscreenedCandidates = createAsyncThunk(
 			disability_types?: string;
 			education_levels?: string;
 			cities?: string;
+			screening_status?: string;
 		} | void = {},
 		{ rejectWithValue }
 	) => {
@@ -127,7 +133,8 @@ export const fetchUnscreenedCandidates = createAsyncThunk(
 				sortOrder,
 				disability_types,
 				education_levels,
-				cities
+				cities,
+				screening_status
 			} = params || {};
 			const response = await candidateService.getUnscreened(
 				skip,
@@ -137,7 +144,8 @@ export const fetchUnscreenedCandidates = createAsyncThunk(
 				sortOrder,
 				disability_types,
 				education_levels,
-				cities
+				cities,
+				screening_status
 			);
 			return response;
 		} catch (error: any) {
@@ -160,6 +168,7 @@ export const fetchScreenedCandidates = createAsyncThunk(
 			disability_types?: string;
 			education_levels?: string;
 			cities?: string;
+			screening_status?: string;
 		} | void = {},
 		{ rejectWithValue }
 	) => {
@@ -174,7 +183,8 @@ export const fetchScreenedCandidates = createAsyncThunk(
 				sortOrder,
 				disability_types,
 				education_levels,
-				cities
+				cities,
+				screening_status
 			} = params || {};
 			const response = await candidateService.getScreened(
 				skip,
@@ -186,7 +196,8 @@ export const fetchScreenedCandidates = createAsyncThunk(
 				sortOrder,
 				disability_types,
 				education_levels,
-				cities
+				cities,
+				screening_status
 			);
 			return response;
 		} catch (error: any) {

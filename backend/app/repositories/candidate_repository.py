@@ -163,22 +163,40 @@ class CandidateRepository(BaseRepository[Candidate]):
         sort_order: str = "desc",
         disability_types: Optional[list] = None,
         education_levels: Optional[list] = None,
-        cities: Optional[list] = None
+        cities: Optional[list] = None,
+        screening_status: Optional[str] = None
     ):
-        """Get candidates without screening records, with optional search filtering, category filters, and sorting"""
+        """Get candidates without screening records or with non-completed screening, with optional search filtering, category filters, and sorting"""
         from sqlalchemy import or_
+        # A candidate is "unscreened" if they have no screening record OR their status is NOT 'Completed'
         stmt = (
             select(Candidate)
             .outerjoin(Candidate.screening)
             .outerjoin(Candidate.counseling)
-            .where(CandidateScreening.id.is_(None))
+            .where(or_(
+                CandidateScreening.id.is_(None),
+                CandidateScreening.status != 'Completed'
+            ))
             .options(
+                joinedload(Candidate.screening),
                 joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor)
             )
         )
         
         # Base count query
-        count_stmt = select(func.count(Candidate.id)).outerjoin(Candidate.screening).where(CandidateScreening.id.is_(None))
+        count_stmt = select(func.count(Candidate.id)).outerjoin(Candidate.screening).where(or_(
+            CandidateScreening.id.is_(None),
+            CandidateScreening.status != 'Completed'
+        ))
+        
+        # Apply screening status filter if provided
+        if screening_status:
+            if screening_status == 'Pending':
+                stmt = stmt.where(CandidateScreening.id.is_(None))
+                count_stmt = count_stmt.where(CandidateScreening.id.is_(None))
+            else:
+                stmt = stmt.where(CandidateScreening.status == screening_status)
+                count_stmt = count_stmt.where(CandidateScreening.status == screening_status)
         
         # Apply search filters if provided
         if search:
@@ -277,15 +295,17 @@ class CandidateRepository(BaseRepository[Candidate]):
         sort_order: str = "desc",
         disability_types: Optional[list] = None,
         education_levels: Optional[list] = None,
-        cities: Optional[list] = None
+        cities: Optional[list] = None,
+        screening_status: Optional[str] = None
     ):
-        """Get candidates with screening records loaded, with optional counseling status filter, document status filter, search filtering, category filters, and sorting"""
+        """Get candidates with 'Completed' screening records loaded, with optional counseling status filter, document status filter, search filtering, category filters, and sorting"""
 
         from sqlalchemy import or_
         stmt = (
             select(Candidate)
             .join(Candidate.screening)
             .outerjoin(Candidate.counseling)
+            .where(CandidateScreening.status == 'Completed')
             .options(
                 joinedload(Candidate.screening),
                 selectinload(Candidate.documents),
@@ -294,7 +314,12 @@ class CandidateRepository(BaseRepository[Candidate]):
         )
         
         # Base count statement for screened candidates
-        count_stmt = select(func.count(Candidate.id)).join(Candidate.screening).outerjoin(Candidate.counseling)
+        count_stmt = select(func.count(Candidate.id)).join(Candidate.screening).outerjoin(Candidate.counseling).where(CandidateScreening.status == 'Completed')
+        
+        # Apply screening status filter if provided (though mostly would be 'Completed' based on logic above)
+        if screening_status:
+            stmt = stmt.where(CandidateScreening.status == screening_status)
+            count_stmt = count_stmt.where(CandidateScreening.status == screening_status)
         
         # Apply counseling status filter
         if counseling_status:
@@ -473,8 +498,8 @@ class CandidateRepository(BaseRepository[Candidate]):
             today_start = datetime.combine(datetime.now().date(), time.min)
             today_count = await get_count(Candidate.created_at >= today_start)
             
-            # Screening stats - count only candidates with formal screening records
-            stmt_screened = select(func.count(CandidateScreening.id))
+            # Screening stats - count only candidates with 'Completed' status
+            stmt_screened = select(func.count(CandidateScreening.id)).where(CandidateScreening.status == 'Completed')
             result_screened = await self.db.execute(stmt_screened)
             screened = result_screened.scalar() or 0
             
@@ -607,6 +632,16 @@ class CandidateRepository(BaseRepository[Candidate]):
             result_cities = await self.db.execute(stmt_cities)
             cities = sorted([city for city in result_cities.scalars().all() if city])
             
+            # Get unique screening statuses
+            stmt_screening = select(func.distinct(CandidateScreening.status)).where(
+                CandidateScreening.status.isnot(None)
+            )
+            result_screening = await self.db.execute(stmt_screening)
+            screening_statuses = [status for status in result_screening.scalars().all() if status]
+            # Add 'Pending' as a virtual status for candidates with no screening record
+            if 'Pending' not in screening_statuses:
+                screening_statuses.append('Pending')
+            
             # Get unique counseling statuses
             stmt_counseling = select(func.distinct(CandidateCounseling.status)).where(
                 CandidateCounseling.status.isnot(None)
@@ -618,7 +653,8 @@ class CandidateRepository(BaseRepository[Candidate]):
                 "disability_types": sorted(list(disability_types)),
                 "education_levels": sorted(list(education_levels)),
                 "cities": cities,
-                "counseling_statuses": counseling_statuses
+                "counseling_statuses": counseling_statuses,
+                "screening_statuses": sorted(screening_statuses)
             }
         except Exception as e:
             import traceback
