@@ -23,7 +23,7 @@ router = APIRouter(prefix="/analytics", tags=["Analytics"])
 async def get_analytics_dump(
     request: Request,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.require_roles([UserRole.ADMIN])),
+    current_user: User = Depends(deps.require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
 ):
     """
     Get a full dump of all major tables for analytics (PowerBI).
@@ -136,7 +136,7 @@ async def export_table_for_power_bi(
 @router.get("/sourcing-overview")
 async def get_sourcing_overview(
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING])),
+    current_user: User = Depends(deps.require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
 ):
     """
     Get aggregated metrics for the Advanced Sourcing Analytics dashboard.

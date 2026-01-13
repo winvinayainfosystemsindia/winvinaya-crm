@@ -34,7 +34,7 @@ async def upload_candidate_document(
     document_type: str = Form(..., description="resume, disability_certificate, or other"),
     file: UploadFile = File(...),
     description: str = Form(None),
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.SOURCING])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -73,7 +73,7 @@ async def download_candidate_document(
     request: Request,
     document_id: int,
     disposition: str = "attachment",
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.SOURCING])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -108,7 +108,7 @@ async def create_candidate_document(
     request: Request,
     public_id: UUID,
     document_in: CandidateDocumentCreate,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.SOURCING])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -138,7 +138,7 @@ async def create_candidate_document(
 async def get_candidate_documents(
     request: Request,
     public_id: UUID,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.SOURCING])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -157,7 +157,7 @@ async def update_candidate_document(
     request: Request,
     document_id: int,
     document_in: CandidateDocumentUpdate,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.SOURCING])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -192,7 +192,7 @@ async def update_candidate_document(
 async def delete_candidate_document(
     request: Request,
     document_id: int,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.SOURCING])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING])),
     db: AsyncSession = Depends(get_db)
 ):
     """
