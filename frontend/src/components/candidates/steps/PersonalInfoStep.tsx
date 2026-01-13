@@ -111,21 +111,31 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
 
                 <Grid size={{ xs: 12, md: 6 }}>
                     <FormControl fullWidth required error={!!errors.gender}>
-                        <InputLabel id="gender-label">Gender</InputLabel>
+                        <InputLabel id="gender-label" htmlFor="gender-select">Gender</InputLabel>
                         <Select
                             labelId="gender-label"
                             id="gender-select"
                             value={formData.gender}
                             label="Gender"
                             onChange={handleSelectChange('gender')}
-                            aria-labelledby="gender-label"
+                            aria-describedby="gender-helper-text"
+                            inputProps={{
+                                'aria-required': 'true',
+                                'aria-invalid': !!errors.gender,
+                            }}
+                            MenuProps={{
+                                disablePortal: true, // Crucial for mobile screen readers to navigate to options
+                                disableScrollLock: true,
+                            }}
                         >
                             <MenuItem value="male">Male</MenuItem>
                             <MenuItem value="female">Female</MenuItem>
                             <MenuItem value="other">Other</MenuItem>
                             <MenuItem value="prefer_not_to_say">Prefer not to say</MenuItem>
                         </Select>
-                        <FormHelperText>{errors.gender || "Select your gender"}</FormHelperText>
+                        <FormHelperText id="gender-helper-text">
+                            {errors.gender || "Select your gender"}
+                        </FormHelperText>
                     </FormControl>
                 </Grid>
 
@@ -260,12 +270,17 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
 
                 <Grid size={{ xs: 12, md: 4 }}>
                     <FormControl fullWidth>
-                        <InputLabel id="guardian-relationship-label">Relationship</InputLabel>
+                        <InputLabel id="guardian-relationship-label" htmlFor="guardian-relationship-select">Relationship</InputLabel>
                         <Select
                             labelId="guardian-relationship-label"
+                            id="guardian-relationship-select"
                             value={formData.guardian_details?.relationship || ''}
                             label="Relationship"
                             onChange={handleGuardianChange('relationship')}
+                            MenuProps={{
+                                disablePortal: true,
+                                disableScrollLock: true,
+                            }}
                         >
                             <MenuItem value="Father">Father</MenuItem>
                             <MenuItem value="Mother">Mother</MenuItem>
