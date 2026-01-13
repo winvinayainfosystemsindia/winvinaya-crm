@@ -20,7 +20,7 @@ import {
 	Home as HomeIcon,
 	Group as CandidatesIcon,
 	Lock as LockIcon,
-	School as SchoolIcon,
+	// School as SchoolIcon,
 	Assessment as AssessmentIcon,
 	Storage as StorageIcon,
 } from '@mui/icons-material';
@@ -41,7 +41,7 @@ const Sidebar: React.FC = () => {
 	const open = useAppSelector((state) => state.ui.sidebarOpen);
 	const user = useAppSelector((state) => state.auth.user);
 	const [candidatesOpen, setCandidatesOpen] = useState(true);
-	const [trainingOpen, setTrainingOpen] = useState(false);
+	// const [trainingOpen, setTrainingOpen] = useState(false);
 
 	const isActive = (path: string) => location.pathname === path;
 
@@ -259,7 +259,7 @@ const Sidebar: React.FC = () => {
 
 
 						{/* Training Group */}
-						<ListItem disablePadding>
+						{/* <ListItem disablePadding>
 							<ListItemButton
 								onClick={() => setTrainingOpen(!trainingOpen)}
 								sx={{ py: 0.5 }}
@@ -355,7 +355,7 @@ const Sidebar: React.FC = () => {
 									/>
 								</ListItemButton>
 							</List>
-						</Collapse>
+						</Collapse> */}
 
 						{/* Company */}
 						{/* <ListItem disablePadding>
