@@ -502,6 +502,11 @@ class CandidateRepository(BaseRepository[Candidate]):
             result_screened = await self.db.execute(stmt_screened)
             screened = result_screened.scalar() or 0
             
+            # Screening distribution
+            stmt_dist = select(CandidateScreening.status, func.count(CandidateScreening.id)).group_by(CandidateScreening.status)
+            res_dist = await self.db.execute(stmt_dist)
+            screening_distribution = dict(res_dist.all())
+            
             not_screened = total - screened
 
             # Counseling stats
@@ -583,7 +588,8 @@ class CandidateRepository(BaseRepository[Candidate]):
                 "counseling_rejected": counseling_rejected,
                 "docs_total": docs_total,
                 "docs_completed": docs_completed,
-                "docs_pending": docs_pending
+                "docs_pending": docs_pending,
+                "screening_distribution": screening_distribution
             }
         except Exception as e:
             import traceback

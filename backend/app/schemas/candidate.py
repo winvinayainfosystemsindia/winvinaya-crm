@@ -288,6 +288,7 @@ class CandidateStats(BaseModel):
     docs_total: int = 0
     docs_completed: int = 0
     docs_pending: int = 0
+    screening_distribution: dict = {}
 
 
 class CandidatePaginatedResponse(BaseModel):

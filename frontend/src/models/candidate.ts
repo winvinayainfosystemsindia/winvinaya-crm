@@ -194,6 +194,7 @@ export interface CandidateStats {
 	docs_total: number;
 	docs_completed: number;
 	docs_pending: number;
+	screening_distribution?: Record<string, number>;
 }
 
 export interface CandidatePaginatedResponse {

@@ -21,7 +21,7 @@ import {
 	Select,
 	MenuItem
 } from '@mui/material';
-import { FilterList, Search, Edit, Accessible, VerifiedUser } from '@mui/icons-material';
+import { FilterList, Search, Edit, Accessible, VerifiedUser, CheckCircle, Cancel, WatchLater, HelpOutline } from '@mui/icons-material';
 import { format, isToday, parseISO } from 'date-fns';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchUnscreenedCandidates, fetchScreenedCandidates } from '../../store/slices/candidateSlice';
@@ -464,6 +464,13 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 										<Chip
 											label={candidate.screening_status}
 											size="small"
+											icon={
+												candidate.screening_status === 'Completed' ? <CheckCircle /> :
+													candidate.screening_status === 'Not Connected' || candidate.screening_status === 'Not Answered' ? <Cancel /> :
+														candidate.screening_status === 'In Progress' ? <WatchLater /> :
+															candidate.screening_status === 'Follow-up Required' ? <WatchLater /> :
+																<HelpOutline />
+											}
 											sx={{
 												height: 24,
 												fontSize: '0.75rem',
@@ -481,6 +488,10 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 															candidate.screening_status === 'In Progress' ? '#1976d2' :
 																candidate.screening_status === 'Follow-up Required' ? '#ed6c02' :
 																	'#757575',
+												'& .MuiChip-icon': {
+													color: 'inherit',
+													fontSize: 16
+												}
 											}}
 										/>
 									</TableCell>
