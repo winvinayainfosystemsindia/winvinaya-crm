@@ -189,7 +189,6 @@ class Deal(BaseModel):
     original_lead: Mapped["Lead"] = relationship(
         "Lead",
         foreign_keys=[lead_id],
-        back_populates="converted_deal",
     )
     
     assigned_user: Mapped["User"] = relationship(

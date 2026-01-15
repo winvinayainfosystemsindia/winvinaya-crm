@@ -182,7 +182,6 @@ class Lead(BaseModel):
     converted_deal: Mapped["Deal"] = relationship(
         "Deal",
         foreign_keys=[converted_to_deal_id],
-        back_populates="original_lead",
         uselist=False,
     )
     
