@@ -18,7 +18,13 @@ from app.api.v1.endpoints import (
     settings,
     activity_logs,
     analytics,
-    migration
+    migration,
+    companies,
+    contacts,
+    leads,
+    deals,
+    crm_tasks,
+    crm_activities
 )
 
 
@@ -43,4 +49,12 @@ router.include_router(training_assessments.router, prefix="/training-extensions"
 router.include_router(training_events.router, prefix="/training-extensions")
 router.include_router(training_mock_interviews.router, prefix="/training-extensions")
 router.include_router(migration.router)
+
+# CRM Routers
+router.include_router(companies.router, prefix="/crm/companies", tags=["CRM Companies"])
+router.include_router(contacts.router, prefix="/crm/contacts", tags=["CRM Contacts"])
+router.include_router(leads.router, prefix="/crm/leads", tags=["CRM Leads"])
+router.include_router(deals.router, prefix="/crm/deals", tags=["CRM Deals"])
+router.include_router(crm_tasks.router, prefix="/crm/tasks", tags=["CRM Tasks"])
+router.include_router(crm_activities.router, prefix="/crm/activities", tags=["CRM Activities"])
 
