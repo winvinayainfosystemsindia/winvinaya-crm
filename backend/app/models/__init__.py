@@ -15,6 +15,12 @@ from app.models.training_mock_interview import TrainingMockInterview
 from app.models.training_batch_event import TrainingBatchEvent
 from app.models.dynamic_field import DynamicField
 from app.models.ticket import Ticket, TicketMessage, TicketStatus, TicketPriority, TicketCategory
+from app.models.company import Company, CompanySize, CompanyStatus
+from app.models.contact import Contact, ContactSource
+from app.models.lead import Lead, LeadSource, LeadStatus
+from app.models.deal import Deal, DealStage, DealType
+from app.models.crm_task import CRMTask, CRMTaskType, CRMTaskPriority, CRMTaskStatus, CRMRelatedToType
+from app.models.crm_activity_log import CRMActivityLog, CRMEntityType, CRMActivityType
 
 __all__ = [
     "User",
@@ -38,5 +44,25 @@ __all__ = [
     "TicketStatus",
     "TicketPriority",
     "TicketCategory",
+    # CRM Models
+    "Company",
+    "CompanySize",
+    "CompanyStatus",
+    "Contact",
+    "ContactSource",
+    "Lead",
+    "LeadSource",
+    "LeadStatus",
+    "Deal",
+    "DealStage",
+    "DealType",
+    "CRMTask",
+    "CRMTaskType",
+    "CRMTaskPriority",
+    "CRMTaskStatus",
+    "CRMRelatedToType",
+    "CRMActivityLog",
+    "CRMEntityType",
+    "CRMActivityType",
 ]
 

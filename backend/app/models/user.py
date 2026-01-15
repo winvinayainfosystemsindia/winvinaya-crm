@@ -1,8 +1,8 @@
 """User model - example database model"""
 
 import enum
-from sqlalchemy import String, Boolean, Enum
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import String, Boolean, Enum, Numeric
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
 
 
@@ -14,6 +14,11 @@ class UserRole(str, enum.Enum):
     PLACEMENT = "placement"
     TRAINER = "trainer"
     COUNSELOR = "counselor"
+    # CRM Roles
+    SALES_MANAGER = "sales_manager"
+    SALES_REP = "sales_rep"
+    SUPPORT = "support"
+    VIEWER = "viewer"
 
 
 class User(BaseModel):
@@ -68,6 +73,57 @@ class User(BaseModel):
         default=UserRole.PLACEMENT,
         nullable=False,
         index=True,
+    )
+    
+    # CRM-specific fields
+    team: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+        index=True,
+        comment="Sales team assignment"
+    )
+    
+    sales_quota_monthly: Mapped[float | None] = mapped_column(
+        Numeric(15, 2),
+        nullable=True,
+        comment="Monthly sales target"
+    )
+    
+    commission_percentage: Mapped[float | None] = mapped_column(
+        Numeric(5, 2),
+        nullable=True,
+        comment="Commission rate"
+    )
+    
+    # CRM Relationships
+    assigned_leads: Mapped[list["Lead"]] = relationship(
+        "Lead",
+        foreign_keys="Lead.assigned_to",
+        back_populates="assigned_user",
+    )
+    
+    assigned_deals: Mapped[list["Deal"]] = relationship(
+        "Deal",
+        foreign_keys="Deal.assigned_to",
+        back_populates="assigned_user",
+    )
+    
+    assigned_crm_tasks: Mapped[list["CRMTask"]] = relationship(
+        "CRMTask",
+        foreign_keys="CRMTask.assigned_to",
+        back_populates="assigned_user",
+    )
+    
+    created_crm_tasks: Mapped[list["CRMTask"]] = relationship(
+        "CRMTask",
+        foreign_keys="CRMTask.created_by",
+        back_populates="creator",
+    )
+    
+    crm_activities: Mapped[list["CRMActivityLog"]] = relationship(
+        "CRMActivityLog",
+        foreign_keys="CRMActivityLog.performed_by",
+        back_populates="performer",
     )
     
     def __repr__(self) -> str:
