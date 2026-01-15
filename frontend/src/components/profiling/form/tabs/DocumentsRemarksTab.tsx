@@ -309,12 +309,20 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 								<MenuItem value="">
 									<em>Not Set</em>
 								</MenuItem>
-								<MenuItem value="Not Connected">Not Connected</MenuItem>
-								<MenuItem value="Not Answered">Not Answered</MenuItem>
 								<MenuItem value="Completed">Completed</MenuItem>
 								<MenuItem value="Pending">Pending</MenuItem>
 								<MenuItem value="In Progress">In Progress</MenuItem>
 								<MenuItem value="Follow-up Required">Follow-up Required</MenuItem>
+								<MenuItem value="No Response">No Response</MenuItem>
+								<MenuItem value="Not Interested">Not Interested</MenuItem>
+								<MenuItem value="Not Eligible">Not Eligible</MenuItem>
+								<MenuItem value="Domain Specific">Domain Specific</MenuItem>
+								<MenuItem value="Studying">Studying</MenuItem>
+								<MenuItem value="Working">Working</MenuItem>
+								<MenuItem value="Int in Direct Hire">Int in Direct Hire</MenuItem>
+								<MenuItem value="Eligible for Direct Hire">Eligible for Direct Hire</MenuItem>
+								<MenuItem value="Test Sent">Test Sent</MenuItem>
+								<MenuItem value="Test Done">Test Done</MenuItem>
 							</Select>
 						</FormControl>
 					</Box>
