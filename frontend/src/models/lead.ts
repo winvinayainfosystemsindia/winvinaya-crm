@@ -42,5 +42,7 @@ export interface LeadStats {
 	total: number;
 	by_status: Record<string, number>;
 	by_source: Record<string, number>;
-	conversions: number;
+	average_score: number;
+	conversion_rate: number;
+	this_week: number;
 }

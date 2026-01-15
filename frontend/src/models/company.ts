@@ -23,7 +23,7 @@ export interface CompanyUpdate extends Partial<CompanyCreate> { }
 export interface CompanyStats {
 	total: number;
 	by_status: Record<string, number>;
-	top_industries: any[];
+	top_industries: { industry: string; count: number }[];
 }
 
 export interface CompanyPaginatedResponse {
