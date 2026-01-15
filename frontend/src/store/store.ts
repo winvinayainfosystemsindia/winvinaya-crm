@@ -9,6 +9,13 @@ import notificationReducer from './slices/notificationSlice';
 import settingsReducer from './slices/settingsSlice';
 import mockInterviewReducer from './slices/mockInterviewSlice';
 
+import companyReducer from './slices/companySlice';
+import contactReducer from './slices/contactSlice';
+import leadReducer from './slices/leadSlice';
+import dealReducer from './slices/dealSlice';
+import crmTaskReducer from './slices/crmTaskSlice';
+import crmActivityReducer from './slices/crmActivitySlice';
+
 export const store = configureStore({
 	reducer: {
 		auth: authReducer,
@@ -20,6 +27,13 @@ export const store = configureStore({
 		settings: settingsReducer,
 		notifications: notificationReducer,
 		mockInterviews: mockInterviewReducer,
+		// CRM Slices
+		companies: companyReducer,
+		contacts: contactReducer,
+		leads: leadReducer,
+		deals: dealReducer,
+		crmTasks: crmTaskReducer,
+		crmActivities: crmActivityReducer,
 	},
 	middleware: (getDefaultMiddleware) =>
 		getDefaultMiddleware({
