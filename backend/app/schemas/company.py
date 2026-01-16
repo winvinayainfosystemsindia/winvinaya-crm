@@ -5,6 +5,7 @@ from uuid import UUID
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from app.models.company import CompanySize, CompanyStatus
+from app.schemas.contact import ContactRead
 
 
 class CompanyBase(BaseModel):
@@ -38,6 +39,7 @@ class CompanyUpdate(BaseModel):
 
 
 class CompanyRead(CompanyBase):
+    id: int
     public_id: UUID
     created_at: datetime
     updated_at: datetime
@@ -45,7 +47,16 @@ class CompanyRead(CompanyBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class CompanyWithContacts(CompanyRead):
+    contacts: list[ContactRead] = []
+
+
 class CompanyStats(BaseModel):
     total: int
     by_status: Dict[str, int]
     top_industries: list[Dict[str, Any]]
+
+
+class CompanyListResponse(BaseModel):
+    items: list[CompanyRead]
+    total: int

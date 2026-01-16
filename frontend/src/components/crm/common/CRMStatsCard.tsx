@@ -17,30 +17,26 @@ const CRMStatsCard: React.FC<CRMStatsCardProps> = ({ label, value, icon, trend, 
 		<Paper
 			elevation={0}
 			sx={{
-				p: 2.5,
-				border: '1px solid #d5dbdb',
-				borderRadius: '2px',
+				p: 3,
+				borderLeft: '5px solid #ff9900',
+				borderRadius: '4px',
+				boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
 				height: '100%',
 				display: 'flex',
 				flexDirection: 'column',
-				justifyContent: 'space-between',
-				transition: 'border-color 0.2s ease',
-				'&:hover': {
-					borderColor: '#aab7b7'
-				}
+				justifyContent: 'center'
 			}}
 		>
 			<Stack direction="row" justifyContent="space-between" alignItems="flex-start">
 				<Box>
 					<Typography
-						variant="body2"
+						variant="overline"
 						sx={{
-							color: '#545b64',
-							fontWeight: 700,
-							mb: 0.5,
-							textTransform: 'uppercase',
-							fontSize: '0.75rem',
-							letterSpacing: '0.05em'
+							color: 'text.secondary',
+							fontWeight: 'bold',
+							display: 'block',
+							lineHeight: 1.2,
+							mb: 1
 						}}
 					>
 						{label}
@@ -52,8 +48,8 @@ const CRMStatsCard: React.FC<CRMStatsCardProps> = ({ label, value, icon, trend, 
 						<Typography
 							variant="h4"
 							sx={{
-								fontWeight: 300,
-								color: '#16191f'
+								fontWeight: 'bold',
+								color: '#232f3e'
 							}}
 						>
 							{value}
@@ -62,7 +58,15 @@ const CRMStatsCard: React.FC<CRMStatsCardProps> = ({ label, value, icon, trend, 
 				</Box>
 
 				{icon && (
-					<Box sx={{ color: '#545b64', opacity: 0.8 }}>
+					<Box sx={{
+						color: '#ff9900',
+						p: 1.5,
+						borderRadius: '50%',
+						backgroundColor: 'rgba(255, 153, 0, 0.1)',
+						display: 'flex',
+						alignItems: 'center',
+						justifyContent: 'center'
+					}}>
 						{icon}
 					</Box>
 				)}

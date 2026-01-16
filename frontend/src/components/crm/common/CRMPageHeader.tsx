@@ -19,8 +19,8 @@ const CRMPageHeader: React.FC<CRMPageHeaderProps> = ({ title, actions }) => {
 					variant="h4"
 					sx={{
 						fontWeight: 300,
-						color: '#16191f',
-						letterSpacing: '-0.01em'
+						color: '#232f3e',
+						mb: 0.5
 					}}
 				>
 					{title}

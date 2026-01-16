@@ -47,9 +47,24 @@ class ContactUpdate(BaseModel):
     custom_fields: Optional[Dict[str, Any]] = None
 
 
+class CompanyMinimal(BaseModel):
+    id: int
+    public_id: UUID
+    name: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class ContactRead(ContactBase):
+    id: int
     public_id: UUID
     created_at: datetime
     updated_at: datetime
+    company: Optional[CompanyMinimal] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ContactListResponse(BaseModel):
+    items: list[ContactRead]
+    total: int

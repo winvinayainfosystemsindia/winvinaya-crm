@@ -3,6 +3,7 @@ import type { Company } from './company';
 export type ContactSource = 'linkedin' | 'website' | 'referral' | 'cold_call' | 'event' | 'other';
 
 export interface Contact {
+	id: number;
 	public_id: string;
 	company_id?: number;
 	first_name: string;
@@ -24,7 +25,7 @@ export interface Contact {
 	company?: Company;
 }
 
-export interface ContactCreate extends Omit<Contact, 'public_id' | 'created_at' | 'updated_at' | 'company'> { }
+export interface ContactCreate extends Omit<Contact, 'id' | 'public_id' | 'created_at' | 'updated_at' | 'company'> { }
 export interface ContactUpdate extends Partial<ContactCreate> { }
 
 export interface ContactPaginatedResponse {

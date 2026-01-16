@@ -7,13 +7,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api import deps
 from app.models.user import User
 from app.models.lead import LeadStatus, LeadSource
-from app.schemas.lead import LeadCreate, LeadUpdate, LeadRead
+from app.schemas.lead import LeadCreate, LeadUpdate, LeadRead, LeadListResponse, LeadConversionResponse
 from app.services.lead_service import LeadService
 
 router = APIRouter()
 
 
-@router.get("/", response_model=dict)
+@router.get("/", response_model=LeadListResponse)
 async def get_leads(
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
@@ -91,7 +91,7 @@ async def update_lead(
     return await service.update_lead(public_id, lead_in, current_user.id)
 
 
-@router.post("/{public_id}/convert", response_model=dict)
+@router.post("/{public_id}/convert", response_model=LeadConversionResponse)
 async def convert_lead(
     public_id: UUID,
     deal_data: Dict[str, Any],

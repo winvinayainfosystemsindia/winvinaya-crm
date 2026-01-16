@@ -7,13 +7,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api import deps
 from app.models.user import User
 from app.models.crm_task import CRMTaskStatus, CRMTaskPriority, CRMRelatedToType
-from app.schemas.crm_task import CRMTaskCreate, CRMTaskUpdate, CRMTaskRead
+from app.schemas.crm_task import CRMTaskCreate, CRMTaskUpdate, CRMTaskRead, CRMTaskListResponse
 from app.services.crm_task_service import CRMTaskService
 
 router = APIRouter()
 
 
-@router.get("/", response_model=dict)
+@router.get("/", response_model=CRMTaskListResponse)
 async def get_tasks(
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),

@@ -6,6 +6,7 @@ from datetime import datetime, date
 from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field
 from app.models.lead import LeadStatus, LeadSource
+from app.schemas.deal import DealRead
 
 
 class LeadBase(BaseModel):
@@ -56,3 +57,13 @@ class LeadRead(LeadBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class LeadListResponse(BaseModel):
+    items: List[LeadRead]
+    total: int
+
+
+class LeadConversionResponse(BaseModel):
+    lead: LeadRead
+    deal: DealRead

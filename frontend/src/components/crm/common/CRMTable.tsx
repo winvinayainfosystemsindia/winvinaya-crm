@@ -66,12 +66,10 @@ const CRMTable: React.FC<CRMTableProps> = ({
 									style={{
 										minWidth: column.minWidth,
 										backgroundColor: '#fafafa',
-										color: '#545b64',
-										fontWeight: 700,
-										fontSize: '0.75rem',
-										textTransform: 'uppercase',
-										letterSpacing: '0.05em',
-										borderBottom: '2px solid #eaeded',
+										color: '#232f3e',
+										fontWeight: 600,
+										fontSize: '0.85rem',
+										borderBottom: '1px solid #d5dbdb',
 										padding: '12px 16px'
 									}}
 								>
@@ -110,7 +108,7 @@ const CRMTable: React.FC<CRMTableProps> = ({
 									sx={{
 										cursor: onRowClick ? 'pointer' : 'default',
 										'&:hover': {
-											bgcolor: '#f2f3f3 !important'
+											bgcolor: '#f5f8fa !important'
 										}
 									}}
 								>

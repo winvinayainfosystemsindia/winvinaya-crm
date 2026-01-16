@@ -6,13 +6,13 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api import deps
 from app.models.user import User
-from app.schemas.contact import ContactCreate, ContactUpdate, ContactRead
+from app.schemas.contact import ContactCreate, ContactUpdate, ContactRead, ContactListResponse
 from app.services.contact_service import ContactService
 
 router = APIRouter()
 
 
-@router.get("/", response_model=dict)
+@router.get("/", response_model=ContactListResponse)
 async def get_contacts(
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),

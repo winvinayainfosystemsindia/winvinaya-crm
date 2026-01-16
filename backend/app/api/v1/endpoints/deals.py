@@ -7,13 +7,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api import deps
 from app.models.user import User
 from app.models.deal import DealStage, DealType
-from app.schemas.deal import DealCreate, DealUpdate, DealRead
+from app.schemas.deal import DealCreate, DealUpdate, DealRead, DealListResponse
 from app.services.deal_service import DealService
 
 router = APIRouter()
 
-
-@router.get("/", response_model=dict)
+@router.get("/", response_model=DealListResponse)
 async def get_deals(
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),

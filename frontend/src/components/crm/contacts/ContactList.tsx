@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, TextField, InputAdornment, Stack, IconButton, Tooltip, Avatar } from '@mui/material';
+import { Box, Button, TextField, InputAdornment, Stack, IconButton, Tooltip, Avatar, Typography } from '@mui/material';
 import {
 	Add as AddIcon,
 	Search as SearchIcon,
@@ -10,18 +10,25 @@ import {
 	Star as StarIcon
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
-import { fetchContacts } from '../../../store/slices/contactSlice';
+import { fetchContacts, createContact, updateContact } from '../../../store/slices/contactSlice';
+import { fetchCompanies } from '../../../store/slices/companySlice';
 import CRMPageHeader from '../common/CRMPageHeader';
 import CRMTable from '../common/CRMTable';
-import type { Contact } from '../../../models/contact';
+import ContactFormDialog from './ContactFormDialog';
+import type { Contact, ContactCreate, ContactUpdate } from '../../../models/contact';
+import { useSnackbar } from 'notistack';
 
 const ContactList: React.FC = () => {
 	const dispatch = useAppDispatch();
+	const { enqueueSnackbar } = useSnackbar();
 	const { list, total, loading } = useAppSelector((state) => state.contacts);
 
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [search, setSearch] = useState('');
+	const [dialogOpen, setDialogOpen] = useState(false);
+	const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+	const [formLoading, setFormLoading] = useState(false);
 
 	useEffect(() => {
 		dispatch(fetchContacts({
@@ -29,6 +36,8 @@ const ContactList: React.FC = () => {
 			limit: rowsPerPage,
 			search: search || undefined
 		}));
+		// Also fetch companies as they are needed for the contact form
+		dispatch(fetchCompanies({ limit: 1000 }));
 	}, [dispatch, page, rowsPerPage, search]);
 
 	const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,6 +51,35 @@ const ContactList: React.FC = () => {
 			limit: rowsPerPage,
 			search: search || undefined
 		}));
+	};
+
+	const handleOpenAdd = () => {
+		setSelectedContact(null);
+		setDialogOpen(true);
+	};
+
+	const handleOpenEdit = (contact: Contact) => {
+		setSelectedContact(contact);
+		setDialogOpen(true);
+	};
+
+	const handleFormSubmit = async (data: ContactCreate | ContactUpdate) => {
+		setFormLoading(true);
+		try {
+			if (selectedContact) {
+				await dispatch(updateContact({ publicId: selectedContact.public_id, contact: data as ContactUpdate })).unwrap();
+				enqueueSnackbar('Contact updated successfully', { variant: 'success' });
+			} else {
+				await dispatch(createContact(data as ContactCreate)).unwrap();
+				enqueueSnackbar('Contact created successfully', { variant: 'success' });
+			}
+			setDialogOpen(false);
+			handleRefresh();
+		} catch (error: any) {
+			enqueueSnackbar(error || 'Failed to save contact', { variant: 'error' });
+		} finally {
+			setFormLoading(false);
+		}
 	};
 
 	const columns = [
@@ -127,7 +165,7 @@ const ContactList: React.FC = () => {
 				variant="outlined"
 				startIcon={<RefreshIcon />}
 				onClick={handleRefresh}
-				sx={{ color: '#545b64', borderColor: '#d5dbdb' }}
+				sx={{ color: '#545b64', borderColor: '#d5dbdb', textTransform: 'none', fontWeight: 700 }}
 			>
 				Refresh
 			</Button>
@@ -135,7 +173,16 @@ const ContactList: React.FC = () => {
 				variant="contained"
 				color="primary"
 				startIcon={<AddIcon />}
-				sx={{ px: 3 }}
+				onClick={handleOpenAdd}
+				sx={{
+					px: 3,
+					bgcolor: '#ff9900',
+					color: '#232f3e',
+					'&:hover': { bgcolor: '#ec7211' },
+					textTransform: 'none',
+					fontWeight: 800,
+					boxShadow: 'none'
+				}}
 			>
 				Add Contact
 			</Button>
@@ -143,55 +190,62 @@ const ContactList: React.FC = () => {
 	);
 
 	return (
-		<Box>
-			<CRMPageHeader
-				title="Contacts"
-				actions={actions}
-			/>
-
-			<Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-				<TextField
-					size="small"
-					placeholder="Search contacts..."
-					value={search}
-					onChange={handleSearchChange}
-					sx={{ width: 320, bgcolor: 'white' }}
-					InputProps={{
-						startAdornment: (
-							<InputAdornment position="start">
-								<SearchIcon fontSize="small" sx={{ color: '#545b64' }} />
-							</InputAdornment>
-						),
-					}}
+		<Box sx={{ bgcolor: '#f5f5f5', minHeight: '100vh', py: 3 }}>
+			<Box sx={{ px: { xs: 2, sm: 3 } }}>
+				<CRMPageHeader
+					title="Contacts"
+					actions={actions}
 				/>
 
-				<Tooltip title="Filter">
-					<IconButton sx={{ border: '1px solid #d5dbdb', borderRadius: '2px', bgcolor: 'white' }}>
-						<FilterIcon fontSize="small" sx={{ color: '#545b64' }} />
-					</IconButton>
-				</Tooltip>
-			</Box>
+				<Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+					<TextField
+						size="small"
+						placeholder="Search contacts..."
+						value={search}
+						onChange={handleSearchChange}
+						sx={{ width: 320, bgcolor: 'white' }}
+						InputProps={{
+							startAdornment: (
+								<InputAdornment position="start">
+									<SearchIcon fontSize="small" sx={{ color: '#545b64' }} />
+								</InputAdornment>
+							),
+						}}
+					/>
 
-			<CRMTable
-				columns={columns}
-				rows={list}
-				total={total}
-				page={page}
-				rowsPerPage={rowsPerPage}
-				onPageChange={(_, newPage) => setPage(newPage)}
-				onRowsPerPageChange={(e) => {
-					setRowsPerPage(parseInt(e.target.value, 10));
-					setPage(0);
-				}}
-				loading={loading}
-				emptyMessage="No contacts found. Add contacts to your companies."
-				onRowClick={(row) => console.log('Clicked Contact', row.public_id)}
-			/>
+					<Tooltip title="Filter">
+						<IconButton sx={{ border: '1px solid #d5dbdb', borderRadius: '2px', bgcolor: 'white' }}>
+							<FilterIcon fontSize="small" sx={{ color: '#545b64' }} />
+						</IconButton>
+					</Tooltip>
+				</Box>
+
+				<CRMTable
+					columns={columns}
+					rows={list}
+					total={total}
+					page={page}
+					rowsPerPage={rowsPerPage}
+					onPageChange={(_, newPage) => setPage(newPage)}
+					onRowsPerPageChange={(e) => {
+						setRowsPerPage(parseInt(e.target.value, 10));
+						setPage(0);
+					}}
+					loading={loading}
+					emptyMessage="No contacts found. Add contacts to your companies."
+					onRowClick={(row) => handleOpenEdit(row)}
+				/>
+
+				<ContactFormDialog
+					open={dialogOpen}
+					onClose={() => setDialogOpen(false)}
+					onSubmit={handleFormSubmit}
+					contact={selectedContact}
+					loading={formLoading}
+				/>
+			</Box>
 		</Box>
 	);
 };
-
-// Internal Typography import fix
-import { Typography } from '@mui/material';
 
 export default ContactList;

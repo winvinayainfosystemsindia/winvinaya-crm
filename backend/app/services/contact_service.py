@@ -39,7 +39,8 @@ class ContactService:
             "summary": f"Contact '{contact.first_name} {contact.last_name}' created"
         })
         
-        return contact
+        # Re-fetch with company details for the response
+        return await self.get_contact(contact.public_id, with_company=True)
 
     async def get_contact(self, public_id: UUID, with_company: bool = False) -> Contact:
         """Get contact by public_id"""
@@ -90,7 +91,8 @@ class ContactService:
             "details": {"updated_fields": list(update_data.keys())}
         })
         
-        return updated_contact
+        # Re-fetch with company details for the response
+        return await self.get_contact(public_id, with_company=True)
 
     async def delete_contact(self, public_id: UUID, user_id: int) -> bool:
         """Delete contact (soft delete) and log activity"""
@@ -128,4 +130,5 @@ class ContactService:
             "summary": f"Contact '{contact.first_name} {contact.last_name}' set as primary contact"
         })
         
-        return updated_contact
+        # Re-fetch with company details for the response
+        return await self.get_contact(public_id, with_company=True)

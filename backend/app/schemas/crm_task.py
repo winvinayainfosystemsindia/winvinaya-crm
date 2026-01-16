@@ -54,3 +54,8 @@ class CRMTaskRead(CRMTaskBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class CRMTaskListResponse(BaseModel):
+    items: List[CRMTaskRead]
+    total: int

@@ -65,3 +65,8 @@ class DealRead(DealBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class DealListResponse(BaseModel):
+    items: List[DealRead]
+    total: int

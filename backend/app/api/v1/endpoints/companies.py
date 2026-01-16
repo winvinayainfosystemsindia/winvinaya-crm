@@ -7,13 +7,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api import deps
 from app.models.user import User, UserRole
 from app.models.company import CompanyStatus
-from app.schemas.company import CompanyCreate, CompanyUpdate, CompanyRead, CompanyStats
+from app.schemas.company import CompanyCreate, CompanyUpdate, CompanyRead, CompanyStats, CompanyListResponse, CompanyWithContacts
 from app.services.company_service import CompanyService
 
 router = APIRouter()
 
 
-@router.get("/", response_model=dict)
+@router.get("/", response_model=CompanyListResponse)
 async def get_companies(
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
@@ -60,7 +60,7 @@ async def get_company_stats(
     return await service.get_stats()
 
 
-@router.get("/{public_id}", response_model=CompanyRead)
+@router.get("/{public_id}", response_model=CompanyWithContacts)
 async def get_company(
     public_id: UUID,
     db: AsyncSession = Depends(deps.get_db),

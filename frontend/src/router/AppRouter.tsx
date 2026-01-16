@@ -23,6 +23,7 @@ import Settings from '../pages/settings/Settings';
 import Support from '../pages/support/Support';
 import MigrationPanel from '../pages/admin/MigrationPanel';
 import CompanyManagement from '../pages/crm/CompanyManagement';
+import CompanyDetail from '../pages/crm/CompanyDetail';
 import ContactManagement from '../pages/crm/ContactManagement';
 import LeadManagement from '../pages/crm/LeadManagement';
 import DealManagement from '../pages/crm/DealManagement';
@@ -72,6 +73,7 @@ const AppRouter: React.FC = () => {
 							<Route index element={<CRMDashboard />} />
 							<Route path="dashboard" element={<CRMDashboard />} />
 							<Route path="companies" element={<CompanyManagement />} />
+							<Route path="companies/:publicId" element={<CompanyDetail />} />
 							<Route path="contacts" element={<ContactManagement />} />
 							<Route path="leads" element={<LeadManagement />} />
 							<Route path="deals" element={<DealManagement />} />
