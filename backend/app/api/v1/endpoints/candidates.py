@@ -82,6 +82,7 @@ async def get_candidates(
     cities: str = None,  # Comma-separated list
     counseling_status: str = None,
     is_experienced: bool = None,
+    screening_status: str = None,
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
     db: AsyncSession = Depends(get_db)
 ):
@@ -106,7 +107,8 @@ async def get_candidates(
         education_levels=education_levels_list,
         cities=cities_list,
         counseling_status=counseling_status,
-        is_experienced=is_experienced
+        is_experienced=is_experienced,
+        screening_status=screening_status
     )
 
 

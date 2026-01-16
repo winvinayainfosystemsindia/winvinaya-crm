@@ -60,7 +60,8 @@ class CandidateRepository(BaseRepository[Candidate]):
         education_levels: Optional[list] = None,
         cities: Optional[list] = None,
         counseling_status: Optional[str] = None,
-        is_experienced: Optional[bool] = None
+        is_experienced: Optional[bool] = None,
+        screening_status: Optional[str] = None
     ):
         """Get multiples candidates with counseling loaded for list view, with optional search filtering, category filters, and sorting"""
         from sqlalchemy import or_
@@ -80,7 +81,7 @@ class CandidateRepository(BaseRepository[Candidate]):
             stmt = stmt.where(Candidate.is_deleted == False) 
         
         # Base count query
-        count_stmt = select(func.count(Candidate.id)).select_from(Candidate).outerjoin(Candidate.counseling)
+        count_stmt = select(func.count(Candidate.id)).select_from(Candidate).outerjoin(Candidate.screening).outerjoin(Candidate.counseling)
         if not include_deleted:
             count_stmt = count_stmt.where(Candidate.is_deleted == False)
         
@@ -135,6 +136,14 @@ class CandidateRepository(BaseRepository[Candidate]):
             is_exp_val = 'true' if is_experienced else 'false'
             stmt = stmt.where(Candidate.work_experience['is_experienced'].as_string() == is_exp_val)
             count_stmt = count_stmt.where(Candidate.work_experience['is_experienced'].as_string() == is_exp_val)
+        
+        if screening_status:
+            if screening_status == 'Pending':
+                stmt = stmt.where(CandidateScreening.id.is_(None))
+                count_stmt = count_stmt.where(CandidateScreening.id.is_(None))
+            else:
+                stmt = stmt.where(CandidateScreening.status == screening_status)
+                count_stmt = count_stmt.where(CandidateScreening.status == screening_status)
         
         # Count total matching records
         count_result = await self.db.execute(count_stmt)

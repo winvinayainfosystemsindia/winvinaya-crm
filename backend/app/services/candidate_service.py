@@ -98,7 +98,8 @@ class CandidateService:
         education_levels: Optional[list] = None,
         cities: Optional[list] = None,
         counseling_status: Optional[str] = None,
-        is_experienced: Optional[bool] = None
+        is_experienced: Optional[bool] = None,
+        screening_status: Optional[str] = None
     ) -> dict:
         """Get list of candidates with total count, supporting optional search, filters, and sorting"""
         items, total = await self.repository.get_multi(
@@ -111,7 +112,8 @@ class CandidateService:
             education_levels=education_levels,
             cities=cities,
             counseling_status=counseling_status,
-            is_experienced=is_experienced
+            is_experienced=is_experienced,
+            screening_status=screening_status
         )
         return {"items": items, "total": total}
 

@@ -60,7 +60,8 @@ const Reports: React.FC = () => {
 			disability_types: filters.disability_type?.join(','),
 			education_levels: filters.education_level?.join(','),
 			cities: filters.city?.join(','),
-			counseling_status: filters.counseling_status
+			counseling_status: filters.counseling_status,
+			screening_status: filters.screening_status
 		}));
 	}, [dispatch, page, rowsPerPage, search, filters]);
 
@@ -148,6 +149,12 @@ const Reports: React.FC = () => {
 			label: 'Counseling Status',
 			type: 'single-select',
 			options: filterOptions.counseling_statuses.map(v => ({ value: v, label: v.charAt(0).toUpperCase() + v.slice(1) }))
+		},
+		{
+			key: 'screening_status',
+			label: 'Screening Status',
+			type: 'single-select',
+			options: filterOptions.screening_statuses.map(v => ({ value: v, label: v }))
 		}
 	];
 
