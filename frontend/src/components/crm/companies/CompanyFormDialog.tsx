@@ -15,8 +15,7 @@ import {
 	Grid,
 	Box,
 	IconButton,
-	Paper,
-	Divider
+	Paper
 } from '@mui/material';
 import { Close as CloseIcon, Business as BusinessIcon, Info as InfoIcon, Email as EmailIcon, LocationOn as LocationIcon } from '@mui/icons-material';
 import type { Company, CompanyCreate, CompanyUpdate, CompanySize, CompanyStatus } from '../../../models/company';

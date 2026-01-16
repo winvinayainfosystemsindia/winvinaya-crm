@@ -19,7 +19,7 @@ import {
 	FormControlLabel,
 	Switch
 } from '@mui/material';
-import { Close as CloseIcon, Person as PersonIcon, Email as EmailIcon, Business as BusinessIcon, Work as WorkIcon, Phone as PhoneIcon } from '@mui/icons-material';
+import { Close as CloseIcon, Person as PersonIcon, Work as WorkIcon, Phone as PhoneIcon } from '@mui/icons-material';
 import type { Contact, ContactCreate, ContactUpdate, ContactSource } from '../../../models/contact';
 import { useAppSelector } from '../../../store/hooks';
 
