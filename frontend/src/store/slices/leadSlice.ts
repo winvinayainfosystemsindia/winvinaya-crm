@@ -102,9 +102,9 @@ export const deleteLead = createAsyncThunk(
 
 export const fetchLeadStats = createAsyncThunk(
 	'leads/fetchStats',
-	async (ownOnly: boolean = false, { rejectWithValue }) => {
+	async (ownOnly: boolean | void, { rejectWithValue }) => {
 		try {
-			return await leadService.getStats(ownOnly);
+			return await leadService.getStats(!!ownOnly);
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.detail || 'Failed to fetch lead stats');
 		}

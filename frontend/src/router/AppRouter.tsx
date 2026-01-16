@@ -22,6 +22,12 @@ import Reports from '../pages/reports/Reports';
 import Settings from '../pages/settings/Settings';
 import Support from '../pages/support/Support';
 import MigrationPanel from '../pages/admin/MigrationPanel';
+import CompanyManagement from '../pages/crm/CompanyManagement';
+import ContactManagement from '../pages/crm/ContactManagement';
+import LeadManagement from '../pages/crm/LeadManagement';
+import DealManagement from '../pages/crm/DealManagement';
+import TaskManagement from '../pages/crm/TaskManagement';
+import CRMDashboard from '../pages/crm/CRMDashboard';
 
 const AppRouter: React.FC = () => {
 	return (
@@ -60,6 +66,16 @@ const AppRouter: React.FC = () => {
 							<Route path="batches" element={<TrainingBatchList />} />
 							<Route path="batches/:id" element={<TrainingBatchDetail />} />
 							<Route path="allocation" element={<CandidateAllocation />} />
+						</Route>
+
+						<Route path="crm">
+							<Route index element={<CRMDashboard />} />
+							<Route path="dashboard" element={<CRMDashboard />} />
+							<Route path="companies" element={<CompanyManagement />} />
+							<Route path="contacts" element={<ContactManagement />} />
+							<Route path="leads" element={<LeadManagement />} />
+							<Route path="deals" element={<DealManagement />} />
+							<Route path="tasks" element={<TaskManagement />} />
 						</Route>
 
 						<Route path="admin/migration" element={<MigrationPanel />} />

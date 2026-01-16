@@ -89,9 +89,9 @@ export const deleteDeal = createAsyncThunk(
 
 export const fetchPipelineSummary = createAsyncThunk(
 	'deals/fetchPipeline',
-	async (ownOnly: boolean = false, { rejectWithValue }) => {
+	async (ownOnly: boolean | void, { rejectWithValue }) => {
 		try {
-			return await dealService.getPipeline(ownOnly);
+			return await dealService.getPipeline(!!ownOnly);
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.detail || 'Failed to fetch pipeline summary');
 		}

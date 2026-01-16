@@ -23,6 +23,12 @@ import {
 	School as SchoolIcon,
 	Assessment as AssessmentIcon,
 	Storage as StorageIcon,
+	Dashboard as DashboardIcon,
+	Business as BusinessIcon,
+	FilterCenterFocus as LeadIcon,
+	Handshake as DealIcon,
+	Assignment as TaskIcon,
+	Person as PersonIcon,
 } from '@mui/icons-material';
 
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -42,6 +48,7 @@ const Sidebar: React.FC = () => {
 	const user = useAppSelector((state) => state.auth.user);
 	const [candidatesOpen, setCandidatesOpen] = useState(true);
 	const [trainingOpen, setTrainingOpen] = useState(false);
+	const [crmOpen, setCrmOpen] = useState(false);
 
 	const isActive = (path: string) => location.pathname === path;
 
@@ -132,6 +139,55 @@ const Sidebar: React.FC = () => {
 								{user?.role !== 'admin' && <LockIcon sx={{ fontSize: 16, color: 'text.disabled' }} aria-hidden="true" />}
 							</ListItemButton>
 						</ListItem>
+
+
+						{/* CRM Group */}
+						<ListItem disablePadding>
+							<ListItemButton
+								onClick={() => setCrmOpen(!crmOpen)}
+								sx={{ py: 0.5 }}
+								aria-expanded={crmOpen}
+								aria-controls="crm-nav-list"
+							>
+								<ListItemIcon sx={{ minWidth: 40, color: '#5f6368' }}>
+									<DealIcon aria-hidden="true" />
+								</ListItemIcon>
+								<ListItemText
+									primary="CRM"
+									primaryTypographyProps={{ fontSize: '0.95rem', fontWeight: 500, color: '#202124' }}
+								/>
+								{crmOpen ? <ExpandLess sx={{ color: '#5f6368' }} aria-hidden="true" /> : <ExpandMore sx={{ color: '#5f6368' }} aria-hidden="true" />}
+							</ListItemButton>
+						</ListItem>
+
+						<Collapse in={crmOpen} timeout="auto" unmountOnExit id="crm-nav-list">
+							<List component="div" disablePadding>
+								{[
+									{ label: 'Dashboard', path: '/crm/dashboard', icon: DashboardIcon },
+									{ label: 'Leads', path: '/crm/leads', icon: LeadIcon },
+									{ label: 'Deals', path: '/crm/deals', icon: DealIcon },
+									{ label: 'Companies', path: '/crm/companies', icon: BusinessIcon },
+									{ label: 'Contacts', path: '/crm/contacts', icon: PersonIcon },
+									{ label: 'Tasks', path: '/crm/tasks', icon: TaskIcon },
+								].map((item) => (
+									<ListItemButton
+										key={item.path}
+										sx={{ pl: 9, py: 0.5 }}
+										selected={isActive(item.path)}
+										onClick={() => handleNavigate(item.path)}
+									>
+										<ListItemText
+											primary={item.label}
+											primaryTypographyProps={{
+												fontSize: '0.9rem',
+												color: isActive(item.path) ? 'primary.main' : '#5f6368',
+												fontWeight: isActive(item.path) ? 600 : 400
+											}}
+										/>
+									</ListItemButton>
+								))}
+							</List>
+						</Collapse>
 
 
 						{/* Candidates Group */}
