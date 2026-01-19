@@ -6,13 +6,17 @@ import {
 	AssignmentInd as AssignmentIndIcon,
 	HistoryEdu as TrainingIcon,
 	VerifiedUser as VerifiedIcon,
-	AddBox as ExtraIcon,
 	Autorenew as InProgressIcon,
 	Schedule as FollowUpIcon,
 	HighlightOff as NotAnsweredIcon,
-	Info as DefaultIcon
+	Info as DefaultIcon,
+	Event as EventIcon,
+	Person as PersonIcon,
+	FamilyRestroom as FamilyIcon,
+	Paid as PaidIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
 import { InfoRow, SectionHeader } from './DetailedViewCommon';
 import type { Candidate } from '../../../models/candidate';
 
@@ -71,6 +75,15 @@ const ScreeningTab: React.FC<ScreeningTabProps> = ({ candidate }) => {
 		);
 	}
 
+	const formatDate = (dateStr: string | undefined) => {
+		if (!dateStr) return '-';
+		try {
+			return format(new Date(dateStr), 'dd MMM yyyy HH:mm');
+		} catch (e) {
+			return dateStr;
+		}
+	};
+
 	return (
 		<Paper
 			variant="outlined"
@@ -116,6 +129,36 @@ const ScreeningTab: React.FC<ScreeningTabProps> = ({ candidate }) => {
 
 			<Grid container spacing={4}>
 				<Grid size={{ xs: 12, md: 6 }}>
+					{/* Screening Metadata */}
+					<Box sx={{ mb: 4 }}>
+						<Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5 }}>
+							<VerifiedIcon sx={{ fontSize: 20, mr: 1, color: '#545b64' }} />
+							<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e' }}>
+								Screening Metadata
+							</Typography>
+						</Box>
+						<Box sx={{ pl: 1 }}>
+							<InfoRow
+								label="Screened By"
+								icon={<PersonIcon sx={{ fontSize: 16 }} />}
+								value={screening.screened_by?.full_name || screening.screened_by?.username || 'Not Recorded'}
+							/>
+							<InfoRow
+								label="Screened Date"
+								icon={<EventIcon sx={{ fontSize: 16 }} />}
+								value={formatDate(screening.created_at)}
+							/>
+							<InfoRow
+								label="Last Updated"
+								icon={<EventIcon sx={{ fontSize: 16 }} />}
+								value={formatDate(screening.updated_at)}
+							/>
+						</Box>
+					</Box>
+
+					<Divider sx={{ mb: 4 }} />
+
+					{/* Skills section */}
 					<Box sx={{ mb: 4 }}>
 						<Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5 }}>
 							<TrainingIcon sx={{ fontSize: 20, mr: 1, color: '#545b64' }} />
@@ -168,6 +211,7 @@ const ScreeningTab: React.FC<ScreeningTabProps> = ({ candidate }) => {
 				</Grid>
 
 				<Grid size={{ xs: 12, md: 6 }}>
+					{/* Documentation section */}
 					<Box sx={{ mb: 4 }}>
 						<Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5 }}>
 							<VerifiedIcon sx={{ fontSize: 20, mr: 1, color: '#545b64' }} />
@@ -188,15 +232,28 @@ const ScreeningTab: React.FC<ScreeningTabProps> = ({ candidate }) => {
 								label="Academic Certificates"
 								value={<BooleanStatus value={screening.documents_upload?.degree_qualification} />}
 							/>
+						</Box>
+					</Box>
 
-							<Divider sx={{ my: 3, borderStyle: 'dashed' }} />
+					<Divider sx={{ mb: 4 }} />
 
-							<Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-								<ExtraIcon sx={{ fontSize: 20, mr: 1, color: '#545b64' }} />
-								<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e' }}>
-									Logistics & Comments
-								</Typography>
-							</Box>
+					{/* Logistics & Financials Section */}
+					<Box sx={{ mb: 4 }}>
+						<Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5 }}>
+							<PaidIcon sx={{ fontSize: 20, mr: 1, color: '#545b64' }} />
+							<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e' }}>
+								Logistics & Financials
+							</Typography>
+						</Box>
+						<Box sx={{ pl: 1 }}>
+							<InfoRow
+								label="Where you know about us"
+								value={screening.others?.source_of_info}
+							/>
+							<InfoRow
+								label="Family Annual Income"
+								value={screening.others?.family_annual_income}
+							/>
 							<InfoRow
 								label="Willing for Training"
 								value={<BooleanStatus value={screening.others?.willing_for_training} />}
@@ -209,23 +266,48 @@ const ScreeningTab: React.FC<ScreeningTabProps> = ({ candidate }) => {
 								label="Internal Notes"
 								value={screening.others?.comments || 'No internal notes provided'}
 							/>
+						</Box>
+					</Box>
 
-							{screening.others && Object.keys(screening.others).filter(k => !['willing_for_training', 'ready_to_relocate', 'comments'].includes(k)).length > 0 && (
-								<>
-									<Divider sx={{ my: 3, borderStyle: 'dashed' }} />
-									<Typography variant="caption" sx={{ color: '#545b64', fontWeight: 600, textTransform: 'uppercase', mb: 1.5, display: 'block' }}>
-										Custom Fields
-									</Typography>
-									{Object.entries(screening.others)
-										.filter(([key]) => !['willing_for_training', 'ready_to_relocate', 'comments'].includes(key))
-										.map(([key, value]) => (
-											<InfoRow
-												key={key}
-												label={key.replace(/_/g, ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
-												value={Array.isArray(value) ? value.join(', ') : (typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value))}
-											/>
-										))}
-								</>
+					<Divider sx={{ mb: 4 }} />
+
+					{/* Detailed Family Members Section */}
+					<Box>
+						<Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5 }}>
+							<FamilyIcon sx={{ fontSize: 20, mr: 1, color: '#545b64' }} />
+							<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e' }}>
+								Family Members Details
+							</Typography>
+						</Box>
+						<Box sx={{ pl: 1 }}>
+							{(screening.family_details?.length ?? 0) > 0 ? (
+								screening.family_details?.map((family: any, idx: number) => (
+									<Box key={idx} sx={{ mb: 2, p: 1.5, bgcolor: '#f8f9fa', border: '1px solid #eaeded', borderRadius: 1 }}>
+										<Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: '#ec7211' }}>
+											{family.relation}: {family.name}
+										</Typography>
+										<Grid container spacing={2}>
+											<Grid size={{ xs: 6 }}>
+												<Typography variant="caption" display="block" color="text.secondary">Phone</Typography>
+												<Typography variant="body2">{family.phone || '-'}</Typography>
+											</Grid>
+											<Grid size={{ xs: 6 }}>
+												<Typography variant="caption" display="block" color="text.secondary">Occupation</Typography>
+												<Typography variant="body2">{family.occupation || '-'}</Typography>
+											</Grid>
+											<Grid size={{ xs: 6 }}>
+												<Typography variant="caption" display="block" color="text.secondary">Company / Institution</Typography>
+												<Typography variant="body2">{family.company_name || '-'}</Typography>
+											</Grid>
+											<Grid size={{ xs: 6 }}>
+												<Typography variant="caption" display="block" color="text.secondary">Position</Typography>
+												<Typography variant="body2">{family.position || '-'}</Typography>
+											</Grid>
+										</Grid>
+									</Box>
+								))
+							) : (
+								<Typography variant="body2" color="text.secondary">No family details recorded</Typography>
 							)}
 						</Box>
 					</Box>
