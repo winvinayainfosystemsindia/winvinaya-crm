@@ -36,6 +36,7 @@ async def create_candidate_screening(
     Create screening for a candidate
     """
     service = CandidateScreeningService(db)
+    screening_in.screened_by_id = current_user.id
     screening = await service.create_screening(public_id, screening_in)
     
     # Log the creation

@@ -28,6 +28,8 @@ import {
 import DynamicFieldRenderer from '../../../common/DynamicFieldRenderer';
 import type { DynamicField } from '../../../../services/settingsService';
 
+import type { User } from '../../../../models/auth';
+
 interface DocumentsRemarksTabProps {
 	formData: any;
 	onUpdateOtherField: (name: string, value: any) => void;
@@ -38,6 +40,7 @@ interface DocumentsRemarksTabProps {
 	uploading: Record<string, boolean>;
 	viewing: Record<string, boolean>;
 	dynamicFields: DynamicField[];
+	currentUser: User | null;
 }
 
 const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
@@ -49,7 +52,8 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 	onRemoveFile,
 	uploading,
 	viewing,
-	dynamicFields
+	dynamicFields,
+	currentUser
 }) => {
 
 	const renderDocumentItem = (label: string, key: string) => {
@@ -336,49 +340,75 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 						</Box>
 					</Stack>
 
-					{/* Screening Status */}
-					<Box>
-						<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 1 }}>
-							Screening Status
-						</Typography>
-						<FormControl fullWidth size="small">
-							<Select
-								id="screening-status"
-								value={formData.status || ''}
-								onChange={(e) => onUpdateStatus(e.target.value)}
+					{/* Screening Status & Screened By Info */}
+					<Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
+						<Box sx={{ flex: 1 }}>
+							<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 1 }}>
+								Screening Status
+							</Typography>
+							<FormControl fullWidth size="small">
+								<Select
+									id="screening-status"
+									value={formData.status || ''}
+									onChange={(e) => onUpdateStatus(e.target.value)}
+									sx={{
+										borderRadius: 0,
+										'& .MuiOutlinedInput-notchedOutline': {
+											borderColor: '#d5dbdb'
+										},
+										'&:hover .MuiOutlinedInput-notchedOutline': {
+											borderColor: '#879596'
+										},
+										'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+											borderColor: '#ec7211'
+										}
+									}}
+								>
+									<MenuItem value="">
+										<em>Not Set</em>
+									</MenuItem>
+									<MenuItem value="Completed">Completed</MenuItem>
+									<MenuItem value="Pending">Pending</MenuItem>
+									<MenuItem value="In Progress">In Progress</MenuItem>
+									<MenuItem value="Follow-up Required">Follow-up Required</MenuItem>
+									<MenuItem value="No Response">No Response</MenuItem>
+									<MenuItem value="Not Interested">Not Interested</MenuItem>
+									<MenuItem value="Not Eligible">Not Eligible</MenuItem>
+									<MenuItem value="Domain Specific">Domain Specific</MenuItem>
+									<MenuItem value="Studying">Studying</MenuItem>
+									<MenuItem value="Working">Working</MenuItem>
+									<MenuItem value="Int in Direct Hire">Int in Direct Hire</MenuItem>
+									<MenuItem value="Eligible for Direct Hire">Eligible for Direct Hire</MenuItem>
+									<MenuItem value="Test Sent">Test Sent</MenuItem>
+									<MenuItem value="Test Done">Test Done</MenuItem>
+								</Select>
+							</FormControl>
+						</Box>
+
+						<Box sx={{ flex: 1 }}>
+							<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 1 }}>
+								Screened By
+							</Typography>
+							<TextField
+								fullWidth
+								size="small"
+								disabled
+								value={formData.screened_by?.full_name || formData.screened_by?.username || currentUser?.full_name || currentUser?.username || '—'}
 								sx={{
-									borderRadius: 0,
-									'& .MuiOutlinedInput-notchedOutline': {
-										borderColor: '#d5dbdb'
-									},
-									'&:hover .MuiOutlinedInput-notchedOutline': {
-										borderColor: '#879596'
-									},
-									'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-										borderColor: '#ec7211'
+									'& .MuiOutlinedInput-root': {
+										borderRadius: 0,
+										bgcolor: '#f8f9f9',
+										'& fieldset': { borderColor: '#d5dbdb' },
+										'&.Mui-disabled fieldset': { borderColor: '#d5dbdb' },
+										'& .MuiInputBase-input.Mui-disabled': {
+											WebkitTextFillColor: '#545b64',
+											color: '#545b64'
+										}
 									}
 								}}
-							>
-								<MenuItem value="">
-									<em>Not Set</em>
-								</MenuItem>
-								<MenuItem value="Completed">Completed</MenuItem>
-								<MenuItem value="Pending">Pending</MenuItem>
-								<MenuItem value="In Progress">In Progress</MenuItem>
-								<MenuItem value="Follow-up Required">Follow-up Required</MenuItem>
-								<MenuItem value="No Response">No Response</MenuItem>
-								<MenuItem value="Not Interested">Not Interested</MenuItem>
-								<MenuItem value="Not Eligible">Not Eligible</MenuItem>
-								<MenuItem value="Domain Specific">Domain Specific</MenuItem>
-								<MenuItem value="Studying">Studying</MenuItem>
-								<MenuItem value="Working">Working</MenuItem>
-								<MenuItem value="Int in Direct Hire">Int in Direct Hire</MenuItem>
-								<MenuItem value="Eligible for Direct Hire">Eligible for Direct Hire</MenuItem>
-								<MenuItem value="Test Sent">Test Sent</MenuItem>
-								<MenuItem value="Test Done">Test Done</MenuItem>
-							</Select>
-						</FormControl>
-					</Box>
+							/>
+						</Box>
+					</Stack>
 
 					<Box>
 						<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 1 }}>

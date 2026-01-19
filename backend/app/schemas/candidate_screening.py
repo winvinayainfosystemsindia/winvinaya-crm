@@ -5,6 +5,9 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 
+from app.schemas.user import UserResponse
+
+
 # Screening Schemas
 
 class CandidateScreeningBase(BaseModel):
@@ -13,6 +16,7 @@ class CandidateScreeningBase(BaseModel):
     documents_upload: Optional[dict[str, Any]] = None
     skills: Optional[dict[str, Any]] = None
     family_details: Optional[list[dict[str, Any]]] = None
+    screened_by_id: Optional[int] = None
     others: Optional[dict[str, Any]] = Field(None, description="Additional screening data (willing_for_training, ready_to_relocate, source_of_info, family_annual_income, comments)")
 
 
@@ -28,6 +32,7 @@ class CandidateScreeningUpdate(BaseModel):
     documents_upload: Optional[dict[str, Any]] = None
     skills: Optional[dict[str, Any]] = None
     family_details: Optional[list[dict[str, Any]]] = None
+    screened_by_id: Optional[int] = None
     others: Optional[dict[str, Any]] = Field(None, description="Additional screening data (willing_for_training, ready_to_relocate, source_of_info, family_annual_income, comments)")
 
 
@@ -37,6 +42,7 @@ class CandidateScreeningResponse(CandidateScreeningBase):
     candidate_id: int
     created_at: datetime
     updated_at: datetime
+    screened_by: Optional[UserResponse] = None
     
     class Config:
         from_attributes = True

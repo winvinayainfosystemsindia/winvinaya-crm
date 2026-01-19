@@ -77,6 +77,8 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 	const dynamicFields = useAppSelector(state => state.settings.fields.screening) || [];
 	const loadingFields = useAppSelector(state => state.settings.loading);
 
+	const currentUser = useAppSelector(state => state.auth.user);
+
 	const [tabValue, setTabValue] = useState(0);
 	const [uploading, setUploading] = useState<Record<string, boolean>>({});
 	const [viewing, setViewing] = useState<Record<string, boolean>>({});
@@ -379,6 +381,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 									uploading={uploading}
 									viewing={viewing}
 									dynamicFields={dynamicFields}
+									currentUser={currentUser}
 								/>
 							</TabPanel>
 						</>

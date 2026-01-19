@@ -7,6 +7,12 @@ export interface CandidateScreening {
 	documents_upload?: Record<string, any>;
 	skills?: Record<string, any>;
 	family_details?: any[];
+	screened_by_id?: number;
+	screened_by?: {
+		id: number;
+		full_name?: string;
+		username: string;
+	};
 	others?: {
 		willing_for_training?: boolean;
 		ready_to_relocate?: boolean;
@@ -25,6 +31,7 @@ export interface CandidateScreeningCreate {
 	documents_upload?: Record<string, any>;
 	skills?: Record<string, any>;
 	family_details?: any[];
+	screened_by_id?: number;
 	others?: {
 		willing_for_training?: boolean;
 		ready_to_relocate?: boolean;

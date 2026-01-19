@@ -41,7 +41,7 @@ class CandidateRepository(BaseRepository[Candidate]):
             select(Candidate)
             .where(Candidate.public_id == public_id)
             .options(
-                joinedload(Candidate.screening),
+                joinedload(Candidate.screening).joinedload(CandidateScreening.screened_by),
                 selectinload(Candidate.documents),
                 joinedload(Candidate.counseling)
             )
@@ -70,7 +70,7 @@ class CandidateRepository(BaseRepository[Candidate]):
             .outerjoin(Candidate.screening)
             .outerjoin(Candidate.counseling)
             .options(
-                joinedload(Candidate.screening),
+                joinedload(Candidate.screening).joinedload(CandidateScreening.screened_by),
                 selectinload(Candidate.documents),
                 joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor)
             )
@@ -192,7 +192,7 @@ class CandidateRepository(BaseRepository[Candidate]):
             .outerjoin(Candidate.counseling)
             .where(CandidateScreening.id.is_(None))
             .options(
-                joinedload(Candidate.screening),
+                joinedload(Candidate.screening).joinedload(CandidateScreening.screened_by),
                 joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor)
             )
         )
@@ -311,7 +311,7 @@ class CandidateRepository(BaseRepository[Candidate]):
             .outerjoin(Candidate.counseling)
             .where(CandidateScreening.id.isnot(None))
             .options(
-                joinedload(Candidate.screening),
+                joinedload(Candidate.screening).joinedload(CandidateScreening.screened_by),
                 selectinload(Candidate.documents),
                 joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor)
             )
