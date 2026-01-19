@@ -2,7 +2,7 @@
 
 from typing import Optional, Any
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 # Screening Schemas
@@ -12,7 +12,7 @@ class CandidateScreeningBase(BaseModel):
     previous_training: Optional[dict[str, Any]] = None
     documents_upload: Optional[dict[str, Any]] = None
     skills: Optional[dict[str, Any]] = None
-    others: Optional[dict[str, Any]] = None
+    others: Optional[dict[str, Any]] = Field(None, description="Additional screening data (willing_for_training, ready_to_relocate, source_of_info, family_annual_income, comments)")
 
 
 class CandidateScreeningCreate(CandidateScreeningBase):
@@ -26,7 +26,7 @@ class CandidateScreeningUpdate(BaseModel):
     previous_training: Optional[dict[str, Any]] = None
     documents_upload: Optional[dict[str, Any]] = None
     skills: Optional[dict[str, Any]] = None
-    others: Optional[dict[str, Any]] = None
+    others: Optional[dict[str, Any]] = Field(None, description="Additional screening data (willing_for_training, ready_to_relocate, source_of_info, family_annual_income, comments)")
 
 
 class CandidateScreeningResponse(CandidateScreeningBase):

@@ -15,7 +15,8 @@ import {
 	Divider,
 	Chip,
 	Select,
-	MenuItem
+	MenuItem,
+	Autocomplete
 } from '@mui/material';
 import {
 	CloudUpload as CloudUploadIcon,
@@ -281,6 +282,58 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 								/>
 							</RadioGroup>
 						</FormControl>
+					</Stack>
+
+					<Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
+						<Box sx={{ flex: 1 }}>
+							<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 1 }}>
+								How did you know about us?
+							</Typography>
+							<Autocomplete
+								freeSolo
+								options={['Google', 'LinkedIn', 'V-Shesh', 'Saira', 'Facebook', 'WhatsApp', 'Friends / Referral']}
+								value={formData.others?.source_of_info || ''}
+								onInputChange={(_event, newValue) => onUpdateOtherField('source_of_info', newValue)}
+								onChange={(_event, newValue) => onUpdateOtherField('source_of_info', newValue)}
+								renderInput={(params) => (
+									<TextField
+										{...params}
+										size="small"
+										placeholder="Select or type source"
+										sx={{
+											'& .MuiOutlinedInput-root': {
+												borderRadius: 0,
+												'& fieldset': { borderColor: '#d5dbdb' },
+												'&:hover fieldset': { borderColor: '#879596' },
+												'&.Mui-focused fieldset': { borderColor: '#ec7211' }
+											}
+										}}
+									/>
+								)}
+							/>
+						</Box>
+
+						<Box sx={{ flex: 1 }}>
+							<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 1 }}>
+								Family Annual Income (in INR)
+							</Typography>
+							<TextField
+								fullWidth
+								size="small"
+								type="number"
+								placeholder="Enter annual income"
+								value={formData.others?.family_annual_income || ''}
+								onChange={(e) => onUpdateOtherField('family_annual_income', e.target.value)}
+								sx={{
+									'& .MuiOutlinedInput-root': {
+										borderRadius: 0,
+										'& fieldset': { borderColor: '#d5dbdb' },
+										'&:hover fieldset': { borderColor: '#879596' },
+										'&.Mui-focused fieldset': { borderColor: '#ec7211' }
+									}
+								}}
+							/>
+						</Box>
 					</Stack>
 
 					{/* Screening Status */}

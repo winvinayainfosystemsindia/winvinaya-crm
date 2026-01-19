@@ -6,7 +6,14 @@ export interface CandidateScreening {
 	previous_training?: Record<string, any>;
 	documents_upload?: Record<string, any>;
 	skills?: Record<string, any>;
-	others?: Record<string, any>;
+	others?: {
+		willing_for_training?: boolean;
+		ready_to_relocate?: boolean;
+		source_of_info?: string;
+		family_annual_income?: string | number;
+		comments?: string;
+		[key: string]: any;
+	};
 	created_at: string;
 	updated_at: string;
 }
@@ -16,7 +23,14 @@ export interface CandidateScreeningCreate {
 	previous_training?: Record<string, any>;
 	documents_upload?: Record<string, any>;
 	skills?: Record<string, any>;
-	others?: Record<string, any>;
+	others?: {
+		willing_for_training?: boolean;
+		ready_to_relocate?: boolean;
+		source_of_info?: string;
+		family_annual_income?: string | number;
+		comments?: string;
+		[key: string]: any;
+	};
 }
 
 // Candidate Document Types

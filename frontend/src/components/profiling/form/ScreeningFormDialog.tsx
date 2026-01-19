@@ -103,6 +103,8 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 		others: {
 			willing_for_training: true,
 			ready_to_relocate: false,
+			source_of_info: '',
+			family_annual_income: '',
 			comments: ''
 		}
 	});
@@ -149,6 +151,8 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 					others: {
 						willing_for_training: true,
 						ready_to_relocate: false,
+						source_of_info: '',
+						family_annual_income: '',
 						comments: '',
 						...(initialData.others || {})
 					}
@@ -179,6 +183,8 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 					others: {
 						willing_for_training: true,
 						ready_to_relocate: false,
+						source_of_info: '',
+						family_annual_income: '',
 						comments: ''
 					}
 				});
