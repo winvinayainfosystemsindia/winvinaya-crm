@@ -12,6 +12,7 @@ class CandidateScreeningBase(BaseModel):
     previous_training: Optional[dict[str, Any]] = None
     documents_upload: Optional[dict[str, Any]] = None
     skills: Optional[dict[str, Any]] = None
+    family_details: Optional[list[dict[str, Any]]] = None
     others: Optional[dict[str, Any]] = Field(None, description="Additional screening data (willing_for_training, ready_to_relocate, source_of_info, family_annual_income, comments)")
 
 
@@ -26,6 +27,7 @@ class CandidateScreeningUpdate(BaseModel):
     previous_training: Optional[dict[str, Any]] = None
     documents_upload: Optional[dict[str, Any]] = None
     skills: Optional[dict[str, Any]] = None
+    family_details: Optional[list[dict[str, Any]]] = None
     others: Optional[dict[str, Any]] = Field(None, description="Additional screening data (willing_for_training, ready_to_relocate, source_of_info, family_annual_income, comments)")
 
 

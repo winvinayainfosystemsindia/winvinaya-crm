@@ -349,7 +349,8 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 								{ id: 'phone', label: 'Phone', hideOnMobile: true },
 								{ id: 'disability_type', label: 'Disability', hideOnMobile: true },
 								{ id: 'education_level', label: 'Education', hideOnMobile: true },
-								{ id: 'city', label: 'Location', hideOnMobile: true },
+								{ id: 'district', label: 'Location', hideOnMobile: true },
+								{ id: 'family_details', label: 'Family', hideOnMobile: true },
 								{ id: 'created_at', label: 'Date', hideOnMobile: true },
 								{ id: 'screening_status', label: 'Status', hideOnMobile: false },
 							].map((headCell) => (
@@ -454,6 +455,25 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 										<Typography variant="body2" color="text.secondary">
 											{candidate.city}, {candidate.state}
 										</Typography>
+									</TableCell>
+									<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+										{candidate.family_details && candidate.family_details.length > 0 ? (
+											<Tooltip title={candidate.family_details.map(m => `${m.name} (${m.relation})`).join(', ')}>
+												<Chip
+													label={`${candidate.family_details.length} ${candidate.family_details.length === 1 ? 'Member' : 'Members'}`}
+													size="small"
+													sx={{
+														height: 20,
+														fontSize: '0.7rem',
+														bgcolor: '#eaeded',
+														color: '#545b64',
+														fontWeight: 600
+													}}
+												/>
+											</Tooltip>
+										) : (
+											<Typography variant="body2" color="text.secondary">-</Typography>
+										)}
 									</TableCell>
 									<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
 										<Typography variant="body2" color="text.secondary">

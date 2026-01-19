@@ -6,6 +6,7 @@ export interface CandidateScreening {
 	previous_training?: Record<string, any>;
 	documents_upload?: Record<string, any>;
 	skills?: Record<string, any>;
+	family_details?: any[];
 	others?: {
 		willing_for_training?: boolean;
 		ready_to_relocate?: boolean;
@@ -23,6 +24,7 @@ export interface CandidateScreeningCreate {
 	previous_training?: Record<string, any>;
 	documents_upload?: Record<string, any>;
 	skills?: Record<string, any>;
+	family_details?: any[];
 	others?: {
 		willing_for_training?: boolean;
 		ready_to_relocate?: boolean;
@@ -173,6 +175,7 @@ export interface CandidateListItem {
 
 	counseling_date?: string;
 	documents_uploaded?: string[];
+	family_details?: any[];
 }
 
 

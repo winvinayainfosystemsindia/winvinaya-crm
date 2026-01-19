@@ -65,18 +65,13 @@ const ScreeningList: React.FC = () => {
 		setTabValue(newValue);
 	};
 
-	const handleAction = async (action: 'screen' | 'edit', candidate: CandidateListItem) => {
-		if (action === 'screen') {
-			setSelectedCandidate(candidate);
+	const handleAction = async (_action: 'screen' | 'edit', candidate: CandidateListItem) => {
+		try {
+			const fullCandidate = await dispatch(fetchCandidateById({ publicId: candidate.public_id, withDetails: true })).unwrap();
+			setSelectedCandidate(fullCandidate);
 			setDialogOpen(true);
-		} else if (action === 'edit') {
-			try {
-				const fullCandidate = await dispatch(fetchCandidateById({ publicId: candidate.public_id, withDetails: true })).unwrap();
-				setSelectedCandidate(fullCandidate);
-				setDialogOpen(true);
-			} catch (error) {
-				showSnackbar('Failed to fetch candidate details', 'error');
-			}
+		} catch (error) {
+			showSnackbar(`Failed to fetch candidate details: ${error}`, 'error');
 		}
 	};
 
@@ -177,6 +172,7 @@ const ScreeningList: React.FC = () => {
 					initialData={selectedCandidate?.screening}
 					candidateName={selectedCandidate?.name}
 					candidatePublicId={selectedCandidate?.public_id}
+					candidateGuardianDetails={selectedCandidate?.guardian_details}
 					existingDocuments={selectedCandidate?.documents}
 				/>
 

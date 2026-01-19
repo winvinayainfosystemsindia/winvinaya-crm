@@ -151,6 +151,7 @@ class CandidateListResponse(BaseModel):
     counselor_name: Optional[str] = None
     counseling_date: Optional[datetime] = None
     documents_uploaded: List[str] = []
+    family_details: Optional[List[dict]] = None
     
     @model_validator(mode='before')
     @classmethod
@@ -164,6 +165,7 @@ class CandidateListResponse(BaseModel):
         counselor_name = None
         counseling_date = None
         documents_uploaded = []
+        family_details = None
         
         # Helper to extract from dict or object safely
         def get_val(obj, key, default=None):
@@ -194,6 +196,7 @@ class CandidateListResponse(BaseModel):
         if screening:
             status_val = get_val(screening, 'status')
             screening_status = status_val if status_val else "Pending"
+            family_details = get_val(screening, 'family_details')
 
         # 4. Counseling Data (Relationship)
         counseling = None
@@ -238,7 +241,8 @@ class CandidateListResponse(BaseModel):
                 'counseling_status': counseling_status,
                 'counselor_name': counselor_name,
                 'counseling_date': counseling_date,
-                'documents_uploaded': documents_uploaded
+                'documents_uploaded': documents_uploaded,
+                'family_details': family_details
             })
             return data
             
@@ -263,7 +267,8 @@ class CandidateListResponse(BaseModel):
             'counseling_status': counseling_status,
             'counselor_name': counselor_name,
             'counseling_date': counseling_date,
-            'documents_uploaded': documents_uploaded
+            'documents_uploaded': documents_uploaded,
+            'family_details': family_details
         }
 
 

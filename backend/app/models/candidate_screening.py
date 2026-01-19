@@ -26,6 +26,7 @@ class CandidateScreening(BaseModel):
     previous_training: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     documents_upload: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     skills: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    family_details: Mapped[list[dict] | None] = mapped_column(JSON, nullable=True)
     others: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     
     # Relationship

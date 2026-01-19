@@ -22,6 +22,7 @@ import type { CandidateScreeningCreate } from '../../../models/candidate';
 // Tabs
 import BackgroundTrainingTab from './tabs/BackgroundTrainingTab';
 import SkillsTab from './tabs/SkillsTab';
+import FamilyDetailsTab from './tabs/FamilyDetailsTab';
 import DocumentsRemarksTab from './tabs/DocumentsRemarksTab';
 
 interface ScreeningFormDialogProps {
@@ -31,6 +32,7 @@ interface ScreeningFormDialogProps {
 	initialData?: any;
 	candidateName?: string;
 	candidatePublicId?: string;
+	candidateGuardianDetails?: any;
 	existingDocuments?: any[];
 }
 
@@ -68,6 +70,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 	initialData,
 	candidateName,
 	candidatePublicId,
+	candidateGuardianDetails,
 	existingDocuments
 }) => {
 	const dispatch = useAppDispatch();
@@ -89,6 +92,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 			technical_skills: [],
 			soft_skills: []
 		},
+		family_details: [],
 		documents_upload: {
 			resume: false,
 			disability_certificate: false,
@@ -137,6 +141,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 						technical_skills: initialData.skills?.technical_skills ?? [],
 						soft_skills: initialData.skills?.soft_skills ?? []
 					},
+					family_details: initialData.family_details ?? [],
 					documents_upload: {
 						resume: initialData.documents_upload?.resume || !!docMap.resume,
 						disability_certificate: initialData.documents_upload?.disability_certificate || !!docMap.disability_certificate,
@@ -169,6 +174,14 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 						technical_skills: [],
 						soft_skills: []
 					},
+					family_details: candidateGuardianDetails ? [{
+						name: candidateGuardianDetails.parent_name || '',
+						phone: candidateGuardianDetails.parent_phone || '',
+						relation: candidateGuardianDetails.relationship || '',
+						occupation: '',
+						company_name: '',
+						position: ''
+					}] : [],
 					documents_upload: {
 						resume: !!docMap.resume,
 						disability_certificate: !!docMap.disability_certificate,
@@ -197,6 +210,13 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 	};
 
 	const handleUpdateField = (section: string, field: string, value: any) => {
+		if (section === 'root') {
+			setFormData((prev: any) => ({
+				...prev,
+				[field]: value
+			}));
+			return;
+		}
 		setFormData((prev: any) => ({
 			...prev,
 			[section]: {
@@ -313,8 +333,9 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 						}}
 					>
 						<Tab label="1. Background & Training" />
-						<Tab label="2. Skills" />
-						<Tab label="3. Documents & Remarks" />
+						<Tab label="2. Family Details" />
+						<Tab label="3. Skills" />
+						<Tab label="4. Documents & Remarks" />
 					</Tabs>
 				</Box>
 
@@ -333,6 +354,13 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 							</TabPanel>
 
 							<TabPanel value={tabValue} index={1}>
+								<FamilyDetailsTab
+									formData={formData}
+									onUpdateField={handleUpdateField}
+								/>
+							</TabPanel>
+
+							<TabPanel value={tabValue} index={2}>
 								<SkillsTab
 									formData={formData}
 									onUpdateField={handleUpdateField}
@@ -340,7 +368,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 								/>
 							</TabPanel>
 
-							<TabPanel value={tabValue} index={2}>
+							<TabPanel value={tabValue} index={3}>
 								<DocumentsRemarksTab
 									formData={formData}
 									onUpdateOtherField={handleUpdateOtherField}
