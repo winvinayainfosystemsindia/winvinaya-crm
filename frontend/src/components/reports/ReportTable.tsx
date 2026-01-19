@@ -71,12 +71,33 @@ const ReportTable: React.FC<ReportTableProps> = ({
 		let val: any = (candidate as any)[colId];
 
 		// Formatting for specific fields
-		if ((colId === 'created_at' || colId === 'dob' || colId === 'counseling_date') && val) {
+		if ((colId === 'created_at' || colId === 'dob' || colId === 'counseling_date' || colId === 'screening_date' || colId === 'screening_updated_at') && val) {
 			try {
 				val = format(new Date(val), 'dd MMM yyyy');
 			} catch (e) {
 				val = '-';
 			}
+		}
+
+		if (colId === 'family_details' && Array.isArray(val)) {
+			if (val.length === 0) return '-';
+			return (
+				<Box sx={{ fontSize: '0.75rem' }}>
+					{val.map((f: any, i: number) => {
+						const details = [];
+						if (f.occupation) details.push(f.occupation);
+						if (f.company_name) details.push(f.company_name);
+						if (f.position) details.push(f.position);
+						const detailsStr = details.length > 0 ? ` - ${details.join(', ')}` : '';
+
+						return (
+							<div key={i} style={{ marginBottom: i < val.length - 1 ? '4px' : 0 }}>
+								<strong>{f.relation}:</strong> {f.name} ({f.phone || 'No phone'}){detailsStr}
+							</div>
+						);
+					})}
+				</Box>
+			);
 		}
 
 		if (colId === 'documents_uploaded' && Array.isArray(val)) {

@@ -183,6 +183,11 @@ export interface CandidateListItem {
 	counseling_date?: string;
 	documents_uploaded?: string[];
 	family_details?: any[];
+	source_of_info?: string;
+	family_annual_income?: string | number;
+	screened_by_name?: string;
+	screening_date?: string;
+	screening_updated_at?: string;
 }
 
 

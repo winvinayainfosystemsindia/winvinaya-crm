@@ -31,6 +31,12 @@ const ALL_COLUMNS = [
 	{ id: 'counselor_name', label: 'Counselor', default: false },
 	{ id: 'counseling_date', label: 'Counseling Date', default: false },
 	{ id: 'documents_uploaded', label: 'Uploaded Documents', default: false },
+	{ id: 'family_details', label: 'Family Details', default: false },
+	{ id: 'source_of_info', label: 'Where you know about us', default: false },
+	{ id: 'family_annual_income', label: 'Family Annual Income', default: false },
+	{ id: 'screened_by_name', label: 'Screened By', default: false },
+	{ id: 'screening_date', label: 'Screened Date', default: false },
+	{ id: 'screening_updated_at', label: 'Screening Update Date', default: false },
 	{ id: 'created_at', label: 'Registration Date', default: false },
 ];
 
@@ -106,11 +112,21 @@ const Reports: React.FC = () => {
 				const col = ALL_COLUMNS.find(ac => ac.id === colId);
 				if (col) {
 					let val = (c as any)[colId];
-					if ((colId === 'created_at' || colId === 'dob' || colId === 'counseling_date') && val) {
+					if ((colId === 'created_at' || colId === 'dob' || colId === 'counseling_date' || colId === 'screening_date' || colId === 'screening_updated_at') && val) {
 						val = format(new Date(val), 'dd-MM-yyyy');
 					}
 					if (colId === 'documents_uploaded' && Array.isArray(val)) {
 						val = val.join(', ');
+					}
+					if (colId === 'family_details' && Array.isArray(val)) {
+						val = val.map((f: any) => {
+							const details = [];
+							if (f.occupation) details.push(f.occupation);
+							if (f.company_name) details.push(f.company_name);
+							if (f.position) details.push(f.position);
+							const detailsStr = details.length > 0 ? ` - ${details.join(', ')}` : '';
+							return `${f.relation}: ${f.name} (${f.phone || 'N/A'})${detailsStr}`;
+						}).join('; ');
 					}
 					filtered[col.label] = val || '-';
 				}

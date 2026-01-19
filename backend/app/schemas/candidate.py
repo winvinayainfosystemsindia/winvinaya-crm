@@ -153,6 +153,13 @@ class CandidateListResponse(BaseModel):
     documents_uploaded: List[str] = []
     family_details: Optional[List[dict]] = None
     
+    # New Screening fields
+    source_of_info: Optional[str] = None
+    family_annual_income: Optional[Any] = None
+    screened_by_name: Optional[str] = None
+    screening_date: Optional[datetime] = None
+    screening_updated_at: Optional[datetime] = None
+    
     @model_validator(mode='before')
     @classmethod
     def extract_flattened_data(cls, data: Any) -> Any:
@@ -166,6 +173,11 @@ class CandidateListResponse(BaseModel):
         counseling_date = None
         documents_uploaded = []
         family_details = None
+        source_of_info = None
+        family_annual_income = None
+        screened_by_name = None
+        screening_date = None
+        screening_updated_at = None
         
         # Helper to extract from dict or object safely
         def get_val(obj, key, default=None):
@@ -197,8 +209,33 @@ class CandidateListResponse(BaseModel):
             status_val = get_val(screening, 'status')
             screening_status = status_val if status_val else "Pending"
             family_details = get_val(screening, 'family_details')
+            screening_date = get_val(screening, 'created_at')
+            screening_updated_at = get_val(screening, 'updated_at')
+            
+            # Extract from others JSON field
+            others = get_val(screening, 'others')
+            if others and isinstance(others, dict):
+                source_of_info = others.get('source_of_info')
+                family_annual_income = others.get('family_annual_income')
+            
+            # Extract screened_by info
+            screened_by = None
+            if isinstance(screening, dict):
+                screened_by = screening.get('screened_by')
+            elif hasattr(screening, '__dict__'):
+                # Handle SQLAlchemy relationship carefully
+                try:
+                    screened_by = screening.screened_by
+                except:
+                    screened_by = None
+            
+            if screened_by:
+                fname = get_val(screened_by, 'full_name')
+                uname = get_val(screened_by, 'username')
+                screened_by_name = fname if fname else uname
 
         # 4. Counseling Data (Relationship)
+        # ... (unchanged)
         counseling = None
         if isinstance(data, dict):
             counseling = data.get('counseling')
@@ -242,7 +279,12 @@ class CandidateListResponse(BaseModel):
                 'counselor_name': counselor_name,
                 'counseling_date': counseling_date,
                 'documents_uploaded': documents_uploaded,
-                'family_details': family_details
+                'family_details': family_details,
+                'source_of_info': source_of_info,
+                'family_annual_income': family_annual_income,
+                'screened_by_name': screened_by_name,
+                'screening_date': screening_date,
+                'screening_updated_at': screening_updated_at
             })
             return data
             
@@ -268,7 +310,12 @@ class CandidateListResponse(BaseModel):
             'counselor_name': counselor_name,
             'counseling_date': counseling_date,
             'documents_uploaded': documents_uploaded,
-            'family_details': family_details
+            'family_details': family_details,
+            'source_of_info': source_of_info,
+            'family_annual_income': family_annual_income,
+            'screened_by_name': screened_by_name,
+            'screening_date': screening_date,
+            'screening_updated_at': screening_updated_at
         }
 
 

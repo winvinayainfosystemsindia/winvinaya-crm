@@ -72,6 +72,10 @@ async def update_candidate_screening(
     # Get before state
     existing_screening = await service.get_screening(public_id)
     
+    # If screened_by_id is not set, set it now
+    if existing_screening and not existing_screening.screened_by_id:
+        screening_in.screened_by_id = current_user.id
+    
     updated_screening = await service.update_screening(public_id, screening_in)
     
     # Log the update
