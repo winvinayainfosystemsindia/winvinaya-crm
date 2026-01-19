@@ -32,6 +32,8 @@ const REQUIRED_DOCUMENTS = [
   { type: '10th_certificate', label: '10th Certificate', description: 'Class 10 Marksheet' },
   { type: '12th_certificate', label: '12th Certificate', description: 'Class 12 Marksheet' },
   { type: 'degree_certificate', label: 'Degree Certificate', description: 'UG/PG Degree Certificate' },
+  { type: 'pan_card', label: 'PAN Card', description: 'PAN Card for ID proof' },
+  { type: 'aadhar_card', label: 'Aadhar Card', description: 'Aadhar Card for Address/ID proof' },
   { type: 'disability_certificate', label: 'Disability Certificate', description: 'Valid Disability Certificate' }
 ];
 

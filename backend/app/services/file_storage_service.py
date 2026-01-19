@@ -21,6 +21,8 @@ class FileStorageService:
         "10th_certificate": {".pdf", ".jpg", ".jpeg", ".png"},
         "12th_certificate": {".pdf", ".jpg", ".jpeg", ".png"},
         "degree_certificate": {".pdf", ".jpg", ".jpeg", ".png"},
+        "pan_card": {".pdf", ".jpg", ".jpeg", ".png"},
+        "aadhar_card": {".pdf", ".jpg", ".jpeg", ".png"},
         "other": {".pdf", ".doc", ".docx", ".jpg", ".jpeg", ".png", ".zip"}
     }
     

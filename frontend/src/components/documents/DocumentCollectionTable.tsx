@@ -103,6 +103,8 @@ const DocumentCollectionTable: React.FC<DocumentCollectionTableProps> = ({ type 
 		if (docs.includes('10th_certificate')) collected.push('10th'); else pending.push('10th');
 		if (docs.includes('12th_certificate')) collected.push('12th'); else pending.push('12th');
 		if (docs.includes('degree_certificate')) collected.push('Degree'); else pending.push('Degree');
+		if (docs.includes('pan_card')) collected.push('PAN'); else pending.push('PAN');
+		if (docs.includes('aadhar_card')) collected.push('Aadhar'); else pending.push('Aadhar');
 
 		return (
 			<Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>

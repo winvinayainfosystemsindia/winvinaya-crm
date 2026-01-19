@@ -41,6 +41,23 @@ const Sidebar: React.FC = () => {
 		if (path.includes('?')) {
 			return location.pathname + location.search === path;
 		}
+
+		// Special handling for All Candidates to avoid highlighting when on sibling routes
+		if (path === '/candidates') {
+			if (location.pathname === path) return true;
+			if (location.pathname.startsWith(path + '/')) {
+				const subPath = location.pathname.substring(path.length);
+				// Don't highlight "All Candidates" if we are on these specific sibling routes
+				if (subPath.startsWith('/screening') ||
+					subPath.startsWith('/counseling') ||
+					subPath.startsWith('/documents')) {
+					return false;
+				}
+				return true;
+			}
+			return false;
+		}
+
 		return location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
 	};
 

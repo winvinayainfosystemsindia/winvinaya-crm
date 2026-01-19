@@ -378,9 +378,9 @@ class CandidateRepository(BaseRepository[Candidate]):
                 collected_ids_stmt = (
                     select(Candidate.id)
                     .join(CandidateDocument, Candidate.id == CandidateDocument.candidate_id)
-                    .where(CandidateDocument.document_type.in_(['resume', '10th_certificate', '12th_certificate', 'degree_certificate']))
+                    .where(CandidateDocument.document_type.in_(['resume', '10th_certificate', '12th_certificate', 'degree_certificate', 'pan_card', 'aadhar_card']))
                     .group_by(Candidate.id)
-                    .having(func.count(func.distinct(CandidateDocument.document_type)) == 4)
+                    .having(func.count(func.distinct(CandidateDocument.document_type)) == 6)
                 )
                 
                 # Further refine for disability cert if needed
@@ -392,9 +392,9 @@ class CandidateRepository(BaseRepository[Candidate]):
                 collected_ids_stmt = (
                     select(Candidate.id)
                     .join(CandidateDocument, Candidate.id == CandidateDocument.candidate_id)
-                    .where(CandidateDocument.document_type.in_(['resume', '10th_certificate', '12th_certificate', 'degree_certificate']))
+                    .where(CandidateDocument.document_type.in_(['resume', '10th_certificate', '12th_certificate', 'degree_certificate', 'pan_card', 'aadhar_card']))
                     .group_by(Candidate.id)
-                    .having(func.count(func.distinct(CandidateDocument.document_type)) == 4)
+                    .having(func.count(func.distinct(CandidateDocument.document_type)) == 6)
                 )
                 stmt = stmt.where(~Candidate.id.in_(collected_ids_stmt))
                 count_stmt = count_stmt.where(~Candidate.id.in_(collected_ids_stmt))
