@@ -190,6 +190,10 @@ export interface CandidateListItem {
 	counselor_name?: string;
 
 	counseling_date?: string;
+	feedback?: string;
+	skills?: CounselingSkill[];
+	questions?: CounselingQuestion[];
+	workexperience?: CounselingWorkExperience[];
 	documents_uploaded?: string[];
 	family_details?: any[];
 	source_of_info?: string;

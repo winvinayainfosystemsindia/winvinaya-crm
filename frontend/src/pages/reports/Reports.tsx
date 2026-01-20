@@ -14,30 +14,39 @@ import FilterDrawer, { type FilterField } from '../../components/common/FilterDr
 
 // Column definitions
 const ALL_COLUMNS = [
-	{ id: 'name', label: 'Candidate Name', default: true },
-	{ id: 'email', label: 'Email', default: true },
-	{ id: 'phone', label: 'Phone', default: true },
-	{ id: 'dob', label: 'DOB', default: true },
-	{ id: 'disability_type', label: 'Disability Type', default: true },
-	{ id: 'education_level', label: 'Education', default: true },
-	{ id: 'screening_status', label: 'Screening Status', default: true },
-	{ id: 'counseling_status', label: 'Counseling Status', default: true },
-	{ id: 'gender', label: 'Gender', default: false },
-	{ id: 'whatsapp_number', label: 'WhatsApp', default: false },
-	{ id: 'city', label: 'City', default: false },
-	{ id: 'district', label: 'District', default: false },
-	{ id: 'state', label: 'State', default: false },
-	{ id: 'pincode', label: 'Pincode', default: false },
-	{ id: 'counselor_name', label: 'Counselor', default: false },
-	{ id: 'counseling_date', label: 'Counseling Date', default: false },
-	{ id: 'documents_uploaded', label: 'Uploaded Documents', default: false },
-	{ id: 'family_details', label: 'Family Details', default: false },
-	{ id: 'source_of_info', label: 'Where you know about us', default: false },
-	{ id: 'family_annual_income', label: 'Family Annual Income', default: false },
-	{ id: 'screened_by_name', label: 'Screened By', default: false },
-	{ id: 'screening_date', label: 'Screened Date', default: false },
-	{ id: 'screening_updated_at', label: 'Screening Update Date', default: false },
-	{ id: 'created_at', label: 'Registration Date', default: false },
+	// General Info
+	{ id: 'name', label: 'Candidate Name', default: true, group: 'general' },
+	{ id: 'gender', label: 'Gender', default: false, group: 'general' },
+	{ id: 'email', label: 'Email', default: true, group: 'general' },
+	{ id: 'phone', label: 'Phone', default: true, group: 'general' },
+	{ id: 'whatsapp_number', label: 'WhatsApp', default: false, group: 'general' },
+	{ id: 'dob', label: 'DOB', default: true, group: 'general' },
+	{ id: 'city', label: 'City', default: false, group: 'general' },
+	{ id: 'district', label: 'District', default: false, group: 'general' },
+	{ id: 'state', label: 'State', default: false, group: 'general' },
+	{ id: 'pincode', label: 'Pincode', default: false, group: 'general' },
+	{ id: 'education_level', label: 'Education', default: true, group: 'general' },
+	{ id: 'disability_type', label: 'Disability Type', default: true, group: 'general' },
+	{ id: 'created_at', label: 'Registration Date', default: false, group: 'general' },
+
+	// Screening Info
+	{ id: 'screening_status', label: 'Screening Status', default: true, group: 'screening' },
+	{ id: 'source_of_info', label: 'Where you know about us', default: false, group: 'screening' },
+	{ id: 'family_annual_income', label: 'Family Annual Income', default: false, group: 'screening' },
+	{ id: 'screened_by_name', label: 'Screened By', default: false, group: 'screening' },
+	{ id: 'screening_date', label: 'Screened Date', default: false, group: 'screening' },
+	{ id: 'screening_updated_at', label: 'Screening Update Date', default: false, group: 'screening' },
+	{ id: 'family_details', label: 'Family Details', default: false, group: 'screening' },
+	{ id: 'documents_uploaded', label: 'Uploaded Documents', default: false, group: 'screening' },
+
+	// Counseling Info
+	{ id: 'counseling_status', label: 'Counseling Status', default: true, group: 'counseling' },
+	{ id: 'counselor_name', label: 'Counselor', default: false, group: 'counseling' },
+	{ id: 'counseling_date', label: 'Counseling Date', default: false, group: 'counseling' },
+	{ id: 'feedback', label: 'Counseling Feedback', default: false, group: 'counseling' },
+	{ id: 'skills', label: 'Counseling Skills', default: false, group: 'counseling' },
+	{ id: 'questions', label: 'Assessment Q&A', default: false, group: 'counseling' },
+	{ id: 'workexperience', label: 'Counseling Work Experience', default: false, group: 'counseling' },
 ];
 
 const Reports: React.FC = () => {
@@ -56,6 +65,7 @@ const Reports: React.FC = () => {
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(25);
 	const [filters, setFilters] = useState<Record<string, any>>({});
+	const [reportType, setReportType] = useState('candidate');
 
 	// Data Fetching
 	const fetchData = useCallback(() => {
@@ -111,13 +121,31 @@ const Reports: React.FC = () => {
 			visibleColumns.forEach(colId => {
 				const col = ALL_COLUMNS.find(ac => ac.id === colId);
 				if (col) {
+					// Handle regular fields and flattened fields
 					let val = (c as any)[colId];
-					if ((colId === 'created_at' || colId === 'dob' || colId === 'counseling_date' || colId === 'screening_date' || colId === 'screening_updated_at') && val) {
-						val = format(new Date(val), 'dd-MM-yyyy');
+
+					// If field is missing from list item, try to get it from nested objects if available
+					if (val === undefined || val === null) {
+						if (col.group === 'counseling' && (c as any).counseling) {
+							val = (c as any).counseling[colId];
+						}
 					}
+
+					// Date Formatting
+					if ((colId === 'created_at' || colId === 'dob' || colId === 'counseling_date' || colId === 'screening_date' || colId === 'screening_updated_at') && val) {
+						try {
+							val = format(new Date(val), 'dd-MM-yyyy');
+						} catch (e) {
+							val = String(val);
+						}
+					}
+
+					// Document Uploads
 					if (colId === 'documents_uploaded' && Array.isArray(val)) {
 						val = val.join(', ');
 					}
+
+					// Family Details (Flattened or format properly)
 					if (colId === 'family_details' && Array.isArray(val)) {
 						val = val.map((f: any) => {
 							const details = [];
@@ -128,6 +156,22 @@ const Reports: React.FC = () => {
 							return `${f.relation}: ${f.name} (${f.phone || 'N/A'})${detailsStr}`;
 						}).join('; ');
 					}
+
+					// Counseling Skills
+					if (colId === 'skills' && Array.isArray(val)) {
+						val = val.map((s: any) => `${s.name} (${s.level})`).join(', ');
+					}
+
+					// Counseling Questions
+					if (colId === 'questions' && Array.isArray(val)) {
+						val = val.map((q: any) => `Q: ${q.question} | A: ${q.answer}`).join(' ; ');
+					}
+
+					// Counseling Work Experience
+					if (colId === 'workexperience' && Array.isArray(val)) {
+						val = val.map((w: any) => `${w.job_title} at ${w.company} (${w.years_of_experience})`).join(' ; ');
+					}
+
 					filtered[col.label] = val || '-';
 				}
 			});
@@ -194,6 +238,8 @@ const Reports: React.FC = () => {
 					onRefresh={fetchData}
 					onExport={handleExport}
 					loading={loading}
+					reportType={reportType}
+					onReportTypeChange={setReportType}
 				/>
 
 				<ReportToolbar

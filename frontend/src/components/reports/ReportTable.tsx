@@ -150,6 +150,58 @@ const ReportTable: React.FC<ReportTableProps> = ({
 			);
 		}
 
+		if (colId === 'skills' && Array.isArray(val)) {
+			return (
+				<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+					{val.length > 0 ? val.map((s: any, i: number) => (
+						<Chip
+							key={i}
+							label={`${s.name} (${s.level})`}
+							size="small"
+							sx={{
+								fontSize: '0.65rem',
+								height: 18,
+								backgroundColor: '#f8f9fa',
+								color: '#545b64',
+								border: '1px solid #d5dbdb'
+							}}
+						/>
+					)) : '-'}
+				</Box>
+			);
+		}
+
+		if (colId === 'questions' && Array.isArray(val)) {
+			if (val.length === 0) return '-';
+			return (
+				<Box sx={{ fontSize: '0.75rem' }}>
+					{val.map((q: any, i: number) => (
+						<div key={i} style={{ marginBottom: i < val.length - 1 ? '4px' : 0 }}>
+							<Typography variant="caption" sx={{ fontWeight: 700, color: '#ec7211', display: 'block' }}>
+								Q: {q.question}
+							</Typography>
+							<Typography variant="caption" sx={{ color: '#545b64' }}>
+								A: {q.answer}
+							</Typography>
+						</div>
+					))}
+				</Box>
+			);
+		}
+
+		if (colId === 'workexperience' && Array.isArray(val)) {
+			if (val.length === 0) return '-';
+			return (
+				<Box sx={{ fontSize: '0.75rem' }}>
+					{val.map((w: any, i: number) => (
+						<div key={i} style={{ marginBottom: i < val.length - 1 ? '4px' : 0 }}>
+							<strong>{w.job_title}</strong> at {w.company} ({w.years_of_experience})
+						</div>
+					))}
+				</Box>
+			);
+		}
+
 		return val || '-';
 	};
 

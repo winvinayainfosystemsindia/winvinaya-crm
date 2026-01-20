@@ -153,6 +153,12 @@ class CandidateListResponse(BaseModel):
     documents_uploaded: List[str] = []
     family_details: Optional[List[dict]] = None
     
+    # Counseling fields
+    feedback: Optional[str] = None
+    skills: Optional[List[dict]] = None
+    questions: Optional[List[dict]] = None
+    workexperience: Optional[List[dict]] = None
+    
     # New Screening fields
     source_of_info: Optional[str] = None
     family_annual_income: Optional[Any] = None
@@ -171,6 +177,10 @@ class CandidateListResponse(BaseModel):
         counseling_status = None
         counselor_name = None
         counseling_date = None
+        feedback = None
+        skills = []
+        questions = []
+        workexperience = []
         documents_uploaded = []
         family_details = None
         source_of_info = None
@@ -179,7 +189,7 @@ class CandidateListResponse(BaseModel):
         screening_date = None
         screening_updated_at = None
         
-        # Helper to extract from dict or object safely
+        # ... (rest of helper functions)
         def get_val(obj, key, default=None):
             if isinstance(obj, dict):
                 return obj.get(key, default)
@@ -235,7 +245,6 @@ class CandidateListResponse(BaseModel):
                 screened_by_name = fname if fname else uname
 
         # 4. Counseling Data (Relationship)
-        # ... (unchanged)
         counseling = None
         if isinstance(data, dict):
             counseling = data.get('counseling')
@@ -246,6 +255,10 @@ class CandidateListResponse(BaseModel):
             counseling_status = get_val(counseling, 'status')
             counseling_date = get_val(counseling, 'counseling_date')
             counselor_name = get_val(counseling, 'counselor_name')
+            feedback = get_val(counseling, 'feedback')
+            skills = get_val(counseling, 'skills', [])
+            questions = get_val(counseling, 'questions', [])
+            workexperience = get_val(counseling, 'workexperience', [])
             
             counselor = None
             if isinstance(counseling, dict):
@@ -278,6 +291,10 @@ class CandidateListResponse(BaseModel):
                 'counseling_status': counseling_status,
                 'counselor_name': counselor_name,
                 'counseling_date': counseling_date,
+                'feedback': feedback,
+                'skills': skills,
+                'questions': questions,
+                'workexperience': workexperience,
                 'documents_uploaded': documents_uploaded,
                 'family_details': family_details,
                 'source_of_info': source_of_info,
@@ -309,6 +326,10 @@ class CandidateListResponse(BaseModel):
             'counseling_status': counseling_status,
             'counselor_name': counselor_name,
             'counseling_date': counseling_date,
+            'feedback': feedback,
+            'skills': skills,
+            'questions': questions,
+            'workexperience': workexperience,
             'documents_uploaded': documents_uploaded,
             'family_details': family_details,
             'source_of_info': source_of_info,

@@ -1,14 +1,32 @@
 import React from 'react';
-import { Box, Typography, Button, useTheme, useMediaQuery } from '@mui/material';
+import {
+	Box,
+	Typography,
+	Button,
+	useTheme,
+	useMediaQuery,
+	FormControl,
+	Select,
+	MenuItem,
+	InputLabel
+} from '@mui/material';
 import { Refresh as RefreshIcon, FileDownload as ExportIcon } from '@mui/icons-material';
 
 interface ReportHeaderProps {
 	onRefresh: () => void;
 	onExport: () => void;
 	loading: boolean;
+	reportType: string;
+	onReportTypeChange: (type: string) => void;
 }
 
-const ReportHeader: React.FC<ReportHeaderProps> = ({ onRefresh, onExport, loading }) => {
+const ReportHeader: React.FC<ReportHeaderProps> = ({
+	onRefresh,
+	onExport,
+	loading,
+	reportType,
+	onReportTypeChange
+}) => {
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -30,7 +48,27 @@ const ReportHeader: React.FC<ReportHeaderProps> = ({ onRefresh, onExport, loadin
 					Generate and customize candidate data reports for export.
 				</Typography>
 			</Box>
-			<Box sx={{ display: 'flex', gap: 1.5 }}>
+			<Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+				<FormControl size="small" sx={{ minWidth: 180 }}>
+					<InputLabel id="report-type-label">Report Type</InputLabel>
+					<Select
+						labelId="report-type-label"
+						value={reportType}
+						label="Report Type"
+						onChange={(e) => onReportTypeChange(e.target.value)}
+						sx={{
+							height: 32,
+							fontSize: '0.85rem',
+							borderRadius: '2px',
+							'& .MuiOutlinedInput-notchedOutline': { borderColor: '#d5dbdb' }
+						}}
+					>
+						<MenuItem value="candidate" sx={{ fontSize: '0.85rem' }}>Candidate Report</MenuItem>
+						<MenuItem value="screening" disabled sx={{ fontSize: '0.85rem' }}>Screening Report</MenuItem>
+						<MenuItem value="counseling" disabled sx={{ fontSize: '0.85rem' }}>Counseling Report</MenuItem>
+					</Select>
+				</FormControl>
+
 				<Button
 					variant="outlined"
 					startIcon={<RefreshIcon className={loading ? 'spin-animation' : ''} />}
@@ -62,17 +100,17 @@ const ReportHeader: React.FC<ReportHeaderProps> = ({ onRefresh, onExport, loadin
 					size="small"
 					sx={{
 						height: 32,
-						backgroundColor: '#ff9900',
+						backgroundColor: '#ec7211',
 						color: '#fff',
 						textTransform: 'none',
 						fontWeight: 700,
 						'&:hover': {
-							backgroundColor: '#ec7211'
+							backgroundColor: '#eb5f07'
 						},
 						boxShadow: 'none'
 					}}
 				>
-					Export to Excel
+					Export Report
 				</Button>
 				<style>
 					{`

@@ -77,35 +77,50 @@ const ColumnSelector: React.FC<ColumnSelectorProps> = ({
 				</Box>
 				<Divider />
 				<Box sx={{ py: 1 }}>
-					{columns.map(col => (
-						<MenuItem
-							key={col.id}
-							onClick={() => onToggleColumn(col.id)}
-							sx={{
-								py: 0.5,
-								'&:hover': { backgroundColor: '#f2f3f3' }
-							}}
-						>
-							<FormControlLabel
-								control={
-									<Checkbox
-										size="small"
-										checked={visibleColumns.includes(col.id)}
-										sx={{
-											color: '#d5dbdb',
-											'&.Mui-checked': { color: '#ff9900' }
-										}}
-									/>
-								}
-								label={
-									<Typography variant="body2" sx={{ color: '#545b64', fontSize: '0.875rem' }}>
-										{col.label}
+					{['general', 'screening', 'counseling'].map(group => {
+						const groupCols = columns.filter(c => (c as any).group === group);
+						if (groupCols.length === 0) return null;
+
+						return (
+							<React.Fragment key={group}>
+								<Box sx={{ px: 2, py: 1, bgcolor: '#f8f9fa' }}>
+									<Typography variant="caption" sx={{ fontWeight: 700, color: '#545b64', textTransform: 'uppercase' }}>
+										{group === 'general' ? 'General Info' : group === 'screening' ? 'Screening Info' : 'Counseling Info'}
 									</Typography>
-								}
-								sx={{ m: 0, width: '100%' }}
-							/>
-						</MenuItem>
-					))}
+								</Box>
+								{groupCols.map(col => (
+									<MenuItem
+										key={col.id}
+										onClick={() => onToggleColumn(col.id)}
+										sx={{
+											py: 0.5,
+											'&:hover': { backgroundColor: '#f2f3f3' }
+										}}
+									>
+										<FormControlLabel
+											control={
+												<Checkbox
+													size="small"
+													checked={visibleColumns.includes(col.id)}
+													sx={{
+														color: '#d5dbdb',
+														'&.Mui-checked': { color: '#ff9900' }
+													}}
+												/>
+											}
+											label={
+												<Typography variant="body2" sx={{ color: '#545b64', fontSize: '0.875rem' }}>
+													{col.label}
+												</Typography>
+											}
+											sx={{ m: 0, width: '100%' }}
+										/>
+									</MenuItem>
+								))}
+								<Divider />
+							</React.Fragment>
+						);
+					})}
 				</Box>
 			</Menu>
 		</Box>
