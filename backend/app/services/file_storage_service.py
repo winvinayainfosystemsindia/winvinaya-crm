@@ -82,6 +82,19 @@ class FileStorageService:
                     status_code=400,
                     detail=f"File too large. Maximum size: {FileStorageService.MAX_FILE_SIZE / (1024*1024)}MB"
                 )
+        else:
+            # Fallback: Check size by seeking to end
+            try:
+                file.file.seek(0, 2)
+                size = file.file.tell()
+                file.file.seek(0)
+                if size > FileStorageService.MAX_FILE_SIZE:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"File too large. Maximum size: {FileStorageService.MAX_FILE_SIZE / (1024*1024)}MB"
+                    )
+            except Exception:
+                pass # If verify fails here, we will catch it during save
     
     @staticmethod
     async def save_file(

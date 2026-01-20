@@ -79,7 +79,7 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 				<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
 					<Box>
 						<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e' }}>
-							{label}
+							{label} <Typography component="span" variant="caption" sx={{ color: '#545b64', fontWeight: 400 }}>(Max 10MB)</Typography>
 						</Typography>
 						{isUploaded ? (
 							<Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
@@ -209,7 +209,7 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 					Document Verification
 				</Typography>
 				<Typography variant="body2" sx={{ color: '#545b64', mb: 2 }}>
-					Upload and verify required candidate documents. Accepted formats: PDF, JPG, PNG (Max 5MB).
+					Upload and verify required candidate documents. Accepted formats: PDF (Max 10MB).
 				</Typography>
 
 				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
