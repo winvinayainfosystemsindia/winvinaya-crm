@@ -205,7 +205,7 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 		<Stack spacing={4}>
 			{/* Document Verification Section */}
 			<Box>
-				<Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#232f3e', mb: 2 }}>
+				<Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#232f3e' }}>
 					Document Verification
 				</Typography>
 				<Typography variant="body2" sx={{ color: '#545b64', mb: 2 }}>
