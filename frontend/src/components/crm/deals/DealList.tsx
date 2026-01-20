@@ -9,9 +9,10 @@ import {
 	TrendingUp as TrendIcon
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
-import { fetchDeals, fetchPipelineSummary } from '../../../store/slices/dealSlice';
+import { fetchDeals, fetchPipelineSummary, createDeal, updateDeal } from '../../../store/slices/dealSlice';
 import CRMPageHeader from '../common/CRMPageHeader';
 import CRMTable from '../common/CRMTable';
+import DealFormDialog from './DealFormDialog';
 import CRMStatsCard from '../common/CRMStatsCard';
 import CRMStatusBadge from '../common/CRMStatusBadge';
 import type { Deal } from '../../../models/deal';
@@ -23,6 +24,8 @@ const DealList: React.FC = () => {
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [search, setSearch] = useState('');
+	const [dialogOpen, setDialogOpen] = useState(false);
+	const [selectedDealForEdit, setSelectedDealForEdit] = useState<Deal | null>(null);
 
 	useEffect(() => {
 		dispatch(fetchDeals({
@@ -45,6 +48,30 @@ const DealList: React.FC = () => {
 			search: search || undefined
 		}));
 		dispatch(fetchPipelineSummary());
+	};
+
+	const handleAddDeal = () => {
+		setSelectedDealForEdit(null);
+		setDialogOpen(true);
+	};
+
+	const handleEditDeal = (deal: Deal) => {
+		setSelectedDealForEdit(deal);
+		setDialogOpen(true);
+	};
+
+	const handleDialogSubmit = async (data: any) => {
+		try {
+			if (selectedDealForEdit) {
+				await dispatch(updateDeal({ publicId: selectedDealForEdit.public_id, deal: data })).unwrap();
+			} else {
+				await dispatch(createDeal(data)).unwrap();
+			}
+			setDialogOpen(false);
+			handleRefresh();
+		} catch (error) {
+			console.error('Failed to save deal:', error);
+		}
 	};
 
 	const columns = [
@@ -119,6 +146,7 @@ const DealList: React.FC = () => {
 				variant="contained"
 				color="primary"
 				startIcon={<AddIcon />}
+				onClick={handleAddDeal}
 				sx={{ px: 3 }}
 			>
 				New Deal
@@ -200,7 +228,15 @@ const DealList: React.FC = () => {
 				}}
 				loading={loading}
 				emptyMessage="No deals found. Open a new deal to track your sales."
-				onRowClick={(row) => console.log('Clicked Deal', row.public_id)}
+				onRowClick={(row) => handleEditDeal(row)}
+			/>
+
+			<DealFormDialog
+				open={dialogOpen}
+				onClose={() => setDialogOpen(false)}
+				onSubmit={handleDialogSubmit}
+				deal={selectedDealForEdit}
+				loading={loading}
 			/>
 		</Box>
 	);

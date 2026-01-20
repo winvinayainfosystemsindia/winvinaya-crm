@@ -50,6 +50,7 @@ class LeadUpdate(BaseModel):
 
 
 class LeadRead(LeadBase):
+    id: int
     public_id: UUID
     converted_to_deal_id: Optional[int] = None
     conversion_date: Optional[datetime] = None

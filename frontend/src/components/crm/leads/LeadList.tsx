@@ -9,8 +9,9 @@ import {
 	Person as PersonIcon
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
-import { fetchLeads, fetchLeadStats } from '../../../store/slices/leadSlice';
+import { fetchLeads, fetchLeadStats, createLead, updateLead } from '../../../store/slices/leadSlice';
 import CRMPageHeader from '../common/CRMPageHeader';
+import LeadFormDialog from './LeadFormDialog';
 import CRMTable from '../common/CRMTable';
 import CRMStatsCard from '../common/CRMStatsCard';
 import CRMStatusBadge from '../common/CRMStatusBadge';
@@ -23,6 +24,8 @@ const LeadList: React.FC = () => {
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [search, setSearch] = useState('');
+	const [dialogOpen, setDialogOpen] = useState(false);
+	const [selectedLeadForEdit, setSelectedLeadForEdit] = useState<Lead | null>(null);
 
 	useEffect(() => {
 		dispatch(fetchLeads({
@@ -45,6 +48,30 @@ const LeadList: React.FC = () => {
 			search: search || undefined
 		}));
 		dispatch(fetchLeadStats());
+	};
+
+	const handleAddLead = () => {
+		setSelectedLeadForEdit(null);
+		setDialogOpen(true);
+	};
+
+	const handleEditLead = (lead: Lead) => {
+		setSelectedLeadForEdit(lead);
+		setDialogOpen(true);
+	};
+
+	const handleDialogSubmit = async (data: any) => {
+		try {
+			if (selectedLeadForEdit) {
+				await dispatch(updateLead({ publicId: selectedLeadForEdit.public_id, lead: data })).unwrap();
+			} else {
+				await dispatch(createLead(data)).unwrap();
+			}
+			setDialogOpen(false);
+			handleRefresh();
+		} catch (error) {
+			console.error('Failed to save lead:', error);
+		}
 	};
 
 	const getScoreColor = (score: number) => {
@@ -141,6 +168,7 @@ const LeadList: React.FC = () => {
 				variant="contained"
 				color="primary"
 				startIcon={<AddIcon />}
+				onClick={handleAddLead}
 				sx={{ px: 3 }}
 			>
 				Add Lead
@@ -222,7 +250,15 @@ const LeadList: React.FC = () => {
 				}}
 				loading={loading}
 				emptyMessage="No leads found. Start by adding a new lead."
-				onRowClick={(row) => console.log('Clicked Lead', row.public_id)}
+				onRowClick={(row) => handleEditLead(row)}
+			/>
+
+			<LeadFormDialog
+				open={dialogOpen}
+				onClose={() => setDialogOpen(false)}
+				onSubmit={handleDialogSubmit}
+				lead={selectedLeadForEdit}
+				loading={loading}
 			/>
 		</Box>
 	);

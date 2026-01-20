@@ -44,6 +44,7 @@ class CRMTaskUpdate(BaseModel):
 
 
 class CRMTaskRead(CRMTaskBase):
+    id: int
     public_id: UUID
     created_by: int
     completed_date: Optional[datetime] = None

@@ -1,9 +1,10 @@
 export type CRMTaskType = 'call' | 'email' | 'meeting' | 'follow_up' | 'demo' | 'proposal' | 'other';
 export type CRMTaskPriority = 'low' | 'medium' | 'high' | 'urgent';
-export type CRMTaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'deferred';
+export type CRMTaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
 export type CRMRelatedToType = 'lead' | 'deal' | 'company' | 'contact';
 
 export interface CRMTask {
+	id: number;
 	public_id: string;
 	title: string;
 	description?: string;

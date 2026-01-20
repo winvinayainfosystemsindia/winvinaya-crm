@@ -1,10 +1,11 @@
 import type { Company } from './company';
 import type { Contact } from './contact';
 
-export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'proposal_sent' | 'negotiation' | 'converted' | 'lost' | 'nurturing';
-export type LeadSource = 'inbound' | 'outbound' | 'referral' | 'partner' | 'event' | 'other';
+export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'unqualified' | 'lost';
+export type LeadSource = 'website' | 'referral' | 'campaign' | 'event' | 'cold_call' | 'social_media' | 'partner';
 
 export interface Lead {
+	id: number;
 	public_id: string;
 	company_id?: number;
 	contact_id?: number;

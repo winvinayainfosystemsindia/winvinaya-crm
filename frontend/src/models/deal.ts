@@ -1,10 +1,11 @@
 import type { Company } from './company';
 import type { Contact } from './contact';
 
-export type DealStage = 'prospecting' | 'qualification' | 'proposal' | 'negotiation' | 'closed_won' | 'closed_lost' | 'on_hold';
-export type DealType = 'new_business' | 'upsell' | 'renewal' | 'expansion';
+export type DealStage = 'discovery' | 'qualification' | 'proposal' | 'negotiation' | 'closed_won' | 'closed_lost';
+export type DealType = 'new_business' | 'upsell' | 'renewal' | 'cross_sell';
 
 export interface Deal {
+	id: number;
 	public_id: string;
 	company_id?: number;
 	contact_id?: number;

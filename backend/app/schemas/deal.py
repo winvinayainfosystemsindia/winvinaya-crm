@@ -59,6 +59,7 @@ class DealUpdate(BaseModel):
 
 
 class DealRead(DealBase):
+    id: int
     public_id: UUID
     actual_close_date: Optional[date] = None
     created_at: datetime

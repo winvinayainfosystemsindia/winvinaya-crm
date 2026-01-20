@@ -9,9 +9,10 @@ import {
 	PriorityHigh as PriorityIcon
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
-import { fetchCRMTasks, updateCRMTask } from '../../../store/slices/crmTaskSlice';
+import { fetchCRMTasks, updateCRMTask, createCRMTask } from '../../../store/slices/crmTaskSlice';
 import CRMPageHeader from '../common/CRMPageHeader';
 import CRMTable from '../common/CRMTable';
+import CRMTaskFormDialog from './CRMTaskFormDialog';
 import type { CRMTask } from '../../../models/crmTask';
 
 const CRMTaskList: React.FC = () => {
@@ -21,6 +22,8 @@ const CRMTaskList: React.FC = () => {
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [search, setSearch] = useState('');
+	const [dialogOpen, setDialogOpen] = useState(false);
+	const [selectedTaskForEdit, setSelectedTaskForEdit] = useState<CRMTask | null>(null);
 
 	useEffect(() => {
 		dispatch(fetchCRMTasks({
@@ -43,12 +46,36 @@ const CRMTaskList: React.FC = () => {
 		}));
 	};
 
+	const handleAddTask = () => {
+		setSelectedTaskForEdit(null);
+		setDialogOpen(true);
+	};
+
+	const handleEditTask = (task: CRMTask) => {
+		setSelectedTaskForEdit(task);
+		setDialogOpen(true);
+	};
+
+	const handleDialogSubmit = async (data: any) => {
+		try {
+			if (selectedTaskForEdit) {
+				await dispatch(updateCRMTask({ publicId: selectedTaskForEdit.public_id, task: data })).unwrap();
+			} else {
+				await dispatch(createCRMTask(data)).unwrap();
+			}
+			setDialogOpen(false);
+			handleRefresh();
+		} catch (error) {
+			console.error('Failed to save task:', error);
+		}
+	};
+
 	const handleToggleComplete = async (task: CRMTask) => {
 		const newStatus = task.status === 'completed' ? 'pending' : 'completed';
 		await dispatch(updateCRMTask({
 			publicId: task.public_id,
 			task: { status: newStatus }
-		}));
+		})).unwrap();
 		handleRefresh();
 	};
 
@@ -171,6 +198,7 @@ const CRMTaskList: React.FC = () => {
 							variant="contained"
 							color="primary"
 							startIcon={<AddIcon />}
+							onClick={handleAddTask}
 							sx={{ px: 3 }}
 						>
 							Create Task
@@ -219,7 +247,15 @@ const CRMTaskList: React.FC = () => {
 				}}
 				loading={loading}
 				emptyMessage="No tasks found. Stay on top of your deals by creating tasks."
-				onRowClick={(row) => console.log('Clicked Task', row.public_id)}
+				onRowClick={(row) => handleEditTask(row)}
+			/>
+
+			<CRMTaskFormDialog
+				open={dialogOpen}
+				onClose={() => setDialogOpen(false)}
+				onSubmit={handleDialogSubmit}
+				task={selectedTaskForEdit}
+				loading={loading}
 			/>
 		</Box>
 	);
