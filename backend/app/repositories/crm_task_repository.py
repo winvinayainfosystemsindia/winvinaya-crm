@@ -19,7 +19,9 @@ class CRMTaskRepository(BaseRepository[CRMTask]):
     async def get_by_public_id(self, public_id: UUID) -> Optional[CRMTask]:
         """Get task by public_id (UUID)"""
         result = await self.db.execute(
-            select(CRMTask).where(CRMTask.public_id == public_id)
+            select(CRMTask)
+            .where(CRMTask.public_id == public_id)
+            .options(joinedload(CRMTask.assigned_user))
         )
         return result.scalars().first()
     

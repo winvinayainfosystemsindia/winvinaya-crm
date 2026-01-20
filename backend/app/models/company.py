@@ -2,10 +2,19 @@
 
 import uuid
 import enum
-from sqlalchemy import String, JSON, Enum
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import String, JSON, Enum, and_
+from sqlalchemy.orm import Mapped, mapped_column, relationship, foreign, remote
+from app.models.crm_task import CRMRelatedToType
 from sqlalchemy.dialects.postgresql import UUID
 from app.models.base import BaseModel
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.contact import Contact
+    from app.models.lead import Lead
+    from app.models.deal import Deal
+    from app.models.crm_activity_log import CRMActivityLog
+    from app.models.crm_task import CRMTask
 
 
 class CompanySize(str, enum.Enum):
@@ -122,6 +131,14 @@ class Company(BaseModel):
         "CRMActivityLog",
         foreign_keys="CRMActivityLog.entity_id",
         primaryjoin="and_(Company.id==CRMActivityLog.entity_id, CRMActivityLog.entity_type=='company')",
+        cascade="all, delete-orphan",
+        viewonly=True,
+    )
+    
+    tasks: Mapped[list["CRMTask"]] = relationship(
+        "CRMTask",
+        foreign_keys="CRMTask.related_to_id",
+        primaryjoin="and_(Company.id==CRMTask.related_to_id, CRMTask.related_to_type=='company')",
         cascade="all, delete-orphan",
         viewonly=True,
     )

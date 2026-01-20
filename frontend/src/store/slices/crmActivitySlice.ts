@@ -51,6 +51,17 @@ export const fetchActivityById = createAsyncThunk(
 	}
 );
 
+export const createActivity = createAsyncThunk(
+	'crmActivities/create',
+	async (activity: Partial<CRMActivityLog>, { rejectWithValue }) => {
+		try {
+			return await crmActivityService.create(activity);
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.detail || 'Failed to create activity');
+		}
+	}
+);
+
 const crmActivitySlice = createSlice({
 	name: 'crmActivities',
 	initialState,
@@ -83,6 +94,10 @@ const crmActivitySlice = createSlice({
 			})
 			.addCase(fetchActivityById.fulfilled, (state, action: PayloadAction<CRMActivityLog>) => {
 				state.selectedActivity = action.payload;
+			})
+			.addCase(createActivity.fulfilled, (state, action: PayloadAction<CRMActivityLog>) => {
+				state.list.unshift(action.payload);
+				state.total += 1;
 			});
 	}
 });

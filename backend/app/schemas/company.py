@@ -6,6 +6,10 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from app.models.company import CompanySize, CompanyStatus
 from app.schemas.contact import ContactRead
+from app.schemas.lead import LeadRead
+from app.schemas.deal import DealRead
+from app.schemas.crm_task import CRMTaskRead
+from app.schemas.crm_activity_log import CRMActivityLogRead
 
 
 class CompanyBase(BaseModel):
@@ -47,8 +51,12 @@ class CompanyRead(CompanyBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-class CompanyWithContacts(CompanyRead):
+class CompanyDetailRead(CompanyRead):
     contacts: list[ContactRead] = []
+    leads: list[LeadRead] = []
+    deals: list[DealRead] = []
+    tasks: list[CRMTaskRead] = []
+    crm_activities: list[CRMActivityLogRead] = []
 
 
 class CompanyStats(BaseModel):

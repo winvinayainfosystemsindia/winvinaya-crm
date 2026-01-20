@@ -6,6 +6,10 @@ from sqlalchemy import select, func, or_
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.company import Company, CompanyStatus
+from app.models.lead import Lead
+from app.models.deal import Deal
+from app.models.crm_task import CRMTask
+from app.models.crm_activity_log import CRMActivityLog
 from app.repositories.base import BaseRepository
 
 
@@ -24,16 +28,19 @@ class CompanyRepository(BaseRepository[Company]):
     
     async def get_by_public_id_with_details(self, public_id: UUID) -> Optional[Company]:
         """Get company by public_id with all related data"""
-        result = await self.db.execute(
+        stmt = (
             select(Company)
             .where(Company.public_id == public_id)
             .options(
                 selectinload(Company.contacts),
-                selectinload(Company.leads),
-                selectinload(Company.deals),
+                selectinload(Company.leads).selectinload(Lead.assigned_user),
+                selectinload(Company.deals).selectinload(Deal.assigned_user),
+                selectinload(Company.tasks).selectinload(CRMTask.assigned_user),
+                selectinload(Company.crm_activities).selectinload(CRMActivityLog.performer),
             )
         )
-        return result.scalars().first()
+        result = await self.db.execute(stmt)
+        return result.scalars().unique().first()
     
     async def get_by_email(self, email: str) -> Optional[Company]:
         """Get company by email"""

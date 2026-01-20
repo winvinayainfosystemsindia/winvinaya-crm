@@ -1,4 +1,7 @@
 import type { Contact } from './contact';
+import type { Lead } from './lead';
+import type { Deal } from './deal';
+import type { CRMTask } from './crmTask';
 
 export type CompanySize = 'micro' | 'small' | 'medium' | 'large' | 'enterprise';
 export type CompanyStatus = 'active' | 'inactive' | 'prospect' | 'customer';
@@ -17,6 +20,10 @@ export interface Company {
 	social_media?: Record<string, any>;
 	custom_fields?: Record<string, any>;
 	contacts?: Contact[];
+	leads?: Lead[];
+	deals?: Deal[];
+	tasks?: CRMTask[];
+	crm_activities?: any[];
 	created_at: string;
 	updated_at: string;
 }

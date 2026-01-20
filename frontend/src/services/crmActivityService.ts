@@ -15,6 +15,10 @@ export const crmActivityService = {
 	getById: async (publicId: string): Promise<CRMActivityLog> => {
 		const response = await api.get<CRMActivityLog>(`/crm/activities/${publicId}`);
 		return response.data;
+	},
+	create: async (activity: Partial<CRMActivityLog>): Promise<CRMActivityLog> => {
+		const response = await api.post<CRMActivityLog>('/crm/activities', activity);
+		return response.data;
 	}
 };
 

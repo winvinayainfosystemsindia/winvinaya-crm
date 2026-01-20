@@ -100,7 +100,8 @@ class CRMTaskService:
                 "summary": f"Task completed: {task.title}"
             })
             
-        return updated_task
+        # Re-fetch with details to avoid session errors during serialization
+        return await self.get_task(public_id)
 
     async def delete_task(self, public_id: UUID, user_id: int) -> bool:
         """Delete task (soft delete)"""

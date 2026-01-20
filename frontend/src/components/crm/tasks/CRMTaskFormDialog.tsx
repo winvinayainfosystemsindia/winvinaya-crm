@@ -37,6 +37,7 @@ interface CRMTaskFormDialogProps {
 	onClose: () => void;
 	onSubmit: (data: CRMTaskCreate | CRMTaskUpdate) => void;
 	task?: CRMTask | null;
+	initialData?: Partial<CRMTaskCreate>;
 	loading?: boolean;
 }
 
@@ -76,6 +77,7 @@ const CRMTaskFormDialog: React.FC<CRMTaskFormDialogProps> = ({
 	onClose,
 	onSubmit,
 	task,
+	initialData,
 	loading = false
 }) => {
 	const dispatch = useAppDispatch();
@@ -114,6 +116,18 @@ const CRMTaskFormDialog: React.FC<CRMTaskFormDialogProps> = ({
 				...task,
 				due_date: task.due_date ? task.due_date.replace('Z', '').replace(' ', 'T').slice(0, 16) : ''
 			});
+		} else if (initialData) {
+			setFormData({
+				title: '',
+				description: '',
+				task_type: 'follow_up',
+				priority: 'medium',
+				status: 'pending',
+				assigned_to: 0,
+				due_date: '',
+				reminder_before_minutes: 30,
+				...initialData
+			});
 		} else {
 			setFormData({
 				title: '',
@@ -128,7 +142,7 @@ const CRMTaskFormDialog: React.FC<CRMTaskFormDialogProps> = ({
 				reminder_before_minutes: 30
 			});
 		}
-	}, [task, open]);
+	}, [task, initialData, open]);
 
 	const handleChange = (field: string, value: any) => {
 		setFormData(prev => ({ ...prev, [field]: value }));
