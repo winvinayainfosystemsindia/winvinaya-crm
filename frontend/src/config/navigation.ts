@@ -1,7 +1,7 @@
 import {
 	Home as HomeIcon,
 	ManageAccounts as UserIcon,
-	Dashboard as DashboardIcon,
+	// Dashboard as DashboardIcon,
 	FilterCenterFocus as LeadIcon,
 	Handshake as DealIcon,
 	Business as BusinessIcon,
@@ -41,11 +41,11 @@ export const topNavigation: NavigationItem[] = [
 		label: 'CRM',
 		icon: DealIcon,
 		children: [
-			{ label: 'Dashboard', path: '/crm/dashboard', icon: DashboardIcon },
-			{ label: 'Leads', path: '/crm/leads', icon: LeadIcon },
-			{ label: 'Deals', path: '/crm/deals', icon: DealIcon },
+			// { label: 'Dashboard', path: '/crm/dashboard', icon: DashboardIcon },
 			{ label: 'Companies', path: '/crm/companies', icon: BusinessIcon },
 			{ label: 'Contacts', path: '/crm/contacts', icon: PersonIcon },
+			{ label: 'Leads', path: '/crm/leads', icon: LeadIcon },
+			{ label: 'Deals', path: '/crm/deals', icon: DealIcon },
 			{ label: 'Tasks', path: '/crm/tasks', icon: TaskIcon },
 		],
 	},

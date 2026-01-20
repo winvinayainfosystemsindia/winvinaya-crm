@@ -6,7 +6,8 @@ import {
 	FilterList as FilterIcon,
 	Refresh as RefreshIcon,
 	Handshake as DealIcon,
-	TrendingUp as TrendIcon
+	TrendingUp as TrendIcon,
+	Person as PersonIcon
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchDeals, fetchPipelineSummary, createDeal, updateDeal } from '../../../store/slices/dealSlice';
@@ -20,6 +21,9 @@ import type { Deal } from '../../../models/deal';
 const DealList: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const { list, total, pipeline, loading } = useAppSelector((state) => state.deals);
+	const { user: currentUser } = useAppSelector((state) => state.auth);
+
+	const isManager = currentUser?.role === 'manager' || currentUser?.role === 'admin' || currentUser?.role === 'sales_manager';
 
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -129,6 +133,17 @@ const DealList: React.FC = () => {
 			label: 'Expected Close',
 			minWidth: 150,
 			format: (value: string) => value ? new Date(value).toLocaleDateString() : '-'
+		},
+		{
+			id: 'assigned_user',
+			label: 'Owner',
+			minWidth: 150,
+			format: (value: any) => (
+				<Stack direction="row" spacing={1} alignItems="center">
+					<PersonIcon sx={{ fontSize: 16, color: '#aab7b7' }} />
+					<Typography variant="body2">{value?.full_name || 'Unassigned'}</Typography>
+				</Stack>
+			)
 		}
 	];
 
@@ -142,15 +157,17 @@ const DealList: React.FC = () => {
 			>
 				Refresh
 			</Button>
-			<Button
-				variant="contained"
-				color="primary"
-				startIcon={<AddIcon />}
-				onClick={handleAddDeal}
-				sx={{ px: 3 }}
-			>
-				New Deal
-			</Button>
+			{isManager && (
+				<Button
+					variant="contained"
+					color="primary"
+					startIcon={<AddIcon />}
+					onClick={handleAddDeal}
+					sx={{ px: 3 }}
+				>
+					New Deal
+				</Button>
+			)}
 		</>
 	);
 

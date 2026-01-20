@@ -6,7 +6,8 @@ import {
 	FilterList as FilterIcon,
 	Refresh as RefreshIcon,
 	Schedule as DueIcon,
-	PriorityHigh as PriorityIcon
+	PriorityHigh as PriorityIcon,
+	Person as PersonIcon
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchCRMTasks, updateCRMTask, createCRMTask } from '../../../store/slices/crmTaskSlice';
@@ -18,6 +19,9 @@ import type { CRMTask } from '../../../models/crmTask';
 const CRMTaskList: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const { list, total, loading } = useAppSelector((state) => state.crmTasks);
+	const { user: currentUser } = useAppSelector((state) => state.auth);
+
+	const isManager = currentUser?.role === 'manager' || currentUser?.role === 'admin' || currentUser?.role === 'sales_manager';
 
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -173,10 +177,15 @@ const CRMTaskList: React.FC = () => {
 			}
 		},
 		{
-			id: 'assigned_to_user',
+			id: 'assigned_user',
 			label: 'Assigned To',
 			minWidth: 150,
-			format: (value: any) => value?.full_name || 'Unassigned'
+			format: (value: any) => (
+				<Stack direction="row" spacing={1} alignItems="center">
+					<PersonIcon sx={{ fontSize: 16, color: '#aab7b7' }} />
+					<Typography variant="body2">{value?.full_name || 'Unassigned'}</Typography>
+				</Stack>
+			)
 		}
 	];
 
@@ -194,15 +203,17 @@ const CRMTaskList: React.FC = () => {
 						>
 							Refresh
 						</Button>
-						<Button
-							variant="contained"
-							color="primary"
-							startIcon={<AddIcon />}
-							onClick={handleAddTask}
-							sx={{ px: 3 }}
-						>
-							Create Task
-						</Button>
+						{isManager && (
+							<Button
+								variant="contained"
+								color="primary"
+								startIcon={<AddIcon />}
+								onClick={handleAddTask}
+								sx={{ px: 3 }}
+							>
+								Create Task
+							</Button>
+						)}
 					</>
 				}
 			/>

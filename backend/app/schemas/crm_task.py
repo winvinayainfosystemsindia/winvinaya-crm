@@ -5,6 +5,7 @@ from uuid import UUID
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 from app.models.crm_task import CRMTaskStatus, CRMTaskType, CRMTaskPriority, CRMRelatedToType
+from app.schemas.user import UserResponse
 
 
 class CRMTaskBase(BaseModel):
@@ -46,6 +47,7 @@ class CRMTaskUpdate(BaseModel):
 class CRMTaskRead(CRMTaskBase):
     id: int
     public_id: UUID
+    assigned_user: Optional[UserResponse] = None
     created_by: int
     completed_date: Optional[datetime] = None
     is_reminder_sent: bool

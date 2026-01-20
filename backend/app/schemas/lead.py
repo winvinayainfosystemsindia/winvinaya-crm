@@ -7,6 +7,7 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field
 from app.models.lead import LeadStatus, LeadSource
 from app.schemas.deal import DealRead
+from app.schemas.user import UserResponse
 
 
 class LeadBase(BaseModel):
@@ -52,6 +53,7 @@ class LeadUpdate(BaseModel):
 class LeadRead(LeadBase):
     id: int
     public_id: UUID
+    assigned_user: Optional[UserResponse] = None
     converted_to_deal_id: Optional[int] = None
     conversion_date: Optional[datetime] = None
     created_at: datetime

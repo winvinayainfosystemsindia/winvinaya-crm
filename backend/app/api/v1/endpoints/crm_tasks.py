@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api import deps
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.models.crm_task import CRMTaskStatus, CRMTaskPriority, CRMRelatedToType
 from app.schemas.crm_task import CRMTaskCreate, CRMTaskUpdate, CRMTaskRead, CRMTaskListResponse
 from app.services.crm_task_service import CRMTaskService
@@ -53,7 +53,7 @@ async def get_tasks(
 async def create_task(
     task_in: CRMTaskCreate,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user)
+    current_user: User = Depends(deps.require_roles([UserRole.MANAGER, UserRole.ADMIN, UserRole.SALES_MANAGER]))
 ) -> Any:
     """Create a new task"""
     service = CRMTaskService(db)
@@ -100,7 +100,7 @@ async def get_tasks_for_entity(
 async def delete_task(
     public_id: UUID,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user)
+    current_user: User = Depends(deps.require_roles([UserRole.MANAGER, UserRole.ADMIN, UserRole.SALES_MANAGER]))
 ) -> Any:
     """Delete task"""
     service = CRMTaskService(db)

@@ -20,6 +20,9 @@ import type { Lead } from '../../../models/lead';
 const LeadList: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const { list, total, stats, loading } = useAppSelector((state) => state.leads);
+	const { user: currentUser } = useAppSelector((state) => state.auth);
+
+	const isManager = currentUser?.role === 'manager' || currentUser?.role === 'admin' || currentUser?.role === 'sales_manager';
 
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -130,7 +133,7 @@ const LeadList: React.FC = () => {
 			)
 		},
 		{
-			id: 'assigned_to_user',
+			id: 'assigned_user',
 			label: 'Owner',
 			minWidth: 150,
 			format: (value: any) => (
@@ -164,15 +167,17 @@ const LeadList: React.FC = () => {
 			>
 				Refresh
 			</Button>
-			<Button
-				variant="contained"
-				color="primary"
-				startIcon={<AddIcon />}
-				onClick={handleAddLead}
-				sx={{ px: 3 }}
-			>
-				Add Lead
-			</Button>
+			{isManager && (
+				<Button
+					variant="contained"
+					color="primary"
+					startIcon={<AddIcon />}
+					onClick={handleAddLead}
+					sx={{ px: 3 }}
+				>
+					Add Lead
+				</Button>
+			)}
 		</>
 	);
 

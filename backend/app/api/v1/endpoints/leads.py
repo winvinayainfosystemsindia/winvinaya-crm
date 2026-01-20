@@ -5,8 +5,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api import deps
-from app.models.user import User
 from app.models.lead import LeadStatus, LeadSource
+from app.models.user import User, UserRole
 from app.schemas.lead import LeadCreate, LeadUpdate, LeadRead, LeadListResponse, LeadConversionResponse
 from app.services.lead_service import LeadService
 
@@ -49,7 +49,7 @@ async def get_leads(
 async def create_lead(
     lead_in: LeadCreate,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user)
+    current_user: User = Depends(deps.require_roles([UserRole.MANAGER, UserRole.ADMIN, UserRole.SALES_MANAGER]))
 ) -> Any:
     """Create a new lead"""
     service = LeadService(db)
@@ -107,7 +107,7 @@ async def convert_lead(
 async def delete_lead(
     public_id: UUID,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user)
+    current_user: User = Depends(deps.require_roles([UserRole.MANAGER, UserRole.ADMIN, UserRole.SALES_MANAGER]))
 ) -> Any:
     """Delete lead"""
     service = LeadService(db)

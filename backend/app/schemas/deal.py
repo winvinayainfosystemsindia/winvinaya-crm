@@ -6,6 +6,7 @@ from datetime import datetime, date
 from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field
 from app.models.deal import DealStage, DealType
+from app.schemas.user import UserResponse
 
 
 class DealBase(BaseModel):
@@ -61,6 +62,7 @@ class DealUpdate(BaseModel):
 class DealRead(DealBase):
     id: int
     public_id: UUID
+    assigned_user: Optional[UserResponse] = None
     actual_close_date: Optional[date] = None
     created_at: datetime
     updated_at: datetime

@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api import deps
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.models.deal import DealStage, DealType
 from app.schemas.deal import DealCreate, DealUpdate, DealRead, DealListResponse
 from app.services.deal_service import DealService
@@ -46,7 +46,7 @@ async def get_deals(
 async def create_deal(
     deal_in: DealCreate,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user)
+    current_user: User = Depends(deps.require_roles([UserRole.MANAGER, UserRole.ADMIN, UserRole.SALES_MANAGER]))
 ) -> Any:
     """Create a new deal"""
     service = DealService(db)
@@ -92,7 +92,7 @@ async def update_deal(
 async def delete_deal(
     public_id: UUID,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user)
+    current_user: User = Depends(deps.require_roles([UserRole.MANAGER, UserRole.ADMIN, UserRole.SALES_MANAGER]))
 ) -> Any:
     """Delete deal"""
     service = DealService(db)
