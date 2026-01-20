@@ -62,36 +62,29 @@ const CounselingList: React.FC = () => {
 	};
 
 	const handleAction = async (action: 'counsel' | 'edit', candidate: CandidateListItem) => {
-		if (action === 'counsel') {
-			// New counseling
-			setSelectedCandidate(candidate);
-			setInitialFormData(undefined); // Reset form
-			setDialogOpen(true);
-		} else if (action === 'edit') {
-			try {
-				// Fetch full candidate details to get existing counseling data
-				// We use the service directly for fetch or we could use dispatch(fetchCandidateById)
-				// Since we need the result immediately to populate the form, let's use the thunk result
-				const resultAction = await dispatch(fetchCandidateById({ publicId: candidate.public_id, withDetails: true }));
+		try {
+			// Fetch full candidate details to get existing counseling/work experience data
+			const resultAction = await dispatch(fetchCandidateById({ publicId: candidate.public_id, withDetails: true }));
 
-				if (fetchCandidateById.fulfilled.match(resultAction)) {
-					const fullCandidate = resultAction.payload;
-					setSelectedCandidate(fullCandidate);
+			if (fetchCandidateById.fulfilled.match(resultAction)) {
+				const fullCandidate = resultAction.payload;
+				setSelectedCandidate(fullCandidate);
 
-					if (fullCandidate.counseling) {
-						setInitialFormData({
-							...fullCandidate.counseling
-						} as CandidateCounselingCreate);
-					} else {
-						setInitialFormData(undefined);
-					}
-					setDialogOpen(true);
+				if (action === 'counsel') {
+					setInitialFormData(undefined); // Reset form
+				} else if (action === 'edit' && fullCandidate.counseling) {
+					setInitialFormData({
+						...fullCandidate.counseling
+					} as CandidateCounselingCreate);
 				} else {
-					showSnackbar('Failed to fetch candidate details', 'error');
+					setInitialFormData(undefined);
 				}
-			} catch (error) {
-				showSnackbar('An error occurred while fetching details', 'error');
+				setDialogOpen(true);
+			} else {
+				showSnackbar('Failed to fetch candidate details', 'error');
 			}
+		} catch (error) {
+			showSnackbar('An error occurred while fetching details', 'error');
 		}
 	};
 
@@ -194,6 +187,7 @@ const CounselingList: React.FC = () => {
 				onSubmit={handleFormSubmit}
 				initialData={initialFormData}
 				candidateName={selectedCandidate?.name}
+				candidateWorkExperience={selectedCandidate?.work_experience}
 			/>
 
 			{/* Snackbar */}

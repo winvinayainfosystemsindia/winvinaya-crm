@@ -7,11 +7,19 @@ from pydantic import BaseModel
 
 # Counseling Schemas
 
+class CounselingWorkExperience(BaseModel):
+    job_title: Optional[str] = None
+    company: Optional[str] = None
+    years_of_experience: Optional[str] = None
+    currently_working: bool = False
+
+
 class CandidateCounselingBase(BaseModel):
     skills: Optional[List[dict]] = None
     feedback: Optional[str] = None
     questions: Optional[List[dict]] = None
     others: Optional[dict] = None
+    workexperience: Optional[List[CounselingWorkExperience]] = None
     counselor_name: Optional[str] = None
     status: str = "pending"  # 'pending', 'selected', 'rejected'
     counseling_date: Optional[datetime] = None
@@ -28,6 +36,7 @@ class CandidateCounselingUpdate(BaseModel):
     feedback: Optional[str] = None
     questions: Optional[List[dict]] = None
     others: Optional[dict] = None
+    workexperience: Optional[List[CounselingWorkExperience]] = None
     counselor_name: Optional[str] = None
     status: Optional[str] = None
     counselor_id: Optional[int] = None

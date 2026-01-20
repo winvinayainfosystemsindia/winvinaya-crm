@@ -21,6 +21,7 @@ import type { CandidateCounselingCreate } from '../../../models/candidate';
 
 // Tabs
 import SkillAssessmentTab from './tabs/SkillAssessmentTab';
+import WorkExperienceTab from './tabs/WorkExperienceTab';
 import InterviewFeedbackTab from './tabs/InterviewFeedbackTab';
 import CounselingInfoTab from './tabs/CounselingInfoTab';
 
@@ -43,6 +44,7 @@ interface CounselingFormDialogProps {
 	onSubmit: (data: CandidateCounselingCreate) => void;
 	initialData?: CandidateCounselingCreate;
 	candidateName?: string;
+	candidateWorkExperience?: any;
 }
 
 interface TabPanelProps {
@@ -71,7 +73,8 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 	onClose,
 	onSubmit,
 	initialData,
-	candidateName
+	candidateName,
+	candidateWorkExperience
 }) => {
 	const dispatch = useAppDispatch();
 	const user = useAppSelector((state) => state.auth.user);
@@ -87,7 +90,8 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 		status: 'pending',
 		counselor_name: '',
 		counseling_date: new Date().toISOString().split('T')[0],
-		others: {}
+		others: {},
+		workexperience: []
 	});
 
 	useEffect(() => {
@@ -101,6 +105,7 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 					skills: initialData.skills || [],
 					questions: initialData.questions || [],
 					others: initialData.others || {},
+					workexperience: initialData.workexperience || [],
 					counseling_date: initialData.counseling_date ? initialData.counseling_date.split('T')[0] : new Date().toISOString().split('T')[0]
 				});
 			} else {
@@ -115,7 +120,8 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 					status: 'pending',
 					counselor_name: user ? (user.full_name || user.username) : '',
 					counseling_date: new Date().toISOString().split('T')[0],
-					others: {}
+					others: {},
+					workexperience: []
 				});
 			}
 		}
@@ -137,6 +143,26 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 				[name]: value
 			}
 		}));
+	};
+
+	const handleUpdateWorkExpField = (index: number, name: string, value: any) => {
+		const newWorkExp = [...(formData.workexperience || [])];
+		newWorkExp[index] = { ...newWorkExp[index], [name]: value };
+		handleChange('workexperience', newWorkExp);
+	};
+
+	const handleAddWorkExp = () => {
+		const newWorkExp = [
+			...(formData.workexperience || []),
+			{ job_title: '', company: '', years_of_experience: '', currently_working: false }
+		];
+		handleChange('workexperience', newWorkExp);
+	};
+
+	const handleRemoveWorkExp = (index: number) => {
+		const newWorkExp = [...(formData.workexperience || [])];
+		newWorkExp.splice(index, 1);
+		handleChange('workexperience', newWorkExp);
 	};
 
 	const handleAddSkill = () => {
@@ -232,8 +258,9 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 						}}
 					>
 						<Tab label="1. Skill Assessment" />
-						<Tab label="2. Interview & Feedback" />
-						<Tab label="3. Counseling Info" />
+						<Tab label="2. Work Experience" />
+						<Tab label="3. Interview & Feedback" />
+						<Tab label="4. Counseling Info" />
 					</Tabs>
 				</Box>
 
@@ -255,6 +282,16 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 							</TabPanel>
 
 							<TabPanel value={tabValue} index={1}>
+								<WorkExperienceTab
+									formData={formData}
+									onAddWorkExp={handleAddWorkExp}
+									onRemoveWorkExp={handleRemoveWorkExp}
+									onWorkExpChange={handleUpdateWorkExpField}
+									candidateWorkExperience={candidateWorkExperience}
+								/>
+							</TabPanel>
+
+							<TabPanel value={tabValue} index={2}>
 								<InterviewFeedbackTab
 									formData={formData}
 									onAddQuestion={handleAddQuestion}
@@ -264,7 +301,7 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 								/>
 							</TabPanel>
 
-							<TabPanel value={tabValue} index={2}>
+							<TabPanel value={tabValue} index={3}>
 								<CounselingInfoTab
 									formData={formData}
 									onFieldChange={handleChange}

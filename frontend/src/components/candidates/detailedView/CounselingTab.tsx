@@ -8,7 +8,8 @@ import {
 	Event as EventIcon,
 	RecordVoiceOver as CounselorIcon,
 	AssignmentTurnedIn as StatusIcon,
-	QuestionAnswer as QuestionIcon
+	QuestionAnswer as QuestionIcon,
+	Work as WorkIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { InfoRow, SectionHeader } from './DetailedViewCommon';
@@ -136,6 +137,49 @@ const CounselingTab: React.FC<CounselingTabProps> = ({ candidate }) => {
 								)) || <Typography variant="caption" sx={{ color: 'text.secondary' }}>None listed</Typography>}
 							</Stack>
 						</Box>
+
+						{counseling.workexperience && counseling.workexperience.length > 0 && (
+							<Box sx={{ mb: 4 }}>
+								<Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+									<WorkIcon sx={{ fontSize: 20, mr: 1, color: '#545b64' }} />
+									<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e' }}>
+										Counseling Work Experience
+									</Typography>
+								</Box>
+								<Stack spacing={2}>
+									{counseling.workexperience.map((exp, idx) => (
+										<Box
+											key={idx}
+											sx={{
+												p: 2,
+												bgcolor: 'white',
+												border: '1px solid #eaeded',
+												borderRadius: 1,
+												boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+											}}
+										>
+											<Typography variant="body2" sx={{ fontWeight: 700, color: '#ec7211', mb: 1 }}>
+												{exp.job_title || 'Role not specified'}
+											</Typography>
+											<Grid container spacing={2}>
+												<Grid size={{ xs: 12, sm: 4 }}>
+													<Typography variant="caption" color="text.secondary" display="block">Company</Typography>
+													<Typography variant="body2">{exp.company || '-'}</Typography>
+												</Grid>
+												<Grid size={{ xs: 12, sm: 4 }}>
+													<Typography variant="caption" color="text.secondary" display="block">Experience</Typography>
+													<Typography variant="body2">{exp.years_of_experience || '-'}</Typography>
+												</Grid>
+												<Grid size={{ xs: 12, sm: 4 }}>
+													<Typography variant="caption" color="text.secondary" display="block">Currently Working</Typography>
+													<Typography variant="body2">{exp.currently_working ? 'Yes' : 'No'}</Typography>
+												</Grid>
+											</Grid>
+										</Box>
+									))}
+								</Stack>
+							</Box>
+						)}
 					</Grid>
 
 					<Grid size={{ xs: 12, md: 5 }}>

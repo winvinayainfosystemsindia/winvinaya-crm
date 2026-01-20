@@ -25,6 +25,7 @@ class CandidateCounseling(BaseModel):
     feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
     questions: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     others: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    workexperience: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     counselor_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     
     status: Mapped[str] = mapped_column(

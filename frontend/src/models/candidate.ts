@@ -76,6 +76,13 @@ export interface CounselingQuestion {
 	answer: string;
 }
 
+export interface CounselingWorkExperience {
+	job_title?: string;
+	company?: string;
+	years_of_experience?: string;
+	currently_working?: boolean;
+}
+
 export interface CandidateCounseling {
 	id: number;
 	candidate_id: number;
@@ -83,6 +90,7 @@ export interface CandidateCounseling {
 	feedback?: string;
 	questions?: CounselingQuestion[];
 	others?: Record<string, any>;
+	workexperience?: CounselingWorkExperience[];
 	counselor_name?: string;
 	status: 'pending' | 'selected' | 'rejected';
 	counselor_id?: number;
@@ -96,6 +104,7 @@ export interface CandidateCounselingCreate {
 	feedback?: string;
 	questions?: CounselingQuestion[];
 	others?: Record<string, any>;
+	workexperience?: CounselingWorkExperience[];
 	counselor_name?: string;
 	status?: 'pending' | 'selected' | 'rejected';
 	counseling_date?: string;
