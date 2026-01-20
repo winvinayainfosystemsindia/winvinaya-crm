@@ -1,4 +1,3 @@
-import React from 'react';
 import {
 	Box,
 	Paper,
@@ -6,7 +5,9 @@ import {
 	InputAdornment,
 	Button,
 	Badge,
-	Typography
+	Typography,
+	useTheme,
+	useMediaQuery
 } from '@mui/material';
 import {
 	Search as SearchIcon,
@@ -30,6 +31,9 @@ const ReportToolbar: React.FC<ReportToolbarProps> = ({
 	onFilterClick,
 	children
 }) => {
+	const theme = useTheme();
+	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
 	return (
 		<Paper
 			elevation={0}
@@ -39,13 +43,21 @@ const ReportToolbar: React.FC<ReportToolbarProps> = ({
 				border: '1px solid #eaeded',
 				borderBottom: 'none',
 				display: 'flex',
+				flexDirection: isMobile ? 'column' : 'row',
 				justifyContent: 'space-between',
-				alignItems: 'center',
+				alignItems: isMobile ? 'stretch' : 'center',
 				backgroundColor: '#fff',
-				borderRadius: '4px 4px 0 0'
+				borderRadius: '4px 4px 0 0',
+				gap: isMobile ? 2 : 0
 			}}
 		>
-			<Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
+			<Box sx={{
+				display: 'flex',
+				flexDirection: isMobile ? 'column' : 'row',
+				alignItems: isMobile ? 'stretch' : 'center',
+				gap: 2,
+				flexGrow: 1
+			}}>
 				<TextField
 					placeholder="Search candidates..."
 					variant="outlined"
@@ -53,7 +65,7 @@ const ReportToolbar: React.FC<ReportToolbarProps> = ({
 					value={search}
 					onChange={(e) => onSearchChange(e.target.value)}
 					sx={{
-						width: 400,
+						width: isMobile ? '100%' : 400,
 						'& .MuiOutlinedInput-root': {
 							height: 32,
 							backgroundColor: '#fff',
@@ -69,46 +81,58 @@ const ReportToolbar: React.FC<ReportToolbarProps> = ({
 								<SearchIcon sx={{ color: '#545b64', fontSize: 18 }} />
 							</InputAdornment>
 						),
+						'aria-label': 'Search candidates'
 					}}
 				/>
-				<Button
-					variant="outlined"
-					startIcon={
-						<Badge
-							badgeContent={filterCount}
-							color="primary"
-							sx={{
-								'& .MuiBadge-badge': {
-									fontSize: '0.65rem',
-									height: 16,
-									minWidth: 16,
-									top: 2,
-									right: -2,
-									backgroundColor: '#007eb9'
-								}
-							}}
-						>
-							<FilterIcon sx={{ fontSize: 18 }} />
-						</Badge>
-					}
-					onClick={onFilterClick}
-					sx={{
-						height: 32,
-						borderColor: '#d5dbdb',
-						color: '#545b64',
-						textTransform: 'none',
-						fontSize: '0.85rem',
-						fontWeight: 500,
-						'&:hover': { borderColor: '#aab7b7', backgroundColor: '#f2f3f3' }
-					}}
-				>
-					Filter
-				</Button>
-				<Typography variant="body2" sx={{ color: '#545b64', ml: 1, fontWeight: 500 }}>
-					({total} candidates)
-				</Typography>
+				<Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+					<Button
+						variant="outlined"
+						startIcon={
+							<Badge
+								badgeContent={filterCount}
+								color="primary"
+								sx={{
+									'& .MuiBadge-badge': {
+										fontSize: '0.65rem',
+										height: 16,
+										minWidth: 16,
+										top: 2,
+										right: -2,
+										backgroundColor: '#007eb9'
+									}
+								}}
+							>
+								<FilterIcon sx={{ fontSize: 18 }} />
+							</Badge>
+						}
+						onClick={onFilterClick}
+						aria-label="Toggle filters"
+						sx={{
+							height: 32,
+							borderColor: '#d5dbdb',
+							color: '#545b64',
+							textTransform: 'none',
+							fontSize: '0.85rem',
+							fontWeight: 500,
+							flex: isMobile ? 1 : 'none',
+							'&:hover': { borderColor: '#aab7b7', backgroundColor: '#f2f3f3' }
+						}}
+					>
+						Filter
+					</Button>
+					<Typography variant="body2" sx={{ color: '#545b64', fontWeight: 500, whiteSpace: 'nowrap' }}>
+						({total} candidates)
+					</Typography>
+				</Box>
 			</Box>
-			<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+			<Box sx={{
+				display: 'flex',
+				alignItems: 'center',
+				gap: 1,
+				mt: isMobile ? 1 : 0,
+				width: isMobile ? '100%' : 'auto',
+				justifyContent: isMobile ? 'flex-start' : 'flex-end'
+			}}>
 				{children}
 			</Box>
 		</Paper>

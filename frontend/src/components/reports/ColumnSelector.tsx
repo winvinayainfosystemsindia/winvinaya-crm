@@ -7,7 +7,9 @@ import {
 	FormControlLabel,
 	Checkbox,
 	Menu,
-	Button
+	Button,
+	useTheme,
+	useMediaQuery
 } from '@mui/material';
 import { ViewColumn as ColumnIcon } from '@mui/icons-material';
 
@@ -33,8 +35,11 @@ const ColumnSelector: React.FC<ColumnSelectorProps> = ({
 	visibleColumns,
 	onToggleColumn
 }) => {
+	const theme = useTheme();
+	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
 	return (
-		<Box>
+		<Box sx={{ width: isMobile ? '100%' : 'auto' }}>
 			<Button
 				variant="outlined"
 				startIcon={<ColumnIcon />}
@@ -42,6 +47,7 @@ const ColumnSelector: React.FC<ColumnSelectorProps> = ({
 				size="small"
 				sx={{
 					height: 32,
+					width: isMobile ? '100%' : 'auto',
 					borderColor: '#d5dbdb',
 					color: '#545b64',
 					textTransform: 'none',

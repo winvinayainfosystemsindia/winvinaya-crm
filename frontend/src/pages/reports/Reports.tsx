@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Box } from '@mui/material';
+import { Box, useTheme, useMediaQuery } from '@mui/material';
 import { format } from 'date-fns';
 import * as XLSX from 'xlsx';
 
@@ -50,6 +50,8 @@ const ALL_COLUMNS = [
 ];
 
 const Reports: React.FC = () => {
+	const theme = useTheme();
+	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const dispatch = useAppDispatch();
 	const { list: candidates, total, loading, filterOptions } = useAppSelector((state) => state.candidates);
 
@@ -228,7 +230,7 @@ const Reports: React.FC = () => {
 		}}>
 			{/* Persistent Header & Toolbar */}
 			<Box sx={{
-				p: 3,
+				p: isMobile ? 1.5 : 3,
 				pb: 1,
 				zIndex: 10,
 				backgroundColor: '#f8f9fa',
@@ -264,7 +266,7 @@ const Reports: React.FC = () => {
 			<Box sx={{
 				flex: 1,
 				overflow: 'hidden',
-				p: 3,
+				p: isMobile ? 1.5 : 3,
 				pt: 0,
 				display: 'flex',
 				flexDirection: 'column'
