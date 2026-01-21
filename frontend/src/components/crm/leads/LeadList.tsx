@@ -15,6 +15,7 @@ import LeadFormDialog from './LeadFormDialog';
 import CRMTable from '../common/CRMTable';
 import CRMStatsCard from '../common/CRMStatsCard';
 import CRMStatusBadge from '../common/CRMStatusBadge';
+import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
 import type { Lead } from '../../../models/lead';
 
 const LeadList: React.FC = () => {
@@ -27,6 +28,10 @@ const LeadList: React.FC = () => {
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [search, setSearch] = useState('');
+	const [sortBy, setSortBy] = useState('lead_score');
+	const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+	const [activeFilters, setActiveFilters] = useState<Record<string, any>>({});
+	const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [selectedLeadForEdit, setSelectedLeadForEdit] = useState<Lead | null>(null);
 
@@ -34,10 +39,13 @@ const LeadList: React.FC = () => {
 		dispatch(fetchLeads({
 			skip: page * rowsPerPage,
 			limit: rowsPerPage,
-			search: search || undefined
+			search: search || undefined,
+			sortBy,
+			sortOrder,
+			...activeFilters
 		}));
 		dispatch(fetchLeadStats());
-	}, [dispatch, page, rowsPerPage, search]);
+	}, [dispatch, page, rowsPerPage, search, sortBy, sortOrder, activeFilters]);
 
 	const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setSearch(event.target.value);
@@ -48,7 +56,10 @@ const LeadList: React.FC = () => {
 		dispatch(fetchLeads({
 			skip: page * rowsPerPage,
 			limit: rowsPerPage,
-			search: search || undefined
+			search: search || undefined,
+			sortBy,
+			sortOrder,
+			...activeFilters
 		}));
 		dispatch(fetchLeadStats());
 	};
@@ -83,11 +94,64 @@ const LeadList: React.FC = () => {
 		return '#d13212';
 	};
 
+	const handleSort = (columnId: string) => {
+		const isAsc = sortBy === columnId && sortOrder === 'asc';
+		setSortOrder(isAsc ? 'desc' : 'asc');
+		setSortBy(columnId);
+		setPage(0);
+	};
+
+	const handleFilterChange = (key: string, value: any) => {
+		setActiveFilters(prev => ({ ...prev, [key]: value }));
+	};
+
+	const handleApplyFilters = () => {
+		setFilterDrawerOpen(false);
+		setPage(0);
+	};
+
+	const handleClearFilters = () => {
+		setActiveFilters({});
+		setFilterDrawerOpen(false);
+		setPage(0);
+	};
+
+	const filterFields: FilterField[] = [
+		{
+			key: 'status',
+			label: 'Status',
+			type: 'single-select',
+			options: [
+				{ value: 'new', label: 'New' },
+				{ value: 'contacted', label: 'Contacted' },
+				{ value: 'qualified', label: 'Qualified' },
+				{ value: 'unqualified', label: 'Unqualified' },
+				{ value: 'converted', label: 'Converted' },
+				{ value: 'lost', label: 'Lost' }
+			]
+		},
+		{
+			key: 'source',
+			label: 'Source',
+			type: 'single-select',
+			options: [
+				{ value: 'website', label: 'Website' },
+				{ value: 'referral', label: 'Referral' },
+				{ value: 'cold_call', label: 'Cold Call' },
+				{ value: 'social_media', label: 'Social Media' },
+				{ value: 'event', label: 'Event' },
+				{ value: 'email_campaign', label: 'Email Campaign' },
+				{ value: 'other', label: 'Other' }
+			]
+		}
+	];
+
 	const columns = [
 		{
 			id: 'title',
 			label: 'Lead Title',
 			minWidth: 220,
+			sortable: true,
 			format: (value: string, row: Lead) => (
 				<Stack direction="row" spacing={1.5} alignItems="center">
 					<LeadIcon sx={{ color: '#545b64', fontSize: 20 }} />
@@ -102,6 +166,7 @@ const LeadList: React.FC = () => {
 			id: 'lead_status',
 			label: 'Status',
 			minWidth: 120,
+			sortable: true,
 			format: (value: string) => (
 				<CRMStatusBadge label={value} status={value} type="lead" />
 			)
@@ -110,6 +175,7 @@ const LeadList: React.FC = () => {
 			id: 'lead_score',
 			label: 'Score',
 			minWidth: 120,
+			sortable: true,
 			format: (value: number) => (
 				<Box sx={{ width: '100%' }}>
 					<Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
@@ -147,12 +213,14 @@ const LeadList: React.FC = () => {
 			id: 'estimated_value',
 			label: 'Est. Value',
 			minWidth: 140,
+			sortable: true,
 			format: (value: number, row: Lead) => value ? `${row.currency} ${value.toLocaleString()}` : '-'
 		},
 		{
 			id: 'expected_close_date',
 			label: 'Close Date',
 			minWidth: 130,
+			sortable: true,
 			format: (value: string) => value ? new Date(value).toLocaleDateString() : '-'
 		}
 	];
@@ -236,8 +304,15 @@ const LeadList: React.FC = () => {
 				/>
 
 				<Tooltip title="Filter">
-					<IconButton sx={{ border: '1px solid #d5dbdb', borderRadius: '2px', bgcolor: 'white' }}>
-						<FilterIcon fontSize="small" sx={{ color: '#545b64' }} />
+					<IconButton
+						onClick={() => setFilterDrawerOpen(true)}
+						sx={{
+							border: '1px solid #d5dbdb',
+							borderRadius: '2px',
+							bgcolor: activeFilters.status || activeFilters.source ? '#f5f8fa' : 'white'
+						}}
+					>
+						<FilterIcon fontSize="small" sx={{ color: activeFilters.status || activeFilters.source ? '#ec7211' : '#545b64' }} />
 					</IconButton>
 				</Tooltip>
 			</Box>
@@ -253,6 +328,9 @@ const LeadList: React.FC = () => {
 					setRowsPerPage(parseInt(e.target.value, 10));
 					setPage(0);
 				}}
+				orderBy={sortBy}
+				order={sortOrder}
+				onSort={handleSort}
 				loading={loading}
 				emptyMessage="No leads found. Start by adding a new lead."
 				onRowClick={(row) => handleEditLead(row)}
@@ -264,6 +342,16 @@ const LeadList: React.FC = () => {
 				onSubmit={handleDialogSubmit}
 				lead={selectedLeadForEdit}
 				loading={loading}
+			/>
+
+			<FilterDrawer
+				open={filterDrawerOpen}
+				onClose={() => setFilterDrawerOpen(false)}
+				fields={filterFields}
+				activeFilters={activeFilters}
+				onFilterChange={handleFilterChange}
+				onClearFilters={handleClearFilters}
+				onApplyFilters={handleApplyFilters}
 			/>
 		</Box>
 	);

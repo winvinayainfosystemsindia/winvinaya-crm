@@ -14,6 +14,7 @@ import { fetchCRMTasks, updateCRMTask, createCRMTask } from '../../../store/slic
 import CRMPageHeader from '../common/CRMPageHeader';
 import CRMTable from '../common/CRMTable';
 import CRMTaskFormDialog from './CRMTaskFormDialog';
+import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
 import type { CRMTask } from '../../../models/crmTask';
 
 const CRMTaskList: React.FC = () => {
@@ -26,6 +27,10 @@ const CRMTaskList: React.FC = () => {
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [search, setSearch] = useState('');
+	const [sortBy, setSortBy] = useState('due_date');
+	const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+	const [activeFilters, setActiveFilters] = useState<Record<string, any>>({});
+	const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [selectedTaskForEdit, setSelectedTaskForEdit] = useState<CRMTask | null>(null);
 
@@ -33,9 +38,12 @@ const CRMTaskList: React.FC = () => {
 		dispatch(fetchCRMTasks({
 			skip: page * rowsPerPage,
 			limit: rowsPerPage,
-			search: search || undefined
+			search: search || undefined,
+			sortBy,
+			sortOrder,
+			...activeFilters
 		}));
-	}, [dispatch, page, rowsPerPage, search]);
+	}, [dispatch, page, rowsPerPage, search, sortBy, sortOrder, activeFilters]);
 
 	const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setSearch(event.target.value);
@@ -46,7 +54,10 @@ const CRMTaskList: React.FC = () => {
 		dispatch(fetchCRMTasks({
 			skip: page * rowsPerPage,
 			limit: rowsPerPage,
-			search: search || undefined
+			search: search || undefined,
+			sortBy,
+			sortOrder,
+			...activeFilters
 		}));
 	};
 
@@ -73,6 +84,72 @@ const CRMTaskList: React.FC = () => {
 			console.error('Failed to save task:', error);
 		}
 	};
+
+	const handleSort = (columnId: string) => {
+		const isAsc = sortBy === columnId && sortOrder === 'asc';
+		setSortOrder(isAsc ? 'desc' : 'asc');
+		setSortBy(columnId);
+		setPage(0);
+	};
+
+	const handleFilterChange = (key: string, value: any) => {
+		setActiveFilters(prev => ({ ...prev, [key]: value }));
+	};
+
+	const handleApplyFilters = () => {
+		setFilterDrawerOpen(false);
+		setPage(0);
+	};
+
+	const handleClearFilters = () => {
+		setActiveFilters({});
+		setFilterDrawerOpen(false);
+		setPage(0);
+	};
+
+	const handleQuickFilter = (type: 'upcoming' | 'overdue') => {
+		if (type === 'overdue') {
+			setActiveFilters({ overdueOnly: true });
+		} else {
+			setActiveFilters({ dueSoonOnly: true });
+		}
+		setPage(0);
+	};
+
+	const filterFields: FilterField[] = [
+		{
+			key: 'status',
+			label: 'Status',
+			type: 'single-select',
+			options: [
+				{ value: 'pending', label: 'Pending' },
+				{ value: 'in_progress', label: 'In Progress' },
+				{ value: 'completed', label: 'Completed' },
+				{ value: 'cancelled', label: 'Cancelled' }
+			]
+		},
+		{
+			key: 'priority',
+			label: 'Priority',
+			type: 'single-select',
+			options: [
+				{ value: 'low', label: 'Low' },
+				{ value: 'medium', label: 'Medium' },
+				{ value: 'high', label: 'High' },
+				{ value: 'urgent', label: 'Urgent' }
+			]
+		},
+		{
+			key: 'overdueOnly',
+			label: 'Overdue Only',
+			type: 'boolean'
+		},
+		{
+			key: 'dueSoonOnly',
+			label: 'Due Soon (Next 24h)',
+			type: 'boolean'
+		}
+	];
 
 	const handleToggleComplete = async (task: CRMTask) => {
 		const newStatus = task.status === 'completed' ? 'pending' : 'completed';
@@ -113,6 +190,7 @@ const CRMTaskList: React.FC = () => {
 			id: 'title',
 			label: 'Task',
 			minWidth: 250,
+			sortable: true,
 			format: (value: string, row: CRMTask) => (
 				<Box>
 					<Box
@@ -140,6 +218,7 @@ const CRMTaskList: React.FC = () => {
 			id: 'priority',
 			label: 'Priority',
 			minWidth: 120,
+			sortable: true,
 			format: (value: string) => (
 				<Stack direction="row" spacing={0.5} alignItems="center">
 					<PriorityIcon sx={{ fontSize: 14, color: getPriorityColor(value) }} />
@@ -160,6 +239,7 @@ const CRMTaskList: React.FC = () => {
 			id: 'due_date',
 			label: 'Due Date',
 			minWidth: 160,
+			sortable: true,
 			format: (value: string, row: CRMTask) => {
 				const date = new Date(value);
 				const isOverdue = date < new Date() && row.status !== 'completed';
@@ -235,11 +315,38 @@ const CRMTaskList: React.FC = () => {
 				/>
 
 				<Stack direction="row" spacing={1}>
-					<Button size="small" variant="outlined" sx={{ color: '#545b64', borderColor: '#d5dbdb' }}>Upcoming</Button>
-					<Button size="small" variant="outlined" sx={{ color: '#545b64', borderColor: '#d5dbdb' }}>Overdue</Button>
+					<Button
+						size="small"
+						variant="outlined"
+						onClick={() => handleQuickFilter('upcoming')}
+						sx={{
+							color: activeFilters.dueSoonOnly ? '#ec7211' : '#545b64',
+							borderColor: activeFilters.dueSoonOnly ? '#ec7211' : '#d5dbdb'
+						}}
+					>
+						Upcoming
+					</Button>
+					<Button
+						size="small"
+						variant="outlined"
+						onClick={() => handleQuickFilter('overdue')}
+						sx={{
+							color: activeFilters.overdueOnly ? '#ec7211' : '#545b64',
+							borderColor: activeFilters.overdueOnly ? '#ec7211' : '#d5dbdb'
+						}}
+					>
+						Overdue
+					</Button>
 					<Tooltip title="Filter">
-						<IconButton sx={{ border: '1px solid #d5dbdb', borderRadius: '2px', bgcolor: 'white' }}>
-							<FilterIcon fontSize="small" sx={{ color: '#545b64' }} />
+						<IconButton
+							onClick={() => setFilterDrawerOpen(true)}
+							sx={{
+								border: '1px solid #d5dbdb',
+								borderRadius: '2px',
+								bgcolor: activeFilters.status || activeFilters.priority ? '#f5f8fa' : 'white'
+							}}
+						>
+							<FilterIcon fontSize="small" sx={{ color: activeFilters.status || activeFilters.priority ? '#ec7211' : '#545b64' }} />
 						</IconButton>
 					</Tooltip>
 				</Stack>
@@ -256,6 +363,9 @@ const CRMTaskList: React.FC = () => {
 					setRowsPerPage(parseInt(e.target.value, 10));
 					setPage(0);
 				}}
+				orderBy={sortBy}
+				order={sortOrder}
+				onSort={handleSort}
 				loading={loading}
 				emptyMessage="No tasks found. Stay on top of your deals by creating tasks."
 				onRowClick={(row) => handleEditTask(row)}
@@ -267,6 +377,16 @@ const CRMTaskList: React.FC = () => {
 				onSubmit={handleDialogSubmit}
 				task={selectedTaskForEdit}
 				loading={loading}
+			/>
+
+			<FilterDrawer
+				open={filterDrawerOpen}
+				onClose={() => setFilterDrawerOpen(false)}
+				fields={filterFields}
+				activeFilters={activeFilters}
+				onFilterChange={handleFilterChange}
+				onClearFilters={handleClearFilters}
+				onApplyFilters={handleApplyFilters}
 			/>
 		</Box>
 	);

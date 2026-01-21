@@ -15,6 +15,7 @@ import { fetchCompanies } from '../../../store/slices/companySlice';
 import CRMPageHeader from '../common/CRMPageHeader';
 import CRMTable from '../common/CRMTable';
 import ContactFormDialog from './ContactFormDialog';
+import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
 import type { Contact, ContactCreate, ContactUpdate } from '../../../models/contact';
 import { useSnackbar } from 'notistack';
 
@@ -26,6 +27,10 @@ const ContactList: React.FC = () => {
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [search, setSearch] = useState('');
+	const [sortBy, setSortBy] = useState('created_at');
+	const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+	const [activeFilters, setActiveFilters] = useState<Record<string, any>>({});
+	const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
 	const [formLoading, setFormLoading] = useState(false);
@@ -34,11 +39,14 @@ const ContactList: React.FC = () => {
 		dispatch(fetchContacts({
 			skip: page * rowsPerPage,
 			limit: rowsPerPage,
-			search: search || undefined
+			search: search || undefined,
+			sortBy,
+			sortOrder,
+			...activeFilters
 		}));
 		// Also fetch companies as they are needed for the contact form
 		dispatch(fetchCompanies({ limit: 1000 }));
-	}, [dispatch, page, rowsPerPage, search]);
+	}, [dispatch, page, rowsPerPage, search, sortBy, sortOrder, activeFilters]);
 
 	const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setSearch(event.target.value);
@@ -49,7 +57,10 @@ const ContactList: React.FC = () => {
 		dispatch(fetchContacts({
 			skip: page * rowsPerPage,
 			limit: rowsPerPage,
-			search: search || undefined
+			search: search || undefined,
+			sortBy,
+			sortOrder,
+			...activeFilters
 		}));
 	};
 
@@ -82,11 +93,42 @@ const ContactList: React.FC = () => {
 		}
 	};
 
+	const handleSort = (columnId: string) => {
+		const isAsc = sortBy === columnId && sortOrder === 'asc';
+		setSortOrder(isAsc ? 'desc' : 'asc');
+		setSortBy(columnId);
+		setPage(0);
+	};
+
+	const handleFilterChange = (key: string, value: any) => {
+		setActiveFilters(prev => ({ ...prev, [key]: value }));
+	};
+
+	const handleApplyFilters = () => {
+		setFilterDrawerOpen(false);
+		setPage(0);
+	};
+
+	const handleClearFilters = () => {
+		setActiveFilters({});
+		setFilterDrawerOpen(false);
+		setPage(0);
+	};
+
+	const filterFields: FilterField[] = [
+		{
+			key: 'is_decision_maker',
+			label: 'Decision Maker',
+			type: 'boolean'
+		}
+	];
+
 	const columns = [
 		{
 			id: 'full_name',
 			label: 'Name',
 			minWidth: 220,
+			sortable: true,
 			format: (_: any, row: Contact) => (
 				<Stack direction="row" spacing={1.5} alignItems="center">
 					<Avatar
@@ -147,6 +189,7 @@ const ContactList: React.FC = () => {
 			id: 'is_decision_maker',
 			label: 'Decision Maker',
 			minWidth: 140,
+			sortable: true,
 			format: (value: boolean) => value ? (
 				<Box sx={{ color: '#1d8102', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>Yes</Box>
 			) : '-'
@@ -155,6 +198,7 @@ const ContactList: React.FC = () => {
 			id: 'created_at',
 			label: 'Added On',
 			minWidth: 130,
+			sortable: true,
 			format: (value: string) => new Date(value).toLocaleDateString()
 		}
 	];
@@ -214,8 +258,15 @@ const ContactList: React.FC = () => {
 					/>
 
 					<Tooltip title="Filter">
-						<IconButton sx={{ border: '1px solid #d5dbdb', borderRadius: '2px', bgcolor: 'white' }}>
-							<FilterIcon fontSize="small" sx={{ color: '#545b64' }} />
+						<IconButton
+							onClick={() => setFilterDrawerOpen(true)}
+							sx={{
+								border: '1px solid #d5dbdb',
+								borderRadius: '2px',
+								bgcolor: activeFilters.is_decision_maker ? '#f5f8fa' : 'white'
+							}}
+						>
+							<FilterIcon fontSize="small" sx={{ color: activeFilters.is_decision_maker ? '#ec7211' : '#545b64' }} />
 						</IconButton>
 					</Tooltip>
 				</Box>
@@ -231,6 +282,9 @@ const ContactList: React.FC = () => {
 						setRowsPerPage(parseInt(e.target.value, 10));
 						setPage(0);
 					}}
+					orderBy={sortBy}
+					order={sortOrder}
+					onSort={handleSort}
 					loading={loading}
 					emptyMessage="No contacts found. Add contacts to your companies."
 					onRowClick={(row) => handleOpenEdit(row)}
@@ -242,6 +296,16 @@ const ContactList: React.FC = () => {
 					onSubmit={handleFormSubmit}
 					contact={selectedContact}
 					loading={formLoading}
+				/>
+
+				<FilterDrawer
+					open={filterDrawerOpen}
+					onClose={() => setFilterDrawerOpen(false)}
+					fields={filterFields}
+					activeFilters={activeFilters}
+					onFilterChange={handleFilterChange}
+					onClearFilters={handleClearFilters}
+					onApplyFilters={handleApplyFilters}
 				/>
 			</Box>
 		</Box>

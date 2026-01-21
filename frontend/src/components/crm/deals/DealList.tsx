@@ -16,6 +16,7 @@ import CRMTable from '../common/CRMTable';
 import DealFormDialog from './DealFormDialog';
 import CRMStatsCard from '../common/CRMStatsCard';
 import CRMStatusBadge from '../common/CRMStatusBadge';
+import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
 import type { Deal } from '../../../models/deal';
 
 const DealList: React.FC = () => {
@@ -28,6 +29,10 @@ const DealList: React.FC = () => {
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [search, setSearch] = useState('');
+	const [sortBy, setSortBy] = useState('created_at');
+	const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+	const [activeFilters, setActiveFilters] = useState<Record<string, any>>({});
+	const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [selectedDealForEdit, setSelectedDealForEdit] = useState<Deal | null>(null);
 
@@ -35,10 +40,13 @@ const DealList: React.FC = () => {
 		dispatch(fetchDeals({
 			skip: page * rowsPerPage,
 			limit: rowsPerPage,
-			search: search || undefined
+			search: search || undefined,
+			sortBy,
+			sortOrder,
+			...activeFilters
 		}));
 		dispatch(fetchPipelineSummary());
-	}, [dispatch, page, rowsPerPage, search]);
+	}, [dispatch, page, rowsPerPage, search, sortBy, sortOrder, activeFilters]);
 
 	const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setSearch(event.target.value);
@@ -49,7 +57,10 @@ const DealList: React.FC = () => {
 		dispatch(fetchDeals({
 			skip: page * rowsPerPage,
 			limit: rowsPerPage,
-			search: search || undefined
+			search: search || undefined,
+			sortBy,
+			sortOrder,
+			...activeFilters
 		}));
 		dispatch(fetchPipelineSummary());
 	};
@@ -78,11 +89,59 @@ const DealList: React.FC = () => {
 		}
 	};
 
+	const handleSort = (columnId: string) => {
+		const isAsc = sortBy === columnId && sortOrder === 'asc';
+		setSortOrder(isAsc ? 'desc' : 'asc');
+		setSortBy(columnId);
+		setPage(0);
+	};
+
+	const handleFilterChange = (key: string, value: any) => {
+		setActiveFilters(prev => ({ ...prev, [key]: value }));
+	};
+
+	const handleApplyFilters = () => {
+		setFilterDrawerOpen(false);
+		setPage(0);
+	};
+
+	const handleClearFilters = () => {
+		setActiveFilters({});
+		setFilterDrawerOpen(false);
+		setPage(0);
+	};
+
+	const filterFields: FilterField[] = [
+		{
+			key: 'stage',
+			label: 'Stage',
+			type: 'single-select',
+			options: [
+				{ value: 'discovery', label: 'Discovery' },
+				{ value: 'qualification', label: 'Qualification' },
+				{ value: 'proposal', label: 'Proposal' },
+				{ value: 'negotiation', label: 'Negotiation' },
+				{ value: 'closed_won', label: 'Closed Won' },
+				{ value: 'closed_lost', label: 'Closed Lost' }
+			]
+		},
+		{
+			key: 'dealType',
+			label: 'Type',
+			type: 'single-select',
+			options: [
+				{ value: 'new_business', label: 'New Business' },
+				{ value: 'existing_business', label: 'Existing Business' }
+			]
+		}
+	];
+
 	const columns = [
 		{
 			id: 'title',
 			label: 'Deal Name',
 			minWidth: 220,
+			sortable: true,
 			format: (value: string, row: Deal) => (
 				<Stack direction="row" spacing={1.5} alignItems="center">
 					<DealIcon sx={{ color: '#545b64', fontSize: 20 }} />
@@ -97,6 +156,7 @@ const DealList: React.FC = () => {
 			id: 'deal_stage',
 			label: 'Stage',
 			minWidth: 140,
+			sortable: true,
 			format: (value: string) => (
 				<CRMStatusBadge label={value.replace('_', ' ')} status={value} type="deal" />
 			)
@@ -105,6 +165,7 @@ const DealList: React.FC = () => {
 			id: 'deal_value',
 			label: 'Value',
 			minWidth: 140,
+			sortable: true,
 			format: (value: number, row: Deal) => (
 				<Box sx={{ fontWeight: 700 }}>
 					{row.currency} {value.toLocaleString()}
@@ -132,6 +193,7 @@ const DealList: React.FC = () => {
 			id: 'expected_close_date',
 			label: 'Expected Close',
 			minWidth: 150,
+			sortable: true,
 			format: (value: string) => value ? new Date(value).toLocaleDateString() : '-'
 		},
 		{
@@ -226,8 +288,15 @@ const DealList: React.FC = () => {
 				/>
 
 				<Tooltip title="Filter">
-					<IconButton sx={{ border: '1px solid #d5dbdb', borderRadius: '2px', bgcolor: 'white' }}>
-						<FilterIcon fontSize="small" sx={{ color: '#545b64' }} />
+					<IconButton
+						onClick={() => setFilterDrawerOpen(true)}
+						sx={{
+							border: '1px solid #d5dbdb',
+							borderRadius: '2px',
+							bgcolor: activeFilters.stage || activeFilters.dealType ? '#f5f8fa' : 'white'
+						}}
+					>
+						<FilterIcon fontSize="small" sx={{ color: activeFilters.stage || activeFilters.dealType ? '#ec7211' : '#545b64' }} />
 					</IconButton>
 				</Tooltip>
 			</Box>
@@ -243,6 +312,9 @@ const DealList: React.FC = () => {
 					setRowsPerPage(parseInt(e.target.value, 10));
 					setPage(0);
 				}}
+				orderBy={sortBy}
+				order={sortOrder}
+				onSort={handleSort}
 				loading={loading}
 				emptyMessage="No deals found. Open a new deal to track your sales."
 				onRowClick={(row) => handleEditDeal(row)}
@@ -254,6 +326,16 @@ const DealList: React.FC = () => {
 				onSubmit={handleDialogSubmit}
 				deal={selectedDealForEdit}
 				loading={loading}
+			/>
+
+			<FilterDrawer
+				open={filterDrawerOpen}
+				onClose={() => setFilterDrawerOpen(false)}
+				fields={filterFields}
+				activeFilters={activeFilters}
+				onFilterChange={handleFilterChange}
+				onClearFilters={handleClearFilters}
+				onApplyFilters={handleApplyFilters}
 			/>
 		</Box>
 	);

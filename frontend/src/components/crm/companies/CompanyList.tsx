@@ -17,6 +17,7 @@ import CRMTable from '../common/CRMTable';
 import CRMStatsCard from '../common/CRMStatsCard';
 import CRMStatusBadge from '../common/CRMStatusBadge';
 import CompanyFormDialog from './CompanyFormDialog';
+import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
 import type { CompanyCreate, CompanyUpdate, Company } from '../../../models/company';
 import { useSnackbar } from 'notistack';
 
@@ -29,6 +30,10 @@ const CompanyList: React.FC = () => {
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [search, setSearch] = useState('');
+	const [sortBy, setSortBy] = useState('created_at');
+	const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+	const [activeFilters, setActiveFilters] = useState<Record<string, any>>({});
+	const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
 	const [formLoading, setFormLoading] = useState(false);
@@ -37,10 +42,13 @@ const CompanyList: React.FC = () => {
 		dispatch(fetchCompanies({
 			skip: page * rowsPerPage,
 			limit: rowsPerPage,
-			search: search || undefined
+			search: search || undefined,
+			sortBy,
+			sortOrder,
+			...activeFilters
 		}));
 		dispatch(fetchCompanyStats());
-	}, [dispatch, page, rowsPerPage, search]);
+	}, [dispatch, page, rowsPerPage, search, sortBy, sortOrder, activeFilters]);
 
 	const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setSearch(event.target.value);
@@ -51,7 +59,10 @@ const CompanyList: React.FC = () => {
 		dispatch(fetchCompanies({
 			skip: page * rowsPerPage,
 			limit: rowsPerPage,
-			search: search || undefined
+			search: search || undefined,
+			sortBy,
+			sortOrder,
+			...activeFilters
 		}));
 		dispatch(fetchCompanyStats());
 	};
@@ -85,11 +96,63 @@ const CompanyList: React.FC = () => {
 		}
 	};
 
+	const handleSort = (columnId: string) => {
+		const isAsc = sortBy === columnId && sortOrder === 'asc';
+		setSortOrder(isAsc ? 'desc' : 'asc');
+		setSortBy(columnId);
+		setPage(0);
+	};
+
+	const handleFilterChange = (key: string, value: any) => {
+		setActiveFilters(prev => ({ ...prev, [key]: value }));
+	};
+
+	const handleApplyFilters = () => {
+		setFilterDrawerOpen(false);
+		setPage(0);
+	};
+
+	const handleClearFilters = () => {
+		setActiveFilters({});
+		setFilterDrawerOpen(false);
+		setPage(0);
+	};
+
+	const filterFields: FilterField[] = [
+		{
+			key: 'status',
+			label: 'Status',
+			type: 'single-select',
+			options: [
+				{ value: 'prospect', label: 'Prospect' },
+				{ value: 'customer', label: 'Customer' },
+				{ value: 'active', label: 'Active' },
+				{ value: 'inactive', label: 'Inactive' }
+			]
+		},
+		{
+			key: 'industry',
+			label: 'Industry',
+			type: 'single-select',
+			options: [
+				{ value: 'Technology', label: 'Technology' },
+				{ value: 'Finance', label: 'Finance' },
+				{ value: 'Healthcare', label: 'Healthcare' },
+				{ value: 'Education', label: 'Education' },
+				{ value: 'Manufacturing', label: 'Manufacturing' },
+				{ value: 'Retail', label: 'Retail' },
+				{ value: 'Services', label: 'Services' },
+				{ value: 'Other', label: 'Other' }
+			]
+		}
+	];
+
 	const columns = [
 		{
 			id: 'name',
 			label: 'Company Name',
 			minWidth: 200,
+			sortable: true,
 			format: (value: string) => (
 				<Stack direction="row" spacing={1.5} alignItems="center">
 					<BusinessIcon sx={{ color: '#545b64', fontSize: 20 }} />
@@ -97,11 +160,11 @@ const CompanyList: React.FC = () => {
 				</Stack>
 			)
 		},
-		{ id: 'status', label: 'Status', minWidth: 120, format: (value: string) => <CRMStatusBadge label={value} status={value} type="company" /> },
-		{ id: 'industry', label: 'Industry', minWidth: 150 },
+		{ id: 'status', label: 'Status', minWidth: 120, sortable: true, format: (value: string) => <CRMStatusBadge label={value} status={value} type="company" /> },
+		{ id: 'industry', label: 'Industry', minWidth: 150, sortable: true },
 		{ id: 'website', label: 'Website', minWidth: 180, format: (value: string) => value ? <a href={value.startsWith('http') ? value : `https://${value}`} target="_blank" rel="noopener noreferrer" style={{ color: '#007eb9', textDecoration: 'none' }}>{value}</a> : '-' },
 		{ id: 'email', label: 'Email', minWidth: 200 },
-		{ id: 'created_at', label: 'Created On', minWidth: 130, format: (value: string) => new Date(value).toLocaleDateString() },
+		{ id: 'created_at', label: 'Created On', minWidth: 130, sortable: true, format: (value: string) => new Date(value).toLocaleDateString() },
 		{
 			id: 'actions',
 			label: 'Actions',
@@ -222,8 +285,15 @@ const CompanyList: React.FC = () => {
 					/>
 
 					<Tooltip title="Filter">
-						<IconButton sx={{ border: '1px solid #d5dbdb', borderRadius: '2px', bgcolor: 'white' }}>
-							<FilterIcon fontSize="small" sx={{ color: '#545b64' }} />
+						<IconButton
+							onClick={() => setFilterDrawerOpen(true)}
+							sx={{
+								border: '1px solid #d5dbdb',
+								borderRadius: '2px',
+								bgcolor: activeFilters.status || activeFilters.industry ? '#f5f8fa' : 'white'
+							}}
+						>
+							<FilterIcon fontSize="small" sx={{ color: activeFilters.status || activeFilters.industry ? '#ec7211' : '#545b64' }} />
 						</IconButton>
 					</Tooltip>
 				</Box>
@@ -239,6 +309,9 @@ const CompanyList: React.FC = () => {
 						setRowsPerPage(parseInt(e.target.value, 10));
 						setPage(0);
 					}}
+					orderBy={sortBy}
+					order={sortOrder}
+					onSort={handleSort}
 					loading={loading}
 					emptyMessage="No companies found. Start by adding your first company."
 					onRowClick={(row) => navigate(`/crm/companies/${row.public_id}`)}
@@ -250,6 +323,16 @@ const CompanyList: React.FC = () => {
 					onSubmit={handleFormSubmit}
 					company={selectedCompany}
 					loading={formLoading}
+				/>
+
+				<FilterDrawer
+					open={filterDrawerOpen}
+					onClose={() => setFilterDrawerOpen(false)}
+					fields={filterFields}
+					activeFilters={activeFilters}
+					onFilterChange={handleFilterChange}
+					onClearFilters={handleClearFilters}
+					onApplyFilters={handleApplyFilters}
 				/>
 			</Box>
 		</Box>

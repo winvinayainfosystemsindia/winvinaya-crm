@@ -9,7 +9,8 @@ import {
 	Paper,
 	Typography,
 	TablePagination,
-	Skeleton
+	Skeleton,
+	TableSortLabel
 } from '@mui/material';
 
 interface Column {
@@ -18,6 +19,7 @@ interface Column {
 	minWidth?: number;
 	align?: 'right' | 'left' | 'center';
 	format?: (value: any, row: any) => React.ReactNode;
+	sortable?: boolean;
 }
 
 interface CRMTableProps {
@@ -28,6 +30,9 @@ interface CRMTableProps {
 	rowsPerPage: number;
 	onPageChange: (event: unknown, newPage: number) => void;
 	onRowsPerPageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+	orderBy?: string;
+	order?: 'asc' | 'desc';
+	onSort?: (id: string) => void;
 	loading?: boolean;
 	emptyMessage?: string;
 	onRowClick?: (row: any) => void;
@@ -41,6 +46,9 @@ const CRMTable: React.FC<CRMTableProps> = ({
 	rowsPerPage,
 	onPageChange,
 	onRowsPerPageChange,
+	orderBy,
+	order = 'desc',
+	onSort,
 	loading,
 	emptyMessage = 'No records found',
 	onRowClick
@@ -73,7 +81,21 @@ const CRMTable: React.FC<CRMTableProps> = ({
 										padding: '12px 16px'
 									}}
 								>
-									{column.label}
+									{column.sortable && onSort ? (
+										<TableSortLabel
+											active={orderBy === column.id}
+											direction={orderBy === column.id ? order : 'asc'}
+											onClick={() => onSort(column.id)}
+											sx={{
+												'&.MuiTableSortLabel-active': { color: '#232f3e' },
+												'& .MuiTableSortLabel-icon': { color: '#232f3e !important' }
+											}}
+										>
+											{column.label}
+										</TableSortLabel>
+									) : (
+										column.label
+									)}
 								</TableCell>
 							))}
 						</TableRow>

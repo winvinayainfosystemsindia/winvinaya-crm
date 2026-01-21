@@ -23,8 +23,8 @@ export interface FilterOption {
 export interface FilterField {
 	key: string;
 	label: string;
-	type: 'multi-select' | 'single-select';
-	options: FilterOption[];
+	type: 'multi-select' | 'single-select' | 'boolean';
+	options?: FilterOption[];
 }
 
 interface FilterDrawerProps {
@@ -130,7 +130,7 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
 						</Typography>
 
 						{field.type === 'multi-select' ? (
-							field.options.length > 0 ? (
+							field.options && field.options.length > 0 ? (
 								<Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, maxHeight: 200, overflow: 'auto' }}>
 									{field.options.map((option) => (
 										<FormControlLabel
@@ -149,13 +149,13 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
 							) : (
 								<Typography variant="body2" color="text.secondary">No options available</Typography>
 							)
-						) : (
+						) : field.type === 'single-select' ? (
 							<RadioGroup
 								value={activeFilters[field.key] || ''}
 								onChange={(e) => handleSingleSelectChange(field.key, e.target.value)}
 							>
 								<FormControlLabel value="" control={<Radio size="small" />} label="All" />
-								{field.options.map((option) => (
+								{field.options && field.options.map((option) => (
 									<FormControlLabel
 										key={option.value}
 										value={option.value}
@@ -164,6 +164,17 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
 									/>
 								))}
 							</RadioGroup>
+						) : (
+							<FormControlLabel
+								control={
+									<Checkbox
+										size="small"
+										checked={!!activeFilters[field.key]}
+										onChange={(e) => onFilterChange(field.key, e.target.checked)}
+									/>
+								}
+								label={`Enable ${field.label}`}
+							/>
 						)}
 					</Box>
 				))}
