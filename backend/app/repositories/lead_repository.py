@@ -1,6 +1,6 @@
 """Lead Repository"""
 
-from typing import Optional, List
+from typing import Optional, List, Any
 from uuid import UUID
 from datetime import datetime
 from sqlalchemy import select, func, or_, and_
@@ -23,6 +23,19 @@ class LeadRepository(BaseRepository[Lead]):
             select(Lead).where(Lead.public_id == public_id)
         )
         return result.scalars().first()
+    
+    async def create(self, obj_in: dict[str, Any]) -> Lead:
+        """Create a new lead and return with eager loaded relationships"""
+        lead = await super().create(obj_in)
+        # Fetch with details to avoid lazy loading issues in FastAPI response serialization
+        return await self.get_by_public_id_with_details(lead.public_id)
+
+    async def update(self, id: int, obj_in: dict[str, Any]) -> Optional[Lead]:
+        """Update a lead and return with eager loaded relationships"""
+        lead = await super().update(id, obj_in)
+        if lead:
+            return await self.get_by_public_id_with_details(lead.public_id)
+        return None
     
     async def get_by_public_id_with_details(self, public_id: UUID) -> Optional[Lead]:
         """Get lead by public_id with all related data"""
@@ -175,7 +188,10 @@ class LeadRepository(BaseRepository[Lead]):
             .returning(Lead)
         )
         await self.db.flush()
-        return result.scalar_one_or_none()
+        lead = result.scalar_one_or_none()
+        if lead:
+            return await self.get_by_public_id_with_details(lead.public_id)
+        return None
     
     async def update_score(self, lead_id: int, score: int) -> Optional[Lead]:
         """Update lead score"""
@@ -190,7 +206,10 @@ class LeadRepository(BaseRepository[Lead]):
             .returning(Lead)
         )
         await self.db.flush()
-        return result.scalar_one_or_none()
+        lead = result.scalar_one_or_none()
+        if lead:
+            return await self.get_by_public_id_with_details(lead.public_id)
+        return None
     
     async def get_stats(self, user_id: Optional[int] = None) -> dict:
         """Get lead statistics, optionally filtered by user"""
