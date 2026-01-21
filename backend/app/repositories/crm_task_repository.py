@@ -25,6 +25,19 @@ class CRMTaskRepository(BaseRepository[CRMTask]):
         )
         return result.scalars().first()
     
+    async def create(self, obj_in: dict[str, Any]) -> CRMTask:
+        """Create a new task and return with eager loaded relationships"""
+        task = await super().create(obj_in)
+        # Fetch with details to avoid lazy loading issues in FastAPI response serialization
+        return await self.get_by_public_id(task.public_id)
+
+    async def update(self, id: int, obj_in: dict[str, Any]) -> Optional[CRMTask]:
+        """Update a task and return with eager loaded relationships"""
+        task = await super().update(id, obj_in)
+        if task:
+            return await self.get_by_public_id(task.public_id)
+        return None
+    
     async def get_multi(
         self,
         skip: int = 0,
