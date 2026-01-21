@@ -76,10 +76,10 @@ const LeadFormDialog: React.FC<LeadFormDialogProps> = ({
 		lead_source: 'website',
 		lead_status: 'new',
 		lead_score: 50,
-		estimated_value: 0,
+		estimated_value: undefined,
 		currency: 'INR',
 		expected_close_date: '',
-		assigned_to: 0,
+		assigned_to: undefined,
 		company_id: undefined,
 		contact_id: undefined
 	});
@@ -105,10 +105,10 @@ const LeadFormDialog: React.FC<LeadFormDialogProps> = ({
 				lead_source: 'website',
 				lead_status: 'new',
 				lead_score: 50,
-				estimated_value: 0,
+				estimated_value: undefined,
 				currency: 'INR',
 				expected_close_date: '',
-				assigned_to: 0,
+				assigned_to: undefined,
 				company_id: undefined,
 				contact_id: undefined
 			});
@@ -260,7 +260,7 @@ const LeadFormDialog: React.FC<LeadFormDialogProps> = ({
 										label="Estimated Value"
 										type="number"
 										value={formData.estimated_value}
-										onChange={(e) => handleChange('estimated_value', parseFloat(e.target.value))}
+										onChange={(e) => handleChange('estimated_value', e.target.value === '' ? undefined : parseFloat(e.target.value))}
 										size="small"
 										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
 									/>
