@@ -22,6 +22,19 @@ class DealRepository(BaseRepository[Deal]):
         )
         return result.scalars().first()
     
+    async def create(self, obj_in: dict[str, Any]) -> Deal:
+        """Create a new deal and return with eager loaded relationships"""
+        deal = await super().create(obj_in)
+        # Fetch with details to avoid lazy loading issues in FastAPI response serialization
+        return await self.get_by_public_id_with_details(deal.public_id)
+
+    async def update(self, id: int, obj_in: dict[str, Any]) -> Optional[Deal]:
+        """Update a deal and return with eager loaded relationships"""
+        deal = await super().update(id, obj_in)
+        if deal:
+            return await self.get_by_public_id_with_details(deal.public_id)
+        return None
+    
     async def get_by_public_id_with_details(self, public_id: UUID) -> Optional[Deal]:
         """Get deal by public_id with all related data"""
         result = await self.db.execute(
