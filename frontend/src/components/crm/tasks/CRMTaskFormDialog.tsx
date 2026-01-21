@@ -16,11 +16,11 @@ import {
 	Box,
 	IconButton,
 	Paper,
-	Autocomplete
+	Autocomplete,
+	Divider
 } from '@mui/material';
 import {
 	Close as CloseIcon,
-	Task as TaskIcon,
 	Info as InfoIcon,
 	Link as LinkIcon
 } from '@mui/icons-material';
@@ -203,167 +203,163 @@ const CRMTaskFormDialog: React.FC<CRMTaskFormDialogProps> = ({
 		>
 			<DialogTitle sx={{ bgcolor: '#232f3e', color: '#ffffff', py: 2 }}>
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
-					<Stack direction="row" spacing={1.5} alignItems="center">
-						<TaskIcon sx={{ color: '#ff9900' }} />
-						<Typography variant="h6" sx={{ color: 'white', fontWeight: 700, fontSize: '1.25rem' }}>
-							{task ? 'Edit Task' : 'Create New Task'}
-						</Typography>
-					</Stack>
-					<IconButton onClick={onClose} size="small" sx={{ color: 'white' }}>
-						<CloseIcon fontSize="small" />
+					<Typography variant="h6" sx={{ fontSize: '1.25rem', fontWeight: 700 }}>
+						{task ? 'Edit Task' : 'New Task'}
+					</Typography>
+					<IconButton onClick={onClose} sx={{ color: '#ffffff' }}>
+						<CloseIcon />
 					</IconButton>
 				</Stack>
 			</DialogTitle>
 
 			<Box component="form" onSubmit={handleSubmit}>
-				<DialogContent sx={{ p: 4, bgcolor: '#f2f3f3' }}>
-					<Stack spacing={3}>
-						<Paper elevation={0} sx={awsPanelStyle}>
-							<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-								<InfoIcon sx={{ color: '#545b64', fontSize: 20 }} />
-								<Typography sx={sectionTitleStyle}>Task Details</Typography>
-							</Stack>
-							<Grid container spacing={3}>
-								<Grid size={{ xs: 12 }}>
-									<TextField
-										required
-										fullWidth
-										label="Task Title"
-										value={formData.title}
-										onChange={(e) => handleChange('title', e.target.value)}
-										size="small"
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
+				<DialogContent sx={{ p: 0, bgcolor: '#f2f3f3' }}>
+					<Box sx={{ px: 4, py: 4 }}>
+						<Stack spacing={3}>
+							<Paper elevation={0} sx={awsPanelStyle}>
+								<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+									<InfoIcon sx={{ color: '#545b64', fontSize: 20 }} />
+									<Typography sx={sectionTitleStyle}>Task Details</Typography>
+								</Stack>
+								<Grid container spacing={3}>
+									<Grid size={{ xs: 12 }}>
+										<TextField
+											required
+											fullWidth
+											label="Task Title"
+											value={formData.title}
+											onChange={(e) => handleChange('title', e.target.value)}
+											size="small"
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										/>
+									</Grid>
+									<Grid size={{ xs: 12 }}>
+										<TextField
+											fullWidth
+											multiline
+											rows={2}
+											label="Description"
+											value={formData.description}
+											onChange={(e) => handleChange('description', e.target.value)}
+											size="small"
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										/>
+									</Grid>
+									<Grid size={{ xs: 12, md: 4 }}>
+										<FormControl fullWidth size="small">
+											<InputLabel>Task Type</InputLabel>
+											<Select
+												value={formData.task_type}
+												label="Task Type"
+												onChange={(e) => handleChange('task_type', e.target.value)}
+												sx={{ borderRadius: '2px' }}
+											>
+												{TASK_TYPES.map(s => <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>)}
+											</Select>
+										</FormControl>
+									</Grid>
+									<Grid size={{ xs: 12, md: 4 }}>
+										<FormControl fullWidth size="small">
+											<InputLabel>Priority</InputLabel>
+											<Select
+												value={formData.priority}
+												label="Priority"
+												onChange={(e) => handleChange('priority', e.target.value)}
+												sx={{ borderRadius: '2px' }}
+											>
+												{TASK_PRIORITIES.map(s => <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>)}
+											</Select>
+										</FormControl>
+									</Grid>
+									<Grid size={{ xs: 12, md: 4 }}>
+										<FormControl fullWidth size="small">
+											<InputLabel>Status</InputLabel>
+											<Select
+												value={formData.status}
+												label="Status"
+												onChange={(e) => handleChange('status', e.target.value)}
+												sx={{ borderRadius: '2px' }}
+											>
+												{TASK_STATUSES.map(s => <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>)}
+											</Select>
+										</FormControl>
+									</Grid>
+									<Grid size={{ xs: 12, md: 6 }}>
+										<TextField
+											required
+											fullWidth
+											type="datetime-local"
+											label="Due Date"
+											value={formData.due_date}
+											onChange={(e) => handleChange('due_date', e.target.value)}
+											size="small"
+											InputLabelProps={{ shrink: true }}
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										/>
+									</Grid>
 								</Grid>
-								<Grid size={{ xs: 12 }}>
-									<TextField
-										fullWidth
-										multiline
-										rows={2}
-										label="Description"
-										value={formData.description}
-										onChange={(e) => handleChange('description', e.target.value)}
-										size="small"
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
-								</Grid>
-								<Grid size={{ xs: 12, md: 4 }}>
-									<FormControl fullWidth size="small">
-										<InputLabel>Task Type</InputLabel>
-										<Select
-											value={formData.task_type}
-											label="Task Type"
-											onChange={(e) => handleChange('task_type', e.target.value)}
-											sx={{ borderRadius: '2px' }}
-										>
-											{TASK_TYPES.map(s => <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>)}
-										</Select>
-									</FormControl>
-								</Grid>
-								<Grid size={{ xs: 12, md: 4 }}>
-									<FormControl fullWidth size="small">
-										<InputLabel>Priority</InputLabel>
-										<Select
-											value={formData.priority}
-											label="Priority"
-											onChange={(e) => handleChange('priority', e.target.value)}
-											sx={{ borderRadius: '2px' }}
-										>
-											{TASK_PRIORITIES.map(s => <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>)}
-										</Select>
-									</FormControl>
-								</Grid>
-								<Grid size={{ xs: 12, md: 4 }}>
-									<FormControl fullWidth size="small">
-										<InputLabel>Status</InputLabel>
-										<Select
-											value={formData.status}
-											label="Status"
-											onChange={(e) => handleChange('status', e.target.value)}
-											sx={{ borderRadius: '2px' }}
-										>
-											{TASK_STATUSES.map(s => <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>)}
-										</Select>
-									</FormControl>
-								</Grid>
-								<Grid size={{ xs: 12, md: 6 }}>
-									<TextField
-										required
-										fullWidth
-										type="datetime-local"
-										label="Due Date"
-										value={formData.due_date}
-										onChange={(e) => handleChange('due_date', e.target.value)}
-										size="small"
-										InputLabelProps={{ shrink: true }}
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
-								</Grid>
-							</Grid>
-						</Paper>
+							</Paper>
 
-						<Paper elevation={0} sx={awsPanelStyle}>
-							<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-								<LinkIcon sx={{ color: '#545b64', fontSize: 20 }} />
-								<Typography sx={sectionTitleStyle}>Associations & Ownership</Typography>
-							</Stack>
-							<Grid container spacing={3}>
-								<Grid size={{ xs: 12, md: 4 }}>
-									<FormControl fullWidth size="small">
-										<InputLabel>Related To Type</InputLabel>
-										<Select
-											value={formData.related_to_type || ''}
-											label="Related To Type"
-											onChange={(e) => {
-												handleChange('related_to_type', e.target.value);
-												handleChange('related_to_id', undefined);
-											}}
-											sx={{ borderRadius: '2px' }}
-										>
-											<MenuItem value="">None</MenuItem>
-											{RELATED_TO_TYPES.map(s => <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>)}
-										</Select>
-									</FormControl>
+							<Paper elevation={0} sx={awsPanelStyle}>
+								<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+									<LinkIcon sx={{ color: '#545b64', fontSize: 20 }} />
+									<Typography sx={sectionTitleStyle}>Associations & Ownership</Typography>
+								</Stack>
+								<Grid container spacing={3}>
+									<Grid size={{ xs: 12, md: 4 }}>
+										<FormControl fullWidth size="small">
+											<InputLabel>Related To Type</InputLabel>
+											<Select
+												value={formData.related_to_type || ''}
+												label="Related To Type"
+												onChange={(e) => {
+													handleChange('related_to_type', e.target.value);
+													handleChange('related_to_id', undefined);
+												}}
+												sx={{ borderRadius: '2px' }}
+											>
+												<MenuItem value="">None</MenuItem>
+												{RELATED_TO_TYPES.map(s => <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>)}
+											</Select>
+										</FormControl>
+									</Grid>
+									<Grid size={{ xs: 12, md: 8 }}>
+										<Autocomplete
+											disabled={!formData.related_to_type}
+											options={getRelatedOptions()}
+											getOptionLabel={getRelatedLabel}
+											value={getRelatedOptions().find(o => o.id === formData.related_to_id) || null}
+											onChange={(_, value) => handleChange('related_to_id', value?.id)}
+											renderInput={(params) => (
+												<TextField {...params} label={`Related ${formData.related_to_type || 'Entity'}`} size="small" />
+											)}
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										/>
+									</Grid>
+									<Grid size={{ xs: 12 }}>
+										<Autocomplete
+											options={users}
+											getOptionLabel={(option) => option.full_name || option.username}
+											value={users.find(u => u.id === formData.assigned_to) || null}
+											onChange={(_, value) => handleChange('assigned_to', value?.id)}
+											renderInput={(params) => (
+												<TextField {...params} required label="Assigned To" size="small" />
+											)}
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										/>
+									</Grid>
 								</Grid>
-								<Grid size={{ xs: 12, md: 8 }}>
-									<Autocomplete
-										disabled={!formData.related_to_type}
-										options={getRelatedOptions()}
-										getOptionLabel={getRelatedLabel}
-										value={getRelatedOptions().find(o => o.id === formData.related_to_id) || null}
-										onChange={(_, value) => handleChange('related_to_id', value?.id)}
-										renderInput={(params) => (
-											<TextField {...params} label={`Related ${formData.related_to_type || 'Entity'}`} size="small" />
-										)}
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
-								</Grid>
-								<Grid size={{ xs: 12 }}>
-									<Autocomplete
-										options={users}
-										getOptionLabel={(option) => option.full_name || option.username}
-										value={users.find(u => u.id === formData.assigned_to) || null}
-										onChange={(_, value) => handleChange('assigned_to', value?.id)}
-										renderInput={(params) => (
-											<TextField {...params} required label="Assigned To" size="small" />
-										)}
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
-								</Grid>
-							</Grid>
-						</Paper>
-					</Stack>
+							</Paper>
+						</Stack>
+					</Box>
 				</DialogContent>
 
-				<DialogActions sx={{ p: 3, bgcolor: '#ffffff', borderTop: '1px solid #d5dbdb' }}>
+				<Divider sx={{ borderColor: '#d5dbdb' }} />
+				<DialogActions sx={{ p: 3, bgcolor: '#ffffff' }}>
 					<Button
 						onClick={onClose}
-						sx={{
-							color: '#16191f',
-							textTransform: 'none',
-							fontWeight: 700,
-							px: 3
-						}}
+						variant="text"
+						sx={{ color: '#545b64', fontWeight: 700, px: 3, textTransform: 'none' }}
 					>
 						Cancel
 					</Button>
@@ -384,7 +380,7 @@ const CRMTaskFormDialog: React.FC<CRMTaskFormDialogProps> = ({
 							boxShadow: 'none'
 						}}
 					>
-						{loading ? 'Saving...' : (task ? 'Update Task' : 'Create Task')}
+						{loading ? 'Saving...' : (task ? 'Update Task' : 'Save Task')}
 					</Button>
 				</DialogActions>
 			</Box>

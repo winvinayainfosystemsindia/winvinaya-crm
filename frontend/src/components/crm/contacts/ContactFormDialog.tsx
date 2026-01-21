@@ -17,7 +17,8 @@ import {
 	IconButton,
 	Paper,
 	FormControlLabel,
-	Switch
+	Switch,
+	Divider
 } from '@mui/material';
 import { Close as CloseIcon, Person as PersonIcon, Work as WorkIcon, Phone as PhoneIcon } from '@mui/icons-material';
 import type { Contact, ContactCreate, ContactUpdate, ContactSource } from '../../../models/contact';
@@ -127,196 +128,192 @@ const ContactFormDialog: React.FC<ContactFormDialogProps> = ({
 		>
 			<DialogTitle sx={{ bgcolor: '#232f3e', color: '#ffffff', py: 2 }}>
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
-					<Stack direction="row" spacing={1.5} alignItems="center">
-						<PersonIcon sx={{ color: '#ff9900' }} />
-						<Typography variant="h6" sx={{ color: 'white', fontWeight: 700, fontSize: '1.25rem' }}>
-							{contact ? 'Edit Contact' : 'Create New Contact'}
-						</Typography>
-					</Stack>
-					<IconButton onClick={onClose} size="small" sx={{ color: 'white' }}>
-						<CloseIcon fontSize="small" />
+					<Typography variant="h6" sx={{ fontSize: '1.25rem', fontWeight: 700 }}>
+						{contact ? 'Edit Contact' : 'New Contact'}
+					</Typography>
+					<IconButton onClick={onClose} sx={{ color: '#ffffff' }}>
+						<CloseIcon />
 					</IconButton>
 				</Stack>
 			</DialogTitle>
 
 			<Box component="form" onSubmit={handleSubmit}>
-				<DialogContent sx={{ p: 4, bgcolor: '#f2f3f3' }}>
-					<Stack spacing={3}>
-						<Paper elevation={0} sx={awsPanelStyle}>
-							<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-								<PersonIcon sx={{ color: '#545b64', fontSize: 20 }} />
-								<Typography sx={sectionTitleStyle}>Contact Identity</Typography>
-							</Stack>
-							<Grid container spacing={3}>
-								<Grid size={{ xs: 12, md: 6 }}>
-									<TextField
-										required
-										fullWidth
-										label="First Name"
-										value={formData.first_name}
-										onChange={(e) => handleChange('first_name', e.target.value)}
-										size="small"
-										variant="outlined"
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
-								</Grid>
-								<Grid size={{ xs: 12, md: 6 }}>
-									<TextField
-										required
-										fullWidth
-										label="Last Name"
-										value={formData.last_name}
-										onChange={(e) => handleChange('last_name', e.target.value)}
-										size="small"
-										variant="outlined"
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
-								</Grid>
-								<Grid size={{ xs: 12, md: 6 }}>
-									<TextField
-										required
-										fullWidth
-										label="Email Address"
-										type="email"
-										value={formData.email}
-										onChange={(e) => handleChange('email', e.target.value)}
-										placeholder="john.doe@example.com"
-										size="small"
-										variant="outlined"
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
-								</Grid>
-								<Grid size={{ xs: 12, md: 6 }}>
-									<FormControl fullWidth size="small">
-										<InputLabel>Associated Company</InputLabel>
-										<Select
-											value={formData.company_id || ''}
-											label="Associated Company"
-											onChange={(e) => handleChange('company_id', e.target.value)}
-											sx={{ borderRadius: '2px' }}
-										>
-											<MenuItem value="">None</MenuItem>
-											{companies.map(c => (
-												<MenuItem key={c.public_id} value={c.id}>
-													{c.name}
-												</MenuItem>
-											))}
-										</Select>
-									</FormControl>
-								</Grid>
-							</Grid>
-						</Paper>
-
-						<Paper elevation={0} sx={awsPanelStyle}>
-							<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-								<WorkIcon sx={{ color: '#545b64', fontSize: 20 }} />
-								<Typography sx={sectionTitleStyle}>Professional Details</Typography>
-							</Stack>
-							<Grid container spacing={3}>
-								<Grid size={{ xs: 12, md: 6 }}>
-									<TextField
-										fullWidth
-										label="Designation"
-										value={formData.designation}
-										onChange={(e) => handleChange('designation', e.target.value)}
-										placeholder="e.g. HR Manager"
-										size="small"
-										variant="outlined"
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
-								</Grid>
-								<Grid size={{ xs: 12, md: 6 }}>
-									<TextField
-										fullWidth
-										label="Department"
-										value={formData.department}
-										onChange={(e) => handleChange('department', e.target.value)}
-										placeholder="e.g. Talent Acquisition"
-										size="small"
-										variant="outlined"
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
-								</Grid>
-								<Grid size={{ xs: 12 }}>
-									<FormControl fullWidth size="small">
-										<InputLabel>Source</InputLabel>
-										<Select
-											value={formData.contact_source}
-											label="Source"
-											onChange={(e) => handleChange('contact_source', e.target.value)}
-											sx={{ borderRadius: '2px' }}
-										>
-											{CONTACT_SOURCES.map(s => <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>)}
-										</Select>
-									</FormControl>
-								</Grid>
-							</Grid>
-							<Stack direction="row" spacing={4} sx={{ mt: 3 }}>
-								<FormControlLabel
-									control={
-										<Switch
-											checked={formData.is_primary}
-											onChange={(e) => handleChange('is_primary', e.target.checked)}
-											sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#ec7211' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#ec7211' } }}
+				<DialogContent sx={{ p: 0, bgcolor: '#f2f3f3' }}>
+					<Box sx={{ px: 4, py: 4 }}>
+						<Stack spacing={3}>
+							<Paper elevation={0} sx={awsPanelStyle}>
+								<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+									<PersonIcon sx={{ color: '#545b64', fontSize: 20 }} />
+									<Typography sx={sectionTitleStyle}>Contact Identity</Typography>
+								</Stack>
+								<Grid container spacing={3}>
+									<Grid size={{ xs: 12, md: 6 }}>
+										<TextField
+											required
+											fullWidth
+											label="First Name"
+											value={formData.first_name}
+											onChange={(e) => handleChange('first_name', e.target.value)}
+											size="small"
+											variant="outlined"
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
 										/>
-									}
-									label={<Typography variant="body2" sx={{ fontWeight: 600 }}>Primary Contact</Typography>}
-								/>
-								<FormControlLabel
-									control={
-										<Switch
-											checked={formData.is_decision_maker}
-											onChange={(e) => handleChange('is_decision_maker', e.target.checked)}
-											sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#ec7211' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#ec7211' } }}
+									</Grid>
+									<Grid size={{ xs: 12, md: 6 }}>
+										<TextField
+											required
+											fullWidth
+											label="Last Name"
+											value={formData.last_name}
+											onChange={(e) => handleChange('last_name', e.target.value)}
+											size="small"
+											variant="outlined"
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
 										/>
-									}
-									label={<Typography variant="body2" sx={{ fontWeight: 600 }}>Decision Maker</Typography>}
-								/>
-							</Stack>
-						</Paper>
+									</Grid>
+									<Grid size={{ xs: 12, md: 6 }}>
+										<TextField
+											required
+											fullWidth
+											label="Email Address"
+											type="email"
+											value={formData.email}
+											onChange={(e) => handleChange('email', e.target.value)}
+											placeholder="john.doe@example.com"
+											size="small"
+											variant="outlined"
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										/>
+									</Grid>
+									<Grid size={{ xs: 12, md: 6 }}>
+										<FormControl fullWidth size="small">
+											<InputLabel>Associated Company</InputLabel>
+											<Select
+												value={formData.company_id || ''}
+												label="Associated Company"
+												onChange={(e) => handleChange('company_id', e.target.value)}
+												sx={{ borderRadius: '2px' }}
+											>
+												<MenuItem value="">None</MenuItem>
+												{companies.map(c => (
+													<MenuItem key={c.public_id} value={c.id}>
+														{c.name}
+													</MenuItem>
+												))}
+											</Select>
+										</FormControl>
+									</Grid>
+								</Grid>
+							</Paper>
 
-						<Paper elevation={0} sx={awsPanelStyle}>
-							<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-								<PhoneIcon sx={{ color: '#545b64', fontSize: 20 }} />
-								<Typography sx={sectionTitleStyle}>Contact Numbers</Typography>
-							</Stack>
-							<Grid container spacing={3}>
-								<Grid size={{ xs: 12, md: 6 }}>
-									<TextField
-										fullWidth
-										label="Work Phone"
-										value={formData.phone}
-										onChange={(e) => handleChange('phone', e.target.value)}
-										size="small"
-										variant="outlined"
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
+							<Paper elevation={0} sx={awsPanelStyle}>
+								<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+									<WorkIcon sx={{ color: '#545b64', fontSize: 20 }} />
+									<Typography sx={sectionTitleStyle}>Professional Details</Typography>
+								</Stack>
+								<Grid container spacing={3}>
+									<Grid size={{ xs: 12, md: 6 }}>
+										<TextField
+											fullWidth
+											label="Designation"
+											value={formData.designation}
+											onChange={(e) => handleChange('designation', e.target.value)}
+											placeholder="e.g. HR Manager"
+											size="small"
+											variant="outlined"
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										/>
+									</Grid>
+									<Grid size={{ xs: 12, md: 6 }}>
+										<TextField
+											fullWidth
+											label="Department"
+											value={formData.department}
+											onChange={(e) => handleChange('department', e.target.value)}
+											placeholder="e.g. Talent Acquisition"
+											size="small"
+											variant="outlined"
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										/>
+									</Grid>
+									<Grid size={{ xs: 12 }}>
+										<FormControl fullWidth size="small">
+											<InputLabel>Source</InputLabel>
+											<Select
+												value={formData.contact_source}
+												label="Source"
+												onChange={(e) => handleChange('contact_source', e.target.value)}
+												sx={{ borderRadius: '2px' }}
+											>
+												{CONTACT_SOURCES.map(s => <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>)}
+											</Select>
+										</FormControl>
+									</Grid>
 								</Grid>
-								<Grid size={{ xs: 12, md: 6 }}>
-									<TextField
-										fullWidth
-										label="Mobile"
-										value={formData.mobile}
-										onChange={(e) => handleChange('mobile', e.target.value)}
-										size="small"
-										variant="outlined"
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+								<Stack direction="row" spacing={4} sx={{ mt: 3 }}>
+									<FormControlLabel
+										control={
+											<Switch
+												checked={formData.is_primary}
+												onChange={(e) => handleChange('is_primary', e.target.checked)}
+												sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#ec7211' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#ec7211' } }}
+											/>
+										}
+										label={<Typography variant="body2" sx={{ fontWeight: 600 }}>Primary Contact</Typography>}
 									/>
+									<FormControlLabel
+										control={
+											<Switch
+												checked={formData.is_decision_maker}
+												onChange={(e) => handleChange('is_decision_maker', e.target.checked)}
+												sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#ec7211' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#ec7211' } }}
+											/>
+										}
+										label={<Typography variant="body2" sx={{ fontWeight: 600 }}>Decision Maker</Typography>}
+									/>
+								</Stack>
+							</Paper>
+
+							<Paper elevation={0} sx={awsPanelStyle}>
+								<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+									<PhoneIcon sx={{ color: '#545b64', fontSize: 20 }} />
+									<Typography sx={sectionTitleStyle}>Contact Numbers</Typography>
+								</Stack>
+								<Grid container spacing={3}>
+									<Grid size={{ xs: 12, md: 6 }}>
+										<TextField
+											fullWidth
+											label="Work Phone"
+											value={formData.phone}
+											onChange={(e) => handleChange('phone', e.target.value)}
+											size="small"
+											variant="outlined"
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										/>
+									</Grid>
+									<Grid size={{ xs: 12, md: 6 }}>
+										<TextField
+											fullWidth
+											label="Mobile"
+											value={formData.mobile}
+											onChange={(e) => handleChange('mobile', e.target.value)}
+											size="small"
+											variant="outlined"
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										/>
+									</Grid>
 								</Grid>
-							</Grid>
-						</Paper>
-					</Stack>
+							</Paper>
+						</Stack>
+					</Box>
 				</DialogContent>
 
-				<DialogActions sx={{ p: 3, bgcolor: '#ffffff', borderTop: '1px solid #d5dbdb' }}>
+				<Divider sx={{ borderColor: '#d5dbdb' }} />
+				<DialogActions sx={{ p: 3, bgcolor: '#ffffff' }}>
 					<Button
 						onClick={onClose}
-						sx={{
-							color: '#16191f',
-							textTransform: 'none',
-							fontWeight: 700,
-							px: 3
-						}}
+						variant="text"
+						sx={{ color: '#545b64', fontWeight: 700, px: 3, textTransform: 'none' }}
 					>
 						Cancel
 					</Button>
@@ -337,7 +334,7 @@ const ContactFormDialog: React.FC<ContactFormDialogProps> = ({
 							boxShadow: 'none'
 						}}
 					>
-						{loading ? 'Saving...' : (contact ? 'Update Contact' : 'Create Contact')}
+						{loading ? 'Saving...' : (contact ? 'Update Contact' : 'Save Contact')}
 					</Button>
 				</DialogActions>
 			</Box>

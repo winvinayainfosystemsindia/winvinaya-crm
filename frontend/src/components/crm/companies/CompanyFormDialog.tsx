@@ -15,9 +15,10 @@ import {
 	Grid,
 	Box,
 	IconButton,
-	Paper
+	Paper,
+	Divider
 } from '@mui/material';
-import { Close as CloseIcon, Business as BusinessIcon, Info as InfoIcon, Email as EmailIcon, LocationOn as LocationIcon } from '@mui/icons-material';
+import { Close as CloseIcon, Info as InfoIcon, Email as EmailIcon, LocationOn as LocationIcon } from '@mui/icons-material';
 import type { Company, CompanyCreate, CompanyUpdate, CompanySize, CompanyStatus } from '../../../models/company';
 
 interface CompanyFormDialogProps {
@@ -136,188 +137,184 @@ const CompanyFormDialog: React.FC<CompanyFormDialogProps> = ({
 		>
 			<DialogTitle sx={{ bgcolor: '#232f3e', color: '#ffffff', py: 2 }}>
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
-					<Stack direction="row" spacing={1.5} alignItems="center">
-						<BusinessIcon sx={{ color: '#ff9900' }} />
-						<Typography variant="h6" sx={{ color: 'white', fontWeight: 700, fontSize: '1.25rem' }}>
-							{company ? 'Edit Company' : 'Create New Company'}
-						</Typography>
-					</Stack>
-					<IconButton onClick={onClose} size="small" sx={{ color: 'white' }}>
-						<CloseIcon fontSize="small" />
+					<Typography variant="h6" sx={{ fontSize: '1.25rem', fontWeight: 700 }}>
+						{company ? 'Edit Company' : 'New Company'}
+					</Typography>
+					<IconButton onClick={onClose} sx={{ color: '#ffffff' }}>
+						<CloseIcon />
 					</IconButton>
 				</Stack>
 			</DialogTitle>
 
 			<Box component="form" onSubmit={handleSubmit}>
-				<DialogContent sx={{ p: 4, bgcolor: '#f2f3f3' }}>
-					<Stack spacing={3}>
-						<Paper elevation={0} sx={awsPanelStyle}>
-							<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-								<InfoIcon sx={{ color: '#545b64', fontSize: 20 }} />
-								<Typography sx={sectionTitleStyle}>Basic Information</Typography>
-							</Stack>
-							<Grid container spacing={3}>
-								<Grid size={{ xs: 12, md: 8 }}>
-									<TextField
-										required
-										fullWidth
-										label="Company Name"
-										value={formData.name}
-										onChange={(e) => handleChange('name', e.target.value)}
-										variant="outlined"
-										size="small"
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
+				<DialogContent sx={{ p: 0, bgcolor: '#f2f3f3' }}>
+					<Box sx={{ px: 4, py: 4 }}>
+						<Stack spacing={3}>
+							<Paper elevation={0} sx={awsPanelStyle}>
+								<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+									<InfoIcon sx={{ color: '#545b64', fontSize: 20 }} />
+									<Typography sx={sectionTitleStyle}>Basic Information</Typography>
+								</Stack>
+								<Grid container spacing={3}>
+									<Grid size={{ xs: 12, md: 8 }}>
+										<TextField
+											required
+											fullWidth
+											label="Company Name"
+											value={formData.name}
+											onChange={(e) => handleChange('name', e.target.value)}
+											variant="outlined"
+											size="small"
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										/>
+									</Grid>
+									<Grid size={{ xs: 12, md: 4 }}>
+										<FormControl fullWidth size="small">
+											<InputLabel>Status</InputLabel>
+											<Select
+												value={formData.status}
+												label="Status"
+												onChange={(e) => handleChange('status', e.target.value)}
+												sx={{ borderRadius: '2px' }}
+											>
+												{COMPANY_STATUSES.map(s => <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>)}
+											</Select>
+										</FormControl>
+									</Grid>
+									<Grid size={{ xs: 12, md: 6 }}>
+										<TextField
+											fullWidth
+											label="Industry"
+											value={formData.industry}
+											onChange={(e) => handleChange('industry', e.target.value)}
+											size="small"
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										/>
+									</Grid>
+									<Grid size={{ xs: 12, md: 6 }}>
+										<FormControl fullWidth size="small">
+											<InputLabel>Company Size</InputLabel>
+											<Select
+												value={formData.company_size}
+												label="Company Size"
+												onChange={(e) => handleChange('company_size', e.target.value)}
+												sx={{ borderRadius: '2px' }}
+											>
+												{COMPANY_SIZES.map(s => <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>)}
+											</Select>
+										</FormControl>
+									</Grid>
 								</Grid>
-								<Grid size={{ xs: 12, md: 4 }}>
-									<FormControl fullWidth size="small">
-										<InputLabel>Status</InputLabel>
-										<Select
-											value={formData.status}
-											label="Status"
-											onChange={(e) => handleChange('status', e.target.value)}
-											sx={{ borderRadius: '2px' }}
-										>
-											{COMPANY_STATUSES.map(s => <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>)}
-										</Select>
-									</FormControl>
-								</Grid>
-								<Grid size={{ xs: 12, md: 6 }}>
-									<TextField
-										fullWidth
-										label="Industry"
-										value={formData.industry}
-										onChange={(e) => handleChange('industry', e.target.value)}
-										size="small"
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
-								</Grid>
-								<Grid size={{ xs: 12, md: 6 }}>
-									<FormControl fullWidth size="small">
-										<InputLabel>Company Size</InputLabel>
-										<Select
-											value={formData.company_size}
-											label="Company Size"
-											onChange={(e) => handleChange('company_size', e.target.value)}
-											sx={{ borderRadius: '2px' }}
-										>
-											{COMPANY_SIZES.map(s => <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>)}
-										</Select>
-									</FormControl>
-								</Grid>
-							</Grid>
-						</Paper>
+							</Paper>
 
-						<Paper elevation={0} sx={awsPanelStyle}>
-							<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-								<EmailIcon sx={{ color: '#545b64', fontSize: 20 }} />
-								<Typography sx={sectionTitleStyle}>Contact Details</Typography>
-							</Stack>
-							<Grid container spacing={3}>
-								<Grid size={{ xs: 12, md: 6 }}>
-									<TextField
-										fullWidth
-										label="Work Email"
-										type="email"
-										value={formData.email}
-										onChange={(e) => handleChange('email', e.target.value)}
-										size="small"
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
+							<Paper elevation={0} sx={awsPanelStyle}>
+								<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+									<EmailIcon sx={{ color: '#545b64', fontSize: 20 }} />
+									<Typography sx={sectionTitleStyle}>Contact Details</Typography>
+								</Stack>
+								<Grid container spacing={3}>
+									<Grid size={{ xs: 12, md: 6 }}>
+										<TextField
+											fullWidth
+											label="Work Email"
+											type="email"
+											value={formData.email}
+											onChange={(e) => handleChange('email', e.target.value)}
+											size="small"
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										/>
+									</Grid>
+									<Grid size={{ xs: 12, md: 6 }}>
+										<TextField
+											fullWidth
+											label="Phone Number"
+											value={formData.phone}
+											onChange={(e) => handleChange('phone', e.target.value)}
+											size="small"
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										/>
+									</Grid>
+									<Grid size={{ xs: 12 }}>
+										<TextField
+											fullWidth
+											label="Website"
+											value={formData.website}
+											onChange={(e) => handleChange('website', e.target.value)}
+											size="small"
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										/>
+									</Grid>
 								</Grid>
-								<Grid size={{ xs: 12, md: 6 }}>
-									<TextField
-										fullWidth
-										label="Phone Number"
-										value={formData.phone}
-										onChange={(e) => handleChange('phone', e.target.value)}
-										size="small"
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
-								</Grid>
-								<Grid size={{ xs: 12 }}>
-									<TextField
-										fullWidth
-										label="Website"
-										value={formData.website}
-										onChange={(e) => handleChange('website', e.target.value)}
-										size="small"
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
-								</Grid>
-							</Grid>
-						</Paper>
+							</Paper>
 
-						<Paper elevation={0} sx={awsPanelStyle}>
-							<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-								<LocationIcon sx={{ color: '#545b64', fontSize: 20 }} />
-								<Typography sx={sectionTitleStyle}>Headquarters Address</Typography>
-							</Stack>
-							<Grid container spacing={3}>
-								<Grid size={{ xs: 12 }}>
-									<TextField
-										fullWidth
-										label="Street Address"
-										value={formData.address?.street}
-										onChange={(e) => handleChange('address.street', e.target.value)}
-										size="small"
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
+							<Paper elevation={0} sx={awsPanelStyle}>
+								<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+									<LocationIcon sx={{ color: '#545b64', fontSize: 20 }} />
+									<Typography sx={sectionTitleStyle}>Headquarters Address</Typography>
+								</Stack>
+								<Grid container spacing={3}>
+									<Grid size={{ xs: 12 }}>
+										<TextField
+											fullWidth
+											label="Street Address"
+											value={formData.address?.street}
+											onChange={(e) => handleChange('address.street', e.target.value)}
+											size="small"
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										/>
+									</Grid>
+									<Grid size={{ xs: 12, md: 6 }}>
+										<TextField
+											fullWidth
+											label="City"
+											value={formData.address?.city}
+											onChange={(e) => handleChange('address.city', e.target.value)}
+											size="small"
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										/>
+									</Grid>
+									<Grid size={{ xs: 12, md: 6 }}>
+										<TextField
+											fullWidth
+											label="State / Province"
+											value={formData.address?.state}
+											onChange={(e) => handleChange('address.state', e.target.value)}
+											size="small"
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										/>
+									</Grid>
+									<Grid size={{ xs: 12, md: 6 }}>
+										<TextField
+											fullWidth
+											label="Country"
+											value={formData.address?.country}
+											onChange={(e) => handleChange('address.country', e.target.value)}
+											size="small"
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										/>
+									</Grid>
+									<Grid size={{ xs: 12, md: 6 }}>
+										<TextField
+											fullWidth
+											label="Pincode"
+											value={formData.address?.pincode}
+											onChange={(e) => handleChange('address.pincode', e.target.value)}
+											size="small"
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										/>
+									</Grid>
 								</Grid>
-								<Grid size={{ xs: 12, md: 6 }}>
-									<TextField
-										fullWidth
-										label="City"
-										value={formData.address?.city}
-										onChange={(e) => handleChange('address.city', e.target.value)}
-										size="small"
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
-								</Grid>
-								<Grid size={{ xs: 12, md: 6 }}>
-									<TextField
-										fullWidth
-										label="State / Province"
-										value={formData.address?.state}
-										onChange={(e) => handleChange('address.state', e.target.value)}
-										size="small"
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
-								</Grid>
-								<Grid size={{ xs: 12, md: 6 }}>
-									<TextField
-										fullWidth
-										label="Country"
-										value={formData.address?.country}
-										onChange={(e) => handleChange('address.country', e.target.value)}
-										size="small"
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
-								</Grid>
-								<Grid size={{ xs: 12, md: 6 }}>
-									<TextField
-										fullWidth
-										label="Pincode"
-										value={formData.address?.pincode}
-										onChange={(e) => handleChange('address.pincode', e.target.value)}
-										size="small"
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-									/>
-								</Grid>
-							</Grid>
-						</Paper>
-					</Stack>
+							</Paper>
+						</Stack>
+					</Box>
 				</DialogContent>
 
-				<DialogActions sx={{ p: 3, bgcolor: '#ffffff', borderTop: '1px solid #d5dbdb' }}>
+				<Divider sx={{ borderColor: '#d5dbdb' }} />
+				<DialogActions sx={{ p: 3, bgcolor: '#ffffff' }}>
 					<Button
 						onClick={onClose}
-						sx={{
-							color: '#16191f',
-							textTransform: 'none',
-							fontWeight: 700,
-							px: 3
-						}}
+						variant="text"
+						sx={{ color: '#545b64', fontWeight: 700, px: 3, textTransform: 'none' }}
 					>
 						Cancel
 					</Button>
@@ -338,7 +335,7 @@ const CompanyFormDialog: React.FC<CompanyFormDialogProps> = ({
 							boxShadow: 'none'
 						}}
 					>
-						{loading ? 'Saving...' : (company ? 'Update Company' : 'Create Company')}
+						{loading ? 'Saving...' : (company ? 'Update Company' : 'Save Company')}
 					</Button>
 				</DialogActions>
 			</Box>
