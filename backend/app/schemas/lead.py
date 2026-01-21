@@ -4,7 +4,7 @@ from typing import Optional, Dict, Any, List
 from uuid import UUID
 from datetime import datetime, date
 from decimal import Decimal
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from app.models.lead import LeadStatus, LeadSource
 from app.schemas.deal import DealRead
 from app.schemas.user import UserResponse
@@ -29,7 +29,19 @@ class LeadBase(BaseModel):
 
 
 class LeadCreate(LeadBase):
-    pass
+    @field_validator('assigned_to')
+    @classmethod
+    def validate_assigned_to(cls, v):
+        if v is None or v <= 0:
+            raise ValueError('assigned_to must be a valid user ID (positive integer)')
+        return v
+    
+    @field_validator('estimated_value')
+    @classmethod
+    def validate_estimated_value(cls, v):
+        if v is not None and (str(v).lower() == 'nan' or v < 0):
+            raise ValueError('estimated_value must be a positive number or null')
+        return v
 
 
 class LeadUpdate(BaseModel):
