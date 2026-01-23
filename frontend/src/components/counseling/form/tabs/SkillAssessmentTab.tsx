@@ -16,6 +16,7 @@ import {
 	Paper
 } from '@mui/material';
 import { Add, Delete } from '@mui/icons-material';
+import InfoIcon from '@mui/icons-material/Info';
 
 interface SkillAssessmentTabProps {
 	formData: any;
@@ -48,6 +49,17 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 		bgcolor: '#ffffff'
 	};
 
+	const infoBoxStyle = {
+		bgcolor: '#f1faff',
+		border: '1px solid #007eb9',
+		borderRadius: '2px',
+		p: 2,
+		display: 'flex',
+		alignItems: 'flex-start',
+		gap: 1.5,
+		mb: 3
+	};
+
 	return (
 		<Paper elevation={0} sx={awsPanelStyle}>
 			<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -67,6 +79,12 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 				>
 					Add Skill
 				</Button>
+			</Box>
+			<Box sx={infoBoxStyle}>
+				<InfoIcon sx={{ color: '#007eb9', mt: 0.25 }} />
+				<Typography variant="body2" color="#007eb9">
+					Please mention at least three key skills you believe you have (you may list more than three if applicable).
+				</Typography>
 			</Box>
 			<Divider sx={{ mb: 3 }} />
 			{formData.skills && formData.skills.length > 0 ? (

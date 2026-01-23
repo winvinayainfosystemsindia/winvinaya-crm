@@ -10,6 +10,7 @@ import {
 	Paper
 } from '@mui/material';
 import { Add, Delete } from '@mui/icons-material';
+import InfoIcon from '@mui/icons-material/Info';
 
 interface InterviewFeedbackTabProps {
 	formData: any;
@@ -42,6 +43,17 @@ const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 		bgcolor: '#ffffff'
 	};
 
+	const infoBoxStyle = {
+		bgcolor: '#f1faff',
+		border: '1px solid #007eb9',
+		borderRadius: '2px',
+		p: 2,
+		display: 'flex',
+		alignItems: 'flex-start',
+		gap: 1.5,
+		mb: 3
+	};
+
 	return (
 		<Stack spacing={3}>
 			<Paper elevation={0} sx={awsPanelStyle}>
@@ -62,6 +74,12 @@ const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 					>
 						Add Custom Question
 					</Button>
+				</Box>
+				<Box sx={infoBoxStyle}>
+					<InfoIcon sx={{ color: '#007eb9', mt: 0.25 }} />
+					<Typography variant="body2" color="#007eb9">
+						Ask Domain based questions/task/activity to understnd the skill level mentioned by the candidate.
+					</Typography>
 				</Box>
 				<Divider sx={{ mb: 3 }} />
 				<Stack spacing={3}>
@@ -103,6 +121,12 @@ const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 
 			<Paper elevation={0} sx={awsPanelStyle}>
 				<Typography sx={sectionTitleStyle}>Training/Placement Recommendation</Typography>
+				<Box sx={infoBoxStyle}>
+					<InfoIcon sx={{ color: '#007eb9', mt: 0.25 }} />
+					<Typography variant="body2" color="#007eb9">
+						Provide feedback on domain skills, communication, and typing speed, along with ratings and remarks, and inform the candidate accordingly.
+					</Typography>
+				</Box>
 				<TextField
 					multiline
 					rows={4}

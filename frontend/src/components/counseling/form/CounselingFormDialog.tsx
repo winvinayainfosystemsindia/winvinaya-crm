@@ -31,11 +31,7 @@ const COMMON_SKILLS = [
 ];
 
 const PREDEFINED_QUESTIONS = [
-	'Tell us about yourself and your background?',
-	'What are your career goals?',
-	'What kind of job roles are you looking for?',
-	'Are you available for immediate training/placement?',
-	'Do you have any specific needs for workplace accessibility?'
+	'Tell us about yourself and your background?'
 ];
 
 interface CounselingFormDialogProps {
