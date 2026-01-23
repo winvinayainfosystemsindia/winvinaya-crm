@@ -22,10 +22,10 @@ import GeneralInfoTab from '../../components/candidates/detailedView/GeneralInfo
 import ScreeningTab from '../../components/candidates/detailedView/ScreeningTab';
 import CounselingTab from '../../components/candidates/detailedView/CounselingTab';
 import DocumentsTab from '../../components/candidates/detailedView/DocumentsTab';
-import TrainingAllocationTab from '../../components/candidates/detailedView/TrainingAllocationTab';
-import CandidateAttendanceTab from '../../components/candidates/detailedView/CandidateAttendanceTab';
-import CandidateAssessmentTab from '../../components/candidates/detailedView/CandidateAssessmentTab';
-import CandidateMockInterviewTab from '../../components/candidates/detailedView/CandidateMockInterviewTab';
+// import TrainingAllocationTab from '../../components/candidates/detailedView/TrainingAllocationTab';
+// import CandidateAttendanceTab from '../../components/candidates/detailedView/CandidateAttendanceTab';
+// import CandidateAssessmentTab from '../../components/candidates/detailedView/CandidateAssessmentTab';
+// import CandidateMockInterviewTab from '../../components/candidates/detailedView/CandidateMockInterviewTab';
 
 
 const CandidateDetail: React.FC = () => {
@@ -140,10 +140,10 @@ const CandidateDetail: React.FC = () => {
 						<Tab label="Screening" id="tab-1" />
 						<Tab label="Counseling" id="tab-2" />
 						<Tab label="Documents" id="tab-3" />
-						<Tab label="Allocation" id="tab-4" />
+						{/* <Tab label="Allocation" id="tab-4" />
 						<Tab label="Attendance" id="tab-5" />
 						<Tab label="Assessments" id="tab-6" />
-						<Tab label="Mock Interviews" id="tab-7" />
+						<Tab label="Mock Interviews" id="tab-7" /> */}
 					</Tabs>
 				</Box>
 
@@ -153,10 +153,10 @@ const CandidateDetail: React.FC = () => {
 					{tabValue === 1 && <ScreeningTab candidate={candidate} />}
 					{tabValue === 2 && <CounselingTab candidate={candidate} />}
 					{tabValue === 3 && <DocumentsTab candidate={candidate} />}
-					{tabValue === 4 && <TrainingAllocationTab candidate={candidate} />}
+					{/* {tabValue === 4 && <TrainingAllocationTab candidate={candidate} />}
 					{tabValue === 5 && <CandidateAttendanceTab candidate={candidate} />}
 					{tabValue === 6 && <CandidateAssessmentTab candidate={candidate} />}
-					{tabValue === 7 && <CandidateMockInterviewTab candidate={candidate} />}
+					{tabValue === 7 && <CandidateMockInterviewTab candidate={candidate} />} */}
 				</Box>
 
 			</Container>
