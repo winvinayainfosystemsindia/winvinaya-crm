@@ -10,7 +10,7 @@ import {
 	useTheme,
 	useMediaQuery
 } from '@mui/material';
-import { useAppDispatch } from '../../store/hooks';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchCandidateStats, createScreening, updateScreening, fetchCandidateById } from '../../store/slices/candidateSlice';
 import ScreeningStatCard from '../../components/profiling/ScreeningStatCard';
 import ScreeningTable from '../../components/profiling/ScreeningTable';
@@ -40,6 +40,7 @@ function TabPanel(props: TabPanelProps) {
 
 const ScreeningList: React.FC = () => {
 	const dispatch = useAppDispatch();
+	const { stats } = useAppSelector((state) => state.candidates);
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const [tabValue, setTabValue] = useState(0);
@@ -97,6 +98,37 @@ const ScreeningList: React.FC = () => {
 		}
 	};
 
+	// Helper to get count for a status safely
+	const getCount = (status: string) => {
+		if (!stats?.screening_distribution) return 0;
+		// Special handling for 'Other' if we wanted to aggregate, but for now exact match
+		return stats.screening_distribution[status] || 0;
+	};
+
+	// 'Other' tab logic: Sum of remaining statuses excluding the main ones? 
+	// Or based on backend? Backend 'Other' query logic is tricky. 
+	// For now, let's just display stats.not_screened for "Not Screened" and distribution for others.
+
+	const renderTabLabel = (label: string, count: number) => (
+		<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+			{label}
+			<Box
+				component="span"
+				sx={{
+					bgcolor: '#e0e0e0',
+					color: '#424242',
+					px: 0.8,
+					py: 0.2,
+					borderRadius: '12px',
+					fontSize: '0.75rem',
+					fontWeight: 600
+				}}
+			>
+				{count}
+			</Box>
+		</Box>
+	);
+
 	return (
 		<Box sx={{ bgcolor: '#f5f5f5', minHeight: '100vh', py: isMobile ? 2 : 3 }}>
 			<Container maxWidth="xl" sx={{ px: isMobile ? 1 : { sm: 2, md: 3 } }}>
@@ -133,6 +165,9 @@ const ScreeningList: React.FC = () => {
 					<Tabs
 						value={tabValue}
 						onChange={handleTabChange}
+						variant="scrollable"
+						scrollButtons="auto"
+						allowScrollButtonsMobile
 						sx={{
 							px: 2,
 							'& .MuiTab-root': {
@@ -143,12 +178,13 @@ const ScreeningList: React.FC = () => {
 							}
 						}}
 					>
-						<Tab label="Not Screened" />
-						<Tab label="Pending" />
-						<Tab label="Completed" />
-						<Tab label="In Progress" />
-						<Tab label="Rejected" />
-						<Tab label="Other" />
+						<Tab label={renderTabLabel("Not Screened", stats?.not_screened || 0)} />
+						<Tab label={renderTabLabel("Pending", getCount('Pending'))} />
+						<Tab label={renderTabLabel("Completed", getCount('Completed'))} />
+						<Tab label={renderTabLabel("In Progress", getCount('In Progress'))} />
+						<Tab label={renderTabLabel("Rejected", getCount('Rejected'))} />
+						{/* Calculating Other: Total - (Not Screened + Pending + Completed + In Progress + Rejected)? 
+						    Ideally backend should provide this, but for now we might leave it without count or try to calc */}
 					</Tabs>
 				</Box>
 

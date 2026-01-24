@@ -356,15 +356,20 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, status, onAction 
 				<Table sx={{ minWidth: 650 }} aria-label="screening table">
 					<TableHead>
 						<TableRow sx={{ bgcolor: '#fafafa' }}>
-							{[
-								{ id: 'name', label: 'Name', hideOnMobile: false },
-								{ id: 'phone', label: 'Phone', hideOnMobile: true },
-								{ id: 'disability_type', label: 'Disability', hideOnMobile: true },
-								{ id: 'education_level', label: 'Education', hideOnMobile: true },
-								{ id: 'district', label: 'Location', hideOnMobile: true },
-								{ id: 'created_at', label: 'Date', hideOnMobile: true },
-								{ id: 'screening_status', label: 'Status', hideOnMobile: false },
-							].map((headCell) => (
+							{(() => {
+								const headers = [
+									{ id: 'name', label: 'Name', hideOnMobile: false },
+									{ id: 'phone', label: 'Phone', hideOnMobile: true },
+									{ id: 'disability_type', label: 'Disability', hideOnMobile: true },
+									{ id: 'education_level', label: 'Education', hideOnMobile: true },
+									{ id: 'district', label: 'Location', hideOnMobile: true },
+									{ id: 'created_at', label: 'Date', hideOnMobile: true },
+								];
+								if (type !== 'unscreened') {
+									headers.push({ id: 'screening_status', label: 'Status', hideOnMobile: false });
+								}
+								return headers;
+							})().map((headCell) => (
 								<TableCell
 									key={headCell.id}
 									sortDirection={orderBy === headCell.id ? order : false}
@@ -473,41 +478,43 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, status, onAction 
 											{formatDate(type === 'screened' && candidate.screening_updated_at ? candidate.screening_updated_at : candidate.created_at)}
 										</Typography>
 									</TableCell>
-									<TableCell>
-										<Chip
-											label={candidate.screening_status}
-											size="small"
-											icon={
-												candidate.screening_status === 'Completed' ? <CheckCircle /> :
-													candidate.screening_status === 'Not Connected' || candidate.screening_status === 'Not Answered' ? <Cancel /> :
-														candidate.screening_status === 'In Progress' ? <WatchLater /> :
-															candidate.screening_status === 'Follow-up Required' ? <WatchLater /> :
-																<HelpOutline />
-											}
-											sx={{
-												height: 24,
-												fontSize: '0.75rem',
-												fontWeight: 700,
-												borderRadius: 1,
-												bgcolor:
-													candidate.screening_status === 'Completed' ? '#e8f5e9' :
-														candidate.screening_status === 'Not Connected' || candidate.screening_status === 'Not Answered' ? '#ffebee' :
-															candidate.screening_status === 'In Progress' ? '#e3f2fd' :
-																candidate.screening_status === 'Follow-up Required' ? '#fff3e0' :
-																	'#f5f5f5',
-												color:
-													candidate.screening_status === 'Completed' ? '#2e7d32' :
-														candidate.screening_status === 'Not Connected' || candidate.screening_status === 'Not Answered' ? '#d32f2f' :
-															candidate.screening_status === 'In Progress' ? '#1976d2' :
-																candidate.screening_status === 'Follow-up Required' ? '#ed6c02' :
-																	'#757575',
-												'& .MuiChip-icon': {
-													color: 'inherit',
-													fontSize: 16
+									{type !== 'unscreened' && (
+										<TableCell>
+											<Chip
+												label={candidate.screening_status}
+												size="small"
+												icon={
+													candidate.screening_status === 'Completed' ? <CheckCircle /> :
+														candidate.screening_status === 'Not Connected' || candidate.screening_status === 'Not Answered' ? <Cancel /> :
+															candidate.screening_status === 'In Progress' ? <WatchLater /> :
+																candidate.screening_status === 'Follow-up Required' ? <WatchLater /> :
+																	<HelpOutline />
 												}
-											}}
-										/>
-									</TableCell>
+												sx={{
+													height: 24,
+													fontSize: '0.75rem',
+													fontWeight: 700,
+													borderRadius: 1,
+													bgcolor:
+														candidate.screening_status === 'Completed' ? '#e8f5e9' :
+															candidate.screening_status === 'Not Connected' || candidate.screening_status === 'Not Answered' ? '#ffebee' :
+																candidate.screening_status === 'In Progress' ? '#e3f2fd' :
+																	candidate.screening_status === 'Follow-up Required' ? '#fff3e0' :
+																		'#f5f5f5',
+													color:
+														candidate.screening_status === 'Completed' ? '#2e7d32' :
+															candidate.screening_status === 'Not Connected' || candidate.screening_status === 'Not Answered' ? '#d32f2f' :
+																candidate.screening_status === 'In Progress' ? '#1976d2' :
+																	candidate.screening_status === 'Follow-up Required' ? '#ed6c02' :
+																		'#757575',
+													'& .MuiChip-icon': {
+														color: 'inherit',
+														fontSize: 16
+													}
+												}}
+											/>
+										</TableCell>
+									)}
 									<TableCell align="right">
 										{type === 'unscreened' ? (
 											<Button

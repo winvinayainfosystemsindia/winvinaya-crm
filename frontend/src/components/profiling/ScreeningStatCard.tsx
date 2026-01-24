@@ -71,45 +71,6 @@ const ScreeningStatCard: React.FC = () => {
 					color="#ed6c02"
 				/>
 			</Box>
-
-			{/* Status Breakdown */}
-			{/* Status Breakdown */}
-			{stats.screening_distribution && Object.keys(stats.screening_distribution).length > 0 && (
-				<Box sx={{ width: '100%' }}>
-					<Box sx={{ bgcolor: 'white', p: 2, borderRadius: 2, border: '1px solid #e0e0e0' }}>
-						<Box sx={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
-							<Box sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.875rem' }}>
-								Status Breakdown:
-							</Box>
-							{Object.entries(stats.screening_distribution).map(([status, count]) => (
-								<Box key={status} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-									<Box
-										sx={{
-											width: 8,
-											height: 8,
-											borderRadius: '50%',
-											bgcolor:
-												status === 'Completed' ? '#2e7d32' :
-													status === 'Rejected' ? '#d32f2f' :
-														status === 'In Progress' ? '#1976d2' :
-															status === 'Pending' ? '#ed6c02' :
-																'#757575'
-										}}
-									/>
-									<Box sx={{ display: 'flex', gap: 0.5, fontSize: '0.875rem' }}>
-										<Box sx={{ color: 'text.primary', textTransform: 'capitalize' }}>
-											{status}:
-										</Box>
-										<Box sx={{ fontWeight: 600 }}>
-											{count}
-										</Box>
-									</Box>
-								</Box>
-							))}
-						</Box>
-					</Box>
-				</Box>
-			)}
 		</Box>
 	);
 };

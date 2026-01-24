@@ -333,8 +333,10 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 									{ id: 'city', label: 'Location', hideOnMobile: true },
 									{ id: 'education_level', label: 'Education', hideOnMobile: true },
 									{ id: 'disability_type', label: 'Disability', hideOnMobile: true },
-									{ id: 'counseling_status', label: 'Status', hideOnMobile: false },
 								];
+								if (type !== 'not_counseled') {
+									headers.push({ id: 'counseling_status', label: 'Status', hideOnMobile: false });
+								}
 								if (type !== 'not_counseled') {
 									headers.push(
 										{ id: 'counselor_name', label: 'Counselor', hideOnMobile: true },
@@ -429,39 +431,41 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 											{candidate.disability_type || '-'}
 										</Typography>
 									</TableCell>
-									{/* Status Column */}
-									<TableCell>
-										<Chip
-											label={((candidate.counseling_status || 'pending').charAt(0).toUpperCase() + (candidate.counseling_status || 'pending').slice(1))}
-											size="small"
-											icon={
-												candidate.counseling_status === 'selected' ? <CheckCircle /> :
-													candidate.counseling_status === 'rejected' ? <Cancel /> :
-														candidate.counseling_status === 'pending' ? <WatchLater /> :
-															<HelpOutline />
-											}
-											sx={{
-												height: 24,
-												fontSize: '0.75rem',
-												fontWeight: 700,
-												borderRadius: 1,
-												bgcolor:
-													candidate.counseling_status === 'selected' ? '#e8f5e9' :
-														candidate.counseling_status === 'rejected' ? '#ffebee' :
-															candidate.counseling_status === 'pending' ? '#fff3e0' :
-																'#f5f5f5',
-												color:
-													candidate.counseling_status === 'selected' ? '#2e7d32' :
-														candidate.counseling_status === 'rejected' ? '#d32f2f' :
-															candidate.counseling_status === 'pending' ? '#ed6c02' :
-																'#757575',
-												'& .MuiChip-icon': {
-													color: 'inherit',
-													fontSize: 16
+									{/* Status Column (Only if not 'Not Counseled') */}
+									{type !== 'not_counseled' && (
+										<TableCell>
+											<Chip
+												label={((candidate.counseling_status || 'pending').charAt(0).toUpperCase() + (candidate.counseling_status || 'pending').slice(1))}
+												size="small"
+												icon={
+													candidate.counseling_status === 'selected' ? <CheckCircle /> :
+														candidate.counseling_status === 'rejected' ? <Cancel /> :
+															candidate.counseling_status === 'pending' ? <WatchLater /> :
+																<HelpOutline />
 												}
-											}}
-										/>
-									</TableCell>
+												sx={{
+													height: 24,
+													fontSize: '0.75rem',
+													fontWeight: 700,
+													borderRadius: 1,
+													bgcolor:
+														candidate.counseling_status === 'selected' ? '#e8f5e9' :
+															candidate.counseling_status === 'rejected' ? '#ffebee' :
+																candidate.counseling_status === 'pending' ? '#fff3e0' :
+																	'#f5f5f5',
+													color:
+														candidate.counseling_status === 'selected' ? '#2e7d32' :
+															candidate.counseling_status === 'rejected' ? '#d32f2f' :
+																candidate.counseling_status === 'pending' ? '#ed6c02' :
+																	'#757575',
+													'& .MuiChip-icon': {
+														color: 'inherit',
+														fontSize: 16
+													}
+												}}
+											/>
+										</TableCell>
+									)}
 
 									{/* Counselor Name & Date (Only if not 'Not Counseled') */}
 									{type !== 'not_counseled' && (

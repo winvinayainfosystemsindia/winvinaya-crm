@@ -13,8 +13,8 @@ import {
 import CounselingTable from '../../components/counseling/CounselingTable';
 import CounselingFormDialog from '../../components/counseling/form/CounselingFormDialog';
 import CounselingStats from '../../components/counseling/CounselingStats';
-import { useAppDispatch } from '../../store/hooks';
-import { createCounseling, updateCounseling, fetchCandidateById } from '../../store/slices/candidateSlice';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { createCounseling, updateCounseling, fetchCandidateById, fetchCandidateStats } from '../../store/slices/candidateSlice';
 import type { CandidateListItem, CandidateCounselingCreate } from '../../models/candidate';
 
 interface TabPanelProps {
@@ -40,6 +40,7 @@ function TabPanel(props: TabPanelProps) {
 
 const CounselingList: React.FC = () => {
 	const dispatch = useAppDispatch();
+	const { stats } = useAppSelector((state) => state.candidates);
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const [tabValue, setTabValue] = useState(0);
@@ -52,6 +53,11 @@ const CounselingList: React.FC = () => {
 	});
 	const [refreshKey, setRefreshKey] = useState(0);
 	const [initialFormData, setInitialFormData] = useState<CandidateCounselingCreate | undefined>(undefined);
+
+	// Fetch stats on mount and refresh
+	React.useEffect(() => {
+		dispatch(fetchCandidateStats());
+	}, [dispatch, refreshKey]);
 
 	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
 		setTabValue(newValue);
@@ -118,6 +124,32 @@ const CounselingList: React.FC = () => {
 		}
 	};
 
+	// Helper to get count for a status safely
+	const getCount = (status: string) => {
+		if (!stats?.counseling_distribution) return 0;
+		return stats.counseling_distribution[status] || 0;
+	};
+
+	const renderTabLabel = (label: string, count: number) => (
+		<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+			{label}
+			<Box
+				component="span"
+				sx={{
+					bgcolor: '#e0e0e0',
+					color: '#424242',
+					px: 0.8,
+					py: 0.2,
+					borderRadius: '12px',
+					fontSize: '0.75rem',
+					fontWeight: 600
+				}}
+			>
+				{count}
+			</Box>
+		</Box>
+	);
+
 	return (
 		<Box sx={{ bgcolor: '#f5f5f5', minHeight: '100vh', py: isMobile ? 2 : 3 }}>
 			<Container maxWidth="xl" sx={{ px: isMobile ? 1 : { sm: 2, md: 3 } }}>
@@ -156,12 +188,15 @@ const CounselingList: React.FC = () => {
 						onChange={handleTabChange}
 						textColor="primary"
 						indicatorColor="primary"
+						variant="scrollable"
+						scrollButtons="auto"
+						allowScrollButtonsMobile
 						sx={{ px: 2 }}
 					>
-						<Tab label="Not Counseled" sx={{ textTransform: 'none', fontWeight: 500 }} />
-						<Tab label="Counseling Selected" sx={{ textTransform: 'none', fontWeight: 500 }} />
-						<Tab label="Counseling Rejected" sx={{ textTransform: 'none', fontWeight: 500 }} />
-						<Tab label="Counseling Pending" sx={{ textTransform: 'none', fontWeight: 500 }} />
+						<Tab label={renderTabLabel("Not Counseled", (stats?.screening_distribution?.['Completed'] || 0) - (getCount('selected') + getCount('rejected') + getCount('pending')))} sx={{ textTransform: 'none', fontWeight: 500 }} />
+						<Tab label={renderTabLabel("Counseling Selected", getCount('selected'))} sx={{ textTransform: 'none', fontWeight: 500 }} />
+						<Tab label={renderTabLabel("Counseling Rejected", getCount('rejected'))} sx={{ textTransform: 'none', fontWeight: 500 }} />
+						<Tab label={renderTabLabel("Counseling Pending", getCount('pending'))} sx={{ textTransform: 'none', fontWeight: 500 }} />
 					</Tabs>
 				</Box>
 
