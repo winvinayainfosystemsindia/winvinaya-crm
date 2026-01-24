@@ -27,6 +27,7 @@ const ALL_COLUMNS = [
 	{ id: 'pincode', label: 'Pincode', default: false, group: 'general' },
 	{ id: 'education_level', label: 'Education', default: true, group: 'general' },
 	{ id: 'disability_type', label: 'Disability Type', default: true, group: 'general' },
+	{ id: 'disability_percentage', label: 'Disability Percentage', default: false, group: 'general' },
 	{ id: 'created_at', label: 'Registration Date', default: false, group: 'general' },
 
 	// Screening Info
@@ -37,7 +38,9 @@ const ALL_COLUMNS = [
 	{ id: 'screening_date', label: 'Screened Date', default: false, group: 'screening' },
 	{ id: 'screening_updated_at', label: 'Screening Update Date', default: false, group: 'screening' },
 	{ id: 'family_details', label: 'Family Details', default: false, group: 'screening' },
+	{ id: 'family_details', label: 'Family Details', default: false, group: 'screening' },
 	{ id: 'documents_uploaded', label: 'Uploaded Documents', default: false, group: 'screening' },
+	{ id: 'screening_comments', label: 'Screening Reason', default: false, group: 'screening' },
 
 	// Counseling Info
 	{ id: 'counseling_status', label: 'Counseling Status', default: true, group: 'counseling' },

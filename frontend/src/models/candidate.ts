@@ -201,6 +201,8 @@ export interface CandidateListItem {
 	screened_by_name?: string;
 	screening_date?: string;
 	screening_updated_at?: string;
+	disability_percentage?: number;
+	screening_comments?: string;
 }
 
 

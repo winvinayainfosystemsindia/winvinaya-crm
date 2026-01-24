@@ -176,6 +176,10 @@ const ReportTable: React.FC<ReportTableProps> = ({
 			return <Chip label={val} size="small" sx={{ borderRadius: '4px', backgroundColor: colors.bg, color: colors.text, border: `1px solid ${colors.border}`, fontWeight: 600, fontSize: '0.7rem', height: 20 }} />;
 		}
 
+		if (colId === 'disability_percentage' && val) {
+			return `${val}%`;
+		}
+
 		if (colId === 'questions' && Array.isArray(val)) {
 			if (val.length === 0) return '-';
 			return (
@@ -199,6 +203,14 @@ const ReportTable: React.FC<ReportTableProps> = ({
 							<strong>{w.job_title}</strong> at {w.company}
 						</div>
 					))}
+				</Box>
+			);
+		}
+
+		if (colId === 'screening_comments' && val) {
+			return (
+				<Box sx={{ maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={val}>
+					{val}
 				</Box>
 			);
 		}

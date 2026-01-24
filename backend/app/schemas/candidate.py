@@ -145,6 +145,7 @@ class CandidateListResponse(BaseModel):
     created_at: datetime
     is_disabled: bool = False
     disability_type: Optional[str] = None
+    disability_percentage: Optional[float] = None
     education_level: Optional[str] = None
     screening_status: str = "Pending"
     counseling_status: Optional[str] = None
@@ -162,6 +163,7 @@ class CandidateListResponse(BaseModel):
     # New Screening fields
     source_of_info: Optional[str] = None
     family_annual_income: Optional[Any] = None
+    screening_comments: Optional[str] = None
     screened_by_name: Optional[str] = None
     screening_date: Optional[datetime] = None
     screening_updated_at: Optional[datetime] = None
@@ -172,6 +174,7 @@ class CandidateListResponse(BaseModel):
         # data could be ORM object or dict
         is_disabled = False
         disability_type = None
+        disability_percentage = None
         education_level = None
         screening_status = "Pending"
         counseling_status = None
@@ -188,6 +191,7 @@ class CandidateListResponse(BaseModel):
         screened_by_name = None
         screening_date = None
         screening_updated_at = None
+        screening_comments = None
         
         # ... (rest of helper functions)
         def get_val(obj, key, default=None):
@@ -200,6 +204,7 @@ class CandidateListResponse(BaseModel):
         if details and isinstance(details, dict):
             is_disabled = details.get('is_disabled', False)
             disability_type = details.get('disability_type')
+            disability_percentage = details.get('disability_percentage')
 
         # 2. Education Data
         edu_details = get_val(data, 'education_details')
@@ -227,6 +232,8 @@ class CandidateListResponse(BaseModel):
             if others and isinstance(others, dict):
                 source_of_info = others.get('source_of_info')
                 family_annual_income = others.get('family_annual_income')
+                # Check for 'reason' first (as per user request), then 'comments'
+                screening_comments = others.get('reason')
             
             # Extract screened_by info
             screened_by = None
@@ -286,6 +293,7 @@ class CandidateListResponse(BaseModel):
             data.update({
                 'is_disabled': is_disabled,
                 'disability_type': disability_type,
+                'disability_percentage': disability_percentage,
                 'education_level': education_level,
                 'screening_status': screening_status,
                 'counseling_status': counseling_status,
@@ -299,6 +307,7 @@ class CandidateListResponse(BaseModel):
                 'family_details': family_details,
                 'source_of_info': source_of_info,
                 'family_annual_income': family_annual_income,
+                'screening_comments': screening_comments,
                 'screened_by_name': screened_by_name,
                 'screening_date': screening_date,
                 'screening_updated_at': screening_updated_at
@@ -321,6 +330,7 @@ class CandidateListResponse(BaseModel):
             'created_at': get_val(data, 'created_at'),
             'is_disabled': is_disabled,
             'disability_type': disability_type,
+            'disability_percentage': disability_percentage,
             'education_level': education_level,
             'screening_status': screening_status,
             'counseling_status': counseling_status,
@@ -334,6 +344,7 @@ class CandidateListResponse(BaseModel):
             'family_details': family_details,
             'source_of_info': source_of_info,
             'family_annual_income': family_annual_income,
+            'screening_comments': screening_comments,
             'screened_by_name': screened_by_name,
             'screening_date': screening_date,
             'screening_updated_at': screening_updated_at
