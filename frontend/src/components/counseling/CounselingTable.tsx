@@ -31,7 +31,7 @@ import type { CandidateListItem } from '../../models/candidate';
 
 
 interface CounselingTableProps {
-	type: 'pending' | 'counseled';
+	type: 'not_counseled' | 'pending' | 'selected' | 'rejected' | 'counseled'; // 'counseled' kept for backward compatibility if needed, but we typically use exact statuses now
 	onAction: (action: 'counsel' | 'edit', candidate: CandidateListItem) => void;
 	refreshKey?: number; // Prop to trigger refresh
 }
@@ -163,17 +163,28 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 	}, []);
 
 	const fetchCandidatesData = async () => {
+		// Determine counseling status to fetch based on tab type
+		let statusToFetch = filters.counseling_status;
+		if (!statusToFetch) {
+			if (type === 'not_counseled') statusToFetch = 'not_counseled';
+			else if (type === 'pending') statusToFetch = 'pending';
+			else if (type === 'selected') statusToFetch = 'selected';
+			else if (type === 'rejected') statusToFetch = 'rejected';
+			else if (type === 'counseled') statusToFetch = 'counseled';
+		}
+
 		dispatch(fetchScreenedCandidates({
 			skip: page * rowsPerPage,
 			limit: rowsPerPage,
-			counselingStatus: filters.counseling_status || type,
+			counselingStatus: statusToFetch,
 			search: debouncedSearchTerm,
 			sortBy: orderBy,
 			sortOrder: order,
 			disability_types: filters.disability_types?.join(',') || '',
 			education_levels: filters.education_levels?.join(',') || '',
 			cities: filters.cities?.join(',') || '',
-			is_experienced: filters.is_experienced === '' ? undefined : filters.is_experienced
+			is_experienced: filters.is_experienced === '' ? undefined : filters.is_experienced,
+			screening_status: type === 'not_counseled' ? 'Completed' : undefined
 		}));
 	};
 
@@ -324,7 +335,7 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 									{ id: 'disability_type', label: 'Disability', hideOnMobile: true },
 									{ id: 'counseling_status', label: 'Status', hideOnMobile: false },
 								];
-								if (type === 'counseled') {
+								if (type !== 'not_counseled') {
 									headers.push(
 										{ id: 'counselor_name', label: 'Counselor', hideOnMobile: true },
 										{ id: 'counseling_date', label: 'Date', hideOnMobile: true }
@@ -452,8 +463,8 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 										/>
 									</TableCell>
 
-									{/* Counselor Name & Date (Only for Counseled) */}
-									{type === 'counseled' && (
+									{/* Counselor Name & Date (Only if not 'Not Counseled') */}
+									{type !== 'not_counseled' && (
 										<>
 											<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{candidate.counselor_name || '-'}</TableCell>
 											<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{candidate.counseling_date ? format(new Date(candidate.counseling_date), 'dd MMM yyyy') : '-'}</TableCell>
@@ -462,7 +473,7 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 
 									{/* Actions */}
 									<TableCell align="right">
-										{(type === 'pending' && !candidate.counseling_status) ? (
+										{(type === 'not_counseled' && !candidate.counseling_status) ? (
 											<Button
 												variant="contained"
 												size="small"
@@ -484,7 +495,7 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 												onClick={() => onAction('edit', candidate)}
 												sx={{ textTransform: 'none' }}
 											>
-												{type === 'pending' ? 'Edit Draft' : 'Edit'}
+												Edit
 											</Button>
 										)}
 									</TableCell>

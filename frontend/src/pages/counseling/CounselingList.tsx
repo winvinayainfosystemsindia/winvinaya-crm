@@ -158,22 +158,38 @@ const CounselingList: React.FC = () => {
 						indicatorColor="primary"
 						sx={{ px: 2 }}
 					>
-						<Tab label="Pending Counseling" sx={{ textTransform: 'none', fontWeight: 500 }} />
-						<Tab label="Counseled" sx={{ textTransform: 'none', fontWeight: 500 }} />
+						<Tab label="Not Counseled" sx={{ textTransform: 'none', fontWeight: 500 }} />
+						<Tab label="Counseling Selected" sx={{ textTransform: 'none', fontWeight: 500 }} />
+						<Tab label="Counseling Rejected" sx={{ textTransform: 'none', fontWeight: 500 }} />
+						<Tab label="Counseling Pending" sx={{ textTransform: 'none', fontWeight: 500 }} />
 					</Tabs>
 				</Box>
 
 				{/* Tab Panels */}
 				<TabPanel value={tabValue} index={0}>
 					<CounselingTable
-						type="pending"
+						type="not_counseled"
 						onAction={handleAction}
 						refreshKey={refreshKey}
 					/>
 				</TabPanel>
 				<TabPanel value={tabValue} index={1}>
 					<CounselingTable
-						type="counseled"
+						type="selected"
+						onAction={handleAction}
+						refreshKey={refreshKey}
+					/>
+				</TabPanel>
+				<TabPanel value={tabValue} index={2}>
+					<CounselingTable
+						type="rejected"
+						onAction={handleAction}
+						refreshKey={refreshKey}
+					/>
+				</TabPanel>
+				<TabPanel value={tabValue} index={3}>
+					<CounselingTable
+						type="pending"
 						onAction={handleAction}
 						refreshKey={refreshKey}
 					/>

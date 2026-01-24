@@ -237,6 +237,7 @@ export interface CandidateStats {
 	docs_completed: number;
 	docs_pending: number;
 	screening_distribution?: Record<string, number>;
+	counseling_distribution?: Record<string, number>;
 }
 
 export interface CandidatePaginatedResponse {

@@ -347,10 +347,14 @@ class CandidateRepository(BaseRepository[Candidate]):
         
         # Apply counseling status filter
         if counseling_status:
-            if counseling_status == 'pending':
-                # Pending includes candidates with no counseling record OR status='pending'
-                stmt = stmt.where((CandidateCounseling.id.is_(None)) | (CandidateCounseling.status == 'pending'))
-                count_stmt = count_stmt.where((CandidateCounseling.id.is_(None)) | (CandidateCounseling.status == 'pending'))
+            if counseling_status == 'not_counseled':
+                # No counseling record
+                stmt = stmt.where(CandidateCounseling.id.is_(None))
+                count_stmt = count_stmt.where(CandidateCounseling.id.is_(None))
+            elif counseling_status == 'pending':
+                # Explicitly 'pending' status in counseling record
+                stmt = stmt.where(CandidateCounseling.status == 'pending')
+                count_stmt = count_stmt.where(CandidateCounseling.status == 'pending')
             elif counseling_status == 'counseled':
                 # Counseled includes 'selected' or 'rejected'
                 stmt = stmt.where(CandidateCounseling.status.in_(['selected', 'rejected']))
@@ -624,7 +628,8 @@ class CandidateRepository(BaseRepository[Candidate]):
                 "docs_total": docs_total,
                 "docs_completed": docs_completed,
                 "docs_pending": docs_pending,
-                "screening_distribution": screening_distribution
+                "screening_distribution": screening_distribution,
+                "counseling_distribution": counseling_counts
             }
         except Exception as e:
             import traceback
