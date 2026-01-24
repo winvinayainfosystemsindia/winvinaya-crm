@@ -61,10 +61,12 @@ class CandidateRepository(BaseRepository[Candidate]):
         cities: Optional[list] = None,
         counseling_status: Optional[str] = None,
         is_experienced: Optional[bool] = None,
-        screening_status: Optional[str] = None
+        screening_status: Optional[str] = None,
+        disability_percentages: Optional[list] = None,
+        screening_reasons: Optional[list] = None
     ):
         """Get multiples candidates with counseling loaded for list view, with optional search filtering, category filters, and sorting"""
-        from sqlalchemy import or_
+        from sqlalchemy import or_, and_
         stmt = (
             select(Candidate)
             .outerjoin(Candidate.screening)
@@ -108,6 +110,36 @@ class CandidateRepository(BaseRepository[Candidate]):
             if disability_filters:
                 stmt = stmt.where(or_(*disability_filters))
                 count_stmt = count_stmt.where(or_(*disability_filters))
+        
+        if disability_percentages and len(disability_percentages) > 0:
+            # Filter by disability_percentage range (min-max)
+            # Expecting format "min-max" e.g. "40-80" in the first element if passed as list of strings from query param
+            # Or handle if it's passed as a single string argument in the controller (it's passed as list here but likely contains one range string)
+            
+            percentage_filters = []
+            for d_range in disability_percentages:
+                if d_range and '-' in d_range:
+                    try:
+                        min_val, max_val = map(float, d_range.split('-'))
+                        # Use Float type for casting
+                        from sqlalchemy import Float
+                        
+                        percentage_filters.append(
+                            Candidate.disability_details['disability_percentage'].as_string().cast(Float) >= min_val
+                        )
+                        percentage_filters.append(
+                            Candidate.disability_details['disability_percentage'].as_string().cast(Float) <= max_val
+                        )
+                    except ValueError:
+                        pass # Ignore invalid format
+
+            if percentage_filters:
+                # Use AND for range bounds (min AND max)
+                # But if multiple ranges were supported (unlikely here), they'd be OR'd.
+                # Here we have one range effectively.
+                stmt = stmt.where(and_(*percentage_filters))
+                count_stmt = count_stmt.where(and_(*percentage_filters))
+
         
         if education_levels and len(education_levels) > 0:
             # Filter by education level (degree name) in JSON field
@@ -694,13 +726,35 @@ class CandidateRepository(BaseRepository[Candidate]):
             )
             result_counseling = await self.db.execute(stmt_counseling)
             counseling_statuses = sorted([status for status in result_counseling.scalars().all() if status])
+
+            # Get unique disability percentages
+            stmt_disability_perc = select(Candidate.disability_details).where(Candidate.disability_details.isnot(None))
+            result_disability_perc = await self.db.execute(stmt_disability_perc)
+            disability_percentages = set()
+            for row in result_disability_perc.scalars().all():
+                if row and isinstance(row, dict):
+                    perc = row.get('disability_percentage')
+                    if perc is not None:
+                        disability_percentages.add(perc)
+
+            # Get unique screening reasons
+            stmt_screening_reasons = select(CandidateScreening.others).where(CandidateScreening.others.isnot(None))
+            result_screening_reasons = await self.db.execute(stmt_screening_reasons)
+            screening_reasons = set()
+            for row in result_screening_reasons.scalars().all():
+                if row and isinstance(row, dict):
+                    reason = row.get('reason')
+                    if reason:
+                        screening_reasons.add(reason)
             
             return {
                 "disability_types": sorted(list(disability_types)),
                 "education_levels": sorted(list(education_levels)),
                 "cities": cities,
                 "counseling_statuses": counseling_statuses,
-                "screening_statuses": sorted(screening_statuses)
+                "screening_statuses": sorted(screening_statuses),
+                "disability_percentages": sorted(list(disability_percentages)),
+                "screening_reasons": sorted(list(screening_reasons))
             }
         except Exception as e:
             import traceback

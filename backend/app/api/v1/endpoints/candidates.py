@@ -83,6 +83,8 @@ async def get_candidates(
     counseling_status: str = None,
     is_experienced: bool = None,
     screening_status: str = None,
+    disability_percentages: str = None, # Comma-separated list (or single range string)
+    screening_reasons: str = None, # Comma-separated list
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
     db: AsyncSession = Depends(get_db)
 ):
@@ -95,6 +97,8 @@ async def get_candidates(
     disability_types_list = disability_types.split(',') if disability_types else None
     education_levels_list = education_levels.split(',') if education_levels else None
     cities_list = cities.split(',') if cities else None
+    disability_percentages_list = disability_percentages.split(',') if disability_percentages else None
+    screening_reasons_list = screening_reasons.split(',') if screening_reasons else None
     
     service = CandidateService(db)
     return await service.get_candidates(
@@ -108,7 +112,9 @@ async def get_candidates(
         cities=cities_list,
         counseling_status=counseling_status,
         is_experienced=is_experienced,
-        screening_status=screening_status
+        screening_status=screening_status,
+        disability_percentages=disability_percentages_list,
+        screening_reasons=screening_reasons_list
     )
 
 

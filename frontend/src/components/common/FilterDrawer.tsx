@@ -10,7 +10,8 @@ import {
 	Checkbox,
 	FormControlLabel,
 	Radio,
-	RadioGroup
+	RadioGroup,
+	TextField
 } from '@mui/material';
 import { Close, FilterAlt } from '@mui/icons-material';
 
@@ -23,7 +24,7 @@ export interface FilterOption {
 export interface FilterField {
 	key: string;
 	label: string;
-	type: 'multi-select' | 'single-select' | 'boolean';
+	type: 'multi-select' | 'single-select' | 'boolean' | 'range';
 	options?: FilterOption[];
 }
 
@@ -164,6 +165,28 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
 									/>
 								))}
 							</RadioGroup>
+						) : field.type === 'range' ? (
+							<Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+								<TextField
+									label="Min"
+									size="small"
+									type="number"
+									value={(activeFilters[field.key] || {}).min || ''}
+									onChange={(e) => onFilterChange(field.key, { ...(activeFilters[field.key] || {}), min: e.target.value })}
+									InputProps={{ inputProps: { min: 0, max: 100 } }}
+									sx={{ flex: 1 }}
+								/>
+								<Typography>-</Typography>
+								<TextField
+									label="Max"
+									size="small"
+									type="number"
+									value={(activeFilters[field.key] || {}).max || ''}
+									onChange={(e) => onFilterChange(field.key, { ...(activeFilters[field.key] || {}), max: e.target.value })}
+									InputProps={{ inputProps: { min: 0, max: 100 } }}
+									sx={{ flex: 1 }}
+								/>
+							</Box>
 						) : (
 							<FormControlLabel
 								control={

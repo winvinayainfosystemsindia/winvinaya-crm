@@ -82,7 +82,9 @@ const Reports: React.FC = () => {
 			education_levels: filters.education_level?.join(','),
 			cities: filters.city?.join(','),
 			counseling_status: filters.counseling_status,
-			screening_status: filters.screening_status
+			screening_status: filters.screening_status,
+			disability_percentages: filters.disability_percentage ? `${filters.disability_percentage.min || 0}-${filters.disability_percentage.max || 100}` : undefined,
+			screening_reasons: filters.screening_reason?.join(',')
 		}));
 	}, [dispatch, page, rowsPerPage, search, filters]);
 
@@ -220,6 +222,17 @@ const Reports: React.FC = () => {
 			label: 'Screening Status',
 			type: 'single-select',
 			options: filterOptions.screening_statuses.map(v => ({ value: v, label: v }))
+		},
+		{
+			key: 'disability_percentage',
+			label: 'Disability Percentage (Min-Max)',
+			type: 'range'
+		},
+		{
+			key: 'screening_reason',
+			label: 'Screening Reason',
+			type: 'multi-select',
+			options: (filterOptions.screening_reasons || []).map(v => ({ value: v, label: v }))
 		}
 	];
 

@@ -25,6 +25,8 @@ interface CandidateState {
 		cities: string[];
 		counseling_statuses: string[];
 		screening_statuses: string[];
+		disability_percentages?: number[];
+		screening_reasons?: string[];
 	};
 }
 
@@ -41,7 +43,9 @@ const initialState: CandidateState = {
 		education_levels: [],
 		cities: [],
 		counseling_statuses: [],
-		screening_statuses: []
+		screening_statuses: [],
+		disability_percentages: [],
+		screening_reasons: []
 	}
 };
 
@@ -76,6 +80,8 @@ export const fetchCandidates = createAsyncThunk(
 			counseling_status?: string;
 			screening_status?: string;
 			is_experienced?: boolean;
+			disability_percentages?: string;
+			screening_reasons?: string;
 		} | void = {},
 		{ rejectWithValue }
 	) => {
@@ -91,7 +97,9 @@ export const fetchCandidates = createAsyncThunk(
 				cities,
 				counseling_status,
 				screening_status,
-				is_experienced
+				is_experienced,
+				disability_percentages,
+				screening_reasons
 			} = params || {};
 			const response = await candidateService.getAll(
 				skip,
@@ -104,7 +112,9 @@ export const fetchCandidates = createAsyncThunk(
 				cities,
 				counseling_status,
 				screening_status,
-				is_experienced
+				is_experienced,
+				disability_percentages,
+				screening_reasons
 			);
 			return response;
 		} catch (error: any) {
