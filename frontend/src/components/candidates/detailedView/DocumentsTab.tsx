@@ -24,7 +24,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ candidate }) => {
 							<Paper variant="outlined" sx={{ p: 2, position: 'relative', '&:hover': { bgcolor: '#f8f9fa' } }}>
 								<Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
 									<DescriptionIcon color="action" />
-									<Box sx={{ minWidth: 0 }}>
+									<Box sx={{ minWidth: 0, flex: 1 }}>
 										<Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }} noWrap>
 											{doc.document_name}
 										</Typography>
@@ -35,6 +35,27 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ candidate }) => {
 											{doc.file_size ? (doc.file_size / 1024 / 1024).toFixed(2) + ' MB' : 'Unknown size'}
 										</Typography>
 									</Box>
+									<Button
+										size="small"
+										variant="outlined"
+										onClick={async () => {
+											try {
+												// Dynamic import to avoid circular dependencies if any, though here it's fine
+												const { documentService } = await import('../../../services/candidateService');
+												const blob = await documentService.download(doc.id);
+												const url = window.URL.createObjectURL(blob);
+												window.open(url, '_blank');
+												// Clean up the URL object after a delay to allow the new tab to load
+												setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+											} catch (error) {
+												console.error('Failed to view document:', error);
+												alert('Failed to load document');
+											}
+										}}
+										sx={{ textTransform: 'none', minWidth: 'auto', px: 2 }}
+									>
+										View
+									</Button>
 								</Box>
 							</Paper>
 						</Grid>
