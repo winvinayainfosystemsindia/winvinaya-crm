@@ -17,6 +17,7 @@ interface CandidateState {
 	selectedCandidate: Candidate | null;
 	stats: CandidateStats | null;
 	loading: boolean;
+	statsLoading: boolean;
 	error: string | null;
 	filterOptions: {
 		disability_types: string[];
@@ -33,6 +34,7 @@ const initialState: CandidateState = {
 	selectedCandidate: null,
 	stats: null,
 	loading: false,
+	statsLoading: false,
 	error: null,
 	filterOptions: {
 		disability_types: [],
@@ -406,15 +408,15 @@ const candidateSlice = createSlice({
 		builder
 			// Fetch stats
 			.addCase(fetchCandidateStats.pending, (state) => {
-				state.loading = true;
+				state.statsLoading = true;
 				state.error = null;
 			})
 			.addCase(fetchCandidateStats.fulfilled, (state, action: PayloadAction<CandidateStats>) => {
-				state.loading = false;
+				state.statsLoading = false;
 				state.stats = action.payload;
 			})
 			.addCase(fetchCandidateStats.rejected, (state, action: PayloadAction<any>) => {
-				state.loading = false;
+				state.statsLoading = false;
 				state.error = action.payload;
 			})
 

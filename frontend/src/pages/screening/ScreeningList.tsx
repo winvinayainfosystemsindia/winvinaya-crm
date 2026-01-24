@@ -144,7 +144,11 @@ const ScreeningList: React.FC = () => {
 						}}
 					>
 						<Tab label="Not Screened" />
-						<Tab label="Screened" />
+						<Tab label="Pending" />
+						<Tab label="Completed" />
+						<Tab label="In Progress" />
+						<Tab label="Rejected" />
+						<Tab label="Other" />
 					</Tabs>
 				</Box>
 
@@ -158,8 +162,41 @@ const ScreeningList: React.FC = () => {
 				</TabPanel>
 				<TabPanel value={tabValue} index={1}>
 					<ScreeningTable
-						key={`screened-${refreshKey}`} // Force re-mount on update
+						key={`pending-${refreshKey}`}
 						type="screened"
+						status="Pending"
+						onAction={handleAction}
+					/>
+				</TabPanel>
+				<TabPanel value={tabValue} index={2}>
+					<ScreeningTable
+						key={`completed-${refreshKey}`}
+						type="screened"
+						status="Completed"
+						onAction={handleAction}
+					/>
+				</TabPanel>
+				<TabPanel value={tabValue} index={3}>
+					<ScreeningTable
+						key={`inprogress-${refreshKey}`}
+						type="screened"
+						status="In Progress"
+						onAction={handleAction}
+					/>
+				</TabPanel>
+				<TabPanel value={tabValue} index={4}>
+					<ScreeningTable
+						key={`rejected-${refreshKey}`}
+						type="screened"
+						status="Rejected"
+						onAction={handleAction}
+					/>
+				</TabPanel>
+				<TabPanel value={tabValue} index={5}>
+					<ScreeningTable
+						key={`other-${refreshKey}`}
+						type="screened"
+						status="Other"
 						onAction={handleAction}
 					/>
 				</TabPanel>

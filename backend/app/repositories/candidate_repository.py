@@ -322,8 +322,28 @@ class CandidateRepository(BaseRepository[Candidate]):
         
         # Apply screening status filter if provided (though mostly would be 'Completed' based on logic above)
         if screening_status:
-            stmt = stmt.where(CandidateScreening.status == screening_status)
-            count_stmt = count_stmt.where(CandidateScreening.status == screening_status)
+            if screening_status == 'Other':
+                # Exclude standard statuses
+                # Standard ones: 'Completed', 'In Progress', 'Rejected', 'Pending'
+                # We WANT Empty and None to be INCLUDED in Other, so do NOT exclude ''
+                excluded_statuses = ['Completed', 'In Progress', 'Rejected', 'Pending']
+                
+                # Include NULLs explicitly using or_
+                stmt = stmt.where(
+                    or_(
+                        CandidateScreening.status.notin_(excluded_statuses),
+                        CandidateScreening.status.is_(None)
+                    )
+                )
+                count_stmt = count_stmt.where(
+                    or_(
+                        CandidateScreening.status.notin_(excluded_statuses),
+                        CandidateScreening.status.is_(None)
+                    )
+                )
+            else:
+                stmt = stmt.where(CandidateScreening.status == screening_status)
+                count_stmt = count_stmt.where(CandidateScreening.status == screening_status)
         
         # Apply counseling status filter
         if counseling_status:
@@ -477,8 +497,11 @@ class CandidateRepository(BaseRepository[Candidate]):
             # Helper to execute count query
             async def get_count(filter_expr=None):
                 stmt = select(func.count(Candidate.id))
+                start_filter = (Candidate.is_deleted == False)
                 if filter_expr is not None:
-                    stmt = stmt.where(filter_expr)
+                    stmt = stmt.where(start_filter, filter_expr)
+                else:
+                    stmt = stmt.where(start_filter)
                 result = await self.db.execute(stmt)
                 return result.scalar() or 0
 
@@ -507,12 +530,14 @@ class CandidateRepository(BaseRepository[Candidate]):
             today_count = await get_count(Candidate.created_at >= today_start)
             
             # Screening stats - count all candidates with ANY screening record
-            stmt_screened = select(func.count(CandidateScreening.id))
+            # Screening stats - count all candidates with ANY screening record
+            stmt_screened = select(func.count(CandidateScreening.id)).join(Candidate).where(Candidate.is_deleted == False)
             result_screened = await self.db.execute(stmt_screened)
             screened = result_screened.scalar() or 0
             
             # Screening distribution
-            stmt_dist = select(CandidateScreening.status, func.count(CandidateScreening.id)).group_by(CandidateScreening.status)
+            # Screening distribution
+            stmt_dist = select(CandidateScreening.status, func.count(CandidateScreening.id)).join(Candidate).where(Candidate.is_deleted == False).group_by(CandidateScreening.status)
             res_dist = await self.db.execute(stmt_dist)
             screening_distribution = dict(res_dist.all())
             
@@ -520,7 +545,7 @@ class CandidateRepository(BaseRepository[Candidate]):
 
             # Counseling stats
             # Normalize status to lowercase for consistent counting
-            stmt_counseling = select(func.lower(CandidateCounseling.status), func.count(CandidateCounseling.id)).group_by(func.lower(CandidateCounseling.status))
+            stmt_counseling = select(func.lower(CandidateCounseling.status), func.count(CandidateCounseling.id)).join(Candidate).where(Candidate.is_deleted == False).group_by(func.lower(CandidateCounseling.status))
             result_counseling = await self.db.execute(stmt_counseling)
             counseling_counts = dict(result_counseling.all())
             
@@ -551,6 +576,7 @@ class CandidateRepository(BaseRepository[Candidate]):
                 .join(CandidateCounseling, Candidate.id == CandidateCounseling.candidate_id)
                 .outerjoin(CandidateDocument, Candidate.id == CandidateDocument.candidate_id)
                 .where(CandidateCounseling.status == 'selected')
+                .where(Candidate.is_deleted == False)
                 .group_by(Candidate.id)
             )
             res_sel_docs = await self.db.execute(stmt_sel_docs)

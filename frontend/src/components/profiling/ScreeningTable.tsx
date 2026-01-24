@@ -33,10 +33,11 @@ import type { CandidateListItem } from '../../models/candidate';
 
 interface ScreeningTableProps {
 	type: 'unscreened' | 'screened';
+	status?: string;
 	onAction: (action: 'edit' | 'screen', candidate: CandidateListItem) => void;
 }
 
-const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
+const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, status, onAction }) => {
 	const theme = useTheme();
 	const dispatch = useAppDispatch();
 	const { list: candidates, loading, total: totalCount } = useAppSelector((state) => state.candidates);
@@ -45,7 +46,7 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(5);
 	const [order, setOrder] = useState<'asc' | 'desc'>('desc');
-	const [orderBy, setOrderBy] = useState<keyof CandidateListItem>('created_at');
+	const [orderBy, setOrderBy] = useState<keyof CandidateListItem>(type === 'screened' ? 'screening_updated_at' : 'created_at');
 
 	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
@@ -56,7 +57,7 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 		education_levels: [],
 		cities: [],
 		counseling_status: '',
-		screening_status: '',
+		screening_status: status || '',
 		is_experienced: ''
 	});
 	const [filterOptions, setFilterOptions] = useState({
@@ -66,6 +67,14 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 		counseling_statuses: [] as string[],
 		screening_statuses: [] as string[]
 	});
+
+	// Update filters when status prop changes
+	useEffect(() => {
+		setFilters(prev => ({
+			...prev,
+			screening_status: status || ''
+		}));
+	}, [status]);
 
 	// Dynamic filter fields based on type
 	const filterFields: FilterField[] = [
@@ -106,12 +115,15 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 		]
 	});
 
-	filterFields.push({
-		key: 'screening_status',
-		label: 'Screening Status',
-		type: 'single-select',
-		options: (filterOptions.screening_statuses || []).map(val => ({ value: val, label: val }))
-	});
+	// Only show screening status filter if not fixed by prop
+	if (!status && type !== 'unscreened') {
+		filterFields.push({
+			key: 'screening_status',
+			label: 'Screening Status',
+			type: 'single-select',
+			options: (filterOptions.screening_statuses || []).map(val => ({ value: val, label: val }))
+		});
+	}
 
 	const handleFilterChange = (key: string, value: any) => {
 		// Convert experience values back to boolean/null
@@ -134,7 +146,7 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 			education_levels: [],
 			cities: [],
 			counseling_status: '',
-			screening_status: '',
+			screening_status: status || '',
 			is_experienced: ''
 		});
 		setPage(0);
@@ -184,14 +196,14 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 		if (type === 'unscreened') {
 			dispatch(fetchUnscreenedCandidates({
 				...params,
-				screening_status: filters.screening_status,
+				screening_status: filters.screening_status, // This would usually be empty or used for advanced filtering if needed
 				counseling_status: filters.counseling_status
 			}));
 		} else {
 			dispatch(fetchScreenedCandidates({
 				...params,
 				counselingStatus: filters.counseling_status,
-				screening_status: filters.screening_status
+				screening_status: filters.screening_status || status // Use filter if set, else prop
 			}));
 		}
 	};
@@ -350,7 +362,6 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 								{ id: 'disability_type', label: 'Disability', hideOnMobile: true },
 								{ id: 'education_level', label: 'Education', hideOnMobile: true },
 								{ id: 'district', label: 'Location', hideOnMobile: true },
-								{ id: 'family_details', label: 'Family', hideOnMobile: true },
 								{ id: 'created_at', label: 'Date', hideOnMobile: true },
 								{ id: 'screening_status', label: 'Status', hideOnMobile: false },
 							].map((headCell) => (
@@ -456,28 +467,10 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, onAction }) => {
 											{candidate.city}, {candidate.state}
 										</Typography>
 									</TableCell>
-									<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-										{candidate.family_details && candidate.family_details.length > 0 ? (
-											<Tooltip title={candidate.family_details.map(m => `${m.name} (${m.relation})`).join(', ')}>
-												<Chip
-													label={`${candidate.family_details.length} ${candidate.family_details.length === 1 ? 'Member' : 'Members'}`}
-													size="small"
-													sx={{
-														height: 20,
-														fontSize: '0.7rem',
-														bgcolor: '#eaeded',
-														color: '#545b64',
-														fontWeight: 600
-													}}
-												/>
-											</Tooltip>
-										) : (
-											<Typography variant="body2" color="text.secondary">-</Typography>
-										)}
-									</TableCell>
+
 									<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
 										<Typography variant="body2" color="text.secondary">
-											{formatDate(candidate.created_at)}
+											{formatDate(type === 'screened' && candidate.screening_updated_at ? candidate.screening_updated_at : candidate.created_at)}
 										</Typography>
 									</TableCell>
 									<TableCell>
