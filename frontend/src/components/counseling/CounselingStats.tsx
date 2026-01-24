@@ -28,8 +28,8 @@ const CounselingStats: React.FC = () => {
 			<Box sx={{ display: 'flex', gap: 3, mb: 3, flexWrap: 'wrap' }}>
 				<Box sx={{ flex: '1 1 250px' }}>
 					<StatCard
-						title="Total Screened"
-						count={stats.screened?.toString() ?? '0'}
+						title="Screened Completed"
+						count={stats.screening_distribution?.['Completed']?.toString() || '0'}
 						icon={<Assignment fontSize="large" />}
 						color="#1976d2"
 					/>
