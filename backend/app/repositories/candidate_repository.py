@@ -559,9 +559,10 @@ class CandidateRepository(BaseRepository[Candidate]):
             
             # Pending counseling should include:
             # 1. Candidates with explicit 'pending' status
-            # 2. Screened candidates who have NOT started counseling yet
-            # So: Pending = Total Screened - (Selected + Rejected)
-            counseling_pending = max(0, screened - (raw_selected + raw_rejected))
+            # 2. Screening COMPLETED candidates who have NOT started counseling yet
+            # So: Pending = Screening Completed - (Selected + Rejected)
+            screened_completed = screening_distribution.get('Completed', 0)
+            counseling_pending = max(0, screened_completed - (raw_selected + raw_rejected))
             
             counseling_selected = raw_selected
             counseling_rejected = raw_rejected
