@@ -106,8 +106,17 @@ const ScreeningList: React.FC = () => {
 	};
 
 	// 'Other' tab logic: Sum of remaining statuses excluding the main ones? 
-	// Or based on backend? Backend 'Other' query logic is tricky. 
-	// For now, let's just display stats.not_screened for "Not Screened" and distribution for others.
+	const getOtherCount = () => {
+		if (!stats?.screening_distribution) return 0;
+		const mainStatuses = ['Completed', 'In Progress', 'Rejected', 'Pending'];
+		let otherCount = 0;
+		Object.entries(stats.screening_distribution).forEach(([status, count]) => {
+			if (!mainStatuses.includes(status)) {
+				otherCount += (count as number);
+			}
+		});
+		return otherCount;
+	};
 
 	const renderTabLabel = (label: string, count: number) => (
 		<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -183,8 +192,7 @@ const ScreeningList: React.FC = () => {
 						<Tab label={renderTabLabel("Completed", getCount('Completed'))} />
 						<Tab label={renderTabLabel("In Progress", getCount('In Progress'))} />
 						<Tab label={renderTabLabel("Rejected", getCount('Rejected'))} />
-						{/* Calculating Other: Total - (Not Screened + Pending + Completed + In Progress + Rejected)? 
-						    Ideally backend should provide this, but for now we might leave it without count or try to calc */}
+						<Tab label={renderTabLabel("Other", getOtherCount())} />
 					</Tabs>
 				</Box>
 
