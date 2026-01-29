@@ -5,7 +5,7 @@ import uuid
 from typing import TYPE_CHECKING
 from sqlalchemy import Integer, ForeignKey, JSON, Boolean, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Uuid
 from app.models.base import BaseModel
 
 if TYPE_CHECKING:
@@ -20,7 +20,7 @@ class TrainingCandidateAllocation(BaseModel):
     
     # Public UUID for external API (security)
     public_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid,
         unique=True,
         index=True,
         nullable=False,

@@ -69,6 +69,8 @@ jobs:
           POSTGRES_USER: ${{ env.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
           SECRET_KEY: "test_secret_key"
+          RATE_LIMIT_ENABLED: "False"
+          ENVIRONMENT: "testing"
         run: |
           pytest
 

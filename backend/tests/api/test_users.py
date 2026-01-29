@@ -23,7 +23,8 @@ async def test_get_current_user_unauthorized(client: AsyncClient):
     """Test getting current user without authentication"""
     response = await client.get("/api/v1/users/me")
     
-    assert response.status_code == 403  # Forbidden due to missing auth
+    # 401 is more appropriate for "Not authenticated" and is what get_current_user returns
+    assert response.status_code == 401
 
 
 @pytest.mark.asyncio

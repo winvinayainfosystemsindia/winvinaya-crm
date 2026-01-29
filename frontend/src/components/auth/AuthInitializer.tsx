@@ -13,7 +13,7 @@ interface AuthInitializerProps {
  */
 const AuthInitializer: React.FC<AuthInitializerProps> = ({ children }) => {
     const dispatch = useAppDispatch();
-    const { isInitialized, loading } = useAppSelector((state) => state.auth);
+    const { isInitialized } = useAppSelector((state) => state.auth);
 
     useEffect(() => {
         // Validate session on mount
@@ -23,7 +23,7 @@ const AuthInitializer: React.FC<AuthInitializerProps> = ({ children }) => {
     }, [dispatch, isInitialized]);
 
     // Show loading screen while validating session
-    if (!isInitialized || loading) {
+    if (!isInitialized) {
         return (
             <Box
                 sx={{

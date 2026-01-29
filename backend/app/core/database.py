@@ -8,14 +8,21 @@ from app.core.config import settings
 
 
 # Create async engine
+engine_kwargs = {
+    "echo": settings.DEBUG,
+    "future": True,
+    "pool_pre_ping": True,
+}
+
+if settings.ENVIRONMENT == "testing":
+    engine_kwargs["poolclass"] = NullPool
+else:
+    engine_kwargs["pool_size"] = 10
+    engine_kwargs["max_overflow"] = 20
+
 engine = create_async_engine(
     settings.DATABASE_URL,
-    echo=settings.DEBUG,
-    future=True,
-    pool_pre_ping=True,
-    pool_size=10,
-    max_overflow=20,
-    poolclass=NullPool if settings.ENVIRONMENT == "testing" else None,
+    **engine_kwargs
 )
 
 # Create async session factory

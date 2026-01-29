@@ -1,6 +1,7 @@
 """Tests for authentication endpoints"""
 
 import pytest
+import asyncio
 from httpx import AsyncClient
 
 
@@ -99,6 +100,10 @@ async def test_refresh_token(client: AsyncClient, test_user_data: dict):
     )
     
     tokens = login_response.json()
+    assert login_response.status_code == 200, f"Login failed: {tokens}"
+
+    # Wait a bit to ensure the new token will have a different iat/exp
+    await asyncio.sleep(1.1)
     
     # Refresh token
     response = await client.post(

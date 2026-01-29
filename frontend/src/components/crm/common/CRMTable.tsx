@@ -13,16 +13,16 @@ import {
 	TableSortLabel
 } from '@mui/material';
 
-interface Column<T = Record<string, unknown>> {
+interface Column<T = any> {
 	id: string;
 	label: string;
 	minWidth?: number;
 	align?: 'right' | 'left' | 'center';
-	format?: (value: unknown, row: T) => React.ReactNode;
+	format?: (value: any, row: T) => React.ReactNode;
 	sortable?: boolean;
 }
 
-interface CRMTableProps<T = Record<string, unknown>> {
+interface CRMTableProps<T = any> {
 	columns: Column<T>[];
 	rows: T[];
 	total: number;
@@ -38,7 +38,7 @@ interface CRMTableProps<T = Record<string, unknown>> {
 	onRowClick?: (row: T) => void;
 }
 
-const CRMTable = <T extends Record<string, unknown>>({
+const CRMTable = <T extends object>({
 	columns,
 	rows,
 	total,
@@ -135,7 +135,7 @@ const CRMTable = <T extends Record<string, unknown>>({
 									}}
 								>
 									{columns.map((column) => {
-										const value = row[column.id];
+										const value = (row as any)[column.id];
 										return (
 											<TableCell
 												key={column.id}
