@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
 	Button,
 	Container,
@@ -22,6 +22,7 @@ const Login: React.FC = () => {
 	const navigate = useNavigate();
 	const toast = useToast();
 	const { loading, error, isAuthenticated, isInitialized } = useAppSelector((state) => state.auth);
+	const lastErrorRef = useRef<string | null>(null);
 
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
@@ -36,8 +37,14 @@ const Login: React.FC = () => {
 
 	useEffect(() => {
 		if (error) {
-			toast.error(typeof error === 'string' ? error : 'Login failed');
-			dispatch(clearError());
+			const errorMessage = typeof error === 'string' ? error : 'Login failed';
+			if (lastErrorRef.current !== errorMessage) {
+				toast.error(errorMessage);
+				lastErrorRef.current = errorMessage;
+				dispatch(clearError());
+			}
+		} else {
+			lastErrorRef.current = null;
 		}
 	}, [error, toast, dispatch]);
 
