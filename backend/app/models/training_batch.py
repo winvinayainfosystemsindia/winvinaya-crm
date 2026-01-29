@@ -5,7 +5,7 @@ import uuid
 from typing import TYPE_CHECKING
 from sqlalchemy import String, JSON, Date, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
+from app.models.guid import GUID as UUID
 from datetime import date
 from app.models.base import BaseModel
 
@@ -21,7 +21,7 @@ class TrainingBatch(BaseModel):
     
     # Public UUID for external API (security)
     public_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        UUID,
         unique=True,
         index=True,
         nullable=False,
