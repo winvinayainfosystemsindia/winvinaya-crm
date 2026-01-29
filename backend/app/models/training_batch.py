@@ -1,11 +1,17 @@
+from __future__ import annotations
 """Training Batch model"""
 
 import uuid
+from typing import TYPE_CHECKING
 from sqlalchemy import String, JSON, Date, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import date
 from app.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from app.models.training_candidate_allocation import TrainingCandidateAllocation
+    from app.models.training_batch_extension import TrainingBatchExtension
 
 
 class TrainingBatch(BaseModel):
@@ -34,13 +40,13 @@ class TrainingBatch(BaseModel):
     other: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     
     # Relationships
-    allocations: Mapped[list["TrainingCandidateAllocation"]] = relationship(
+    allocations: Mapped[list[TrainingCandidateAllocation]] = relationship(
         "TrainingCandidateAllocation",
         back_populates="batch",
         cascade="all, delete-orphan"
     )
     
-    extensions: Mapped[list["TrainingBatchExtension"]] = relationship(
+    extensions: Mapped[list[TrainingBatchExtension]] = relationship(
         "TrainingBatchExtension",
         back_populates="batch",
         cascade="all, delete-orphan"

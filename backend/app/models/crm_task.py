@@ -1,12 +1,18 @@
+from __future__ import annotations
 """CRM Task model"""
 
 import uuid
 import enum
 from datetime import datetime
+from typing import TYPE_CHECKING
 from sqlalchemy import String, Text, JSON, Integer, Boolean, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from app.models.user import User
+    from app.models.crm_activity_log import CRMActivityLog
 
 
 class CRMTaskType(str, enum.Enum):
@@ -162,19 +168,19 @@ class CRMTask(BaseModel):
     )
     
     # Relationships
-    assigned_user: Mapped["User"] = relationship(
+    assigned_user: Mapped[User] = relationship(
         "User",
         foreign_keys=[assigned_to],
         back_populates="assigned_crm_tasks",
     )
     
-    creator: Mapped["User"] = relationship(
+    creator: Mapped[User] = relationship(
         "User",
         foreign_keys=[created_by],
         back_populates="created_crm_tasks",
     )
     
-    crm_activities: Mapped[list["CRMActivityLog"]] = relationship(
+    crm_activities: Mapped[list[CRMActivityLog]] = relationship(
         "CRMActivityLog",
         foreign_keys="CRMActivityLog.entity_id",
         primaryjoin="and_(CRMTask.id==CRMActivityLog.entity_id, CRMActivityLog.entity_type=='task')",

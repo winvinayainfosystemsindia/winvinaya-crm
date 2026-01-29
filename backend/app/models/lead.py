@@ -1,13 +1,23 @@
+from __future__ import annotations
 """Lead model for CRM"""
 
 import uuid
 import enum
 from datetime import date, datetime
 from decimal import Decimal
+from typing import TYPE_CHECKING
 from sqlalchemy import String, Text, JSON, Integer, Numeric, Date, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from app.models.company import Company
+    from app.models.contact import Contact
+    from app.models.user import User
+    from app.models.deal import Deal
+    from app.models.crm_task import CRMTask
+    from app.models.crm_activity_log import CRMActivityLog
 
 
 class LeadSource(str, enum.Enum):
@@ -163,29 +173,29 @@ class Lead(BaseModel):
     )
     
     # Relationships
-    company: Mapped["Company"] = relationship(
+    company: Mapped[Company] = relationship(
         "Company",
         back_populates="leads",
     )
     
-    contact: Mapped["Contact"] = relationship(
+    contact: Mapped[Contact] = relationship(
         "Contact",
         back_populates="leads",
     )
     
-    assigned_user: Mapped["User"] = relationship(
+    assigned_user: Mapped[User] = relationship(
         "User",
         foreign_keys=[assigned_to],
         back_populates="assigned_leads",
     )
     
-    converted_deal: Mapped["Deal"] = relationship(
+    converted_deal: Mapped[Deal] = relationship(
         "Deal",
         foreign_keys=[converted_to_deal_id],
         uselist=False,
     )
     
-    tasks: Mapped[list["CRMTask"]] = relationship(
+    tasks: Mapped[list[CRMTask]] = relationship(
         "CRMTask",
         foreign_keys="CRMTask.related_to_id",
         primaryjoin="and_(Lead.id==CRMTask.related_to_id, CRMTask.related_to_type=='lead')",
@@ -193,7 +203,7 @@ class Lead(BaseModel):
         viewonly=True,
     )
     
-    crm_activities: Mapped[list["CRMActivityLog"]] = relationship(
+    crm_activities: Mapped[list[CRMActivityLog]] = relationship(
         "CRMActivityLog",
         foreign_keys="CRMActivityLog.entity_id",
         primaryjoin="and_(Lead.id==CRMActivityLog.entity_id, CRMActivityLog.entity_type=='lead')",

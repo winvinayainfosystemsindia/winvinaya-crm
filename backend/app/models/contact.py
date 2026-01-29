@@ -1,11 +1,19 @@
+from __future__ import annotations
 """Contact model for CRM"""
 
 import uuid
 import enum
+from typing import TYPE_CHECKING
 from sqlalchemy import String, JSON, Integer, Boolean, ForeignKey, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from app.models.company import Company
+    from app.models.lead import Lead
+    from app.models.deal import Deal
+    from app.models.crm_activity_log import CRMActivityLog
 
 
 class ContactSource(str, enum.Enum):
@@ -125,24 +133,24 @@ class Contact(BaseModel):
     )
     
     # Relationships
-    company: Mapped["Company"] = relationship(
+    company: Mapped[Company] = relationship(
         "Company",
         back_populates="contacts",
     )
     
-    leads: Mapped[list["Lead"]] = relationship(
+    leads: Mapped[list[Lead]] = relationship(
         "Lead",
         back_populates="contact",
         cascade="all, delete-orphan",
     )
     
-    deals: Mapped[list["Deal"]] = relationship(
+    deals: Mapped[list[Deal]] = relationship(
         "Deal",
         back_populates="contact",
         cascade="all, delete-orphan",
     )
     
-    crm_activities: Mapped[list["CRMActivityLog"]] = relationship(
+    crm_activities: Mapped[list[CRMActivityLog]] = relationship(
         "CRMActivityLog",
         foreign_keys="CRMActivityLog.entity_id",
         primaryjoin="and_(Contact.id==CRMActivityLog.entity_id, CRMActivityLog.entity_type=='contact')",

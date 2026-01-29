@@ -1,9 +1,15 @@
+from __future__ import annotations
 """Candidate Counseling model for career counseling data"""
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 from sqlalchemy import String, Integer, ForeignKey, DateTime, Text, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from app.models.candidate import Candidate
+    from app.models.user import User
 
 
 class CandidateCounseling(BaseModel):
@@ -44,8 +50,8 @@ class CandidateCounseling(BaseModel):
     counseling_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     
     # Relationships
-    candidate: Mapped["Candidate"] = relationship("Candidate", back_populates="counseling")
-    counselor: Mapped["User"] = relationship("User")
+    candidate: Mapped[Candidate] = relationship("Candidate", back_populates="counseling")
+    counselor: Mapped[User] = relationship("User")
     
     def __repr__(self) -> str:
         return f"<CandidateCounseling(id={self.id}, candidate_id={self.candidate_id}, status={self.status})>"

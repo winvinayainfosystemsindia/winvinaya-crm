@@ -1,9 +1,14 @@
+from __future__ import annotations
 """Training Batch Event model (Holidays, Special Events)"""
 
 from datetime import date
+from typing import TYPE_CHECKING
 from sqlalchemy import Integer, ForeignKey, String, Text, Date
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from app.models.training_batch import TrainingBatch
 
 
 class TrainingBatchEvent(BaseModel):
@@ -24,7 +29,7 @@ class TrainingBatchEvent(BaseModel):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     
     # Relationships
-    batch: Mapped["TrainingBatch"] = relationship("TrainingBatch")
+    batch: Mapped[TrainingBatch] = relationship("TrainingBatch")
     
     def __repr__(self) -> str:
         return f"<TrainingBatchEvent(batch_id={self.batch_id}, date={self.date}, type={self.event_type}, title={self.title})>"

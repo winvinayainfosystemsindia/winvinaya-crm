@@ -1,9 +1,16 @@
+from __future__ import annotations
 """Training Assessment model"""
 
 from datetime import date
+from typing import TYPE_CHECKING
 from sqlalchemy import Integer, ForeignKey, String, Float, Date, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from app.models.training_batch import TrainingBatch
+    from app.models.candidate import Candidate
+    from app.models.user import User
 
 
 class TrainingAssessment(BaseModel):
@@ -44,9 +51,9 @@ class TrainingAssessment(BaseModel):
     others: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     
     # Relationships
-    batch: Mapped["TrainingBatch"] = relationship("TrainingBatch")
-    candidate: Mapped["Candidate"] = relationship("Candidate")
-    trainer: Mapped["User"] = relationship("User")
+    batch: Mapped[TrainingBatch] = relationship("TrainingBatch")
+    candidate: Mapped[Candidate] = relationship("Candidate")
+    trainer: Mapped[User] = relationship("User")
     
     def __repr__(self) -> str:
         return f"<TrainingAssessment(batch_id={self.batch_id}, candidate_id={self.candidate_id}, name={self.assessment_name}, marks={self.marks_obtained}/{self.max_marks})>"

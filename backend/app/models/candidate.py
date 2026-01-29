@@ -1,11 +1,18 @@
+from __future__ import annotations
 """Candidate model"""
 
 import uuid
 from datetime import date
+from typing import TYPE_CHECKING
 from sqlalchemy import String, Boolean, JSON, Date
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from app.models.candidate_screening import CandidateScreening
+    from app.models.candidate_document import CandidateDocument
+    from app.models.candidate_counseling import CandidateCounseling
 
 
 class Candidate(BaseModel):
@@ -43,20 +50,20 @@ class Candidate(BaseModel):
     disability_details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     
     # Relationships (filled by trainers)
-    screening: Mapped["CandidateScreening"] = relationship(
+    screening: Mapped[CandidateScreening] = relationship(
         "CandidateScreening",
         back_populates="candidate",
         uselist=False,
         cascade="all, delete-orphan"
     )
     
-    documents: Mapped[list["CandidateDocument"]] = relationship(
+    documents: Mapped[list[CandidateDocument]] = relationship(
         "CandidateDocument",
         back_populates="candidate",
         cascade="all, delete-orphan"
     )
     
-    counseling: Mapped["CandidateCounseling"] = relationship(
+    counseling: Mapped[CandidateCounseling] = relationship(
         "CandidateCounseling",
         back_populates="candidate",
         uselist=False,

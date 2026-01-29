@@ -1,8 +1,13 @@
+from __future__ import annotations
 """Candidate Document model for managing uploaded documents"""
 
+from typing import TYPE_CHECKING
 from sqlalchemy import String, Integer, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from app.models.candidate import Candidate
 
 
 class CandidateDocument(BaseModel):
@@ -34,7 +39,7 @@ class CandidateDocument(BaseModel):
     description: Mapped[str | None] = mapped_column(String(500), nullable=True)
     
     # Relationship
-    candidate: Mapped["Candidate"] = relationship("Candidate", back_populates="documents")
+    candidate: Mapped[Candidate] = relationship("Candidate", back_populates="documents")
     
     def __repr__(self) -> str:
         return f"<CandidateDocument(id={self.id}, candidate_id={self.candidate_id}, type={self.document_type})>"

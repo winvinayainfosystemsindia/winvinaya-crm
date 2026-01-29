@@ -1,8 +1,14 @@
+from __future__ import annotations
 """Candidate Screening model for trainer-filled screening data"""
 
+from typing import TYPE_CHECKING
 from sqlalchemy import Integer, ForeignKey, JSON, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from app.models.candidate import Candidate
+    from app.models.user import User
 
 
 class CandidateScreening(BaseModel):
@@ -33,8 +39,8 @@ class CandidateScreening(BaseModel):
     screened_by_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
     
     # Relationship
-    candidate: Mapped["Candidate"] = relationship("Candidate", back_populates="screening")
-    screened_by: Mapped["User"] = relationship("User")
+    candidate: Mapped[Candidate] = relationship("Candidate", back_populates="screening")
+    screened_by: Mapped[User] = relationship("User")
     
     def __repr__(self) -> str:
         return f"<CandidateScreening(id={self.id}, candidate_id={self.candidate_id})>"

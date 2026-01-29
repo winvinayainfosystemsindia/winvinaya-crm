@@ -1,11 +1,16 @@
+from __future__ import annotations
 """CRM Activity Log model for tracking CRM entity changes"""
 
 import uuid
 import enum
+from typing import TYPE_CHECKING
 from sqlalchemy import String, JSON, Integer, ForeignKey, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from app.models.user import User
 
 
 class CRMEntityType(str, enum.Enum):
@@ -91,7 +96,7 @@ class CRMActivityLog(BaseModel):
     )
     
     # Relationships
-    performer: Mapped["User"] = relationship(
+    performer: Mapped[User] = relationship(
         "User",
         foreign_keys=[performed_by],
         back_populates="crm_activities",

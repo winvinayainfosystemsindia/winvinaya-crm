@@ -1,8 +1,12 @@
+from __future__ import annotations
 import enum
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 from sqlalchemy import String, Enum, Text, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from app.models.user import User
 
 
 class TicketStatus(str, enum.Enum):
@@ -54,8 +58,8 @@ class Ticket(BaseModel):
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     
     # Relationships
-    messages: Mapped[List["TicketMessage"]] = relationship("TicketMessage", back_populates="ticket", cascade="all, delete-orphan")
-    user: Mapped["User"] = relationship("User")
+    messages: Mapped[List[TicketMessage]] = relationship("TicketMessage", back_populates="ticket", cascade="all, delete-orphan")
+    user: Mapped[User] = relationship("User")
 
 
 class TicketMessage(BaseModel):
@@ -66,5 +70,5 @@ class TicketMessage(BaseModel):
     message: Mapped[str] = mapped_column(Text, nullable=False)
     
     # Relationships
-    ticket: Mapped["Ticket"] = relationship("Ticket", back_populates="messages")
-    user: Mapped["User"] = relationship("User")
+    ticket: Mapped[Ticket] = relationship("Ticket", back_populates="messages")
+    user: Mapped[User] = relationship("User")

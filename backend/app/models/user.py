@@ -1,9 +1,17 @@
+from __future__ import annotations
 """User model - example database model"""
 
 import enum
+from typing import TYPE_CHECKING
 from sqlalchemy import String, Boolean, Enum, Numeric
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from app.models.lead import Lead
+    from app.models.deal import Deal
+    from app.models.crm_task import CRMTask
+    from app.models.crm_activity_log import CRMActivityLog
 
 
 class UserRole(str, enum.Enum):
@@ -96,31 +104,31 @@ class User(BaseModel):
     )
     
     # CRM Relationships
-    assigned_leads: Mapped[list["Lead"]] = relationship(
+    assigned_leads: Mapped[list[Lead]] = relationship(
         "Lead",
         foreign_keys="Lead.assigned_to",
         back_populates="assigned_user",
     )
     
-    assigned_deals: Mapped[list["Deal"]] = relationship(
+    assigned_deals: Mapped[list[Deal]] = relationship(
         "Deal",
         foreign_keys="Deal.assigned_to",
         back_populates="assigned_user",
     )
     
-    assigned_crm_tasks: Mapped[list["CRMTask"]] = relationship(
+    assigned_crm_tasks: Mapped[list[CRMTask]] = relationship(
         "CRMTask",
         foreign_keys="CRMTask.assigned_to",
         back_populates="assigned_user",
     )
     
-    created_crm_tasks: Mapped[list["CRMTask"]] = relationship(
+    created_crm_tasks: Mapped[list[CRMTask]] = relationship(
         "CRMTask",
         foreign_keys="CRMTask.created_by",
         back_populates="creator",
     )
     
-    crm_activities: Mapped[list["CRMActivityLog"]] = relationship(
+    crm_activities: Mapped[list[CRMActivityLog]] = relationship(
         "CRMActivityLog",
         foreign_keys="CRMActivityLog.performed_by",
         back_populates="performer",

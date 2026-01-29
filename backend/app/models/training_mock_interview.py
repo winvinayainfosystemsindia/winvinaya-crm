@@ -1,9 +1,15 @@
+from __future__ import annotations
 """Training Mock Interview model"""
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 from sqlalchemy import Integer, ForeignKey, String, Text, DateTime, JSON, Float
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from app.models.training_batch import TrainingBatch
+    from app.models.candidate import Candidate
 
 
 class TrainingMockInterview(BaseModel):
@@ -43,8 +49,8 @@ class TrainingMockInterview(BaseModel):
     ) # pending, cleared, re-test, rejected, absent
     
     # Relationships
-    batch: Mapped["TrainingBatch"] = relationship("TrainingBatch")
-    candidate: Mapped["Candidate"] = relationship("Candidate")
+    batch: Mapped[TrainingBatch] = relationship("TrainingBatch")
+    candidate: Mapped[Candidate] = relationship("Candidate")
     
     def __repr__(self) -> str:
         return f"<TrainingMockInterview(batch_id={self.batch_id}, candidate_id={self.candidate_id}, status={self.status})>"

@@ -1,10 +1,16 @@
+from __future__ import annotations
 """Candidate Allocation model"""
 
 import uuid
+from typing import TYPE_CHECKING
 from sqlalchemy import Integer, ForeignKey, JSON, Boolean, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from app.models.training_batch import TrainingBatch
+    from app.models.candidate import Candidate
 
 
 class TrainingCandidateAllocation(BaseModel):
@@ -41,8 +47,8 @@ class TrainingCandidateAllocation(BaseModel):
     others: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     
     # Relationships
-    batch: Mapped["TrainingBatch"] = relationship("TrainingBatch", back_populates="allocations")
-    candidate: Mapped["Candidate"] = relationship("Candidate")
+    batch: Mapped[TrainingBatch] = relationship("TrainingBatch", back_populates="allocations")
+    candidate: Mapped[Candidate] = relationship("Candidate")
     
     def __repr__(self) -> str:
         return f"<TrainingCandidateAllocation(id={self.id}, public_id={self.public_id}, batch_id={self.batch_id}, candidate_id={self.candidate_id})>"
