@@ -43,8 +43,8 @@ class TrainingMockInterview(BaseModel):
     ) # pending, cleared, re-test, rejected, absent
     
     # Relationships
-    batch: Mapped["TrainingBatch"] = relationship("TrainingBatch")
-    candidate: Mapped["Candidate"] = relationship("Candidate")
+    batch: Mapped["TrainingBatch"] = relationship("TrainingBatch")  # noqa: F821
+    candidate: Mapped["Candidate"] = relationship("Candidate")  # noqa: F821
     
     def __repr__(self) -> str:
         return f"<TrainingMockInterview(batch_id={self.batch_id}, candidate_id={self.candidate_id}, status={self.status})>"

@@ -1,5 +1,11 @@
+from __future__ import annotations
 """Candidate model"""
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from app.models.candidate_screening import CandidateScreening
+    from app.models.candidate_document import CandidateDocument
+    from app.models.candidate_counseling import CandidateCounseling
 import uuid
 from datetime import date
 from sqlalchemy import String, Boolean, JSON, Date

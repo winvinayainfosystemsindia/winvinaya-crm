@@ -125,24 +125,24 @@ class Contact(BaseModel):
     )
     
     # Relationships
-    company: Mapped["Company"] = relationship(
+    company: Mapped["Company"] = relationship(  # noqa: F821
         "Company",
         back_populates="contacts",
     )
     
-    leads: Mapped[list["Lead"]] = relationship(
+    leads: Mapped[list["Lead"]] = relationship(  # noqa: F821
         "Lead",
         back_populates="contact",
         cascade="all, delete-orphan",
     )
     
-    deals: Mapped[list["Deal"]] = relationship(
+    deals: Mapped[list["Deal"]] = relationship(  # noqa: F821
         "Deal",
         back_populates="contact",
         cascade="all, delete-orphan",
     )
     
-    crm_activities: Mapped[list["CRMActivityLog"]] = relationship(
+    crm_activities: Mapped[list["CRMActivityLog"]] = relationship(  # noqa: F821
         "CRMActivityLog",
         foreign_keys="CRMActivityLog.entity_id",
         primaryjoin="and_(Contact.id==CRMActivityLog.entity_id, CRMActivityLog.entity_type=='contact')",

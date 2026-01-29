@@ -34,13 +34,13 @@ class TrainingBatch(BaseModel):
     other: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     
     # Relationships
-    allocations: Mapped[list["TrainingCandidateAllocation"]] = relationship(
+    allocations: Mapped[list["TrainingCandidateAllocation"]] = relationship(  # noqa: F821
         "TrainingCandidateAllocation",
         back_populates="batch",
         cascade="all, delete-orphan"
     )
     
-    extensions: Mapped[list["TrainingBatchExtension"]] = relationship(
+    extensions: Mapped[list["TrainingBatchExtension"]] = relationship(  # noqa: F821
         "TrainingBatchExtension",
         back_populates="batch",
         cascade="all, delete-orphan"

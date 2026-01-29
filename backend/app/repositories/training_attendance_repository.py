@@ -2,7 +2,7 @@
 
 from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from app.models.training_attendance import TrainingAttendance
 from app.repositories.base import BaseRepository
 

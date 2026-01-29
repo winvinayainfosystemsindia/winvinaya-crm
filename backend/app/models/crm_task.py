@@ -162,19 +162,19 @@ class CRMTask(BaseModel):
     )
     
     # Relationships
-    assigned_user: Mapped["User"] = relationship(
+    assigned_user: Mapped["User"] = relationship(  # noqa: F821
         "User",
         foreign_keys=[assigned_to],
         back_populates="assigned_crm_tasks",
     )
     
-    creator: Mapped["User"] = relationship(
+    creator: Mapped["User"] = relationship(  # noqa: F821
         "User",
         foreign_keys=[created_by],
         back_populates="created_crm_tasks",
     )
     
-    crm_activities: Mapped[list["CRMActivityLog"]] = relationship(
+    crm_activities: Mapped[list["CRMActivityLog"]] = relationship(  # noqa: F821
         "CRMActivityLog",
         foreign_keys="CRMActivityLog.entity_id",
         primaryjoin="and_(CRMTask.id==CRMActivityLog.entity_id, CRMActivityLog.entity_type=='task')",

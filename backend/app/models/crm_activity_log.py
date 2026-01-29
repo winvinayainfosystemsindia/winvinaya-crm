@@ -91,7 +91,7 @@ class CRMActivityLog(BaseModel):
     )
     
     # Relationships
-    performer: Mapped["User"] = relationship(
+    performer: Mapped["User"] = relationship(  # noqa: F821
         "User",
         foreign_keys=[performed_by],
         back_populates="crm_activities",

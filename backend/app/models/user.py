@@ -96,31 +96,31 @@ class User(BaseModel):
     )
     
     # CRM Relationships
-    assigned_leads: Mapped[list["Lead"]] = relationship(
+    assigned_leads: Mapped[list["Lead"]] = relationship(  # noqa: F821
         "Lead",
         foreign_keys="Lead.assigned_to",
         back_populates="assigned_user",
     )
     
-    assigned_deals: Mapped[list["Deal"]] = relationship(
+    assigned_deals: Mapped[list["Deal"]] = relationship(  # noqa: F821
         "Deal",
         foreign_keys="Deal.assigned_to",
         back_populates="assigned_user",
     )
     
-    assigned_crm_tasks: Mapped[list["CRMTask"]] = relationship(
+    assigned_crm_tasks: Mapped[list["CRMTask"]] = relationship(  # noqa: F821
         "CRMTask",
         foreign_keys="CRMTask.assigned_to",
         back_populates="assigned_user",
     )
     
-    created_crm_tasks: Mapped[list["CRMTask"]] = relationship(
+    created_crm_tasks: Mapped[list["CRMTask"]] = relationship(  # noqa: F821
         "CRMTask",
         foreign_keys="CRMTask.created_by",
         back_populates="creator",
     )
     
-    crm_activities: Mapped[list["CRMActivityLog"]] = relationship(
+    crm_activities: Mapped[list["CRMActivityLog"]] = relationship(  # noqa: F821
         "CRMActivityLog",
         foreign_keys="CRMActivityLog.performed_by",
         back_populates="performer",

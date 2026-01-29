@@ -33,8 +33,8 @@ class CandidateScreening(BaseModel):
     screened_by_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
     
     # Relationship
-    candidate: Mapped["Candidate"] = relationship("Candidate", back_populates="screening")
-    screened_by: Mapped["User"] = relationship("User")
+    candidate: Mapped["Candidate"] = relationship("Candidate", back_populates="screening")  # noqa: F821
+    screened_by: Mapped["User"] = relationship("User")  # noqa: F821
     
     def __repr__(self) -> str:
         return f"<CandidateScreening(id={self.id}, candidate_id={self.candidate_id})>"

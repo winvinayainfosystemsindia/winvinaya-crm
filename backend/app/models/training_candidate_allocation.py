@@ -41,8 +41,8 @@ class TrainingCandidateAllocation(BaseModel):
     others: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     
     # Relationships
-    batch: Mapped["TrainingBatch"] = relationship("TrainingBatch", back_populates="allocations")
-    candidate: Mapped["Candidate"] = relationship("Candidate")
+    batch: Mapped["TrainingBatch"] = relationship("TrainingBatch", back_populates="allocations")  # noqa: F821
+    candidate: Mapped["Candidate"] = relationship("Candidate")  # noqa: F821
     
     def __repr__(self) -> str:
         return f"<TrainingCandidateAllocation(id={self.id}, public_id={self.public_id}, batch_id={self.batch_id}, candidate_id={self.candidate_id})>"

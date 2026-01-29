@@ -163,29 +163,29 @@ class Lead(BaseModel):
     )
     
     # Relationships
-    company: Mapped["Company"] = relationship(
+    company: Mapped["Company"] = relationship(  # noqa: F821
         "Company",
         back_populates="leads",
     )
     
-    contact: Mapped["Contact"] = relationship(
+    contact: Mapped["Contact"] = relationship(  # noqa: F821
         "Contact",
         back_populates="leads",
     )
     
-    assigned_user: Mapped["User"] = relationship(
+    assigned_user: Mapped["User"] = relationship(  # noqa: F821
         "User",
         foreign_keys=[assigned_to],
         back_populates="assigned_leads",
     )
     
-    converted_deal: Mapped["Deal"] = relationship(
+    converted_deal: Mapped["Deal"] = relationship(  # noqa: F821
         "Deal",
         foreign_keys=[converted_to_deal_id],
         uselist=False,
     )
     
-    tasks: Mapped[list["CRMTask"]] = relationship(
+    tasks: Mapped[list["CRMTask"]] = relationship(  # noqa: F821
         "CRMTask",
         foreign_keys="CRMTask.related_to_id",
         primaryjoin="and_(Lead.id==CRMTask.related_to_id, CRMTask.related_to_type=='lead')",
@@ -193,7 +193,7 @@ class Lead(BaseModel):
         viewonly=True,
     )
     
-    crm_activities: Mapped[list["CRMActivityLog"]] = relationship(
+    crm_activities: Mapped[list["CRMActivityLog"]] = relationship(  # noqa: F821
         "CRMActivityLog",
         foreign_keys="CRMActivityLog.entity_id",
         primaryjoin="and_(Lead.id==CRMActivityLog.entity_id, CRMActivityLog.entity_type=='lead')",

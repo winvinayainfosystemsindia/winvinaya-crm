@@ -55,7 +55,7 @@ class Ticket(BaseModel):
     
     # Relationships
     messages: Mapped[List["TicketMessage"]] = relationship("TicketMessage", back_populates="ticket", cascade="all, delete-orphan")
-    user: Mapped["User"] = relationship("User")
+    user: Mapped["User"] = relationship("User")  # noqa: F821
 
 
 class TicketMessage(BaseModel):
@@ -67,4 +67,4 @@ class TicketMessage(BaseModel):
     
     # Relationships
     ticket: Mapped["Ticket"] = relationship("Ticket", back_populates="messages")
-    user: Mapped["User"] = relationship("User")
+    user: Mapped["User"] = relationship("User")  # noqa: F821

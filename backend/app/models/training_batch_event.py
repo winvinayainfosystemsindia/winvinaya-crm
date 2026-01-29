@@ -24,7 +24,7 @@ class TrainingBatchEvent(BaseModel):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     
     # Relationships
-    batch: Mapped["TrainingBatch"] = relationship("TrainingBatch")
+    batch: Mapped["TrainingBatch"] = relationship("TrainingBatch")  # noqa: F821
     
     def __repr__(self) -> str:
         return f"<TrainingBatchEvent(batch_id={self.batch_id}, date={self.date}, type={self.event_type}, title={self.title})>"

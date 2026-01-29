@@ -44,8 +44,8 @@ class CandidateCounseling(BaseModel):
     counseling_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     
     # Relationships
-    candidate: Mapped["Candidate"] = relationship("Candidate", back_populates="counseling")
-    counselor: Mapped["User"] = relationship("User")
+    candidate: Mapped["Candidate"] = relationship("Candidate", back_populates="counseling")  # noqa: F821
+    counselor: Mapped["User"] = relationship("User")  # noqa: F821
     
     def __repr__(self) -> str:
         return f"<CandidateCounseling(id={self.id}, candidate_id={self.candidate_id}, status={self.status})>"

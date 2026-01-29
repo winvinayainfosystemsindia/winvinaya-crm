@@ -44,9 +44,9 @@ class TrainingAssessment(BaseModel):
     others: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     
     # Relationships
-    batch: Mapped["TrainingBatch"] = relationship("TrainingBatch")
-    candidate: Mapped["Candidate"] = relationship("Candidate")
-    trainer: Mapped["User"] = relationship("User")
+    batch: Mapped["TrainingBatch"] = relationship("TrainingBatch")  # noqa: F821
+    candidate: Mapped["Candidate"] = relationship("Candidate")  # noqa: F821
+    trainer: Mapped["User"] = relationship("User")  # noqa: F821
     
     def __repr__(self) -> str:
         return f"<TrainingAssessment(batch_id={self.batch_id}, candidate_id={self.candidate_id}, name={self.assessment_name}, marks={self.marks_obtained}/{self.max_marks})>"

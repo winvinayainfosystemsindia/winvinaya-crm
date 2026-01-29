@@ -30,8 +30,8 @@ class TrainingAttendance(BaseModel):
     remarks: Mapped[str | None] = mapped_column(Text, nullable=True)
     
     # Relationships
-    batch: Mapped["TrainingBatch"] = relationship("TrainingBatch")
-    candidate: Mapped["Candidate"] = relationship("Candidate")
+    batch: Mapped["TrainingBatch"] = relationship("TrainingBatch")  # noqa: F821
+    candidate: Mapped["Candidate"] = relationship("Candidate")  # noqa: F821
     
     def __repr__(self) -> str:
         return f"<TrainingAttendance(batch_id={self.batch_id}, candidate_id={self.candidate_id}, date={self.date}, status={self.status})>"

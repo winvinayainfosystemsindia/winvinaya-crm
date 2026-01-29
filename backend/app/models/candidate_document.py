@@ -34,7 +34,7 @@ class CandidateDocument(BaseModel):
     description: Mapped[str | None] = mapped_column(String(500), nullable=True)
     
     # Relationship
-    candidate: Mapped["Candidate"] = relationship("Candidate", back_populates="documents")
+    candidate: Mapped["Candidate"] = relationship("Candidate", back_populates="documents")  # noqa: F821
     
     def __repr__(self) -> str:
         return f"<CandidateDocument(id={self.id}, candidate_id={self.candidate_id}, type={self.document_type})>"
