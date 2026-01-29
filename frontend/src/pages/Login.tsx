@@ -34,12 +34,6 @@ const Login: React.FC = () => {
 		}
 	}, [isAuthenticated, isInitialized, navigate]);
 
-	useEffect(() => {
-		if (error) {
-			toast.error(typeof error === 'string' ? error : 'Login failed');
-			dispatch(clearError());
-		}
-	}, [error, toast, dispatch]);
 
 	const handleTogglePasswordVisibility = () => {
 		setShowPassword((prev: boolean) => !prev);
@@ -51,8 +45,9 @@ const Login: React.FC = () => {
 		try {
 			await dispatch(loginUser({ email, password })).unwrap();
 			toast.success('Login successful');
-		} catch (err) {
+		} catch (err: unknown) {
 			console.error('Login failed', err);
+			toast.error(typeof err === 'string' ? err : 'Login failed');
 		}
 	};
 
@@ -114,7 +109,10 @@ const Login: React.FC = () => {
 							autoFocus
 							size="small"
 							value={email}
-							onChange={(e) => setEmail(e.target.value)}
+							onChange={(e) => {
+								setEmail(e.target.value);
+								if (error) dispatch(clearError());
+							}}
 							sx={{ mb: 2 }}
 							inputProps={{
 								'aria-required': 'true'
@@ -131,7 +129,10 @@ const Login: React.FC = () => {
 							autoComplete="current-password"
 							size="small"
 							value={password}
-							onChange={(e) => setPassword(e.target.value)}
+							onChange={(e) => {
+								setPassword(e.target.value);
+								if (error) dispatch(clearError());
+							}}
 							sx={{ mb: 3 }}
 							inputProps={{
 								'aria-required': 'true'
