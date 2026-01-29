@@ -34,6 +34,12 @@ const Login: React.FC = () => {
 		}
 	}, [isAuthenticated, isInitialized, navigate]);
 
+	useEffect(() => {
+		return () => {
+			dispatch(clearError());
+		};
+	}, [dispatch]);
+
 
 	const handleTogglePasswordVisibility = () => {
 		setShowPassword((prev: boolean) => !prev);
