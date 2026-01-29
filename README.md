@@ -15,6 +15,7 @@ We have comprehensive documentation to help you understand, deploy, and use the 
 *   **[Architecture & Design](docs/ARCHITECTURE_AND_DESIGN.md)**: Technical diagrams (Mermaid) of the Application, Deployment, and CI/CD pipelines.
 *   **[Initial Deployment Guide](docs/INITIAL_DEPLOYMENT.md)**: Step-by-step technical guide to setting up the server from scratch (EC2, Nginx, Postgres, PM2).
 *   **[CI/CD Workflow Guide](docs/CI_CD_WORKFLOW_GUIDE.md)**: Instructions on how to trigger automated tests and deployments using Git.
+*   **[Jules Integration & Usage Guide](docs/JULES_GUIDE.md)**: Steps to setup and use Jules (Google Labs AI Agent) for automated coding tasks.
 *   **[Optimization and Architecture](docs/OPTIMIZATION_AND_ARCHITECTURE.md)**: Non-technical breakdown of cost savings and performance strategies (Cost Analysis included).
 
 ---
