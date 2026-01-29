@@ -53,11 +53,11 @@ const TrainingBatchFormDialog: React.FC<TrainingBatchFormDialogProps> = ({
 		batch_name: '',
 		courses: [],
 		disability_type: '',
-		start_date: new Date().toISOString().split('T')[0],
-		approx_close_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+		start_date: '',
+		approx_close_date: '',
 		duration: {
-			start_date: new Date().toISOString().split('T')[0],
-			end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+			start_date: '',
+			end_date: '',
 			weeks: 4
 		},
 		status: 'planned',
@@ -66,39 +66,47 @@ const TrainingBatchFormDialog: React.FC<TrainingBatchFormDialogProps> = ({
 
 	useEffect(() => {
 		if (open) {
-			if (initialData) {
-				setFormData({
-					...initialData,
-					duration: initialData.duration ? {
-						...initialData.duration,
-						start_date: initialData.duration.start_date.split('T')[0],
-						end_date: initialData.duration.end_date.split('T')[0]
-					} : {
-						start_date: new Date().toISOString().split('T')[0],
-						end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-						weeks: 4
-					}
-				});
-			} else {
-				setFormData({
-					batch_name: '',
-					disability_type: '',
-					courses: [],
-					start_date: new Date().toISOString().split('T')[0],
-					approx_close_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-					duration: {
-						start_date: new Date().toISOString().split('T')[0],
-						end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-						weeks: 4
-					},
-					status: 'planned',
-					other: {}
-				});
-			}
+			const today = new Date().toISOString().split('T')[0];
+			const thirtyDaysLater = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+			const initForm = () => {
+				if (initialData) {
+					setFormData({
+						...initialData,
+						duration: initialData.duration ? {
+							...initialData.duration,
+							start_date: initialData.duration.start_date.split('T')[0],
+							end_date: initialData.duration.end_date.split('T')[0]
+						} : {
+							start_date: today,
+							end_date: thirtyDaysLater,
+							weeks: 4
+						}
+					});
+				} else {
+					setFormData({
+						batch_name: '',
+						disability_type: '',
+						courses: [],
+						start_date: today,
+						approx_close_date: thirtyDaysLater,
+						duration: {
+							start_date: today,
+							end_date: thirtyDaysLater,
+							weeks: 4
+						},
+						status: 'planned',
+						other: {}
+					});
+				}
+			};
+
+			const timer = setTimeout(initForm, 0);
+			return () => clearTimeout(timer);
 		}
 	}, [initialData, open]);
 
-	const handleChange = (field: keyof TrainingBatch, value: any) => {
+	const handleChange = (field: keyof TrainingBatch, value: unknown) => {
 		setFormData((prev) => ({ ...prev, [field]: value }));
 	};
 
@@ -111,7 +119,7 @@ const TrainingBatchFormDialog: React.FC<TrainingBatchFormDialogProps> = ({
 		return Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 7));
 	};
 
-	const handleDurationChange = (field: string, value: any) => {
+	const handleDurationChange = (field: string, value: string | number) => {
 		setFormData((prev) => {
 			const newDuration = {
 				...(prev.duration || { start_date: '', end_date: '', weeks: 0 }),
@@ -119,14 +127,14 @@ const TrainingBatchFormDialog: React.FC<TrainingBatchFormDialogProps> = ({
 			};
 
 			if (field === 'start_date' || field === 'end_date') {
-				const start = field === 'start_date' ? value : newDuration.start_date;
-				const end = field === 'end_date' ? value : newDuration.end_date;
+				const start = field === 'start_date' ? (value as string) : newDuration.start_date;
+				const end = field === 'end_date' ? (value as string) : newDuration.end_date;
 				newDuration.weeks = calculateWeeks(start, end);
 			}
 
-			const topLevelUpdates: any = {};
-			if (field === 'start_date') topLevelUpdates.start_date = value;
-			if (field === 'end_date') topLevelUpdates.approx_close_date = value;
+			const topLevelUpdates: Partial<TrainingBatch> = {};
+			if (field === 'start_date') topLevelUpdates.start_date = value as string;
+			if (field === 'end_date') topLevelUpdates.approx_close_date = value as string;
 
 			return { ...prev, duration: newDuration, ...topLevelUpdates };
 		});

@@ -41,7 +41,7 @@ const DisabilityStep: React.FC<DisabilityStepProps> = ({
         });
     };
 
-    const handleDisabilityAutocompleteChange = (_event: any, newValue: string | null) => {
+    const handleDisabilityAutocompleteChange = (_event: React.SyntheticEvent, newValue: string | null) => {
         onChange({
             disability_details: {
                 ...formData.disability_details!,

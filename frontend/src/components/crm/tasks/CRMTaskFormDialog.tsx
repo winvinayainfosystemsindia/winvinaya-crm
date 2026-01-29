@@ -31,6 +31,10 @@ import { fetchContacts } from '../../../store/slices/contactSlice';
 import { fetchLeads } from '../../../store/slices/leadSlice';
 import { fetchDeals } from '../../../store/slices/dealSlice';
 import type { CRMTask, CRMTaskCreate, CRMTaskUpdate, CRMTaskType, CRMTaskPriority, CRMTaskStatus, CRMRelatedToType } from '../../../models/crmTask';
+import type { Company } from '../../../models/company';
+import type { Contact } from '../../../models/contact';
+import type { Lead } from '../../../models/lead';
+import type { Deal } from '../../../models/deal';
 
 interface CRMTaskFormDialogProps {
 	open: boolean;
@@ -111,40 +115,43 @@ const CRMTaskFormDialog: React.FC<CRMTaskFormDialogProps> = ({
 	}, [dispatch, open]);
 
 	useEffect(() => {
-		if (task) {
-			setFormData({
-				...task,
-				due_date: task.due_date ? task.due_date.replace('Z', '').replace(' ', 'T').slice(0, 16) : ''
-			});
-		} else if (initialData) {
-			setFormData({
-				title: '',
-				description: '',
-				task_type: 'follow_up',
-				priority: 'medium',
-				status: 'pending',
-				assigned_to: 0,
-				due_date: '',
-				reminder_before_minutes: 30,
-				...initialData
-			});
-		} else {
-			setFormData({
-				title: '',
-				description: '',
-				task_type: 'follow_up',
-				priority: 'medium',
-				status: 'pending',
-				assigned_to: 0,
-				due_date: '',
-				related_to_type: undefined,
-				related_to_id: undefined,
-				reminder_before_minutes: 30
-			});
-		}
+		const timer = setTimeout(() => {
+			if (task) {
+				setFormData({
+					...task,
+					due_date: task.due_date ? task.due_date.replace('Z', '').replace(' ', 'T').slice(0, 16) : ''
+				});
+			} else if (initialData) {
+				setFormData({
+					title: '',
+					description: '',
+					task_type: 'follow_up',
+					priority: 'medium',
+					status: 'pending',
+					assigned_to: 0,
+					due_date: '',
+					reminder_before_minutes: 30,
+					...initialData
+				});
+			} else {
+				setFormData({
+					title: '',
+					description: '',
+					task_type: 'follow_up',
+					priority: 'medium',
+					status: 'pending',
+					assigned_to: 0,
+					due_date: '',
+					related_to_type: undefined,
+					related_to_id: undefined,
+					reminder_before_minutes: 30
+				});
+			}
+		}, 0);
+		return () => clearTimeout(timer);
 	}, [task, initialData, open]);
 
-	const handleChange = (field: string, value: any) => {
+	const handleChange = (field: string, value: unknown) => {
 		setFormData(prev => ({ ...prev, [field]: value }));
 	};
 
@@ -169,10 +176,11 @@ const CRMTaskFormDialog: React.FC<CRMTaskFormDialogProps> = ({
 		}
 	};
 
-	const getRelatedLabel = (option: any) => {
+	const getRelatedLabel = (option: Company | Contact | Lead | Deal) => {
 		if (!option) return '';
-		if (formData.related_to_type === 'contact') return `${option.first_name} ${option.last_name}`;
-		return option.title || option.name || '';
+		const opt = option as { first_name?: string; last_name?: string; title?: string; name?: string };
+		if (formData.related_to_type === 'contact') return `${opt.first_name || ''} ${opt.last_name || ''}`.trim();
+		return opt.title || opt.name || '';
 	};
 
 	const sectionTitleStyle = {

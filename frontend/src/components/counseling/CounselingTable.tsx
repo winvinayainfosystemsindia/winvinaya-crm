@@ -51,7 +51,17 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 
 	// Filter state
 	const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
-	const [filters, setFilters] = useState<Record<string, any>>({
+
+	interface FilterState {
+		disability_types: string[];
+		education_levels: string[];
+		cities: string[];
+		counseling_status: string;
+		is_experienced: boolean | string;
+		[key: string]: string[] | string | boolean | undefined;
+	}
+
+	const [filters, setFilters] = useState<FilterState>({
 		disability_types: [],
 		education_levels: [],
 		cities: [],
@@ -108,7 +118,7 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 		});
 	}
 
-	const handleFilterChange = (key: string, value: any) => {
+	const handleFilterChange = (key: string, value: string | string[] | boolean) => {
 		// Convert experience values back to boolean/null
 		let finalValue = value;
 		if (key === 'is_experienced') {
@@ -149,20 +159,30 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 		}
 	}, 0);
 
-	const fetchFilterOptions = async () => {
+	const fetchFilterOptions = React.useCallback(async () => {
 		try {
 			const options = await candidateService.getFilterOptions();
 			setFilterOptions(options);
 		} catch (error) {
 			console.error('Failed to fetch filter options:', error);
 		}
-	};
-
-	useEffect(() => {
-		fetchFilterOptions();
 	}, []);
 
-	const fetchCandidatesData = async () => {
+	useEffect(() => {
+		let isMounted = true;
+		const loadOptions = async () => {
+			try {
+				const options = await candidateService.getFilterOptions();
+				if (isMounted) setFilterOptions(options);
+			} catch (error) {
+				console.error('Failed to fetch filter options:', error);
+			}
+		};
+		void loadOptions();
+		return () => { isMounted = false; };
+	}, [fetchFilterOptions]);
+
+	const fetchCandidatesData = React.useCallback(async () => {
 		// Determine counseling status to fetch based on tab type
 		let statusToFetch = filters.counseling_status;
 		if (!statusToFetch) {
@@ -183,10 +203,10 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 			disability_types: filters.disability_types?.join(',') || '',
 			education_levels: filters.education_levels?.join(',') || '',
 			cities: filters.cities?.join(',') || '',
-			is_experienced: filters.is_experienced === '' ? undefined : filters.is_experienced,
+			is_experienced: filters.is_experienced === '' ? undefined : (filters.is_experienced as boolean),
 			screening_status: type === 'not_counseled' ? 'Completed' : undefined
 		}));
-	};
+	}, [dispatch, page, rowsPerPage, type, debouncedSearchTerm, orderBy, order, filters]);
 
 
 	// Debounce search term
@@ -200,7 +220,7 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 
 	useEffect(() => {
 		fetchCandidatesData();
-	}, [page, rowsPerPage, type, refreshKey, debouncedSearchTerm, order, orderBy, filters]);
+	}, [fetchCandidatesData, refreshKey]);
 
 
 	const handleChangePage = (_event: unknown, newPage: number) => {
@@ -528,7 +548,7 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 					<FormControl size="small">
 						<Select
 							value={rowsPerPage}
-							onChange={(e) => handleChangeRowsPerPage(e as any)}
+							onChange={(e) => setRowsPerPage(parseInt(String(e.target.value), 10))}
 							sx={{
 								height: '32px',
 								'& .MuiOutlinedInput-notchedOutline': {

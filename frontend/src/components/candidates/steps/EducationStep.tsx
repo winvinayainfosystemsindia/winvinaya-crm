@@ -64,7 +64,7 @@ const EducationStep: React.FC<EducationStepProps> = ({
     };
 
     const handleDegreeAutocompleteChange = (index: number, field: keyof Degree) => (
-        _event: any,
+        _event: React.SyntheticEvent,
         newValue: string | null
     ) => {
         const updatedDegrees = [...(formData.education_details?.degrees || [])];
@@ -81,7 +81,7 @@ const EducationStep: React.FC<EducationStepProps> = ({
     };
 
     const handleDegreeInputChange = (index: number, field: keyof Degree) => (
-        _event: any,
+        _event: React.SyntheticEvent,
         newInputValue: string
     ) => {
         const updatedDegrees = [...(formData.education_details?.degrees || [])];

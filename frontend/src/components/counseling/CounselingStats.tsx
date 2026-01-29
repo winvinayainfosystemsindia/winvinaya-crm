@@ -8,18 +8,21 @@ import type { CandidateStats } from '../../models/candidate';
 const CounselingStats: React.FC = () => {
 	const [stats, setStats] = useState<CandidateStats | null>(null);
 
-	useEffect(() => {
-		fetchStats();
-	}, []);
 
-	const fetchStats = async () => {
-		try {
-			const data = await candidateService.getStats();
-			setStats(data);
-		} catch (error) {
-			console.error('Failed to fetch stats:', error);
-		}
-	};
+
+	useEffect(() => {
+		let isMounted = true;
+		const getStats = async () => {
+			try {
+				const data = await candidateService.getStats();
+				if (isMounted) setStats(data);
+			} catch (error) {
+				console.error('Failed to fetch stats:', error);
+			}
+		};
+		void getStats();
+		return () => { isMounted = false; };
+	}, []);
 
 	if (!stats) return null;
 

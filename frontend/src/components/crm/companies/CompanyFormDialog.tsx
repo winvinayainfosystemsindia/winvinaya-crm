@@ -69,32 +69,35 @@ const CompanyFormDialog: React.FC<CompanyFormDialogProps> = ({
 	});
 
 	useEffect(() => {
-		if (company) {
-			setFormData({
-				...company,
-				address: company.address || { street: '', city: '', state: '', country: 'India', pincode: '' }
-			});
-		} else {
-			setFormData({
-				name: '',
-				industry: '',
-				company_size: 'micro',
-				website: '',
-				phone: '',
-				email: '',
-				status: 'prospect',
-				address: { street: '', city: '', state: '', country: 'India', pincode: '' }
-			});
-		}
+		const timer = setTimeout(() => {
+			if (company) {
+				setFormData({
+					...company,
+					address: company.address || { street: '', city: '', state: '', country: 'India', pincode: '' }
+				});
+			} else {
+				setFormData({
+					name: '',
+					industry: '',
+					company_size: 'micro',
+					website: '',
+					phone: '',
+					email: '',
+					status: 'prospect',
+					address: { street: '', city: '', state: '', country: 'India', pincode: '' }
+				});
+			}
+		}, 0);
+		return () => clearTimeout(timer);
 	}, [company, open]);
 
-	const handleChange = (field: string, value: any) => {
+	const handleChange = (field: string, value: unknown) => {
 		if (field.includes('.')) {
 			const [parent, child] = field.split('.');
 			setFormData(prev => ({
 				...prev,
 				[parent]: {
-					...(prev[parent as keyof typeof prev] as any),
+					...(prev[parent as keyof typeof prev] as Record<string, unknown>),
 					[child]: value
 				}
 			}));

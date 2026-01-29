@@ -23,6 +23,7 @@ import {
 	TableSortLabel,
 	Badge
 } from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material';
 import { Search, Edit, Visibility, Accessible, FilterList, Refresh } from '@mui/icons-material';
 import {
 	CircularProgress,
@@ -67,9 +68,9 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onEditCandidate, onView
 		counseling_statuses: string[];
 	}>({ disability_types: [], education_levels: [], cities: [], counseling_statuses: [] });
 
-	const fetchCandidatesData = async () => {
+	const fetchCandidatesData = React.useCallback(async () => {
 		// Build filter query parameters
-		const filterParams: any = {
+		const filterParams: Record<string, unknown> = {
 			skip: page * rowsPerPage,
 			limit: rowsPerPage,
 			search: debouncedSearchTerm,
@@ -92,7 +93,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onEditCandidate, onView
 		}
 
 		dispatch(fetchCandidates(filterParams));
-	};
+	}, [page, rowsPerPage, debouncedSearchTerm, orderBy, order, filters, dispatch]);
 
 	// Debounce search term
 	useEffect(() => {
@@ -106,14 +107,14 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onEditCandidate, onView
 	// Initial fetch and fetch on pagination change
 	useEffect(() => {
 		fetchCandidatesData();
-	}, [page, rowsPerPage, debouncedSearchTerm, order, orderBy, filters]);
+	}, [fetchCandidatesData]);
 
 	const handleChangePage = (_event: unknown, newPage: number) => {
 		setPage(newPage);
 	};
 
-	const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-		setRowsPerPage(parseInt(event.target.value, 10));
+	const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent<number>) => {
+		setRowsPerPage(parseInt(event.target.value as string, 10));
 		setPage(0);
 	};
 
@@ -149,7 +150,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onEditCandidate, onView
 		setFilterDrawerOpen(false);
 	};
 
-	const handleFilterChange = (key: string, value: any) => {
+	const handleFilterChange = (key: string, value: unknown) => {
 		setFilters(prev => ({ ...prev, [key]: value }));
 	};
 
@@ -515,7 +516,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onEditCandidate, onView
 					<FormControl size="small">
 						<Select
 							value={rowsPerPage}
-							onChange={(e) => handleChangeRowsPerPage(e as any)}
+							onChange={handleChangeRowsPerPage}
 							sx={{
 								height: '32px',
 								'& .MuiOutlinedInput-notchedOutline': {

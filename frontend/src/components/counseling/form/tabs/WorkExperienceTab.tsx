@@ -24,7 +24,7 @@ interface WorkExperienceTabProps {
 	formData: CandidateCounselingCreate;
 	onAddWorkExp: () => void;
 	onRemoveWorkExp: (index: number) => void;
-	onWorkExpChange: (index: number, field: string, value: any) => void;
+	onWorkExpChange: (index: number, field: string, value: unknown) => void;
 	candidateWorkExperience?: WorkExperience;
 }
 

@@ -13,18 +13,18 @@ import {
 	TableSortLabel
 } from '@mui/material';
 
-interface Column {
+interface Column<T = Record<string, unknown>> {
 	id: string;
 	label: string;
 	minWidth?: number;
 	align?: 'right' | 'left' | 'center';
-	format?: (value: any, row: any) => React.ReactNode;
+	format?: (value: unknown, row: T) => React.ReactNode;
 	sortable?: boolean;
 }
 
-interface CRMTableProps {
-	columns: Column[];
-	rows: any[];
+interface CRMTableProps<T = Record<string, unknown>> {
+	columns: Column<T>[];
+	rows: T[];
 	total: number;
 	page: number;
 	rowsPerPage: number;
@@ -35,10 +35,10 @@ interface CRMTableProps {
 	onSort?: (id: string) => void;
 	loading?: boolean;
 	emptyMessage?: string;
-	onRowClick?: (row: any) => void;
+	onRowClick?: (row: T) => void;
 }
 
-const CRMTable: React.FC<CRMTableProps> = ({
+const CRMTable = <T extends Record<string, unknown>>({
 	columns,
 	rows,
 	total,
@@ -52,7 +52,7 @@ const CRMTable: React.FC<CRMTableProps> = ({
 	loading,
 	emptyMessage = 'No records found',
 	onRowClick
-}) => {
+}: CRMTableProps<T>) => {
 	return (
 		<Paper
 			elevation={0}
@@ -125,7 +125,7 @@ const CRMTable: React.FC<CRMTableProps> = ({
 									hover
 									role="checkbox"
 									tabIndex={-1}
-									key={row.public_id || index}
+									key={(row as { public_id?: string | number }).public_id || index}
 									onClick={() => onRowClick && onRowClick(row)}
 									sx={{
 										cursor: onRowClick ? 'pointer' : 'default',
@@ -147,7 +147,7 @@ const CRMTable: React.FC<CRMTableProps> = ({
 													padding: '10px 16px'
 												}}
 											>
-												{column.format ? column.format(value, row) : value}
+												{column.format ? column.format(value, row) : (value as React.ReactNode)}
 											</TableCell>
 										);
 									})}

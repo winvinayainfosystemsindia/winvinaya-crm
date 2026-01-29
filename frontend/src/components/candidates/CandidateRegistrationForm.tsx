@@ -206,8 +206,9 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
                         formData.phone,
                         formData.pincode
                     );
-                } catch (error: any) {
-                    const detail = error?.response?.data?.detail || error?.message || 'Validation failed';
+                } catch (error: unknown) {
+                    const detail = (error as { response?: { data?: { detail?: string } }, message?: string })?.response?.data?.detail
+                        || (error instanceof Error ? error.message : 'Validation failed');
                     const backendErrors: Record<string, string> = {};
 
                     if (detail.includes('Email already registered')) {
@@ -298,9 +299,10 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
             }
 
             // Handle other fields
-            Object.keys(data).forEach(key => {
+            Object.keys(data).forEach(k => {
+                const key = k as keyof CandidateCreate;
                 if (!['education_details', 'disability_details', 'guardian_details', 'work_experience'].includes(key)) {
-                    (updated as any)[key] = (data as any)[key];
+                    (updated as Record<string, unknown>)[key] = (data as Record<string, unknown>)[key];
                 }
             });
 
@@ -344,12 +346,15 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
 
             // Mark all steps as completed
             setCompletedSteps(new Set(steps.map((_, index) => index)));
-        } catch (error: any) {
+        } catch (error: unknown) {
             let message = 'Submission failed';
             let detail = '';
 
-            if (error?.response?.data?.detail) {
-                detail = error.response.data.detail;
+            const err = error as { response?: { data?: { detail?: string | string[] } }, message?: string };
+
+            if (err?.response?.data?.detail) {
+                const d = err.response.data.detail;
+                detail = Array.isArray(d) ? d.join(', ') : d;
             } else if (typeof error === 'string') {
                 detail = error;
             } else if (error instanceof Error) {
@@ -411,7 +416,7 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
         }
     };
 
-    const StepIcon = ({ active, completed, error, icon }: any) => {
+    const StepIcon = ({ active, completed, error, icon }: { active?: boolean, completed?: boolean, error?: boolean, icon: number }) => {
         const theme = useTheme();
 
         return (

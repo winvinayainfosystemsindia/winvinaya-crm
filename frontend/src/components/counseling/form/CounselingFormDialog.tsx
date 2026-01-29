@@ -17,7 +17,7 @@ import {
 import { Close as CloseIcon } from '@mui/icons-material';
 import { useAppSelector, useAppDispatch } from '../../../store/hooks';
 import { fetchFields } from '../../../store/slices/settingsSlice';
-import type { CandidateCounselingCreate } from '../../../models/candidate';
+import type { CandidateCounselingCreate, WorkExperience } from '../../../models/candidate';
 
 // Tabs
 import SkillAssessmentTab from './tabs/SkillAssessmentTab';
@@ -40,7 +40,7 @@ interface CounselingFormDialogProps {
 	onSubmit: (data: CandidateCounselingCreate) => void;
 	initialData?: CandidateCounselingCreate;
 	candidateName?: string;
-	candidateWorkExperience?: any;
+	candidateWorkExperience?: WorkExperience;
 }
 
 interface TabPanelProps {
@@ -92,34 +92,41 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 
 	useEffect(() => {
 		if (open) {
-			setTabValue(0);
-			dispatch(fetchFields('counseling'));
+			// Defer state updates to avoid synchronous setState inside effect warning
+			const initForm = () => {
+				setTabValue(0);
+				dispatch(fetchFields('counseling'));
 
-			if (initialData) {
-				setFormData({
-					...initialData,
-					skills: initialData.skills || [],
-					questions: initialData.questions || [],
-					others: initialData.others || {},
-					workexperience: initialData.workexperience || [],
-					counseling_date: initialData.counseling_date ? initialData.counseling_date.split('T')[0] : new Date().toISOString().split('T')[0]
-				});
-			} else {
-				const defaultQuestions = PREDEFINED_QUESTIONS.map(q => ({
-					question: q,
-					answer: ''
-				}));
-				setFormData({
-					skills: [],
-					feedback: '',
-					questions: defaultQuestions,
-					status: 'pending',
-					counselor_name: user ? (user.full_name || user.username) : '',
-					counseling_date: new Date().toISOString().split('T')[0],
-					others: {},
-					workexperience: []
-				});
-			}
+				if (initialData) {
+					setFormData({
+						...initialData,
+						skills: initialData.skills || [],
+						questions: initialData.questions || [],
+						others: initialData.others || {},
+						workexperience: initialData.workexperience || [],
+						counseling_date: initialData.counseling_date ? initialData.counseling_date.split('T')[0] : new Date().toISOString().split('T')[0],
+						status: initialData.status || 'pending'
+					});
+				} else {
+					const defaultQuestions = PREDEFINED_QUESTIONS.map(q => ({
+						question: q,
+						answer: ''
+					}));
+					setFormData({
+						skills: [],
+						feedback: '',
+						questions: defaultQuestions,
+						status: 'pending',
+						counselor_name: user ? (user.full_name || user.username) : '',
+						counseling_date: new Date().toISOString().split('T')[0],
+						others: {},
+						workexperience: []
+					});
+				}
+			};
+
+			const timer = setTimeout(initForm, 0);
+			return () => clearTimeout(timer);
 		}
 	}, [initialData, open, user, dispatch]);
 
@@ -127,12 +134,12 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 		setTabValue(newValue);
 	};
 
-	const handleChange = (field: string, value: any) => {
+	const handleChange = (field: string, value: unknown) => {
 		setFormData((prev) => ({ ...prev, [field]: value }));
 	};
 
-	const handleUpdateOtherField = (name: string, value: any) => {
-		setFormData((prev: any) => ({
+	const handleUpdateOtherField = (name: string, value: unknown) => {
+		setFormData((prev) => ({
 			...prev,
 			others: {
 				...prev.others,
@@ -141,7 +148,7 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 		}));
 	};
 
-	const handleUpdateWorkExpField = (index: number, name: string, value: any) => {
+	const handleUpdateWorkExpField = (index: number, name: string, value: unknown) => {
 		const newWorkExp = [...(formData.workexperience || [])];
 		newWorkExp[index] = { ...newWorkExp[index], [name]: value };
 		handleChange('workexperience', newWorkExp);
@@ -172,15 +179,15 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 		handleChange('skills', newSkills);
 	};
 
-	const handleSkillChange = (index: number, field: string, value: any) => {
-		const newSkills: any = [...(formData.skills || [])];
-		newSkills[index] = { ...newSkills[index], [field]: value };
+	const handleSkillChange = (index: number, field: string, value: unknown) => {
+		const newSkills = [...(formData.skills || [])];
+		newSkills[index] = { ...newSkills[index], [field]: value } as { name: string; level: 'Beginner' | 'Intermediate' | 'Advanced' };
 		handleChange('skills', newSkills);
 	};
 
 	const handleQuestionChange = (index: number, field: string, value: string) => {
-		const newQuestions: any = [...(formData.questions || [])];
-		newQuestions[index] = { ...newQuestions[index], [field]: value };
+		const newQuestions = [...(formData.questions || [])];
+		newQuestions[index] = { ...newQuestions[index], [field]: value } as { question: string; answer: string };
 		handleChange('questions', newQuestions);
 	};
 

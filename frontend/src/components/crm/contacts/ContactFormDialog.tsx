@@ -66,29 +66,32 @@ const ContactFormDialog: React.FC<ContactFormDialogProps> = ({
 	});
 
 	useEffect(() => {
-		if (contact) {
-			setFormData({
-				...contact
-			});
-		} else {
-			setFormData({
-				first_name: '',
-				last_name: '',
-				email: '',
-				phone: '',
-				mobile: '',
-				designation: '',
-				department: '',
-				company_id: undefined,
-				is_primary: false,
-				is_decision_maker: false,
-				contact_source: 'linkedin',
-				linkedin_url: ''
-			});
-		}
+		const timer = setTimeout(() => {
+			if (contact) {
+				setFormData({
+					...contact
+				});
+			} else {
+				setFormData({
+					first_name: '',
+					last_name: '',
+					email: '',
+					phone: '',
+					mobile: '',
+					designation: '',
+					department: '',
+					company_id: undefined,
+					is_primary: false,
+					is_decision_maker: false,
+					contact_source: 'linkedin',
+					linkedin_url: ''
+				});
+			}
+		}, 0);
+		return () => clearTimeout(timer);
 	}, [contact, open]);
 
-	const handleChange = (field: string, value: any) => {
+	const handleChange = (field: string, value: unknown) => {
 		setFormData(prev => ({ ...prev, [field]: value }));
 	};
 
@@ -96,7 +99,7 @@ const ContactFormDialog: React.FC<ContactFormDialogProps> = ({
 		e.preventDefault();
 		if (!formData.first_name || !formData.last_name || !formData.email) return;
 
-		const { public_id, created_at, updated_at, company, ...submitData } = formData as any;
+		const { public_id, created_at, updated_at, company, ...submitData } = formData as Contact & { public_id?: string; created_at?: string; updated_at?: string; company?: unknown };
 		onSubmit(submitData as ContactCreate);
 	};
 

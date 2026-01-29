@@ -18,11 +18,13 @@ import {
 import { Add, Delete } from '@mui/icons-material';
 import InfoIcon from '@mui/icons-material/Info';
 
+import type { CandidateCounselingCreate } from '../../../../models/candidate';
+
 interface SkillAssessmentTabProps {
-	formData: any;
+	formData: CandidateCounselingCreate;
 	onAddSkill: () => void;
 	onRemoveSkill: (index: number) => void;
-	onSkillChange: (index: number, field: string, value: any) => void;
+	onSkillChange: (index: number, field: string, value: string) => void;
 	commonSkills: string[];
 }
 
@@ -89,7 +91,7 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 			<Divider sx={{ mb: 3 }} />
 			{formData.skills && formData.skills.length > 0 ? (
 				<Stack spacing={2}>
-					{formData.skills.map((skill: any, index: number) => (
+					{formData.skills.map((skill, index: number) => (
 						<Grid container spacing={2} key={index} alignItems="center">
 							<Grid size={{ xs: 12, md: 6 }}>
 								<Autocomplete
@@ -116,7 +118,7 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 									<Select
 										value={skill.level}
 										label="Level"
-										onChange={(e) => onSkillChange(index, 'level', e.target.value)}
+										onChange={(e) => onSkillChange(index, 'level', e.target.value as string)}
 										sx={{ borderRadius: '2px' }}
 									>
 										<MenuItem value="Beginner">Beginner</MenuItem>

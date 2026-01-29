@@ -12,8 +12,10 @@ import {
 import { Add, Delete } from '@mui/icons-material';
 import InfoIcon from '@mui/icons-material/Info';
 
+import type { CandidateCounselingCreate } from '../../../../models/candidate';
+
 interface InterviewFeedbackTabProps {
-	formData: any;
+	formData: CandidateCounselingCreate;
 	onAddQuestion: () => void;
 	onRemoveQuestion: (index: number) => void;
 	onQuestionChange: (index: number, field: string, value: string) => void;
@@ -83,7 +85,7 @@ const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 				</Box>
 				<Divider sx={{ mb: 3 }} />
 				<Stack spacing={3}>
-					{formData.questions?.map((q: any, index: number) => (
+					{formData.questions?.map((q, index: number) => (
 						<Box key={index}>
 							<Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1, alignItems: 'center' }}>
 								<TextField

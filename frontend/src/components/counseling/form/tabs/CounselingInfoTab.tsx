@@ -13,10 +13,12 @@ import {
 import DynamicFieldRenderer from '../../../common/DynamicFieldRenderer';
 import type { DynamicField } from '../../../../services/settingsService';
 
+import type { CandidateCounselingCreate } from '../../../../models/candidate';
+
 interface CounselingInfoTabProps {
-	formData: any;
-	onFieldChange: (field: string, value: any) => void;
-	onUpdateOtherField: (name: string, value: any) => void;
+	formData: CandidateCounselingCreate;
+	onFieldChange: (field: string, value: unknown) => void;
+	onUpdateOtherField: (name: string, value: unknown) => void;
 	dynamicFields: DynamicField[];
 }
 

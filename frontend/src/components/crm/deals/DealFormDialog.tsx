@@ -95,30 +95,33 @@ const DealFormDialog: React.FC<DealFormDialogProps> = ({
 	}, [dispatch, open]);
 
 	useEffect(() => {
-		if (deal) {
-			setFormData({
-				...deal,
-				expected_close_date: deal.expected_close_date ? deal.expected_close_date.split('T')[0] : ''
-			});
-		} else {
-			setFormData({
-				title: '',
-				description: '',
-				deal_stage: 'discovery',
-				deal_type: 'new_business',
-				win_probability: 20,
-				deal_value: 0,
-				currency: 'INR',
-				expected_close_date: '',
-				assigned_to: 0,
-				company_id: undefined,
-				contact_id: undefined,
-				original_lead_id: undefined
-			});
-		}
+		const timer = setTimeout(() => {
+			if (deal) {
+				setFormData({
+					...deal,
+					expected_close_date: deal.expected_close_date ? deal.expected_close_date.split('T')[0] : ''
+				});
+			} else {
+				setFormData({
+					title: '',
+					description: '',
+					deal_stage: 'discovery',
+					deal_type: 'new_business',
+					win_probability: 20,
+					deal_value: 0,
+					currency: 'INR',
+					expected_close_date: '',
+					assigned_to: 0,
+					company_id: undefined,
+					contact_id: undefined,
+					original_lead_id: undefined
+				});
+			}
+		}, 0);
+		return () => clearTimeout(timer);
 	}, [deal, open]);
 
-	const handleChange = (field: string, value: any) => {
+	const handleChange = (field: string, value: unknown) => {
 		setFormData(prev => ({ ...prev, [field]: value }));
 	};
 

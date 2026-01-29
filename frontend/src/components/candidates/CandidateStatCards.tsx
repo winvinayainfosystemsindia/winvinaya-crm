@@ -14,7 +14,7 @@ const StatSparkLine = ({ color, data }: { color: string, data: number[] }) => (
 		<SparkLineChart
 			data={data}
 			height={40}
-			// @ts-ignore - The type definition might be lagging or 'colors' vs 'color' ambiguity
+			// @ts-expect-error - The type definition might be lagging or 'colors' vs 'color' ambiguity
 			colors={[color]}
 			showHighlight={true}
 			showTooltip={true}

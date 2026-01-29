@@ -93,29 +93,32 @@ const LeadFormDialog: React.FC<LeadFormDialogProps> = ({
 	}, [dispatch, open]);
 
 	useEffect(() => {
-		if (lead) {
-			setFormData({
-				...lead,
-				expected_close_date: lead.expected_close_date ? lead.expected_close_date.split('T')[0] : ''
-			});
-		} else {
-			setFormData({
-				title: '',
-				description: '',
-				lead_source: 'website',
-				lead_status: 'new',
-				lead_score: 50,
-				estimated_value: undefined,
-				currency: 'INR',
-				expected_close_date: '',
-				assigned_to: undefined,
-				company_id: undefined,
-				contact_id: undefined
-			});
-		}
+		const timer = setTimeout(() => {
+			if (lead) {
+				setFormData({
+					...lead,
+					expected_close_date: lead.expected_close_date ? lead.expected_close_date.split('T')[0] : ''
+				});
+			} else {
+				setFormData({
+					title: '',
+					description: '',
+					lead_source: 'website',
+					lead_status: 'new',
+					lead_score: 50,
+					estimated_value: undefined,
+					currency: 'INR',
+					expected_close_date: '',
+					assigned_to: undefined,
+					company_id: undefined,
+					contact_id: undefined
+				});
+			}
+		}, 0);
+		return () => clearTimeout(timer);
 	}, [lead, open]);
 
-	const handleChange = (field: string, value: any) => {
+	const handleChange = (field: string, value: unknown) => {
 		setFormData(prev => ({ ...prev, [field]: value }));
 	};
 

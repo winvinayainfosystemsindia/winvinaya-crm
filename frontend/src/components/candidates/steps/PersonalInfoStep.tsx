@@ -50,7 +50,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     };
 
     const handleSelectChange = (field: keyof CandidateCreate) => (
-        event: any
+        event: { target: { value: unknown } }
     ) => {
         onChange({
             [field]: event.target.value,
@@ -58,7 +58,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     };
 
     const handleGuardianChange = (field: keyof NonNullable<CandidateCreate['guardian_details']>) => (
-        event: any
+        event: { target: { value: string } }
     ) => {
         const value = event.target.value;
         // Allow only digits for phone field
