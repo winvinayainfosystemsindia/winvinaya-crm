@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 from sqlalchemy import String, Text, JSON, Integer, Boolean, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Uuid
 from app.models.base import BaseModel
 
 if TYPE_CHECKING:
@@ -57,7 +57,7 @@ class CRMTask(BaseModel):
     
     # Public UUID for external API (security)
     public_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid,
         unique=True,
         index=True,
         nullable=False,

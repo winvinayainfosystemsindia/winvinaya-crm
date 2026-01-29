@@ -213,7 +213,7 @@ def get_sourcing_team_template(candidate: Any) -> str:
                 <h1>NEW CANDIDATE ALERT</h1>
             </div>
             <div class="content">
-                <h2>Registration Details</h2>
+                <h2>New Candidate Registration</h2>
                 <p>A new candidate has successfully registered on the WinVinaya CRM portal.</p>
                 
                 <div class="summary-box">

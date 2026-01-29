@@ -5,7 +5,7 @@ import enum
 from sqlalchemy import String, JSON, Enum, and_
 from sqlalchemy.orm import Mapped, mapped_column, relationship, foreign, remote
 from app.models.crm_task import CRMRelatedToType
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Uuid
 from app.models.base import BaseModel
 from typing import TYPE_CHECKING
 
@@ -41,7 +41,7 @@ class Company(BaseModel):
     
     # Public UUID for external API (security)
     public_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid,
         unique=True,
         index=True,
         nullable=False,

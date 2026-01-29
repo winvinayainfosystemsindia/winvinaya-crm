@@ -5,7 +5,7 @@ from datetime import date, datetime
 from typing import TYPE_CHECKING
 from sqlalchemy import String, Integer, Date, ForeignKey, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Uuid
 from app.models.base import BaseModel
 
 if TYPE_CHECKING:
@@ -18,7 +18,7 @@ class TrainingBatchExtension(BaseModel):
     __tablename__ = "training_batch_extensions"
     
     public_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid,
         unique=True,
         index=True,
         nullable=False,
