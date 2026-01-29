@@ -6,7 +6,7 @@ import enum
 from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
-from sqlalchemy import String, Text, JSON, Integer, Numeric, Date, DateTime, ForeignKey, Enum
+from sqlalchemy import String, Text, JSON, Integer, Numeric, Date, ForeignKey, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Uuid
 from app.models.base import BaseModel

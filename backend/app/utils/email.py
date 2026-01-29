@@ -1,7 +1,6 @@
 """Email Utility for sending professional HTML emails"""
 
 import logging
-import os
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import List, Optional, Any

@@ -3,7 +3,7 @@
 import uuid
 from datetime import date, datetime
 from typing import TYPE_CHECKING
-from sqlalchemy import String, Integer, Date, ForeignKey, DateTime
+from sqlalchemy import String, Integer, Date, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Uuid
 from app.models.base import BaseModel
