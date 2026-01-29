@@ -40,7 +40,6 @@ const Login: React.FC = () => {
 		};
 	}, [dispatch]);
 
-
 	const handleTogglePasswordVisibility = () => {
 		setShowPassword((prev: boolean) => !prev);
 	};
