@@ -15,7 +15,7 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import useToast from '../hooks/useToast';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { loginUser } from '../store/slices/authSlice';
+import { loginUser, clearError } from '../store/slices/authSlice';
 
 const Login: React.FC = () => {
 	const dispatch = useAppDispatch();
@@ -37,8 +37,9 @@ const Login: React.FC = () => {
 	useEffect(() => {
 		if (error) {
 			toast.error(typeof error === 'string' ? error : 'Login failed');
+			dispatch(clearError());
 		}
-	}, [error, toast]);
+	}, [error, toast, dispatch]);
 
 	const handleTogglePasswordVisibility = () => {
 		setShowPassword((prev: boolean) => !prev);
