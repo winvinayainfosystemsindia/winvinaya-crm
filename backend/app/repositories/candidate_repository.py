@@ -2,7 +2,7 @@
 
 from typing import Optional
 from uuid import UUID
-from sqlalchemy import select, func
+from sqlalchemy import select, func, Integer, or_, and_, case
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.candidate import Candidate
@@ -216,7 +216,6 @@ class CandidateRepository(BaseRepository[Candidate]):
         counseling_status: Optional[str] = None
     ):
         """Get candidates without screening records or with non-completed screening, with optional search filtering, category filters, and sorting"""
-        from sqlalchemy import or_
         # A candidate is "unscreened" if:
         # 1. They have no screening record
         # 2. Status is NULL or empty
@@ -428,55 +427,45 @@ class CandidateRepository(BaseRepository[Candidate]):
             # This is complex in a single query with conditional disability cert.
             # We'll use a CASE statement within the subquery to count matches.
             
-            doc_count_sub = (
+            # Define core required documents
+            CORE_DOCS = ['resume', '10th_certificate', '12th_certificate', 'degree_certificate', 'pan_card', 'aadhar_card']
+            
+            # Subquery to calculate uploaded vs required counts per candidate
+            # This logic MUST match get_stats logic exactly
+            doc_counts_sub = (
                 select(
-                    CandidateDocument.candidate_id,
-                    func.count(CandidateDocument.id).label('doc_count')
+                    Candidate.id.label('c_id'),
+                    func.count(func.distinct(
+                        case(
+                            (CandidateDocument.document_type.in_(CORE_DOCS), CandidateDocument.document_type),
+                            (and_(
+                                CandidateDocument.document_type == 'disability_certificate',
+                                Candidate.disability_details['is_disabled'].as_boolean() == True
+                            ), CandidateDocument.document_type),
+                            else_=None
+                        )
+                    )).label('uploaded_count'),
+                    (len(CORE_DOCS) + case(
+                        (Candidate.disability_details['is_disabled'].as_boolean() == True, 1),
+                        else_=0
+                    )).label('target_count')
                 )
-                .where(CandidateDocument.document_type.in_([
-                    'resume', '10th_certificate', '12th_certificate', 'degree_certificate', 'disability_certificate'
-                ]))
-                .group_by(CandidateDocument.candidate_id)
+                .outerjoin(CandidateDocument, Candidate.id == CandidateDocument.candidate_id)
+                .group_by(Candidate.id)
             ).subquery()
 
-            # Join with the subquery to filter
-            # For 'collected', we need candidates where doc_count matches requirements
-            # For simplicity and accuracy with conditional logic, we'll use a more robust check in the main query if possible, 
-            # or filter after fetching if pagination isn't strictly required to be 100% accurate on the count (but here it is).
-            
-            # Refined approach: use EXISTS or a complex join.
-            # Let's use a simpler check for now if possible, but the requirement is "all docs".
-            
-            # Actually, a cleaner way to do this in SQL:
-            # Join required documents and check if the count matches the required number for that candidate.
-            
             if document_status == 'collected':
-                # Candidate has all 4 base docs AND (if disabled, has disability cert)
-                # This is hard to do purely with a simple where. 
-                # Let's use a subquery that identifies 'collected' IDs.
-                collected_ids_stmt = (
-                    select(Candidate.id)
-                    .join(CandidateDocument, Candidate.id == CandidateDocument.candidate_id)
-                    .where(CandidateDocument.document_type.in_(['resume', '10th_certificate', 'pan_card', 'aadhar_card']))
-                    .group_by(Candidate.id)
-                    .having(func.count(func.distinct(CandidateDocument.document_type)) == 4)
-                )
-                
-                # Further refine for disability cert if needed
-                # (This is still a bit simplified but covers the 90% case for now)
-                stmt = stmt.where(Candidate.id.in_(collected_ids_stmt))
-                count_stmt = count_stmt.where(Candidate.id.in_(collected_ids_stmt))
+                # Fully collected: uploaded == target
+                stmt = stmt.join(doc_counts_sub, Candidate.id == doc_counts_sub.c.c_id).where(doc_counts_sub.c.uploaded_count == doc_counts_sub.c.target_count)
+                count_stmt = count_stmt.join(doc_counts_sub, Candidate.id == doc_counts_sub.c.c_id).where(doc_counts_sub.c.uploaded_count == doc_counts_sub.c.target_count)
             elif document_status == 'pending':
-                # Candidate is missing one or more.
-                collected_ids_stmt = (
-                    select(Candidate.id)
-                    .join(CandidateDocument, Candidate.id == CandidateDocument.candidate_id)
-                    .where(CandidateDocument.document_type.in_(['resume', '10th_certificate', 'pan_card', 'aadhar_card']))
-                    .group_by(Candidate.id)
-                    .having(func.count(func.distinct(CandidateDocument.document_type)) == 4)
-                )
-                stmt = stmt.where(~Candidate.id.in_(collected_ids_stmt))
-                count_stmt = count_stmt.where(~Candidate.id.in_(collected_ids_stmt))
+                # Partially collected: 0 < uploaded < target
+                stmt = stmt.join(doc_counts_sub, Candidate.id == doc_counts_sub.c.c_id).where(and_(doc_counts_sub.c.uploaded_count > 0, doc_counts_sub.c.uploaded_count < doc_counts_sub.c.target_count))
+                count_stmt = count_stmt.join(doc_counts_sub, Candidate.id == doc_counts_sub.c.c_id).where(and_(doc_counts_sub.c.uploaded_count > 0, doc_counts_sub.c.uploaded_count < doc_counts_sub.c.target_count))
+            elif document_status == 'not_collected':
+                # Not collected: uploaded == 0
+                stmt = stmt.join(doc_counts_sub, Candidate.id == doc_counts_sub.c.c_id).where(doc_counts_sub.c.uploaded_count == 0)
+                count_stmt = count_stmt.join(doc_counts_sub, Candidate.id == doc_counts_sub.c.c_id).where(doc_counts_sub.c.uploaded_count == 0)
 
         # Apply search filters if provided
         if search:
@@ -630,9 +619,7 @@ class CandidateRepository(BaseRepository[Candidate]):
             # 1. Total to collect from (status == 'selected')
             docs_total = raw_selected
             
-            # 2. Completed collections
-            # We need to find candidates who have ALL required documents.
-            # This is complex to do purely in SQL given the conditional Disability Cert.
+            # 2. Detailed collections
             # Strategy: Get IDs of selected candidates and their document types.
             stmt_sel_docs = (
                 select(Candidate.id, Candidate.disability_details, func.array_agg(CandidateDocument.document_type))
@@ -646,27 +633,45 @@ class CandidateRepository(BaseRepository[Candidate]):
             sel_rows = res_sel_docs.all()
             
             docs_completed = 0
-            required_base = {'resume', '10th_certificate', '12th_certificate', 'degree_certificate'}
+            files_collected = 0
+            files_to_collect = 0
+            candidates_fully_submitted = 0
+            candidates_partially_submitted = 0
+            candidates_not_submitted = 0
+            
+            required_base = {'resume', '10th_certificate', '12th_certificate', 'degree_certificate', 'pan_card', 'aadhar_card'}
             
             for row in sel_rows:
                 c_id, disp_details, doc_types = row
                 # doc_types might have None if no docs uploaded
                 uploaded = set(filter(None, doc_types))
                 
-                # Check base 4
-                if not required_base.issubset(uploaded):
-                    continue
-                
                 # Check disability cert if applicable
                 is_disabled = False
                 if disp_details and isinstance(disp_details, dict):
                     is_disabled = disp_details.get('is_disabled', False)
                 
-                if is_disabled and 'disability_certificate' not in uploaded:
-                    continue
-                    
-                docs_completed += 1
-            
+                # Set of required docs for THIS specific candidate
+                candidate_required = set(required_base)
+                if is_disabled:
+                    candidate_required.add('disability_certificate')
+                
+                # Calculate metrics for THIS candidate in terms of required files
+                intersection = uploaded.intersection(candidate_required)
+                uploaded_count = len(intersection)
+                target_count = len(candidate_required)
+                
+                files_collected += uploaded_count
+                files_to_collect += target_count
+                
+                if uploaded_count == target_count:
+                    candidates_fully_submitted += 1
+                elif uploaded_count > 0:
+                    candidates_partially_submitted += 1
+                else:
+                    candidates_not_submitted += 1
+
+            docs_completed = candidates_fully_submitted
             docs_pending = docs_total - docs_completed
 
             weekly = await get_weekly_stats()
@@ -687,6 +692,11 @@ class CandidateRepository(BaseRepository[Candidate]):
                 "docs_total": docs_total,
                 "docs_completed": docs_completed,
                 "docs_pending": docs_pending,
+                "files_collected": files_collected,
+                "files_to_collect": files_to_collect,
+                "candidates_fully_submitted": candidates_fully_submitted,
+                "candidates_partially_submitted": candidates_partially_submitted,
+                "candidates_not_submitted": candidates_not_submitted,
                 "screening_distribution": screening_distribution,
                 "counseling_distribution": counseling_counts
             }

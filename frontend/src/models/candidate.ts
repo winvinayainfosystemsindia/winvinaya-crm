@@ -238,6 +238,11 @@ export interface CandidateStats {
 	docs_total: number;
 	docs_completed: number;
 	docs_pending: number;
+	files_collected: number;
+	files_to_collect: number;
+	candidates_fully_submitted: number;
+	candidates_partially_submitted: number;
+	candidates_not_submitted: number;
 	screening_distribution?: Record<string, number>;
 	counseling_distribution?: Record<string, number>;
 }

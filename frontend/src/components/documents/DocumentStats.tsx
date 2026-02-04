@@ -37,31 +37,35 @@ const DocumentStats: React.FC = () => {
 
 	return (
 		<Box sx={{ mb: 4 }}>
-			<Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-				<Box sx={{ flex: '1 1 250px' }}>
-					<StatCard
-						title="Total to Collect"
-						count={stats.docs_total?.toString() || '0'}
-						icon={<DescriptionIcon fontSize="large" />}
-						color="#1976d2"
-					/>
-				</Box>
-				<Box sx={{ flex: '1 1 250px' }}>
-					<StatCard
-						title="Fully Collected"
-						count={stats.docs_completed?.toString() || '0'}
-						icon={<CheckCircleIcon fontSize="large" />}
-						color="#2e7d32"
-					/>
-				</Box>
-				<Box sx={{ flex: '1 1 250px' }}>
-					<StatCard
-						title="Pending Collection"
-						count={stats.docs_pending?.toString() || '0'}
-						icon={<PendingActionsIcon fontSize="large" />}
-						color="#ed6c02"
-					/>
-				</Box>
+			<Box sx={{ display: 'grid', gap: 3, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(4, 1fr)' } }}>
+				<StatCard
+					title="Files Collected"
+					count={stats.files_collected?.toString() || '0'}
+					subtitle={`Yet to collect: ${(stats.files_to_collect || 0) - (stats.files_collected || 0)}`}
+					icon={<DescriptionIcon fontSize="large" />}
+					color="#1976d2"
+				/>
+				<StatCard
+					title="Fully Submitted"
+					count={stats.candidates_fully_submitted?.toString() || '0'}
+					subtitle="Candidates with all docs"
+					icon={<CheckCircleIcon fontSize="large" />}
+					color="#2e7d32"
+				/>
+				<StatCard
+					title="Partially Submitted"
+					count={stats.candidates_partially_submitted?.toString() || '0'}
+					subtitle="Candidates with some docs"
+					icon={<PendingActionsIcon fontSize="large" />}
+					color="#ed6c02"
+				/>
+				<StatCard
+					title="Not Submitted"
+					count={stats.candidates_not_submitted?.toString() || '0'}
+					subtitle="Candidates with 0 docs"
+					icon={<DescriptionIcon fontSize="large" />}
+					color="#d32f2f"
+				/>
 			</Box>
 		</Box>
 	);

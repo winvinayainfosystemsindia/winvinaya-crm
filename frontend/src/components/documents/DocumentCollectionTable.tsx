@@ -28,7 +28,7 @@ import { fetchScreenedCandidates } from '../../store/slices/candidateSlice';
 import type { CandidateListItem } from '../../models/candidate';
 
 interface DocumentCollectionTableProps {
-	type: 'pending' | 'collected';
+	type: 'not_collected' | 'pending' | 'collected';
 }
 
 const DocumentCollectionTable: React.FC<DocumentCollectionTableProps> = ({ type }) => {
@@ -133,7 +133,7 @@ const DocumentCollectionTable: React.FC<DocumentCollectionTableProps> = ({ type 
 				bgcolor: '#fafafa'
 			}}>
 				<TextField
-					placeholder={`Search ${type === 'pending' ? 'pending' : 'collected'} candidates...`}
+					placeholder={`Search ${type.replace('_', ' ')} candidates...`}
 					value={searchTerm}
 					onChange={handleSearch}
 					size="small"
@@ -197,7 +197,7 @@ const DocumentCollectionTable: React.FC<DocumentCollectionTableProps> = ({ type 
 						) : candidates.length === 0 ? (
 							<TableRow>
 								<TableCell colSpan={5} align="center" sx={{ py: 4 }}>
-									<Typography color="text.secondary">No candidates found in this category.</Typography>
+									<Typography color="text.secondary">No candidates found with {type.replace('_', ' ')} documents.</Typography>
 								</TableCell>
 							</TableRow>
 						) : (

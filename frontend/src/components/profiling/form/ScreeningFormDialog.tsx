@@ -78,6 +78,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 	const loadingFields = useAppSelector(state => state.settings.loading);
 
 	const currentUser = useAppSelector(state => state.auth.user);
+	const selectedCandidate = useAppSelector(state => state.candidates.selectedCandidate);
 
 	const [tabValue, setTabValue] = useState(0);
 	const [uploading, setUploading] = useState<Record<string, boolean>>({});
@@ -98,13 +99,13 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 		documents_upload: {
 			resume: false,
 			disability_certificate: false,
-			degree_qualification: false,
+			degree_certificate: false,
 			resume_filename: '',
 			disability_certificate_filename: '',
-			degree_qualification_filename: '',
+			degree_certificate_filename: '',
 			resume_id: null,
 			disability_certificate_id: null,
-			degree_qualification_id: null
+			degree_certificate_id: null
 		},
 		others: {
 			willing_for_training: true,
@@ -382,6 +383,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 									viewing={viewing}
 									dynamicFields={dynamicFields}
 									currentUser={currentUser}
+									candidateIsDisabled={!!selectedCandidate?.disability_details?.is_disabled}
 								/>
 							</TabPanel>
 						</>

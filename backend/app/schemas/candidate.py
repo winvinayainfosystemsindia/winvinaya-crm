@@ -372,6 +372,11 @@ class CandidateStats(BaseModel):
     docs_total: int = 0
     docs_completed: int = 0
     docs_pending: int = 0
+    files_collected: int = 0
+    files_to_collect: int = 0
+    candidates_fully_submitted: int = 0
+    candidates_partially_submitted: int = 0
+    candidates_not_submitted: int = 0
     screening_distribution: dict = {}
     counseling_distribution: dict = {}
 

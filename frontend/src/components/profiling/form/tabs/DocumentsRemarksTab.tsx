@@ -41,6 +41,7 @@ interface DocumentsRemarksTabProps {
 	viewing: Record<string, boolean>;
 	dynamicFields: DynamicField[];
 	currentUser: User | null;
+	candidateIsDisabled: boolean;
 }
 
 const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
@@ -53,7 +54,8 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 	uploading,
 	viewing,
 	dynamicFields,
-	currentUser
+	currentUser,
+	candidateIsDisabled
 }) => {
 
 	const renderDocumentItem = (label: string, key: string) => {
@@ -214,8 +216,8 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 
 				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
 					{renderDocumentItem('Resume', 'resume')}
-					{renderDocumentItem('Disability Certificate', 'disability_certificate')}
-					{renderDocumentItem('Degree / Education Certificate', 'degree_qualification')}
+					{candidateIsDisabled && renderDocumentItem('Disability Certificate', 'disability_certificate')}
+					{renderDocumentItem('Degree / Education Certificate', 'degree_certificate')}
 				</Box>
 			</Box>
 

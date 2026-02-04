@@ -192,7 +192,7 @@ async def update_candidate_document(
 async def delete_candidate_document(
     request: Request,
     document_id: int,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.COUNSELOR])),
     db: AsyncSession = Depends(get_db)
 ):
     """

@@ -231,7 +231,7 @@ const DocumentCollection: React.FC = () => {
       )}
 
       <Box sx={{ display: 'flex', flexWrap: 'wrap', mx: -1.5 }}>
-        {REQUIRED_DOCUMENTS.map((docType) => {
+        {REQUIRED_DOCUMENTS.filter(doc => doc.type !== 'disability_certificate' || !!candidate?.disability_details?.is_disabled).map((docType) => {
           const existingDoc = getDocumentForType(docType.type);
 
           return (
