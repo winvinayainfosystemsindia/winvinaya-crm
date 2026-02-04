@@ -4,10 +4,15 @@ import {
 	Box,
 	Paper,
 	Typography,
-	Divider,
-	Grid
+	Tabs,
+	Tab,
+	Stack
 } from '@mui/material';
-import SettingsSidebar from '../../components/settings/SettingsSidebar';
+import {
+	Assignment as ScreeningIcon,
+	FactCheck as CounselingIcon,
+	SmartToy as AIIcon
+} from '@mui/icons-material';
 import DynamicFieldsSection from '../../components/settings/DynamicFieldsSection';
 import AIConfigurationSection from '../../components/settings/AIConfigurationSection';
 
@@ -20,6 +25,10 @@ const Settings: React.FC = () => {
 	useEffect(() => {
 		localStorage.setItem('settings_current_tab', tabValue.toString());
 	}, [tabValue]);
+
+	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+		setTabValue(newValue);
+	};
 
 	const renderContent = () => {
 		switch (tabValue) {
@@ -40,15 +49,6 @@ const Settings: React.FC = () => {
 		}
 	};
 
-	const getTabLabel = (id: number) => {
-		switch (id) {
-			case 0: return 'Screening Fields';
-			case 1: return 'Counseling Fields';
-			case 2: return 'AI Configuration';
-			default: return 'General Settings';
-		}
-	};
-
 	return (
 		<Box sx={{
 			bgcolor: '#f8fafc',
@@ -60,54 +60,68 @@ const Settings: React.FC = () => {
 			<Box sx={{
 				bgcolor: '#ffffff',
 				borderBottom: '1px solid #e2e8f0',
-				py: 2.5,
-				px: 4,
-				display: 'flex',
-				justifyContent: 'space-between',
-				alignItems: 'center'
+				pt: 3,
+				pb: 0,
+				px: 4
 			}}>
-				<Box>
-					<Typography variant="h5" sx={{ fontWeight: 800, color: '#1e293b', letterSpacing: '-0.02em' }}>
-						System Settings
-					</Typography>
-					<Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
-						Configure global system parameters, custom fields, and AI integrations
-					</Typography>
-				</Box>
+				<Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
+					<Box>
+						<Typography variant="h5" sx={{ fontWeight: 600, color: '#1e293b', letterSpacing: '-0.02em', mb: 0.5 }}>
+							System Settings
+						</Typography>
+						<Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+							Manage your CRM's custom fields, AI configurations, and overall system behavior.
+						</Typography>
+					</Box>
+				</Stack>
+
+				<Tabs
+					value={tabValue}
+					onChange={handleTabChange}
+					sx={{
+						'& .MuiTab-root': {
+							textTransform: 'none',
+							fontWeight: 600,
+							fontSize: '0.95rem',
+							minWidth: 120,
+							px: 3,
+							minHeight: 48,
+							color: '#64748b',
+							transition: 'all 0.2s',
+							'&.Mui-selected': {
+								color: '#ec7211',
+							}
+						},
+						'& .MuiTabs-indicator': {
+							backgroundColor: '#ec7211',
+							height: 3,
+							borderRadius: '3px 3px 0 0'
+						}
+					}}
+				>
+					<Tab icon={<ScreeningIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Screening Fields" />
+					<Tab icon={<CounselingIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Counseling Fields" />
+					<Tab icon={<AIIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="AI Configuration" />
+				</Tabs>
 			</Box>
 
-			<Grid container spacing={0} sx={{ flexGrow: 1 }}>
-				{/* Sidebar */}
-				<Grid size={{ xs: 12, md: 3, lg: 2.5 }}>
-					<SettingsSidebar currentTab={tabValue} onTabChange={setTabValue} />
-				</Grid>
-
-				{/* Main Content Area */}
-				<Grid size={{ xs: 12, md: 9, lg: 9.5 }}>
-					<Container maxWidth="xl" sx={{ py: 5, px: { xs: 2, md: 6 } }}>
-						<Paper
-							elevation={0}
-							sx={{
-								p: { xs: 3, md: 5 },
-								borderRadius: '12px',
-								bgcolor: '#ffffff',
-								minHeight: '700px',
-								border: '1px solid #e2e8f0',
-								boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
-							}}
-						>
-							<Box sx={{ mb: 4 }}>
-								<Typography variant="h5" sx={{ fontWeight: 700, color: '#1e293b', mb: 1 }}>
-									{getTabLabel(tabValue)}
-								</Typography>
-								<Divider sx={{ borderColor: '#f1f5f9' }} />
-							</Box>
-
-							{renderContent()}
-						</Paper>
-					</Container>
-				</Grid>
-			</Grid>
+			<Box sx={{ flexGrow: 1, p: { xs: 2, md: 4 } }}>
+				<Container maxWidth="xl" sx={{ p: 0 }}>
+					<Paper
+						elevation={0}
+						sx={{
+							p: { xs: 3, md: 4 },
+							borderRadius: '12px',
+							bgcolor: '#ffffff',
+							minHeight: '600px',
+							border: '1px solid #e2e8f0',
+							boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)'
+						}}
+					>
+						{renderContent()}
+					</Paper>
+				</Container>
+			</Box>
 		</Box>
 	);
 };
