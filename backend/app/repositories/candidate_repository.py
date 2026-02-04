@@ -217,12 +217,23 @@ class CandidateRepository(BaseRepository[Candidate]):
     ):
         """Get candidates without screening records or with non-completed screening, with optional search filtering, category filters, and sorting"""
         from sqlalchemy import or_
-        # A candidate is "unscreened" if they have no screening record OR their status is NOT 'Completed'
+        # A candidate is "unscreened" if:
+        # 1. They have no screening record
+        # 2. Status is NULL or empty
+        # 3. Status is not one of the final/in-progress ones
+        MAIN_STATUSES = ['Completed', 'In Progress', 'Rejected', 'Pending']
+        unscreened_filter = or_(
+            CandidateScreening.id.is_(None),
+            CandidateScreening.status.is_(None),
+            CandidateScreening.status == '',
+            CandidateScreening.status.notin_(MAIN_STATUSES)
+        )
+
         stmt = (
             select(Candidate)
             .outerjoin(Candidate.screening)
             .outerjoin(Candidate.counseling)
-            .where(CandidateScreening.id.is_(None))
+            .where(unscreened_filter)
             .options(
                 joinedload(Candidate.screening).joinedload(CandidateScreening.screened_by),
                 joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor)
@@ -230,13 +241,25 @@ class CandidateRepository(BaseRepository[Candidate]):
         )
         
         # Base count query
-        count_stmt = select(func.count(Candidate.id)).outerjoin(Candidate.screening).where(CandidateScreening.id.is_(None))
+        count_stmt = select(func.count(Candidate.id)).outerjoin(Candidate.screening).where(unscreened_filter)
         
         # Apply screening status filter if provided
         if screening_status:
             if screening_status == 'Pending':
                 stmt = stmt.where(CandidateScreening.id.is_(None))
                 count_stmt = count_stmt.where(CandidateScreening.id.is_(None))
+            elif screening_status == 'Other':
+                # Explicitly 'Other' or something else not in main list
+                stmt = stmt.where(or_(
+                    CandidateScreening.status.notin_(MAIN_STATUSES),
+                    CandidateScreening.status.is_(None),
+                    CandidateScreening.status == ''
+                ), CandidateScreening.id.isnot(None))
+                count_stmt = count_stmt.where(or_(
+                    CandidateScreening.status.notin_(MAIN_STATUSES),
+                    CandidateScreening.status.is_(None),
+                    CandidateScreening.status == ''
+                ), CandidateScreening.id.isnot(None))
             else:
                 stmt = stmt.where(CandidateScreening.status == screening_status)
                 count_stmt = count_stmt.where(CandidateScreening.status == screening_status)
@@ -565,9 +588,12 @@ class CandidateRepository(BaseRepository[Candidate]):
             today_start = datetime.combine(datetime.now().date(), time.min)
             today_count = await get_count(Candidate.created_at >= today_start)
             
-            # Screening stats - count all candidates with ANY screening record
-            # Screening stats - count all candidates with ANY screening record
-            stmt_screened = select(func.count(CandidateScreening.id)).join(Candidate).where(Candidate.is_deleted == False)
+            # Screening stats - count all candidates with a VALID screening status
+            MAIN_STATUSES = ['Completed', 'In Progress', 'Rejected', 'Pending']
+            stmt_screened = select(func.count(CandidateScreening.id)).join(Candidate).where(
+                Candidate.is_deleted == False,
+                CandidateScreening.status.in_(MAIN_STATUSES)
+            )
             result_screened = await self.db.execute(stmt_screened)
             screened = result_screened.scalar() or 0
             

@@ -106,17 +106,7 @@ const ScreeningList: React.FC = () => {
 	};
 
 	// 'Other' tab logic: Sum of remaining statuses excluding the main ones? 
-	const getOtherCount = () => {
-		if (!stats?.screening_distribution) return 0;
-		const mainStatuses = ['Completed', 'In Progress', 'Rejected', 'Pending'];
-		let otherCount = 0;
-		Object.entries(stats.screening_distribution).forEach(([status, count]) => {
-			if (!mainStatuses.includes(status)) {
-				otherCount += (count as number);
-			}
-		});
-		return otherCount;
-	};
+
 
 	const renderTabLabel = (label: string, count: number) => (
 		<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -192,7 +182,7 @@ const ScreeningList: React.FC = () => {
 						<Tab label={renderTabLabel("Completed", getCount('Completed'))} />
 						<Tab label={renderTabLabel("In Progress", getCount('In Progress'))} />
 						<Tab label={renderTabLabel("Rejected", getCount('Rejected'))} />
-						<Tab label={renderTabLabel("Other", getOtherCount())} />
+
 					</Tabs>
 				</Box>
 
@@ -236,14 +226,7 @@ const ScreeningList: React.FC = () => {
 						onAction={handleAction}
 					/>
 				</TabPanel>
-				<TabPanel value={tabValue} index={5}>
-					<ScreeningTable
-						key={`other-${refreshKey}`}
-						type="screened"
-						status="Other"
-						onAction={handleAction}
-					/>
-				</TabPanel>
+
 
 				{/* Screening Form Dialog */}
 				<ScreeningFormDialog
