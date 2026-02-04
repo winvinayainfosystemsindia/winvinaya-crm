@@ -21,6 +21,7 @@ from app.models.lead import Lead, LeadSource, LeadStatus
 from app.models.deal import Deal, DealStage, DealType
 from app.models.crm_task import CRMTask, CRMTaskType, CRMTaskPriority, CRMTaskStatus, CRMRelatedToType
 from app.models.crm_activity_log import CRMActivityLog, CRMEntityType, CRMActivityType
+from app.models.system_setting import SystemSetting
 
 __all__ = [
     "User",
@@ -64,5 +65,6 @@ __all__ = [
     "CRMActivityLog",
     "CRMEntityType",
     "CRMActivityType",
+    "SystemSetting",
 ]
 

@@ -52,3 +52,20 @@ class UserRepository(BaseRepository[User]):
     async def deactivate_user(self, user_id: int) -> Optional[User]:
         """Deactivate user"""
         return await self.update(user_id, {"is_active": False})
+
+    async def search_users(self, query: str = None, role: str = None, limit: int = 10):
+        """Search users by name or role"""
+        from sqlalchemy import or_
+        stmt = select(User).where(User.is_deleted == False)
+        if query:
+            stmt = stmt.where(or_(
+                User.full_name.ilike(f"%{query}%"),
+                User.username.ilike(f"%{query}%"),
+                User.email.ilike(f"%{query}%")
+            ))
+        if role:
+            stmt = stmt.where(User.role == role)
+        
+        stmt = stmt.limit(limit)
+        result = await self.db.execute(stmt)
+        return list(result.scalars().all())

@@ -26,16 +26,27 @@ import {
 	Add as AddIcon,
 	Delete as DeleteIcon,
 	Settings as SettingsIcon,
-	DragIndicator as DragIcon
+	DragIndicator as DragIcon,
+	SmartToy as RobotIcon
 } from '@mui/icons-material';
 import { settingsService } from '../../services/settingsService';
-import type { DynamicField, DynamicFieldCreate } from '../../services/settingsService';
+import type { DynamicField, DynamicFieldCreate, SystemSetting } from '../../services/settingsService';
+import { chatService } from '../../services/chatService';
 import { useSnackbar } from 'notistack';
+import {
+	Visibility as VisibilityIcon,
+	VisibilityOff as VisibilityOffIcon,
+	CheckCircle as CheckCircleIcon
+} from '@mui/icons-material';
 
 
 const Settings: React.FC = () => {
 	const { enqueueSnackbar } = useSnackbar();
-	const [tabValue, setTabValue] = useState(0);
+	const [tabValue, setTabValue] = useState(() => {
+		const saved = localStorage.getItem('settings_current_tab');
+		return saved ? parseInt(saved, 10) : 0;
+	});
+	const [showSecrets, setShowSecrets] = useState<Record<number, boolean>>({});
 	const [fields, setFields] = useState<DynamicField[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [dialogOpen, setDialogOpen] = useState(false);
@@ -43,6 +54,9 @@ const Settings: React.FC = () => {
 	const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 	const [fieldToDelete, setFieldToDelete] = useState<DynamicField | null>(null);
 	const [optionInputValue, setOptionInputValue] = useState('');
+	const [systemSettings, setSystemSettings] = useState<SystemSetting[]>([]);
+	const [savingSettings, setSavingSettings] = useState(false);
+	const [testingConnection, setTestingConnection] = useState(false);
 
 	const [newField, setNewField] = useState<DynamicFieldCreate>({
 		entity_type: 'screening',
@@ -67,8 +81,26 @@ const Settings: React.FC = () => {
 	};
 
 	useEffect(() => {
-		loadFields();
+		localStorage.setItem('settings_current_tab', tabValue.toString());
+		if (tabValue < 2) {
+			loadFields();
+		} else {
+			loadSystemSettings();
+		}
 	}, [tabValue]);
+
+	const loadSystemSettings = async () => {
+		setLoading(true);
+		try {
+			const data = await settingsService.getSystemSettings();
+			setSystemSettings(data);
+		} catch (error) {
+			console.error('Failed to load system settings:', error);
+			enqueueSnackbar('Failed to load system settings', { variant: 'error' });
+		} finally {
+			setLoading(false);
+		}
+	};
 
 	const loadFields = async () => {
 		setLoading(true);
@@ -156,6 +188,51 @@ const Settings: React.FC = () => {
 		}
 	};
 
+	const handleSaveSystemSetting = async (id: number, value: string) => {
+		const trimmedValue = value.trim();
+		if (trimmedValue === '********') return; // Don't save mask
+
+		try {
+			await settingsService.updateSystemSetting(id, { value: trimmedValue });
+		} catch (error) {
+			enqueueSnackbar('Failed to update setting', { variant: 'error' });
+		}
+	};
+
+	const handleBulkSaveSystemSettings = async () => {
+		setSavingSettings(true);
+		try {
+			// Save all settings that aren't masked secrets
+			const savePromises = systemSettings
+				.filter(s => !(s.is_secret && s.value === '********'))
+				.map(s => settingsService.updateSystemSetting(s.id, { value: s.value.trim() }));
+
+			await Promise.all(savePromises);
+			enqueueSnackbar('All AI settings saved successfully', { variant: 'success' });
+		} catch (error) {
+			console.error('Failed to save some settings:', error);
+			enqueueSnackbar('Failed to save some settings', { variant: 'error' });
+		} finally {
+			setSavingSettings(false);
+		}
+	};
+
+	const handleTestConnection = async () => {
+		setTestingConnection(true);
+		try {
+			const result = await chatService.testConnection();
+			if (result.status === 'success') {
+				enqueueSnackbar(result.message, { variant: 'success' });
+			} else {
+				enqueueSnackbar(result.message, { variant: 'error' });
+			}
+		} catch (error) {
+			enqueueSnackbar('Failed to test connection. Please ensure all settings are saved.', { variant: 'error' });
+		} finally {
+			setTestingConnection(false);
+		}
+	};
+
 	const sectionTitleStyle = {
 		fontWeight: 700,
 		fontSize: '0.875rem',
@@ -201,92 +278,214 @@ const Settings: React.FC = () => {
 					>
 						<Tab label="Screening Dynamic Fields" />
 						<Tab label="Counseling Dynamic Fields" />
+						<Tab label="AI Configuration" icon={<RobotIcon sx={{ fontSize: 18 }} />} iconPosition="start" />
 					</Tabs>
 				</Box>
 
 				<Box sx={{ p: 4 }}>
-					<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-						<Box>
-							<Typography sx={sectionTitleStyle}>
-								Manage {entityTypes[tabValue]} Fields
-							</Typography>
-							<Typography variant="body2" color="text.secondary">
-								Custom fields added here will appear in the {entityTypes[tabValue]} forms.
-							</Typography>
-						</Box>
-						<Button
-							variant="contained"
-							startIcon={<AddIcon />}
-							onClick={() => handleOpenDialog()}
-							sx={{
-								bgcolor: '#ec7211',
-								'&:hover': { bgcolor: '#eb5f07' },
-								borderRadius: '2px',
-								textTransform: 'none',
-								fontWeight: 700,
-								boxShadow: 'none'
-							}}
-						>
-							Add Field
-						</Button>
-					</Box>
-
-					{loading ? (
-						<Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-							<CircularProgress size={32} sx={{ color: '#ec7211' }} />
-						</Box>
-					) : (
-						<Stack spacing={2}>
-							{fields.length === 0 ? (
-								<Paper variant="outlined" sx={{ p: 4, textAlign: 'center', bgcolor: '#fafafa', borderStyle: 'dashed' }}>
-									<Typography variant="body2" color="text.secondary">
-										No dynamic fields configured for {entityTypes[tabValue]}.
+					{tabValue < 2 ? (
+						<>
+							<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+								<Box>
+									<Typography sx={sectionTitleStyle}>
+										Manage {entityTypes[tabValue]} Fields
 									</Typography>
-								</Paper>
+									<Typography variant="body2" color="text.secondary">
+										Custom fields added here will appear in the {entityTypes[tabValue]} forms.
+									</Typography>
+								</Box>
+								<Button
+									variant="contained"
+									startIcon={<AddIcon />}
+									onClick={() => handleOpenDialog()}
+									sx={{
+										bgcolor: '#ec7211',
+										'&:hover': { bgcolor: '#eb5f07' },
+										borderRadius: '2px',
+										textTransform: 'none',
+										fontWeight: 700,
+										boxShadow: 'none'
+									}}
+								>
+									Add Field
+								</Button>
+							</Box>
+
+							{loading ? (
+								<Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+									<CircularProgress size={32} sx={{ color: '#ec7211' }} />
+								</Box>
 							) : (
-								fields.map((field) => (
-									<Paper
-										key={field.id}
-										variant="outlined"
-										sx={{
-											p: 2,
-											borderRadius: '2px',
-											display: 'flex',
-											alignItems: 'center',
-											'&:hover': { borderColor: '#545b64' }
-										}}
-									>
-										<DragIcon sx={{ color: '#d5dbdb', mr: 2 }} />
-										<Box sx={{ flexGrow: 1 }}>
-											<Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-												{field.label}
-												{field.is_required && (
-													<Typography component="span" color="error" sx={{ ml: 0.5 }}>*</Typography>
-												)}
+								<Stack spacing={2}>
+									{fields.length === 0 ? (
+										<Paper variant="outlined" sx={{ p: 4, textAlign: 'center', bgcolor: '#fafafa', borderStyle: 'dashed' }}>
+											<Typography variant="body2" color="text.secondary">
+												No dynamic fields configured for {entityTypes[tabValue]}.
 											</Typography>
-											<Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
-												<Chip label={fieldTypeLabels[field.field_type as typeof fieldTypes[number]] || field.field_type} size="small" variant="outlined" sx={{ borderRadius: '2px', height: 20, fontSize: '0.7rem' }} />
-												<Typography variant="caption" color="text.secondary">
-													Key: {field.name}
-												</Typography>
-											</Stack>
-										</Box>
-										<Stack direction="row" spacing={1}>
-											<Button
-												size="small"
-												onClick={() => handleOpenDialog(field)}
-												sx={{ textTransform: 'none', color: '#0073bb', fontWeight: 700 }}
+										</Paper>
+									) : (
+										fields.map((field) => (
+											<Paper
+												key={field.id}
+												variant="outlined"
+												sx={{
+													p: 2,
+													borderRadius: '2px',
+													display: 'flex',
+													alignItems: 'center',
+													'&:hover': { borderColor: '#545b64' }
+												}}
 											>
-												Edit
-											</Button>
-											<IconButton size="small" color="error" onClick={() => handleDeleteClick(field)}>
-												<DeleteIcon fontSize="small" />
-											</IconButton>
-										</Stack>
-									</Paper>
-								))
+												<DragIcon sx={{ color: '#d5dbdb', mr: 2 }} />
+												<Box sx={{ flexGrow: 1 }}>
+													<Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+														{field.label}
+														{field.is_required && (
+															<Typography component="span" color="error" sx={{ ml: 0.5 }}>*</Typography>
+														)}
+													</Typography>
+													<Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
+														<Chip label={fieldTypeLabels[field.field_type as typeof fieldTypes[number]] || field.field_type} size="small" variant="outlined" sx={{ borderRadius: '2px', height: 20, fontSize: '0.7rem' }} />
+														<Typography variant="caption" color="text.secondary">
+															Key: {field.name}
+														</Typography>
+													</Stack>
+												</Box>
+												<Stack direction="row" spacing={1}>
+													<Button
+														size="small"
+														onClick={() => handleOpenDialog(field)}
+														sx={{ textTransform: 'none', color: '#0073bb', fontWeight: 700 }}
+													>
+														Edit
+													</Button>
+													<IconButton size="small" color="error" onClick={() => handleDeleteClick(field)}>
+														<DeleteIcon fontSize="small" />
+													</IconButton>
+												</Stack>
+											</Paper>
+										))
+									)}
+								</Stack>
 							)}
-						</Stack>
+						</>
+					) : (
+						<Box>
+							<Box sx={{ mb: 4 }}>
+								<Typography sx={sectionTitleStyle}>
+									AI Chatbot Configuration
+								</Typography>
+								<Typography variant="body2" color="text.secondary">
+									Configure the backend AI features. Settings saved here impact all users.
+								</Typography>
+							</Box>
+
+							{loading ? (
+								<Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+									<CircularProgress size={32} sx={{ color: '#ec7211' }} />
+								</Box>
+							) : (
+								<Stack spacing={4}>
+									{systemSettings
+										.filter(s => s.key !== 'ai_provider') // Filter out adaptive provider key
+										.length === 0 ? (
+										<Typography variant="body2" color="text.secondary">
+											No system settings found. Ensure migrations are applied.
+										</Typography>
+									) : (
+										systemSettings
+											.filter(s => s.key !== 'ai_provider')
+											.map((setting) => (
+												<Box key={setting.id}>
+													<Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
+														{setting.description || setting.key.replace(/_/g, ' ').toUpperCase()}
+													</Typography>
+													{setting.key === 'ai_enabled' ? (
+														<FormControlLabel
+															control={
+																<Switch
+																	checked={setting.value === 'true'}
+																	onChange={(e) => {
+																		const val = e.target.checked ? 'true' : 'false';
+																		setSystemSettings(prev => prev.map(s => s.id === setting.id ? { ...s, value: val } : s));
+																		handleSaveSystemSetting(setting.id, val);
+																	}}
+																/>
+															}
+															label={setting.value === 'true' ? "Enabled" : "Disabled"}
+														/>
+													) : (
+														<TextField
+															fullWidth
+															size="small"
+															type={setting.is_secret ? (showSecrets[setting.id] ? "text" : "password") : "text"}
+															value={setting.value}
+															onChange={(e) => {
+																const val = e.target.value;
+																setSystemSettings(prev => prev.map(s => s.id === setting.id ? { ...s, value: val } : s));
+															}}
+															onBlur={(e) => handleSaveSystemSetting(setting.id, e.target.value)}
+															placeholder={setting.is_secret ? "••••••••••••••••" : `Enter ${setting.key}`}
+															sx={{ maxWidth: 600 }}
+															InputProps={{
+																endAdornment: setting.is_secret ? (
+																	<Stack direction="row" spacing={1} alignItems="center">
+																		{setting.value === '********' && (
+																			<CheckCircleIcon color="success" sx={{ fontSize: 18, mr: 0.5 }} />
+																		)}
+																		<IconButton
+																			size="small"
+																			onClick={() => setShowSecrets(prev => ({ ...prev, [setting.id]: !prev[setting.id] }))}
+																		>
+																			{showSecrets[setting.id] ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+																		</IconButton>
+																	</Stack>
+																) : null
+															}}
+															helperText={setting.is_secret && (setting.value === '********' ? "Configuration is securely saved." : "Editing key...")}
+														/>
+													)}
+												</Box>
+											))
+									)}
+									<Box sx={{ pt: 2, display: 'flex', gap: 2 }}>
+										<Button
+											variant="contained"
+											onClick={handleBulkSaveSystemSettings}
+											disabled={savingSettings}
+											sx={{
+												bgcolor: '#ec7211',
+												'&:hover': { bgcolor: '#eb5f07' },
+												borderRadius: '2px',
+												textTransform: 'none',
+												fontWeight: 700,
+												boxShadow: 'none',
+												px: 3
+											}}
+										>
+											{savingSettings ? <CircularProgress size={20} sx={{ color: 'white' }} /> : 'Save AI Configuration'}
+										</Button>
+
+										<Button
+											variant="outlined"
+											onClick={handleTestConnection}
+											disabled={testingConnection}
+											sx={{
+												borderColor: '#545b64',
+												color: '#232f3e',
+												'&:hover': { borderColor: '#232f3e', bgcolor: '#f2f3f3' },
+												borderRadius: '2px',
+												textTransform: 'none',
+												fontWeight: 700,
+												px: 3
+											}}
+										>
+											{testingConnection ? <CircularProgress size={20} /> : 'Test AI Connection'}
+										</Button>
+									</Box>
+								</Stack>
+							)}
+						</Box>
 					)}
 				</Box>
 			</Paper>

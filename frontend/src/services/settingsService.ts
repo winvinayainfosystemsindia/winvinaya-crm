@@ -14,6 +14,18 @@ export interface DynamicField {
 export type DynamicFieldCreate = Omit<DynamicField, 'id'>;
 export type DynamicFieldUpdate = Partial<DynamicFieldCreate>;
 
+export interface SystemSetting {
+	id: number;
+	key: string;
+	value: string;
+	description: string;
+	is_secret: boolean;
+}
+
+export type SystemSettingUpdate = {
+	value: string;
+}
+
 export const settingsService = {
 	getFields: async (entityType: string): Promise<DynamicField[]> => {
 		const response = await api.get(`/settings/fields/${entityType}`);
@@ -32,5 +44,15 @@ export const settingsService = {
 
 	deleteField: async (id: number): Promise<void> => {
 		await api.delete(`/settings/fields/${id}`);
+	},
+
+	getSystemSettings: async (): Promise<SystemSetting[]> => {
+		const response = await api.get('/settings/system');
+		return response.data;
+	},
+
+	updateSystemSetting: async (id: number, setting: SystemSettingUpdate): Promise<SystemSetting> => {
+		const response = await api.patch(`/settings/system/${id}`, setting);
+		return response.data;
 	}
 };

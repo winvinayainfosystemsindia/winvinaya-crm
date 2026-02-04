@@ -8,6 +8,7 @@ import { store } from './store/store';
 import AppRouter from './router/AppRouter';
 import SmoothScroll from "./components/layout/SmoothScroll";
 import AuthInitializer from './components/auth/AuthInitializer';
+import ChatWidget from './components/chat/ChatWidget';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
               </AuthInitializer>
             </AuthProvider>
           </SmoothScroll>
+          <ChatWidget />
         </SnackbarProvider>
       </ThemeProvider>
     </Provider>
