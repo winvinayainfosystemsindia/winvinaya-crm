@@ -33,7 +33,12 @@ const CandidateList: React.FC = () => {
 		counseling_rejected: 0,
 		docs_total: 0,
 		docs_completed: 0,
-		docs_pending: 0
+		docs_pending: 0,
+		files_collected: 0,
+		files_to_collect: 0,
+		candidates_fully_submitted: 0,
+		candidates_partially_submitted: 0,
+		candidates_not_submitted: 0
 	};
 
 	const handleEditCandidate = (id: string) => {
