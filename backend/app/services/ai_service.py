@@ -22,13 +22,16 @@ class AIService:
         self.openai_client = None
 
     SYSTEM_INSTRUCTION = (
-        "You are an internal CRM Assistant with access to real-time database tools. "
+        "You are Sarathi, an internal CRM Assistant for WinVinaya. Your goal is to provide helpful, data-driven insights from the CRM database. "
         "Strictly follow these rules: "
         "1. You are friendly and can respond to greetings, thank yous, and general conversation. "
-        "2. For any information about candidates, users, deals, leads, or stats, you MUST use your tools. "
-        "3. NEVER hallucinate or make up data. If tool results are empty, say so. "
-        "4. If you don't have a tool for a specific data request, say 'I don't have access to that information.' "
-        "5. Be concise and data-driven for all business queries."
+        "2. Identify yourself as Sarathi when asked. "
+        "3. For information about candidates, users, deals, leads, stats, USER PERFORMANCE, or DAILY REPORTS, you MUST use your tools. "
+        "4. **CRITICAL:** NEVER mention tool names (like 'get_daily_report' or 'search_candidates') in your response to the user. "
+        "5. Use clear, professional formatting (bullet points, bold text) for reports and data summaries. "
+        "6. NEVER hallucinate or make up data. If tool results are empty, say so. "
+        "7. If you don't have a tool for a specific data request, say 'I don't have access to that information.' "
+        "8. Start data-heavy responses with a brief professional confirmation like 'Certainly, let me pull those details for you...'."
     )
 
     async def initialize(self):
@@ -138,14 +141,83 @@ class AIService:
         from app.repositories.user_repository import UserRepository
         repo = UserRepository(self.db)
         users = await repo.search_users(query=query, role=role, limit=10)
-        return [{"full_name": u.full_name, "username": u.username, "role": u.role, "email": u.email} for u in users]
+        return [{"id": u.id, "full_name": u.full_name, "username": u.username, "role": u.role, "email": u.email} for u in users]
+
+    async def get_user_performance(self, username: str) -> Dict[str, Any]:
+        """Fetch performance metrics for a specific system user (e.g., how many screenings they've done)."""
+        from app.repositories.user_repository import UserRepository
+        from app.repositories.candidate_screening_repository import CandidateScreeningRepository
+        
+        user_repo = UserRepository(self.db)
+        screening_repo = CandidateScreeningRepository(self.db)
+        
+        user = await user_repo.get_by_username(username)
+        if not user:
+            # Try searching by full name if username lookup fails
+            users = await user_repo.search_users(query=username, limit=1)
+            if users:
+                user = users[0]
+            else:
+                return {"error": f"User '{username}' not found in the system."}
+        
+        screening_count = await screening_repo.count_screenings_by_user(user.id)
+        
+        return {
+            "full_name": user.full_name,
+            "username": user.username,
+            "role": user.role,
+            "screenings_performed": screening_count,
+            "status": "Active" if user.is_active else "Inactive"
+        }
+
+    async def get_daily_report(self) -> Dict[str, Any]:
+        """Generate a summarized report of all activities performed today."""
+        from datetime import datetime, time
+        from app.repositories.candidate_repository import CandidateRepository
+        from app.repositories.candidate_screening_repository import CandidateScreeningRepository
+        from app.repositories.crm_activity_log_repository import CRMActivityLogRepository
+        
+        today_start = datetime.combine(datetime.now().date(), time.min)
+        today_end = datetime.combine(datetime.now().date(), time.max)
+        
+        candidate_repo = CandidateRepository(self.db)
+        screening_repo = CandidateScreeningRepository(self.db)
+        crm_repo = CRMActivityLogRepository(self.db)
+        
+        # 1. New Candidates
+        new_candidates = await candidate_repo.get_new_candidates_by_date(today_start, today_end)
+        
+        # 2. Screenings
+        screenings = await screening_repo.get_screenings_by_date(today_start, today_end)
+        
+        # 3. CRM Activities
+        crm_activities = await crm_repo.get_activities_by_date(today_start, today_end)
+        
+        # Format the summary
+        report = {
+            "date": datetime.now().date().isoformat(),
+            "new_candidates_count": len(new_candidates),
+            "new_candidates": [c.name for c in new_candidates[:10]],
+            "screenings_count": len(screenings),
+            "screenings_details": [
+                f"{s.candidate.name} screened by {s.screened_by.full_name} ({s.status})" 
+                for s in screenings if s.candidate and s.screened_by
+            ],
+            "crm_activities_count": len(crm_activities),
+            "crm_activities_summary": [
+                f"{a.performer.full_name}: {a.summary} ({a.activity_type})"
+                for a in crm_activities if a.performer
+            ]
+        }
+        
+        return report
 
     # --- Chat Implementation ---
 
     async def chat(self, message: str, history: List[Dict[str, str]] = []) -> str:
         """Send a message to the AI and get a response"""
         if not self.enabled:
-            return "AI feature is currently disabled."
+            return "Sarathi is currently offline. Please check back later or contact support."
 
         try:
             if self.provider == "google" and self.google_client:
@@ -166,11 +238,7 @@ class AIService:
                         "function": {
                             "name": "get_candidate_stats",
                             "description": "Get high-level candidate statistics",
-                            "parameters": {
-                                "type": "object",
-                                "properties": {},
-                                "required": []
-                            }
+                            "parameters": {"type": "object", "properties": {}, "required": []}
                         }
                     },
                     {
@@ -180,10 +248,20 @@ class AIService:
                             "description": "Search for candidates by name, email, or city",
                             "parameters": {
                                 "type": "object",
-                                "properties": {
-                                    "query": {"type": "string", "description": "Search term"}
-                                },
+                                "properties": {"query": {"type": "string", "description": "Search term"}},
                                 "required": ["query"]
+                            }
+                        }
+                    },
+                    {
+                        "type": "function",
+                        "function": {
+                            "name": "get_user_performance",
+                            "description": "Fetch performance metrics for a specific system user (e.g., how many screenings they've done)",
+                            "parameters": {
+                                "type": "object",
+                                "properties": {"username": {"type": "string", "description": "Username or full name of the user"}},
+                                "required": ["username"]
                             }
                         }
                     },
@@ -194,9 +272,7 @@ class AIService:
                             "description": "Fetch details about a company",
                             "parameters": {
                                 "type": "object",
-                                "properties": {
-                                    "name": {"type": "string", "description": "Company name"}
-                                },
+                                "properties": {"name": {"type": "string", "description": "Company name"}},
                                 "required": ["name"]
                             }
                         }
@@ -206,11 +282,15 @@ class AIService:
                         "function": {
                             "name": "get_deal_stats",
                             "description": "Get CRM deal statistics",
-                            "parameters": {
-                                "type": "object",
-                                "properties": {},
-                                "required": []
-                            }
+                            "parameters": {"type": "object", "properties": {}, "required": []}
+                        }
+                    },
+                    {
+                        "type": "function",
+                        "function": {
+                            "name": "get_daily_report",
+                            "description": "Generate a summarized report of all activities performed today (new candidates, screenings, CRM logs)",
+                            "parameters": {"type": "object", "properties": {}, "required": []}
                         }
                     },
                     {
@@ -253,19 +333,30 @@ class AIService:
                     available_tools = {
                         "get_candidate_stats": self.get_candidate_stats,
                         "search_candidates": self.search_candidates,
+                        "get_user_performance": self.get_user_performance,
                         "get_company_info": self.get_company_info,
                         "get_deal_stats": self.get_deal_stats,
+                        "get_daily_report": self.get_daily_report,
                         "search_users": self.search_users
                     }
 
                     for tool_call in tool_calls:
                         function_name = tool_call.function.name
-                        function_to_call = available_tools.get(function_name)
+                        if function_name not in available_tools:
+                            logger.error(f"AI attempted to call unknown tool: {function_name}")
+                            messages.append({
+                                "tool_call_id": tool_call.id,
+                                "role": "tool",
+                                "name": function_name,
+                                "content": json.dumps({"error": f"Unknown tool: {function_name}"}),
+                            })
+                            continue
+
+                        function_to_call = available_tools[function_name]
                         
-                        # Fix: Ensure function_args is always a dict, even if arguments is null or empty
                         try:
                             function_args = json.loads(tool_call.function.arguments) or {}
-                        except (json.JSONDecodeError, TypeError):
+                        except:
                             function_args = {}
                         
                         if function_to_call:
@@ -282,11 +373,14 @@ class AIService:
                         model=self.model_name,
                         messages=messages
                     )
-                    return final_response.choices[0].message.content or "No response received."
+                    return final_response.choices[0].message.content or "I couldn't process that data right now."
                 
-                return response_message.content or "No response received."
+                return response_message.content or "I'm sorry, I couldn't generate a response."
             
-            return "AI client not initialized correctly."
+            return "Sarathi is currently unable to process requests. Please ensure your AI configuration is correct."
         except Exception as e:
             logger.error(f"Error in AI chat: {e}")
-            return f"Sorry, I encountered an error: {str(e)}"
+            msg = str(e).lower()
+            if "validation" in msg or "tool" in msg:
+                return "I apologize, but I encountered a technical issue while trying to fetch that information. I've logged the error and our team will look into it."
+            return "I'm sorry, I'm having a bit of trouble connecting to my knowledge base. Could you try asking that again in a moment?"

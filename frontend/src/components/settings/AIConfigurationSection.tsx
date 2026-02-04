@@ -116,10 +116,10 @@ const AIConfigurationSection: React.FC = () => {
 			}}>
 				<Box>
 					<Typography variant="h6" sx={{ fontWeight: 700, color: '#1a1c21', mb: 0.5 }}>
-						AI Engine Configuration
+						Sarathi Engine Configuration
 					</Typography>
 					<Typography variant="body2" sx={{ color: '#64748b' }}>
-						Manage API keys and global settings for the AI-powered candidate screening and counseling features.
+						Manage API keys and global settings for Sarathi, your AI-powered candidate screening and counseling assistant.
 					</Typography>
 				</Box>
 				<Stack direction="row" spacing={2}>

@@ -1,6 +1,7 @@
 """Candidate Repository"""
 
-from typing import Optional
+from datetime import datetime
+from typing import Optional, List
 from uuid import UUID
 from sqlalchemy import select, func, Integer, or_, and_, case
 from sqlalchemy.orm import joinedload, selectinload
@@ -199,6 +200,18 @@ class CandidateRepository(BaseRepository[Candidate]):
         stmt = stmt.offset(skip).limit(limit)
         result = await self.db.execute(stmt)
         return result.scalars().unique().all(), total
+
+    async def get_new_candidates_by_date(self, start_date: datetime, end_date: datetime) -> List[Candidate]:
+        """Get candidates created within a date range"""
+        stmt = (
+            select(Candidate)
+            .where(Candidate.created_at >= start_date)
+            .where(Candidate.created_at <= end_date)
+            .where(Candidate.is_deleted == False)
+            .order_by(Candidate.created_at.desc())
+        )
+        result = await self.db.execute(stmt)
+        return list(result.scalars().all())
 
 
     async def get_unscreened(

@@ -1,5 +1,6 @@
 """CRM Activity Log Repository"""
 
+from datetime import datetime
 from typing import Optional, List, Any
 from uuid import UUID
 from sqlalchemy import select, func
@@ -63,6 +64,20 @@ class CRMActivityLogRepository(BaseRepository[CRMActivityLog]):
             .order_by(CRMActivityLog.created_at.desc())
             .options(joinedload(CRMActivityLog.performer))
             .limit(limit)
+        )
+        result = await self.db.execute(stmt)
+        return list(result.scalars().unique().all())
+
+    async def get_activities_by_date(self, start_date: datetime, end_date: datetime) -> List[CRMActivityLog]:
+        """Get CRM activities within a date range"""
+        from datetime import datetime
+        stmt = (
+            select(CRMActivityLog)
+            .where(CRMActivityLog.created_at >= start_date)
+            .where(CRMActivityLog.created_at <= end_date)
+            .where(CRMActivityLog.is_deleted == False)
+            .options(joinedload(CRMActivityLog.performer))
+            .order_by(CRMActivityLog.created_at.desc())
         )
         result = await self.db.execute(stmt)
         return list(result.scalars().unique().all())

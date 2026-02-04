@@ -10,7 +10,8 @@ import {
 	CircularProgress,
 	Fade,
 	Stack,
-	Divider
+	Divider,
+	Chip
 } from '@mui/material';
 import {
 	SmartToy as RobotIcon,
@@ -19,6 +20,14 @@ import {
 } from '@mui/icons-material';
 import { chatService, type ChatMessage } from '../../services/chatService';
 import { settingsService } from '../../services/settingsService';
+
+const SUGGESTED_QUESTIONS = [
+	"What is the current candidate status?",
+	"Show me high-level statistics.",
+	"Search for candidates in Chennai.",
+	"What are the recent deal stats?",
+	"How many candidates are screened?"
+];
 
 const ChatWidget: React.FC = () => {
 	const [isOpen, setIsOpen] = useState(false);
@@ -31,6 +40,15 @@ const ChatWidget: React.FC = () => {
 	useEffect(() => {
 		checkEnabled();
 	}, []);
+
+	useEffect(() => {
+		if (isOpen && chatHistory.length === 0) {
+			setChatHistory([{
+				role: 'assistant',
+				content: "Welcome to WinVinaya CRM! I am Sarathi, your AI assistant. How can I assist you today?"
+			}]);
+		}
+	}, [isOpen, chatHistory.length]);
 
 	useEffect(() => {
 		if (chatEndRef.current) {
@@ -48,10 +66,11 @@ const ChatWidget: React.FC = () => {
 		}
 	};
 
-	const handleSend = async () => {
-		if (!message.trim()) return;
+	const handleSend = async (customMessage?: string) => {
+		const messageToSend = customMessage || message;
+		if (!messageToSend.trim()) return;
 
-		const userMsg: ChatMessage = { role: 'user', content: message };
+		const userMsg: ChatMessage = { role: 'user', content: messageToSend };
 		const currentHistory = [...chatHistory, userMsg];
 
 		setChatHistory(currentHistory);
@@ -73,15 +92,27 @@ const ChatWidget: React.FC = () => {
 	return (
 		<Box sx={{ position: 'fixed', bottom: 24, right: 24, zIndex: 1000 }}>
 			<Fab
+				variant="extended"
 				color="primary"
 				onClick={() => setIsOpen(!isOpen)}
 				sx={{
 					bgcolor: '#ec7211',
 					'&:hover': { bgcolor: '#eb5f07' },
-					boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+					boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+					textTransform: 'none',
+					fontWeight: 700,
+					px: 2,
+					gap: 1
 				}}
 			>
-				{isOpen ? <CloseIcon /> : <RobotIcon />}
+				{isOpen ? (
+					<CloseIcon />
+				) : (
+					<>
+						<RobotIcon />
+						Ask Sarathi
+					</>
+				)}
 			</Fab>
 
 			<Fade in={isOpen}>
@@ -106,8 +137,8 @@ const ChatWidget: React.FC = () => {
 								<RobotIcon sx={{ fontSize: 20 }} />
 							</Avatar>
 							<Box>
-								<Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.2 }}>WinVinaya AI</Typography>
-								<Typography variant="caption" sx={{ opacity: 0.8 }}>Online</Typography>
+								<Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.2 }}>Sarathi</Typography>
+								<Typography variant="caption" sx={{ opacity: 0.8 }}>Your AI Guide</Typography>
 							</Box>
 						</Stack>
 						<IconButton size="small" onClick={() => setIsOpen(false)} sx={{ color: 'white' }}>
@@ -117,12 +148,6 @@ const ChatWidget: React.FC = () => {
 
 					{/* Chat Window */}
 					<Box sx={{ flexGrow: 1, p: 2, overflowY: 'auto', bgcolor: '#f2f3f3', minHeight: 300 }}>
-						{chatHistory.length === 0 && (
-							<Box sx={{ textAlign: 'center', mt: 8, opacity: 0.6 }}>
-								<RobotIcon sx={{ fontSize: 48, mb: 1 }} />
-								<Typography variant="body2">How can I help you today?</Typography>
-							</Box>
-						)}
 						<Stack spacing={2}>
 							{chatHistory.map((msg, i) => (
 								<Box
@@ -145,8 +170,51 @@ const ChatWidget: React.FC = () => {
 								</Box>
 							))}
 							{loading && (
-								<Box sx={{ alignSelf: 'flex-start' }}>
-									<CircularProgress size={20} sx={{ color: '#ec7211' }} />
+								<Box sx={{ alignSelf: 'flex-start', maxWidth: '85%' }}>
+									<Paper
+										sx={{
+											p: 1.5,
+											bgcolor: 'white',
+											color: 'text.secondary',
+											borderRadius: '12px 12px 12px 2px',
+											display: 'flex',
+											alignItems: 'center',
+											gap: 1.5
+										}}
+									>
+										<CircularProgress size={16} sx={{ color: '#ec7211' }} />
+										<Typography variant="body2" sx={{ fontStyle: 'italic', color: '#64748b' }}>
+											Sarathi is fetching today's updates...
+										</Typography>
+									</Paper>
+								</Box>
+							)}
+
+							{/* Suggested Questions */}
+							{!loading && chatHistory.length <= 1 && (
+								<Box sx={{ mt: 2 }}>
+									<Typography variant="caption" sx={{ color: '#545b64', fontWeight: 600, mb: 1, display: 'block', px: 0.5 }}>
+										Try asking...
+									</Typography>
+									<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+										{SUGGESTED_QUESTIONS.map((q, idx) => (
+											<Chip
+												key={idx}
+												label={q}
+												onClick={() => handleSend(q)}
+												size="small"
+												sx={{
+													bgcolor: 'white',
+													border: '1px solid #d5dbdb',
+													fontSize: '0.75rem',
+													cursor: 'pointer',
+													'&:hover': { bgcolor: '#f7f9f9', borderColor: '#adb5bd' },
+													height: 'auto',
+													'& .MuiChip-label': { display: 'block', whiteSpace: 'normal', py: 0.5 }
+												}}
+											/>
+										))}
+									</Stack>
 								</Box>
 							)}
 							<div ref={chatEndRef} />
@@ -166,7 +234,7 @@ const ChatWidget: React.FC = () => {
 							onKeyPress={(e) => e.key === 'Enter' && handleSend()}
 							InputProps={{
 								endAdornment: (
-									<IconButton size="small" onClick={handleSend} disabled={loading || !message.trim()} sx={{ color: '#ec7211' }}>
+									<IconButton size="small" onClick={() => handleSend()} disabled={loading || !message.trim()} sx={{ color: '#ec7211' }}>
 										<SendIcon />
 									</IconButton>
 								)
