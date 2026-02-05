@@ -366,11 +366,7 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 										}
 									}}
 								>
-									<MenuItem value="">
-										<em>Choose any status</em>
-									</MenuItem>
 									<MenuItem value="Completed">Completed</MenuItem>
-									<MenuItem value="Pending">Pending</MenuItem>
 									<MenuItem value="In Progress">In Progress</MenuItem>
 									<MenuItem value="Rejected">Rejected</MenuItem>
 								</Select>

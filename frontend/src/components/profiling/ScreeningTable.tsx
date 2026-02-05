@@ -485,7 +485,7 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, status, onAction 
 												size="small"
 												icon={
 													candidate.screening_status === 'Completed' ? <CheckCircle /> :
-														candidate.screening_status === 'Not Connected' || candidate.screening_status === 'Not Answered' ? <Cancel /> :
+														candidate.screening_status === 'Rejected' || candidate.screening_status === 'Not Connected' || candidate.screening_status === 'Not Answered' ? <Cancel /> :
 															candidate.screening_status === 'In Progress' ? <WatchLater /> :
 																candidate.screening_status === 'Follow-up Required' ? <WatchLater /> :
 																	<HelpOutline />
@@ -497,16 +497,14 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, status, onAction 
 													borderRadius: 1,
 													bgcolor:
 														candidate.screening_status === 'Completed' ? '#e8f5e9' :
-															candidate.screening_status === 'Not Connected' || candidate.screening_status === 'Not Answered' ? '#ffebee' :
+															candidate.screening_status === 'Rejected' || candidate.screening_status === 'Not Connected' || candidate.screening_status === 'Not Answered' ? '#ffebee' :
 																candidate.screening_status === 'In Progress' ? '#e3f2fd' :
-																	candidate.screening_status === 'Follow-up Required' ? '#fff3e0' :
-																		'#f5f5f5',
+																	'#f5f5f5',
 													color:
 														candidate.screening_status === 'Completed' ? '#2e7d32' :
-															candidate.screening_status === 'Not Connected' || candidate.screening_status === 'Not Answered' ? '#d32f2f' :
+															candidate.screening_status === 'Rejected' || candidate.screening_status === 'Not Connected' || candidate.screening_status === 'Not Answered' ? '#d32f2f' :
 																candidate.screening_status === 'In Progress' ? '#1976d2' :
-																	candidate.screening_status === 'Follow-up Required' ? '#ed6c02' :
-																		'#757575',
+																	'#757575',
 													'& .MuiChip-icon': {
 														color: 'inherit',
 														fontSize: 16

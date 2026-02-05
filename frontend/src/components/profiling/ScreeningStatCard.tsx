@@ -57,7 +57,7 @@ const ScreeningStatCard: React.FC = () => {
 			</Box>
 			<Box sx={{ flex: '1 1 200px' }}>
 				<StatCard
-					title="Selected Candidates"
+					title="Selected For Counseling"
 					count={stats.screening_distribution?.['Completed']?.toString() || '0'}
 					icon={<CheckCircle fontSize="large" />}
 					color="#4caf50"
@@ -65,7 +65,7 @@ const ScreeningStatCard: React.FC = () => {
 			</Box>
 			<Box sx={{ flex: '1 1 200px' }}>
 				<StatCard
-					title="Not Screened"
+					title="Yet To Be Screened"
 					count={stats.not_screened?.toString() || '0'}
 					icon={<PeopleIcon fontSize="large" />}
 					color="#ed6c02"

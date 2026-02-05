@@ -178,9 +178,8 @@ const ScreeningList: React.FC = () => {
 						}}
 					>
 						<Tab label={renderTabLabel("Not Screened", stats?.not_screened || 0)} />
-						<Tab label={renderTabLabel("Pending", getCount('Pending'))} />
-						<Tab label={renderTabLabel("Completed", getCount('Completed'))} />
 						<Tab label={renderTabLabel("In Progress", getCount('In Progress'))} />
+						<Tab label={renderTabLabel("Completed", getCount('Completed'))} />
 						<Tab label={renderTabLabel("Rejected", getCount('Rejected'))} />
 
 					</Tabs>
@@ -196,9 +195,9 @@ const ScreeningList: React.FC = () => {
 				</TabPanel>
 				<TabPanel value={tabValue} index={1}>
 					<ScreeningTable
-						key={`pending-${refreshKey}`}
+						key={`inprogress-${refreshKey}`}
 						type="screened"
-						status="Pending"
+						status="In Progress"
 						onAction={handleAction}
 					/>
 				</TabPanel>
@@ -211,14 +210,6 @@ const ScreeningList: React.FC = () => {
 					/>
 				</TabPanel>
 				<TabPanel value={tabValue} index={3}>
-					<ScreeningTable
-						key={`inprogress-${refreshKey}`}
-						type="screened"
-						status="In Progress"
-						onAction={handleAction}
-					/>
-				</TabPanel>
-				<TabPanel value={tabValue} index={4}>
 					<ScreeningTable
 						key={`rejected-${refreshKey}`}
 						type="screened"
