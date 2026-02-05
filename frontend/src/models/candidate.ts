@@ -203,6 +203,8 @@ export interface CandidateListItem {
 	screening_updated_at?: string;
 	disability_percentage?: number;
 	screening_comments?: string;
+	screening?: CandidateScreening;
+	counseling?: CandidateCounseling;
 }
 
 

@@ -5,6 +5,7 @@ import * as XLSX from 'xlsx';
 
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchCandidates, fetchFilterOptions } from '../../store/slices/candidateSlice';
+import { settingsService } from '../../services/settingsService';
 
 import ReportHeader from '../../components/reports/ReportHeader';
 import ReportToolbar from '../../components/reports/ReportToolbar';
@@ -58,6 +59,9 @@ const Reports: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const { list: candidates, total, loading, filterOptions } = useAppSelector((state) => state.candidates);
 
+	// Columns State
+	const [columns, setColumns] = useState<any[]>(ALL_COLUMNS);
+
 	// Visibility and UI State
 	const [visibleColumns, setVisibleColumns] = useState<string[]>(
 		ALL_COLUMNS.filter(c => c.default).map(c => c.id)
@@ -71,6 +75,48 @@ const Reports: React.FC = () => {
 	const [rowsPerPage, setRowsPerPage] = useState(25);
 	const [filters, setFilters] = useState<Record<string, any>>({});
 	const [reportType, setReportType] = useState('candidate');
+
+	// Fetch dynamic fields
+	useEffect(() => {
+		const fetchDynamicColumns = async () => {
+			try {
+				const [screeningFields, counselingFields] = await Promise.all([
+					settingsService.getFields('screening'),
+					settingsService.getFields('counseling')
+				]);
+
+				const dynamicCols: any[] = [];
+
+				if (screeningFields && screeningFields.length > 0) {
+					screeningFields.forEach(field => {
+						dynamicCols.push({
+							id: `screening_others.${field.name}`,
+							label: field.label,
+							default: false,
+							group: 'screening'
+						});
+					});
+				}
+
+				if (counselingFields && counselingFields.length > 0) {
+					counselingFields.forEach(field => {
+						dynamicCols.push({
+							id: `counseling_others.${field.name}`,
+							label: field.label,
+							default: false,
+							group: 'counseling'
+						});
+					});
+				}
+
+				setColumns([...ALL_COLUMNS, ...dynamicCols]);
+			} catch (error) {
+				console.error("Failed to fetch dynamic fields for reports", error);
+			}
+		};
+
+		fetchDynamicColumns();
+	}, []);
 
 	// Data Fetching
 	const fetchData = useCallback(() => {
@@ -126,14 +172,24 @@ const Reports: React.FC = () => {
 		const exportData = candidates.map(c => {
 			const filtered: any = {};
 			visibleColumns.forEach(colId => {
-				const col = ALL_COLUMNS.find(ac => ac.id === colId);
+				const col = columns.find(ac => ac.id === colId);
 				if (col) {
 					// Handle regular fields and flattened fields
-					let val = (c as any)[colId];
+					let val: any;
+
+					if (colId.startsWith('screening_others.')) {
+						const fieldName = colId.split('.')[1];
+						val = (c.screening?.others as any)?.[fieldName];
+					} else if (colId.startsWith('counseling_others.')) {
+						const fieldName = colId.split('.')[1];
+						val = (c.counseling?.others as any)?.[fieldName];
+					} else {
+						val = (c as any)[colId];
+					}
 
 					// If field is missing from list item, try to get it from nested objects if available
 					if (val === undefined || val === null) {
-						if (col.group === 'counseling' && (c as any).counseling) {
+						if (col.group === 'counseling' && (c as any).counseling && !colId.startsWith('counseling_others.')) {
 							val = (c as any).counseling[colId];
 						}
 					}
@@ -271,7 +327,7 @@ const Reports: React.FC = () => {
 						anchorEl={anchorEl}
 						onOpen={(e) => setAnchorEl(e.currentTarget)}
 						onClose={() => setAnchorEl(null)}
-						columns={ALL_COLUMNS}
+						columns={columns}
 						visibleColumns={visibleColumns}
 						onToggleColumn={toggleColumn}
 					/>
@@ -289,7 +345,7 @@ const Reports: React.FC = () => {
 			}}>
 				<ReportTable
 					loading={loading}
-					columns={ALL_COLUMNS}
+					columns={columns}
 					visibleColumns={visibleColumns}
 					data={candidates}
 					total={total}

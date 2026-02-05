@@ -108,7 +108,17 @@ const ReportTable: React.FC<ReportTableProps> = ({
 	const renderCell = (candidate: CandidateListItem, colId: string) => {
 		// ... (renderCell content remains same but move inside the component for easier access if not already)
 		// I'll keep it as is if it fits, else move it.
-		let val: any = (candidate as any)[colId];
+		let val: any;
+
+		if (colId.startsWith('screening_others.')) {
+			const fieldName = colId.split('.')[1];
+			val = (candidate.screening?.others as any)?.[fieldName];
+		} else if (colId.startsWith('counseling_others.')) {
+			const fieldName = colId.split('.')[1];
+			val = (candidate.counseling?.others as any)?.[fieldName];
+		} else {
+			val = (candidate as any)[colId];
+		}
 
 		if ((colId === 'created_at' || colId === 'dob' || colId === 'counseling_date' || colId === 'screening_date' || colId === 'screening_updated_at') && val) {
 			try {

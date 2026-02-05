@@ -167,6 +167,8 @@ class CandidateListResponse(BaseModel):
     screened_by_name: Optional[str] = None
     screening_date: Optional[datetime] = None
     screening_updated_at: Optional[datetime] = None
+    screening: Optional[dict] = None
+    counseling: Optional[dict] = None
     
     @model_validator(mode='before')
     @classmethod
@@ -192,6 +194,9 @@ class CandidateListResponse(BaseModel):
         screening_date = None
         screening_updated_at = None
         screening_comments = None
+        
+        screening_data = None
+        counseling_data = None
         
         # ... (rest of helper functions)
         def get_val(obj, key, default=None):
@@ -229,11 +234,15 @@ class CandidateListResponse(BaseModel):
             
             # Extract from others JSON field
             others = get_val(screening, 'others')
-            if others and isinstance(others, dict):
-                source_of_info = others.get('source_of_info')
-                family_annual_income = others.get('family_annual_income')
-                # Check for 'reason' first (as per user request), then 'comments'
-                screening_comments = others.get('reason')
+            if others:
+                if isinstance(others, dict):
+                    source_of_info = others.get('source_of_info')
+                    family_annual_income = others.get('family_annual_income')
+                    # Check for 'reason' first (as per user request), then 'comments'
+                    screening_comments = others.get('reason')
+                
+                # Expose full others in screening object for dynamic fields
+                screening_data = {'others': others}
             
             # Extract screened_by info
             screened_by = None
@@ -266,6 +275,11 @@ class CandidateListResponse(BaseModel):
             skills = get_val(counseling, 'skills', [])
             questions = get_val(counseling, 'questions', [])
             workexperience = get_val(counseling, 'workexperience', [])
+            
+            # Extract others for dynamic fields
+            counseling_others = get_val(counseling, 'others')
+            if counseling_others:
+                counseling_data = {'others': counseling_others}
             
             counselor = None
             if isinstance(counseling, dict):
@@ -310,7 +324,9 @@ class CandidateListResponse(BaseModel):
                 'screening_comments': screening_comments,
                 'screened_by_name': screened_by_name,
                 'screening_date': screening_date,
-                'screening_updated_at': screening_updated_at
+                'screening_updated_at': screening_updated_at,
+                'screening': screening_data,
+                'counseling': counseling_data
             })
             return data
             
@@ -347,7 +363,9 @@ class CandidateListResponse(BaseModel):
             'screening_comments': screening_comments,
             'screened_by_name': screened_by_name,
             'screening_date': screening_date,
-            'screening_updated_at': screening_updated_at
+            'screening_updated_at': screening_updated_at,
+            'screening': screening_data,
+            'counseling': counseling_data
         }
 
 
