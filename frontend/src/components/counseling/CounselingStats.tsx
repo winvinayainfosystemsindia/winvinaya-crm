@@ -39,18 +39,18 @@ const CounselingStats: React.FC = () => {
 				</Box>
 				<Box sx={{ flex: '1 1 250px' }}>
 					<StatCard
-						title="Pending Counseling"
-						count={stats.counseling_pending?.toString() ?? '0'}
-						icon={<PendingActions fontSize="large" />}
-						color="#ed6c02"
-					/>
-				</Box>
-				<Box sx={{ flex: '1 1 250px' }}>
-					<StatCard
 						title="Selected"
 						count={stats.counseling_selected?.toString() ?? '0'}
 						icon={<CheckCircle fontSize="large" />}
 						color="#2e7d32"
+					/>
+				</Box>
+				<Box sx={{ flex: '1 1 250px' }}>
+					<StatCard
+						title="Yet To Be Counseled"
+						count={((stats.screening_distribution?.['Completed'] || 0) - (stats.total_counseled || 0)).toString()}
+						icon={<PendingActions fontSize="large" />}
+						color="#ed6c02"
 					/>
 				</Box>
 				<Box sx={{ flex: '1 1 250px' }}>

@@ -194,9 +194,9 @@ const CounselingList: React.FC = () => {
 						sx={{ px: 2 }}
 					>
 						<Tab label={renderTabLabel("Not Counseled", (stats?.screening_distribution?.['Completed'] || 0) - (getCount('selected') + getCount('rejected') + getCount('pending')))} sx={{ textTransform: 'none', fontWeight: 500 }} />
-						<Tab label={renderTabLabel("Counseling Selected", getCount('selected'))} sx={{ textTransform: 'none', fontWeight: 500 }} />
-						<Tab label={renderTabLabel("Counseling Rejected", getCount('rejected'))} sx={{ textTransform: 'none', fontWeight: 500 }} />
-						<Tab label={renderTabLabel("Counseling Pending", getCount('pending'))} sx={{ textTransform: 'none', fontWeight: 500 }} />
+						<Tab label={renderTabLabel("On Hold", getCount('pending'))} sx={{ textTransform: 'none', fontWeight: 500 }} />
+						<Tab label={renderTabLabel("Selected", getCount('selected'))} sx={{ textTransform: 'none', fontWeight: 500 }} />
+						<Tab label={renderTabLabel("Rejected", getCount('rejected'))} sx={{ textTransform: 'none', fontWeight: 500 }} />
 					</Tabs>
 				</Box>
 
@@ -210,21 +210,21 @@ const CounselingList: React.FC = () => {
 				</TabPanel>
 				<TabPanel value={tabValue} index={1}>
 					<CounselingTable
-						type="selected"
+						type="pending"
 						onAction={handleAction}
 						refreshKey={refreshKey}
 					/>
 				</TabPanel>
 				<TabPanel value={tabValue} index={2}>
 					<CounselingTable
-						type="rejected"
+						type="selected"
 						onAction={handleAction}
 						refreshKey={refreshKey}
 					/>
 				</TabPanel>
 				<TabPanel value={tabValue} index={3}>
 					<CounselingTable
-						type="pending"
+						type="rejected"
 						onAction={handleAction}
 						refreshKey={refreshKey}
 					/>
