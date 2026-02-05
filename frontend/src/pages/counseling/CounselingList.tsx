@@ -194,7 +194,7 @@ const CounselingList: React.FC = () => {
 						sx={{ px: 2 }}
 					>
 						<Tab label={renderTabLabel("Not Counseled", (stats?.screening_distribution?.['Completed'] || 0) - (getCount('selected') + getCount('rejected') + getCount('pending')))} sx={{ textTransform: 'none', fontWeight: 500 }} />
-						<Tab label={renderTabLabel("On Hold", getCount('pending'))} sx={{ textTransform: 'none', fontWeight: 500 }} />
+						<Tab label={renderTabLabel("In Progress", getCount('pending'))} sx={{ textTransform: 'none', fontWeight: 500 }} />
 						<Tab label={renderTabLabel("Selected", getCount('selected'))} sx={{ textTransform: 'none', fontWeight: 500 }} />
 						<Tab label={renderTabLabel("Rejected", getCount('rejected'))} sx={{ textTransform: 'none', fontWeight: 500 }} />
 					</Tabs>

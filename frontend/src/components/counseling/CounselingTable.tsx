@@ -455,7 +455,7 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 									{type !== 'not_counseled' && (
 										<TableCell>
 											<Chip
-												label={candidate.counseling_status === 'pending' ? 'On Hold' : ((candidate.counseling_status || 'pending').charAt(0).toUpperCase() + (candidate.counseling_status || 'pending').slice(1))}
+												label={candidate.counseling_status === 'pending' ? 'In Progress' : ((candidate.counseling_status || 'pending').charAt(0).toUpperCase() + (candidate.counseling_status || 'pending').slice(1))}
 												size="small"
 												icon={
 													candidate.counseling_status === 'selected' ? <CheckCircle /> :

@@ -85,7 +85,7 @@ const CounselingInfoTab: React.FC<CounselingInfoTabProps> = ({
 								onChange={(e) => onFieldChange('status', e.target.value)}
 								sx={{ borderRadius: '2px' }}
 							>
-								<MenuItem value="pending">On Hold</MenuItem>
+								<MenuItem value="pending">In Progress</MenuItem>
 								<MenuItem value="selected">Selected</MenuItem>
 								<MenuItem value="rejected">Rejected</MenuItem>
 							</Select>
