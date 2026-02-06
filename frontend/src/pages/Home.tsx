@@ -9,12 +9,16 @@ import StatCard from '../components/dashboard/StatCard';
 import RecentActivity from '../components/dashboard/RecentActivity';
 import SystemStatus from '../components/dashboard/SystemStatus';
 import RegistrationLinkModal from '../components/dashboard/RegistrationLinkModal';
-import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { useAppDispatch } from '../store/hooks';
 import { fetchCandidates } from '../store/slices/candidateSlice';
+import type { CandidateStats } from '../models/candidate';
 
-const Home: React.FC = () => {
+interface CandidateStatCardsProps {
+	stats: CandidateStats;
+}
+
+const Home: React.FC<CandidateStatCardsProps> = ({ stats }) => {
 	const dispatch = useAppDispatch();
-	const { total } = useAppSelector((state) => state.candidates);
 
 	useEffect(() => {
 		dispatch(fetchCandidates());
@@ -34,7 +38,7 @@ const Home: React.FC = () => {
 				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
 					<StatCard
 						title="Total Candidates"
-						count={(total || 0).toLocaleString()}
+						count={(stats.total || 0).toLocaleString()}
 						icon={<PeopleIcon fontSize="large" />}
 						color="#1976d2"
 					/>
