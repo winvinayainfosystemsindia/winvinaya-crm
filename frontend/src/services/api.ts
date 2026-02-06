@@ -74,13 +74,16 @@ api.interceptors.response.use(
 			// Attempt to refresh the token
 			const response = await authService.refreshToken();
 
+			const publicPaths = ['/login', '/candidate-registration', '/success', '/maintenance'];
+			const isPublicPath = publicPaths.some(path => window.location.pathname.startsWith(path));
+
 			if (!response) {
 				// Refresh failed, clear tokens and redirect to login
 				processQueue(new Error('Token refresh failed'), null);
 				authService.clearTokens();
 
-				// Only redirect if we're not already on login page
-				if (window.location.pathname !== '/login') {
+				// Only redirect if we're not already on login page and not on a public path
+				if (!isPublicPath && window.location.pathname !== '/login') {
 					window.location.href = '/login';
 				}
 

@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext';
 import { Provider } from 'react-redux';
 import { SnackbarProvider } from 'notistack';
 import { store } from './store/store';
+import { BrowserRouter as Router } from 'react-router-dom';
 import AppRouter from './router/AppRouter';
 import SmoothScroll from "./components/layout/SmoothScroll";
 import AuthInitializer from './components/auth/AuthInitializer';
@@ -16,14 +17,16 @@ function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <SnackbarProvider maxSnack={3}>
-          <SmoothScroll>
-            <AuthProvider>
-              <AuthInitializer>
-                <AppRouter />
-              </AuthInitializer>
-            </AuthProvider>
-          </SmoothScroll>
-          <ChatWidget />
+          <Router>
+            <SmoothScroll>
+              <AuthProvider>
+                <AuthInitializer>
+                  <AppRouter />
+                </AuthInitializer>
+              </AuthProvider>
+            </SmoothScroll>
+            <ChatWidget />
+          </Router>
         </SnackbarProvider>
       </ThemeProvider>
     </Provider>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from '../pages/Login';
 import Dashboard from '../pages/Dashboard';
 import UserManagement from '../pages/user/UserManagement';
@@ -32,63 +32,61 @@ import CRMDashboard from '../pages/crm/CRMDashboard';
 
 const AppRouter: React.FC = () => {
 	return (
-		<Router>
-			<Routes>
-				<Route path="/login" element={<Login />} />
-				<Route path="/candidate-registration" element={<CandidateRegistration />} />
+		<Routes>
+			<Route path="/login" element={<Login />} />
+			<Route path="/candidate-registration" element={<CandidateRegistration />} />
 
-				{/* Public Support Pages */}
-				<Route path="/success" element={<SuccessPage />} />
-				<Route path="/maintenance" element={<MaintenancePage />} />
+			{/* Public Support Pages */}
+			<Route path="/success" element={<SuccessPage />} />
+			<Route path="/maintenance" element={<MaintenancePage />} />
 
-				<Route element={<ProtectedRoute />}>
-					{/* Protected Routes */}
-					<Route element={<MainLayout />}>
-						<Route path="/" element={<Navigate to="/dashboard" replace />} />
-						<Route path="dashboard" element={<Dashboard />} />
-						<Route path="users" element={<UserManagement />} />
-						<Route path="reports" element={<Reports />} />
-						<Route path="settings" element={<Settings />} />
-						<Route path="support" element={<Support />} />
+			<Route element={<ProtectedRoute />}>
+				{/* Protected Routes */}
+				<Route element={<MainLayout />}>
+					<Route path="/" element={<Navigate to="/dashboard" replace />} />
+					<Route path="dashboard" element={<Dashboard />} />
+					<Route path="users" element={<UserManagement />} />
+					<Route path="reports" element={<Reports />} />
+					<Route path="settings" element={<Settings />} />
+					<Route path="support" element={<Support />} />
 
-						<Route path="candidates">
+					<Route path="candidates">
 
-							<Route index element={<CandidateList />} />
-							<Route path="list" element={<CandidateList />} />
-							{/* <Route path="overview" element={<SourcingAnalytics />} /> */}
-							<Route path="screening" element={<ScreeningList />} />
-							<Route path="counseling" element={<CounselingList />} />
-							<Route path="documents" element={<DocumentCollectionList />} />
-							<Route path="documents/:id" element={<DocumentCollection />} />
-							<Route path=":publicId" element={<CandidateDetail />} />
-						</Route>
-
-						<Route path="training">
-							<Route path="batches" element={<TrainingBatchList />} />
-							<Route path="batches/:id" element={<TrainingBatchDetail />} />
-							<Route path="allocation" element={<CandidateAllocation />} />
-						</Route>
-
-						<Route path="crm">
-							<Route index element={<CRMDashboard />} />
-							<Route path="dashboard" element={<CRMDashboard />} />
-							<Route path="companies" element={<CompanyManagement />} />
-							<Route path="companies/:publicId" element={<CompanyDetail />} />
-							<Route path="contacts" element={<ContactManagement />} />
-							<Route path="leads" element={<LeadManagement />} />
-							<Route path="deals" element={<DealManagement />} />
-							<Route path="tasks" element={<TaskManagement />} />
-						</Route>
-
-						<Route path="admin/migration" element={<MigrationPanel />} />
-
-						{/* Add more protected routes here */}
+						<Route index element={<CandidateList />} />
+						<Route path="list" element={<CandidateList />} />
+						{/* <Route path="overview" element={<SourcingAnalytics />} /> */}
+						<Route path="screening" element={<ScreeningList />} />
+						<Route path="counseling" element={<CounselingList />} />
+						<Route path="documents" element={<DocumentCollectionList />} />
+						<Route path="documents/:id" element={<DocumentCollection />} />
+						<Route path=":publicId" element={<CandidateDetail />} />
 					</Route>
-				</Route>
 
-				<Route path="*" element={<NotFoundPage />} />
-			</Routes>
-		</Router>
+					<Route path="training">
+						<Route path="batches" element={<TrainingBatchList />} />
+						<Route path="batches/:id" element={<TrainingBatchDetail />} />
+						<Route path="allocation" element={<CandidateAllocation />} />
+					</Route>
+
+					<Route path="crm">
+						<Route index element={<CRMDashboard />} />
+						<Route path="dashboard" element={<CRMDashboard />} />
+						<Route path="companies" element={<CompanyManagement />} />
+						<Route path="companies/:publicId" element={<CompanyDetail />} />
+						<Route path="contacts" element={<ContactManagement />} />
+						<Route path="leads" element={<LeadManagement />} />
+						<Route path="deals" element={<DealManagement />} />
+						<Route path="tasks" element={<TaskManagement />} />
+					</Route>
+
+					<Route path="admin/migration" element={<MigrationPanel />} />
+
+					{/* Add more protected routes here */}
+				</Route>
+			</Route>
+
+			<Route path="*" element={<NotFoundPage />} />
+		</Routes>
 	);
 };
 

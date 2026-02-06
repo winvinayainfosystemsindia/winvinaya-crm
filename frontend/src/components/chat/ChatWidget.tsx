@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useLocation } from 'react-router-dom';
 import {
 	Box,
 	Fab,
@@ -21,7 +22,6 @@ import {
 	Send as SendIcon,
 	Lightbulb as IdeaIcon
 } from '@mui/icons-material';
-import { useLocation } from 'react-router-dom';
 import { chatService, type ChatMessage } from '../../services/chatService';
 import { settingsService } from '../../services/settingsService';
 
@@ -44,9 +44,27 @@ const ChatWidget: React.FC = () => {
 	const [loading, setLoading] = useState(false);
 	const chatEndRef = useRef<HTMLDivElement>(null);
 
+	// Check eligibility based on current route
+	const isCurrentlyPublic = (pathname: string) => PUBLIC_PATHS.some(path => pathname.startsWith(path));
+
+	const checkEnabled = async () => {
+		if (isCurrentlyPublic(location.pathname)) {
+			setIsEnabled(false);
+			return;
+		}
+
+		try {
+			const settings = await settingsService.getSystemSettings();
+			const aiEnabled = settings.find(s => s.key === 'ai_enabled')?.value === 'true';
+			setIsEnabled(aiEnabled);
+		} catch (error) {
+			console.error('Failed to check AI status:', error);
+			setIsEnabled(false);
+		}
+	};
+
 	useEffect(() => {
-		const isPublic = PUBLIC_PATHS.some(path => location.pathname.startsWith(path));
-		if (isPublic) {
+		if (isCurrentlyPublic(location.pathname)) {
 			setIsEnabled(false);
 		} else {
 			checkEnabled();
@@ -67,23 +85,6 @@ const ChatWidget: React.FC = () => {
 			chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
 		}
 	}, [chatHistory, loading]);
-
-	const checkEnabled = async () => {
-		// Second check for sanity (used in the effect but also helps if called directly)
-		const isPublic = PUBLIC_PATHS.some(path => location.pathname.startsWith(path));
-		if (isPublic) {
-			setIsEnabled(false);
-			return;
-		}
-
-		try {
-			const settings = await settingsService.getSystemSettings();
-			const aiEnabled = settings.find(s => s.key === 'ai_enabled')?.value === 'true';
-			setIsEnabled(aiEnabled);
-		} catch (error) {
-			console.error('Failed to check AI status:', error);
-		}
-	};
 
 	const handleSend = async (customMessage?: string) => {
 		const messageToSend = customMessage || message;
