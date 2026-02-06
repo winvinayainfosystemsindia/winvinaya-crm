@@ -14,7 +14,7 @@ import { fetchCandidates } from '../store/slices/candidateSlice';
 
 const Home: React.FC = () => {
 	const dispatch = useAppDispatch();
-	const { list: candidates } = useAppSelector((state) => state.candidates);
+	const { total } = useAppSelector((state) => state.candidates);
 
 	useEffect(() => {
 		dispatch(fetchCandidates());
@@ -34,7 +34,7 @@ const Home: React.FC = () => {
 				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
 					<StatCard
 						title="Total Candidates"
-						count={(candidates?.length || 0).toLocaleString()}
+						count={(total || 0).toLocaleString()}
 						icon={<PeopleIcon fontSize="large" />}
 						color="#1976d2"
 					/>
