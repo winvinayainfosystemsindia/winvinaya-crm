@@ -20,7 +20,7 @@ const Home: React.FC<CandidateStatCardsProps> = ({ stats }) => {
 	return (
 		<Box component="main" sx={{ p: { xs: 1, sm: 0 } }}>
 			<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-				<Typography variant="h5" component="h1" sx={{ fontWeight: 700, color: '#16191f' }}>
+				<Typography variant="h5" component="h1" sx={{ fontWeight: 600, color: '#16191f' }}>
 					Dashboard
 				</Typography>
 				<RegistrationLinkModal />

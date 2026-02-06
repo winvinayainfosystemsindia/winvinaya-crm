@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from '../pages/Login';
-import Home from '../pages/Home';
+import Dashboard from '../pages/Dashboard';
 import UserManagement from '../pages/user/UserManagement';
 import ProtectedRoute from './ProtectedRoute';
 import MainLayout from '../components/layout/MainLayout';
@@ -45,7 +45,7 @@ const AppRouter: React.FC = () => {
 					{/* Protected Routes */}
 					<Route element={<MainLayout />}>
 						<Route path="/" element={<Navigate to="/dashboard" replace />} />
-						<Route path="dashboard" element={<Home />} />
+						<Route path="dashboard" element={<Dashboard />} />
 						<Route path="users" element={<UserManagement />} />
 						<Route path="reports" element={<Reports />} />
 						<Route path="settings" element={<Settings />} />
