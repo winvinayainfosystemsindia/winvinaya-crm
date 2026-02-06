@@ -22,6 +22,7 @@ async def get_management_report_data(db: AsyncSession) -> ManagementReportRespon
     users_query = select(User).where(
         func.cast(User.role, String).in_([
             UserRole.SOURCING.value, 
+            UserRole.MANAGER.value,  
             UserRole.TRAINER.value, 
             UserRole.COUNSELOR.value
         ]),
