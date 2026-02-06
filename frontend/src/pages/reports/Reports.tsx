@@ -174,27 +174,30 @@ const Reports: React.FC = () => {
 			visibleColumns.forEach(colId => {
 				const col = columns.find(ac => ac.id === colId);
 				if (col) {
-					// Handle regular fields and flattened fields
-					let val: any;
+					// Initialize value
+					let val: any = undefined;
 
+					// 1. Dynamic Screening Fields
 					if (colId.startsWith('screening_others.')) {
-						const fieldName = colId.split('.')[1];
+						const fieldName = colId.substring('screening_others.'.length);
 						val = (c.screening?.others as any)?.[fieldName];
-					} else if (colId.startsWith('counseling_others.')) {
-						const fieldName = colId.split('.')[1];
+					}
+					// 2. Dynamic Counseling Fields
+					else if (colId.startsWith('counseling_others.')) {
+						const fieldName = colId.substring('counseling_others.'.length);
 						val = (c.counseling?.others as any)?.[fieldName];
-					} else {
+					}
+					// 3. Regular Fields
+					else {
 						val = (c as any)[colId];
 					}
 
-					// If field is missing from list item, try to get it from nested objects if available
-					if (val === undefined || val === null) {
-						if (col.group === 'counseling' && (c as any).counseling && !colId.startsWith('counseling_others.')) {
-							val = (c as any).counseling[colId];
-						}
+					// 4. Fallback for nested counseling fields (standard ones)
+					if ((val === undefined || val === null) && col.group === 'counseling' && (c as any).counseling && !colId.startsWith('counseling_others.')) {
+						val = (c as any).counseling[colId];
 					}
 
-					// Date Formatting
+					// 5. Date Formatting
 					if ((colId === 'created_at' || colId === 'dob' || colId === 'counseling_date' || colId === 'screening_date' || colId === 'screening_updated_at') && val) {
 						try {
 							val = format(new Date(val), 'dd-MM-yyyy');
@@ -203,12 +206,12 @@ const Reports: React.FC = () => {
 						}
 					}
 
-					// Document Uploads
+					// 6. Array Handling (Documents)
 					if (colId === 'documents_uploaded' && Array.isArray(val)) {
 						val = val.join(', ');
 					}
 
-					// Family Details (Flattened or format properly)
+					// 7. Array Handling (Family Details)
 					if (colId === 'family_details' && Array.isArray(val)) {
 						val = val.map((f: any) => {
 							const details = [];
@@ -220,22 +223,28 @@ const Reports: React.FC = () => {
 						}).join('; ');
 					}
 
-					// Counseling Skills
+					// 8. Array Handling (Counseling Skills)
 					if (colId === 'skills' && Array.isArray(val)) {
 						val = val.map((s: any) => `${s.name} (${s.level})`).join(', ');
 					}
 
-					// Counseling Questions
+					// 9. Array Handling (Counseling Questions)
 					if (colId === 'questions' && Array.isArray(val)) {
 						val = val.map((q: any) => `Q: ${q.question} | A: ${q.answer}`).join(' ; ');
 					}
 
-					// Counseling Work Experience
+					// 10. Array Handling (Work Experience)
 					if (colId === 'workexperience' && Array.isArray(val)) {
 						val = val.map((w: any) => `${w.job_title} at ${w.company} (${w.years_of_experience})`).join(' ; ');
 					}
 
-					filtered[col.label] = val || '-';
+					// 11. Generic Array Fallback (for dynamic multi-selects)
+					if (Array.isArray(val)) {
+						val = val.join(', ');
+					}
+
+					// Final assignment: ensure explicit fallback for undefined/null/empty
+					filtered[col.label] = (val !== undefined && val !== null && val !== '') ? val : '-';
 				}
 			});
 			return filtered;

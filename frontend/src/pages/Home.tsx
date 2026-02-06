@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Typography, Box } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import PeopleIcon from '@mui/icons-material/People';
@@ -9,8 +9,6 @@ import StatCard from '../components/dashboard/StatCard';
 import RecentActivity from '../components/dashboard/RecentActivity';
 import SystemStatus from '../components/dashboard/SystemStatus';
 import RegistrationLinkModal from '../components/dashboard/RegistrationLinkModal';
-import { useAppDispatch } from '../store/hooks';
-import { fetchCandidates } from '../store/slices/candidateSlice';
 import type { CandidateStats } from '../models/candidate';
 
 interface CandidateStatCardsProps {
@@ -18,11 +16,6 @@ interface CandidateStatCardsProps {
 }
 
 const Home: React.FC<CandidateStatCardsProps> = ({ stats }) => {
-	const dispatch = useAppDispatch();
-
-	useEffect(() => {
-		dispatch(fetchCandidates());
-	}, [dispatch]);
 
 	return (
 		<Box component="main" sx={{ p: { xs: 1, sm: 0 } }}>
