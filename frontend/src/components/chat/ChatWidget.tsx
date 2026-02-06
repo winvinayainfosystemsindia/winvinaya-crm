@@ -21,6 +21,7 @@ import {
 	Send as SendIcon,
 	Lightbulb as IdeaIcon
 } from '@mui/icons-material';
+import { useLocation } from 'react-router-dom';
 import { chatService, type ChatMessage } from '../../services/chatService';
 import { settingsService } from '../../services/settingsService';
 
@@ -32,7 +33,10 @@ const SUGGESTED_QUESTIONS = [
 	"Candidates in Bangalore?"
 ];
 
+const PUBLIC_PATHS = ['/login', '/candidate-registration', '/success', '/maintenance'];
+
 const ChatWidget: React.FC = () => {
+	const location = useLocation();
 	const [isOpen, setIsOpen] = useState(false);
 	const [isEnabled, setIsEnabled] = useState(false);
 	const [message, setMessage] = useState('');
@@ -41,8 +45,13 @@ const ChatWidget: React.FC = () => {
 	const chatEndRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
-		checkEnabled();
-	}, []);
+		const isPublic = PUBLIC_PATHS.some(path => location.pathname.startsWith(path));
+		if (isPublic) {
+			setIsEnabled(false);
+		} else {
+			checkEnabled();
+		}
+	}, [location.pathname]);
 
 	useEffect(() => {
 		if (isOpen && chatHistory.length === 0) {
@@ -60,6 +69,13 @@ const ChatWidget: React.FC = () => {
 	}, [chatHistory, loading]);
 
 	const checkEnabled = async () => {
+		// Second check for sanity (used in the effect but also helps if called directly)
+		const isPublic = PUBLIC_PATHS.some(path => location.pathname.startsWith(path));
+		if (isPublic) {
+			setIsEnabled(false);
+			return;
+		}
+
 		try {
 			const settings = await settingsService.getSystemSettings();
 			const aiEnabled = settings.find(s => s.key === 'ai_enabled')?.value === 'true';

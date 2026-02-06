@@ -100,8 +100,11 @@ api.interceptors.response.use(
 			processQueue(refreshError, null);
 			authService.clearTokens();
 
-			// Redirect to login
-			if (window.location.pathname !== '/login') {
+			// Redirect to login - only for non-public routes
+			const publicPaths = ['/login', '/candidate-registration', '/success', '/maintenance'];
+			const isPublicPath = publicPaths.some(path => window.location.pathname.startsWith(path));
+
+			if (!isPublicPath && window.location.pathname !== '/login') {
 				window.location.href = '/login';
 			}
 
