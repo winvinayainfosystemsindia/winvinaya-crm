@@ -111,13 +111,38 @@ const ReportTable: React.FC<ReportTableProps> = ({
 		let val: any;
 
 		if (colId.startsWith('screening_others.')) {
-			const fieldName = colId.split('.')[1];
-			val = (candidate.screening?.others as any)?.[fieldName];
+			const fieldName = colId.substring('screening_others.'.length);
+			val = (candidate.screening?.others as any)?.[fieldName] ?? (candidate as any)[fieldName];
 		} else if (colId.startsWith('counseling_others.')) {
-			const fieldName = colId.split('.')[1];
-			val = (candidate.counseling?.others as any)?.[fieldName];
+			const fieldName = colId.substring('counseling_others.'.length);
+			val = (candidate.counseling?.others as any)?.[fieldName] ?? (candidate as any)[fieldName];
 		} else {
 			val = (candidate as any)[colId];
+		}
+
+		// Relationship fallback for standard fields
+		if (val === undefined || val === null) {
+			if (colId.includes('counseling') && candidate.counseling) {
+				val = (candidate.counseling as any)[colId];
+			}
+		}
+
+		// Array Handling for dynamic fields (Multi-select)
+		if (Array.isArray(val) && (colId.startsWith('screening_others.') || colId.startsWith('counseling_others.'))) {
+			if (val.length === 0) return '-';
+			return (
+				<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+					{val.map((item: any, i: number) => (
+						<Chip
+							key={i}
+							label={String(item)}
+							size="small"
+							variant="outlined"
+							sx={{ fontSize: '0.65rem', height: 18 }}
+						/>
+					))}
+				</Box>
+			);
 		}
 
 		if ((colId === 'created_at' || colId === 'dob' || colId === 'counseling_date' || colId === 'screening_date' || colId === 'screening_updated_at') && val) {
@@ -225,7 +250,10 @@ const ReportTable: React.FC<ReportTableProps> = ({
 			);
 		}
 
-		return val || '-';
+		if (typeof val === 'boolean') return val ? 'Yes' : 'No';
+
+		const finalVal = (val !== undefined && val !== null) ? String(val).trim() : '';
+		return finalVal !== '' ? finalVal : '-';
 	};
 
 	return (

@@ -39,7 +39,6 @@ const ALL_COLUMNS = [
 	{ id: 'screening_date', label: 'Screened Date', default: false, group: 'screening' },
 	{ id: 'screening_updated_at', label: 'Screening Update Date', default: false, group: 'screening' },
 	{ id: 'family_details', label: 'Family Details', default: false, group: 'screening' },
-	{ id: 'family_details', label: 'Family Details', default: false, group: 'screening' },
 	{ id: 'documents_uploaded', label: 'Uploaded Documents', default: false, group: 'screening' },
 	{ id: 'screening_comments', label: 'Screening Reason', default: false, group: 'screening' },
 
@@ -169,85 +168,94 @@ const Reports: React.FC = () => {
 	};
 
 	const handleExport = () => {
+		// Generate export data by mapping candidates to an object where keys are column labels
 		const exportData = candidates.map(c => {
-			const filtered: any = {};
-			visibleColumns.forEach(colId => {
-				const col = columns.find(ac => ac.id === colId);
-				if (col) {
-					// Initialize value
-					let val: any = undefined;
+			const rowData: Record<string, any> = {};
 
-					// 1. Dynamic Screening Fields
-					if (colId.startsWith('screening_others.')) {
-						const fieldName = colId.substring('screening_others.'.length);
-						val = (c.screening?.others as any)?.[fieldName];
-					}
-					// 2. Dynamic Counseling Fields
-					else if (colId.startsWith('counseling_others.')) {
-						const fieldName = colId.substring('counseling_others.'.length);
-						val = (c.counseling?.others as any)?.[fieldName];
-					}
-					// 3. Regular Fields
-					else {
-						val = (c as any)[colId];
-					}
+			// We iterate through columns to maintain order if possible, or just visibleColumns
+			visibleColumns.forEach(virtColId => {
+				const col = columns.find(ac => ac.id === virtColId);
+				if (!col) return;
 
-					// 4. Fallback for nested counseling fields (standard ones)
-					if ((val === undefined || val === null) && col.group === 'counseling' && (c as any).counseling && !colId.startsWith('counseling_others.')) {
-						val = (c as any).counseling[colId];
-					}
+				let val: any = undefined;
 
-					// 5. Date Formatting
-					if ((colId === 'created_at' || colId === 'dob' || colId === 'counseling_date' || colId === 'screening_date' || colId === 'screening_updated_at') && val) {
-						try {
-							val = format(new Date(val), 'dd-MM-yyyy');
-						} catch (e) {
-							val = String(val);
-						}
+				// 1. Precise Data Extraction
+				if (virtColId.startsWith('screening_others.')) {
+					const fieldName = virtColId.substring('screening_others.'.length);
+					val = (c.screening?.others as any)?.[fieldName] ?? (c as any)[fieldName];
+				} else if (virtColId.startsWith('counseling_others.')) {
+					const fieldName = virtColId.substring('counseling_others.'.length);
+					val = (c.counseling?.others as any)?.[fieldName] ?? (c as any)[fieldName];
+				} else {
+					// Fallback: Check top-level, then screening, then counseling
+					val = (c as any)[virtColId];
+					if (val === undefined || val === null) {
+						if (col.group === 'screening' && c.screening) val = (c.screening as any)[virtColId];
+						if ((val === undefined || val === null) && col.group === 'counseling' && c.counseling) val = (c.counseling as any)[virtColId];
 					}
-
-					// 6. Array Handling (Documents)
-					if (colId === 'documents_uploaded' && Array.isArray(val)) {
-						val = val.join(', ');
-					}
-
-					// 7. Array Handling (Family Details)
-					if (colId === 'family_details' && Array.isArray(val)) {
-						val = val.map((f: any) => {
-							const details = [];
-							if (f.occupation) details.push(f.occupation);
-							if (f.company_name) details.push(f.company_name);
-							if (f.position) details.push(f.position);
-							const detailsStr = details.length > 0 ? ` - ${details.join(', ')}` : '';
-							return `${f.relation}: ${f.name} (${f.phone || 'N/A'})${detailsStr}`;
-						}).join('; ');
-					}
-
-					// 8. Array Handling (Counseling Skills)
-					if (colId === 'skills' && Array.isArray(val)) {
-						val = val.map((s: any) => `${s.name} (${s.level})`).join(', ');
-					}
-
-					// 9. Array Handling (Counseling Questions)
-					if (colId === 'questions' && Array.isArray(val)) {
-						val = val.map((q: any) => `Q: ${q.question} | A: ${q.answer}`).join(' ; ');
-					}
-
-					// 10. Array Handling (Work Experience)
-					if (colId === 'workexperience' && Array.isArray(val)) {
-						val = val.map((w: any) => `${w.job_title} at ${w.company} (${w.years_of_experience})`).join(' ; ');
-					}
-
-					// 11. Generic Array Fallback (for dynamic multi-selects)
-					if (Array.isArray(val)) {
-						val = val.join(', ');
-					}
-
-					// Final assignment: ensure explicit fallback for undefined/null/empty
-					filtered[col.label] = (val !== undefined && val !== null && val !== '') ? val : '-';
 				}
+
+				// 2. Normalization & Formatting
+
+				// Handle Booleans
+				if (typeof val === 'boolean') {
+					val = val ? 'Yes' : 'No';
+				}
+
+				// Handle Dates
+				const dateFields = ['created_at', 'dob', 'counseling_date', 'screening_date', 'screening_updated_at'];
+				if (val && dateFields.includes(virtColId)) {
+					try {
+						val = format(new Date(val), 'dd-MM-yyyy');
+					} catch {
+						// Keep as is if format fails
+					}
+				}
+
+				// Handle Arrays (Dynamic multi-selects and standard ones)
+				if (Array.isArray(val)) {
+					if (virtColId === 'family_details') {
+						val = val.map((f: any) => `${f.relation}: ${f.name} (${f.phone || 'N/A'})`).join('; ');
+					} else if (virtColId === 'skills') {
+						val = val.map((s: any) => `${s.name} (${s.level})`).join(', ');
+					} else if (virtColId === 'questions') {
+						val = val.map((q: any) => `Q: ${q.question} A: ${q.answer}`).join(' ; ');
+					} else if (virtColId === 'workexperience') {
+						val = val.map((w: any) => `${w.job_title} at ${w.company}`).join(' ; ');
+					} else {
+						val = val.join(', ');
+					}
+				}
+
+				// Handle Objects (Sanity check)
+				if (val && typeof val === 'object' && !(val instanceof Date)) {
+					try {
+						val = JSON.stringify(val);
+					} catch {
+						val = '[Object]';
+					}
+				}
+
+				// Final Sanitization: Ensure string and non-empty
+				const finalVal = (val !== undefined && val !== null) ? String(val).trim() : '';
+
+				// Use label as key for Excel, but deduplicate if necessary
+				let label = col.label;
+				if (rowData.hasOwnProperty(label)) {
+					// If already set and current is just '-', don't overwrite
+					if (finalVal === '' || finalVal === '-') return;
+					// If previous was '-' but current has data, overwrite
+					if (rowData[label] === '' || rowData[label] === '-') {
+						rowData[label] = finalVal;
+						return;
+					}
+					// Otherwise, append to existing (uncommon case)
+					label = `${label} (${col.group})`;
+				}
+
+				rowData[label] = finalVal !== '' ? finalVal : '-';
 			});
-			return filtered;
+			return rowData;
 		});
 
 		const ws = XLSX.utils.json_to_sheet(exportData);
