@@ -85,7 +85,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 	const [viewing, setViewing] = useState<Record<string, boolean>>({});
 
 	const [formData, setFormData] = useState<CandidateScreeningCreate>({
-		status: 'Pending',
+		status: 'In Progress',
 		previous_training: {
 			attended_any_training: false,
 			training_details: '',
@@ -134,7 +134,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 
 			if (initialData) {
 				setFormData({
-					status: initialData.status || 'Pending',
+					status: initialData.status || 'In Progress',
 					previous_training: {
 						attended_any_training: initialData.previous_training?.attended_any_training ?? false,
 						training_details: initialData.previous_training?.training_details ?? '',
@@ -167,7 +167,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 				});
 			} else {
 				setFormData({
-					status: 'Pending',
+					status: 'In Progress',
 					previous_training: {
 						attended_any_training: false,
 						training_details: '',
