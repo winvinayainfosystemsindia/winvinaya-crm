@@ -30,13 +30,14 @@ def upgrade() -> None:
     op.drop_column('training_batches', 'disability_type')
     
     # Drop email templates and triggers if they were removed from models
-    op.drop_index('ix_email_report_triggers_id', table_name='email_report_triggers', if_exists=True)
-    op.drop_index('ix_email_report_triggers_is_deleted', table_name='email_report_triggers', if_exists=True)
-    op.drop_table('email_report_triggers', if_exists=True)
-    op.drop_index('ix_email_templates_id', table_name='email_templates', if_exists=True)
-    op.drop_index('ix_email_templates_is_deleted', table_name='email_templates', if_exists=True)
-    op.drop_index('ix_email_templates_name', table_name='email_templates', if_exists=True)
-    op.drop_table('email_templates', if_exists=True)
+    # Using raw SQL with IF EXISTS for better compatibility across different environments
+    op.execute("DROP INDEX IF EXISTS ix_email_report_triggers_id")
+    op.execute("DROP INDEX IF EXISTS ix_email_report_triggers_is_deleted")
+    op.execute("DROP TABLE IF EXISTS email_report_triggers CASCADE")
+    op.execute("DROP INDEX IF EXISTS ix_email_templates_id")
+    op.execute("DROP INDEX IF EXISTS ix_email_templates_is_deleted")
+    op.execute("DROP INDEX IF EXISTS ix_email_templates_name")
+    op.execute("DROP TABLE IF EXISTS email_templates CASCADE")
     # ### end Alembic commands ###
 
 
