@@ -351,7 +351,7 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 							<FormControl fullWidth size="small">
 								<Select
 									id="screening-status"
-									value={formData.status || ''}
+									value={formData.status || 'In Progress'}
 									onChange={(e) => onUpdateStatus(e.target.value)}
 									sx={{
 										borderRadius: 0,

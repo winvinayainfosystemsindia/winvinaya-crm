@@ -229,17 +229,8 @@ class CandidateRepository(BaseRepository[Candidate]):
         counseling_status: Optional[str] = None
     ):
         """Get candidates without screening records or with non-completed screening, with optional search filtering, category filters, and sorting"""
-        # A candidate is "unscreened" if:
-        # 1. They have no screening record
-        # 2. Status is NULL or empty
-        # 3. Status is not one of the final/in-progress ones
-        MAIN_STATUSES = ['Completed', 'In Progress', 'Rejected', 'Pending']
-        unscreened_filter = or_(
-            CandidateScreening.id.is_(None),
-            CandidateScreening.status.is_(None),
-            CandidateScreening.status == '',
-            CandidateScreening.status.notin_(MAIN_STATUSES)
-        )
+        # A candidate is "unscreened" ONLY if they have no screening record at all
+        unscreened_filter = CandidateScreening.id.is_(None)
 
         stmt = (
             select(Candidate)
@@ -408,6 +399,15 @@ class CandidateRepository(BaseRepository[Candidate]):
                         CandidateScreening.status.is_(None)
                     )
                 )
+            elif screening_status == 'In Progress':
+                # Treat empty/null status as 'In Progress' for filtering
+                in_progress_filter = or_(
+                    CandidateScreening.status == 'In Progress',
+                    CandidateScreening.status.is_(None),
+                    CandidateScreening.status == ''
+                )
+                stmt = stmt.where(in_progress_filter)
+                count_stmt = count_stmt.where(in_progress_filter)
             else:
                 stmt = stmt.where(CandidateScreening.status == screening_status)
                 count_stmt = count_stmt.where(CandidateScreening.status == screening_status)
@@ -590,11 +590,9 @@ class CandidateRepository(BaseRepository[Candidate]):
             today_start = datetime.combine(datetime.now().date(), time.min)
             today_count = await get_count(Candidate.created_at >= today_start)
             
-            # Screening stats - count all candidates with a VALID screening status
-            MAIN_STATUSES = ['Completed', 'In Progress', 'Rejected', 'Pending']
+            # Screening stats - count all candidates with ANY screening record
             stmt_screened = select(func.count(CandidateScreening.id)).join(Candidate).where(
-                Candidate.is_deleted == False,
-                CandidateScreening.status.in_(MAIN_STATUSES)
+                Candidate.is_deleted == False
             )
             result_screened = await self.db.execute(stmt_screened)
             screened = result_screened.scalar() or 0
@@ -603,7 +601,16 @@ class CandidateRepository(BaseRepository[Candidate]):
             # Screening distribution
             stmt_dist = select(CandidateScreening.status, func.count(CandidateScreening.id)).join(Candidate).where(Candidate.is_deleted == False).group_by(CandidateScreening.status)
             res_dist = await self.db.execute(stmt_dist)
-            screening_distribution = dict(res_dist.all())
+            raw_dist = dict(res_dist.all())
+            
+            # Merge None and empty string into 'In Progress'
+            screening_distribution = {}
+            for status_key, count in raw_dist.items():
+                target_key = status_key
+                if status_key is None or status_key == '':
+                    target_key = 'In Progress'
+                
+                screening_distribution[target_key] = screening_distribution.get(target_key, 0) + count
             
             not_screened = total - screened
 
