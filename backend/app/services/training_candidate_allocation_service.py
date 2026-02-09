@@ -127,17 +127,29 @@ class TrainingCandidateAllocationService:
             is_women_batch = "women" in batch_types_lower
             is_female = candidate.gender.lower() == "female" if candidate.gender else False
             
+            # Extract candidate disability from JSON - handle multiple possible keys
+            details = candidate.disability_details or {}
+            cand_dis_val = details.get('disability_type') or details.get('type')
+            
+            # Normalize strings for comparison (lowercase, remove spaces and hyphens)
+            def normalize(s):
+                if not s: return ""
+                return str(s).lower().replace(" ", "").replace("-", "")
+
+            cand_dis_norm = normalize(cand_dis_val)
+            batch_types_norm = [normalize(dt) for dt in batch.disability_types]
+            
             # Match if candidate has a matching disability OR if it's a Women's batch and candidate is female
             match_found = False
             if is_women_batch and is_female:
                 match_found = True
-            elif candidate_disability and candidate_disability.lower() in batch_types_lower:
+            elif cand_dis_norm and cand_dis_norm in batch_types_norm:
                 match_found = True
                 
             if not match_found:
                 raise HTTPException(
                     status_code=400, 
-                    detail=f"Candidate does not match batch categories. Batch allows: {batch.disability_types}, Candidate: {candidate_disability or 'No Disability'} ({candidate.gender})"
+                    detail=f"Candidate does not match batch categories. Batch allows: {batch.disability_types}, Candidate: {cand_dis_val or 'No Disability'} ({candidate.gender})"
                 )
         
         # 2. Business Logic: Must be selected in counseling
@@ -220,10 +232,21 @@ class TrainingCandidateAllocationService:
                 matching_conditions.append(func.lower(Candidate.gender) == "female")
             
             # Condition 2: Match candidates with specific disabilities
+            # Robust JSON matching: check both common keys and use partial match to bypass quoting issues
+            # Using fuzzy matching by replacing spaces with % to catch variations like "Low Vision" vs "Low-vision"
             if other_disabilities:
-                matching_conditions.append(
-                    or_(*[Candidate.disability_details['disability_type'].as_string().ilike(dt) for dt in other_disabilities])
-                )
+                for dt in other_disabilities:
+                    # Fuzzy variation: "Low Vision" -> "%Low%Vision%"
+                    fuzzy_dt = f"%{dt.replace(' ', '%').replace('-', '%')}%"
+                    
+                    # Check 'disability_type' key
+                    matching_conditions.append(
+                        Candidate.disability_details['disability_type'].as_string().ilike(fuzzy_dt)
+                    )
+                    # Also check 'type' key just in case
+                    matching_conditions.append(
+                        Candidate.disability_details['type'].as_string().ilike(fuzzy_dt)
+                    )
             
             if matching_conditions:
                 query = query.where(or_(*matching_conditions))
