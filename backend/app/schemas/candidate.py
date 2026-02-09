@@ -227,7 +227,7 @@ class CandidateListResponse(BaseModel):
         
         if screening:
             status_val = get_val(screening, 'status')
-            screening_status = status_val if status_val else "Pending"
+            screening_status = status_val if status_val else "In Progress"
             family_details = get_val(screening, 'family_details')
             screening_date = get_val(screening, 'created_at')
             screening_updated_at = get_val(screening, 'updated_at')

@@ -13,6 +13,9 @@ from app.models.candidate_counseling import CandidateCounseling
 from app.repositories.base import BaseRepository
 
 
+MAIN_STATUSES = ['Completed', 'In Progress', 'Rejected', 'Pending']
+
+
 class CandidateRepository(BaseRepository[Candidate]):
     """Repository for Candidate model"""
     
@@ -174,6 +177,18 @@ class CandidateRepository(BaseRepository[Candidate]):
             if screening_status == 'Pending':
                 stmt = stmt.where(CandidateScreening.id.is_(None))
                 count_stmt = count_stmt.where(CandidateScreening.id.is_(None))
+            elif screening_status == 'In Progress':
+                # Treat empty/null as In Progress
+                stmt = stmt.where(or_(
+                    CandidateScreening.status == 'In Progress',
+                    CandidateScreening.status.is_(None),
+                    CandidateScreening.status == ''
+                ), CandidateScreening.id.isnot(None))
+                count_stmt = count_stmt.where(or_(
+                    CandidateScreening.status == 'In Progress',
+                    CandidateScreening.status.is_(None),
+                    CandidateScreening.status == ''
+                ), CandidateScreening.id.isnot(None))
             else:
                 stmt = stmt.where(CandidateScreening.status == screening_status)
                 count_stmt = count_stmt.where(CandidateScreening.status == screening_status)
@@ -384,7 +399,7 @@ class CandidateRepository(BaseRepository[Candidate]):
                 # Exclude standard statuses
                 # Standard ones: 'Completed', 'In Progress', 'Rejected', 'Pending'
                 # We also EXCLUDE Empty and None because they now map to 'In Progress'
-                excluded_statuses = ['Completed', 'In Progress', 'Rejected', 'Pending']
+                excluded_statuses = MAIN_STATUSES
                 
                 stmt = stmt.where(
                     and_(
