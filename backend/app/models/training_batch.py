@@ -29,7 +29,7 @@ class TrainingBatch(BaseModel):
     )
     
     batch_name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
-    disability_type: Mapped[str] = mapped_column(String(255), nullable=True)
+    disability_types: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     start_date: Mapped[date] = mapped_column(Date, nullable=True)
     approx_close_date: Mapped[date] = mapped_column(Date, nullable=True)
     total_extension_days: Mapped[int] = mapped_column(Integer, default=0)

@@ -2,7 +2,7 @@ export interface TrainingBatch {
 	id: number;
 	public_id: string;
 	batch_name: string;
-	disability_type?: string;
+	disability_types: string[];
 	start_date?: string;
 	approx_close_date?: string;
 	total_extension_days?: number;

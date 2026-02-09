@@ -22,9 +22,9 @@ import FilterDrawer from '../../common/FilterDrawer';
 // Specialized Components
 import TrainingTableHeader from './TrainingTableHeader';
 import TrainingTableRow from './TrainingTableRow';
-import TrainingBatchDeleteDialog from '../dialogs/TrainingBatchDeleteDialog';
-import TrainingBatchFormDialog from '../dialogs/TrainingBatchFormDialog';
-import ExtendBatchDialog from '../dialogs/ExtendBatchDialog';
+import TrainingBatchDeleteDialog from './TrainingBatchDeleteDialog';
+import TrainingBatchFormDialog from './TrainingBatchFormDialog';
+import ExtendBatchDialog from './ExtendBatchDialog';
 
 // Hooks
 import { useTrainingTable } from './useTrainingTable';

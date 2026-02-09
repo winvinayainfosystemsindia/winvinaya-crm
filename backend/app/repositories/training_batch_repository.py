@@ -39,10 +39,11 @@ class TrainingBatchRepository(BaseRepository[TrainingBatch]):
         
         if search:
             search_filter = f"%{search}%"
+            # cast disability_types to string for ilike if needed, or just search batch_name
             query = query.where(
                 or_(
                     self.model.batch_name.ilike(search_filter),
-                    self.model.disability_type.ilike(search_filter)
+                    self.model.disability_types.cast(String).ilike(search_filter)
                 )
             )
             
@@ -50,7 +51,16 @@ class TrainingBatchRepository(BaseRepository[TrainingBatch]):
             query = query.where(self.model.status == status)
             
         if disability_types:
-            query = query.where(self.model.disability_type.in_(disability_types))
+            # PostgreSQL JSONB array overlap / containment or simply check if any of the requested types are in the list
+            # For simplicity with SQLAlchemy and JSON column (not JSONB necessarily depending on dialect):
+            # Using cast to String and checking or specific JSON operators if available.
+            # Assuming PostgreSQL-like behavior or standard JSON.
+            from sqlalchemy import func
+            query = query.where(
+                or_(
+                    *[self.model.disability_types.cast(String).ilike(f"%{dt}%") for dt in disability_types]
+                )
+            )
             
         return query
 

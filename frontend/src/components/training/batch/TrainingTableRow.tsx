@@ -38,7 +38,9 @@ const TrainingTableRow: React.FC<TrainingTableRowProps> = memo(({
 				</Typography>
 			</TableCell>
 			<TableCell>
-				{batch.disability_type || '-'}
+				{batch.disability_types?.map((type, idx) => (
+					<Chip key={idx} label={type} size="small" variant="outlined" sx={{ mr: 0.5, mb: 0.5, bgcolor: '#f1f8e9' }} />
+				)) || '-'}
 			</TableCell>
 			<TableCell>
 				{batch.courses?.map((course, idx) => (

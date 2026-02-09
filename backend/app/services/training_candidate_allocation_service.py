@@ -123,11 +123,11 @@ class TrainingCandidateAllocationService:
         # Assuming candidate.disability_details is a dict containing 'type' or similar
         candidate_disability = candidate.disability_details.get('disability_type') if candidate.disability_details else None
         
-        if batch.disability_type and candidate_disability:
-            if batch.disability_type.lower() != candidate_disability.lower():
+        if batch.disability_types and candidate_disability:
+            if candidate_disability.lower() not in [dt.lower() for dt in batch.disability_types]:
                 raise HTTPException(
                     status_code=400, 
-                    detail=f"Disability type mismatch. Batch: {batch.disability_type}, Candidate: {candidate_disability}"
+                    detail=f"Disability type mismatch. Batch allows: {batch.disability_types}, Candidate: {candidate_disability}"
                 )
         
         # 2. Business Logic: Must be selected in counseling
@@ -178,7 +178,7 @@ class TrainingCandidateAllocationService:
         if batch_public_id:
             batch = await self.batch_repo.get_by_public_id(str(batch_public_id))
             if batch:
-                target_disability = batch.disability_type
+                target_disabilities = batch.disability_types
 
         # Subquery for active allocations
         # Only consider allocations in active batches (planned, running, extended) as blocking
@@ -198,10 +198,14 @@ class TrainingCandidateAllocationService:
         )
         
         # Apply disability matching if batch specified
-        if target_disability:
-            # Look into JSON column for disability type
-            # Use ilike for robust case-insensitive matching
-            query = query.where(Candidate.disability_details['disability_type'].as_string().ilike(target_disability))
+        if target_disabilities:
+            # Match any of the batch's disability types
+            # Use ilike for robust case-insensitive matching if needed, or exact match if sanitized
+            query = query.where(
+                or_(
+                    *[Candidate.disability_details['disability_type'].as_string().ilike(dt) for dt in target_disabilities]
+                )
+            )
         
         result = await self.db.execute(query)
         candidates = result.scalars().all()

@@ -52,7 +52,7 @@ const TrainingBatchFormDialog: React.FC<TrainingBatchFormDialogProps> = ({
 	const [formData, setFormData] = useState<Partial<TrainingBatch>>({
 		batch_name: '',
 		courses: [],
-		disability_type: '',
+		disability_types: [],
 		start_date: '',
 		approx_close_date: '',
 		duration: {
@@ -86,7 +86,7 @@ const TrainingBatchFormDialog: React.FC<TrainingBatchFormDialogProps> = ({
 				} else {
 					setFormData({
 						batch_name: '',
-						disability_type: '',
+						disability_types: [],
 						courses: [],
 						start_date: today,
 						approx_close_date: thirtyDaysLater,
@@ -211,17 +211,31 @@ const TrainingBatchFormDialog: React.FC<TrainingBatchFormDialogProps> = ({
 									<InfoIcon sx={{ color: '#879196', fontSize: 14 }} />
 									<Typography variant="caption" color="textSecondary">Target Candidate Disability</Typography>
 								</Stack>
-								<Select
-									value={formData.disability_type || ''}
-									displayEmpty
-									onChange={(e) => handleChange('disability_type', e.target.value)}
-									renderValue={(selected) => selected || <Typography color="text.disabled">Select Disability Type</Typography>}
-									sx={{ borderRadius: '2px' }}
-								>
-									{disabilityTypes.map((type) => (
-										<MenuItem key={type} value={type}>{type}</MenuItem>
-									))}
-								</Select>
+								<Autocomplete
+									multiple
+									options={disabilityTypes}
+									value={formData.disability_types || []}
+									onChange={(_e, val) => handleChange('disability_types', val)}
+									renderInput={(params) => (
+										<TextField
+											{...params}
+											placeholder="Select Disability Types"
+											size="small"
+											variant="outlined"
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										/>
+									)}
+									renderTags={(tagValue, getTagProps) =>
+										tagValue.map((option, index) => (
+											<Chip
+												label={option}
+												{...getTagProps({ index })}
+												size="small"
+												sx={{ borderRadius: '2px', bgcolor: '#e8f5e9' }}
+											/>
+										))
+									}
+								/>
 							</FormControl>
 
 							<Box>

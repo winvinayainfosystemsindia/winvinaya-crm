@@ -7,7 +7,7 @@ import {
 	useMediaQuery
 } from '@mui/material';
 import TrainingStats from '../../components/training/stats/TrainingStats';
-import TrainingTable from '../../components/training/table/TrainingTable';
+import TrainingTable from '../../components/training/batch/TrainingTable';
 
 const TrainingBatchList: React.FC = () => {
 	const theme = useTheme();

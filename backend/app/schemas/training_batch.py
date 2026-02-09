@@ -9,7 +9,7 @@ from app.schemas.training_batch_extension import TrainingBatchExtensionResponse
 
 class TrainingBatchBase(BaseModel):
     batch_name: str
-    disability_type: Optional[str] = None
+    disability_types: Optional[List[str]] = []
     start_date: Optional[date] = None
     approx_close_date: Optional[date] = None
     
@@ -27,7 +27,7 @@ class TrainingBatchCreate(TrainingBatchBase):
 class TrainingBatchUpdate(BaseModel):
     """Schema for updating a training batch"""
     batch_name: Optional[str] = None
-    disability_type: Optional[str] = None
+    disability_types: Optional[List[str]] = []
     start_date: Optional[date] = None
     approx_close_date: Optional[date] = None
     
