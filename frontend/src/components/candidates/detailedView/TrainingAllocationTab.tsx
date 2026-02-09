@@ -113,7 +113,7 @@ const TrainingAllocationTab: React.FC<TrainingAllocationTabProps> = ({ candidate
 							<TableHead sx={{ bgcolor: '#f8f9fa' }}>
 								<TableRow>
 									<TableCell sx={{ fontWeight: 700, color: '#545b64', py: 1.5 }}>BATCH NAME</TableCell>
-									<TableCell sx={{ fontWeight: 700, color: '#545b64', py: 1.5 }}>DISABILITY TYPE</TableCell>
+									<TableCell sx={{ fontWeight: 700, color: '#545b64', py: 1.5 }}>CATEGORY</TableCell>
 									<TableCell sx={{ fontWeight: 700, color: '#545b64', py: 1.5 }}>DURATION</TableCell>
 									<TableCell sx={{ fontWeight: 700, color: '#545b64', py: 1.5 }}>STATUS</TableCell>
 									<TableCell sx={{ fontWeight: 700, color: '#545b64', py: 1.5 }}>REMARK</TableCell>
@@ -139,7 +139,7 @@ const TrainingAllocationTab: React.FC<TrainingAllocationTabProps> = ({ candidate
 											</Button>
 										</TableCell>
 										<TableCell sx={{ color: '#545b64' }}>
-											{allocation.batch?.disability_type || 'N/A'}
+											{allocation.batch?.disability_types?.join(', ') || 'N/A'}
 										</TableCell>
 										<TableCell sx={{ color: '#545b64', fontSize: '0.875rem' }}>
 											{allocation.batch?.start_date && (

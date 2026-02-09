@@ -119,15 +119,25 @@ class TrainingCandidateAllocationService:
         if not candidate:
             raise HTTPException(status_code=404, detail="Candidate not found")
             
-        # 1. Business Logic: Disability Type Match
-        # Assuming candidate.disability_details is a dict containing 'type' or similar
+        # 1. Business Logic: Category/Disability Type Match
         candidate_disability = candidate.disability_details.get('disability_type') if candidate.disability_details else None
         
-        if batch.disability_types and candidate_disability:
-            if candidate_disability.lower() not in [dt.lower() for dt in batch.disability_types]:
+        if batch.disability_types:
+            batch_types_lower = [dt.lower() for dt in batch.disability_types]
+            is_women_batch = "women" in batch_types_lower
+            is_female = candidate.gender.lower() == "female" if candidate.gender else False
+            
+            # Match if candidate has a matching disability OR if it's a Women's batch and candidate is female
+            match_found = False
+            if is_women_batch and is_female:
+                match_found = True
+            elif candidate_disability and candidate_disability.lower() in batch_types_lower:
+                match_found = True
+                
+            if not match_found:
                 raise HTTPException(
                     status_code=400, 
-                    detail=f"Disability type mismatch. Batch allows: {batch.disability_types}, Candidate: {candidate_disability}"
+                    detail=f"Candidate does not match batch categories. Batch allows: {batch.disability_types}, Candidate: {candidate_disability or 'No Disability'} ({candidate.gender})"
                 )
         
         # 2. Business Logic: Must be selected in counseling
@@ -197,15 +207,26 @@ class TrainingCandidateAllocationService:
             ~active_allocation_exists
         )
         
-        # Apply disability matching if batch specified
+        # Apply matching logic if batch specified
         if target_disabilities:
-            # Match any of the batch's disability types
-            # Use ilike for robust case-insensitive matching if needed, or exact match if sanitized
-            query = query.where(
-                or_(
-                    *[Candidate.disability_details['disability_type'].as_string().ilike(dt) for dt in target_disabilities]
+            batch_types_lower = [dt.lower() for dt in target_disabilities]
+            is_women_batch = "women" in batch_types_lower
+            other_disabilities = [dt for dt in target_disabilities if dt.lower() != "women"]
+            
+            matching_conditions = []
+            
+            # Condition 1: Match female candidates if it's a Women batch
+            if is_women_batch:
+                matching_conditions.append(func.lower(Candidate.gender) == "female")
+            
+            # Condition 2: Match candidates with specific disabilities
+            if other_disabilities:
+                matching_conditions.append(
+                    or_(*[Candidate.disability_details['disability_type'].as_string().ilike(dt) for dt in other_disabilities])
                 )
-            )
+            
+            if matching_conditions:
+                query = query.where(or_(*matching_conditions))
         
         result = await self.db.execute(query)
         candidates = result.scalars().all()
