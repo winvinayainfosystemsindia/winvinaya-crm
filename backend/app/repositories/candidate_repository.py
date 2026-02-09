@@ -383,20 +383,21 @@ class CandidateRepository(BaseRepository[Candidate]):
             if screening_status == 'Other':
                 # Exclude standard statuses
                 # Standard ones: 'Completed', 'In Progress', 'Rejected', 'Pending'
-                # We WANT Empty and None to be INCLUDED in Other, so do NOT exclude ''
+                # We also EXCLUDE Empty and None because they now map to 'In Progress'
                 excluded_statuses = ['Completed', 'In Progress', 'Rejected', 'Pending']
                 
-                # Include NULLs explicitly using or_
                 stmt = stmt.where(
-                    or_(
+                    and_(
                         CandidateScreening.status.notin_(excluded_statuses),
-                        CandidateScreening.status.is_(None)
+                        CandidateScreening.status.isnot(None),
+                        CandidateScreening.status != ''
                     )
                 )
                 count_stmt = count_stmt.where(
-                    or_(
+                    and_(
                         CandidateScreening.status.notin_(excluded_statuses),
-                        CandidateScreening.status.is_(None)
+                        CandidateScreening.status.isnot(None),
+                        CandidateScreening.status != ''
                     )
                 )
             elif screening_status == 'In Progress':
