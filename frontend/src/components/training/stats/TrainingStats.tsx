@@ -17,7 +17,7 @@ const TrainingStats: React.FC = memo(() => {
 
 	return (
 		<Box sx={{ display: 'flex', gap: 3, mb: 3, flexWrap: 'wrap' }}>
-			<Box sx={{ flex: '1 1 250px' }}>
+			<Box sx={{ flex: '1 1 200px' }}>
 				<StatCard
 					title="Total Batches"
 					count={stats.total?.toString() ?? '0'}
@@ -25,7 +25,7 @@ const TrainingStats: React.FC = memo(() => {
 					color="#1976d2"
 				/>
 			</Box>
-			<Box sx={{ flex: '1 1 250px' }}>
+			<Box sx={{ flex: '1 1 200px' }}>
 				<StatCard
 					title="Planned"
 					count={stats.planned?.toString() ?? '0'}
@@ -33,7 +33,7 @@ const TrainingStats: React.FC = memo(() => {
 					color="#ed6c02"
 				/>
 			</Box>
-			<Box sx={{ flex: '1 1 250px' }}>
+			<Box sx={{ flex: '1 1 200px' }}>
 				<StatCard
 					title="Running"
 					count={stats.running?.toString() ?? '0'}
@@ -41,12 +41,20 @@ const TrainingStats: React.FC = memo(() => {
 					color="#2e7d32"
 				/>
 			</Box>
-			<Box sx={{ flex: '1 1 250px' }}>
+			<Box sx={{ flex: '1 1 200px' }}>
 				<StatCard
 					title="Closed"
 					count={stats.closed?.toString() ?? '0'}
 					icon={<DoneAll fontSize="large" />}
 					color="#d32f2f"
+				/>
+			</Box>
+			<Box sx={{ flex: '1 1 200px' }}>
+				<StatCard
+					title="Women"
+					count={stats.women?.toString() ?? '0'}
+					icon={<DoneAll fontSize="large" />}
+					color="#9c27b0"
 				/>
 			</Box>
 		</Box>

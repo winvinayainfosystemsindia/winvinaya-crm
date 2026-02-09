@@ -177,11 +177,21 @@ class TrainingBatchService:
         return await self.repository.update(batch.id, update_data)
 
     async def get_stats(self) -> dict:
-        """Get training batch statistics"""
-        batches = await self.repository.get_multi(limit=1000)
-        return {
+        """Get training batch statistics with accurate counts"""
+        from sqlalchemy import func, select, or_, String
+        
+        # Base query for all non-deleted batches
+        base_query = select(self.repository.model).where(self.repository.model.is_deleted == False)
+        result = await self.db.execute(base_query)
+        batches = result.scalars().all()
+        
+        # Calculate status counts
+        stats = {
             "total": len(batches),
-            "planned": len([b for b in batches if b.status == "planned"]),
-            "running": len([b for b in batches if b.status == "running"]),
-            "closed": len([b for b in batches if b.status == "closed"])
+            "planned": sum(1 for b in batches if b.status == "planned"),
+            "running": sum(1 for b in batches if b.status == "running"),
+            "closed": sum(1 for b in batches if b.status == "closed"),
+            "women": sum(1 for b in batches if b.disability_types and "Women" in b.disability_types)
         }
+        
+        return stats

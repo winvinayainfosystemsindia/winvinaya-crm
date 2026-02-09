@@ -55,6 +55,7 @@ export interface TrainingStats {
 	running: number;
 	closed: number;
 	planned: number;
+	women: number;
 }
 
 export interface TrainingAttendance {
