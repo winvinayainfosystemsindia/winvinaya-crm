@@ -20,5 +20,6 @@ export const disabilityTypes = [
 	"Multiple Disabilities (including deaf-blindness)",
 	"Acid Attack Survivor",
 	"Parkinson's Disease",
+	"Women",
 	"Other"
 ];

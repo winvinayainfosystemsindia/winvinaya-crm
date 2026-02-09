@@ -209,13 +209,14 @@ const TrainingBatchFormDialog: React.FC<TrainingBatchFormDialogProps> = ({
 							<FormControl fullWidth size="small">
 								<Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 1 }}>
 									<InfoIcon sx={{ color: '#879196', fontSize: 14 }} />
-									<Typography variant="caption" color="textSecondary">Target Candidate Disability</Typography>
+									<Typography variant="caption" color="textSecondary">Target Candidate Category</Typography>
 								</Stack>
 								<Autocomplete
 									multiple
 									options={disabilityTypes}
-									value={formData.disability_types || []}
+									value={Array.isArray(formData.disability_types) ? formData.disability_types : []}
 									onChange={(_e, val) => handleChange('disability_types', val)}
+									isOptionEqualToValue={(option, value) => option === value}
 									renderInput={(params) => (
 										<TextField
 											{...params}
@@ -226,14 +227,18 @@ const TrainingBatchFormDialog: React.FC<TrainingBatchFormDialogProps> = ({
 										/>
 									)}
 									renderTags={(tagValue, getTagProps) =>
-										tagValue.map((option, index) => (
-											<Chip
-												label={option}
-												{...getTagProps({ index })}
-												size="small"
-												sx={{ borderRadius: '2px', bgcolor: '#e8f5e9' }}
-											/>
-										))
+										tagValue.map((option, index) => {
+											const { key, ...tagProps } = getTagProps({ index });
+											return (
+												<Chip
+													key={key}
+													label={option}
+													{...tagProps}
+													size="small"
+													sx={{ borderRadius: '2px', bgcolor: '#e8f5e9', m: 0.5 }}
+												/>
+											);
+										})
 									}
 								/>
 							</FormControl>

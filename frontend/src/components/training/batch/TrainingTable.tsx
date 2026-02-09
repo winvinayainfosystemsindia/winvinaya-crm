@@ -193,7 +193,7 @@ const TrainingTable: React.FC<TrainingTableProps> = ({ refreshKey }) => {
 									Batch Name
 								</TableSortLabel>
 							</TableCell>
-							<TableCell>Disability Type</TableCell>
+							<TableCell>Category</TableCell>
 							<TableCell>Courses</TableCell>
 							<TableCell>Duration</TableCell>
 							<TableCell>Ext. Days</TableCell>
