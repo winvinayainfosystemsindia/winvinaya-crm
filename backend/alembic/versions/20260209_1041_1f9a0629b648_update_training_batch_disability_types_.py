@@ -30,13 +30,13 @@ def upgrade() -> None:
     op.drop_column('training_batches', 'disability_type')
     
     # Drop email templates and triggers if they were removed from models
-    op.drop_index('ix_email_report_triggers_id', table_name='email_report_triggers')
-    op.drop_index('ix_email_report_triggers_is_deleted', table_name='email_report_triggers')
-    op.drop_table('email_report_triggers')
-    op.drop_index('ix_email_templates_id', table_name='email_templates')
-    op.drop_index('ix_email_templates_is_deleted', table_name='email_templates')
-    op.drop_index('ix_email_templates_name', table_name='email_templates')
-    op.drop_table('email_templates')
+    op.drop_index('ix_email_report_triggers_id', table_name='email_report_triggers', if_exists=True)
+    op.drop_index('ix_email_report_triggers_is_deleted', table_name='email_report_triggers', if_exists=True)
+    op.drop_table('email_report_triggers', if_exists=True)
+    op.drop_index('ix_email_templates_id', table_name='email_templates', if_exists=True)
+    op.drop_index('ix_email_templates_is_deleted', table_name='email_templates', if_exists=True)
+    op.drop_index('ix_email_templates_name', table_name='email_templates', if_exists=True)
+    op.drop_table('email_templates', if_exists=True)
     # ### end Alembic commands ###
 
 
