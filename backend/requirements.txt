@@ -27,6 +27,9 @@ slowapi==0.1.9
 # Logging
 loguru==0.7.2
 
+# System Monitoring
+psutil==6.0.0
+
 # CORS
 python-dotenv==1.0.0
 
