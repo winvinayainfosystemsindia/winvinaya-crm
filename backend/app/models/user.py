@@ -24,9 +24,6 @@ class UserRole(str, enum.Enum):
     COUNSELOR = "counselor"
     # CRM Roles
     SALES_MANAGER = "sales_manager"
-    SALES_REP = "sales_rep"
-    SUPPORT = "support"
-    VIEWER = "viewer"
 
 
 class User(BaseModel):

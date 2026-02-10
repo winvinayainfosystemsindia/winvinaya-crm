@@ -31,41 +31,20 @@ class UserRepository(BaseRepository[User]):
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
     
-    async def get_active_users(self, skip: int = 0, limit: int = 100):
-        """Get all active users"""
-        query = select(User).where(
-            User.is_active == True,
-            User.is_deleted == False
-        ).offset(skip).limit(limit)
-        
-        result = await self.db.execute(query)
-        return list(result.scalars().all())
-    
-    async def verify_user(self, user_id: int) -> Optional[User]:
-        """Mark user as verified"""
-        return await self.update(user_id, {"is_verified": True})
-    
-    async def activate_user(self, user_id: int) -> Optional[User]:
-        """Activate user"""
-        return await self.update(user_id, {"is_active": True})
-    
-    async def deactivate_user(self, user_id: int) -> Optional[User]:
-        """Deactivate user"""
-        return await self.update(user_id, {"is_active": False})
-
-    async def search_users(self, query: str = None, role: str = None, limit: int = 10):
-        """Search users by name or role"""
-        from sqlalchemy import or_
+    async def search_users(self, query: str = None, role: str = None, limit: int = 10) -> list[User]:
+        """Search users by name, email or username with optional role filter"""
         stmt = select(User).where(User.is_deleted == False)
-        if query:
-            stmt = stmt.where(or_(
-                User.full_name.ilike(f"%{query}%"),
-                User.username.ilike(f"%{query}%"),
-                User.email.ilike(f"%{query}%")
-            ))
+        
         if role:
             stmt = stmt.where(User.role == role)
-        
-        stmt = stmt.limit(limit)
-        result = await self.db.execute(stmt)
+            
+        if query:
+            search_filter = (
+                User.full_name.ilike(f"%{query}%") |
+                User.email.ilike(f"%{query}%") |
+                User.username.ilike(f"%{query}%")
+            )
+            stmt = stmt.where(search_filter)
+            
+        result = await self.db.execute(stmt.limit(limit))
         return list(result.scalars().all())

@@ -4,9 +4,8 @@ from __future__ import annotations
 import uuid
 from datetime import date
 from typing import TYPE_CHECKING
-from sqlalchemy import String, Boolean, JSON, Date
+from sqlalchemy import String, Boolean, JSON, Date, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
 from app.models.base import BaseModel
 
 if TYPE_CHECKING:
@@ -22,7 +21,7 @@ class Candidate(BaseModel):
     
     # Public UUID for external API (security)
     public_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid,
         unique=True,
         index=True,
         nullable=False,

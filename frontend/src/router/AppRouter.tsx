@@ -21,7 +21,6 @@ import CandidateDetail from '../pages/Candidates/CandidateDetail';
 import Reports from '../pages/reports/Reports';
 import Settings from '../pages/settings/Settings';
 import Support from '../pages/support/Support';
-import MigrationPanel from '../pages/admin/MigrationPanel';
 import CompanyManagement from '../pages/crm/CompanyManagement';
 import CompanyDetail from '../pages/crm/CompanyDetail';
 import ContactManagement from '../pages/crm/ContactManagement';
@@ -79,7 +78,6 @@ const AppRouter: React.FC = () => {
 						<Route path="tasks" element={<TaskManagement />} />
 					</Route>
 
-					<Route path="admin/migration" element={<MigrationPanel />} />
 
 					{/* Add more protected routes here */}
 				</Route>

@@ -109,7 +109,7 @@ class AIService:
         """Fetch details about a company and its current status."""
         from app.repositories.company_repository import CompanyRepository
         repo = CompanyRepository(self.db)
-        companies, _ = await repo.get_all(search=name, limit=1)
+        companies, _ = await repo.get_multi(search=name, limit=1)
         if companies:
             c = companies[0]
             return {"name": c.name, "industry": c.industry, "status": c.status, "website": c.website}
@@ -119,21 +119,21 @@ class AIService:
         """Get high-level CRM deal statistics (total deals, amount by stage, etc.)"""
         from app.repositories.deal_repository import DealRepository
         repo = DealRepository(self.db)
-        deals, _ = await repo.get_all(limit=100)
+        deals, _ = await repo.get_multi(limit=100)
         
         stats = {
             "total_deals": len(deals),
             "by_stage": {}
         }
         for d in deals:
-            stats["by_stage"][d.stage] = stats["by_stage"].get(d.stage, 0) + 1
+            stats["by_stage"][d.deal_stage] = stats["by_stage"].get(d.deal_stage, 0) + 1
         return stats
 
     async def search_leads(self, query: str) -> List[Dict[str, Any]]:
         """Search for potential CRM leads. Returns a list of leads with their source and status."""
         from app.repositories.lead_repository import LeadRepository
         repo = LeadRepository(self.db)
-        leads, _ = await repo.get_all(search=query, limit=5)
+        leads, _ = await repo.get_multi(search=query, limit=5)
         return [{"name": f"{l.first_name} {l.last_name}", "source": l.source, "status": l.status} for l in leads]
 
     async def search_users(self, query: str = None, role: str = None) -> List[Dict[str, Any]]:

@@ -137,7 +137,7 @@ class UserService:
             )
         
         return user
-    
-    async def verify_user(self, user_id: int) -> User:
-        """Verify user account"""
-        return await self.repository.verify_user(user_id)
+
+    async def search_users(self, query: str = None, role: str = None, limit: int = 10) -> List[User]:
+        """Search users by name, email or username"""
+        return await self.repository.search_users(query=query, role=role, limit=limit)

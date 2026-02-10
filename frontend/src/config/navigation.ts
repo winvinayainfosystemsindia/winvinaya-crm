@@ -11,7 +11,6 @@ import {
 	School as SchoolIcon,
 	Assessment as AssessmentIcon,
 	Settings as SettingsIcon,
-	Storage as StorageIcon,
 	HelpOutline as HelpIcon,
 } from '@mui/icons-material';
 import type { SvgIconComponent } from '@mui/icons-material';
@@ -94,12 +93,6 @@ export const bottomNavigation: NavigationItem[] = [
 		label: 'Settings',
 		path: '/settings',
 		icon: SettingsIcon,
-		roles: ['admin'],
-	},
-	{
-		label: 'Data Migration',
-		path: '/admin/migration',
-		icon: StorageIcon,
 		roles: ['admin'],
 	},
 	{

@@ -34,7 +34,7 @@ async def test_email_templates_content():
     assert "John Doe" in team_html
     assert "john@example.com" in team_html
     assert "Visual Impairment" in team_html
-    assert "New Candidate Registration" in team_html
+    assert "NEW CANDIDATE ALERT" in team_html
 
 
 @pytest.mark.anyio

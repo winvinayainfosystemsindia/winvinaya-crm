@@ -165,64 +165,6 @@ const activityLogService = {
     const res = await api.get("/activity-logs/me", { params });
     return mapPaginatedResponse(res.data ?? res);
   },
-
-  /**
-   * Fetches activity logs for a specific user (Admin/Manager only).
-   * 
-   * @param userId - ID of the user whose logs to fetch
-   * @param page - Page number (1-based, default: 1)
-   * @param pageSize - Items per page (default: 20)
-   * @returns Promise resolving to paginated activity logs for the specified user
-   * @throws {Error} If the API request fails
-   * 
-   * @example
-   * ```ts
-   * const userLogs = await activityLogService.getUserActivityLogs(123, 1, 20);
-   * ```
-   */
-  getUserActivityLogs: async (
-    userId: number,
-    page = 1,
-    pageSize = 20
-  ): Promise<PaginatedActivityLogsResponse> => {
-    const params = { page, page_size: pageSize };
-    const res = await api.get(`/activity-logs/user/${userId}`, { params });
-    return mapPaginatedResponse(res.data ?? res);
-  },
-
-  /**
-   * Fetches activity logs for a specific resource (Admin/Manager only).
-   * 
-   * @param resourceType - Type of the resource (e.g., 'candidate', 'job', 'company')
-   * @param resourceId - ID of the resource
-   * @param page - Page number (1-based, default: 1)
-   * @param pageSize - Items per page (default: 20)
-   * @returns Promise resolving to paginated activity logs for the specified resource
-   * @throws {Error} If the API request fails
-   * 
-   * @example
-   * ```ts
-   * const candidateLogs = await activityLogService.getResourceActivityLogs(
-   *   'candidate',
-   *   456,
-   *   1,
-   *   20
-   * );
-   * ```
-   */
-  getResourceActivityLogs: async (
-    resourceType: string,
-    resourceId: number,
-    page = 1,
-    pageSize = 20
-  ): Promise<PaginatedActivityLogsResponse> => {
-    const params = { page, page_size: pageSize };
-    const res = await api.get(
-      `/activity-logs/resource/${encodeURIComponent(resourceType)}/${resourceId}`,
-      { params }
-    );
-    return mapPaginatedResponse(res.data ?? res);
-  },
 };
 
 export default activityLogService;

@@ -169,15 +169,3 @@ async def refresh_token(
         "token_type": "bearer"
     }
 
-
-@router.get("/me", response_model=UserResponse)
-@rate_limit_high()
-async def read_users_me(
-    request: Request,
-    current_user: User = Depends(get_current_user)
-):
-    """
-    Get current user
-    """
-    return current_user
-

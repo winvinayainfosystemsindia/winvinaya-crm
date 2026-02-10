@@ -6,9 +6,8 @@ import enum
 from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
-from sqlalchemy import String, Text, JSON, Integer, Numeric, Date, DateTime, ForeignKey, Enum
+from sqlalchemy import String, Text, JSON, Integer, Numeric, Date, DateTime, ForeignKey, Enum, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
 from app.models.base import BaseModel
 
 if TYPE_CHECKING:
@@ -47,7 +46,7 @@ class Lead(BaseModel):
     
     # Public UUID for external API (security)
     public_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid,
         unique=True,
         index=True,
         nullable=False,

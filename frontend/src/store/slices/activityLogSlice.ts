@@ -93,63 +93,6 @@ export const fetchMyActivityLogs = createAsyncThunk(
     }
 );
 
-/**
- * Fetch activity logs for a specific user (Admin/Manager only)
- * 
- * @param params - Object containing userId, page, and pageSize
- */
-export const fetchUserActivityLogs = createAsyncThunk(
-    'activityLogs/fetchUser',
-    async (
-        params: { userId: number; page?: number; pageSize?: number },
-        { rejectWithValue }
-    ) => {
-        try {
-            const { userId, page = 1, pageSize = 20 } = params;
-            const response = await activityLogService.getUserActivityLogs(userId, page, pageSize);
-            return response;
-        } catch (error: any) {
-            return rejectWithValue(
-                error.response?.data?.message || error.message || 'Failed to fetch user activity logs'
-            );
-        }
-    }
-);
-
-/**
- * Fetch activity logs for a specific resource (Admin/Manager only)
- * 
- * @param params - Object containing resourceType, resourceId, page, and pageSize
- */
-export const fetchResourceActivityLogs = createAsyncThunk(
-    'activityLogs/fetchResource',
-    async (
-        params: {
-            resourceType: string;
-            resourceId: number;
-            page?: number;
-            pageSize?: number;
-        },
-        { rejectWithValue }
-    ) => {
-        try {
-            const { resourceType, resourceId, page = 1, pageSize = 20 } = params;
-            const response = await activityLogService.getResourceActivityLogs(
-                resourceType,
-                resourceId,
-                page,
-                pageSize
-            );
-            return response;
-        } catch (error: any) {
-            return rejectWithValue(
-                error.response?.data?.message ||
-                error.message ||
-                'Failed to fetch resource activity logs'
-            );
-        }
-    }
-);
 
 // =============================================================================
 // Slice
@@ -246,50 +189,6 @@ const activityLogSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
-            // Fetch User Activity Logs
-            .addCase(fetchUserActivityLogs.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(
-                fetchUserActivityLogs.fulfilled,
-                (state, action: PayloadAction<PaginatedActivityLogsResponse>) => {
-                    state.loading = false;
-                    state.logs = action.payload.items;
-                    state.pagination = {
-                        page: action.payload.page,
-                        pageSize: action.payload.pageSize,
-                        total: action.payload.total,
-                        totalPages: action.payload.totalPages,
-                    };
-                }
-            )
-            .addCase(fetchUserActivityLogs.rejected, (state, action: PayloadAction<any>) => {
-                state.loading = false;
-                state.error = action.payload;
-            })
-            // Fetch Resource Activity Logs
-            .addCase(fetchResourceActivityLogs.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(
-                fetchResourceActivityLogs.fulfilled,
-                (state, action: PayloadAction<PaginatedActivityLogsResponse>) => {
-                    state.loading = false;
-                    state.logs = action.payload.items;
-                    state.pagination = {
-                        page: action.payload.page,
-                        pageSize: action.payload.pageSize,
-                        total: action.payload.total,
-                        totalPages: action.payload.totalPages,
-                    };
-                }
-            )
-            .addCase(fetchResourceActivityLogs.rejected, (state, action: PayloadAction<any>) => {
-                state.loading = false;
-                state.error = action.payload;
-            });
     },
 });
 
