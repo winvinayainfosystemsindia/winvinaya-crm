@@ -10,6 +10,7 @@ import AppRouter from './router/AppRouter';
 import SmoothScroll from "./components/layout/SmoothScroll";
 import AuthInitializer from './components/auth/AuthInitializer';
 import ChatWidget from './components/chat/ChatWidget';
+import UpdateDetector from './components/common/UpdateDetector';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <SnackbarProvider maxSnack={3}>
+          <UpdateDetector />
           <Router>
             <SmoothScroll>
               <AuthProvider>
