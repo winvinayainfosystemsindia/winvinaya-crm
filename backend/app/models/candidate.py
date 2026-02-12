@@ -12,6 +12,10 @@ if TYPE_CHECKING:
     from app.models.candidate_screening import CandidateScreening
     from app.models.candidate_document import CandidateDocument
     from app.models.candidate_counseling import CandidateCounseling
+    from app.models.training_attendance import TrainingAttendance
+    from app.models.training_assessment import TrainingAssessment
+    from app.models.training_candidate_allocation import TrainingCandidateAllocation
+    from app.models.training_mock_interview import TrainingMockInterview
 
 
 class Candidate(BaseModel):
@@ -66,6 +70,31 @@ class Candidate(BaseModel):
         "CandidateCounseling",
         back_populates="candidate",
         uselist=False,
+        cascade="all, delete-orphan"
+    )
+    
+    # Training Relationships
+    attendance: Mapped[list[TrainingAttendance]] = relationship(
+        "TrainingAttendance",
+        back_populates="candidate",
+        cascade="all, delete-orphan"
+    )
+    
+    assessments: Mapped[list[TrainingAssessment]] = relationship(
+        "TrainingAssessment",
+        back_populates="candidate",
+        cascade="all, delete-orphan"
+    )
+    
+    allocations: Mapped[list[TrainingCandidateAllocation]] = relationship(
+        "TrainingCandidateAllocation",
+        back_populates="candidate",
+        cascade="all, delete-orphan"
+    )
+    
+    mock_interviews: Mapped[list[TrainingMockInterview]] = relationship(
+        "TrainingMockInterview",
+        back_populates="candidate",
         cascade="all, delete-orphan"
     )
     
