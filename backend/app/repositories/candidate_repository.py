@@ -752,7 +752,10 @@ class CandidateRepository(BaseRepository[Candidate]):
         """Get all unique values for filterable fields across all candidates"""
         try:
             # Get unique disability types
-            stmt_disability = select(Candidate.disability_details).where(Candidate.disability_details.isnot(None))
+            stmt_disability = select(Candidate.disability_details).where(
+                Candidate.disability_details.isnot(None),
+                Candidate.is_deleted == False
+            )
             result_disability = await self.db.execute(stmt_disability)
             disability_types = set()
             for row in result_disability.scalars().all():
@@ -762,7 +765,10 @@ class CandidateRepository(BaseRepository[Candidate]):
                         disability_types.add(disability_type)
             
             # Get unique education levels (from degree names)
-            stmt_education = select(Candidate.education_details).where(Candidate.education_details.isnot(None))
+            stmt_education = select(Candidate.education_details).where(
+                Candidate.education_details.isnot(None),
+                Candidate.is_deleted == False
+            )
             result_education = await self.db.execute(stmt_education)
             education_levels = set()
             for row in result_education.scalars().all():
@@ -777,7 +783,8 @@ class CandidateRepository(BaseRepository[Candidate]):
             # Get unique cities
             stmt_cities = select(func.distinct(Candidate.city)).where(
                 Candidate.city.isnot(None),
-                Candidate.city != ''
+                Candidate.city != '',
+                Candidate.is_deleted == False
             )
             result_cities = await self.db.execute(stmt_cities)
             cities = sorted([city for city in result_cities.scalars().all() if city])
