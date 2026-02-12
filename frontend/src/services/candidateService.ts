@@ -33,7 +33,8 @@ export const candidateService = {
 		screeningStatus?: string,
 		isExperienced?: boolean,
 		disabilityPercentages?: string,
-		screeningReasons?: string
+		screeningReasons?: string,
+		gender?: string
 	): Promise<CandidatePaginatedResponse> => {
 		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
 		const sortParam = sortBy ? `&sort_by=${sortBy}&sort_order=${sortOrder}` : '';
@@ -45,7 +46,8 @@ export const candidateService = {
 			screeningStatus ? `&screening_status=${encodeURIComponent(screeningStatus)}` : '',
 			isExperienced !== undefined ? `&is_experienced=${isExperienced}` : '',
 			disabilityPercentages ? `&disability_percentages=${encodeURIComponent(disabilityPercentages)}` : '',
-			screeningReasons ? `&screening_reasons=${encodeURIComponent(screeningReasons)}` : ''
+			screeningReasons ? `&screening_reasons=${encodeURIComponent(screeningReasons)}` : '',
+			gender ? `&gender=${encodeURIComponent(gender)}` : ''
 		].join('');
 
 		const response = await api.get<CandidatePaginatedResponse>(`/candidates/?skip=${skip}&limit=${limit}${searchParam}${sortParam}${filterParams}`);

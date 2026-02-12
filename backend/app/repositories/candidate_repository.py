@@ -67,7 +67,9 @@ class CandidateRepository(BaseRepository[Candidate]):
         is_experienced: Optional[bool] = None,
         screening_status: Optional[str] = None,
         disability_percentages: Optional[list] = None,
-        screening_reasons: Optional[list] = None
+        screening_reasons: Optional[list] = None,
+        gender: Optional[str] = None,
+        extra_filters: Optional[dict] = None
     ):
         """Get multiples candidates with counseling loaded for list view, with optional search filtering, category filters, and sorting"""
         from sqlalchemy import or_, and_
@@ -143,6 +145,25 @@ class CandidateRepository(BaseRepository[Candidate]):
                 # Here we have one range effectively.
                 stmt = stmt.where(and_(*percentage_filters))
                 count_stmt = count_stmt.where(and_(*percentage_filters))
+
+        if gender:
+            stmt = stmt.where(Candidate.gender == gender)
+            count_stmt = count_stmt.where(Candidate.gender == gender)
+
+        if extra_filters:
+            # Handle dynamic JSONB filters for screening/counseling 'others' field
+            for key, value in extra_filters.items():
+                if not value:
+                    continue
+                
+                if key.startswith('screening_others.'):
+                    field_name = key.replace('screening_others.', '')
+                    stmt = stmt.where(CandidateScreening.others[field_name].as_string() == str(value))
+                    count_stmt = count_stmt.where(CandidateScreening.others[field_name].as_string() == str(value))
+                elif key.startswith('counseling_others.'):
+                    field_name = key.replace('counseling_others.', '')
+                    stmt = stmt.where(CandidateCounseling.others[field_name].as_string() == str(value))
+                    count_stmt = count_stmt.where(CandidateCounseling.others[field_name].as_string() == str(value))
 
         
         if education_levels and len(education_levels) > 0:
@@ -241,7 +262,9 @@ class CandidateRepository(BaseRepository[Candidate]):
         cities: Optional[list] = None,
         screening_status: Optional[str] = None,
         is_experienced: Optional[bool] = None,
-        counseling_status: Optional[str] = None
+        counseling_status: Optional[str] = None,
+        gender: Optional[str] = None,
+        extra_filters: Optional[dict] = None
     ):
         """Get candidates without screening records or with non-completed screening, with optional search filtering, category filters, and sorting"""
         # A candidate is "unscreened" ONLY if they have no screening record at all
@@ -373,7 +396,9 @@ class CandidateRepository(BaseRepository[Candidate]):
         education_levels: Optional[list] = None,
         cities: Optional[list] = None,
         screening_status: Optional[str] = None,
-        is_experienced: Optional[bool] = None
+        is_experienced: Optional[bool] = None,
+        gender: Optional[str] = None,
+        extra_filters: Optional[dict] = None
     ):
         """Get candidates with 'Completed' screening records loaded, with optional counseling status filter, document status filter, search filtering, category filters, and sorting"""
 

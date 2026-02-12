@@ -82,6 +82,7 @@ export const fetchCandidates = createAsyncThunk(
 			is_experienced?: boolean;
 			disability_percentages?: string;
 			screening_reasons?: string;
+			gender?: string;
 		} | void = {},
 		{ rejectWithValue }
 	) => {
@@ -99,8 +100,9 @@ export const fetchCandidates = createAsyncThunk(
 				screening_status,
 				is_experienced,
 				disability_percentages,
-				screening_reasons
-			} = params || {};
+				screening_reasons,
+				gender
+			} = (params || {}) as any;
 			const response = await candidateService.getAll(
 				skip,
 				limit,
@@ -114,7 +116,8 @@ export const fetchCandidates = createAsyncThunk(
 				screening_status,
 				is_experienced,
 				disability_percentages,
-				screening_reasons
+				screening_reasons,
+				gender
 			);
 			return response;
 		} catch (error: any) {

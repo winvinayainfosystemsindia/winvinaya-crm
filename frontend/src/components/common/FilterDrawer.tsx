@@ -24,7 +24,7 @@ export interface FilterOption {
 export interface FilterField {
 	key: string;
 	label: string;
-	type: 'multi-select' | 'single-select' | 'boolean' | 'range';
+	type: 'multi-select' | 'single-select' | 'boolean' | 'range' | 'text';
 	options?: FilterOption[];
 }
 
@@ -187,6 +187,14 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
 									sx={{ flex: 1 }}
 								/>
 							</Box>
+						) : field.type === 'text' ? (
+							<TextField
+								fullWidth
+								size="small"
+								placeholder={`Filter by ${field.label}...`}
+								value={activeFilters[field.key] || ''}
+								onChange={(e) => onFilterChange(field.key, e.target.value)}
+							/>
 						) : (
 							<FormControlLabel
 								control={

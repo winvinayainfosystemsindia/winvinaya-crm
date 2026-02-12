@@ -85,6 +85,7 @@ async def get_candidates(
     screening_status: str = None,
     disability_percentages: str = None, # Comma-separated list (or single range string)
     screening_reasons: str = None, # Comma-separated list
+    gender: str = None,
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
     db: AsyncSession = Depends(get_db)
 ):
@@ -100,6 +101,12 @@ async def get_candidates(
     disability_percentages_list = disability_percentages.split(',') if disability_percentages else None
     screening_reasons_list = screening_reasons.split(',') if screening_reasons else None
     
+    # Collect dynamic filters from query params
+    extra_filters = {}
+    for key, value in request.query_params.items():
+        if key.startswith(('screening_others.', 'counseling_others.')):
+            extra_filters[key] = value
+
     service = CandidateService(db)
     return await service.get_candidates(
         skip=skip, 
@@ -114,7 +121,9 @@ async def get_candidates(
         is_experienced=is_experienced,
         screening_status=screening_status,
         disability_percentages=disability_percentages_list,
-        screening_reasons=screening_reasons_list
+        screening_reasons=screening_reasons_list,
+        gender=gender,
+        extra_filters=extra_filters
     )
 
 

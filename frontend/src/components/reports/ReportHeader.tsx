@@ -84,8 +84,6 @@ const ReportHeader: React.FC<ReportHeaderProps> = ({
 						}}
 					>
 						<MenuItem value="candidate" sx={{ fontSize: '0.85rem' }}>Candidate Report</MenuItem>
-						<MenuItem value="screening" disabled sx={{ fontSize: '0.85rem' }}>Screening Report</MenuItem>
-						<MenuItem value="counseling" disabled sx={{ fontSize: '0.85rem' }}>Counseling Report</MenuItem>
 					</Select>
 				</FormControl>
 

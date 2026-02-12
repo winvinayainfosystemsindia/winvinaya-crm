@@ -17,16 +17,16 @@ import FilterDrawer, { type FilterField } from '../../components/common/FilterDr
 const ALL_COLUMNS = [
 	// General Info
 	{ id: 'name', label: 'Candidate Name', default: true, group: 'general' },
-	{ id: 'gender', label: 'Gender', default: false, group: 'general' },
+	{ id: 'gender', label: 'Gender', default: true, group: 'general' },
 	{ id: 'email', label: 'Email', default: true, group: 'general' },
 	{ id: 'phone', label: 'Phone', default: true, group: 'general' },
 	{ id: 'whatsapp_number', label: 'WhatsApp', default: false, group: 'general' },
-	{ id: 'dob', label: 'DOB', default: true, group: 'general' },
+	{ id: 'dob', label: 'DOB', default: false, group: 'general' },
 	{ id: 'city', label: 'City', default: false, group: 'general' },
 	{ id: 'district', label: 'District', default: false, group: 'general' },
 	{ id: 'state', label: 'State', default: false, group: 'general' },
 	{ id: 'pincode', label: 'Pincode', default: false, group: 'general' },
-	{ id: 'education_level', label: 'Education', default: true, group: 'general' },
+	{ id: 'education_level', label: 'Education', default: false, group: 'general' },
 	{ id: 'disability_type', label: 'Disability Type', default: true, group: 'general' },
 	{ id: 'disability_percentage', label: 'Disability Percentage', default: false, group: 'general' },
 	{ id: 'created_at', label: 'Registration Date', default: false, group: 'general' },
@@ -57,6 +57,7 @@ const Reports: React.FC = () => {
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const dispatch = useAppDispatch();
 	const { list: candidates, total, loading, filterOptions } = useAppSelector((state) => state.candidates);
+	const [dynamicFieldDefs, setDynamicFieldDefs] = useState<any[]>([]);
 
 	// Columns State
 	const [columns, setColumns] = useState<any[]>(ALL_COLUMNS);
@@ -108,6 +109,7 @@ const Reports: React.FC = () => {
 					});
 				}
 
+				setDynamicFieldDefs([...(screeningFields || []), ...(counselingFields || [])]);
 				setColumns([...ALL_COLUMNS, ...dynamicCols]);
 			} catch (error) {
 				console.error("Failed to fetch dynamic fields for reports", error);
@@ -119,17 +121,28 @@ const Reports: React.FC = () => {
 
 	// Data Fetching
 	const fetchData = useCallback(() => {
+		const extraFilters: Record<string, string> = {};
+		Object.keys(filters).forEach(key => {
+			if (key.startsWith('screening_others.') || key.startsWith('counseling_others.')) {
+				if (filters[key]) {
+					extraFilters[key] = filters[key];
+				}
+			}
+		});
+
 		dispatch(fetchCandidates({
 			skip: page * rowsPerPage,
 			limit: rowsPerPage,
 			search,
+			gender: filters.gender,
 			disability_types: filters.disability_type?.join(','),
 			education_levels: filters.education_level?.join(','),
 			cities: filters.city?.join(','),
 			counseling_status: filters.counseling_status,
 			screening_status: filters.screening_status,
 			disability_percentages: filters.disability_percentage ? `${filters.disability_percentage.min || 0}-${filters.disability_percentage.max || 100}` : undefined,
-			screening_reasons: filters.screening_reason?.join(',')
+			screening_reasons: filters.screening_reason?.join(','),
+			...extraFilters
 		}));
 	}, [dispatch, page, rowsPerPage, search, filters]);
 
@@ -306,8 +319,40 @@ const Reports: React.FC = () => {
 			label: 'Screening Reason',
 			type: 'multi-select',
 			options: (filterOptions.screening_reasons || []).map(v => ({ value: v, label: v }))
+		},
+		{
+			key: 'gender',
+			label: 'Gender',
+			type: 'single-select',
+			options: [
+				{ value: 'male', label: 'Male' },
+				{ value: 'female', label: 'Female' },
+				{ value: 'other', label: 'Other' }
+			]
 		}
 	];
+
+	// Add dynamic filters
+	columns.forEach(col => {
+		if (col.id.startsWith('screening_others.') || col.id.startsWith('counseling_others.')) {
+			const fieldName = col.id.split('.')[1];
+			const fieldDef = dynamicFieldDefs.find(fd => fd.name === fieldName);
+
+			if (fieldDef) {
+				const isOptionField = fieldDef.type === 'select' || fieldDef.type === 'multi-select' || fieldDef.type === 'radio';
+
+				filterFields.push({
+					key: col.id,
+					label: col.label,
+					type: isOptionField ? 'single-select' : 'text',
+					options: isOptionField ? (fieldDef.options || []).map((o: any) => ({
+						value: typeof o === 'string' ? o : o.value,
+						label: typeof o === 'string' ? o : o.label
+					})) : []
+				});
+			}
+		}
+	});
 
 	return (
 		<Box sx={{
