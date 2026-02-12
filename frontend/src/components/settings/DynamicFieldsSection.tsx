@@ -23,6 +23,7 @@ import {
 import { settingsService, type DynamicField } from '../../services/settingsService';
 import { useSnackbar } from 'notistack';
 import FieldDialog from './FieldDialog';
+import ConfirmDialog from '../common/ConfirmDialog';
 
 interface DynamicFieldsSectionProps {
 	entityType: 'screening' | 'counseling';
@@ -35,6 +36,9 @@ const DynamicFieldsSection: React.FC<DynamicFieldsSectionProps> = ({ entityType 
 	const [loading, setLoading] = useState(false);
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [editingField, setEditingField] = useState<DynamicField | null>(null);
+	const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+	const [fieldToDelete, setFieldToDelete] = useState<number | null>(null);
+	const [deleteLoading, setDeleteLoading] = useState(false);
 
 	const fieldTypeLabels: Record<string, string> = {
 		text: 'Short Text',
@@ -62,14 +66,25 @@ const DynamicFieldsSection: React.FC<DynamicFieldsSectionProps> = ({ entityType 
 		}
 	};
 
-	const handleDelete = async (id: number) => {
-		if (!window.confirm('Are you sure you want to delete this field? This action cannot be undone.')) return;
+	const handleDelete = (id: number) => {
+		setFieldToDelete(id);
+		setConfirmDeleteOpen(true);
+	};
+
+	const handleConfirmDelete = async () => {
+		if (fieldToDelete === null) return;
+
+		setDeleteLoading(true);
 		try {
-			await settingsService.deleteField(id);
+			await settingsService.deleteField(fieldToDelete);
 			enqueueSnackbar('Field deleted successfully', { variant: 'success' });
 			loadFields();
+			setConfirmDeleteOpen(false);
 		} catch (error) {
 			enqueueSnackbar('Failed to delete field', { variant: 'error' });
+		} finally {
+			setDeleteLoading(false);
+			setFieldToDelete(null);
 		}
 	};
 
@@ -260,6 +275,17 @@ const DynamicFieldsSection: React.FC<DynamicFieldsSectionProps> = ({ entityType 
 				editingField={editingField}
 				entityType={entityType}
 				nextOrder={fields.length}
+			/>
+
+			<ConfirmDialog
+				open={confirmDeleteOpen}
+				title="Delete Custom Field"
+				message="Are you sure you want to delete this custom field? This action will hide this field from future screening/counseling entries. Existing data will be preserved but the field will no longer be visible."
+				onClose={() => setConfirmDeleteOpen(false)}
+				onConfirm={handleConfirmDelete}
+				confirmText="Delete Field"
+				loading={deleteLoading}
+				severity="error"
 			/>
 		</Box>
 	);
