@@ -42,8 +42,7 @@ const CandidateList: React.FC = () => {
 	};
 
 	const handleEditCandidate = (id: string) => {
-		console.log('Edit candidate', id);
-		// TODO: Implement edit functionality or navigation
+		navigate(`/candidates/edit/${id}`);
 	};
 
 	const handleViewCandidate = (id: string) => {

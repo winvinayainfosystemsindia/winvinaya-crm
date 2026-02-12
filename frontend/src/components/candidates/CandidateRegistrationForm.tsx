@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box,
     Stepper,
@@ -116,6 +116,18 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
 
+    const isEditMode = !!initialData && !!(initialData as any).public_id;
+
+    // Sync formData when initialData changes (for async loading in CandidateEdit)
+    useEffect(() => {
+        if (initialData) {
+            setFormData(prev => ({
+                ...prev,
+                ...initialData
+            }));
+        }
+    }, [initialData]);
+
     // Validation functions for each step
     const validateStep = (step: number): Record<string, string> => {
         const errors: Record<string, string> = {};
@@ -197,7 +209,7 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
 
         if (isValid) {
             // Early backend validation for Step 0 (Personal Info)
-            if (activeStep === 0) {
+            if (activeStep === 0 && !isEditMode) {
                 setIsSubmitting(true);
                 setSubmitError(null);
                 try {
@@ -472,11 +484,11 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
                 gutterBottom
                 sx={{
                     color: theme.palette.secondary.main,
-                    fontWeight: 700,
+                    fontWeight: 500,
                     mb: 4,
                 }}
             >
-                Candidate Registration
+                {isEditMode ? 'Update Candidate Profile' : 'Candidate Registration'}
             </Typography>
 
             <Typography
@@ -484,7 +496,10 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
                 color="text.secondary"
                 sx={{ mb: 4 }}
             >
-                Please complete all steps to register as a candidate. All fields marked with * are required.
+                {isEditMode
+                    ? 'Use the sections below to update candidate information.'
+                    : 'Please complete all steps to register as a candidate. All fields marked with * are required.'
+                }
             </Typography>
 
             <Stepper
@@ -636,7 +651,7 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
                                 },
                             }}
                         >
-                            {isSubmitting ? 'Submitting...' : 'Submit Registration'}
+                            {isSubmitting ? (isEditMode ? 'Updating...' : 'Submitting...') : (isEditMode ? 'Update Candidate' : 'Submit Registration')}
                         </Button>
                     ) : (
                         <Button

@@ -18,6 +18,7 @@ import MaintenancePage from '../pages/common/MaintenancePage';
 import DocumentCollectionList from '../pages/documents/DocumentCollectionList';
 import DocumentCollection from '../pages/documents/DocumentCollection';
 import CandidateDetail from '../pages/Candidates/CandidateDetail';
+import CandidateEdit from '../pages/Candidates/CandidateEdit';
 import Reports from '../pages/reports/Reports';
 import Settings from '../pages/settings/Settings';
 import Support from '../pages/support/Support';
@@ -59,6 +60,7 @@ const AppRouter: React.FC = () => {
 						<Route path="documents" element={<DocumentCollectionList />} />
 						<Route path="documents/:id" element={<DocumentCollection />} />
 						<Route path=":publicId" element={<CandidateDetail />} />
+						<Route path="edit/:publicId" element={<CandidateEdit />} />
 					</Route>
 
 					<Route path="training">
