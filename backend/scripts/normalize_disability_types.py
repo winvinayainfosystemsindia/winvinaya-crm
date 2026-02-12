@@ -32,10 +32,9 @@ async def normalize_disability_types(dry_run: bool = True):
     async with AsyncSessionLocal() as session:
         logger.info(f"--- Disability Type Normalization ({'DRY RUN' if dry_run else 'LIVE UPDATE'}) ---")
         
-        # Fetch all candidates who have disability details
+        # Fetch all candidates who have disability details (including deleted for consistency)
         query = select(Candidate).where(
-            Candidate.disability_details.isnot(None),
-            Candidate.is_deleted == False
+            Candidate.disability_details.isnot(None)
         )
         result = await session.execute(query)
         candidates = result.scalars().all()
