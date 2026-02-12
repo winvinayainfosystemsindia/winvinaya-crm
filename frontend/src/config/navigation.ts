@@ -8,7 +8,7 @@ import {
 	// Person as PersonIcon,
 	// Assignment as TaskIcon,
 	Group as CandidatesIcon,
-	// School as SchoolIcon,
+	School as SchoolIcon,
 	Assessment as AssessmentIcon,
 	Settings as SettingsIcon,
 	HelpOutline as HelpIcon,
@@ -70,17 +70,17 @@ export const topNavigation: NavigationItem[] = [
 			},
 		],
 	},
-	// {
-	// 	label: 'Training Management',
-	// 	icon: SchoolIcon,
-	// 	children: [
-	// 		{ label: 'Training Batch', path: '/training/batches' },
-	// 		{ label: 'Candidate Allocation', path: '/training/allocation?tab=1' },
-	// 		{ label: 'Attendance', path: '/training/allocation?tab=2' },
-	// 		{ label: 'Assessment', path: '/training/allocation?tab=3' },
-	// 		{ label: 'Mock Interview', path: '/training/allocation?tab=4' },
-	// 	],
-	// },
+	{
+		label: 'Training Management',
+		icon: SchoolIcon,
+		children: [
+			{ label: 'Training Batch', path: '/training/batches' },
+			{ label: 'Candidate Allocation', path: '/training/allocation?tab=1' },
+			{ label: 'Attendance', path: '/training/allocation?tab=2' },
+			{ label: 'Assessment', path: '/training/allocation?tab=3' },
+			{ label: 'Mock Interview', path: '/training/allocation?tab=4' },
+		],
+	},
 ];
 
 export const bottomNavigation: NavigationItem[] = [
