@@ -53,8 +53,12 @@ export interface CandidateAllocation {
 export interface TrainingStats {
 	total: number;
 	running: number;
-	closed: number;
+	completed: number;
 	planned: number;
+	in_training: number;
+	completed_training: number;
+	ready_for_training: number;
+	dropped_out: number;
 	women: number;
 }
 

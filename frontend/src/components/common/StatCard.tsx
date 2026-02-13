@@ -12,9 +12,11 @@ interface StatCardProps {
 		direction: 'up' | 'down' | 'neutral';
 	};
 	color?: string; // Accent color
+	children?: React.ReactNode;
+	sx?: any;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend, color = 'primary.main' }) => {
+const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend, color = 'primary.main', children, sx }) => {
 	// Determine trend color
 	const getTrendColor = () => {
 		if (!trend) return 'text.secondary';
@@ -28,18 +30,19 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend, color = 
 			elevation={0}
 			variant="outlined"
 			sx={{
-				p: 2.5,
+				p: 2, // Reduced padding for professional look
 				height: '100%',
 				display: 'flex',
 				flexDirection: 'column',
 				justifyContent: 'space-between',
 				borderLeft: `4px solid`,
 				borderLeftColor: color,
-				transition: 'transform 0.2s, box-shadow 0.2s',
+				transition: 'all 0.2s ease-in-out',
 				'&:hover': {
-					transform: 'translateY(-2px)',
-					boxShadow: 2
-				}
+					borderColor: color,
+					boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+				},
+				...sx
 			}}
 		>
 			<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
@@ -71,6 +74,12 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend, color = 
 					</Box>
 				)}
 			</Box>
+
+			{children && (
+				<Box sx={{ mt: 2 }}>
+					{children}
+				</Box>
+			)}
 		</Paper>
 	);
 };
