@@ -5,12 +5,11 @@ import {
 	Typography,
 	Chip,
 	Box,
-	Tooltip,
-	IconButton
+	Tooltip
 } from '@mui/material';
-import { Edit, EventRepeat, Delete } from '@mui/icons-material';
 import { format, isValid } from 'date-fns';
 import type { TrainingBatch } from '../../../../models/training';
+import TrainingTableActions from './TrainingTableActions';
 
 interface TrainingTableRowProps {
 	batch: TrainingBatch;
@@ -43,9 +42,42 @@ const TrainingTableRow: React.FC<TrainingTableRowProps> = memo(({
 				)) || '-'}
 			</TableCell>
 			<TableCell>
-				{batch.courses?.map((course, idx) => (
-					<Chip key={idx} label={course} size="small" sx={{ mr: 0.5, mb: 0.5 }} />
-				)) || '-'}
+				<Typography variant="body2">{batch.domain || '-'}</Typography>
+			</TableCell>
+			<TableCell>
+				{batch.training_mode ? (
+					<Chip
+						label={batch.training_mode}
+						size="small"
+						variant="outlined"
+						sx={{
+							bgcolor: batch.training_mode === 'Online' ? '#e3f2fd' :
+								batch.training_mode === 'Offline' ? '#fff3e0' : '#f3e5f5',
+							borderColor: 'rgba(0,0,0,0.1)'
+						}}
+					/>
+				) : '-'}
+			</TableCell>
+			<TableCell>
+				{batch.courses?.map((course, idx) => {
+					const isObject = typeof course === 'object' && course !== null;
+					const name = isObject ? (course as any).name : course;
+					const trainer = isObject ? (course as any).trainer : null;
+
+					return (
+						<Tooltip key={idx} title={trainer ? `Trainer: ${trainer}` : "No trainer assigned"}>
+							<Chip
+								label={trainer ? `${name} (${trainer})` : name}
+								size="small"
+								sx={{
+									mr: 0.5,
+									mb: 0.5,
+									bgcolor: trainer ? '#e3f2fd' : '#f5f5f5'
+								}}
+							/>
+						</Tooltip>
+					);
+				}) || '-'}
 			</TableCell>
 			<TableCell>
 				{(() => {
@@ -103,6 +135,7 @@ const TrainingTableRow: React.FC<TrainingTableRowProps> = memo(({
 				<Chip
 					label={batch.status.toUpperCase()}
 					size="small"
+					variant="outlined"
 					color={
 						batch.status === 'running' ? 'success' :
 							batch.status === 'planned' ? 'warning' : 'default'
@@ -110,37 +143,13 @@ const TrainingTableRow: React.FC<TrainingTableRowProps> = memo(({
 				/>
 			</TableCell>
 			<TableCell align="right">
-				<Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
-					<Tooltip title="Extend Batch">
-						<IconButton
-							size="small"
-							onClick={() => onExtend(batch)}
-							sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
-						>
-							<EventRepeat fontSize="small" />
-						</IconButton>
-					</Tooltip>
-					<Tooltip title="Edit Batch">
-						<IconButton
-							size="small"
-							onClick={() => onEdit(batch)}
-							sx={{ color: 'text.secondary', '&:hover': { color: 'warning.main' } }}
-						>
-							<Edit fontSize="small" />
-						</IconButton>
-					</Tooltip>
-					{isAdmin && (
-						<Tooltip title="Delete Batch">
-							<IconButton
-								size="small"
-								onClick={() => onDelete(batch)}
-								sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}
-							>
-								<Delete fontSize="small" />
-							</IconButton>
-						</Tooltip>
-					)}
-				</Box>
+				<TrainingTableActions
+					batch={batch}
+					isAdmin={isAdmin}
+					onEdit={onEdit}
+					onExtend={onExtend}
+					onDelete={onDelete}
+				/>
 			</TableCell>
 		</TableRow>
 	);

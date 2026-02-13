@@ -3,7 +3,7 @@
 import uuid
 from typing import Optional, List, Any
 from datetime import datetime, date
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from app.schemas.training_batch_extension import TrainingBatchExtensionResponse
 
 
@@ -17,6 +17,10 @@ class TrainingBatchBase(BaseModel):
     duration: Optional[dict] = None # JSON with start/end/weeks
     status: str = "planned"
     other: Optional[dict] = None
+    
+    # Extra fields for the 'other' JSON column
+    domain: Optional[str] = None
+    training_mode: Optional[str] = None
 
 
 class TrainingBatchCreate(TrainingBatchBase):
@@ -52,6 +56,13 @@ class TrainingBatchResponse(TrainingBatchBase):
     created_at: datetime
     updated_at: datetime
     
+    @model_validator(mode='after')
+    def extract_other_fields(self) -> 'TrainingBatchResponse':
+        if self.other and isinstance(self.other, dict):
+            self.domain = self.other.get('domain')
+            self.training_mode = self.other.get('training_mode')
+        return self
+
 class TrainingBatchPaginatedResponse(BaseModel):
     """Paginated response for training batch listing"""
     items: List[TrainingBatchResponse]

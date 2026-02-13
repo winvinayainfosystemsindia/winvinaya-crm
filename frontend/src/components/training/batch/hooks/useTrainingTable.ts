@@ -38,6 +38,11 @@ export const useTrainingTable = () => {
 		setPage(0);
 	}, []);
 
+	const handleRowsPerPageSelectChange = useCallback((rows: number) => {
+		setRowsPerPage(rows);
+		setPage(0);
+	}, []);
+
 	const handleRequestSort = useCallback((property: keyof TrainingBatch) => {
 		setOrder(prevOrder => {
 			const isAsc = orderBy === property && prevOrder === 'asc';
@@ -71,6 +76,7 @@ export const useTrainingTable = () => {
 		handleRequestSort,
 		handleFilterChange,
 		clearFilters,
+		handleRowsPerPageSelectChange,
 		setPage
 	};
 };

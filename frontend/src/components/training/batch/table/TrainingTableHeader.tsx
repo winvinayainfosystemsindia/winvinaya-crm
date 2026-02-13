@@ -4,8 +4,6 @@ import {
 	TextField,
 	Button,
 	InputAdornment,
-	Tooltip,
-	IconButton,
 	Badge,
 	useTheme
 } from '@mui/material';
@@ -28,7 +26,6 @@ const TrainingTableHeader: React.FC<TrainingTableHeaderProps> = memo(({
 	onFilterOpen,
 	onCreateClick,
 	onRefresh,
-	loading
 }) => {
 	const theme = useTheme();
 
@@ -43,73 +40,67 @@ const TrainingTableHeader: React.FC<TrainingTableHeaderProps> = memo(({
 			bgcolor: '#fafafa',
 			gap: 2
 		}}>
-			<Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flex: 1 }}>
-				<TextField
-					placeholder="Search batches..."
-					value={searchTerm}
-					onChange={(e) => onSearchChange(e.target.value)}
-					size="small"
-					sx={{
-						maxWidth: { xs: '100%', sm: '350px' },
-						'& .MuiOutlinedInput-root': {
-							bgcolor: 'white',
-							'& fieldset': { borderColor: '#d5dbdb' },
-							'&:hover fieldset': { borderColor: theme.palette.primary.main },
-						}
-					}}
-					InputProps={{
-						startAdornment: (
-							<InputAdornment position="start">
-								<Search sx={{ color: 'text.secondary', fontSize: 20 }} />
-							</InputAdornment>
-						),
-					}}
-				/>
-			</Box>
+			<TextField
+				placeholder="Search batches..."
+				value={searchTerm}
+				onChange={(e) => onSearchChange(e.target.value)}
+				size="small"
+				fullWidth
+				sx={{
+					maxWidth: { xs: '100%', sm: '350px' },
+					'& .MuiOutlinedInput-root': {
+						bgcolor: 'white',
+						'& fieldset': { borderColor: '#d5dbdb' },
+						'&:hover fieldset': { borderColor: theme.palette.primary.main },
+					}
+				}}
+				InputProps={{
+					startAdornment: (
+						<InputAdornment position="start">
+							<Search sx={{ color: 'text.secondary', fontSize: 20 }} />
+						</InputAdornment>
+					),
+				}}
+			/>
 
-			<Box sx={{ display: 'flex', gap: 1 }}>
-				<Tooltip title="Refresh Data">
-					<IconButton
-						onClick={onRefresh}
-						disabled={loading}
-						sx={{
-							border: '1px solid #d5dbdb',
-							borderRadius: 1,
-							color: 'text.secondary',
-							'&:hover': {
-								borderColor: theme.palette.primary.main,
-								color: theme.palette.primary.main,
-								bgcolor: 'white'
-							}
-						}}
-					>
-						<Refresh
-							fontSize="small"
-							className={loading ? 'spin-animation' : ''}
-							sx={loading ? { animation: 'spin 1s linear infinite' } : {}}
-						/>
-					</IconButton>
-				</Tooltip>
-
-				<Badge badgeContent={activeFilterCount} color="primary">
+			<Box sx={{ display: 'flex', gap: 1, mt: { xs: 1, sm: 0 }, justifyContent: { xs: 'space-between', sm: 'flex-end' } }}>
+				<Box sx={{ display: 'flex', gap: 1 }}>
 					<Button
 						variant="outlined"
-						startIcon={<FilterList />}
-						onClick={onFilterOpen}
+						startIcon={<Refresh />}
+						onClick={onRefresh}
 						sx={{
-							borderColor: '#d5dbdb',
-							color: 'text.secondary',
 							textTransform: 'none',
+							color: '#232f3e',
+							borderColor: '#d5dbdb',
 							'&:hover': {
-								borderColor: theme.palette.primary.main,
-								color: theme.palette.primary.main,
-								bgcolor: 'white'
+								borderColor: '#232f3e',
+								bgcolor: '#f5f8fa'
 							}
 						}}
 					>
-						Filter
+						Refresh
 					</Button>
-				</Badge>
+
+					<Badge badgeContent={activeFilterCount} color="primary">
+						<Button
+							variant="outlined"
+							startIcon={<FilterList fontSize="small" />}
+							onClick={onFilterOpen}
+							sx={{
+								textTransform: 'none',
+								color: '#232f3e',
+								borderColor: '#d5dbdb',
+								'&:hover': {
+									borderColor: '#232f3e',
+									bgcolor: '#f5f8fa'
+								}
+							}}
+						>
+							Filters
+						</Button>
+					</Badge>
+				</Box>
 
 				<Button
 					variant="contained"
@@ -127,15 +118,6 @@ const TrainingTableHeader: React.FC<TrainingTableHeaderProps> = memo(({
 					Create Batch
 				</Button>
 			</Box>
-
-			<style>
-				{`
-                    @keyframes spin {
-                        from { transform: rotate(0deg); }
-                        to { transform: rotate(360deg); }
-                    }
-                `}
-			</style>
 		</Box>
 	);
 });

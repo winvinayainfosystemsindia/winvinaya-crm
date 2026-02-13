@@ -7,7 +7,6 @@ import {
 	TableContainer,
 	TableHead,
 	TableRow,
-	TablePagination,
 	TableSortLabel,
 	CircularProgress,
 	Box,
@@ -19,6 +18,7 @@ import type { TrainingBatch } from '../../../../models/training';
 import type { FilterField } from '../../../common/FilterDrawer';
 import FilterDrawer from '../../../common/FilterDrawer';
 import ConfirmDialog from '../../../common/ConfirmDialog';
+import CustomTablePagination from '../../../common/CustomTablePagination';
 import { getBatchFilterFields } from '../BatchFilters';
 
 // Specialized Components
@@ -58,6 +58,7 @@ const TrainingTable: React.FC<TrainingTableProps> = ({ refreshKey }) => {
 		handleRequestSort,
 		handleFilterChange,
 		clearFilters,
+		handleRowsPerPageSelectChange,
 		setPage
 	} = useTrainingTable();
 
@@ -134,10 +135,22 @@ const TrainingTable: React.FC<TrainingTableProps> = ({ refreshKey }) => {
 
 	const filterFields: FilterField[] = useMemo(() => getBatchFilterFields(), []);
 
+	const columns = useMemo(() => [
+		{ id: 'batch_name', label: 'Batch Name', sortable: true },
+		{ id: 'disability_types', label: 'Category', sortable: false },
+		{ id: 'domain', label: 'Domain', sortable: false },
+		{ id: 'training_mode', label: 'Mode', sortable: false },
+		{ id: 'courses', label: 'Courses', sortable: false },
+		{ id: 'duration', label: 'Duration', sortable: false },
+		{ id: 'total_extension_days', label: 'Ext. Days', sortable: false },
+		{ id: 'status', label: 'Status', sortable: false },
+		{ id: 'actions', label: 'Actions', sortable: false, align: 'right' as const },
+	], []);
+
 	const activeFilterCount = (filters.status ? 1 : 0) + filters.disability_types.length;
 
 	return (
-		<Paper sx={{ border: '1px solid #d5dbdb', boxShadow: 'none', borderRadius: 0 }}>
+		<Paper sx={{ border: '1px solid #d5dbdb', boxShadow: 'none', borderRadius: '8px', overflow: 'hidden' }}>
 			<TrainingTableHeader
 				searchTerm={searchTerm}
 				onSearchChange={handleSearch}
@@ -162,27 +175,40 @@ const TrainingTable: React.FC<TrainingTableProps> = ({ refreshKey }) => {
 				<Table sx={{ minWidth: 650 }}>
 					<TableHead>
 						<TableRow sx={{ bgcolor: '#fafafa' }}>
-							<TableCell>
-								<TableSortLabel
-									active={orderBy === 'batch_name'}
-									direction={orderBy === 'batch_name' ? order : 'asc'}
-									onClick={() => handleRequestSort('batch_name')}
+							{columns.map((column) => (
+								<TableCell
+									key={column.id}
+									align={column.align || 'left'}
+									sx={{
+										fontWeight: 600,
+										color: '#545b64',
+										whiteSpace: 'nowrap',
+										fontSize: '0.8125rem'
+									}}
 								>
-									Batch Name
-								</TableSortLabel>
-							</TableCell>
-							<TableCell>Category</TableCell>
-							<TableCell>Courses</TableCell>
-							<TableCell>Duration</TableCell>
-							<TableCell>Ext. Days</TableCell>
-							<TableCell>Status</TableCell>
-							<TableCell align="right">Actions</TableCell>
+									{column.sortable ? (
+										<TableSortLabel
+											active={orderBy === column.id}
+											direction={orderBy === column.id ? order : 'asc'}
+											onClick={() => handleRequestSort(column.id as any)}
+											sx={{
+												'&.Mui-active': { fontWeight: 700 },
+												'& .MuiTableSortLabel-icon': { fontSize: 16 }
+											}}
+										>
+											{column.label}
+										</TableSortLabel>
+									) : (
+										column.label
+									)}
+								</TableCell>
+							))}
 						</TableRow>
 					</TableHead>
 					<TableBody>
 						{loading ? (
 							<TableRow>
-								<TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+								<TableCell colSpan={9} align="center" sx={{ py: 4 }}>
 									<Box sx={{ display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'center' }}>
 										<CircularProgress size={20} />
 										<Typography variant="body2" color="text.secondary">Fetching batches...</Typography>
@@ -190,7 +216,7 @@ const TrainingTable: React.FC<TrainingTableProps> = ({ refreshKey }) => {
 								</TableCell>
 							</TableRow>
 						) : batches.length === 0 ? (
-							<TableRow><TableCell colSpan={7} align="center" sx={{ py: 4 }}>No batches found</TableCell></TableRow>
+							<TableRow><TableCell colSpan={9} align="center" sx={{ py: 4 }}>No batches found</TableCell></TableRow>
 						) : (
 							batches.map((batch) => (
 								<TrainingTableRow
@@ -207,15 +233,13 @@ const TrainingTable: React.FC<TrainingTableProps> = ({ refreshKey }) => {
 				</Table>
 			</TableContainer>
 
-			<TablePagination
-				component="div"
+			<CustomTablePagination
 				count={totalCount}
 				page={page}
-				onPageChange={(_e, p) => handleChangePage(p)}
 				rowsPerPage={rowsPerPage}
+				onPageChange={(_e, p) => handleChangePage(p)}
 				onRowsPerPageChange={(e) => handleChangeRowsPerPage(parseInt(e.target.value, 10))}
-				rowsPerPageOptions={[10, 25, 50]}
-				sx={{ borderTop: '1px solid #d5dbdb', bgcolor: '#fafafa' }}
+				onRowsPerPageSelectChange={handleRowsPerPageSelectChange}
 			/>
 
 			<ConfirmDialog

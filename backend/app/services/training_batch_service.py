@@ -62,7 +62,17 @@ class TrainingBatchService:
     
     async def create_batch(self, batch_in: TrainingBatchCreate) -> TrainingBatch:
         """Create a new training batch"""
-        return await self.repository.create(batch_in.model_dump())
+        data = batch_in.model_dump()
+        
+        # Handle domain and training_mode in 'other'
+        other = data.get("other") or {}
+        if data.get("domain"):
+            other["domain"] = data.pop("domain")
+        if data.get("training_mode"):
+            other["training_mode"] = data.pop("training_mode")
+        data["other"] = other
+        
+        return await self.repository.create(data)
     
     async def update_batch(self, public_id: UUID, batch_in: TrainingBatchUpdate) -> TrainingBatch:
         """Update a training batch"""
@@ -74,9 +84,15 @@ class TrainingBatchService:
         new_status = update_data.get("status", old_status)
         
         # If batch is being closed, mark all non-dropout allocations as completed
-        if old_status != "closed" and new_status == "closed":
-            await self._complete_batch_allocations(batch.id)
-        
+        # Handle domain and training_mode in 'other'
+        if "domain" in update_data or "training_mode" in update_data:
+            other = dict(batch.other or {})
+            if "domain" in update_data:
+                other["domain"] = update_data.pop("domain")
+            if "training_mode" in update_data:
+                other["training_mode"] = update_data.pop("training_mode")
+            update_data["other"] = other
+
         # Update batch
         return await self.repository.update(batch.id, update_data)
     

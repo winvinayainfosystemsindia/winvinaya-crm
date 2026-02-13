@@ -6,13 +6,16 @@ export interface TrainingBatch {
 	start_date?: string;
 	approx_close_date?: string;
 	total_extension_days?: number;
-	courses: string[] | null;
+	courses: (string | { name: string; trainer: string })[] | null;
 	duration?: {
 		start_date: string;
 		end_date: string;
 		weeks: number;
+		days: number;
 	} | null;
 	status: 'planned' | 'running' | 'closed' | string;
+	domain?: string;
+	training_mode?: string;
 	other: any;
 	created_at: string;
 	updated_at: string;
