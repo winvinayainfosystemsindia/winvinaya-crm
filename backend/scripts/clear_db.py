@@ -61,15 +61,29 @@ async def clear_database(engine_to_use, include_users: bool = False):
     from app.models.training_batch import TrainingBatch
     from app.models.training_batch_extension import TrainingBatchExtension
     from app.models.ticket import Ticket, TicketMessage
+    from app.models.crm_activity_log import CRMActivityLog
+    from app.models.crm_task import CRMTask
+    from app.models.deal import Deal
+    from app.models.lead import Lead
+    from app.models.company import Company
+    from app.models.contact import Contact
     from app.core.config import settings
 
     # Safety check for environment
-    allowed_envs = ["development", "qa"]
+    allowed_envs = ["development", "qa", "staging", "production"]
     current_env = settings.ENVIRONMENT.lower()
     if current_env not in allowed_envs:
         print(f"CRITICAL ERROR: Attempting to clear database in '{current_env}' environment.")
         print(f"This script is strictly allowed only in {allowed_envs} environments.")
         sys.exit(1)
+
+    if current_env in ["staging", "production"]:
+        print(f"\n! WARNING: YOU ARE RUNNING THIS ON {current_env.upper()} !")
+        print("This operation will DESTROY all data in the target database.")
+        confirm_env = input(f"Confirm environment name '{current_env}' to proceed: ")
+        if confirm_env != current_env:
+            print("Environment name mismatch. Operation cancelled.")
+            sys.exit(1)
 
     print(f"Environment Check Passed: {current_env}")
 
@@ -79,12 +93,21 @@ async def clear_database(engine_to_use, include_users: bool = False):
         try:
             # Order of deletion matters because of foreign keys
             
-            # 1. Ticket System (Refers to Users)
+            # 1. CRM Logs & Tasks (Refers to Entities)
+            print("Clearing CRM Activity Logs & Tasks...")
+            await session.execute(delete(CRMActivityLog))
+            await session.execute(delete(CRMTask))
+            
+            # 2. Activity Logs (Refers to Users/Entities)
+            print("Clearing Activity Logs...")
+            await session.execute(delete(ActivityLog))
+
+            # 3. Ticket System (Refers to Users)
             print("Clearing Ticket Messages & Tickets...")
             await session.execute(delete(TicketMessage))
             await session.execute(delete(Ticket))
 
-            # 2. Training Extensions (Refers to Batches & Candidates)
+            # 4. Training Extensions (Refers to Batches & Candidates)
             print("Clearing Training Extensions (Attendance, Assessments, Interviews, Events)...")
             await session.execute(delete(TrainingAttendance))
             await session.execute(delete(TrainingAssessment))
@@ -92,19 +115,20 @@ async def clear_database(engine_to_use, include_users: bool = False):
             await session.execute(delete(TrainingBatchEvent))
             await session.execute(delete(TrainingBatchExtension))
 
-            # 3. Allocations (Refers to Batches & Candidates)
+            # 5. CRM Root Entities (Deals/Leads)
+            print("Clearing CRM Deals & Leads...")
+            await session.execute(delete(Deal))
+            await session.execute(delete(Lead))
+
+            # 6. Allocations (Refers to Batches & Candidates)
             print("Clearing Candidate Allocations...")
             await session.execute(delete(TrainingCandidateAllocation))
 
-            # 4. Batches (Refers to nothing/Users)
+            # 7. Batches (Refers to nothing/Users)
             print("Clearing Training Batches...")
             await session.execute(delete(TrainingBatch))
-
-            # 5. Activity Logs (Refers to Users)
-            print("Clearing Activity Logs...")
-            await session.execute(delete(ActivityLog))
             
-            # 6. Candidate Data (Refers to Candidates)
+            # 8. Candidate Data (Refers to Candidates)
             print("Clearing Candidate Documents...")
             await session.execute(delete(CandidateDocument))
             
@@ -114,11 +138,16 @@ async def clear_database(engine_to_use, include_users: bool = False):
             print("Clearing Candidate Screenings...")
             await session.execute(delete(CandidateScreening))
             
-            # 7. Candidates
+            # 9. Candidates
             print("Clearing Candidates...")
             await session.execute(delete(Candidate))
+
+            # 10. CRM Base Entities (Contacts/Companies)
+            print("Clearing CRM Contacts & Companies...")
+            await session.execute(delete(Contact))
+            await session.execute(delete(Company))
             
-            # 8. Users (Optional)
+            # 11. Users (Optional)
             if include_users:
                 print("Clearing Users (excluding superusers)...")
                 await session.execute(delete(User).where(User.is_superuser == False))
