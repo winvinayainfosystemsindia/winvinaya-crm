@@ -13,22 +13,23 @@ import {
 	Box,
 	Typography
 } from '@mui/material';
-import { useAppDispatch, useAppSelector } from '../../../store/hooks';
-import { fetchTrainingBatches } from '../../../store/slices/trainingSlice';
-import type { TrainingBatch } from '../../../models/training';
-import type { FilterField } from '../../common/FilterDrawer';
-import FilterDrawer from '../../common/FilterDrawer';
+import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
+import { fetchTrainingBatches } from '../../../../store/slices/trainingSlice';
+import type { TrainingBatch } from '../../../../models/training';
+import type { FilterField } from '../../../common/FilterDrawer';
+import FilterDrawer from '../../../common/FilterDrawer';
+import ConfirmDialog from '../../../common/ConfirmDialog';
+import { getBatchFilterFields } from '../BatchFilters';
 
 // Specialized Components
 import TrainingTableHeader from './TrainingTableHeader';
 import TrainingTableRow from './TrainingTableRow';
-import TrainingBatchDeleteDialog from './TrainingBatchDeleteDialog';
-import TrainingBatchFormDialog from './TrainingBatchFormDialog';
-import ExtendBatchDialog from './ExtendBatchDialog';
+import TrainingBatchFormDialog from '../dialogs/TrainingBatchFormDialog';
+import ExtendBatchDialog from '../dialogs/ExtendBatchDialog';
 
 // Hooks
-import { useTrainingTable } from './useTrainingTable';
-import { useTrainingActions } from './useTrainingActions';
+import { useTrainingTable } from '../hooks/useTrainingTable';
+import { useTrainingActions } from '../hooks/useTrainingActions';
 
 interface TrainingTableProps {
 	refreshKey?: number;
@@ -131,30 +132,7 @@ const TrainingTable: React.FC<TrainingTableProps> = ({ refreshKey }) => {
 		}
 	};
 
-	const filterFields: FilterField[] = useMemo(() => [
-		{
-			key: 'status',
-			label: 'Operational Status',
-			type: 'single-select',
-			options: [
-				{ value: 'planned', label: 'Planned' },
-				{ value: 'running', label: 'Running' },
-				{ value: 'closed', label: 'Closed' }
-			]
-		},
-		{
-			key: 'disability_types',
-			label: 'Candidate Disability',
-			type: 'multi-select',
-			options: [
-				{ value: 'Locomotor Disability', label: 'Locomotor Disability' },
-				{ value: 'Hearing Impairment', label: 'Hearing Impairment' },
-				{ value: 'Visual Impairment', label: 'Visual Impairment' },
-				{ value: 'Speech and Language Disability', label: 'Speech and Language Disability' },
-				{ value: 'IDD', label: 'IDD' }
-			]
-		}
-	], []);
+	const filterFields: FilterField[] = useMemo(() => getBatchFilterFields(), []);
 
 	const activeFilterCount = (filters.status ? 1 : 0) + filters.disability_types.length;
 
@@ -240,11 +218,14 @@ const TrainingTable: React.FC<TrainingTableProps> = ({ refreshKey }) => {
 				sx={{ borderTop: '1px solid #d5dbdb', bgcolor: '#fafafa' }}
 			/>
 
-			<TrainingBatchDeleteDialog
+			<ConfirmDialog
 				open={deleteConfirmOpen}
+				title="Delete Batch?"
+				message={`Are you sure you want to delete "${selectedBatch?.batch_name}"? This action cannot be undone.`}
 				onClose={() => setDeleteConfirmOpen(false)}
 				onConfirm={onDeleteBatch}
-				batchName={selectedBatch?.batch_name}
+				confirmText="Delete"
+				severity="error"
 			/>
 
 			<TrainingBatchFormDialog

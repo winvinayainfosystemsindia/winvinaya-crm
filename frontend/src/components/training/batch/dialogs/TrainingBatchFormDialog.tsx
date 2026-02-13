@@ -21,8 +21,8 @@ import {
 	Box
 } from '@mui/material';
 import { Close as CloseIcon, Info as InfoIcon, Event as EventIcon, School as SchoolIcon, Assignment as AssignmentIcon } from '@mui/icons-material';
-import type { TrainingBatch } from '../../../models/training';
-import { disabilityTypes } from '../../../data/Disabilities';
+import type { TrainingBatch } from '../../../../models/training';
+import { disabilityTypes } from '../../../../data/Disabilities';
 
 interface TrainingBatchFormDialogProps {
 	open: boolean;

@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import { Edit, EventRepeat, Delete } from '@mui/icons-material';
 import { format, isValid } from 'date-fns';
-import type { TrainingBatch } from '../../../models/training';
+import type { TrainingBatch } from '../../../../models/training';
 
 interface TrainingTableRowProps {
 	batch: TrainingBatch;

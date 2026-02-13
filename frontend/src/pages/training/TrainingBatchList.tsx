@@ -6,8 +6,8 @@ import {
 	useTheme,
 	useMediaQuery
 } from '@mui/material';
-import TrainingStats from '../../components/training/stats/TrainingStats';
-import TrainingTable from '../../components/training/batch/TrainingTable';
+import TrainingStats from '../../components/training/batch/stats/TrainingStats';
+import TrainingTable from '../../components/training/batch/table/TrainingTable';
 
 const TrainingBatchList: React.FC = () => {
 	const theme = useTheme();

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { TrainingBatch } from '../../../models/training';
+import type { TrainingBatch } from '../../../../models/training';
 
 export const useTrainingTable = () => {
 	const [searchTerm, setSearchTerm] = useState('');

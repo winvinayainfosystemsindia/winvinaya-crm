@@ -1,13 +1,13 @@
 import { useCallback } from 'react';
-import { useAppDispatch } from '../../../store/hooks';
+import { useAppDispatch } from '../../../../store/hooks';
 import {
 	createTrainingBatch,
 	updateTrainingBatch,
 	extendTrainingBatch,
 	deleteTrainingBatch
-} from '../../../store/slices/trainingSlice';
-import type { TrainingBatch } from '../../../models/training';
-import useToast from '../../../hooks/useToast';
+} from '../../../../store/slices/trainingSlice';
+import type { TrainingBatch } from '../../../../models/training';
+import useToast from '../../../../hooks/useToast';
 
 export const useTrainingActions = () => {
 	const dispatch = useAppDispatch();
