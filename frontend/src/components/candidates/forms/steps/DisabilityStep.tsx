@@ -12,9 +12,9 @@ import {
     Autocomplete,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import type { CandidateCreate } from '../../../models/candidate';
+import type { CandidateCreate } from '../../../../models/candidate';
 import { Accessible as AccessibleIcon } from '@mui/icons-material';
-import { disabilityTypes } from '../../../data/Disabilities';
+import { disabilityTypes } from '../../../../data/Disabilities';
 
 interface DisabilityStepProps {
     formData: CandidateCreate;

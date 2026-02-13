@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Box, Container, Typography, useTheme, useMediaQuery } from '@mui/material';
-import CandidateStatCards from '../../components/candidates/CandidateStatCards';
-import CandidateTable from '../../components/candidates/CandidateTable';
+import CandidateStatCards from '../../components/candidates/stats/CandidateStatCards';
+import CandidateTable from '../../components/candidates/table/CandidateTable';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchCandidateStats } from '../../store/slices/candidateSlice';

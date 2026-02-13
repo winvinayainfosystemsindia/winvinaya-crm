@@ -12,7 +12,7 @@ import {
     Divider,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import type { CandidateCreate } from '../../../models/candidate';
+import type { CandidateCreate } from '../../../../models/candidate';
 
 interface PersonalInfoStepProps {
     formData: CandidateCreate;

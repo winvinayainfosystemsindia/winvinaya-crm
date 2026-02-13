@@ -7,7 +7,7 @@ import {
     Snackbar,
     Typography,
 } from '@mui/material';
-import CandidateRegistrationForm from '../../components/candidates/CandidateRegistrationForm';
+import CandidateRegistrationForm from '../../components/candidates/forms/CandidateRegistrationForm';
 import { useAppDispatch } from '../../store/hooks';
 import { createCandidate } from '../../store/slices/candidateSlice';
 import type { CandidateCreate } from '../../models/candidate';

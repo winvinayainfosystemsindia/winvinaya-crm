@@ -9,7 +9,7 @@ import {
 	Button
 } from '@mui/material';
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
-import CandidateRegistrationForm from '../../components/candidates/CandidateRegistrationForm';
+import CandidateRegistrationForm from '../../components/candidates/forms/CandidateRegistrationForm';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchCandidateById, updateCandidate, clearSelectedCandidate } from '../../store/slices/candidateSlice';
 import type { CandidateUpdate } from '../../models/candidate';

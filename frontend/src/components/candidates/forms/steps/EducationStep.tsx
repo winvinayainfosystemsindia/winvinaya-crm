@@ -15,10 +15,10 @@ import {
     Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
-import type { CandidateCreate, Degree } from '../../../models/candidate';
-import { degrees } from '../../../data/Degree';
-import { specializations } from '../../../data/Specialization';
-import { colleges } from '../../../data/College';
+import type { CandidateCreate, Degree } from '../../../../models/candidate';
+import { degrees } from '../../../../data/Degree';
+import { specializations } from '../../../../data/Specialization';
+import { colleges } from '../../../../data/College';
 
 interface EducationStepProps {
     formData: CandidateCreate;

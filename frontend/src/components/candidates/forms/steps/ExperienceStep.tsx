@@ -10,7 +10,7 @@ import {
     Stack,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import type { CandidateCreate } from '../../../models/candidate';
+import type { CandidateCreate } from '../../../../models/candidate';
 import { Work as WorkIcon } from '@mui/icons-material';
 
 interface ExperienceStepProps {

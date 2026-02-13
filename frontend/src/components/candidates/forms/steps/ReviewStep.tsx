@@ -23,7 +23,7 @@ import {
     Circle as CircleIcon,
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
-import type { CandidateCreate } from '../../../models/candidate';
+import type { CandidateCreate } from '../../../../models/candidate';
 
 interface ReviewStepProps {
     formData: CandidateCreate;

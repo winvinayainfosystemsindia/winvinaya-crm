@@ -3,7 +3,6 @@ import {
 	Box,
 	TextField,
 	Button,
-	IconButton,
 	InputAdornment,
 	Tooltip,
 	Badge,
@@ -32,7 +31,6 @@ const CandidateTableHeader: React.FC<CandidateTableHeaderProps> = ({
 	searchTerm,
 	onSearchChange,
 	onRefresh,
-	loading,
 	activeFilterCount,
 	filterDrawerOpen,
 	onFilterOpen,
@@ -88,22 +86,22 @@ const CandidateTableHeader: React.FC<CandidateTableHeaderProps> = ({
 			<Box sx={{ display: 'flex', gap: 1, justifyContent: { xs: 'space-between', sm: 'flex-end' } }}>
 				<Box sx={{ display: 'flex', gap: 1 }}>
 					<Tooltip title="Refresh Data">
-						<IconButton
+						<Button
+							variant="outlined"
+							startIcon={<Refresh />}
 							onClick={onRefresh}
-							disabled={loading}
 							sx={{
-								border: '1px solid #d5dbdb',
-								borderRadius: 1,
-								color: 'text.secondary',
+								textTransform: 'none',
+								color: '#232f3e',
+								borderColor: '#d5dbdb',
 								'&:hover': {
-									borderColor: theme.palette.primary.main,
-									color: theme.palette.primary.main,
-									bgcolor: 'white'
+									borderColor: '#232f3e',
+									bgcolor: '#f5f8fa'
 								}
 							}}
 						>
-							<Refresh fontSize="small" className={loading ? 'spin-animation' : ''} />
-						</IconButton>
+							Refresh
+						</Button>
 					</Tooltip>
 
 					<Badge badgeContent={activeFilterCount} color="primary">

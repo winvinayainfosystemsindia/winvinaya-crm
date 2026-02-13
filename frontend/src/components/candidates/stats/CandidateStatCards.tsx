@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, Typography, Box, useTheme } from '@mui/material';
 import { People, Today, PieChart, Man, Woman, Transgender } from '@mui/icons-material';
 import { SparkLineChart } from '@mui/x-charts';
-import type { CandidateStats } from '../../models/candidate';
+import type { CandidateStats } from '../../../models/candidate';
 
 interface CandidateStatCardsProps {
 	stats: CandidateStats;

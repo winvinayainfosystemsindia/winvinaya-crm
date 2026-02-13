@@ -28,12 +28,12 @@ import { useTheme } from '@mui/material/styles';
 import PersonalInfoStep from './steps/PersonalInfoStep';
 import EducationStep from './steps/EducationStep';
 import ExperienceStep from './steps/ExperienceStep';
-import candidateService from '../../services/candidateService';
+import candidateService from '../../../services/candidateService';
 import DisabilityStep from './steps/DisabilityStep';
 import ReviewStep from './steps/ReviewStep';
 
 // Import types
-import type { CandidateCreate } from '../../models/candidate';
+import type { CandidateCreate } from '../../../models/candidate';
 
 // Initial form state
 const initialFormData: CandidateCreate = {
