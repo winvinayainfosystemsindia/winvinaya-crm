@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
 	Box,
 	Container,
@@ -10,9 +10,9 @@ import {
 	useTheme,
 	useMediaQuery
 } from '@mui/material';
-import CounselingTable from '../../components/counseling/CounselingTable';
-import CounselingFormDialog from '../../components/counseling/form/CounselingFormDialog';
-import CounselingStats from '../../components/counseling/CounselingStats';
+import CounselingTable from '../../components/counseling/table/CounselingTable';
+import CounselingFormDialog from '../../components/counseling/forms/CounselingFormDialog';
+import CounselingStats from '../../components/counseling/stats/CounselingStats';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { createCounseling, updateCounseling, fetchCandidateById, fetchCandidateStats } from '../../store/slices/candidateSlice';
 import type { CandidateListItem, CandidateCounselingCreate } from '../../models/candidate';
@@ -23,7 +23,7 @@ interface TabPanelProps {
 	value: number;
 }
 
-function TabPanel(props: TabPanelProps) {
+const TabPanel = React.memo((props: TabPanelProps) => {
 	const { children, value, index, ...other } = props;
 	return (
 		<div
@@ -36,7 +36,7 @@ function TabPanel(props: TabPanelProps) {
 			{value === index && <Box sx={{ py: 3 }}>{children}</Box>}
 		</div>
 	);
-}
+});
 
 const CounselingList: React.FC = () => {
 	const dispatch = useAppDispatch();
@@ -55,19 +55,19 @@ const CounselingList: React.FC = () => {
 	const [initialFormData, setInitialFormData] = useState<CandidateCounselingCreate | undefined>(undefined);
 
 	// Fetch stats on mount and refresh
-	React.useEffect(() => {
+	useEffect(() => {
 		dispatch(fetchCandidateStats());
 	}, [dispatch, refreshKey]);
 
-	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+	const handleTabChange = useCallback((_event: React.SyntheticEvent, newValue: number) => {
 		setTabValue(newValue);
-	};
+	}, []);
 
-	const showSnackbar = (message: string, severity: 'success' | 'error') => {
+	const showSnackbar = useCallback((message: string, severity: 'success' | 'error') => {
 		setSnackbar({ open: true, message, severity });
-	};
+	}, []);
 
-	const handleAction = async (action: 'counsel' | 'edit', candidate: CandidateListItem) => {
+	const handleAction = useCallback(async (action: 'counsel' | 'edit', candidate: CandidateListItem) => {
 		try {
 			// Fetch full candidate details to get existing counseling/work experience data
 			const resultAction = await dispatch(fetchCandidateById({ publicId: candidate.public_id, withDetails: true }));
@@ -92,15 +92,15 @@ const CounselingList: React.FC = () => {
 		} catch (error) {
 			showSnackbar('An error occurred while fetching details', 'error');
 		}
-	};
+	}, [dispatch, showSnackbar]);
 
-	const handleDialogClose = () => {
+	const handleDialogClose = useCallback(() => {
 		setDialogOpen(false);
 		setSelectedCandidate(null);
 		setInitialFormData(undefined);
-	};
+	}, []);
 
-	const handleFormSubmit = async (data: CandidateCounselingCreate) => {
+	const handleFormSubmit = useCallback(async (data: CandidateCounselingCreate) => {
 		try {
 			if (selectedCandidate.counseling) {
 				// Update via Redux
@@ -122,13 +122,13 @@ const CounselingList: React.FC = () => {
 			console.error("Counseling submit error", error);
 			showSnackbar(error || 'Failed to save counseling record', 'error');
 		}
-	};
+	}, [dispatch, selectedCandidate, showSnackbar]);
 
 	// Helper to get count for a status safely
-	const getCount = (status: string) => {
+	const getCount = useCallback((status: string) => {
 		if (!stats?.counseling_distribution) return 0;
 		return stats.counseling_distribution[status] || 0;
-	};
+	}, [stats]);
 
 	const renderTabLabel = (label: string, count: number) => (
 		<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -149,6 +149,13 @@ const CounselingList: React.FC = () => {
 			</Box>
 		</Box>
 	);
+
+	const tabsConfig = useMemo(() => [
+		{ label: "Not Counseled", count: (stats?.screening_distribution?.['Completed'] || 0) - (getCount('selected') + getCount('rejected') + getCount('pending')), type: 'not_counseled' },
+		{ label: "In Progress", count: getCount('pending'), type: 'pending' },
+		{ label: "Selected", count: getCount('selected'), type: 'selected' },
+		{ label: "Rejected", count: getCount('rejected'), type: 'rejected' },
+	], [stats, getCount]);
 
 	return (
 		<Box sx={{ bgcolor: '#f5f5f5', minHeight: '100vh', py: isMobile ? 2 : 3 }}>
@@ -193,42 +200,26 @@ const CounselingList: React.FC = () => {
 						allowScrollButtonsMobile
 						sx={{ px: 2 }}
 					>
-						<Tab label={renderTabLabel("Not Counseled", (stats?.screening_distribution?.['Completed'] || 0) - (getCount('selected') + getCount('rejected') + getCount('pending')))} sx={{ textTransform: 'none', fontWeight: 500 }} />
-						<Tab label={renderTabLabel("In Progress", getCount('pending'))} sx={{ textTransform: 'none', fontWeight: 500 }} />
-						<Tab label={renderTabLabel("Selected", getCount('selected'))} sx={{ textTransform: 'none', fontWeight: 500 }} />
-						<Tab label={renderTabLabel("Rejected", getCount('rejected'))} sx={{ textTransform: 'none', fontWeight: 500 }} />
+						{tabsConfig.map((tab) => (
+							<Tab
+								key={tab.type}
+								label={renderTabLabel(tab.label, tab.count)}
+								sx={{ textTransform: 'none', fontWeight: 500 }}
+							/>
+						))}
 					</Tabs>
 				</Box>
 
 				{/* Tab Panels */}
-				<TabPanel value={tabValue} index={0}>
-					<CounselingTable
-						type="not_counseled"
-						onAction={handleAction}
-						refreshKey={refreshKey}
-					/>
-				</TabPanel>
-				<TabPanel value={tabValue} index={1}>
-					<CounselingTable
-						type="pending"
-						onAction={handleAction}
-						refreshKey={refreshKey}
-					/>
-				</TabPanel>
-				<TabPanel value={tabValue} index={2}>
-					<CounselingTable
-						type="selected"
-						onAction={handleAction}
-						refreshKey={refreshKey}
-					/>
-				</TabPanel>
-				<TabPanel value={tabValue} index={3}>
-					<CounselingTable
-						type="rejected"
-						onAction={handleAction}
-						refreshKey={refreshKey}
-					/>
-				</TabPanel>
+				{tabsConfig.map((tab, index) => (
+					<TabPanel key={tab.type} value={tabValue} index={index}>
+						<CounselingTable
+							type={tab.type as any}
+							onAction={handleAction}
+							refreshKey={refreshKey}
+						/>
+					</TabPanel>
+				))}
 			</Container>
 
 			{/* Form Dialog */}
