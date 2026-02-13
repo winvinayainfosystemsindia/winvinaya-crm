@@ -30,9 +30,9 @@ SPECIALIZATIONS = [
 
 DISABILITY_TYPES = [
     "Locomotor Disability",
-    "Hearing Impairment (deaf and hard of hearing)",
+    "Hearing Impairment (Deaf and Hard of Hearing)",
     "Blindness",
-    "Low-vision"
+    "Low Vision"
 ]
 
 def random_dob(start_year=1985, end_year=2004):
@@ -40,7 +40,7 @@ def random_dob(start_year=1985, end_year=2004):
     end = date(end_year, 12, 31)
     return start + timedelta(days=random.randint(0, (end - start).days))
 
-for i in range(1, 101):
+for i in range(1, 51):
     is_disabled = random.choice([True, True, True, False]) # 75% chance of being disabled for better test data
     
     payload = {
