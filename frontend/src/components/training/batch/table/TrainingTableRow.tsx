@@ -42,6 +42,23 @@ const TrainingTableRow: React.FC<TrainingTableRowProps> = memo(({
 				)) || '-'}
 			</TableCell>
 			<TableCell>
+				{batch.other?.tag ? (
+					<Chip
+						label={batch.other.tag}
+						size="small"
+						sx={{
+							bgcolor: '#f1faff',
+							color: '#007eb9',
+							border: '1px solid #007eb9',
+							fontWeight: 600,
+							borderRadius: '4px'
+						}}
+					/>
+				) : (
+					<Typography variant="caption" color="text.secondary">No Tag</Typography>
+				)}
+			</TableCell>
+			<TableCell>
 				<Typography variant="body2">{batch.domain || '-'}</Typography>
 			</TableCell>
 			<TableCell>

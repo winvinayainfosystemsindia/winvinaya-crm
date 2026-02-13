@@ -29,10 +29,12 @@ import {
 	Language as LanguageIcon,
 	People as PeopleIcon,
 	History as HistoryIcon,
-	Assessment as AssessmentIcon
+	Assessment as AssessmentIcon,
+	LabelOutlined as TagIcon
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { fetchUsers } from '../../../../store/slices/userSlice';
+import { settingsService } from '../../../../services/settingsService';
 import type { TrainingBatch } from '../../../../models/training';
 import { disabilityTypes } from '../../../../data/Disabilities';
 import { COURSES } from '../../../../data/Courses';
@@ -72,11 +74,35 @@ const TrainingBatchFormDialog: React.FC<TrainingBatchFormDialogProps> = ({
 		other: {}
 	});
 
+	const [availableTags, setAvailableTags] = useState<string[]>([]);
+	const [tagsLoading, setTagsLoading] = useState(false);
+
 	useEffect(() => {
-		if (open && allUsers.length === 0) {
-			dispatch(fetchUsers({ skip: 0, limit: 1000 }));
+		if (open) {
+			if (allUsers.length === 0) {
+				dispatch(fetchUsers({ skip: 0, limit: 1000 }));
+			}
+			loadTags();
 		}
 	}, [open, allUsers.length, dispatch]);
+
+	const loadTags = async () => {
+		setTagsLoading(true);
+		try {
+			const settings = await settingsService.getSystemSettings();
+			const tagSetting = settings.find(s => s.key === 'TRAINING_BATCH_TAGS');
+			if (tagSetting && tagSetting.value) {
+				const tags = tagSetting.value.split(',')
+					.map(t => t.trim())
+					.filter(t => t.length > 0);
+				setAvailableTags(tags);
+			}
+		} catch (error) {
+			console.error('Failed to load training tags', error);
+		} finally {
+			setTagsLoading(false);
+		}
+	};
 
 	useEffect(() => {
 		if (open) {
@@ -123,6 +149,16 @@ const TrainingBatchFormDialog: React.FC<TrainingBatchFormDialogProps> = ({
 
 	const handleChange = (field: keyof TrainingBatch, value: unknown) => {
 		setFormData((prev) => ({ ...prev, [field]: value }));
+	};
+
+	const handleOtherChange = (key: string, value: any) => {
+		setFormData((prev) => ({
+			...prev,
+			other: {
+				...(prev.other || {}),
+				[key]: value
+			}
+		}));
 	};
 
 	const calculateDuration = (start: string, end: string): { weeks: number; days: number; totalDays: number } => {
@@ -402,6 +438,33 @@ const TrainingBatchFormDialog: React.FC<TrainingBatchFormDialogProps> = ({
 										</Box>
 									</Grid>
 								</Grid>
+
+								<Box>
+									<Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 1 }}>
+										<TagIcon sx={{ color: '#879196', fontSize: 14 }} />
+										<Typography variant="caption" color="textSecondary">Batch Tag / Category</Typography>
+									</Stack>
+									<FormControl fullWidth size="small">
+										<InputLabel>Select Tag</InputLabel>
+										<Select
+											value={formData.other?.tag || ''}
+											label="Select Tag"
+											onChange={(e) => handleOtherChange('tag', e.target.value)}
+											sx={{ borderRadius: '2px' }}
+											disabled={tagsLoading}
+										>
+											<MenuItem value=""><em>None</em></MenuItem>
+											{availableTags.map(tag => (
+												<MenuItem key={tag} value={tag}>{tag}</MenuItem>
+											))}
+										</Select>
+										{availableTags.length === 0 && !tagsLoading && (
+											<Typography variant="caption" color="warning.main" sx={{ mt: 0.5, display: 'block' }}>
+												No tags configured in System Settings.
+											</Typography>
+										)}
+									</FormControl>
+								</Box>
 
 								<Box>
 									<Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 1 }}>

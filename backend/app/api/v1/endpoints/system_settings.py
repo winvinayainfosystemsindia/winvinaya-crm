@@ -6,7 +6,7 @@ from app.api.deps import require_roles
 from app.models.user import UserRole
 from app.utils.activity_tracker import log_update
 from app.repositories.system_setting_repository import SystemSettingRepository
-from app.schemas.system_setting import SystemSettingResponse, SystemSettingUpdate
+from app.schemas.system_setting import SystemSettingResponse, SystemSettingUpdate, SystemSettingCreate
 
 router = APIRouter(prefix="/settings/system", tags=["Settings"])
 
@@ -36,6 +36,33 @@ async def get_system_settings(
         response_settings.append(s_dict)
             
     return response_settings
+
+
+@router.post("", response_model=SystemSettingResponse, status_code=status.HTTP_201_CREATED)
+async def create_system_setting(
+    setting_in: SystemSettingCreate,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user: Any = Depends(require_roles([UserRole.ADMIN])),
+) -> Any:
+    """
+    Create a new system setting. (Admin only)
+    """
+    repo = SystemSettingRepository(db)
+    
+    # Check if key already exists
+    existing = await repo.get_by_key(setting_in.key)
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"System setting with key '{setting_in.key}' already exists"
+        )
+        
+    new_setting = await repo.create(setting_in.model_dump())
+    
+    # No log_create util imported yet, but we can log it if needed or follow the log_update pattern
+    # For now, following the existing repo pattern
+    return new_setting
 
 
 @router.patch("/{id}", response_model=SystemSettingResponse)

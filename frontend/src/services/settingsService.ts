@@ -26,6 +26,13 @@ export type SystemSettingUpdate = {
 	value: string;
 }
 
+export type SystemSettingCreate = {
+	key: string;
+	value: string;
+	description?: string;
+	is_secret?: boolean;
+}
+
 export const settingsService = {
 	getFields: async (entityType: string): Promise<DynamicField[]> => {
 		const response = await api.get(`/settings/fields/${entityType}`);
@@ -53,6 +60,11 @@ export const settingsService = {
 
 	updateSystemSetting: async (id: number, setting: SystemSettingUpdate): Promise<SystemSetting> => {
 		const response = await api.patch(`/settings/system/${id}`, setting);
+		return response.data;
+	},
+
+	createSystemSetting: async (setting: SystemSettingCreate): Promise<SystemSetting> => {
+		const response = await api.post('/settings/system', setting);
 		return response.data;
 	}
 };

@@ -11,10 +11,12 @@ import {
 import {
 	Assignment as ScreeningIcon,
 	FactCheck as CounselingIcon,
-	SmartToy as AIIcon
+	SmartToy as AIIcon,
+	School as SchoolIcon
 } from '@mui/icons-material';
 import DynamicFieldsSection from '../../components/settings/DynamicFieldsSection';
 import AIConfigurationSection from '../../components/settings/AIConfigurationSection';
+import TrainingConfigurationSection from '../../components/settings/TrainingConfigurationSection';
 
 const Settings: React.FC = () => {
 	const [tabValue, setTabValue] = useState(() => {
@@ -38,6 +40,8 @@ const Settings: React.FC = () => {
 				return <DynamicFieldsSection entityType="counseling" />;
 			case 2:
 				return <AIConfigurationSection />;
+			case 3:
+				return <TrainingConfigurationSection />;
 			default:
 				return (
 					<Box sx={{ p: 8, textAlign: 'center' }}>
@@ -101,6 +105,7 @@ const Settings: React.FC = () => {
 					<Tab icon={<ScreeningIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Screening Fields" />
 					<Tab icon={<CounselingIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Counseling Fields" />
 					<Tab icon={<AIIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="AI Configuration" />
+					<Tab icon={<SchoolIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Training Config" />
 				</Tabs>
 			</Box>
 

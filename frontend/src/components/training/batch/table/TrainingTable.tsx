@@ -138,6 +138,7 @@ const TrainingTable: React.FC<TrainingTableProps> = ({ refreshKey }) => {
 	const columns = useMemo(() => [
 		{ id: 'batch_name', label: 'Batch Name', sortable: true },
 		{ id: 'disability_types', label: 'Category', sortable: false },
+		{ id: 'tag', label: 'Tag', sortable: false },
 		{ id: 'domain', label: 'Domain', sortable: false },
 		{ id: 'training_mode', label: 'Mode', sortable: false },
 		{ id: 'courses', label: 'Courses', sortable: false },
@@ -208,7 +209,7 @@ const TrainingTable: React.FC<TrainingTableProps> = ({ refreshKey }) => {
 					<TableBody>
 						{loading ? (
 							<TableRow>
-								<TableCell colSpan={9} align="center" sx={{ py: 4 }}>
+								<TableCell colSpan={10} align="center" sx={{ py: 4 }}>
 									<Box sx={{ display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'center' }}>
 										<CircularProgress size={20} />
 										<Typography variant="body2" color="text.secondary">Fetching batches...</Typography>
@@ -216,7 +217,7 @@ const TrainingTable: React.FC<TrainingTableProps> = ({ refreshKey }) => {
 								</TableCell>
 							</TableRow>
 						) : batches.length === 0 ? (
-							<TableRow><TableCell colSpan={9} align="center" sx={{ py: 4 }}>No batches found</TableCell></TableRow>
+							<TableRow><TableCell colSpan={10} align="center" sx={{ py: 4 }}>No batches found</TableCell></TableRow>
 						) : (
 							batches.map((batch) => (
 								<TrainingTableRow
