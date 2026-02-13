@@ -12,9 +12,9 @@ import {
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchCandidateStats, createScreening, updateScreening, fetchCandidateById } from '../../store/slices/candidateSlice';
-import ScreeningStatCard from '../../components/profiling/ScreeningStatCard';
-import ScreeningTable from '../../components/profiling/ScreeningTable';
-import ScreeningFormDialog from '../../components/profiling/form/ScreeningFormDialog';
+import ScreeningStatCard from '../../components/profiling/stats/ScreeningStatCard';
+import ScreeningTable from '../../components/profiling/table/ScreeningTable';
+import ScreeningFormDialog from '../../components/profiling/dialogs/ScreeningFormDialog';
 import type { CandidateListItem, CandidateScreeningCreate } from '../../models/candidate';
 
 interface TabPanelProps {
@@ -188,33 +188,33 @@ const ScreeningList: React.FC = () => {
 				{/* Tab Panels */}
 				<TabPanel value={tabValue} index={0}>
 					<ScreeningTable
-						key={`unscreened-${refreshKey}`} // Force re-mount on update
 						type="unscreened"
 						onAction={handleAction}
+						refreshTrigger={refreshKey}
 					/>
 				</TabPanel>
 				<TabPanel value={tabValue} index={1}>
 					<ScreeningTable
-						key={`inprogress-${refreshKey}`}
 						type="screened"
 						status="In Progress"
 						onAction={handleAction}
+						refreshTrigger={refreshKey}
 					/>
 				</TabPanel>
 				<TabPanel value={tabValue} index={2}>
 					<ScreeningTable
-						key={`completed-${refreshKey}`}
 						type="screened"
 						status="Completed"
 						onAction={handleAction}
+						refreshTrigger={refreshKey}
 					/>
 				</TabPanel>
 				<TabPanel value={tabValue} index={3}>
 					<ScreeningTable
-						key={`rejected-${refreshKey}`}
 						type="screened"
 						status="Rejected"
 						onAction={handleAction}
+						refreshTrigger={refreshKey}
 					/>
 				</TabPanel>
 

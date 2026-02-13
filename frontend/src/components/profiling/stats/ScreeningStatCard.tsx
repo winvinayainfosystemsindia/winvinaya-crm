@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { Box, CircularProgress, Alert } from '@mui/material';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { fetchCandidateStats } from '../../store/slices/candidateSlice';
-import StatCard from '../dashboard/StatCard';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import { fetchCandidateStats } from '../../../store/slices/candidateSlice';
+import StatCard from '../../dashboard/StatCard';
 import PeopleIcon from '@mui/icons-material/People';
 import WcIcon from '@mui/icons-material/Wc';
 import CheckCircle from '@mui/icons-material/CheckCircle';
@@ -17,7 +17,7 @@ const ScreeningStatCard: React.FC = () => {
 		dispatch(fetchCandidateStats());
 	}, [dispatch]);
 
-	if (statsLoading) {
+	if (statsLoading && !stats) {
 		return (
 			<Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
 				<CircularProgress />
@@ -38,7 +38,7 @@ const ScreeningStatCard: React.FC = () => {
 	}
 
 	return (
-		<Box sx={{ display: 'flex', gap: 3, mb: 3, flexWrap: 'wrap' }}>
+		<Box sx={{ display: 'flex', gap: 3, mb: 3, flexWrap: 'wrap', opacity: statsLoading ? 0.7 : 1, transition: 'opacity 0.2s' }}>
 			<Box sx={{ flex: '1 1 200px' }}>
 				<StatCard
 					title="Total Candidates"
