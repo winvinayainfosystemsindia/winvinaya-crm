@@ -78,7 +78,10 @@ const AssessmentConfigPanel: React.FC<AssessmentConfigPanelProps> = ({
 							renderValue={(selected) => selected.join(', ')}
 							sx={{ bgcolor: 'white' }}
 						>
-							{batch.courses?.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
+							{batch.courses?.map(c => {
+								const name = typeof c === 'string' ? c : c.name;
+								return <MenuItem key={name} value={name}>{name}</MenuItem>;
+							})}
 						</Select>
 					</FormControl>
 				</Grid>

@@ -50,7 +50,10 @@ export const useAssessment = (batch: TrainingBatch, allocations: CandidateAlloca
 				}
 			} else {
 				setActiveAssessmentName('New Assessment');
-				if (batch.courses && batch.courses.length > 0) setActiveCourses([batch.courses[0]]);
+				if (batch.courses && batch.courses.length > 0) {
+					const firstCourse = batch.courses[0];
+					setActiveCourses([typeof firstCourse === 'string' ? firstCourse : firstCourse.name]);
+				}
 				if (user && (user.role === 'trainer' || user.role === 'admin' || user.role === 'manager')) {
 					setActiveTrainerId(user.id);
 				}
