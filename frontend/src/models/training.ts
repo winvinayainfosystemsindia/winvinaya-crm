@@ -38,7 +38,7 @@ export interface CandidateAllocation {
 	public_id: string;
 	batch_id: number;
 	candidate_id: number;
-	status: any;
+	status: 'allocated' | 'in_training' | 'completed' | 'dropped_out' | 'placed' | string;
 	is_dropout: boolean;
 	dropout_remark: string | null;
 	others: any;
@@ -50,6 +50,16 @@ export interface CandidateAllocation {
 		name: string;
 		email: string;
 		phone: string;
+		gender?: string;
+		disability_details?: {
+			disability_type?: string;
+			type?: string;
+			[key: string]: any;
+		};
+		education_details?: {
+			qualification?: string;
+			[key: string]: any;
+		};
 	};
 }
 

@@ -112,6 +112,7 @@ export const markAsDropout = createAsyncThunk(
 		try {
 			const response = await trainingService.updateAllocation(publicId, {
 				is_dropout: true,
+				status: 'dropped_out',
 				dropout_remark: remark
 			});
 			return response;
@@ -129,7 +130,8 @@ export const allocateCandidate = createAsyncThunk(
 				batch_id: batchId,
 				candidate_id: candidateId,
 				batch_public_id: batchPublicId,
-				candidate_public_id: candidatePublicId
+				candidate_public_id: candidatePublicId,
+				status: 'allocated'
 			});
 			// If allocation successful, we might need to refresh stats and batches because status might have changed
 			dispatch(fetchTrainingStats());
@@ -157,7 +159,7 @@ export const updateAllocationStatus = createAsyncThunk(
 	'training/updateAllocationStatus',
 	async ({ publicId, status }: { publicId: string, status: string }, { rejectWithValue }) => {
 		try {
-			const response = await trainingService.updateAllocation(publicId, { status: { current: status } });
+			const response = await trainingService.updateAllocation(publicId, { status: status });
 			return response;
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.message || 'Failed to update allocation status');

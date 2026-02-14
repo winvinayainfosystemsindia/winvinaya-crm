@@ -1,5 +1,4 @@
 """Training Candidate Allocation Service"""
-
 from typing import List, Optional, Any
 from uuid import UUID
 from fastapi import HTTPException
@@ -152,16 +151,6 @@ class TrainingCandidateAllocationService:
                     detail=f"Candidate does not match batch categories. Batch allows: {batch.disability_types}, Candidate: {cand_dis_val or 'No Disability'} ({candidate.gender})"
                 )
         
-        # 2. Business Logic: Must be selected in counseling
-        # Need to check counseling status
-        query = select(CandidateCounseling).where(CandidateCounseling.candidate_id == candidate.id)
-        counseling_result = await self.db.execute(query)
-        counseling = counseling_result.scalar_one_or_none()
-        
-        # Temporarily commenting out until we are sure about the counseling flow integration
-        # if not counseling or counseling.status != "selected":
-        #    raise HTTPException(status_code=400, detail="Candidate must be 'selected' in counseling to be allocated")
-        
         # Check if already allocated to this batch
         query = select(TrainingCandidateAllocation).where(
             TrainingCandidateAllocation.batch_id == batch.id,
@@ -182,8 +171,9 @@ class TrainingCandidateAllocationService:
         data["batch_id"] = batch.id
         data["candidate_id"] = candidate.id
         
+        # Set default status if not provided
         if "status" not in data or data["status"] is None:
-            data["status"] = {"current": "allocated"}
+            data["status"] = "allocated"
             
         allocation = await self.repository.create(data)
         
@@ -196,7 +186,7 @@ class TrainingCandidateAllocationService:
     async def get_eligible_candidates(self, batch_public_id: Optional[UUID] = None) -> List[dict]:
         """Get candidates eligible for training (selected and matching disability)"""
         # If batch_public_id is provided, filter by matching disability type
-        target_disability = None
+        target_disabilities = None
         if batch_public_id:
             batch = await self.batch_repo.get_by_public_id(str(batch_public_id))
             if batch:
@@ -232,8 +222,6 @@ class TrainingCandidateAllocationService:
                 matching_conditions.append(func.lower(Candidate.gender) == "female")
             
             # Condition 2: Match candidates with specific disabilities
-            # Robust JSON matching: check both common keys and use partial match to bypass quoting issues
-            # Using fuzzy matching by replacing spaces with % to catch variations like "Low Vision" vs "Low-vision"
             if other_disabilities:
                 for dt in other_disabilities:
                     # Fuzzy variation: "Low Vision" -> "%Low%Vision%"
@@ -272,17 +260,32 @@ class TrainingCandidateAllocationService:
             
         update_data = allocation_in.model_dump(exclude_unset=True)
         
-        # If being marked as dropout, ensure remark is provided or already exists
-        if update_data.get("is_dropout") is True:
-            remark = update_data.get("dropout_remark") or allocation.dropout_remark
-            if not remark:
-                 raise HTTPException(status_code=400, detail="Dropout remark is required when marking as dropout")
+        # Status Handling
+        if "status" in update_data:
+            new_status = update_data["status"]
             
-            # Update status as well
-            if "status" not in update_data:
-                update_data["status"] = allocation.status or {}
-            update_data["status"]["current"] = "dropout"
+            if new_status == "dropped_out":
+                update_data["is_dropout"] = True
+                
+                # Check for dropout remark
+                remark = update_data.get("dropout_remark") or allocation.dropout_remark
+                if not remark:
+                    raise HTTPException(status_code=400, detail="Dropout remark is required when status is 'dropped_out'")
+            else:
+                # If moving out of dropout status, clear flags
+                if allocation.is_dropout and new_status != "dropped_out":
+                    update_data["is_dropout"] = False
+                    # Optionally clear remark? Let's keep it for history, or clear it.
+                    # User request implies strict logic. If they rejoin, they are not a dropout.
+                    # update_data["dropout_remark"] = None # Optional: clear remark
         
+        # If is_dropout is explicitly set to True
+        elif update_data.get("is_dropout") is True:
+             update_data["status"] = "dropped_out"
+             remark = update_data.get("dropout_remark") or allocation.dropout_remark
+             if not remark:
+                  raise HTTPException(status_code=400, detail="Dropout remark is required when marking as dropout")
+
         await self.repository.update(allocation.id, update_data)
         return await self._get_with_relations(allocation.id)
     

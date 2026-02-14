@@ -40,7 +40,9 @@ class TrainingCandidateAllocation(BaseModel):
         index=True
     )
     
-    status: Mapped[dict | None] = mapped_column(JSON, nullable=True) # Status info per candidate
+    # Status: 'allocated', 'in_training', 'completed', 'dropped_out', 'placed'
+    status: Mapped[str] = mapped_column(String(50), default="allocated", index=True, nullable=False)
+    
     is_dropout: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     dropout_remark: Mapped[str | None] = mapped_column(String(500), nullable=True)
     others: Mapped[dict | None] = mapped_column(JSON, nullable=True)

@@ -8,7 +8,6 @@ import {
 } from '../../store/slices/trainingSlice';
 import AllocateCandidateDialog from '../../components/training/form/AllocateCandidateDialog';
 import CandidateAllocationTable from '../../components/training/allocation/CandidateAllocationTable';
-import DropoutDialog from '../../components/training/form/DropoutDialog';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { useSnackbar } from 'notistack';
 import TrainingModuleLayout from '../../components/training/layout/TrainingModuleLayout';
@@ -28,9 +27,6 @@ const AllocationManager: React.FC<AllocationManagerProps> = ({ selectedBatch, al
 	const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 	const [searchQuery, setSearchQuery] = useState('');
 	const [filterDropout, setFilterDropout] = useState<boolean | 'all'>('all');
-	const [dropoutDialogOpen, setDropoutDialogOpen] = useState(false);
-	const [selectedAllocationId, setSelectedAllocationId] = useState<string | null>(null);
-	const [dropoutRemark, setDropoutRemark] = useState('');
 
 	// Confirmation Dialog State
 	const [confirmOpen, setConfirmOpen] = useState(false);
@@ -46,35 +42,17 @@ const AllocationManager: React.FC<AllocationManagerProps> = ({ selectedBatch, al
 		}
 	}, [searchQuery, filterDropout, selectedBatch, dispatch]);
 
-	const handleStatusChange = async (publicId: string, newStatus: string) => {
-		if (newStatus === 'dropout') {
-			setSelectedAllocationId(publicId);
-			setDropoutRemark('');
-			setDropoutDialogOpen(true);
-			return;
-		}
-
+	const handleStatusChange = async (publicId: string, newStatus: string, reason?: string) => {
 		setUpdatingStatus(publicId);
 		try {
-			await dispatch(updateAllocationStatus({ publicId, status: newStatus })).unwrap();
+			if (newStatus === 'dropped_out' && reason) {
+				await dispatch(markAsDropout({ publicId, remark: reason })).unwrap();
+			} else {
+				await dispatch(updateAllocationStatus({ publicId, status: newStatus })).unwrap();
+			}
 			enqueueSnackbar('Status updated successfully', { variant: 'success' });
 		} catch (error: any) {
 			enqueueSnackbar(error || 'Failed to update status', { variant: 'error' });
-		} finally {
-			setUpdatingStatus(null);
-		}
-	};
-
-	const handleConfirmDropout = async () => {
-		if (!selectedAllocationId || !dropoutRemark) return;
-
-		setUpdatingStatus(selectedAllocationId);
-		try {
-			await dispatch(markAsDropout({ publicId: selectedAllocationId, remark: dropoutRemark })).unwrap();
-			enqueueSnackbar('Candidate marked as dropout', { variant: 'success' });
-			setDropoutDialogOpen(false);
-		} catch (error: any) {
-			enqueueSnackbar(error || 'Failed to mark as dropout', { variant: 'error' });
 		} finally {
 			setUpdatingStatus(null);
 		}
@@ -119,15 +97,6 @@ const AllocationManager: React.FC<AllocationManagerProps> = ({ selectedBatch, al
 				batchId={selectedBatch.id}
 				batchPublicId={selectedBatch.public_id}
 				batchName={selectedBatch.batch_name}
-			/>
-
-			<DropoutDialog
-				open={dropoutDialogOpen}
-				onClose={() => setDropoutDialogOpen(false)}
-				onConfirm={handleConfirmDropout}
-				remark={dropoutRemark}
-				onRemarkChange={setDropoutRemark}
-				submitting={updatingStatus !== null}
 			/>
 
 			<ConfirmDialog

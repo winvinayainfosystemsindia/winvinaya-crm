@@ -23,24 +23,25 @@ import {
 	People as PeopleIcon,
 	PersonAdd as PersonAddIcon
 } from '@mui/icons-material';
+import { useState } from 'react';
 import type { CandidateAllocation } from '../../../models/training';
 import CandidateAllocationTableRow from './CandidateAllocationTableRow';
+import DropoutReasonDialog from '../../common/DropoutReasonDialog';
 
 const ALLOCATION_STATUSES = [
-	'allocated',
-	'training',
+	'in_training',
 	'completed',
-	'dropout',
-	'not interested'
+	'dropped_out',
+	'placed'
 ];
 
 const getAllocationStatusColor = (status: string) => {
 	switch (status?.toLowerCase()) {
 		case 'completed': return '#2e7d32';
-		case 'dropout': return '#d32f2f';
-		case 'not interested': return '#757575';
-		case 'training': return '#0288d1';
-		default: return '#fb8c00';
+		case 'dropped_out': return '#d32f2f';
+		case 'placed': return '#00a3bf';
+		case 'in_training': return '#0288d1';
+		default: return '#fb8c00'; // allocated or others
 	}
 };
 
@@ -52,7 +53,7 @@ interface CandidateAllocationTableProps {
 	filterDropout: boolean | 'all';
 	onFilterChange: (value: boolean | 'all') => void;
 	updatingStatusId: string | null;
-	onStatusChange: (publicId: string, status: string) => void;
+	onStatusChange: (publicId: string, status: string, reason?: string) => void;
 	onRemove: (publicId: string, name: string) => void;
 	onAddClick: () => void;
 }
@@ -69,6 +70,28 @@ const CandidateAllocationTable: React.FC<CandidateAllocationTableProps> = memo((
 	onRemove,
 	onAddClick
 }) => {
+	const [dropoutDialog, setDropoutDialog] = useState<{ open: boolean, publicId: string, name: string } | null>(null);
+
+	const handleStatusChangeInternal = (publicId: string, status: string) => {
+		if (status === 'dropped_out') {
+			const candidate = allocations.find(a => a.public_id === publicId);
+			setDropoutDialog({
+				open: true,
+				publicId,
+				name: candidate?.candidate?.name || 'Candidate'
+			});
+		} else {
+			onStatusChange(publicId, status);
+		}
+	};
+
+	const handleDropoutConfirm = (reason: string) => {
+		if (dropoutDialog) {
+			onStatusChange(dropoutDialog.publicId, 'dropped_out', reason);
+			setDropoutDialog(null);
+		}
+	};
+
 	return (
 		<Box>
 			{/* Command Bar */}
@@ -146,9 +169,11 @@ const CandidateAllocationTable: React.FC<CandidateAllocationTableProps> = memo((
 					<TableHead>
 						<TableRow sx={{ bgcolor: '#f8f9fa' }}>
 							<TableCell sx={{ fontWeight: 700, py: 1.5, color: '#545b64', fontSize: '0.75rem', textTransform: 'uppercase' }}>Candidate Name</TableCell>
+							<TableCell sx={{ fontWeight: 700, color: '#545b64', fontSize: '0.75rem', textTransform: 'uppercase' }}>Gender</TableCell>
+							<TableCell sx={{ fontWeight: 700, color: '#545b64', fontSize: '0.75rem', textTransform: 'uppercase' }}>Disability</TableCell>
+							<TableCell sx={{ fontWeight: 700, color: '#545b64', fontSize: '0.75rem', textTransform: 'uppercase' }}>Qualification</TableCell>
 							<TableCell sx={{ fontWeight: 700, color: '#545b64', fontSize: '0.75rem', textTransform: 'uppercase' }}>Contact Info</TableCell>
-							<TableCell sx={{ fontWeight: 700, color: '#545b64', fontSize: '0.75rem', textTransform: 'uppercase' }}>Allocation Date</TableCell>
-							<TableCell sx={{ fontWeight: 700, color: '#545b64', fontSize: '0.75rem', textTransform: 'uppercase' }}>Current Status</TableCell>
+							<TableCell sx={{ fontWeight: 700, color: '#545b64', fontSize: '0.75rem', textTransform: 'uppercase' }}>Status</TableCell>
 							<TableCell align="right" sx={{ fontWeight: 700, color: '#545b64', fontSize: '0.75rem', textTransform: 'uppercase' }}>Actions</TableCell>
 						</TableRow>
 					</TableHead>
@@ -176,7 +201,7 @@ const CandidateAllocationTable: React.FC<CandidateAllocationTableProps> = memo((
 									key={allocation.public_id}
 									allocation={allocation}
 									updatingStatusId={updatingStatusId}
-									onStatusChange={onStatusChange}
+									onStatusChange={handleStatusChangeInternal}
 									onRemove={onRemove}
 									getAllocationStatusColor={getAllocationStatusColor}
 									ALLOCATION_STATUSES={ALLOCATION_STATUSES}
@@ -186,6 +211,15 @@ const CandidateAllocationTable: React.FC<CandidateAllocationTableProps> = memo((
 					</TableBody>
 				</Table>
 			</TableContainer>
+
+			{dropoutDialog && (
+				<DropoutReasonDialog
+					open={dropoutDialog.open}
+					onClose={() => setDropoutDialog(null)}
+					onConfirm={handleDropoutConfirm}
+					candidateName={dropoutDialog.name}
+				/>
+			)}
 		</Box>
 	);
 });

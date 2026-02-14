@@ -15,8 +15,7 @@ import {
 import {
 	Delete as DeleteIcon,
 	MailOutline as MailIcon,
-	PhoneIphone as PhoneIcon,
-	History as HistoryIcon
+	PhoneIphone as PhoneIcon
 } from '@mui/icons-material';
 import type { CandidateAllocation } from '../../../models/training';
 
@@ -37,15 +36,19 @@ const CandidateAllocationTableRow: React.FC<CandidateAllocationTableRowProps> = 
 	getAllocationStatusColor,
 	ALLOCATION_STATUSES
 }) => {
-	const isDropout = allocation.is_dropout;
-	const currentStatus = isDropout ? 'dropout' : (allocation.status?.current || 'allocated');
+	const isDropout = allocation.is_dropout || allocation.status === 'dropped_out';
+	// Handle backward compatibility if status comes as object
+	const statusStr = typeof allocation.status === 'string' ? allocation.status : (allocation.status as any)?.current;
+	const currentStatus = isDropout ? 'dropped_out' : (statusStr || 'allocated');
 
 	const getDisplayStatus = (status: string) => {
 		switch (status) {
-			case 'allocated': return 'In Training';
-			case 'completed': return 'Certified';
-			case 'dropout': return 'Withdrawn';
-			default: return status.charAt(0).toUpperCase() + status.slice(1);
+			case 'allocated': return 'Allocated';
+			case 'in_training': return 'In Training';
+			case 'completed': return 'Completed';
+			case 'dropped_out': return 'Drop Out';
+			case 'placed': return 'Moved to placement';
+			default: return status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ');
 		}
 	};
 
@@ -85,6 +88,21 @@ const CandidateAllocationTableRow: React.FC<CandidateAllocationTableRowProps> = 
 				</Stack>
 			</TableCell>
 			<TableCell>
+				<Typography variant="body2" sx={{ color: '#545b64', fontSize: '0.8125rem' }}>
+					{allocation.candidate?.gender || '-'}
+				</Typography>
+			</TableCell>
+			<TableCell>
+				<Typography variant="body2" sx={{ color: '#545b64', fontSize: '0.8125rem' }}>
+					{allocation.candidate?.disability_details?.disability_type || allocation.candidate?.disability_details?.type || '-'}
+				</Typography>
+			</TableCell>
+			<TableCell>
+				<Typography variant="body2" sx={{ color: '#545b64', fontSize: '0.8125rem' }}>
+					{allocation.candidate?.education_details?.degrees?.[0]?.degree_name || '-'}
+				</Typography>
+			</TableCell>
+			<TableCell>
 				<Stack spacing={0.5}>
 					<Stack direction="row" spacing={1} alignItems="center">
 						<MailIcon sx={{ fontSize: 14, color: '#879196' }} />
@@ -94,14 +112,6 @@ const CandidateAllocationTableRow: React.FC<CandidateAllocationTableRowProps> = 
 						<PhoneIcon sx={{ fontSize: 14, color: '#879196' }} />
 						<Typography variant="caption" sx={{ color: '#879196' }}>{allocation.candidate?.phone}</Typography>
 					</Stack>
-				</Stack>
-			</TableCell>
-			<TableCell>
-				<Stack direction="row" spacing={1} alignItems="center">
-					<HistoryIcon sx={{ fontSize: 14, color: '#879196' }} />
-					<Typography variant="body2" sx={{ color: '#545b64', fontSize: '0.8125rem' }}>
-						{new Date(allocation.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-					</Typography>
 				</Stack>
 			</TableCell>
 			<TableCell>

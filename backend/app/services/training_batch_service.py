@@ -109,7 +109,7 @@ class TrainingBatchService:
         
         query = select(TrainingCandidateAllocation).where(
             TrainingCandidateAllocation.batch_id == batch_id,
-            TrainingCandidateAllocation.is_deleted == False,
+            TrainingCandidateAllocation.batch_id == batch_id, # redundant but harmless
             TrainingCandidateAllocation.is_dropout == False
         )
         result = await self.db.execute(query)
@@ -117,11 +117,12 @@ class TrainingBatchService:
         
         for allocation in allocations:
             # Update status to completed
-            if allocation.status:
-                allocation.status["current"] = "completed"
-            else:
-                allocation.status = {"current": "completed"}
-            allocation.status["completed_at"] = datetime.now().isoformat()
+            allocation.status = "completed"
+            
+            # Store completion metadata in others
+            others = allocation.others or {}
+            others["completed_at"] = datetime.now().isoformat()
+            allocation.others = others
         
         await self.db.commit()
     
@@ -239,7 +240,7 @@ class TrainingBatchService:
         alloc_result = await self.db.execute(alloc_query)
         allocations = alloc_result.all()
         
-        completed_count = sum(1 for a in allocations if a.status and a.status.get('current') == 'completed')
+        completed_count = sum(1 for a in allocations if a.status == 'completed')
         dropped_count = sum(1 for a in allocations if a.is_dropout)
         
         # Ready for Training candidates: 

@@ -9,7 +9,7 @@ from pydantic import BaseModel
 class TrainingCandidateAllocationBase(BaseModel):
     batch_id: Optional[int] = None
     candidate_id: Optional[int] = None
-    status: Optional[dict] = None # Status info per candidate
+    status: str = "allocated" 
     is_dropout: bool = False
     dropout_remark: Optional[str] = None
     others: Optional[dict] = None
@@ -23,9 +23,7 @@ class TrainingCandidateAllocationCreate(TrainingCandidateAllocationBase):
 
 class TrainingCandidateAllocationUpdate(BaseModel):
     """Schema for updating a candidate allocation"""
-    batch_id: Optional[int] = None
-    candidate_id: Optional[int] = None
-    status: Optional[dict] = None
+    status: Optional[str] = None
     is_dropout: Optional[bool] = None
     dropout_remark: Optional[str] = None
     others: Optional[dict] = None
@@ -36,6 +34,9 @@ class CandidateMini(BaseModel):
     name: str
     email: str
     phone: str
+    gender: Optional[str] = None
+    disability_details: Optional[dict] = None
+    education_details: Optional[dict] = None
 
     class Config:
         from_attributes = True
