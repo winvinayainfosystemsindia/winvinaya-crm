@@ -76,7 +76,7 @@ const MockInterviewFormMetadata: React.FC<MockInterviewFormMetadataProps> = memo
 					/>
 
 					<TextField
-						label="Assessment Timestamp"
+						label="Interview Timestamp"
 						type="datetime-local"
 						value={formData.interview_date || ''}
 						onChange={(e) => onChange('interview_date', e.target.value)}

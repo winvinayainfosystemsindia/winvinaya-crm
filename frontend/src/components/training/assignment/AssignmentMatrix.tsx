@@ -8,23 +8,23 @@ import {
 	TableHead,
 	TableRow,
 } from '@mui/material';
-import type { CandidateAllocation, TrainingAssessment } from '../../../models/training';
-import AssessmentMatrixRow from './AssessmentMatrixRow';
+import type { CandidateAllocation, TrainingAssignment } from '../../../models/training';
+import AssignmentMatrixRow from './AssignmentMatrixRow';
 
-interface AssessmentMatrixProps {
+interface AssignmentMatrixProps {
 	allocations: CandidateAllocation[];
-	assessments: TrainingAssessment[];
-	activeAssessmentName: string;
+	assignments: TrainingAssignment[];
+	activeAssignmentName: string;
 	activeCourses: string[];
 	activeMaxMarks: number;
 	activeDate: string;
-	onMarkChange: (candidateId: number, field: keyof TrainingAssessment | 'remarks' | 'course_mark', value: any, courseName?: string) => void;
+	onMarkChange: (candidateId: number, field: keyof TrainingAssignment | 'remarks' | 'course_mark', value: any, courseName?: string) => void;
 }
 
-const AssessmentMatrix: React.FC<AssessmentMatrixProps> = memo(({
+const AssignmentMatrix: React.FC<AssignmentMatrixProps> = memo(({
 	allocations,
-	assessments,
-	activeAssessmentName,
+	assignments,
+	activeAssignmentName,
 	activeCourses,
 	activeMaxMarks,
 	activeDate,
@@ -47,10 +47,10 @@ const AssessmentMatrix: React.FC<AssessmentMatrixProps> = memo(({
 				</TableHead>
 				<TableBody>
 					{allocations.map(allocation => {
-						const record = assessments.find(a => a.candidate_id === allocation.candidate_id && a.assessment_name === activeAssessmentName);
+						const record = assignments.find(a => a.candidate_id === allocation.candidate_id && a.assignment_name === activeAssignmentName);
 
 						return (
-							<AssessmentMatrixRow
+							<AssignmentMatrixRow
 								key={allocation.id}
 								allocation={allocation}
 								record={record}
@@ -67,7 +67,7 @@ const AssessmentMatrix: React.FC<AssessmentMatrixProps> = memo(({
 	);
 });
 
-AssessmentMatrix.displayName = 'AssessmentMatrix';
+AssignmentMatrix.displayName = 'AssignmentMatrix';
 
-export default AssessmentMatrix;
+export default AssignmentMatrix;
 

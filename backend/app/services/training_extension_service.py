@@ -10,22 +10,22 @@ from sqlalchemy.orm import selectinload
 from app.models.candidate import Candidate
 from app.models.training_candidate_allocation import TrainingCandidateAllocation
 from app.repositories.training_attendance_repository import TrainingAttendanceRepository
-from app.repositories.training_assessment_repository import TrainingAssessmentRepository
+from app.repositories.training_assignment_repository import TrainingAssignmentRepository
 from app.repositories.training_mock_interview_repository import TrainingMockInterviewRepository
 from app.repositories.training_batch_event_repository import TrainingBatchEventRepository
 from app.schemas.training_attendance import TrainingAttendanceCreate, TrainingAttendanceUpdate
-from app.schemas.training_assessment import TrainingAssessmentCreate, TrainingAssessmentUpdate
+from app.schemas.training_assignment import TrainingAssignmentCreate, TrainingAssignmentUpdate
 from app.schemas.training_mock_interview import TrainingMockInterviewCreate, TrainingMockInterviewUpdate
 from app.schemas.training_batch_event import TrainingBatchEventCreate, TrainingBatchEventUpdate
 
 
 class TrainingExtensionService:
-    """Service for training attendance, assessments, and mock interviews"""
+    """Service for training attendance, assignments, and mock interviews"""
     
     def __init__(self, db: AsyncSession):
         self.db = db
         self.attendance_repo = TrainingAttendanceRepository(db)
-        self.assessment_repo = TrainingAssessmentRepository(db)
+        self.assignment_repo = TrainingAssignmentRepository(db)
         self.mock_interview_repo = TrainingMockInterviewRepository(db)
         self.event_repo = TrainingBatchEventRepository(db)
 
@@ -132,44 +132,44 @@ class TrainingExtensionService:
         result = await self.db.execute(query)
         return result.scalars().all()
 
-    # Assessments
-    async def get_assessments(self, batch_id: int):
-        query = select(self.assessment_repo.model).options(
-            selectinload(self.assessment_repo.model.batch)
+    # Assignments
+    async def get_assignments(self, batch_id: int):
+        query = select(self.assignment_repo.model).options(
+            selectinload(self.assignment_repo.model.batch)
         ).where(
-            self.assessment_repo.model.batch_id == batch_id,
-            self.assessment_repo.model.is_deleted == False
+            self.assignment_repo.model.batch_id == batch_id,
+            self.assignment_repo.model.is_deleted == False
         )
         result = await self.db.execute(query)
         return result.scalars().all()
 
-    async def get_assessments_by_candidate(self, public_id: UUID):
-        query = select(self.assessment_repo.model).join(Candidate).options(
-            selectinload(self.assessment_repo.model.batch)
+    async def get_assignments_by_candidate(self, public_id: UUID):
+        query = select(self.assignment_repo.model).join(Candidate).options(
+            selectinload(self.assignment_repo.model.batch)
         ).where(
             Candidate.public_id == public_id,
-            self.assessment_repo.model.is_deleted == False
-        ).order_by(self.assessment_repo.model.created_at.desc())
+            self.assignment_repo.model.is_deleted == False
+        ).order_by(self.assignment_repo.model.created_at.desc())
         result = await self.db.execute(query)
         return result.scalars().all()
 
-    async def create_assessment(self, assessment_in: TrainingAssessmentCreate):
-        record = await self.assessment_repo.create(assessment_in.model_dump())
+    async def create_assignment(self, assignment_in: TrainingAssignmentCreate):
+        record = await self.assignment_repo.create(assignment_in.model_dump())
         # Re-fetch with batch
-        query = select(self.assessment_repo.model).options(
-            selectinload(self.assessment_repo.model.batch)
-        ).where(self.assessment_repo.model.id == record.id)
+        query = select(self.assignment_repo.model).options(
+            selectinload(self.assignment_repo.model.batch)
+        ).where(self.assignment_repo.model.id == record.id)
         return (await self.db.execute(query)).scalar_one()
 
-    async def update_bulk_assessments(self, assessments_in: List[TrainingAssessmentCreate]):
+    async def update_bulk_assignments(self, assignments_in: List[TrainingAssignmentCreate]):
         records = []
-        for ass in assessments_in:
+        for ass in assignments_in:
             # Check if record exists for this candidate/batch/date/name
-            query = select(self.assessment_repo.model).where(
-                self.assessment_repo.model.batch_id == ass.batch_id,
-                self.assessment_repo.model.candidate_id == ass.candidate_id,
-                self.assessment_repo.model.assessment_name == ass.assessment_name,
-                self.assessment_repo.model.is_deleted == False
+            query = select(self.assignment_repo.model).where(
+                self.assignment_repo.model.batch_id == ass.batch_id,
+                self.assignment_repo.model.candidate_id == ass.candidate_id,
+                self.assignment_repo.model.assignment_name == ass.assignment_name,
+                self.assignment_repo.model.is_deleted == False
             )
             # Auto-calculate marks_obtained if course_marks is provided
             if ass.course_marks:
@@ -177,30 +177,30 @@ class TrainingExtensionService:
 
             existing = (await self.db.execute(query)).scalar_one_or_none()
             if existing:
-                record = await self.assessment_repo.update(existing.id, ass.model_dump(exclude={"batch_id", "candidate_id", "assessment_name"}))
+                record = await self.assignment_repo.update(existing.id, ass.model_dump(exclude={"batch_id", "candidate_id", "assignment_name"}))
             else:
-                record = await self.assessment_repo.create(ass.model_dump())
+                record = await self.assignment_repo.create(ass.model_dump())
             records.append(record)
         
         # Re-fetch with batch
         ids = [r.id for r in records]
-        query = select(self.assessment_repo.model).options(
-            selectinload(self.assessment_repo.model.batch)
-        ).where(self.assessment_repo.model.id.in_(ids))
+        query = select(self.assignment_repo.model).options(
+            selectinload(self.assignment_repo.model.batch)
+        ).where(self.assignment_repo.model.id.in_(ids))
         result = await self.db.execute(query)
         return result.scalars().all()
 
-    async def delete_assessments_by_name(self, batch_id: int, assessment_name: str):
-        """Delete all assessment records for a given assessment name in a batch"""
+    async def delete_assignments_by_name(self, batch_id: int, assignment_name: str):
+        """Delete all assignment records for a given assignment name in a batch"""
         from sqlalchemy import update
-        query = update(self.assessment_repo.model).where(
-            self.assessment_repo.model.batch_id == batch_id,
-            self.assessment_repo.model.assessment_name == assessment_name,
-            self.assessment_repo.model.is_deleted == False
+        query = update(self.assignment_repo.model).where(
+            self.assignment_repo.model.batch_id == batch_id,
+            self.assignment_repo.model.assignment_name == assignment_name,
+            self.assignment_repo.model.is_deleted == False
         ).values(is_deleted=True)
         await self.db.execute(query)
         await self.db.commit()
-        return {"message": f"Assessment '{assessment_name}' deleted successfully", "batch_id": batch_id, "assessment_name": assessment_name}
+        return {"message": f"Assignment '{assignment_name}' deleted successfully", "batch_id": batch_id, "assignment_name": assignment_name}
 
     async def get_mock_interviews(self, batch_id: int):
         return await self.mock_interview_repo.get_by_batch_id(batch_id)

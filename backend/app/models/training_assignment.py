@@ -1,5 +1,5 @@
 from __future__ import annotations
-"""Training Assessment model"""
+"""Training Assignment model"""
 
 from datetime import date
 from typing import TYPE_CHECKING
@@ -13,10 +13,10 @@ if TYPE_CHECKING:
     from app.models.user import User
 
 
-class TrainingAssessment(BaseModel):
-    """Training Assessment database model"""
+class TrainingAssignment(BaseModel):
+    """Training Assignment database model"""
     
-    __tablename__ = "training_assessments"
+    __tablename__ = "training_assignments"
     
     batch_id: Mapped[int] = mapped_column(
         Integer,
@@ -32,7 +32,7 @@ class TrainingAssessment(BaseModel):
         index=True
     )
     
-    assessment_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    assignment_name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     course_name: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
     course_marks: Mapped[dict | None] = mapped_column(JSON, nullable=True)
@@ -46,7 +46,7 @@ class TrainingAssessment(BaseModel):
     
     marks_obtained: Mapped[float] = mapped_column(Float, nullable=False)
     max_marks: Mapped[float] = mapped_column(Float, nullable=False, default=100.0)
-    assessment_date: Mapped[date] = mapped_column(Date, nullable=False)
+    assignment_date: Mapped[date] = mapped_column(Date, nullable=False)
     submission_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     others: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     
@@ -56,4 +56,4 @@ class TrainingAssessment(BaseModel):
     trainer: Mapped[User] = relationship("User")
     
     def __repr__(self) -> str:
-        return f"<TrainingAssessment(batch_id={self.batch_id}, candidate_id={self.candidate_id}, name={self.assessment_name}, marks={self.marks_obtained}/{self.max_marks})>"
+        return f"<TrainingAssignment(batch_id={self.batch_id}, candidate_id={self.candidate_id}, name={self.assignment_name}, marks={self.marks_obtained}/{self.max_marks})>"

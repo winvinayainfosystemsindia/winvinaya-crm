@@ -6,18 +6,18 @@ import {
 	TextField,
 	Box
 } from '@mui/material';
-import type { CandidateAllocation, TrainingAssessment } from '../../../models/training';
+import type { CandidateAllocation, TrainingAssignment } from '../../../models/training';
 
-interface AssessmentMatrixRowProps {
+interface AssignmentMatrixRowProps {
 	allocation: CandidateAllocation;
-	record: TrainingAssessment | undefined;
+	record: TrainingAssignment | undefined;
 	activeDate: string;
 	activeCourses: string[];
 	activeMaxMarks: number;
-	onMarkChange: (candidateId: number, field: keyof TrainingAssessment | 'remarks' | 'course_mark', value: any, courseName?: string) => void;
+	onMarkChange: (candidateId: number, field: keyof TrainingAssignment | 'remarks' | 'course_mark', value: any, courseName?: string) => void;
 }
 
-const AssessmentMatrixRow: React.FC<AssessmentMatrixRowProps> = memo(({
+const AssignmentMatrixRow: React.FC<AssignmentMatrixRowProps> = memo(({
 	allocation,
 	record,
 	activeDate,
@@ -33,6 +33,11 @@ const AssessmentMatrixRow: React.FC<AssessmentMatrixRowProps> = memo(({
 		<TableRow hover sx={{ '&:hover': { bgcolor: '#f1faff !important' } }}>
 			<TableCell sx={{ py: 1.5 }}>
 				<Typography variant="body2" sx={{ fontWeight: 700, color: '#232f3e' }}>{allocation.candidate?.name}</Typography>
+				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+					<Typography variant="body2" sx={{ color: '#545b64', fontSize: '0.75rem' }}>
+						{record?.assignment_date || activeDate}
+					</Typography>
+				</Box>
 				<Typography variant="caption" sx={{ color: '#545b64' }}>{allocation.candidate?.email}</Typography>
 			</TableCell>
 			<TableCell align="center">
@@ -91,7 +96,7 @@ const AssessmentMatrixRow: React.FC<AssessmentMatrixRowProps> = memo(({
 	);
 });
 
-AssessmentMatrixRow.displayName = 'AssessmentMatrixRow';
+AssignmentMatrixRow.displayName = 'AssignmentMatrixRow';
 
-export default AssessmentMatrixRow;
+export default AssignmentMatrixRow;
 

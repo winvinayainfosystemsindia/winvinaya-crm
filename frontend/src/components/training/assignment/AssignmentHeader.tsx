@@ -10,20 +10,20 @@ import {
 } from '@mui/material';
 import { Add as AddIcon, Save as SaveIcon } from '@mui/icons-material';
 
-interface AssessmentHeaderProps {
-	assessmentNames: string[];
-	activeAssessmentName: string;
-	onSelectAssessment: (name: string) => void;
+interface AssignmentHeaderProps {
+	assignmentNames: string[];
+	activeAssignmentName: string;
+	onSelectAssignment: (name: string) => void;
 	onCreateNew: () => void;
 	onSave: () => void;
 	onDelete: () => void;
 	saving: boolean;
 }
 
-const AssessmentHeader: React.FC<AssessmentHeaderProps> = ({
-	assessmentNames,
-	activeAssessmentName,
-	onSelectAssessment,
+const AssignmentHeader: React.FC<AssignmentHeaderProps> = ({
+	assignmentNames,
+	activeAssignmentName,
+	onSelectAssignment,
 	onCreateNew,
 	onSave,
 	onDelete,
@@ -33,17 +33,17 @@ const AssessmentHeader: React.FC<AssessmentHeaderProps> = ({
 		<Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
 			<Grid size={{ xs: 12, md: 4 }}>
 				<FormControl fullWidth size="small">
-					<InputLabel>Select Assessment</InputLabel>
+					<InputLabel>Select Assignment</InputLabel>
 					<Select
-						value={assessmentNames.includes(activeAssessmentName) ? activeAssessmentName : ''}
-						label="Select Assessment"
-						onChange={(e) => onSelectAssessment(e.target.value)}
+						value={assignmentNames.includes(activeAssignmentName) ? activeAssignmentName : ''}
+						label="Select Assignment"
+						onChange={(e) => onSelectAssignment(e.target.value)}
 						sx={{ bgcolor: 'white' }}
 					>
-						{assessmentNames.map(name => (
+						{assignmentNames.map(name => (
 							<MenuItem key={name} value={name}>{name}</MenuItem>
 						))}
-						{assessmentNames.length === 0 && <MenuItem disabled>No assessments found</MenuItem>}
+						{assignmentNames.length === 0 && <MenuItem disabled>No assignments found</MenuItem>}
 					</Select>
 				</FormControl>
 			</Grid>
@@ -68,7 +68,7 @@ const AssessmentHeader: React.FC<AssessmentHeaderProps> = ({
 					variant="contained"
 					startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
 					onClick={onSave}
-					disabled={saving || !activeAssessmentName}
+					disabled={saving || !activeAssignmentName}
 					sx={{
 						bgcolor: '#ff9900',
 						color: '#232f3e',
@@ -82,7 +82,7 @@ const AssessmentHeader: React.FC<AssessmentHeaderProps> = ({
 				>
 					{saving ? 'Saving...' : 'Save changes'}
 				</Button>
-				{activeAssessmentName && assessmentNames.includes(activeAssessmentName) && (
+				{activeAssignmentName && assignmentNames.includes(activeAssignmentName) && (
 					<Button
 						variant="outlined"
 						onClick={onDelete}
@@ -95,7 +95,7 @@ const AssessmentHeader: React.FC<AssessmentHeaderProps> = ({
 							fontWeight: 700
 						}}
 					>
-						Delete Assessment
+						Delete Assignment
 					</Button>
 				)}
 			</Grid>
@@ -103,4 +103,4 @@ const AssessmentHeader: React.FC<AssessmentHeaderProps> = ({
 	);
 };
 
-export default AssessmentHeader;
+export default AssignmentHeader;

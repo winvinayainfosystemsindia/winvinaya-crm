@@ -17,7 +17,7 @@ import {
 	AccordionDetails
 } from '@mui/material';
 import {
-	Assignment as AssessmentIcon,
+	Assignment as AssignmentIcon,
 	PendingActions as PendingIcon,
 	ExpandMore as ExpandMoreIcon,
 	School as BatchIcon
@@ -25,25 +25,25 @@ import {
 import { format } from 'date-fns';
 import { SectionHeader } from './DetailedViewCommon';
 import trainingExtensionService from '../../../services/trainingExtensionService';
-import type { TrainingAssessment } from '../../../models/training';
+import type { TrainingAssignment } from '../../../models/training';
 import type { Candidate } from '../../../models/candidate';
 
-interface CandidateAssessmentTabProps {
+interface CandidateAssignmentTabProps {
 	candidate: Candidate;
 }
 
-const CandidateAssessmentTab: React.FC<CandidateAssessmentTabProps> = ({ candidate }) => {
-	const [assessments, setAssessments] = useState<TrainingAssessment[]>([]);
+const CandidateAssignmentTab: React.FC<CandidateAssignmentTabProps> = ({ candidate }) => {
+	const [assignments, setAssignments] = useState<TrainingAssignment[]>([]);
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
 		const loadData = async () => {
 			if (!candidate.public_id) return;
 			try {
-				const data = await trainingExtensionService.getCandidateAssessments(candidate.public_id);
-				setAssessments(data);
+				const data = await trainingExtensionService.getCandidateAssignments(candidate.public_id);
+				setAssignments(data);
 			} catch (error) {
-				console.error('Failed to fetch assessments:', error);
+				console.error('Failed to fetch assignments:', error);
 			} finally {
 				setLoading(false);
 			}
@@ -51,11 +51,11 @@ const CandidateAssessmentTab: React.FC<CandidateAssessmentTabProps> = ({ candida
 		loadData();
 	}, [candidate.public_id]);
 
-	// Group assessments by batch
-	const assessmentsByBatch = useMemo(() => {
-		const grouped = new Map<number, { batch: any; records: TrainingAssessment[] }>();
+	// Group assignments by batch
+	const assignmentsByBatch = useMemo(() => {
+		const grouped = new Map<number, { batch: any; records: TrainingAssignment[] }>();
 
-		assessments.forEach(record => {
+		assignments.forEach(record => {
 			if (!record.batch) return;
 
 			if (!grouped.has(record.batch_id)) {
@@ -65,23 +65,23 @@ const CandidateAssessmentTab: React.FC<CandidateAssessmentTabProps> = ({ candida
 		});
 
 		return Array.from(grouped.values());
-	}, [assessments]);
+	}, [assignments]);
 
 	// Overall statistics
 	const overallStats = useMemo(() => {
-		if (assessments.length === 0) return { avgPercentage: 0, total: 0 };
-		const totalPercentage = assessments.reduce((sum, a) => {
+		if (assignments.length === 0) return { avgPercentage: 0, total: 0 };
+		const totalPercentage = assignments.reduce((sum, a) => {
 			const perc = (a.marks_obtained / a.max_marks) * 100;
 			return sum + perc;
 		}, 0);
 		return {
-			avgPercentage: (totalPercentage / assessments.length).toFixed(1),
-			total: assessments.length
+			avgPercentage: (totalPercentage / assignments.length).toFixed(1),
+			total: assignments.length
 		};
-	}, [assessments]);
+	}, [assignments]);
 
 	// Batch-specific statistics
-	const getBatchStats = (records: TrainingAssessment[]) => {
+	const getBatchStats = (records: TrainingAssignment[]) => {
 		if (records.length === 0) return { avgPercentage: 0, total: 0 };
 		const totalPercentage = records.reduce((sum, a) => {
 			const perc = (a.marks_obtained / a.max_marks) * 100;
@@ -132,15 +132,15 @@ const CandidateAssessmentTab: React.FC<CandidateAssessmentTabProps> = ({ candida
 			variant="outlined"
 			sx={{ p: 3, borderRadius: 0, border: '1px solid #d5dbdb', boxShadow: '0 1px 1px 0 rgba(0,28,36,0.1)' }}
 		>
-			<SectionHeader title="Assessment Performance" icon={<AssessmentIcon />} />
+			<SectionHeader title="Assignment Performance" icon={<AssignmentIcon />} />
 
-			{assessments.length > 0 ? (
+			{assignments.length > 0 ? (
 				<>
 					{/* Overall Summary Strip */}
 					<Box sx={{ display: 'flex', gap: 6, mb: 4, bgcolor: '#f8f9fa', p: 2.5, border: '1px solid #eaeded', borderRadius: '2px' }}>
 						<Box>
 							<Typography variant="caption" sx={{ color: '#545b64', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem', display: 'block', mb: 0.5 }}>
-								Total Assessments
+								Total Assignments
 							</Typography>
 							<Typography variant="h5" sx={{ fontWeight: 800, color: '#232f3e' }}>{overallStats.total}</Typography>
 						</Box>
@@ -167,12 +167,12 @@ const CandidateAssessmentTab: React.FC<CandidateAssessmentTabProps> = ({ candida
 						</Box>
 					</Box>
 
-					{/* Assessments by Batch */}
+					{/* Assignments by Batch */}
 					<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e', mb: 2 }}>
-						Assessments by Training Batch
+						Assignments by Training Batch
 					</Typography>
 
-					{assessmentsByBatch.map(({ batch, records }, index) => {
+					{assignmentsByBatch.map(({ batch, records }, index) => {
 						const batchStats = getBatchStats(records);
 						return (
 							<Accordion
@@ -196,7 +196,7 @@ const CandidateAssessmentTab: React.FC<CandidateAssessmentTabProps> = ({ candida
 												{batch.batch_name}
 											</Typography>
 											<Typography variant="caption" sx={{ color: '#545b64' }}>
-												{records.length} assessments • {batchStats.avgPercentage}% average
+												{records.length} assignments • {batchStats.avgPercentage}% average
 											</Typography>
 										</Box>
 										<Box sx={{ mr: 2 }}>
@@ -210,7 +210,7 @@ const CandidateAssessmentTab: React.FC<CandidateAssessmentTabProps> = ({ candida
 										<Table size="small">
 											<TableHead sx={{ bgcolor: '#f8f9fa' }}>
 												<TableRow>
-													<TableCell sx={{ fontWeight: 700, color: '#545b64', py: 1.5 }}>ASSESSMENT NAME</TableCell>
+													<TableCell sx={{ fontWeight: 700, color: '#545b64', py: 1.5 }}>ASSIGNMENT NAME</TableCell>
 													<TableCell sx={{ fontWeight: 700, color: '#545b64', py: 1.5 }}>MARKS</TableCell>
 													<TableCell sx={{ fontWeight: 700, color: '#545b64', py: 1.5 }}>PROFICIENCY</TableCell>
 													<TableCell sx={{ fontWeight: 700, color: '#545b64', py: 1.5 }}>DATE</TableCell>
@@ -220,7 +220,7 @@ const CandidateAssessmentTab: React.FC<CandidateAssessmentTabProps> = ({ candida
 												{records.map((row) => (
 													<TableRow key={row.id} hover>
 														<TableCell sx={{ color: '#232f3e', fontWeight: 600 }}>
-															{row.assessment_name}
+															{row.assignment_name}
 														</TableCell>
 														<TableCell sx={{ color: '#232f3e' }}>
 															<Typography variant="body2" sx={{ fontWeight: 500 }}>
@@ -231,7 +231,7 @@ const CandidateAssessmentTab: React.FC<CandidateAssessmentTabProps> = ({ candida
 															{renderRating((row.marks_obtained / row.max_marks) * 100)}
 														</TableCell>
 														<TableCell sx={{ color: '#545b64' }}>
-															{format(new Date(row.assessment_date), 'MMM dd, yyyy')}
+															{format(new Date(row.assignment_date), 'MMM dd, yyyy')}
 														</TableCell>
 													</TableRow>
 												))}
@@ -246,9 +246,9 @@ const CandidateAssessmentTab: React.FC<CandidateAssessmentTabProps> = ({ candida
 			) : (
 				<Box sx={{ textAlign: 'center', py: 8, bgcolor: '#f8f9fa', border: '1px dashed #eaeded', borderRadius: '2px' }}>
 					<PendingIcon sx={{ fontSize: 48, color: '#aab7b8', mb: 2 }} />
-					<Typography variant="h6" sx={{ color: '#545b64', fontWeight: 600 }}>No Assessment Records Found</Typography>
+					<Typography variant="h6" sx={{ color: '#545b64', fontWeight: 600 }}>No Assignment Records Found</Typography>
 					<Typography variant="body2" color="text.secondary">
-						Detailed performance metrics will appear here once the candidate completes their first training assessment.
+						Detailed performance metrics will appear here once the candidate completes their first training assignment.
 					</Typography>
 				</Box>
 			)}
@@ -256,4 +256,4 @@ const CandidateAssessmentTab: React.FC<CandidateAssessmentTabProps> = ({ candida
 	);
 };
 
-export default CandidateAssessmentTab;
+export default CandidateAssignmentTab;

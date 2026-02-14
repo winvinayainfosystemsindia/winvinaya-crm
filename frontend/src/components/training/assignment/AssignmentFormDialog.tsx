@@ -18,11 +18,11 @@ import {
 
 import type { TrainingBatch } from '../../../models/training';
 
-interface AssessmentFormDialogProps {
+interface AssignmentFormDialogProps {
 	open: boolean;
 	onClose: () => void;
 	onSubmit: (data: {
-		assessmentName: string;
+		assignmentName: string;
 		courses: string[];
 		description: string;
 		date: string;
@@ -31,14 +31,14 @@ interface AssessmentFormDialogProps {
 	batch: TrainingBatch;
 }
 
-const AssessmentFormDialog: React.FC<AssessmentFormDialogProps> = ({
+const AssignmentFormDialog: React.FC<AssignmentFormDialogProps> = ({
 	open,
 	onClose,
 	onSubmit,
 	batch
 }) => {
 	const [formData, setFormData] = useState({
-		assessmentName: '',
+		assignmentName: '',
 		courses: [] as string[],
 		description: '',
 		date: new Date().toISOString().split('T')[0],
@@ -49,7 +49,7 @@ const AssessmentFormDialog: React.FC<AssessmentFormDialogProps> = ({
 		if (!open) {
 			// Reset form when dialog closes
 			setFormData({
-				assessmentName: '',
+				assignmentName: '',
 				courses: [],
 				description: '',
 				date: new Date().toISOString().split('T')[0],
@@ -59,7 +59,7 @@ const AssessmentFormDialog: React.FC<AssessmentFormDialogProps> = ({
 	}, [open]);
 
 	const handleSubmit = () => {
-		if (!formData.assessmentName.trim() || formData.courses.length === 0) {
+		if (!formData.assignmentName.trim() || formData.courses.length === 0) {
 			return;
 		}
 		onSubmit(formData);
@@ -71,7 +71,7 @@ const AssessmentFormDialog: React.FC<AssessmentFormDialogProps> = ({
 			<DialogTitle sx={{ bgcolor: '#232f3e', borderBottom: '1px solid #16191f', p: 2 }}>
 				<Stack direction="row" spacing={1} alignItems="center">
 					<Typography variant="h6" sx={{ fontWeight: 800, color: 'white' }}>
-						Configure Assessment Event
+						Configure Assignment Event
 					</Typography>
 				</Stack>
 			</DialogTitle>
@@ -80,11 +80,11 @@ const AssessmentFormDialog: React.FC<AssessmentFormDialogProps> = ({
 					<TextField
 						fullWidth
 						autoFocus
-						label="Assessment Title"
+						label="Assignment Title"
 						placeholder="e.g. Week 4 - Python fundamentals"
-						value={formData.assessmentName}
-						onChange={(e) => setFormData({ ...formData, assessmentName: e.target.value })}
-						helperText="Give a clear name for this assessment event"
+						value={formData.assignmentName}
+						onChange={(e) => setFormData({ ...formData, assignmentName: e.target.value })}
+						helperText="Give a clear name for this assignment event"
 					/>
 					<FormControl fullWidth>
 						<InputLabel>Target Courses</InputLabel>
@@ -159,7 +159,7 @@ const AssessmentFormDialog: React.FC<AssessmentFormDialogProps> = ({
 				<Button
 					onClick={handleSubmit}
 					variant="contained"
-					disabled={!formData.assessmentName.trim() || formData.courses.length === 0}
+					disabled={!formData.assignmentName.trim() || formData.courses.length === 0}
 					sx={{
 						bgcolor: '#ff9900',
 						color: '#232f3e',
@@ -176,4 +176,4 @@ const AssessmentFormDialog: React.FC<AssessmentFormDialogProps> = ({
 	);
 };
 
-export default AssessmentFormDialog;
+export default AssignmentFormDialog;

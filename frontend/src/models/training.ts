@@ -97,18 +97,18 @@ export interface TrainingBatchEvent {
 	description: string | null;
 }
 
-export interface TrainingAssessment {
+export interface TrainingAssignment {
 	id?: number;
 	batch_id: number;
 	candidate_id: number;
-	assessment_name: string;
+	assignment_name: string;
 	description?: string;
 	course_name?: string[];
 	course_marks?: Record<string, number>;
 	trainer_id?: number;
 	marks_obtained: number;
 	max_marks: number;
-	assessment_date: string;
+	assignment_date: string;
 	submission_date?: string;
 	others?: any;
 	batch?: TrainingBatch; // Eager loaded batch info

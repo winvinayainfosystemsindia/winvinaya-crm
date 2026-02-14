@@ -36,7 +36,7 @@ const Breadcrumbs: React.FC = () => {
 		switch (tabValue) {
 			case '1': return 'Allocation';
 			case '2': return 'Attendance';
-			case '3': return 'Assessment';
+			case '3': return 'Assignment';
 			case '4': return 'Mock Interview';
 			default: return 'Allocation';
 		}

@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from app.models.candidate_document import CandidateDocument
     from app.models.candidate_counseling import CandidateCounseling
     from app.models.training_attendance import TrainingAttendance
-    from app.models.training_assessment import TrainingAssessment
+    from app.models.training_assignment import TrainingAssignment
     from app.models.training_candidate_allocation import TrainingCandidateAllocation
     from app.models.training_mock_interview import TrainingMockInterview
 
@@ -80,10 +80,10 @@ class Candidate(BaseModel):
         cascade="all, delete-orphan"
     )
     
-    assessments: Mapped[list[TrainingAssessment]] = relationship(
-        "TrainingAssessment",
+    assignments: Mapped[list["TrainingAssignment"]] = relationship(
+        "TrainingAssignment",
         back_populates="candidate",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
     )
     
     allocations: Mapped[list[TrainingCandidateAllocation]] = relationship(

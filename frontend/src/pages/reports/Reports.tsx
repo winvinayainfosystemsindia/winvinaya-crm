@@ -48,7 +48,7 @@ const ALL_COLUMNS = [
 	{ id: 'counseling_date', label: 'Counseling Date', default: false, group: 'counseling' },
 	{ id: 'feedback', label: 'Counseling Feedback', default: false, group: 'counseling' },
 	{ id: 'skills', label: 'Counseling Skills', default: false, group: 'counseling' },
-	{ id: 'questions', label: 'Assessment Q&A', default: false, group: 'counseling' },
+	{ id: 'questions', label: 'Assignment Q&A', default: false, group: 'counseling' },
 	{ id: 'workexperience', label: 'Counseling Work Experience', default: false, group: 'counseling' },
 ];
 

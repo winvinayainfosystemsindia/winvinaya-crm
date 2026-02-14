@@ -13,7 +13,7 @@ import TrainingBatchList from '../pages/training/TrainingBatchList';
 import TrainingBatchDetail from '../pages/training/TrainingBatchDetail';
 import CandidateAllocation from '../pages/training/CandidateAllocation';
 import AttendanceTrackerPage from '../pages/training/AttendanceTrackerPage';
-import AssessmentMatrixPage from '../pages/training/AssessmentMatrixPage';
+import AssignmentMatrixPage from '../pages/training/AssignmentMatrixPage';
 import MockInterviewPage from '../pages/training/MockInterviewPage';
 import WeeklyTrainingPlanPage from '../pages/training/WeeklyTrainingPlanPage';
 import SuccessPage from '../pages/common/SuccessPage';
@@ -72,7 +72,7 @@ const AppRouter: React.FC = () => {
 						<Route path="batches/:id" element={<TrainingBatchDetail />} />
 						<Route path="allocation" element={<CandidateAllocation />} />
 						<Route path="attendance" element={<AttendanceTrackerPage />} />
-						<Route path="assessment" element={<AssessmentMatrixPage />} />
+						<Route path="assignment" element={<AssignmentMatrixPage />} />
 						<Route path="mock-interview" element={<MockInterviewPage />} />
 						<Route path="weekly-plan" element={<WeeklyTrainingPlanPage />} />
 					</Route>

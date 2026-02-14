@@ -1,62 +1,62 @@
 import React, { useState } from 'react';
 import { Box, Paper, CircularProgress, Typography, Divider } from '@mui/material';
 import type { TrainingBatch, CandidateAllocation } from '../../../models/training';
-import { useAssessment } from './useAssessment';
+import { useAssignment } from './useAssignment';
 
 // Sub-components
-import AssessmentHeader from './AssessmentHeader';
-import AssessmentConfigPanel from './AssessmentConfigPanel';
-import AssessmentMatrix from './AssessmentMatrix';
-import AssessmentFormDialog from './AssessmentFormDialog';
+import AssignmentHeader from './AssignmentHeader';
+import AssignmentConfigPanel from './AssignmentConfigPanel';
+import AssignmentMatrix from './AssignmentMatrix';
+import AssignmentFormDialog from './AssignmentFormDialog';
 
-interface AssessmentTrackerProps {
+interface AssignmentTrackerProps {
 	batch: TrainingBatch;
 	allocations: CandidateAllocation[];
 }
 
-const AssessmentTracker: React.FC<AssessmentTrackerProps> = ({ batch, allocations }) => {
+const AssignmentTracker: React.FC<AssignmentTrackerProps> = ({ batch, allocations }) => {
 	const {
 		loading,
 		saving,
-		assessments,
+		assignments,
 		trainers,
-		activeAssessmentName,
+		activeAssignmentName,
 		activeDate,
 		activeMaxMarks,
 		activeCourses,
 		activeTrainerId,
 		activeDescription,
-		assessmentNames,
+		assignmentNames,
 		stats,
 		setActiveDate,
 		setActiveCourses,
 		setActiveTrainerId,
 		setActiveMaxMarks,
 		setActiveDescription,
-		handleSelectAssessment,
+		handleSelectAssignment,
 		handleMarkChange,
 		handleSave,
-		handleDeleteAssessment,
-		setActiveAssessmentName
-	} = useAssessment(batch, allocations);
+		handleDeleteAssignment,
+		setActiveAssignmentName
+	} = useAssignment(batch, allocations);
 
 	const [dialogOpen, setDialogOpen] = useState(false);
 
 	const handleCreateNew = () => {
-		setActiveAssessmentName('');
+		setActiveAssignmentName('');
 		setActiveDescription('');
 		setActiveCourses([]);
 		setDialogOpen(true);
 	};
 
 	const handleDialogSubmit = (data: {
-		assessmentName: string;
+		assignmentName: string;
 		courses: string[];
 		description: string;
 		date: string;
 		maxMarks: number;
 	}) => {
-		setActiveAssessmentName(data.assessmentName);
+		setActiveAssignmentName(data.assignmentName);
 		setActiveCourses(data.courses);
 		setActiveDescription(data.description);
 		setActiveDate(data.date);
@@ -86,8 +86,8 @@ const AssessmentTracker: React.FC<AssessmentTrackerProps> = ({ batch, allocation
 						<Box component="span" sx={{ display: 'block', width: 20, height: 20, bgcolor: '#007eb9', borderRadius: '4px' }} />
 					</Box>
 					<Box>
-						<Typography variant="caption" sx={{ color: '#545b64', fontWeight: 600, display: 'block', textTransform: 'uppercase', fontSize: '0.65rem' }}>Total Assessments</Typography>
-						<Typography variant="h6" sx={{ fontWeight: 800, color: '#232f3e', lineHeight: 1 }}>{stats.totalAssessments}</Typography>
+						<Typography variant="caption" sx={{ color: '#545b64', fontWeight: 600, display: 'block', textTransform: 'uppercase', fontSize: '0.65rem' }}>Total Assignments</Typography>
+						<Typography variant="h6" sx={{ fontWeight: 800, color: '#232f3e', lineHeight: 1 }}>{stats.totalAssignments}</Typography>
 					</Box>
 				</Box>
 
@@ -116,25 +116,25 @@ const AssessmentTracker: React.FC<AssessmentTrackerProps> = ({ batch, allocation
 				<Box sx={{ flexGrow: 1 }} />
 
 				<Typography variant="caption" sx={{ color: '#879196', fontStyle: 'italic' }}>
-					Showing stats for: <strong>{activeAssessmentName || 'New Assessment'}</strong>
+					Showing stats for: <strong>{activeAssignmentName || 'New Assignment'}</strong>
 				</Typography>
 			</Paper>
 
 			{/* Configuration Section */}
 			<Paper elevation={0} sx={{ p: 3, mb: 3, border: '1px solid #d5dbdb', borderRadius: '2px', bgcolor: 'white' }}>
-				<AssessmentHeader
-					assessmentNames={assessmentNames}
-					activeAssessmentName={activeAssessmentName}
-					onSelectAssessment={handleSelectAssessment}
+				<AssignmentHeader
+					assignmentNames={assignmentNames}
+					activeAssignmentName={activeAssignmentName}
+					onSelectAssignment={handleSelectAssignment}
 					onCreateNew={handleCreateNew}
 					onSave={handleSave}
-					onDelete={handleDeleteAssessment}
+					onDelete={handleDeleteAssignment}
 					saving={saving}
 				/>
 
-				{activeAssessmentName && (
-					<AssessmentConfigPanel
-						assessmentName={activeAssessmentName}
+				{activeAssignmentName && (
+					<AssignmentConfigPanel
+						assignmentName={activeAssignmentName}
 						date={activeDate}
 						courses={activeCourses}
 						trainerId={activeTrainerId}
@@ -151,18 +151,18 @@ const AssessmentTracker: React.FC<AssessmentTrackerProps> = ({ batch, allocation
 				)}
 			</Paper>
 
-			<AssessmentMatrix
+			<AssignmentMatrix
 				allocations={allocations}
-				assessments={assessments}
-				activeAssessmentName={activeAssessmentName}
+				assignments={assignments}
+				activeAssignmentName={activeAssignmentName}
 				activeCourses={activeCourses}
 				activeMaxMarks={activeMaxMarks}
 				activeDate={activeDate}
 				onMarkChange={handleMarkChange}
 			/>
 
-			{/* New Assessment Dialog */}
-			<AssessmentFormDialog
+			{/* New Assignment Dialog */}
+			<AssignmentFormDialog
 				open={dialogOpen}
 				onClose={() => setDialogOpen(false)}
 				onSubmit={handleDialogSubmit}
@@ -172,4 +172,4 @@ const AssessmentTracker: React.FC<AssessmentTrackerProps> = ({ batch, allocation
 	);
 };
 
-export default AssessmentTracker;
+export default AssignmentTracker;

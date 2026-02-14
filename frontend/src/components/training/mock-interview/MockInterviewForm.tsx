@@ -74,7 +74,7 @@ const MockInterviewForm: React.FC<MockInterviewFormProps> = ({ open, onClose, ba
 						{viewMode ? 'Review' : currentMockInterview ? 'Edit' : 'Record'} Mock Interview
 					</Typography>
 					<Typography variant="body2" color="text.secondary">
-						Comprehensive technical assessment and proficiency tracking
+						Comprehensive technical interview and proficiency tracking
 					</Typography>
 				</Box>
 				<IconButton onClick={onClose} size="small" sx={{ color: '#545b64' }}>
@@ -155,7 +155,7 @@ const MockInterviewForm: React.FC<MockInterviewFormProps> = ({ open, onClose, ba
 							boxShadow: 'none'
 						}}
 					>
-						{saveLoading ? <CircularProgress size={20} color="inherit" /> : 'Finalize Assessment'}
+						{saveLoading ? <CircularProgress size={20} color="inherit" /> : 'Finalize Interview'}
 					</Button>
 				)}
 			</DialogActions>

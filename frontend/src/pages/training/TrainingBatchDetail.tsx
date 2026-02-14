@@ -89,7 +89,7 @@ const TrainingBatchDetail: React.FC = () => {
 					<Tabs value={tabIndex} onChange={handleTabChange}>
 						<Tab label="Overview" />
 						<Tab label="Mock Interviews" />
-						<Tab label="Assessments" />
+						<Tab label="Assignments" />
 						<Tab label="Attendance" />
 					</Tabs>
 				</Box>
@@ -109,7 +109,7 @@ const TrainingBatchDetail: React.FC = () => {
 
 				{tabIndex === 2 && (
 					<Box>
-						<Typography>Assessments Content (Placeholder)</Typography>
+						<Typography>Assignments Content (Placeholder)</Typography>
 					</Box>
 				)}
 

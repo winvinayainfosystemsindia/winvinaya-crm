@@ -10,7 +10,7 @@ from app.api.v1.endpoints import (
     candidate_screening,
     training_batches,
     training_attendance,
-    training_assessments,
+    training_assignments,
     training_events,
     training_mock_interviews,
     training_candidate_allocations,
@@ -49,7 +49,7 @@ router.include_router(system_settings.router)
 router.include_router(chat.router)
 router.include_router(tickets.router)
 router.include_router(training_attendance.router, prefix="/training-extensions")
-router.include_router(training_assessments.router, prefix="/training-extensions")
+router.include_router(training_assignments.router, prefix="/training-extensions")
 router.include_router(training_events.router, prefix="/training-extensions")
 router.include_router(training_mock_interviews.router, prefix="/training-extensions")
 router.include_router(training_batch_plans.router)

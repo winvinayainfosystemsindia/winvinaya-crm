@@ -13,8 +13,8 @@ import {
 import type { TrainingBatch } from '../../../models/training';
 import type { User } from '../../../models/user';
 
-interface AssessmentConfigPanelProps {
-	assessmentName: string;
+interface AssignmentConfigPanelProps {
+	assignmentName: string;
 	date: string;
 	courses: string[];
 	trainerId: number | '';
@@ -29,8 +29,8 @@ interface AssessmentConfigPanelProps {
 	onDescriptionChange: (description: string) => void;
 }
 
-const AssessmentConfigPanel: React.FC<AssessmentConfigPanelProps> = ({
-	assessmentName,
+const AssignmentConfigPanel: React.FC<AssignmentConfigPanelProps> = ({
+	assignmentName,
 	date,
 	courses,
 	trainerId,
@@ -51,7 +51,7 @@ const AssessmentConfigPanel: React.FC<AssessmentConfigPanelProps> = ({
 					General settings
 				</Typography>
 				<Typography variant="caption" sx={{ color: '#545b64', fontWeight: 600 }}>
-					Assessment: {assessmentName}
+					Assignment: {assignmentName}
 				</Typography>
 			</Stack>
 			<Grid container spacing={2}>
@@ -120,7 +120,7 @@ const AssessmentConfigPanel: React.FC<AssessmentConfigPanelProps> = ({
 						size="small"
 						value={description}
 						onChange={(e) => onDescriptionChange(e.target.value)}
-						placeholder="Describe the assessment or list questions..."
+						placeholder="Describe the assignment or list questions..."
 						sx={{ '& .MuiInputBase-root': { bgcolor: 'white' } }}
 					/>
 				</Grid>
@@ -129,4 +129,4 @@ const AssessmentConfigPanel: React.FC<AssessmentConfigPanelProps> = ({
 	);
 };
 
-export default AssessmentConfigPanel;
+export default AssignmentConfigPanel;

@@ -1,45 +1,45 @@
-"""Training Assessment Pydantic schemas"""
+"""Training Assignment Pydantic schemas"""
 
 from datetime import date
 from typing import Optional
 from pydantic import BaseModel, ConfigDict
 
 
-class TrainingAssessmentBase(BaseModel):
+class TrainingAssignmentBase(BaseModel):
     batch_id: int
     candidate_id: int
-    assessment_name: str
+    assignment_name: str
     description: Optional[str] = None
     course_name: Optional[list[str]] = None
     course_marks: Optional[dict[str, float]] = None
     trainer_id: Optional[int] = None
     marks_obtained: float
     max_marks: float = 100.0
-    assessment_date: date
+    assignment_date: date
     submission_date: Optional[date] = None
     others: Optional[dict] = None
 
 
-class TrainingAssessmentCreate(TrainingAssessmentBase):
+class TrainingAssignmentCreate(TrainingAssignmentBase):
     pass
 
 
-class TrainingAssessmentUpdate(BaseModel):
-    assessment_name: Optional[str] = None
+class TrainingAssignmentUpdate(BaseModel):
+    assignment_name: Optional[str] = None
     description: Optional[str] = None
     course_name: Optional[list[str]] = None
     course_marks: Optional[dict[str, float]] = None
     trainer_id: Optional[int] = None
     marks_obtained: Optional[float] = None
     max_marks: Optional[float] = None
-    assessment_date: Optional[date] = None
+    assignment_date: Optional[date] = None
     submission_date: Optional[date] = None
     others: Optional[dict] = None
 
 
 from app.schemas.training_batch import TrainingBatchMini
 
-class TrainingAssessmentResponse(TrainingAssessmentBase):
+class TrainingAssignmentResponse(TrainingAssignmentBase):
     id: int
     batch: Optional[TrainingBatchMini] = None
     

@@ -1,5 +1,5 @@
 import api from './api';
-import type { TrainingAttendance, TrainingAssessment, TrainingMockInterview, TrainingBatchEvent, TrainingBatchPlan } from '../models/training';
+import type { TrainingAttendance, TrainingAssignment, TrainingMockInterview, TrainingBatchEvent, TrainingBatchPlan } from '../models/training';
 
 const trainingExtensionService = {
 	// Attendance
@@ -27,24 +27,24 @@ const trainingExtensionService = {
 		return response.data.filter(plan => plan.date === date);
 	},
 
-	// Assessments
-	getAssessments: async (batchId: number) => {
-		const response = await api.get<TrainingAssessment[]>(`/training-extensions/assessments/${batchId}`);
+	// Assignments
+	getAssignments: async (batchId: number) => {
+		const response = await api.get<TrainingAssignment[]>(`/training-extensions/assignments/${batchId}`);
 		return response.data;
 	},
 
-	createAssessment: async (data: TrainingAssessment) => {
-		const response = await api.post<TrainingAssessment>('/training-extensions/assessments', data);
+	createAssignment: async (data: TrainingAssignment) => {
+		const response = await api.post<TrainingAssignment>('/training-extensions/assignments', data);
 		return response.data;
 	},
 
-	updateBulkAssessments: async (data: TrainingAssessment[]) => {
-		const response = await api.post<TrainingAssessment[]>('/training-extensions/assessments/bulk', data);
+	updateBulkAssignments: async (data: TrainingAssignment[]) => {
+		const response = await api.post<TrainingAssignment[]>('/training-extensions/assignments/bulk', data);
 		return response.data;
 	},
 
-	deleteAssessment: async (batchId: number, assessmentName: string) => {
-		const response = await api.delete(`/training-extensions/assessments/${batchId}/${encodeURIComponent(assessmentName)}`);
+	deleteAssignment: async (batchId: number, assignmentName: string) => {
+		const response = await api.delete(`/training-extensions/assignments/${batchId}/${encodeURIComponent(assignmentName)}`);
 		return response.data;
 	},
 
@@ -80,8 +80,8 @@ const trainingExtensionService = {
 		return response.data;
 	},
 
-	getCandidateAssessments: async (publicId: string) => {
-		const response = await api.get<TrainingAssessment[]>(`/training-extensions/assessments/candidate/${publicId}`);
+	getCandidateAssignments: async (publicId: string) => {
+		const response = await api.get<TrainingAssignment[]>(`/training-extensions/assignments/candidate/${publicId}`);
 		return response.data;
 	},
 
