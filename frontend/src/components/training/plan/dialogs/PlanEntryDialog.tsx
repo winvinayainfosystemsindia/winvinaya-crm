@@ -271,25 +271,27 @@ const PlanEntryDialog: React.FC<PlanEntryDialogProps> = ({
 						/>
 					</Stack>
 
-					<FormControl fullWidth error={!!formErrors.trainer}>
-						<InputLabel>Trainer</InputLabel>
-						<Select
-							required
-							label="Trainer"
-							value={selectedEntry?.trainer || ''}
-							onChange={(e) => {
-								setSelectedEntry({ ...selectedEntry, trainer: e.target.value });
-								if (formErrors.trainer) setFormErrors({ ...formErrors, trainer: '' });
-							}}
-						>
-							{users.map((u: User) => (
-								<MenuItem key={u.id} value={u.full_name}>
-									{u.full_name}
-								</MenuItem>
-							))}
-						</Select>
-						{formErrors.trainer && <Typography variant="caption" color="error" sx={{ mx: 2, mt: 0.5 }}>{formErrors.trainer}</Typography>}
-					</FormControl>
+					{['course', 'hr_session'].includes(selectedEntry?.activity_type || '') && (
+						<FormControl fullWidth error={!!formErrors.trainer}>
+							<InputLabel>Trainer</InputLabel>
+							<Select
+								required
+								label="Trainer"
+								value={selectedEntry?.trainer || ''}
+								onChange={(e) => {
+									setSelectedEntry({ ...selectedEntry, trainer: e.target.value });
+									if (formErrors.trainer) setFormErrors({ ...formErrors, trainer: '' });
+								}}
+							>
+								{users.map((u: User) => (
+									<MenuItem key={u.id} value={u.full_name}>
+										{u.full_name}
+									</MenuItem>
+								))}
+							</Select>
+							{formErrors.trainer && <Typography variant="caption" color="error" sx={{ mx: 2, mt: 0.5 }}>{formErrors.trainer}</Typography>}
+						</FormControl>
+					)}
 
 					<TextField
 						label="Notes (Optional)"

@@ -253,7 +253,10 @@ export const useWeeklyPlanManager = (selectedBatch: TrainingBatch) => {
 		if (!entry.activity_name) errors.activity_name = 'Activity Name is required';
 		if (!entry.start_time) errors.start_time = 'Start Time is required';
 		if (!entry.end_time) errors.end_time = 'End Time is required';
-		if (!entry.trainer) errors.trainer = 'Trainer selection is required';
+
+		if (['course', 'hr_session'].includes(entry.activity_type || '') && !entry.trainer) {
+			errors.trainer = 'Trainer selection is required';
+		}
 
 		if (entry.activity_type === 'course') {
 			const dayEntries = weeklyPlan.filter((p: TrainingBatchPlan) => p.date === entry.date && p.public_id !== entry.public_id);

@@ -124,6 +124,11 @@ const WeeklyPlanTable: React.FC<WeeklyPlanTableProps> = ({
 																Trainer: {entry.trainer}
 															</Typography>
 														)}
+														{entry.notes && (
+															<Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5, fontStyle: 'italic' }}>
+																Note: {entry.notes}
+															</Typography>
+														)}
 													</Box>
 													{canEdit && (
 														<Box>
