@@ -75,10 +75,10 @@ export const topNavigation: NavigationItem[] = [
 		icon: SchoolIcon,
 		children: [
 			{ label: 'Training Batch', path: '/training/batches' },
-			{ label: 'Candidate Allocation', path: '/training/allocation?tab=1' },
-			{ label: 'Attendance', path: '/training/allocation?tab=2' },
-			{ label: 'Assessment', path: '/training/allocation?tab=3' },
-			{ label: 'Mock Interview', path: '/training/allocation?tab=4' },
+			{ label: 'Candidate Allocation', path: '/training/allocation' },
+			{ label: 'Attendance', path: '/training/attendance' },
+			{ label: 'Assessment', path: '/training/assessment' },
+			{ label: 'Mock Interview', path: '/training/mock-interview' },
 		],
 	},
 ];

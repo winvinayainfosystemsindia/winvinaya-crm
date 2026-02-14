@@ -12,6 +12,9 @@ import CounselingList from '../pages/counseling/CounselingList';
 import TrainingBatchList from '../pages/training/TrainingBatchList';
 import TrainingBatchDetail from '../pages/training/TrainingBatchDetail';
 import CandidateAllocation from '../pages/training/CandidateAllocation';
+import AttendanceTrackerPage from '../pages/training/AttendanceTrackerPage';
+import AssessmentMatrixPage from '../pages/training/AssessmentMatrixPage';
+import MockInterviewPage from '../pages/training/MockInterviewPage';
 import SuccessPage from '../pages/common/SuccessPage';
 import NotFoundPage from '../pages/common/NotFoundPage';
 import MaintenancePage from '../pages/common/MaintenancePage';
@@ -67,6 +70,9 @@ const AppRouter: React.FC = () => {
 						<Route path="batches" element={<TrainingBatchList />} />
 						<Route path="batches/:id" element={<TrainingBatchDetail />} />
 						<Route path="allocation" element={<CandidateAllocation />} />
+						<Route path="attendance" element={<AttendanceTrackerPage />} />
+						<Route path="assessment" element={<AssessmentMatrixPage />} />
+						<Route path="mock-interview" element={<MockInterviewPage />} />
 					</Route>
 
 					<Route path="crm">
