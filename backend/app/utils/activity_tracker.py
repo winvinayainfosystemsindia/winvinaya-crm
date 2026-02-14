@@ -2,7 +2,7 @@
 
 import uuid
 from typing import Optional, Any, Dict
-from datetime import datetime, date
+from datetime import datetime, date, time
 from fastapi import Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.activity_log import ActionType
@@ -80,9 +80,9 @@ def get_changes(before: Any, after: Any) -> Optional[Dict[str, Any]]:
         # Only include if values are different
         if before_val != after_val:
             # Convert non-serializable types to strings
-            if isinstance(before_val, (uuid.UUID, datetime, date)):
+            if isinstance(before_val, (uuid.UUID, datetime, date, time)):
                 before_val = before_val.isoformat() if hasattr(before_val, 'isoformat') else str(before_val)
-            if isinstance(after_val, (uuid.UUID, datetime, date)):
+            if isinstance(after_val, (uuid.UUID, datetime, date, time)):
                 after_val = after_val.isoformat() if hasattr(after_val, 'isoformat') else str(after_val)
                 
             before_filtered[key] = before_val
@@ -127,7 +127,7 @@ def extract_safe_metadata(obj: Any) -> Optional[Dict[str, Any]]:
             continue
         
         # Convert non-serializable types to strings for JSON serialization
-        if isinstance(v, (datetime, date, uuid.UUID)):
+        if isinstance(v, (datetime, date, time, uuid.UUID)):
             filtered[k] = v.isoformat() if hasattr(v, 'isoformat') else str(v)
         else:
             filtered[k] = v

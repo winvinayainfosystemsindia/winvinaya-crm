@@ -113,3 +113,19 @@ export interface TrainingMockInterview {
 	status: 'pending' | 'cleared' | 're-test' | 'rejected' | 'absent';
 	batch?: TrainingBatch; // Eager loaded batch info
 }
+
+export interface TrainingBatchPlan {
+	id: number;
+	public_id: string;
+	batch_id: number;
+	date: string;
+	start_time: string;
+	end_time: string;
+	activity_type: 'course' | 'break' | 'event' | 'interview' | 'other' | string;
+	activity_name: string;
+	trainer?: string | null;
+	notes?: string | null;
+	others?: any;
+	created_at: string;
+	updated_at: string;
+}

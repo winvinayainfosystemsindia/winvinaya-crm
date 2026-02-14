@@ -15,6 +15,7 @@ import CandidateAllocation from '../pages/training/CandidateAllocation';
 import AttendanceTrackerPage from '../pages/training/AttendanceTrackerPage';
 import AssessmentMatrixPage from '../pages/training/AssessmentMatrixPage';
 import MockInterviewPage from '../pages/training/MockInterviewPage';
+import WeeklyTrainingPlanPage from '../pages/training/WeeklyTrainingPlanPage';
 import SuccessPage from '../pages/common/SuccessPage';
 import NotFoundPage from '../pages/common/NotFoundPage';
 import MaintenancePage from '../pages/common/MaintenancePage';
@@ -73,6 +74,7 @@ const AppRouter: React.FC = () => {
 						<Route path="attendance" element={<AttendanceTrackerPage />} />
 						<Route path="assessment" element={<AssessmentMatrixPage />} />
 						<Route path="mock-interview" element={<MockInterviewPage />} />
+						<Route path="weekly-plan" element={<WeeklyTrainingPlanPage />} />
 					</Route>
 
 					<Route path="crm">
