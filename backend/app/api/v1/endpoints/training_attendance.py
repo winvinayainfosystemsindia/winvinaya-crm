@@ -2,6 +2,7 @@
 
 from typing import List
 from uuid import UUID
+from datetime import date
 from fastapi import APIRouter, Depends, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
@@ -23,6 +24,7 @@ async def update_bulk_attendance(
 ):
     """
     Update bulk attendance for a training batch.
+    Supports period-based attendance tracking.
     """
     service = TrainingExtensionService(db)
     
@@ -54,6 +56,23 @@ async def get_attendance(
     """
     service = TrainingExtensionService(db)
     return await service.get_attendance(batch_id)
+
+
+@router.get("/{batch_id}/date/{attendance_date}", response_model=List[TrainingAttendanceResponse])
+async def get_attendance_by_date(
+    batch_id: int,
+    attendance_date: date,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get attendance records for a specific batch and date.
+    Useful for period-based attendance tracking.
+    """
+    service = TrainingExtensionService(db)
+    return await service.get_attendance_by_date(batch_id, attendance_date)
+
+
 @router.get("/candidate/{public_id}", response_model=List[TrainingAttendanceResponse])
 async def get_candidate_attendance(
     public_id: UUID,
@@ -65,3 +84,4 @@ async def get_candidate_attendance(
     """
     service = TrainingExtensionService(db)
     return await service.get_attendance_by_candidate(public_id)
+

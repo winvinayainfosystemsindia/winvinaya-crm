@@ -46,19 +46,26 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 		saving,
 		attendance,
 		batchEvents,
+		dailyPlan,
 		selectedDate,
 		activeTab,
 		currentEvent,
 		isDateOutOfRange,
+		isFutureDate,
 		batchBounds,
 		setSelectedDate,
 		setActiveTab,
 		handleStatusChange,
 		handleRemarkChange,
+		handlePeriodStatusChange,
+		handleTrainerNotesChange,
 		handleMarkAllPresent,
+		handleMarkAllAbsent,
+		handleCandidateMarkAll,
 		handleSave,
 		handleConfirmEvent,
-		handleDeleteEvent
+		handleDeleteEvent,
+		isDroppedOut
 	} = useAttendance(batch, allocations);
 
 	const [eventDialogOpen, setEventDialogOpen] = useState(false);
@@ -100,6 +107,12 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 						</Alert>
 					)}
 
+					{isFutureDate && (
+						<Alert severity="error" sx={{ mb: 3, borderRadius: '4px' }}>
+							Cannot mark attendance for future dates. Please select today or a past date.
+						</Alert>
+					)}
+
 					<Grid container spacing={3}>
 						<Grid size={{ xs: 12 }}>
 							<AttendanceHeader
@@ -110,9 +123,12 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 								onOpenEventDialog={() => setEventDialogOpen(true)}
 								onDeleteEvent={handleDeleteEvent}
 								onMarkAllPresent={handleMarkAllPresent}
+								onMarkAllAbsent={handleMarkAllAbsent}
 								onSave={handleSave}
 								saving={saving}
 								isDateOutOfRange={isDateOutOfRange}
+								isFutureDate={isFutureDate}
+								hasNoPlan={dailyPlan.length === 0}
 							/>
 						</Grid>
 
@@ -145,14 +161,26 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 								</Box>
 							)}
 
+							{dailyPlan.length === 0 && !currentEvent && (
+								<Alert severity="info" sx={{ mb: 3 }}>
+									No training plan configured for this date. You can still mark full-day attendance.
+								</Alert>
+							)}
+
 							<AttendanceTable
 								allocations={allocations}
 								selectedDate={selectedDate}
 								attendance={attendance}
+								dailyPlan={dailyPlan}
 								onStatusChange={handleStatusChange}
 								onRemarkChange={handleRemarkChange}
+								onPeriodStatusChange={handlePeriodStatusChange}
+								onTrainerNotesChange={handleTrainerNotesChange}
+								onMarkCandidateAll={handleCandidateMarkAll}
 								currentEvent={currentEvent}
 								isDateOutOfRange={isDateOutOfRange}
+								isFutureDate={isFutureDate}
+								isDroppedOut={isDroppedOut}
 								statuses={ATTENDANCE_STATUSES}
 							/>
 						</Grid>

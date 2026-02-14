@@ -137,7 +137,6 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({ attendance, allocat
 								{days.map(day => {
 									const dateStr = format(day, 'yyyy-MM-dd');
 									const holiday = getHoliday(day);
-									const record = attendance.find(a => a.candidate_id === allocation.candidate_id && a.date === dateStr);
 
 									if (holiday) {
 										return (
@@ -168,7 +167,10 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({ attendance, allocat
 										);
 									}
 
-									if (!record) {
+									// Get all records for this candidate and date
+									const dayRecords = attendance.filter(a => a.candidate_id === allocation.candidate_id && a.date === dateStr);
+
+									if (dayRecords.length === 0) {
 										return (
 											<TableCell key={dateStr} align="center" sx={{ p: 0 }}>
 												<Typography sx={{ color: '#d5dbdb' }}>-</Typography>
@@ -176,12 +178,38 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({ attendance, allocat
 										);
 									}
 
-									const status = STATUS_MAP[record.status];
+									// Consolidated Status Logic:
+									// 1. All Present -> Present
+									// 2. All Absent -> Absent
+									// 3. Mix -> Half Day
+
+									const statusCounts = dayRecords.reduce((acc, rec) => {
+										acc[rec.status] = (acc[rec.status] || 0) + 1;
+										return acc;
+									}, {} as Record<string, number>);
+
+									let consolidatedStatus = 'present';
+									const totalRecords = dayRecords.length;
+
+									if (statusCounts['absent'] === totalRecords) {
+										consolidatedStatus = 'absent';
+									} else if (statusCounts['present'] === totalRecords) {
+										consolidatedStatus = 'present';
+									} else {
+										// Mix of status or mixed presence
+										consolidatedStatus = 'half_day';
+									}
+
+									const statusInfo = STATUS_MAP[consolidatedStatus];
+									const tooltipTitle = dayRecords.map(r =>
+										`${r.period?.activity_name || 'Full Day'}: ${r.status.toUpperCase()}`
+									).join('\n');
+
 									return (
 										<TableCell key={dateStr} align="center" sx={{ p: 0 }}>
-											<Tooltip title={`${record.status.toUpperCase()}${record.remarks ? `: ${record.remarks}` : ''}`}>
-												<Box sx={{ color: status.color, display: 'flex', justifyContent: 'center' }}>
-													{status.icon}
+											<Tooltip title={tooltipTitle}>
+												<Box sx={{ color: statusInfo.color, display: 'flex', justifyContent: 'center' }}>
+													{statusInfo.icon}
 												</Box>
 											</Tooltip>
 										</TableCell>

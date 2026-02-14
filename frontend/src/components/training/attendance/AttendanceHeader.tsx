@@ -26,9 +26,12 @@ interface AttendanceHeaderProps {
 	onOpenEventDialog: () => void;
 	onDeleteEvent: (eventId: number) => void;
 	onMarkAllPresent: () => void;
+	onMarkAllAbsent: () => void;
 	onSave: () => void;
 	saving: boolean;
 	isDateOutOfRange: boolean;
+	isFutureDate: boolean;
+	hasNoPlan: boolean;
 }
 
 const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
@@ -39,9 +42,12 @@ const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
 	onOpenEventDialog,
 	onDeleteEvent,
 	onMarkAllPresent,
+	onMarkAllAbsent,
 	onSave,
 	saving,
-	isDateOutOfRange
+	isDateOutOfRange,
+	isFutureDate,
+	hasNoPlan
 }) => {
 	return (
 		<Paper elevation={0} sx={{ p: 2.5, border: '1px solid #eaeded', borderRadius: '4px', bgcolor: 'white' }}>
@@ -95,16 +101,24 @@ const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
 					<Button
 						variant="outlined"
 						onClick={onMarkAllPresent}
-						disabled={!!currentEvent || isDateOutOfRange}
-						sx={{ textTransform: 'none', color: '#545b64', borderColor: '#d5dbdb' }}
+						disabled={!!currentEvent || isDateOutOfRange || isFutureDate || hasNoPlan}
+						sx={{ textTransform: 'none', color: '#007d35', borderColor: '#007d35' }}
 					>
 						Mark All Present
+					</Button>
+					<Button
+						variant="outlined"
+						onClick={onMarkAllAbsent}
+						disabled={!!currentEvent || isDateOutOfRange || isFutureDate || hasNoPlan}
+						sx={{ textTransform: 'none', color: '#d13212', borderColor: '#d13212' }}
+					>
+						Mark All Absent
 					</Button>
 					<Button
 						variant="contained"
 						startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
 						onClick={onSave}
-						disabled={saving || !!currentEvent || isDateOutOfRange}
+						disabled={saving || !!currentEvent || isDateOutOfRange || isFutureDate || hasNoPlan}
 						sx={{
 							bgcolor: '#ff9900',
 							'&:hover': { bgcolor: '#ec7211' },

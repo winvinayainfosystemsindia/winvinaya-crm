@@ -3,10 +3,12 @@
 from typing import List, Any
 from datetime import date
 from uuid import UUID
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from app.models.candidate import Candidate
+from app.models.training_candidate_allocation import TrainingCandidateAllocation
 from app.repositories.training_attendance_repository import TrainingAttendanceRepository
 from app.repositories.training_assessment_repository import TrainingAssessmentRepository
 from app.repositories.training_mock_interview_repository import TrainingMockInterviewRepository
@@ -30,7 +32,8 @@ class TrainingExtensionService:
     # Attendance
     async def get_attendance(self, batch_id: int, start_date: date = None, end_date: date = None):
         query = select(self.attendance_repo.model).options(
-            selectinload(self.attendance_repo.model.batch)
+            selectinload(self.attendance_repo.model.batch),
+            selectinload(self.attendance_repo.model.period)
         ).where(
             self.attendance_repo.model.batch_id == batch_id,
             self.attendance_repo.model.is_deleted == False
@@ -42,6 +45,43 @@ class TrainingExtensionService:
         
         result = await self.db.execute(query)
         return result.scalars().all()
+
+    async def get_attendance_by_date(self, batch_id: int, attendance_date: date):
+        """Get all attendance records for a specific batch and date"""
+        query = select(self.attendance_repo.model).options(
+            selectinload(self.attendance_repo.model.batch),
+            selectinload(self.attendance_repo.model.period)
+        ).where(
+            self.attendance_repo.model.batch_id == batch_id,
+            self.attendance_repo.model.date == attendance_date,
+            self.attendance_repo.model.is_deleted == False
+        )
+        result = await self.db.execute(query)
+        return result.scalars().all()
+
+    async def validate_attendance_marking(self, candidate_id: int, batch_id: int) -> bool:
+        """Validate if attendance can be marked for a candidate"""
+        # Check if candidate is dropped out
+        query = select(TrainingCandidateAllocation).where(
+            TrainingCandidateAllocation.batch_id == batch_id,
+            TrainingCandidateAllocation.candidate_id == candidate_id,
+            TrainingCandidateAllocation.is_deleted == False
+        )
+        allocation = (await self.db.execute(query)).scalar_one_or_none()
+        
+        if not allocation:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Candidate allocation not found for this batch"
+            )
+        
+        if allocation.is_dropout:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot mark attendance for dropped out candidates"
+            )
+        
+        return True
 
     async def get_attendance_by_candidate(self, public_id: UUID):
         query = select(self.attendance_repo.model).join(Candidate).options(
@@ -56,24 +96,38 @@ class TrainingExtensionService:
     async def update_bulk_attendance(self, attendance_list: List[TrainingAttendanceCreate]):
         records = []
         for att in attendance_list:
-            # Check if record exists
+            # Validate attendance marking (dropout check)
+            await self.validate_attendance_marking(att.candidate_id, att.batch_id)
+            
+            # Check if record exists (now includes period_id for uniqueness)
             query = select(self.attendance_repo.model).where(
                 self.attendance_repo.model.batch_id == att.batch_id,
                 self.attendance_repo.model.candidate_id == att.candidate_id,
                 self.attendance_repo.model.date == att.date,
                 self.attendance_repo.model.is_deleted == False
             )
+            
+            # If period_id is provided, include it in the uniqueness check
+            if att.period_id is not None:
+                query = query.where(self.attendance_repo.model.period_id == att.period_id)
+            else:
+                query = query.where(self.attendance_repo.model.period_id.is_(None))
+            
             existing = (await self.db.execute(query)).scalar_one_or_none()
             if existing:
-                record = await self.attendance_repo.update(existing.id, att.model_dump(exclude={"batch_id", "candidate_id", "date"}))
+                record = await self.attendance_repo.update(
+                    existing.id, 
+                    att.model_dump(exclude={"batch_id", "candidate_id", "date", "period_id"})
+                )
             else:
                 record = await self.attendance_repo.create(att.model_dump())
             records.append(record)
         
-        # Re-fetch with batch to avoid session error during serialization
+        # Re-fetch with batch and period to avoid session error during serialization
         ids = [r.id for r in records]
         query = select(self.attendance_repo.model).options(
-            selectinload(self.attendance_repo.model.batch)
+            selectinload(self.attendance_repo.model.batch),
+            selectinload(self.attendance_repo.model.period)
         ).where(self.attendance_repo.model.id.in_(ids))
         result = await self.db.execute(query)
         return result.scalars().all()

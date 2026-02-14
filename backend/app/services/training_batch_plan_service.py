@@ -1,6 +1,6 @@
 """Training Batch Plan Service"""
 
-from datetime import date, time, timedelta
+from datetime import date, time, timedelta, datetime
 from typing import List, Optional
 from uuid import UUID
 from fastapi import HTTPException, status
@@ -36,6 +36,10 @@ class TrainingBatchPlanService:
         end_date = start_date + timedelta(days=6)
         
         return await self.repository.get_by_batch_and_date_range(batch.id, start_date, end_date)
+
+    async def get_daily_plan(self, batch_id: int, plan_date: date) -> List[TrainingBatchPlan]:
+        """Get all periods/sessions for a specific date"""
+        return await self.repository.get_by_batch_and_day(batch_id, plan_date)
 
     async def get_full_batch_plan(self, batch_public_id: UUID) -> List[TrainingBatchPlan]:
         """Get all plan entries for a batch ever created"""
@@ -105,5 +109,3 @@ class TrainingBatchPlanService:
         plan = await self.get_plan_by_public_id(public_id)
         return await self.repository.delete(plan.id)
 
-# Helper needed for combinations
-from datetime import datetime

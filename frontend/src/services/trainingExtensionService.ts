@@ -1,5 +1,5 @@
 import api from './api';
-import type { TrainingAttendance, TrainingAssessment, TrainingMockInterview, TrainingBatchEvent } from '../models/training';
+import type { TrainingAttendance, TrainingAssessment, TrainingMockInterview, TrainingBatchEvent, TrainingBatchPlan } from '../models/training';
 
 const trainingExtensionService = {
 	// Attendance
@@ -8,9 +8,23 @@ const trainingExtensionService = {
 		return response.data;
 	},
 
+	getAttendanceByDate: async (batchId: number, date: string) => {
+		const response = await api.get<TrainingAttendance[]>(`/training-extensions/attendance/${batchId}/date/${date}`);
+		return response.data;
+	},
+
 	updateBulkAttendance: async (data: TrainingAttendance[]) => {
 		const response = await api.post<TrainingAttendance[]>('/training-extensions/attendance/bulk', data);
 		return response.data;
+	},
+
+	// Training Plan
+	getDailyPlan: async (batchPublicId: string, date: string) => {
+		const response = await api.get<TrainingBatchPlan[]>(`/training-batch-plans/batch/${batchPublicId}`, {
+			params: { start_date: date }
+		});
+		// Filter to only return plans for the specific date
+		return response.data.filter(plan => plan.date === date);
 	},
 
 	// Assessments
@@ -83,3 +97,4 @@ const trainingExtensionService = {
 };
 
 export default trainingExtensionService;
+

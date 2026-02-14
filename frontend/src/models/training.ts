@@ -80,9 +80,12 @@ export interface TrainingAttendance {
 	batch_id: number;
 	candidate_id: number;
 	date: string;
+	period_id?: number | null;  // Reference to training plan period (NULL = full day attendance)
 	status: 'present' | 'absent' | 'late' | 'half_day';
 	remarks: string | null;
+	trainer_notes?: string | null;  // Period-specific trainer observations
 	batch?: TrainingBatch; // Eager loaded batch info
+	period?: TrainingBatchPlan;  // Eager loaded period info
 }
 
 export interface TrainingBatchEvent {
