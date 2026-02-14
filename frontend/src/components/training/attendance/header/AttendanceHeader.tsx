@@ -16,7 +16,7 @@ import {
 	EventAvailable as EventIcon
 } from '@mui/icons-material';
 import { format, addDays, isWithinInterval, startOfDay } from 'date-fns';
-import type { TrainingBatchEvent } from '../../../models/training';
+import type { TrainingBatchEvent } from '../../../../models/training';
 
 interface AttendanceHeaderProps {
 	selectedDate: Date;

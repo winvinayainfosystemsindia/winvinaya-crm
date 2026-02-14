@@ -9,7 +9,7 @@ import {
 	InfoOutlined as InfoIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
-import type { TrainingAttendance } from '../../../models/training';
+import type { TrainingAttendance } from '../../../../models/training';
 
 interface AttendanceLegendProps {
 	attendance: TrainingAttendance[];

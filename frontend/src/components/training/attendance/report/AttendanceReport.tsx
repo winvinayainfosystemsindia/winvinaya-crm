@@ -19,7 +19,7 @@ import {
 	EventBusy as HolidayIcon
 } from '@mui/icons-material';
 import { format, eachDayOfInterval, parseISO, startOfDay, isWeekend } from 'date-fns';
-import type { TrainingAttendance, CandidateAllocation, TrainingBatch, TrainingBatchEvent } from '../../../models/training';
+import type { TrainingAttendance, CandidateAllocation, TrainingBatch, TrainingBatchEvent } from '../../../../models/training';
 
 interface AttendanceReportProps {
 	attendance: TrainingAttendance[];

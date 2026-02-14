@@ -14,8 +14,8 @@ import {
 	Badge
 } from '@mui/material';
 import { Notes as NotesIcon, EditNote as EditNoteIcon } from '@mui/icons-material';
-import type { CandidateAllocation, TrainingAttendance, TrainingBatchPlan } from '../../../models/training';
-import TrainerNotesDialog from './TrainerNotesDialog';
+import type { CandidateAllocation, TrainingAttendance, TrainingBatchPlan } from '../../../../models/training';
+import TrainerNotesDialog from '../dialogs/TrainerNotesDialog';
 import { format } from 'date-fns';
 
 interface AttendanceTableRowProps {

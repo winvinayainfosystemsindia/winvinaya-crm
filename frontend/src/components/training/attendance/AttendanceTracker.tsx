@@ -19,14 +19,14 @@ import {
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import type { TrainingBatch, CandidateAllocation } from '../../../models/training';
-import { useAttendance } from './useAttendance';
+import { useAttendance } from './hooks/useAttendance';
 
 // Sub-components
-import AttendanceHeader from './AttendanceHeader';
-import AttendanceTable from './AttendanceTable';
-import AttendanceLegend from './AttendanceLegend';
-import BatchEventDialog from './BatchEventDialog';
-import AttendanceReport from './AttendanceReport';
+import AttendanceHeader from './header/AttendanceHeader';
+import AttendanceTable from './table/AttendanceTable';
+import AttendanceLegend from './table/AttendanceLegend';
+import BatchEventDialog from './dialogs/BatchEventDialog';
+import AttendanceReport from './report/AttendanceReport';
 
 interface AttendanceTrackerProps {
 	batch: TrainingBatch;

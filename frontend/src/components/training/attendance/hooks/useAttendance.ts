@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { format, parseISO, startOfDay, isWithinInterval } from 'date-fns';
-import trainingExtensionService from '../../../services/trainingExtensionService';
-import type { TrainingBatch, CandidateAllocation, TrainingAttendance, TrainingBatchEvent, TrainingBatchPlan } from '../../../models/training';
+import trainingExtensionService from '../../../../services/trainingExtensionService';
+import type { TrainingBatch, CandidateAllocation, TrainingAttendance, TrainingBatchEvent, TrainingBatchPlan } from '../../../../models/training';
 import { useSnackbar } from 'notistack';
 
 export const useAttendance = (batch: TrainingBatch, allocations: CandidateAllocation[]) => {

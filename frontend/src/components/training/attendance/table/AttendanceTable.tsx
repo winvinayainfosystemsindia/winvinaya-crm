@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import { Block as BlockIcon } from '@mui/icons-material';
 import { format } from 'date-fns';
-import type { CandidateAllocation, TrainingAttendance, TrainingBatchEvent, TrainingBatchPlan } from '../../../models/training';
+import type { CandidateAllocation, TrainingAttendance, TrainingBatchEvent, TrainingBatchPlan } from '../../../../models/training';
 import AttendanceTableRow from './AttendanceTableRow';
 
 interface AttendanceTableProps {
