@@ -11,6 +11,7 @@ from app.models.training_batch_extension import TrainingBatchExtension
 from app.models.training_candidate_allocation import TrainingCandidateAllocation
 from app.models.training_attendance import TrainingAttendance
 from app.models.training_assignment import TrainingAssignment
+from app.models.assessment import Assessment, AssessmentQuestion, AssessmentResult, AssessmentResponse
 from app.models.training_mock_interview import TrainingMockInterview
 from app.models.training_batch_event import TrainingBatchEvent
 from app.models.training_batch_plan import TrainingBatchPlan
@@ -38,6 +39,10 @@ __all__ = [
     "TrainingCandidateAllocation",
     "TrainingAttendance",
     "TrainingAssignment",
+    "Assessment",
+    "AssessmentQuestion",
+    "AssessmentResult",
+    "AssessmentResponse",
     "TrainingMockInterview",
     "TrainingBatchEvent",
     "TrainingBatchPlan",

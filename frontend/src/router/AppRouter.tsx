@@ -13,7 +13,9 @@ import TrainingBatchList from '../pages/training/TrainingBatchList';
 import TrainingBatchDetail from '../pages/training/TrainingBatchDetail';
 import CandidateAllocation from '../pages/training/CandidateAllocation';
 import AttendanceTrackerPage from '../pages/training/AttendanceTrackerPage';
+import AssessmentMatrixPage from '../pages/training/AssessmentMatrixPage';
 import AssignmentMatrixPage from '../pages/training/AssignmentMatrixPage';
+import ExamPortal from '../pages/training/ExamPortal';
 import MockInterviewPage from '../pages/training/MockInterviewPage';
 import WeeklyTrainingPlanPage from '../pages/training/WeeklyTrainingPlanPage';
 import SuccessPage from '../pages/common/SuccessPage';
@@ -39,6 +41,7 @@ const AppRouter: React.FC = () => {
 		<Routes>
 			<Route path="/login" element={<Login />} />
 			<Route path="/candidate-registration" element={<CandidateRegistration />} />
+			<Route path="/exam/:publicId" element={<ExamPortal />} />
 
 			{/* Public Support Pages */}
 			<Route path="/success" element={<SuccessPage />} />
@@ -73,6 +76,7 @@ const AppRouter: React.FC = () => {
 						<Route path="allocation" element={<CandidateAllocation />} />
 						<Route path="attendance" element={<AttendanceTrackerPage />} />
 						<Route path="assignment" element={<AssignmentMatrixPage />} />
+						<Route path="assessment" element={<AssessmentMatrixPage />} />
 						<Route path="mock-interview" element={<MockInterviewPage />} />
 						<Route path="weekly-plan" element={<WeeklyTrainingPlanPage />} />
 					</Route>

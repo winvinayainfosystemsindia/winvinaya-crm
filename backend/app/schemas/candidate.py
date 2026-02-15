@@ -84,6 +84,7 @@ class CandidateResponse(CandidateBase):
     Candidate response schema.
     Note: Uses public_id (UUID) instead of internal id for security.
     """
+    id: int
     public_id: UUID  # Secure UUID for external API
     city: str
     district: str
@@ -131,6 +132,7 @@ class CandidateResponse(CandidateBase):
 
 class CandidateListResponse(BaseModel):
     """Simplified response for list endpoints"""
+    id: int
     public_id: UUID
     name: str
     gender: str
@@ -332,6 +334,7 @@ class CandidateListResponse(BaseModel):
             
         # For ORM objects, create a complete dict
         return {
+            'id': get_val(data, 'id'),
             'public_id': get_val(data, 'public_id'),
             'name': get_val(data, 'name'),
             'gender': get_val(data, 'gender'),

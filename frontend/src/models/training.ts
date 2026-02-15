@@ -142,3 +142,62 @@ export interface TrainingBatchPlan {
 	created_at: string;
 	updated_at: string;
 }
+
+export interface Course {
+	name: string;
+	trainer: string;
+}
+
+export interface Assessment {
+	id?: number;
+	public_id?: string;
+	batch_id: number;
+	title: string;
+	description?: string;
+	duration_minutes: number;
+	security_key?: string;
+	is_active: boolean;
+	pass_percentage: number;
+	include_seb: boolean;
+	seb_config_key?: string;
+	others?: any;
+	questions?: AssessmentQuestion[];
+	created_at?: string;
+	updated_at?: string;
+}
+
+export interface AssessmentQuestion {
+	id?: number;
+	assessment_id?: number;
+	text: string;
+	type: 'MCQ' | 'TF';
+	options?: string[] | any;
+	correct_answer: string;
+	marks: number;
+	others?: any;
+}
+
+export interface AssessmentResult {
+	id?: number;
+	assessment_id: number;
+	candidate_id: number;
+	candidate_name?: string;
+	candidate_email?: string;
+	total_score: number;
+	started_at: string;
+	submitted_at?: string;
+	status: 'InProgress' | 'Completed';
+	others?: any;
+	responses?: AssessmentResponse[];
+	candidate?: any;
+	assessment?: Assessment;
+}
+
+export interface AssessmentResponse {
+	id?: number;
+	result_id?: number;
+	question_id: number;
+	selected_answer: string | null;
+	is_correct: boolean;
+	others?: any;
+}

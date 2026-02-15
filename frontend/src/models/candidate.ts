@@ -144,6 +144,7 @@ export interface WorkExperience {
 
 // Main Candidate Types
 export interface Candidate {
+	id: number;
 	public_id: string; // UUID - Used for all API operations
 	name: string;
 	gender: string;
@@ -170,6 +171,7 @@ export interface Candidate {
 
 // Simplified list response (without nested data)
 export interface CandidateListItem {
+	id: number;
 	public_id: string;
 	name: string;
 	gender: string;
