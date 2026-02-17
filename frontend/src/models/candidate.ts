@@ -210,7 +210,7 @@ export interface CandidateListItem {
 }
 
 
-export interface CandidateCreate extends Omit<Candidate, 'public_id' | 'city' | 'district' | 'state' | 'created_at' | 'updated_at' | 'screening' | 'documents' | 'counseling'> { }
+export interface CandidateCreate extends Omit<Candidate, 'id' | 'public_id' | 'city' | 'district' | 'state' | 'created_at' | 'updated_at' | 'screening' | 'documents' | 'counseling'> { }
 
 export interface CandidateUpdate {
 	name?: string;
