@@ -68,6 +68,12 @@ class CandidateScreeningService:
         
         # Update screening
         update_data = screening_in.model_dump(exclude_unset=True)
+        
+        # Protect original screened_by info:
+        # Only allow setting screened_by_id if it's currently None
+        if "screened_by_id" in update_data and candidate.screening.screened_by_id is not None:
+             del update_data["screened_by_id"]
+             
         return await self.repository.update(candidate.screening.id, update_data)
     
     async def delete_screening(self, candidate_public_id: UUID) -> bool:
