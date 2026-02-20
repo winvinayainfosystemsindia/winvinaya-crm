@@ -4,6 +4,7 @@ from app.models.user import User, UserRole
 from app.models.activity_log import ActivityLog, ActionType
 from app.models.candidate import Candidate
 from app.models.candidate_screening import CandidateScreening
+from app.models.candidate_screening_assignment import CandidateScreeningAssignment
 from app.models.candidate_document import CandidateDocument
 from app.models.candidate_counseling import CandidateCounseling
 from app.models.training_batch import TrainingBatch
@@ -32,6 +33,7 @@ __all__ = [
     "ActionType",
     "Candidate",
     "CandidateScreening",
+    "CandidateScreeningAssignment",
     "CandidateDocument",
     "CandidateCounseling",
     "TrainingBatch",

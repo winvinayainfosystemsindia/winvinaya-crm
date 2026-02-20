@@ -171,6 +171,11 @@ class CandidateListResponse(BaseModel):
     screening_updated_at: Optional[datetime] = None
     screening: Optional[dict] = None
     counseling: Optional[dict] = None
+
+    # Screening assignment fields
+    assigned_to_id: Optional[int] = None
+    assigned_to_name: Optional[str] = None
+    assigned_by_name: Optional[str] = None
     
     @model_validator(mode='before')
     @classmethod
@@ -199,6 +204,9 @@ class CandidateListResponse(BaseModel):
         
         screening_data = None
         counseling_data = None
+        assigned_to_id = None
+        assigned_to_name = None
+        assigned_by_name = None
         
         # ... (rest of helper functions)
         def get_val(obj, key, default=None):
@@ -304,7 +312,36 @@ class CandidateListResponse(BaseModel):
         if docs_list:
             documents_uploaded = [get_val(d, 'document_type') for d in docs_list]
 
-        # 6. Build response dict
+        # 6. Screening Assignment Data
+        assignment = None
+        if isinstance(data, dict):
+            assignment = data.get('screening_assignment')
+        elif hasattr(data, '__dict__') and 'screening_assignment' in data.__dict__:
+            assignment = data.screening_assignment
+
+        if assignment:
+            assigned_to_id = get_val(assignment, 'assigned_to_id')
+            assigned_to = None
+            assigned_by = None
+            if isinstance(assignment, dict):
+                assigned_to = assignment.get('assigned_to')
+                assigned_by = assignment.get('assigned_by')
+            elif hasattr(assignment, '__dict__'):
+                try:
+                    assigned_to = assignment.assigned_to
+                    assigned_by = assignment.assigned_by
+                except Exception:
+                    pass
+            if assigned_to:
+                fn = get_val(assigned_to, 'full_name')
+                un = get_val(assigned_to, 'username')
+                assigned_to_name = fn if fn else un
+            if assigned_by:
+                fn = get_val(assigned_by, 'full_name')
+                un = get_val(assigned_by, 'username')
+                assigned_by_name = fn if fn else un
+
+        # 7. Build response dict
         if isinstance(data, dict):
             data.update({
                 'is_disabled': is_disabled,
@@ -328,7 +365,10 @@ class CandidateListResponse(BaseModel):
                 'screening_date': screening_date,
                 'screening_updated_at': screening_updated_at,
                 'screening': screening_data,
-                'counseling': counseling_data
+                'counseling': counseling_data,
+                'assigned_to_id': assigned_to_id,
+                'assigned_to_name': assigned_to_name,
+                'assigned_by_name': assigned_by_name,
             })
             return data
             
@@ -368,7 +408,10 @@ class CandidateListResponse(BaseModel):
             'screening_date': screening_date,
             'screening_updated_at': screening_updated_at,
             'screening': screening_data,
-            'counseling': counseling_data
+            'counseling': counseling_data,
+            'assigned_to_id': assigned_to_id,
+            'assigned_to_name': assigned_to_name,
+            'assigned_by_name': assigned_by_name,
         }
 
 
@@ -400,6 +443,9 @@ class CandidateStats(BaseModel):
     candidates_not_submitted: int = 0
     screening_distribution: dict = {}
     counseling_distribution: dict = {}
+    # New fields for assigned stats
+    assigned_screening_distribution: dict = {}
+    assigned_not_screened: int = 0
 
 
 class CandidatePaginatedResponse(BaseModel):

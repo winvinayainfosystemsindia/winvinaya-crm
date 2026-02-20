@@ -66,8 +66,9 @@ export const candidateService = {
 	/**
 	 * Get candidate statistics
 	 */
-	getStats: async (): Promise<CandidateStats> => {
-		const response = await api.get<CandidateStats>('/candidates/stats');
+	getStats: async (assignedToUserId?: number): Promise<CandidateStats> => {
+		const param = assignedToUserId ? `?assigned_to_user_id=${assignedToUserId}` : '';
+		const response = await api.get<CandidateStats>(`/candidates/stats${param}`);
 		return response.data;
 	},
 
@@ -118,7 +119,8 @@ export const candidateService = {
 		cities?: string,
 		screeningStatus?: string,
 		isExperienced?: boolean,
-		counselingStatus?: string
+		counselingStatus?: string,
+		assignedToUserId?: number
 	): Promise<CandidatePaginatedResponse> => {
 		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
 		const sortParam = sortBy ? `&sort_by=${sortBy}&sort_order=${sortOrder}` : '';
@@ -128,7 +130,8 @@ export const candidateService = {
 			cities ? `&cities=${encodeURIComponent(cities)}` : '',
 			screeningStatus ? `&screening_status=${encodeURIComponent(screeningStatus)}` : '',
 			isExperienced !== undefined ? `&is_experienced=${isExperienced}` : '',
-			counselingStatus ? `&counseling_status=${encodeURIComponent(counselingStatus)}` : ''
+			counselingStatus ? `&counseling_status=${encodeURIComponent(counselingStatus)}` : '',
+			assignedToUserId ? `&assigned_to_user_id=${assignedToUserId}` : ''
 		].join('');
 
 		const response = await api.get<CandidatePaginatedResponse>(`/candidates/unscreened?skip=${skip}&limit=${limit}${searchParam}${sortParam}${filterParams}`);
@@ -150,7 +153,8 @@ export const candidateService = {
 		educationLevels?: string,
 		cities?: string,
 		screeningStatus?: string,
-		isExperienced?: boolean
+		isExperienced?: boolean,
+		assignedToUserId?: number
 	): Promise<CandidatePaginatedResponse> => {
 		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
 		const docStatusParam = documentStatus ? `&document_status=${documentStatus}` : '';
@@ -160,7 +164,8 @@ export const candidateService = {
 			educationLevels ? `&education_levels=${encodeURIComponent(educationLevels)}` : '',
 			cities ? `&cities=${encodeURIComponent(cities)}` : '',
 			screeningStatus ? `&screening_status=${encodeURIComponent(screeningStatus)}` : '',
-			isExperienced !== undefined ? `&is_experienced=${isExperienced}` : ''
+			isExperienced !== undefined ? `&is_experienced=${isExperienced}` : '',
+			assignedToUserId ? `&assigned_to_user_id=${assignedToUserId}` : ''
 		].join('');
 
 		const response = await api.get<CandidatePaginatedResponse>(`/candidates/screened?skip=${skip}&limit=${limit}${counselingStatus ? `&counseling_status=${counselingStatus}` : ''}${docStatusParam}${searchParam}${sortParam}${filterParams}`);

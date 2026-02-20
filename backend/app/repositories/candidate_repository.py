@@ -69,18 +69,23 @@ class CandidateRepository(BaseRepository[Candidate]):
         disability_percentages: Optional[list] = None,
         screening_reasons: Optional[list] = None,
         gender: Optional[str] = None,
-        extra_filters: Optional[dict] = None
+        extra_filters: Optional[dict] = None,
+        assigned_to_user_id: Optional[int] = None
     ):
         """Get multiples candidates with counseling loaded for list view, with optional search filtering, category filters, and sorting"""
         from sqlalchemy import or_, and_
+        from app.models.candidate_screening_assignment import CandidateScreeningAssignment
         stmt = (
             select(Candidate)
             .outerjoin(Candidate.screening)
             .outerjoin(Candidate.counseling)
+            .outerjoin(Candidate.screening_assignment)
             .options(
                 joinedload(Candidate.screening).joinedload(CandidateScreening.screened_by),
                 selectinload(Candidate.documents),
-                joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor)
+                joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor),
+                joinedload(Candidate.screening_assignment).joinedload(CandidateScreeningAssignment.assigned_to),
+                joinedload(Candidate.screening_assignment).joinedload(CandidateScreeningAssignment.assigned_by),
             )
         )
 
@@ -92,7 +97,15 @@ class CandidateRepository(BaseRepository[Candidate]):
         count_stmt = select(func.count(Candidate.id)).select_from(Candidate).outerjoin(Candidate.screening).outerjoin(Candidate.counseling)
         if not include_deleted:
             count_stmt = count_stmt.where(Candidate.is_deleted == False)
-        
+
+        # Filter by assignment — only show candidates assigned to this user
+        if assigned_to_user_id is not None:
+            from app.models.candidate_screening_assignment import CandidateScreeningAssignment as CSA
+            stmt = stmt.where(CandidateScreeningAssignment.assigned_to_id == assigned_to_user_id)
+            count_stmt = count_stmt.outerjoin(Candidate.screening_assignment).where(
+                CandidateScreeningAssignment.assigned_to_id == assigned_to_user_id
+            )
+
         # Apply search filters if provided
         if search:
             search_filter = or_(
@@ -287,27 +300,39 @@ class CandidateRepository(BaseRepository[Candidate]):
         is_experienced: Optional[bool] = None,
         counseling_status: Optional[str] = None,
         gender: Optional[str] = None,
-        extra_filters: Optional[dict] = None
+        extra_filters: Optional[dict] = None,
+        assigned_to_user_id: Optional[int] = None
     ):
         """Get candidates without screening records or with non-completed screening, with optional search filtering, category filters, and sorting"""
         # A candidate is "unscreened" ONLY if they have no screening record at all
         unscreened_filter = CandidateScreening.id.is_(None)
 
+        from app.models.candidate_screening_assignment import CandidateScreeningAssignment
         stmt = (
             select(Candidate)
             .outerjoin(Candidate.screening)
             .outerjoin(Candidate.counseling)
+            .outerjoin(Candidate.screening_assignment)
             .where(unscreened_filter)
             .options(
                 joinedload(Candidate.screening).joinedload(CandidateScreening.screened_by),
-                joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor)
+                joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor),
+                joinedload(Candidate.screening_assignment).joinedload(CandidateScreeningAssignment.assigned_to),
+                joinedload(Candidate.screening_assignment).joinedload(CandidateScreeningAssignment.assigned_by)
             )
         )
         
         # Base count query
         count_stmt = select(func.count(Candidate.id)).outerjoin(Candidate.screening).where(unscreened_filter)
-        
-        # Apply screening status filter if provided
+
+        # Filter by assignment
+        if assigned_to_user_id is not None:
+            stmt = stmt.where(CandidateScreeningAssignment.assigned_to_id == assigned_to_user_id)
+            count_stmt = count_stmt.outerjoin(Candidate.screening_assignment).where(
+                CandidateScreeningAssignment.assigned_to_id == assigned_to_user_id
+            )
+
+        # Apply screening status filter if provided if provided
         if screening_status:
             if screening_status == 'Pending':
                 stmt = stmt.where(CandidateScreening.id.is_(None))
@@ -421,26 +446,38 @@ class CandidateRepository(BaseRepository[Candidate]):
         screening_status: Optional[str] = None,
         is_experienced: Optional[bool] = None,
         gender: Optional[str] = None,
-        extra_filters: Optional[dict] = None
+        extra_filters: Optional[dict] = None,
+        assigned_to_user_id: Optional[int] = None
     ):
         """Get candidates with 'Completed' screening records loaded, with optional counseling status filter, document status filter, search filtering, category filters, and sorting"""
 
         from sqlalchemy import or_
+        from app.models.candidate_screening_assignment import CandidateScreeningAssignment
         stmt = (
             select(Candidate)
             .join(Candidate.screening)
             .outerjoin(Candidate.counseling)
+            .outerjoin(Candidate.screening_assignment)
             .where(CandidateScreening.id.isnot(None))
             .options(
                 joinedload(Candidate.screening).joinedload(CandidateScreening.screened_by),
                 selectinload(Candidate.documents),
-                joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor)
+                joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor),
+                joinedload(Candidate.screening_assignment).joinedload(CandidateScreeningAssignment.assigned_to),
+                joinedload(Candidate.screening_assignment).joinedload(CandidateScreeningAssignment.assigned_by)
             )
         )
         
         # Base count statement for screened candidates
         count_stmt = select(func.count(Candidate.id)).join(Candidate.screening).outerjoin(Candidate.counseling).where(CandidateScreening.id.isnot(None))
-        
+
+        # Filter by assignment
+        if assigned_to_user_id is not None:
+            stmt = stmt.where(CandidateScreeningAssignment.assigned_to_id == assigned_to_user_id)
+            count_stmt = count_stmt.outerjoin(Candidate.screening_assignment).where(
+                CandidateScreeningAssignment.assigned_to_id == assigned_to_user_id
+            )
+
         # Apply screening status filter if provided (though mostly would be 'Completed' based on logic above)
         if screening_status:
             if screening_status == 'Other':
@@ -608,18 +645,18 @@ class CandidateRepository(BaseRepository[Candidate]):
         return result.scalars().unique().all(), total
 
 
-    async def get_stats(self) -> dict:
+    async def get_stats(self, assigned_to_user_id: Optional[int] = None) -> dict:
         """Get candidate statistics"""
-        # Lazy imports to avoid circular dependency
         # Lazy imports to avoid circular dependency
         from sqlalchemy import func
         from datetime import datetime, time, timedelta
         from app.models.candidate_counseling import CandidateCounseling
         from app.models.candidate_screening import CandidateScreening
         from app.models.candidate_document import CandidateDocument
+        from app.models.candidate_screening_assignment import CandidateScreeningAssignment
         
         try:
-            # Helper to execute count query
+            # Helper to execute count query (Overall)
             async def get_count(filter_expr=None):
                 stmt = select(func.count(Candidate.id))
                 start_filter = (Candidate.is_deleted == False)
@@ -627,6 +664,17 @@ class CandidateRepository(BaseRepository[Candidate]):
                     stmt = stmt.where(start_filter, filter_expr)
                 else:
                     stmt = stmt.where(start_filter)
+                result = await self.db.execute(stmt)
+                return result.scalar() or 0
+
+            # Helper to execute count query (Assigned)
+            async def get_assigned_count(filter_expr=None):
+                if assigned_to_user_id is None:
+                    return 0
+                stmt = select(func.count(Candidate.id)).outerjoin(Candidate.screening_assignment)
+                stmt = stmt.where(Candidate.is_deleted == False, CandidateScreeningAssignment.assigned_to_id == assigned_to_user_id)
+                if filter_expr is not None:
+                    stmt = stmt.where(filter_expr)
                 result = await self.db.execute(stmt)
                 return result.scalar() or 0
 
@@ -643,68 +691,81 @@ class CandidateRepository(BaseRepository[Candidate]):
                     stats.append(count)
                 return stats
 
+            # 1. OVERALL STATS
             total = await get_count()
             male = await get_count(func.lower(Candidate.gender) == 'male')
             female = await get_count(func.lower(Candidate.gender) == 'female')
-            
-            # All others that are not male/female (case insensitive)
             others = total - (male + female)
-            
-            # Candidates registered today
             today_start = datetime.combine(datetime.now().date(), time.min)
             today_count = await get_count(Candidate.created_at >= today_start)
             
-            # Screening stats - count all candidates with ANY screening record
-            stmt_screened = select(func.count(CandidateScreening.id)).join(Candidate).where(
-                Candidate.is_deleted == False
-            )
+            # Overall Screening stats
+            stmt_screened = select(func.count(CandidateScreening.id)).join(Candidate).where(Candidate.is_deleted == False)
             result_screened = await self.db.execute(stmt_screened)
             screened = result_screened.scalar() or 0
             
-            # Screening distribution
-            # Screening distribution
-            stmt_dist = select(CandidateScreening.status, func.count(CandidateScreening.id)).join(Candidate).where(Candidate.is_deleted == False).group_by(CandidateScreening.status)
+            stmt_dist = (
+                select(CandidateScreening.status, func.count(CandidateScreening.id))
+                .join(Candidate)
+                .where(Candidate.is_deleted == False)
+                .group_by(CandidateScreening.status)
+            )
             res_dist = await self.db.execute(stmt_dist)
             raw_dist = dict(res_dist.all())
             
-            # Merge None and empty string into 'In Progress'
             screening_distribution = {}
             for status_key, count in raw_dist.items():
-                target_key = status_key
-                if status_key is None or status_key == '':
-                    target_key = 'In Progress'
-                
+                target_key = status_key if status_key and status_key != '' else 'In Progress'
                 screening_distribution[target_key] = screening_distribution.get(target_key, 0) + count
             
             not_screened = total - screened
 
-            # Counseling stats
-            # Normalize status to lowercase for consistent counting
-            stmt_counseling = select(func.lower(CandidateCounseling.status), func.count(CandidateCounseling.id)).join(Candidate).where(Candidate.is_deleted == False).group_by(func.lower(CandidateCounseling.status))
+            # 2. ASSIGNED STATS (Optional)
+            assigned_screening_distribution = {}
+            assigned_not_screened = 0
+            if assigned_to_user_id is not None:
+                # Total assigned candidates
+                assigned_total = await get_assigned_count()
+                
+                # Assigned Screening Distribution
+                stmt_assigned_dist = (
+                    select(CandidateScreening.status, func.count(CandidateScreening.id))
+                    .join(Candidate)
+                    .outerjoin(Candidate.screening_assignment)
+                    .where(Candidate.is_deleted == False, CandidateScreeningAssignment.assigned_to_id == assigned_to_user_id)
+                    .group_by(CandidateScreening.status)
+                )
+                res_assigned_dist = await self.db.execute(stmt_assigned_dist)
+                raw_assigned_dist = dict(res_assigned_dist.all())
+                
+                assigned_screened_total = 0
+                for status_key, count in raw_assigned_dist.items():
+                    target_key = status_key if status_key and status_key != '' else 'In Progress'
+                    assigned_screening_distribution[target_key] = assigned_screening_distribution.get(target_key, 0) + count
+                    assigned_screened_total += count
+                
+                # Assigned Not Screened = Total Assigned - Total with Screening Record
+                assigned_not_screened = max(0, assigned_total - assigned_screened_total)
+
+            # Overall Counseling stats
+            stmt_counseling = (
+                select(func.lower(CandidateCounseling.status), func.count(CandidateCounseling.id))
+                .join(Candidate)
+                .where(Candidate.is_deleted == False)
+                .group_by(func.lower(CandidateCounseling.status))
+            )
             result_counseling = await self.db.execute(stmt_counseling)
             counseling_counts = dict(result_counseling.all())
-            
-            # Get raw counts
             raw_selected = counseling_counts.get('selected', 0)
             raw_rejected = counseling_counts.get('rejected', 0)
-            
-            # Pending counseling should include:
-            # 1. Candidates with explicit 'pending' status
-            # 2. Screening COMPLETED candidates who have NOT started counseling yet
-            # So: Pending = Screening Completed - (Selected + Rejected)
             screened_completed = screening_distribution.get('Completed', 0)
             counseling_pending = max(0, screened_completed - (raw_selected + raw_rejected))
-            
             counseling_selected = raw_selected
             counseling_rejected = raw_rejected
             total_counseled = sum(counseling_counts.values())
 
             # Document collection stats (for Selected candidates)
-            # 1. Total to collect from (status == 'selected')
             docs_total = raw_selected
-            
-            # 2. Detailed collections
-            # Strategy: Get IDs of selected candidates and their document types.
             stmt_sel_docs = (
                 select(Candidate.id, Candidate.disability_details, func.array_agg(CandidateDocument.document_type))
                 .join(CandidateCounseling, Candidate.id == CandidateCounseling.candidate_id)
@@ -716,48 +777,30 @@ class CandidateRepository(BaseRepository[Candidate]):
             res_sel_docs = await self.db.execute(stmt_sel_docs)
             sel_rows = res_sel_docs.all()
             
-            docs_completed = 0
             files_collected = 0
             files_to_collect = 0
             candidates_fully_submitted = 0
             candidates_partially_submitted = 0
             candidates_not_submitted = 0
-            
             required_base = {'resume', '10th_certificate', '12th_certificate', 'degree_certificate', 'pan_card', 'aadhar_card'}
             
             for row in sel_rows:
                 c_id, disp_details, doc_types = row
-                # doc_types might have None if no docs uploaded
                 uploaded = set(filter(None, doc_types))
-                
-                # Check disability cert if applicable
-                is_disabled = False
-                if disp_details and isinstance(disp_details, dict):
-                    is_disabled = disp_details.get('is_disabled', False)
-                
-                # Set of required docs for THIS specific candidate
+                is_disabled = disp_details.get('is_disabled', False) if disp_details and isinstance(disp_details, dict) else False
                 candidate_required = set(required_base)
-                if is_disabled:
-                    candidate_required.add('disability_certificate')
-                
-                # Calculate metrics for THIS candidate in terms of required files
+                if is_disabled: candidate_required.add('disability_certificate')
                 intersection = uploaded.intersection(candidate_required)
                 uploaded_count = len(intersection)
                 target_count = len(candidate_required)
-                
                 files_collected += uploaded_count
                 files_to_collect += target_count
-                
-                if uploaded_count == target_count:
-                    candidates_fully_submitted += 1
-                elif uploaded_count > 0:
-                    candidates_partially_submitted += 1
-                else:
-                    candidates_not_submitted += 1
+                if uploaded_count == target_count: candidates_fully_submitted += 1
+                elif uploaded_count > 0: candidates_partially_submitted += 1
+                else: candidates_not_submitted += 1
 
             docs_completed = candidates_fully_submitted
             docs_pending = docs_total - docs_completed
-
             weekly = await get_weekly_stats()
             
             return {
@@ -782,7 +825,9 @@ class CandidateRepository(BaseRepository[Candidate]):
                 "candidates_partially_submitted": candidates_partially_submitted,
                 "candidates_not_submitted": candidates_not_submitted,
                 "screening_distribution": screening_distribution,
-                "counseling_distribution": counseling_counts
+                "counseling_distribution": counseling_counts,
+                "assigned_screening_distribution": assigned_screening_distribution,
+                "assigned_not_screened": assigned_not_screened
             }
         except Exception as e:
             import traceback
@@ -793,7 +838,9 @@ class CandidateRepository(BaseRepository[Candidate]):
                 "today": 0, "weekly": [], "screened": 0, "not_screened": 0,
                 "total_counseled": 0, "counseling_pending": 0,
                 "counseling_selected": 0, "counseling_rejected": 0,
-                "docs_total": 0, "docs_completed": 0, "docs_pending": 0
+                "docs_total": 0, "docs_completed": 0, "docs_pending": 0,
+                "assigned_screening_distribution": {},
+                "assigned_not_screened": 0
             }
 
     async def get_filter_options(self) -> dict:

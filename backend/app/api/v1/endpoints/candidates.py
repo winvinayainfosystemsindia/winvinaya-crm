@@ -1,8 +1,8 @@
 """Candidate Endpoints"""
 
-from typing import List
+from typing import List, Optional
 from uuid import UUID
-from fastapi import APIRouter, Depends, status, Request, BackgroundTasks
+from fastapi import APIRouter, Depends, status, Request, BackgroundTasks, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.rate_limiter import rate_limit_medium
@@ -150,6 +150,7 @@ async def get_filter_options(
 @rate_limit_medium()
 async def get_candidate_stats(
     request: Request,
+    assigned_to_user_id: Optional[int] = Query(None),
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
     db: AsyncSession = Depends(get_db)
 ):
@@ -157,7 +158,7 @@ async def get_candidate_stats(
     Get candidate statistics (Restricted)
     """
     service = CandidateService(db)
-    return await service.get_stats()
+    return await service.get_stats(assigned_to_user_id=assigned_to_user_id)
 
 
 @router.get("/unscreened", response_model=CandidatePaginatedResponse)
@@ -186,6 +187,11 @@ async def get_unscreened_candidates(
     education_levels_list = education_levels.split(',') if education_levels else None
     cities_list = cities.split(',') if cities else None
 
+    # Role-based assignment filtering
+    assigned_to_user_id = None
+    if current_user.role in [UserRole.TRAINER, UserRole.SOURCING]:
+        assigned_to_user_id = current_user.id
+
     service = CandidateService(db)
     return await service.get_unscreened_candidates(
         skip=skip, 
@@ -198,7 +204,8 @@ async def get_unscreened_candidates(
         cities=cities_list,
         screening_status=screening_status,
         is_experienced=is_experienced,
-        counseling_status=counseling_status
+        counseling_status=counseling_status,
+        assigned_to_user_id=assigned_to_user_id
     )
 
 
@@ -230,6 +237,11 @@ async def get_screened_candidates(
     education_levels_list = education_levels.split(',') if education_levels else None
     cities_list = cities.split(',') if cities else None
 
+    # Role-based assignment filtering
+    assigned_to_user_id = None
+    if current_user.role in [UserRole.TRAINER, UserRole.SOURCING]:
+        assigned_to_user_id = current_user.id
+
     service = CandidateService(db)
     return await service.get_screened_candidates(
         skip=skip, 
@@ -243,7 +255,8 @@ async def get_screened_candidates(
         education_levels=education_levels_list,
         cities=cities_list,
         screening_status=screening_status,
-        is_experienced=is_experienced
+        is_experienced=is_experienced,
+        assigned_to_user_id=assigned_to_user_id
     )
 
 

@@ -1,21 +1,16 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Box, CircularProgress, Alert } from '@mui/material';
-import { useAppDispatch, useAppSelector } from '../../../store/hooks';
-import { fetchCandidateStats } from '../../../store/slices/candidateSlice';
+import { useAppSelector } from '../../../store/hooks';
 import StatCard from '../../dashboard/StatCard';
 import PeopleIcon from '@mui/icons-material/People';
 import WcIcon from '@mui/icons-material/Wc';
 import CheckCircle from '@mui/icons-material/CheckCircle';
 
 const ScreeningStatCard: React.FC = () => {
-	const dispatch = useAppDispatch();
 	// Use statsLoading specifically to avoid flicker when list refreshes
 	// @ts-ignore - statsLoading is added to slice but might not be picked up by TS immediately in editor
 	const { stats, statsLoading, error } = useAppSelector((state) => state.candidates);
 
-	useEffect(() => {
-		dispatch(fetchCandidateStats());
-	}, [dispatch]);
 
 	if (statsLoading && !stats) {
 		return (

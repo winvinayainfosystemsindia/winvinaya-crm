@@ -9,6 +9,7 @@ import notificationReducer from './slices/notificationSlice';
 import settingsReducer from './slices/settingsSlice';
 import mockInterviewReducer from './slices/mockInterviewSlice';
 import trainingPlanReducer from './slices/trainingPlanSlice';
+import screeningAssignmentReducer from './slices/screeningAssignmentSlice';
 
 import companyReducer from './slices/companySlice';
 import contactReducer from './slices/contactSlice';
@@ -39,6 +40,7 @@ export const store = configureStore({
 		crmActivities: crmActivityReducer,
 		// System Health
 		health: healthReducer,
+		screeningAssignments: screeningAssignmentReducer,
 	},
 	middleware: (getDefaultMiddleware) =>
 		getDefaultMiddleware({

@@ -27,7 +27,8 @@ from app.api.v1.endpoints import (
     crm_activities,
     system_settings,
     chat,
-    training_batch_plans
+    training_batch_plans,
+    screening_assignments
 )
 
 
@@ -42,6 +43,7 @@ router.include_router(candidates.router)
 router.include_router(candidate_screening.router)
 router.include_router(candidate_documents.router)
 router.include_router(candidate_counseling.router)
+router.include_router(screening_assignments.router)
 router.include_router(analytics.router)
 router.include_router(training_batches.router)
 router.include_router(training_candidate_allocations.router)

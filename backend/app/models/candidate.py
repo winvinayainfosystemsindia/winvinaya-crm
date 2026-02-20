@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from sqlalchemy import String, Boolean, JSON, Date, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from app.models.training_assignment import TrainingAssignment
     from app.models.training_candidate_allocation import TrainingCandidateAllocation
     from app.models.training_mock_interview import TrainingMockInterview
+    from app.models.candidate_screening_assignment import CandidateScreeningAssignment
 
 
 class Candidate(BaseModel):
@@ -53,7 +54,7 @@ class Candidate(BaseModel):
     disability_details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     
     # Relationships (filled by trainers)
-    screening: Mapped[CandidateScreening] = relationship(
+    screening: Mapped[Optional[CandidateScreening]] = relationship(
         "CandidateScreening",
         back_populates="candidate",
         uselist=False,
@@ -66,7 +67,7 @@ class Candidate(BaseModel):
         cascade="all, delete-orphan"
     )
     
-    counseling: Mapped[CandidateCounseling] = relationship(
+    counseling: Mapped[Optional[CandidateCounseling]] = relationship(
         "CandidateCounseling",
         back_populates="candidate",
         uselist=False,
@@ -97,6 +98,14 @@ class Candidate(BaseModel):
         back_populates="candidate",
         cascade="all, delete-orphan"
     )
-    
+
+    # Screening assignment (who is responsible for screening this candidate)
+    screening_assignment: Mapped[Optional["CandidateScreeningAssignment"]] = relationship(
+        "CandidateScreeningAssignment",
+        back_populates="candidate",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
+
     def __repr__(self) -> str:
         return f"<Candidate(id={self.id}, public_id={self.public_id}, name={self.name})>"

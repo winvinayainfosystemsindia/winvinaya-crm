@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
 	Paper,
 	Table,
@@ -11,7 +11,8 @@ import {
 	Typography,
 	Box,
 	CircularProgress,
-	LinearProgress
+	LinearProgress,
+	Checkbox
 } from '@mui/material';
 import FilterDrawer from '../../common/FilterDrawer';
 import type { CandidateListItem } from '../../../models/candidate';
@@ -20,6 +21,7 @@ import { getScreeningFilterFields } from '../ScreeningFilters';
 import ScreeningTableHeader from './ScreeningTableHeader';
 import ScreeningTableRow from './ScreeningTableRow';
 import CustomTablePagination from '../../common/CustomTablePagination';
+import { AssignCandidatesDialog } from '../dialogs';
 
 interface ScreeningTableProps {
 	type: 'unscreened' | 'screened';
@@ -50,8 +52,17 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, status, onAction,
 		handleClearFilters,
 		handleApplyFilters,
 		setRowsPerPage,
-		fetchCandidatesData
+		fetchCandidatesData,
+		// Selection
+		selected,
+		handleSelectAllClick,
+		handleSelectClick,
+		isSelected,
+		clearSelection,
+		isManager
 	} = useScreeningTable({ type, status, refreshTrigger });
+
+	const [assignDialogOpen, setAssignDialogOpen] = useState(false);
 
 	const filterFields = useMemo(() => getScreeningFilterFields(type, status, filterOptions), [type, status, filterOptions]);
 
@@ -73,6 +84,9 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, status, onAction,
 				activeFilterCount={activeFilterCount}
 				onFilterOpen={() => setFilterDrawerOpen(true)}
 				onRefresh={fetchCandidatesData}
+				selectedCount={selected.length}
+				onAssign={() => setAssignDialogOpen(true)}
+				isManager={isManager}
 			/>
 			{loading && candidates.length > 0 && <LinearProgress sx={{ height: 2 }} />}
 
@@ -97,33 +111,48 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, status, onAction,
 									{ id: 'disability_type', label: 'Disability', hideOnMobile: true },
 									{ id: 'education_level', label: 'Education', hideOnMobile: true },
 									{ id: 'district', label: 'Location', hideOnMobile: true },
+									{ id: 'assigned', label: 'Assigned To', hideOnMobile: true },
 									{ id: 'created_at', label: 'Date', hideOnMobile: true },
 								];
 								if (type !== 'unscreened') {
 									headers.push({ id: 'screening_status', label: 'Status', hideOnMobile: false });
 								}
 								return headers;
-							})().map((headCell) => (
-								<TableCell
-									key={headCell.id}
-									sortDirection={orderBy === headCell.id ? order : false}
-									sx={{
-										fontWeight: 'bold',
-										color: 'text.secondary',
-										fontSize: '0.875rem',
-										borderBottom: '2px solid #d5dbdb',
-										display: headCell.hideOnMobile ? { xs: 'none', md: 'table-cell' } : 'table-cell'
-									}}
-								>
-									<TableSortLabel
-										active={orderBy === headCell.id}
-										direction={orderBy === headCell.id ? order : 'asc'}
-										onClick={() => handleRequestSort(headCell.id as keyof CandidateListItem)}
+							})()
+								.filter(h => isManager || h.id !== 'assigned')
+								.map((headCell, index) => (
+									<TableCell
+										key={headCell.id}
+										sortDirection={orderBy === headCell.id ? order : false}
+										sx={{
+											fontWeight: 'bold',
+											color: 'text.secondary',
+											fontSize: '0.875rem',
+											borderBottom: '2px solid #d5dbdb',
+											display: headCell.hideOnMobile ? { xs: 'none', md: 'table-cell' } : 'table-cell',
+											...(index === 0 && isManager && { pl: 0 })
+										}}
 									>
-										{headCell.label}
-									</TableSortLabel>
-								</TableCell>
-							))}
+										<Box sx={{ display: 'flex', alignItems: 'center' }}>
+											{index === 0 && isManager && (
+												<Checkbox
+													indeterminate={selected.length > 0 && selected.length < candidates.length}
+													checked={candidates.length > 0 && selected.length === candidates.length}
+													onChange={handleSelectAllClick}
+													size="small"
+													sx={{ mr: 1 }}
+												/>
+											)}
+											<TableSortLabel
+												active={orderBy === headCell.id}
+												direction={orderBy === headCell.id ? order : 'asc'}
+												onClick={() => handleRequestSort(headCell.id as keyof CandidateListItem)}
+											>
+												{headCell.label}
+											</TableSortLabel>
+										</Box>
+									</TableCell>
+								))}
 							<TableCell align="right" sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem', borderBottom: '2px solid #d5dbdb' }}>
 								Actions
 							</TableCell>
@@ -152,6 +181,9 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, status, onAction,
 									candidate={candidate}
 									type={type}
 									onAction={onAction}
+									selected={isSelected(candidate.public_id)}
+									onSelect={(e) => handleSelectClick(e, candidate.public_id)}
+									isManager={isManager}
 								/>
 							))
 						)}
@@ -166,6 +198,16 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, status, onAction,
 				onPageChange={handleChangePage}
 				onRowsPerPageChange={handleChangeRowsPerPage}
 				onRowsPerPageSelectChange={setRowsPerPage}
+			/>
+
+			<AssignCandidatesDialog
+				open={assignDialogOpen}
+				onClose={() => setAssignDialogOpen(false)}
+				selectedCandidateIds={selected}
+				onSuccess={() => {
+					clearSelection();
+					fetchCandidatesData();
+				}}
 			/>
 		</Paper>
 	);

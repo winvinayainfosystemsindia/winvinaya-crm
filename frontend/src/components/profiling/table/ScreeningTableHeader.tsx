@@ -6,7 +6,7 @@ import {
 	InputAdornment,
 	useTheme
 } from '@mui/material';
-import { Search, FilterList, Refresh } from '@mui/icons-material';
+import { Search, FilterList, Refresh, AssignmentInd } from '@mui/icons-material';
 
 interface ScreeningTableHeaderProps {
 	type: 'unscreened' | 'screened';
@@ -15,6 +15,9 @@ interface ScreeningTableHeaderProps {
 	activeFilterCount: number;
 	onFilterOpen: () => void;
 	onRefresh: () => void;
+	selectedCount?: number;
+	onAssign?: () => void;
+	isManager?: boolean;
 }
 
 const ScreeningTableHeader: React.FC<ScreeningTableHeaderProps> = memo(({
@@ -23,7 +26,10 @@ const ScreeningTableHeader: React.FC<ScreeningTableHeaderProps> = memo(({
 	onSearchChange,
 	activeFilterCount,
 	onFilterOpen,
-	onRefresh
+	onRefresh,
+	selectedCount = 0,
+	onAssign,
+	isManager = false
 }) => {
 	const theme = useTheme();
 
@@ -63,7 +69,25 @@ const ScreeningTableHeader: React.FC<ScreeningTableHeaderProps> = memo(({
 					),
 				}}
 			/>
-			<Box sx={{ display: 'flex', gap: 1, mt: { xs: 1, sm: 0 } }}>
+			<Box sx={{ display: 'flex', gap: 1, mt: { xs: 1, sm: 0 }, alignItems: 'center' }}>
+				{isManager && selectedCount > 0 && (
+					<Button
+						variant="contained"
+						startIcon={<AssignmentInd />}
+						onClick={onAssign}
+						size="medium"
+						sx={{
+							textTransform: 'none',
+							mr: 1,
+							boxShadow: 'none',
+							'&:hover': {
+								boxShadow: 'none'
+							}
+						}}
+					>
+						Assign ({selectedCount})
+					</Button>
+				)}
 				<Button
 					variant="outlined"
 					startIcon={<Refresh />}

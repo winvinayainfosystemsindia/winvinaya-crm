@@ -103,7 +103,8 @@ class CandidateService:
         disability_percentages: Optional[list] = None,
         screening_reasons: Optional[list] = None,
         gender: Optional[str] = None,
-        extra_filters: Optional[dict] = None
+        extra_filters: Optional[dict] = None,
+        assigned_to_user_id: Optional[int] = None
     ) -> dict:
         """Get list of candidates with total count, supporting optional search, filters, and sorting"""
         items, total = await self.repository.get_multi(
@@ -121,7 +122,8 @@ class CandidateService:
             disability_percentages=disability_percentages,
             screening_reasons=screening_reasons,
             gender=gender,
-            extra_filters=extra_filters
+            extra_filters=extra_filters,
+            assigned_to_user_id=assigned_to_user_id
         )
         return {"items": items, "total": total}
 
@@ -155,9 +157,9 @@ class CandidateService:
         # Use internal id for repository delete
         return await self.repository.delete(candidate.id, soft=False)
 
-    async def get_stats(self) -> dict:
+    async def get_stats(self, assigned_to_user_id: Optional[int] = None) -> dict:
         """Get candidate statistics"""
-        return await self.repository.get_stats()
+        return await self.repository.get_stats(assigned_to_user_id=assigned_to_user_id)
 
     async def get_unscreened_candidates(
         self, 
@@ -171,7 +173,8 @@ class CandidateService:
         cities: Optional[list] = None,
         screening_status: Optional[str] = None,
         is_experienced: Optional[bool] = None,
-        counseling_status: Optional[str] = None
+        counseling_status: Optional[str] = None,
+        assigned_to_user_id: Optional[int] = None
     ) -> dict:
         """Get list of candidates without screening records with total count, supporting optional search, filters and sorting"""
         items, total = await self.repository.get_unscreened(
@@ -185,7 +188,8 @@ class CandidateService:
             cities=cities,
             screening_status=screening_status,
             is_experienced=is_experienced,
-            counseling_status=counseling_status
+            counseling_status=counseling_status,
+            assigned_to_user_id=assigned_to_user_id
         )
         return {"items": items, "total": total}
 
@@ -203,7 +207,8 @@ class CandidateService:
         education_levels: Optional[list] = None,
         cities: Optional[list] = None,
         screening_status: Optional[str] = None,
-        is_experienced: Optional[bool] = None
+        is_experienced: Optional[bool] = None,
+        assigned_to_user_id: Optional[int] = None
     ) -> dict:
         """Get list of candidates with screening records with total count, supporting optional search, filters, document status filter, and sorting"""
         items, total = await self.repository.get_screened(
@@ -218,7 +223,8 @@ class CandidateService:
             education_levels=education_levels,
             cities=cities,
             screening_status=screening_status,
-            is_experienced=is_experienced
+            is_experienced=is_experienced,
+            assigned_to_user_id=assigned_to_user_id
         )
         return {"items": items, "total": total}
 

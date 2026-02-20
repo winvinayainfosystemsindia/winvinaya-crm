@@ -167,6 +167,11 @@ export interface Candidate {
 	screening?: CandidateScreening;
 	documents?: CandidateDocument[];
 	counseling?: CandidateCounseling;
+
+	// Screening assignment fields
+	assigned_to_id?: number;
+	assigned_to_name?: string;
+	assigned_by_name?: string;
 }
 
 // Simplified list response (without nested data)
@@ -207,6 +212,11 @@ export interface CandidateListItem {
 	screening_comments?: string;
 	screening?: CandidateScreening;
 	counseling?: CandidateCounseling;
+
+	// Screening assignment fields
+	assigned_to_id?: number;
+	assigned_to_name?: string;
+	assigned_by_name?: string;
 }
 
 
@@ -249,6 +259,8 @@ export interface CandidateStats {
 	candidates_not_submitted: number;
 	screening_distribution?: Record<string, number>;
 	counseling_distribution?: Record<string, number>;
+	assigned_screening_distribution?: Record<string, number>;
+	assigned_not_screened?: number;
 }
 
 export interface CandidatePaginatedResponse {

@@ -55,9 +55,10 @@ const initialState: CandidateState = {
 
 export const fetchCandidateStats = createAsyncThunk(
 	'candidates/fetchStats',
-	async (_, { rejectWithValue }) => {
+	async (params: { assigned_to_user_id?: number } | void = {}, { rejectWithValue }) => {
 		try {
-			const response = await candidateService.getStats();
+			const { assigned_to_user_id } = (params || {}) as any;
+			const response = await candidateService.getStats(assigned_to_user_id);
 			return response;
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to fetch candidate stats');

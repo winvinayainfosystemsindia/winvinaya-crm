@@ -13,6 +13,9 @@ interface UseScreeningTableProps {
 export const useScreeningTable = ({ type, status, refreshTrigger = 0 }: UseScreeningTableProps) => {
 	const dispatch = useAppDispatch();
 	const { list: candidates, loading, total: totalCount } = useAppSelector((state) => state.candidates);
+	const { user } = useAppSelector((state) => state.auth);
+
+	const isManager = user?.role === 'manager' || user?.role === 'admin';
 
 	const [searchTerm, setSearchTerm] = useState('');
 	const [page, setPage] = useState(0);
@@ -23,6 +26,9 @@ export const useScreeningTable = ({ type, status, refreshTrigger = 0 }: UseScree
 	);
 
 	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+	// Selection state
+	const [selected, setSelected] = useState<string[]>([]);
 
 	// Filter state
 	const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
@@ -155,6 +161,40 @@ export const useScreeningTable = ({ type, status, refreshTrigger = 0 }: UseScree
 		fetchCandidatesData();
 	};
 
+	// Selection Handlers
+	const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
+		if (event && event.target && event.target.checked) {
+			const newSelected = candidates.map((n) => n.public_id);
+			setSelected(newSelected);
+			return;
+		}
+		setSelected([]);
+	};
+
+	const handleSelectClick = (_event: React.MouseEvent<unknown>, publicId: string) => {
+		const selectedIndex = selected.indexOf(publicId);
+		let newSelected: string[] = [];
+
+		if (selectedIndex === -1) {
+			newSelected = newSelected.concat(selected, publicId);
+		} else if (selectedIndex === 0) {
+			newSelected = newSelected.concat(selected.slice(1));
+		} else if (selectedIndex === selected.length - 1) {
+			newSelected = newSelected.concat(selected.slice(0, -1));
+		} else if (selectedIndex > 0) {
+			newSelected = newSelected.concat(
+				selected.slice(0, selectedIndex),
+				selected.slice(selectedIndex + 1)
+			);
+		}
+
+		setSelected(newSelected);
+	};
+
+	const isSelected = (publicId: string) => selected.indexOf(publicId) !== -1;
+
+	const clearSelection = () => setSelected([]);
+
 	return {
 		candidates,
 		loading,
@@ -176,6 +216,13 @@ export const useScreeningTable = ({ type, status, refreshTrigger = 0 }: UseScree
 		handleClearFilters,
 		handleApplyFilters,
 		fetchCandidatesData,
-		setRowsPerPage
+		setRowsPerPage,
+		// Selection
+		selected,
+		handleSelectAllClick,
+		handleSelectClick,
+		isSelected,
+		clearSelection,
+		isManager
 	};
 };

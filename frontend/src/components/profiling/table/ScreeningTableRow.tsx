@@ -6,7 +6,8 @@ import {
 	Box,
 	Tooltip,
 	Chip,
-	Button
+	Button,
+	Checkbox
 } from '@mui/material';
 import { Edit, Accessible, VerifiedUser, CheckCircle, Cancel, WatchLater, HelpOutline } from '@mui/icons-material';
 import { format, isToday, parseISO } from 'date-fns';
@@ -16,12 +17,18 @@ interface ScreeningTableRowProps {
 	candidate: CandidateListItem;
 	type: 'unscreened' | 'screened';
 	onAction: (action: 'edit' | 'screen', candidate: CandidateListItem) => void;
+	selected?: boolean;
+	onSelect?: (event: React.MouseEvent<unknown>) => void;
+	isManager?: boolean;
 }
 
 const ScreeningTableRow: React.FC<ScreeningTableRowProps> = memo(({
 	candidate,
 	type,
-	onAction
+	onAction,
+	selected = false,
+	onSelect,
+	isManager = false
 }) => {
 	const formatDate = (dateString: string) => {
 		try {
@@ -42,35 +49,45 @@ const ScreeningTableRow: React.FC<ScreeningTableRowProps> = memo(({
 				}
 			}}
 		>
-			<TableCell>
-				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-					<Typography variant="body2" sx={{ fontWeight: 500 }}>
-						{candidate.name}
-					</Typography>
-					{candidate.is_disabled && (
-						<Tooltip title="Person with Disability">
-							<Accessible color="primary" fontSize="small" />
-						</Tooltip>
-					)}
-					{type === 'screened' && (
-						<Tooltip title="Verified Screening">
-							<VerifiedUser sx={{ color: '#4caf50', fontSize: 20 }} />
-						</Tooltip>
-					)}
-					{isToday(parseISO(candidate.created_at)) && (
-						<Chip
-							label="New"
+			<TableCell sx={{ ...(isManager && { pr: 0 }) }}>
+				<Box sx={{ display: 'flex', alignItems: 'center' }}>
+					{isManager && onSelect && (
+						<Checkbox
+							checked={selected}
+							onClick={onSelect}
 							size="small"
-							color="primary"
-							sx={{
-								height: 20,
-								fontSize: '0.65rem',
-								fontWeight: 'bold',
-								bgcolor: '#e3f2fd',
-								color: '#1976d2'
-							}}
+							sx={{ mr: 1, p: 0.5 }}
 						/>
 					)}
+					<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+						<Typography variant="body2" sx={{ fontWeight: 500 }}>
+							{candidate.name}
+						</Typography>
+						{candidate.is_disabled && (
+							<Tooltip title="Person with Disability">
+								<Accessible color="primary" fontSize="small" />
+							</Tooltip>
+						)}
+						{type === 'screened' && (
+							<Tooltip title="Verified Screening">
+								<VerifiedUser sx={{ color: '#4caf50', fontSize: 20 }} />
+							</Tooltip>
+						)}
+						{isToday(parseISO(candidate.created_at)) && (
+							<Chip
+								label="New"
+								size="small"
+								color="primary"
+								sx={{
+									height: 20,
+									fontSize: '0.65rem',
+									fontWeight: 'bold',
+									bgcolor: '#e3f2fd',
+									color: '#1976d2'
+								}}
+							/>
+						)}
+					</Box>
 				</Box>
 			</TableCell>
 			<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
@@ -93,6 +110,25 @@ const ScreeningTableRow: React.FC<ScreeningTableRowProps> = memo(({
 					{candidate.city}, {candidate.state}
 				</Typography>
 			</TableCell>
+
+			{isManager && (
+				<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+					{candidate.assigned_to_name ? (
+						<Box sx={{ display: 'flex', flexDirection: 'column' }}>
+							<Typography variant="caption" color="primary.main" sx={{ fontWeight: 600 }}>
+								{candidate.assigned_to_name}
+							</Typography>
+							<Typography variant="caption" color="text.secondary">
+								by {candidate.assigned_by_name || 'System'}
+							</Typography>
+						</Box>
+					) : (
+						<Typography variant="caption" color="text.disabled">
+							Not Assigned
+						</Typography>
+					)}
+				</TableCell>
+			)}
 
 			<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
 				<Typography variant="body2" color="text.secondary">
@@ -140,6 +176,7 @@ const ScreeningTableRow: React.FC<ScreeningTableRowProps> = memo(({
 						variant="contained"
 						size="small"
 						onClick={() => onAction('screen', candidate)}
+						disabled={!isManager && candidate.assigned_to_id === undefined}
 						sx={{
 							textTransform: 'none',
 							bgcolor: '#1976d2',

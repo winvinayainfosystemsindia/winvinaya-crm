@@ -41,6 +41,7 @@ function TabPanel(props: TabPanelProps) {
 const ScreeningList: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const { stats } = useAppSelector((state) => state.candidates);
+	const { user } = useAppSelector((state) => state.auth);
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const [tabValue, setTabValue] = useState(0);
@@ -55,8 +56,9 @@ const ScreeningList: React.FC = () => {
 	const [refreshKey, setRefreshKey] = useState(0);
 
 	useEffect(() => {
-		dispatch(fetchCandidateStats());
-	}, [dispatch, refreshKey]);
+		const assignedToUserId = (user?.role === 'trainer' || user?.role === 'sourcing') ? user.id : undefined;
+		dispatch(fetchCandidateStats({ assigned_to_user_id: assignedToUserId }));
+	}, [dispatch, refreshKey, user]);
 
 	const showSnackbar = (message: string, severity: 'success' | 'error') => {
 		setSnackbar({ open: true, message, severity });
@@ -100,12 +102,19 @@ const ScreeningList: React.FC = () => {
 
 	// Helper to get count for a status safely
 	const getCount = (status: string) => {
-		if (!stats?.screening_distribution) return 0;
-		// Special handling for 'Other' if we wanted to aggregate, but for now exact match
-		return stats.screening_distribution[status] || 0;
+		const isAssignedFiltered = user?.role === 'trainer' || user?.role === 'sourcing';
+		const distribution = isAssignedFiltered
+			? stats?.assigned_screening_distribution
+			: stats?.screening_distribution;
+
+		if (!distribution) return 0;
+		return distribution[status] || 0;
 	};
 
-	// 'Other' tab logic: Sum of remaining statuses excluding the main ones? 
+	const getNotScreenedCount = () => {
+		const isAssignedFiltered = user?.role === 'trainer' || user?.role === 'sourcing';
+		return (isAssignedFiltered ? stats?.assigned_not_screened : stats?.not_screened) || 0;
+	};
 
 
 	const renderTabLabel = (label: string, count: number) => (
@@ -177,7 +186,7 @@ const ScreeningList: React.FC = () => {
 							}
 						}}
 					>
-						<Tab label={renderTabLabel("Not Screened", stats?.not_screened || 0)} />
+						<Tab label={renderTabLabel("Not Screened", getNotScreenedCount())} />
 						<Tab label={renderTabLabel("In Progress", getCount('In Progress'))} />
 						<Tab label={renderTabLabel("Completed", getCount('Completed'))} />
 						<Tab label={renderTabLabel("Rejected", getCount('Rejected'))} />
