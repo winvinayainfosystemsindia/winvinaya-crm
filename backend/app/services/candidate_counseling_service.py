@@ -76,9 +76,18 @@ class CandidateCounselingService:
         # Update counseling
         update_data = counseling_in.model_dump(exclude_unset=True)
         
-        # Update counselor_id if provided
-        if counselor_id:
+        # Protect original counselor info: 
+        # Only set counselor_id and counseling_date if they don't already exist
+        if counselor_id and (candidate.counseling.counselor_id is None):
             update_data["counselor_id"] = counselor_id
+            
+        if "counseling_date" in update_data and candidate.counseling.counseling_date is not None:
+             # Don't overwrite existing date unless explicitly allowed (for now we protect it)
+             del update_data["counseling_date"]
+        elif "counseling_date" not in update_data and candidate.counseling.counseling_date is None and counselor_id:
+             # If no date provided but we are setting a new counselor, use current time
+             from datetime import datetime
+             update_data["counseling_date"] = datetime.now()
         
         return await self.repository.update(candidate.counseling.id, update_data)
     
