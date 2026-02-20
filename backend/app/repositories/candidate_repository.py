@@ -151,19 +151,42 @@ class CandidateRepository(BaseRepository[Candidate]):
             count_stmt = count_stmt.where(Candidate.gender == gender)
 
         if extra_filters:
-            # Handle dynamic JSONB filters for screening/counseling 'others' field
+            # Handle dynamic JSON filters for screening/counseling 'others' field
+            # Values may be comma-separated for multi-select filter selections (e.g. "option1,option2")
+            # Storage formats differ by field type:
+            #   single_choice  -> stored as plain string: "Yes"
+            #   multiple_choice -> stored as JSON array:  ["Yes","No"]
+            # Using ilike '%value%' handles BOTH cases without needing to know the field type.
             for key, value in extra_filters.items():
                 if not value:
                     continue
-                
+
+                selected_values = [v.strip() for v in str(value).split(',') if v.strip()]
+                if not selected_values:
+                    continue
+
+                print(f"[DEBUG] Dynamic filter: key={key}, selected_values={selected_values}")
+
                 if key.startswith('screening_others.'):
                     field_name = key.replace('screening_others.', '')
-                    stmt = stmt.where(CandidateScreening.others[field_name].as_string() == str(value))
-                    count_stmt = count_stmt.where(CandidateScreening.others[field_name].as_string() == str(value))
+                    conditions = [
+                        func.json_extract_path_text(CandidateScreening.others, field_name).ilike(f'%{v}%')
+                        for v in selected_values
+                    ]
+                    filter_clause = or_(*conditions) if len(conditions) > 1 else conditions[0]
+                    stmt = stmt.where(filter_clause)
+                    count_stmt = count_stmt.where(filter_clause)
                 elif key.startswith('counseling_others.'):
                     field_name = key.replace('counseling_others.', '')
-                    stmt = stmt.where(CandidateCounseling.others[field_name].as_string() == str(value))
-                    count_stmt = count_stmt.where(CandidateCounseling.others[field_name].as_string() == str(value))
+                    conditions = [
+                        func.json_extract_path_text(CandidateCounseling.others, field_name).ilike(f'%{v}%')
+                        for v in selected_values
+                    ]
+                    filter_clause = or_(*conditions) if len(conditions) > 1 else conditions[0]
+                    stmt = stmt.where(filter_clause)
+                    count_stmt = count_stmt.where(filter_clause)
+
+
 
         
         if education_levels and len(education_levels) > 0:

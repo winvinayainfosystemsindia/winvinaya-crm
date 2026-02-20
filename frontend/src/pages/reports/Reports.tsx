@@ -121,15 +121,6 @@ const Reports: React.FC = () => {
 
 	// Data Fetching
 	const fetchData = useCallback(() => {
-		const extraFilters: Record<string, string> = {};
-		Object.keys(filters).forEach(key => {
-			if (key.startsWith('screening_others.') || key.startsWith('counseling_others.')) {
-				if (filters[key]) {
-					extraFilters[key] = filters[key];
-				}
-			}
-		});
-
 		dispatch(fetchCandidates({
 			skip: page * rowsPerPage,
 			limit: rowsPerPage,
@@ -142,7 +133,15 @@ const Reports: React.FC = () => {
 			screening_status: filters.screening_status,
 			disability_percentages: filters.disability_percentage ? `${filters.disability_percentage.min || 0}-${filters.disability_percentage.max || 100}` : undefined,
 			screening_reasons: filters.screening_reason?.join(','),
-			...extraFilters
+			extraFilters: Object.keys(filters)
+				.filter(key => key.startsWith('screening_others.') || key.startsWith('counseling_others.'))
+				.reduce((acc, key) => {
+					const val = filters[key];
+					if (val && (!Array.isArray(val) || val.length > 0)) {
+						acc[key] = Array.isArray(val) ? val.join(',') : val;
+					}
+					return acc;
+				}, {} as Record<string, string>)
 		}));
 	}, [dispatch, page, rowsPerPage, search, filters]);
 
@@ -332,19 +331,21 @@ const Reports: React.FC = () => {
 		}
 	];
 
-	// Add dynamic filters
+	// Add dynamic filters — only single_choice and multiple_choice fields show as multi-select dropdowns
 	columns.forEach(col => {
 		if (col.id.startsWith('screening_others.') || col.id.startsWith('counseling_others.')) {
 			const fieldName = col.id.split('.')[1];
 			const fieldDef = dynamicFieldDefs.find(fd => fd.name === fieldName);
 
 			if (fieldDef) {
-				const isOptionField = fieldDef.type === 'select' || fieldDef.type === 'multi-select' || fieldDef.type === 'radio';
+				// Match the actual backend field_type values from settingsService
+				const isOptionField = fieldDef.field_type === 'single_choice' || fieldDef.field_type === 'multiple_choice';
 
 				filterFields.push({
 					key: col.id,
 					label: col.label,
-					type: isOptionField ? 'single-select' : 'text',
+					// Both single_choice and multiple_choice render as multi-select checkboxes
+					type: isOptionField ? 'multi-select' : 'text',
 					options: isOptionField ? (fieldDef.options || []).map((o: any) => ({
 						value: typeof o === 'string' ? o : o.value,
 						label: typeof o === 'string' ? o : o.label

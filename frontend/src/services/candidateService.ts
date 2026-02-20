@@ -34,7 +34,8 @@ export const candidateService = {
 		isExperienced?: boolean,
 		disabilityPercentages?: string,
 		screeningReasons?: string,
-		gender?: string
+		gender?: string,
+		extraFilters?: Record<string, string>
 	): Promise<CandidatePaginatedResponse> => {
 		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
 		const sortParam = sortBy ? `&sort_by=${sortBy}&sort_order=${sortOrder}` : '';
@@ -50,7 +51,15 @@ export const candidateService = {
 			gender ? `&gender=${encodeURIComponent(gender)}` : ''
 		].join('');
 
-		const response = await api.get<CandidatePaginatedResponse>(`/candidates/?skip=${skip}&limit=${limit}${searchParam}${sortParam}${filterParams}`);
+		// Append dynamic (screening_others.* / counseling_others.*) filters
+		const extraParams = extraFilters
+			? Object.entries(extraFilters)
+				.filter(([, v]) => v)
+				.map(([k, v]) => `&${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+				.join('')
+			: '';
+
+		const response = await api.get<CandidatePaginatedResponse>(`/candidates/?skip=${skip}&limit=${limit}${searchParam}${sortParam}${filterParams}${extraParams}`);
 		return response.data;
 	},
 
