@@ -13,7 +13,12 @@ import {
 	Stack,
 	CircularProgress
 } from '@mui/material';
-import { Close as CloseIcon } from '@mui/icons-material';
+import {
+	Close as CloseIcon,
+	Person as PersonIcon,
+	AssignmentInd as ScreenerIcon,
+	Event as DateIcon
+} from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { uploadDocument } from '../../../store/slices/candidateSlice';
 import { fetchFields } from '../../../store/slices/settingsSlice';
@@ -310,13 +315,35 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 			PaperProps={{ sx: { borderRadius: '2px', bgcolor: '#f2f3f3' } }}
 		>
 			<DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: '#232f3e', color: '#ffffff', py: 2 }}>
-				<Box>
-					<Typography variant="h6" sx={{ fontWeight: 700 }}>Candidate Screening</Typography>
-					<Stack direction="row" spacing={2}>
-						<Typography variant="caption" sx={{ fontSize: '1rem', color: '#aab7b8' }}>Name: {candidateName || 'New Candidate'}</Typography>
-						{initialData?.screened_by?.full_name && (
-							<Typography variant="caption" sx={{ fontSize: '1rem', color: '#aab7b8' }}>| Screened By: {initialData.screened_by.full_name}</Typography>
-						)}
+				<Box sx={{ flex: 1 }}>
+					<Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5, lineHeight: 1.2 }}>
+						Candidate Screening
+					</Typography>
+					<Stack direction="row" spacing={3} alignItems="center" sx={{ opacity: 0.85 }}>
+						<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+							<PersonIcon sx={{ fontSize: 16 }} />
+							<Typography variant="caption" sx={{ fontSize: '0.875rem' }}>
+								{candidateName || 'New Candidate'}
+							</Typography>
+						</Box>
+						<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+							<ScreenerIcon sx={{ fontSize: 16 }} />
+							<Typography variant="caption" sx={{ fontSize: '0.875rem' }}>
+								<Typography component="span" variant="caption" sx={{ fontWeight: 600, mr: 0.5 }}>
+									{initialData ? 'Screened By:' : 'Screener:'}
+								</Typography>
+								{initialData?.screened_by?.full_name || currentUser?.full_name || currentUser?.username || '—'}
+							</Typography>
+						</Box>
+						<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+							<DateIcon sx={{ fontSize: 16 }} />
+							<Typography variant="caption" sx={{ fontSize: '0.875rem' }}>
+								<Typography component="span" variant="caption" sx={{ fontWeight: 600, mr: 0.5 }}>Date:</Typography>
+								{initialData?.updated_at
+									? new Date(initialData.updated_at).toLocaleDateString()
+									: new Date().toLocaleDateString()}
+							</Typography>
+						</Box>
 					</Stack>
 				</Box>
 				<IconButton onClick={onClose} size="small" sx={{ color: '#ffffff' }}>
@@ -388,7 +415,6 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 									uploading={uploading}
 									viewing={viewing}
 									dynamicFields={dynamicFields}
-									currentUser={currentUser}
 									candidateIsDisabled={!!selectedCandidate?.disability_details?.is_disabled}
 								/>
 							</TabPanel>

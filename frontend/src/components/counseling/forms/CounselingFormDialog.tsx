@@ -14,7 +14,12 @@ import {
 	CircularProgress,
 	Divider
 } from '@mui/material';
-import { Close as CloseIcon } from '@mui/icons-material';
+import {
+	Close as CloseIcon,
+	Person as PersonIcon,
+	AssignmentInd as CounselorIcon,
+	Event as DateIcon
+} from '@mui/icons-material';
 import { useAppSelector, useAppDispatch } from '../../../store/hooks';
 import { fetchFields } from '../../../store/slices/settingsSlice';
 import type { CandidateCounselingCreate, WorkExperience } from '../../../models/candidate';
@@ -228,17 +233,37 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 		>
 			<DialogTitle sx={{ bgcolor: '#232f3e', color: '#ffffff', py: 2 }}>
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
-					<Box>
-						<Typography variant="h6" sx={{ fontSize: '1.25rem', fontWeight: 700 }}>
+					<Box sx={{ flex: 1 }}>
+						<Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5, lineHeight: 1.2 }}>
 							{initialData ? 'Edit Candidate Counseling' : 'New Candidate Counseling'}
 						</Typography>
-						<Stack direction="row" spacing={2} alignItems="center">
-							{candidateName && (
-								<Typography variant="caption" sx={{ fontSize: '1rem', color: '#aab7b8' }}>Name: {candidateName}</Typography>
-							)}
+						<Stack direction="row" spacing={3} alignItems="center" sx={{ opacity: 0.85 }}>
+							<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+								<PersonIcon sx={{ fontSize: 16 }} />
+								<Typography variant="caption" sx={{ fontSize: '0.875rem' }}>
+									{candidateName || 'New Candidate'}
+								</Typography>
+							</Box>
 							{formData.counselor_name && (
-								<Typography variant="caption" sx={{ fontSize: '1rem', color: '#aab7b8' }}>| Counseled By: {formData.counselor_name}</Typography>
+								<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+									<CounselorIcon sx={{ fontSize: 16 }} />
+									<Typography variant="caption" sx={{ fontSize: '0.875rem' }}>
+										<Typography component="span" variant="caption" sx={{ fontWeight: 600, mr: 0.5 }}>
+											{initialData ? 'Counseled By:' : 'Counselor:'}
+										</Typography>
+										{formData.counselor_name}
+									</Typography>
+								</Box>
 							)}
+							<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+								<DateIcon sx={{ fontSize: 16 }} />
+								<Typography variant="caption" sx={{ fontSize: '0.875rem' }}>
+									<Typography component="span" variant="caption" sx={{ fontWeight: 600, mr: 0.5 }}>Date:</Typography>
+									{formData.counseling_date
+										? new Date(formData.counseling_date).toLocaleDateString()
+										: new Date().toLocaleDateString()}
+								</Typography>
+							</Box>
 						</Stack>
 					</Box>
 					<IconButton onClick={onClose} sx={{ color: '#ffffff' }}>

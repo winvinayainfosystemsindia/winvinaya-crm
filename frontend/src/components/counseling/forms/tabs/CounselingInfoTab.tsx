@@ -3,7 +3,6 @@ import {
 	Typography,
 	Stack,
 	Grid,
-	TextField,
 	FormControl,
 	InputLabel,
 	Select,
@@ -48,35 +47,8 @@ const CounselingInfoTab: React.FC<CounselingInfoTabProps> = ({
 		<Stack spacing={3}>
 			<Paper elevation={0} sx={awsPanelStyle}>
 				<Typography sx={sectionTitleStyle}>General Information</Typography>
-				<Grid container spacing={4}>
-					<Grid size={{ xs: 12, md: 6 }}>
-						<TextField
-							label="Counselor Name"
-							fullWidth
-							disabled
-							size="small"
-							variant="outlined"
-							value={formData.counselor_name || ''}
-							onChange={(e) => onFieldChange('counselor_name', e.target.value)}
-							placeholder="Enter your name"
-							sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-						/>
-					</Grid>
-					<Grid size={{ xs: 12, md: 6 }}>
-						<TextField
-							label="Date"
-							type="date"
-							disabled
-							size="small"
-							fullWidth
-							variant="outlined"
-							InputLabelProps={{ shrink: true }}
-							value={formData.counseling_date ? formData.counseling_date.split('T')[0] : ''}
-							onChange={(e) => onFieldChange('counseling_date', e.target.value)}
-							sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-						/>
-					</Grid>
-					<Grid size={{ xs: 12, md: 6 }}>
+				<Grid container spacing={2}>
+					<Grid size={{ xs: 12, md: 4 }}>
 						<FormControl fullWidth size="small">
 							<InputLabel>Status</InputLabel>
 							<Select

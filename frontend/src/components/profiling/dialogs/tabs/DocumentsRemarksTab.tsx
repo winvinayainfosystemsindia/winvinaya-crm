@@ -28,7 +28,6 @@ import {
 import DynamicFieldRenderer from '../../../common/DynamicFieldRenderer';
 import type { DynamicField } from '../../../../services/settingsService';
 
-import type { User } from '../../../../models/auth';
 
 interface DocumentsRemarksTabProps {
 	formData: any;
@@ -40,7 +39,6 @@ interface DocumentsRemarksTabProps {
 	uploading: Record<string, boolean>;
 	viewing: Record<string, boolean>;
 	dynamicFields: DynamicField[];
-	currentUser: User | null;
 	candidateIsDisabled: boolean;
 }
 
@@ -54,7 +52,6 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 	uploading,
 	viewing,
 	dynamicFields,
-	currentUser,
 	candidateIsDisabled
 }) => {
 
@@ -342,61 +339,34 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 						</Box>
 					</Stack>
 
-					{/* Screening Status & Screened By Info */}
-					<Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
-						<Box sx={{ flex: 1 }}>
-							<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 1 }}>
-								Screening Status
-							</Typography>
-							<FormControl fullWidth size="small">
-								<Select
-									id="screening-status"
-									value={formData.status || 'In Progress'}
-									onChange={(e) => onUpdateStatus(e.target.value)}
-									sx={{
-										borderRadius: 0,
-										'& .MuiOutlinedInput-notchedOutline': {
-											borderColor: '#d5dbdb'
-										},
-										'&:hover .MuiOutlinedInput-notchedOutline': {
-											borderColor: '#879596'
-										},
-										'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-											borderColor: '#ec7211'
-										}
-									}}
-								>
-									<MenuItem value="Completed">Completed</MenuItem>
-									<MenuItem value="In Progress">In Progress</MenuItem>
-									<MenuItem value="Rejected">Rejected</MenuItem>
-								</Select>
-							</FormControl>
-						</Box>
-
-						<Box sx={{ flex: 1 }}>
-							<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 1 }}>
-								Screened By
-							</Typography>
-							<TextField
-								fullWidth
-								size="small"
-								disabled
-								value={formData.screened_by?.full_name || formData.screened_by?.username || currentUser?.full_name || currentUser?.username || '—'}
+					<Box sx={{ flex: 1 }}>
+						<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 1 }}>
+							Screening Status
+						</Typography>
+						<FormControl fullWidth size="small">
+							<Select
+								id="screening-status"
+								value={formData.status || 'In Progress'}
+								onChange={(e) => onUpdateStatus(e.target.value)}
 								sx={{
-									'& .MuiOutlinedInput-root': {
-										borderRadius: 0,
-										bgcolor: '#f8f9f9',
-										'& fieldset': { borderColor: '#d5dbdb' },
-										'&.Mui-disabled fieldset': { borderColor: '#d5dbdb' },
-										'& .MuiInputBase-input.Mui-disabled': {
-											WebkitTextFillColor: '#545b64',
-											color: '#545b64'
-										}
+									borderRadius: 0,
+									'& .MuiOutlinedInput-notchedOutline': {
+										borderColor: '#d5dbdb'
+									},
+									'&:hover .MuiOutlinedInput-notchedOutline': {
+										borderColor: '#879596'
+									},
+									'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+										borderColor: '#ec7211'
 									}
 								}}
-							/>
-						</Box>
-					</Stack>
+							>
+								<MenuItem value="Completed">Completed</MenuItem>
+								<MenuItem value="In Progress">In Progress</MenuItem>
+								<MenuItem value="Rejected">Rejected</MenuItem>
+							</Select>
+						</FormControl>
+					</Box>
 
 					{/* Conditional Reason Field */}
 					{(formData.status === 'In Progress' || formData.status === 'Rejected') && (
