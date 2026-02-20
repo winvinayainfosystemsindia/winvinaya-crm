@@ -232,9 +232,14 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 						<Typography variant="h6" sx={{ fontSize: '1.25rem', fontWeight: 700 }}>
 							{initialData ? 'Edit Candidate Counseling' : 'New Candidate Counseling'}
 						</Typography>
-						{candidateName && (
-							<Typography variant="caption" sx={{ fontSize: '1rem', color: '#aab7b8' }}>Name: {candidateName}</Typography>
-						)}
+						<Stack direction="row" spacing={2} alignItems="center">
+							{candidateName && (
+								<Typography variant="caption" sx={{ fontSize: '1rem', color: '#aab7b8' }}>Name: {candidateName}</Typography>
+							)}
+							{formData.counselor_name && (
+								<Typography variant="caption" sx={{ fontSize: '1rem', color: '#aab7b8' }}>| Counseled By: {formData.counselor_name}</Typography>
+							)}
+						</Stack>
 					</Box>
 					<IconButton onClick={onClose} sx={{ color: '#ffffff' }}>
 						<CloseIcon />

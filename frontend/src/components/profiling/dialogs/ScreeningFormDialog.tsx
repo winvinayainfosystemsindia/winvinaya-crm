@@ -10,6 +10,7 @@ import {
 	Tabs,
 	Tab,
 	IconButton,
+	Stack,
 	CircularProgress
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
@@ -311,7 +312,12 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 			<DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: '#232f3e', color: '#ffffff', py: 2 }}>
 				<Box>
 					<Typography variant="h6" sx={{ fontWeight: 700 }}>Candidate Screening</Typography>
-					<Typography variant="caption" sx={{ fontSize: '1rem', color: '#aab7b8' }}>Name: {candidateName || 'New Candidate'}</Typography>
+					<Stack direction="row" spacing={2}>
+						<Typography variant="caption" sx={{ fontSize: '1rem', color: '#aab7b8' }}>Name: {candidateName || 'New Candidate'}</Typography>
+						{initialData?.screened_by?.full_name && (
+							<Typography variant="caption" sx={{ fontSize: '1rem', color: '#aab7b8' }}>| Screened By: {initialData.screened_by.full_name}</Typography>
+						)}
+					</Stack>
 				</Box>
 				<IconButton onClick={onClose} size="small" sx={{ color: '#ffffff' }}>
 					<CloseIcon />
