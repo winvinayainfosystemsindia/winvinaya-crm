@@ -20,6 +20,7 @@ import {
 	Event as DateIcon
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import useToast from '../../../hooks/useToast';
 import { uploadDocument } from '../../../store/slices/candidateSlice';
 import { fetchFields } from '../../../store/slices/settingsSlice';
 import { documentService } from '../../../services/candidateService';
@@ -80,6 +81,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 	existingDocuments
 }) => {
 	const dispatch = useAppDispatch();
+	const toast = useToast();
 	const dynamicFields = useAppSelector(state => state.settings.fields.screening) || [];
 	const loadingFields = useAppSelector(state => state.settings.loading);
 
@@ -248,6 +250,19 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 	const handleFileUpload = async (type: string, file: File) => {
 		if (!candidatePublicId) return;
 
+		// Validation: Format (PDF only)
+		if (file.type !== 'application/pdf') {
+			toast.error('Invalid file format. Please upload a PDF document.');
+			return;
+		}
+
+		// Validation: Size (Max 10MB)
+		const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+		if (file.size > MAX_SIZE) {
+			toast.error('File size exceeds the 10MB limit.');
+			return;
+		}
+
 		setUploading(prev => ({ ...prev, [type]: true }));
 		try {
 			const backendType = type === 'degree_qualification' ? 'degree_certificate' : type;
@@ -266,8 +281,11 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 					[`${type}_id`]: result.document.id
 				}
 			}));
-		} catch (error) {
+
+			toast.success('Document uploaded successfully');
+		} catch (error: any) {
 			console.error('Upload failed:', error);
+			toast.error(error || 'Failed to upload document. Please try again.');
 		} finally {
 			setUploading(prev => ({ ...prev, [type]: false }));
 		}
