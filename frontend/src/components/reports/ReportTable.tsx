@@ -17,7 +17,6 @@ import {
 	Stack
 } from '@mui/material';
 import { format } from 'date-fns';
-import type { CandidateListItem } from '../../models/candidate';
 
 interface Column {
 	id: string;
@@ -28,7 +27,7 @@ interface ReportTableProps {
 	loading: boolean;
 	columns: Column[];
 	visibleColumns: string[];
-	data: CandidateListItem[];
+	data: any[];
 	total: number;
 	page: number;
 	rowsPerPage: number;
@@ -75,10 +74,10 @@ const ReportTable: React.FC<ReportTableProps> = ({
 	const activeColumns = columns.filter(c => visibleColumns.includes(c.id));
 
 	// Helper for Card View Rendering
-	const renderMobileCard = (candidate: CandidateListItem) => (
+	const renderMobileCard = (item: any) => (
 		<Paper
 			elevation={0}
-			key={candidate.public_id}
+			key={item.public_id}
 			sx={{
 				p: 2,
 				mb: 2,
@@ -88,7 +87,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
 			}}
 		>
 			<Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#232f3e', mb: 1.5 }}>
-				{candidate.name}
+				{item.candidate?.name || item.name}
 			</Typography>
 			<Stack spacing={1.5}>
 				{activeColumns.filter(c => c.id !== 'name').map(col => (
@@ -97,7 +96,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
 							{col.label}
 						</Typography>
 						<Box sx={{ fontSize: '0.875rem', color: '#1a1c1e' }}>
-							{renderCell(candidate, col.id)}
+							{renderCell(item, col.id)}
 						</Box>
 					</Box>
 				))}
@@ -105,25 +104,82 @@ const ReportTable: React.FC<ReportTableProps> = ({
 		</Paper>
 	);
 
-	const renderCell = (candidate: CandidateListItem, colId: string) => {
-		// ... (renderCell content remains same but move inside the component for easier access if not already)
-		// I'll keep it as is if it fits, else move it.
+	const renderCell = (item: any, colId: string) => {
 		let val: any;
 
-		if (colId.startsWith('screening_others.')) {
-			const fieldName = colId.substring('screening_others.'.length);
-			val = (candidate.screening?.others as any)?.[fieldName] ?? (candidate as any)[fieldName];
-		} else if (colId.startsWith('counseling_others.')) {
-			const fieldName = colId.substring('counseling_others.'.length);
-			val = (candidate.counseling?.others as any)?.[fieldName] ?? (candidate as any)[fieldName];
-		} else {
-			val = (candidate as any)[colId];
-		}
+		// 1. Precise Data Extraction (Handle both Candidate and Allocation)
+		if (item.candidate && item.batch) {
+			// It's an allocation
+			if (colId === 'name') val = item.candidate.name;
+			else if (colId === 'gender') val = item.candidate.gender;
+			else if (colId === 'disability_type') val = item.candidate.disability_details?.disability_type || item.candidate.disability_details?.type;
+			else if (colId === 'email') val = item.candidate.email;
+			else if (colId === 'phone') val = item.candidate.phone;
+			else if (colId === 'batch_name') val = item.batch.batch_name;
+			else if (colId === 'batch_status') val = item.batch.status;
+			else if (colId === 'domain') val = item.batch.domain;
+			else if (colId === 'training_mode') val = item.batch.training_mode;
+			else if (colId === 'courses') {
+				if (Array.isArray(item.batch.courses)) {
+					return item.batch.courses.map((c: any) => typeof c === 'string' ? c : c.name).join(', ');
+				}
+				return '-';
+			}
+			else if (colId === 'duration') {
+				const dur = item.batch.duration;
+				let dateStr = '';
+				if (item.batch.start_date) {
+					dateStr = format(new Date(item.batch.start_date), 'dd MMM yyyy');
+					if (item.batch.approx_close_date) {
+						dateStr += ` to ${format(new Date(item.batch.approx_close_date), 'dd MMM yyyy')}`;
+					}
+				}
 
-		// Relationship fallback for standard fields
-		if (val === undefined || val === null) {
-			if (colId.includes('counseling') && candidate.counseling) {
-				val = (candidate.counseling as any)[colId];
+				if (dur && (dur.weeks || dur.days)) {
+					return (
+						<Box>
+							<Typography variant="body2" sx={{ fontSize: '0.8125rem' }}>
+								{dur.weeks || 0}w, {dur.days || 0}d
+							</Typography>
+							{dateStr && (
+								<Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', fontSize: '0.7rem' }}>
+									{dateStr}
+								</Typography>
+							)}
+						</Box>
+					);
+				}
+				return dateStr || '-';
+			}
+			else if (colId === 'attendance_percentage') {
+				val = item.attendance_percentage;
+				if (val === null || val === undefined) return '-';
+				const color = val >= 90 ? '#1d8102' : val >= 75 ? '#c85e00' : '#d13212';
+				return <Box sx={{ color, fontWeight: 700 }}>{val}%</Box>;
+			}
+			else if (colId === 'assessment_score') {
+				val = item.assessment_score;
+				if (val === null || val === undefined) return '-';
+				return <Box sx={{ fontWeight: 700, color: '#232f3e' }}>{val}</Box>;
+			}
+			else val = item[colId];
+		} else {
+			// It's a candidate
+			if (colId.startsWith('screening_others.')) {
+				const fieldName = colId.substring('screening_others.'.length);
+				val = (item.screening?.others as any)?.[fieldName] ?? (item as any)[fieldName];
+			} else if (colId.startsWith('counseling_others.')) {
+				const fieldName = colId.substring('counseling_others.'.length);
+				val = (item.counseling?.others as any)?.[fieldName] ?? (item as any)[fieldName];
+			} else {
+				val = (item as any)[colId];
+			}
+
+			// Relationship fallback for standard fields
+			if (val === undefined || val === null) {
+				if (colId.includes('counseling') && item.counseling) {
+					val = (item.counseling as any)[colId];
+				}
 			}
 		}
 
@@ -199,12 +255,12 @@ const ReportTable: React.FC<ReportTableProps> = ({
 			);
 		}
 
-		if ((colId === 'disability_type' || colId === 'screening_status' || colId === 'counseling_status') && val) {
+		if ((colId === 'disability_type' || colId === 'screening_status' || colId === 'counseling_status' || colId === 'status' || colId === 'batch_status') && val) {
 			const getStatusColor = (v: string) => {
 				const lowerV = v.toLowerCase();
-				if (lowerV === 'completed' || lowerV === 'selected') return { bg: '#e7f4e4', text: '#1d8102', border: '#b7d1a3' };
-				if (lowerV === 'pending') return { bg: '#fff7e6', text: '#c85e00', border: '#fbd49d' };
-				if (lowerV === 'rejected') return { bg: '#fdecea', text: '#d13212', border: '#f5bcac' };
+				if (lowerV === 'completed' || lowerV === 'selected' || lowerV === 'ongoing') return { bg: '#e7f4e4', text: '#1d8102', border: '#b7d1a3' };
+				if (lowerV === 'allocated' || lowerV === 'pending') return { bg: '#fff7e6', text: '#c85e00', border: '#fbd49d' };
+				if (lowerV === 'rejected' || lowerV === 'dropped_out') return { bg: '#fdecea', text: '#d13212', border: '#f5bcac' };
 				return { bg: '#f2f3f3', text: '#545b64', border: '#d5dbdb' };
 			};
 			const colors = getStatusColor(val);

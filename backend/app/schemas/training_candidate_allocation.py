@@ -55,5 +55,15 @@ class TrainingCandidateAllocationResponse(TrainingCandidateAllocationBase):
     candidate: Optional[CandidateMini] = None
     batch: Optional[TrainingBatchMini] = None
 
+    # Computed Metrics
+    attendance_percentage: Optional[float] = None
+    assessment_score: Optional[float] = None
+
     class Config:
         from_attributes = True
+
+
+class TrainingCandidateAllocationPaginatedResponse(BaseModel):
+    """Paginated response for candidate allocations"""
+    items: List[TrainingCandidateAllocationResponse]
+    total: int

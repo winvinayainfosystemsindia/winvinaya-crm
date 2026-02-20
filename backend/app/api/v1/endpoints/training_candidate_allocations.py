@@ -10,13 +10,48 @@ from app.models.user import User, UserRole
 from app.schemas.training_candidate_allocation import (
     TrainingCandidateAllocationCreate, 
     TrainingCandidateAllocationResponse, 
-    TrainingCandidateAllocationUpdate
+    TrainingCandidateAllocationUpdate,
+    TrainingCandidateAllocationPaginatedResponse
 )
 from app.services.training_candidate_allocation_service import TrainingCandidateAllocationService
 from app.utils.activity_tracker import log_create, log_update, log_delete
 
 
 router = APIRouter(prefix="/training-candidate-allocations", tags=["Training Candidate Allocations"])
+
+
+@router.get("/", response_model=TrainingCandidateAllocationPaginatedResponse)
+async def get_all_allocations(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=500),
+    search: Optional[str] = Query(None),
+    batch_id: Optional[int] = Query(None),
+    status: Optional[str] = Query(None),
+    is_dropout: Optional[bool] = Query(None),
+    gender: Optional[str] = Query(None),
+    disability_types: Optional[str] = Query(None),
+    sort_by: str = Query("created_at"),
+    sort_order: str = Query("desc"),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Generic retrieval of candidate allocations for reports and management.
+    """
+    service = TrainingCandidateAllocationService(db)
+    items, total = await service.get_multi(
+        skip=skip,
+        limit=limit,
+        search=search,
+        batch_id=batch_id,
+        status=status,
+        is_dropout=is_dropout,
+        gender=gender,
+        disability_types=disability_types,
+        sort_by=sort_by,
+        sort_order=sort_order
+    )
+    return {"items": items, "total": total}
 
 
 @router.post("/", response_model=TrainingCandidateAllocationResponse, status_code=status.HTTP_201_CREATED)

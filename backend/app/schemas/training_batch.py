@@ -79,6 +79,20 @@ class TrainingBatchMini(BaseModel):
     disability_types: Optional[List[str]] = []
     start_date: Optional[date] = None
     approx_close_date: Optional[date] = None
+    
+    # New fields for report
+    courses: Optional[Any] = None
+    duration: Optional[dict] = None
+    other: Optional[dict] = None
+    domain: Optional[str] = None
+    training_mode: Optional[str] = None
+
+    @model_validator(mode='after')
+    def extract_other_fields(self) -> 'TrainingBatchMini':
+        if self.other and isinstance(self.other, dict):
+            self.domain = self.other.get('domain')
+            self.training_mode = self.other.get('training_mode')
+        return self
 
     class Config:
         from_attributes = True

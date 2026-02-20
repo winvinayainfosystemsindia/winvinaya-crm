@@ -73,6 +73,23 @@ const trainingService = {
 	removeAllocation: async (publicId: string) => {
 		const response = await api.delete(`/training-candidate-allocations/${publicId}`);
 		return response.data;
+	},
+
+	getAllAllocations: async (params: any = {}) => {
+		const query = new URLSearchParams();
+		if (params.skip !== undefined) query.append('skip', params.skip.toString());
+		if (params.limit !== undefined) query.append('limit', params.limit.toString());
+		if (params.search) query.append('search', params.search);
+		if (params.batch_id) query.append('batch_id', params.batch_id.toString());
+		if (params.status) query.append('status', params.status);
+		if (params.is_dropout !== undefined) query.append('is_dropout', params.is_dropout.toString());
+		if (params.gender) query.append('gender', params.gender);
+		if (params.disability_types) query.append('disability_types', params.disability_types);
+		if (params.sortBy) query.append('sort_by', params.sortBy);
+		if (params.sortOrder) query.append('sort_order', params.sortOrder);
+
+		const response = await api.get<{ items: CandidateAllocation[], total: number }>(`/training-candidate-allocations/?${query.toString()}`);
+		return response.data;
 	}
 };
 

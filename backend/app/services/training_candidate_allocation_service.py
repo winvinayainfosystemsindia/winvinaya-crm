@@ -306,3 +306,31 @@ class TrainingCandidateAllocationService:
         )
         result = await self.db.execute(query)
         return result.scalar_one()
+
+    async def get_multi(
+        self,
+        *,
+        skip: int = 0,
+        limit: int = 100,
+        search: Optional[str] = None,
+        batch_id: Optional[int] = None,
+        status: Optional[str] = None,
+        is_dropout: Optional[bool] = None,
+        gender: Optional[str] = None,
+        disability_types: Optional[str] = None,
+        sort_by: str = "created_at",
+        sort_order: str = "desc"
+    ) -> tuple[List[TrainingCandidateAllocation], int]:
+        """Global retrieval with expert filtering and metrics aggregation for reports"""
+        return await self.repository.get_multi(
+            skip=skip,
+            limit=limit,
+            search=search,
+            batch_id=batch_id,
+            status=status,
+            is_dropout=is_dropout,
+            gender=gender,
+            disability_types=disability_types,
+            sort_by=sort_by,
+            sort_order=sort_order
+        )

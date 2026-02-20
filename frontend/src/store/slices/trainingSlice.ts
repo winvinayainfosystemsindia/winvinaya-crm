@@ -179,6 +179,18 @@ export const deleteTrainingBatch = createAsyncThunk(
 	}
 );
 
+export const fetchAllAllocations = createAsyncThunk(
+	'training/fetchAllAllocations',
+	async (params: any = {}, { rejectWithValue }) => {
+		try {
+			const response = await trainingService.getAllAllocations(params);
+			return response;
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.message || 'Failed to fetch allocations');
+		}
+	}
+);
+
 const trainingSlice = createSlice({
 	name: 'training',
 	initialState,
@@ -277,6 +289,19 @@ const trainingSlice = createSlice({
 				state.loading = false;
 				state.batches = state.batches.filter(b => b.public_id !== action.payload);
 				state.total -= 1;
+			})
+			// Global Allocations
+			.addCase(fetchAllAllocations.pending, (state) => {
+				state.loading = true;
+			})
+			.addCase(fetchAllAllocations.fulfilled, (state, action: PayloadAction<{ items: CandidateAllocation[], total: number }>) => {
+				state.loading = false;
+				state.allocations = action.payload.items;
+				state.total = action.payload.total;
+			})
+			.addCase(fetchAllAllocations.rejected, (state, action: PayloadAction<any>) => {
+				state.loading = false;
+				state.error = action.payload;
 			});
 	},
 });

@@ -5,6 +5,7 @@ import * as XLSX from 'xlsx';
 
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchCandidates, fetchFilterOptions } from '../../store/slices/candidateSlice';
+import { fetchAllAllocations, fetchTrainingBatches } from '../../store/slices/trainingSlice';
 import { settingsService } from '../../services/settingsService';
 
 import ReportHeader from '../../components/reports/ReportHeader';
@@ -52,6 +53,29 @@ const ALL_COLUMNS = [
 	{ id: 'workexperience', label: 'Counseling Work Experience', default: false, group: 'counseling' },
 ];
 
+const TRAINING_COLUMNS = [
+	// Candidate Details
+	{ id: 'name', label: 'Candidate Name', default: true, group: 'candidate' },
+	{ id: 'gender', label: 'Gender', default: true, group: 'candidate' },
+	{ id: 'disability_type', label: 'Disability Type', default: true, group: 'candidate' },
+	{ id: 'email', label: 'Email', default: true, group: 'candidate' },
+	{ id: 'phone', label: 'Phone', default: true, group: 'candidate' },
+
+	// Batch Details
+	{ id: 'batch_name', label: 'Batch Name', default: true, group: 'batch' },
+	{ id: 'batch_status', label: 'Batch Status', default: false, group: 'batch' },
+	{ id: 'domain', label: 'Domain', default: false, group: 'batch' },
+	{ id: 'training_mode', label: 'Training Mode', default: false, group: 'batch' },
+	{ id: 'courses', label: 'Course(s)', default: false, group: 'batch' },
+	{ id: 'duration', label: 'Duration', default: false, group: 'batch' },
+
+	// Progress
+	{ id: 'status', label: 'Training Status', default: false, group: 'progress' },
+	{ id: 'attendance_percentage', label: 'Attendance (%)', default: false, group: 'progress' },
+	{ id: 'assessment_score', label: 'Assessment Mark', default: false, group: 'progress' },
+	{ id: 'created_at', label: 'Allocation Date', default: false, group: 'progress' },
+];
+
 const Reports: React.FC = () => {
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -59,13 +83,9 @@ const Reports: React.FC = () => {
 	const { list: candidates, total, loading, filterOptions } = useAppSelector((state) => state.candidates);
 	const [dynamicFieldDefs, setDynamicFieldDefs] = useState<any[]>([]);
 
-	// Columns State
-	const [columns, setColumns] = useState<any[]>(ALL_COLUMNS);
-
-	// Visibility and UI State
-	const [visibleColumns, setVisibleColumns] = useState<string[]>(
-		ALL_COLUMNS.filter(c => c.default).map(c => c.id)
-	);
+	// Columns State - derived from reportType
+	const [columns, setColumns] = useState<any[]>([]);
+	const [visibleColumns, setVisibleColumns] = useState<string[]>([]);
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 
@@ -76,48 +96,60 @@ const Reports: React.FC = () => {
 	const [filters, setFilters] = useState<Record<string, any>>({});
 	const [reportType, setReportType] = useState('candidate');
 
-	// Fetch dynamic fields
+	const { allocations, total: trainingTotal, loading: trainingLoading, batches } = useAppSelector((state) => state.training);
+
+	const isTraining = reportType === 'training';
+	const reportData = isTraining ? allocations : candidates;
+	const reportTotal = isTraining ? trainingTotal : total;
+	const reportLoading = isTraining ? trainingLoading : loading;
+
+	// Fetch dynamic fields & initialize columns based on reportType
 	useEffect(() => {
-		const fetchDynamicColumns = async () => {
+		const setupColumns = async () => {
 			try {
-				const [screeningFields, counselingFields] = await Promise.all([
-					settingsService.getFields('screening'),
-					settingsService.getFields('counseling')
-				]);
+				let currentCols: any[] = [];
+				if (reportType === 'candidate') {
+					const [screeningFields, counselingFields] = await Promise.all([
+						settingsService.getFields('screening'),
+						settingsService.getFields('counseling')
+					]);
 
-				const dynamicCols: any[] = [];
-
-				if (screeningFields && screeningFields.length > 0) {
-					screeningFields.forEach(field => {
-						dynamicCols.push({
-							id: `screening_others.${field.name}`,
-							label: field.label,
-							default: false,
-							group: 'screening'
+					const dynamicCols: any[] = [];
+					if (screeningFields) {
+						screeningFields.forEach(field => {
+							dynamicCols.push({
+								id: `screening_others.${field.name}`,
+								label: field.label,
+								default: false,
+								group: 'screening'
+							});
 						});
-					});
+					}
+					if (counselingFields) {
+						counselingFields.forEach(field => {
+							dynamicCols.push({
+								id: `counseling_others.${field.name}`,
+								label: field.label,
+								default: false,
+								group: 'counseling'
+							});
+						});
+					}
+					setDynamicFieldDefs([...(screeningFields || []), ...(counselingFields || [])]);
+					currentCols = [...ALL_COLUMNS, ...dynamicCols];
+				} else {
+					currentCols = TRAINING_COLUMNS;
 				}
 
-				if (counselingFields && counselingFields.length > 0) {
-					counselingFields.forEach(field => {
-						dynamicCols.push({
-							id: `counseling_others.${field.name}`,
-							label: field.label,
-							default: false,
-							group: 'counseling'
-						});
-					});
-				}
-
-				setDynamicFieldDefs([...(screeningFields || []), ...(counselingFields || [])]);
-				setColumns([...ALL_COLUMNS, ...dynamicCols]);
+				setColumns(currentCols);
+				setVisibleColumns(currentCols.filter(c => c.default).map(c => c.id));
 			} catch (error) {
-				console.error("Failed to fetch dynamic fields for reports", error);
+				console.error("Failed to setup columns", error);
 			}
 		};
 
-		fetchDynamicColumns();
-	}, []);
+		setupColumns();
+	}, [reportType]);
 
 	// Data Fetching
 	const fetchData = useCallback(() => {
@@ -145,13 +177,33 @@ const Reports: React.FC = () => {
 		}));
 	}, [dispatch, page, rowsPerPage, search, filters]);
 
+	const fetchTrainingData = useCallback(() => {
+		dispatch(fetchAllAllocations({
+			skip: page * rowsPerPage,
+			limit: rowsPerPage,
+			search,
+			batch_id: filters.batch_id,
+			status: filters.status,
+			is_dropout: filters.is_dropout,
+			gender: filters.gender,
+			disability_types: filters.disability_type?.join(','),
+			sortBy: 'created_at',
+			sortOrder: 'desc'
+		}));
+	}, [dispatch, page, rowsPerPage, search, filters]);
+
 	useEffect(() => {
 		dispatch(fetchFilterOptions());
+		dispatch(fetchTrainingBatches({}));
 	}, [dispatch]);
 
 	useEffect(() => {
-		fetchData();
-	}, [fetchData]);
+		if (isTraining) {
+			fetchTrainingData();
+		} else {
+			fetchData();
+		}
+	}, [isTraining, fetchData, fetchTrainingData]);
 
 	// Handlers
 	const handleSearchChange = (value: string) => {
@@ -180,8 +232,8 @@ const Reports: React.FC = () => {
 	};
 
 	const handleExport = () => {
-		// Generate export data by mapping candidates to an object where keys are column labels
-		const exportData = candidates.map(c => {
+		// Generate export data by mapping candidates/allocations to an object where keys are column labels
+		const exportData = reportData.map(item => {
 			const rowData: Record<string, any> = {};
 
 			// We iterate through columns to maintain order if possible, or just visibleColumns
@@ -191,93 +243,141 @@ const Reports: React.FC = () => {
 
 				let val: any = undefined;
 
-				// 1. Precise Data Extraction
-				if (virtColId.startsWith('screening_others.')) {
-					const fieldName = virtColId.substring('screening_others.'.length);
-					val = (c.screening?.others as any)?.[fieldName] ?? (c as any)[fieldName];
-				} else if (virtColId.startsWith('counseling_others.')) {
-					const fieldName = virtColId.substring('counseling_others.'.length);
-					val = (c.counseling?.others as any)?.[fieldName] ?? (c as any)[fieldName];
+				if (isTraining) {
+					const allocation = item as any;
+					if (virtColId === 'batch_name') val = allocation.batch?.batch_name;
+					else if (virtColId === 'batch_status') val = allocation.batch?.status;
+					else if (virtColId === 'domain') val = allocation.batch?.domain;
+					else if (virtColId === 'training_mode') val = allocation.batch?.training_mode;
+					else if (virtColId === 'courses') {
+						if (Array.isArray(allocation.batch?.courses)) {
+							val = allocation.batch.courses.map((c: any) => typeof c === 'string' ? c : c.name).join(', ');
+						} else {
+							val = '-';
+						}
+					}
+					else if (virtColId === 'duration') {
+						const dur = allocation.batch?.duration;
+						let dateStr = '';
+						if (allocation.batch?.start_date) {
+							dateStr = format(new Date(allocation.batch.start_date), 'dd MMM yyyy');
+							if (allocation.batch?.approx_close_date) {
+								dateStr += ` to ${format(new Date(allocation.batch.approx_close_date), 'dd MMM yyyy')}`;
+							}
+						}
+
+						if (dur && (dur.weeks || dur.days)) {
+							val = `${dur.weeks || 0} weeks, ${dur.days || 0} days${dateStr ? ` (${dateStr})` : ''}`;
+						} else {
+							val = dateStr || '-';
+						}
+					}
+					else if (virtColId === 'name') val = allocation.candidate?.name;
+					else if (virtColId === 'gender') val = allocation.candidate?.gender;
+					else if (virtColId === 'email') val = allocation.candidate?.email;
+					else if (virtColId === 'phone') val = allocation.candidate?.phone;
+					else if (virtColId === 'disability_type') val = allocation.candidate?.disability_details?.disability_type || allocation.candidate?.disability_details?.type;
+					else if (virtColId === 'attendance_percentage') val = allocation.attendance_percentage !== null ? `${allocation.attendance_percentage}%` : '-';
+					else if (virtColId === 'assessment_score') val = allocation.assessment_score !== null ? allocation.assessment_score : '-';
+					else val = allocation[virtColId];
 				} else {
-					// Fallback: Check top-level, then screening, then counseling
-					val = (c as any)[virtColId];
-					if (val === undefined || val === null) {
-						if (col.group === 'screening' && c.screening) val = (c.screening as any)[virtColId];
-						if ((val === undefined || val === null) && col.group === 'counseling' && c.counseling) val = (c.counseling as any)[virtColId];
+					const c = item as any;
+					// 1. Precise Data Extraction
+					if (virtColId.startsWith('screening_others.')) {
+						const fieldName = virtColId.substring('screening_others.'.length);
+						val = (c.screening?.others as any)?.[fieldName] ?? (c as any)[fieldName];
+					} else if (virtColId.startsWith('counseling_others.')) {
+						const fieldName = virtColId.substring('counseling_others.'.length);
+						val = (c.counseling?.others as any)?.[fieldName] ?? (c as any)[fieldName];
+					} else {
+						// Fallback: Check top-level, then screening, then counseling
+						val = (c as any)[virtColId];
+						if (val === undefined || val === null) {
+							if (col.group === 'screening' && c.screening) val = (c.screening as any)[virtColId];
+							if ((val === undefined || val === null) && col.group === 'counseling' && c.counseling) val = (c.counseling as any)[virtColId];
+						}
 					}
 				}
 
 				// 2. Normalization & Formatting
-
-				// Handle Booleans
-				if (typeof val === 'boolean') {
-					val = val ? 'Yes' : 'No';
-				}
-
-				// Handle Dates
-				const dateFields = ['created_at', 'dob', 'counseling_date', 'screening_date', 'screening_updated_at'];
-				if (val && dateFields.includes(virtColId)) {
+				if ((virtColId === 'created_at' || virtColId === 'dob' || virtColId === 'counseling_date' || virtColId === 'screening_date' || virtColId === 'screening_updated_at') && val) {
 					try {
-						val = format(new Date(val), 'dd-MM-yyyy');
-					} catch {
-						// Keep as is if format fails
+						val = format(new Date(val), 'dd MMM yyyy');
+					} catch (e) {
+						val = '-';
 					}
 				}
 
-				// Handle Arrays (Dynamic multi-selects and standard ones)
 				if (Array.isArray(val)) {
-					if (virtColId === 'family_details') {
-						val = val.map((f: any) => `${f.relation}: ${f.name} (${f.phone || 'N/A'})`).join('; ');
-					} else if (virtColId === 'skills') {
+					if (virtColId === 'skills') {
 						val = val.map((s: any) => `${s.name} (${s.level})`).join(', ');
+					} else if (virtColId === 'family_details') {
+						val = val.map((f: any) => `${f.relation}: ${f.name} (${f.occupation || 'N/A'})`).join('; ');
 					} else if (virtColId === 'questions') {
-						val = val.map((q: any) => `Q: ${q.question} A: ${q.answer}`).join(' ; ');
+						val = val.map((q: any) => `Q: ${q.question} A: ${q.answer}`).join(' | ');
 					} else if (virtColId === 'workexperience') {
-						val = val.map((w: any) => `${w.job_title} at ${w.company}`).join(' ; ');
-					} else {
+						val = val.map((w: any) => `${w.job_title} at ${w.company}`).join(', ');
+					} else if (virtColId === 'documents_uploaded') {
 						val = val.join(', ');
+					} else {
+						val = val.map((v: any) => String(v)).join(', ');
 					}
+				} else if (typeof val === 'boolean') {
+					val = val ? 'Yes' : 'No';
+				} else if (val === null || val === undefined) {
+					val = '';
 				}
 
-				// Handle Objects (Sanity check)
-				if (val && typeof val === 'object' && !(val instanceof Date)) {
-					try {
-						val = JSON.stringify(val);
-					} catch {
-						val = '[Object]';
-					}
-				}
-
-				// Final Sanitization: Ensure string and non-empty
-				const finalVal = (val !== undefined && val !== null) ? String(val).trim() : '';
-
-				// Use label as key for Excel, but deduplicate if necessary
-				let label = col.label;
-				if (rowData.hasOwnProperty(label)) {
-					// If already set and current is just '-', don't overwrite
-					if (finalVal === '' || finalVal === '-') return;
-					// If previous was '-' but current has data, overwrite
-					if (rowData[label] === '' || rowData[label] === '-') {
-						rowData[label] = finalVal;
-						return;
-					}
-					// Otherwise, append to existing (uncommon case)
-					label = `${label} (${col.group})`;
-				}
-
-				rowData[label] = finalVal !== '' ? finalVal : '-';
+				rowData[col.label] = val;
 			});
+
 			return rowData;
 		});
 
 		const ws = XLSX.utils.json_to_sheet(exportData);
 		const wb = XLSX.utils.book_new();
-		XLSX.utils.book_append_sheet(wb, ws, "Candidates Report");
-		XLSX.writeFile(wb, `WinVinaya_Report_${format(new Date(), 'yyyyMMdd_HHmm')}.xlsx`);
+		XLSX.utils.book_append_sheet(wb, ws, 'Report');
+		XLSX.writeFile(wb, `${isTraining ? 'Training' : 'Candidates'}_Report_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
 	};
 
 	// Filter Field Configuration
-	const filterFields: FilterField[] = [
+	const filterFields: FilterField[] = isTraining ? [
+		{
+			key: 'batch_id',
+			label: 'Batch Name',
+			type: 'single-select',
+			options: batches.map(b => ({ label: b.batch_name, value: String(b.id) }))
+		},
+		{
+			key: 'status',
+			label: 'Training Status',
+			type: 'single-select',
+			options: [
+				{ label: 'Allocated', value: 'allocated' },
+				{ label: 'In Training', value: 'in_training' },
+				{ label: 'Completed', value: 'completed' },
+				{ label: 'Dropped Out', value: 'dropped_out' },
+				{ label: 'Placed', value: 'placed' }
+			]
+		},
+		{ key: 'is_dropout', label: 'Is Dropout', type: 'boolean' },
+		{
+			key: 'gender',
+			label: 'Gender',
+			type: 'single-select',
+			options: [
+				{ value: 'male', label: 'Male' },
+				{ value: 'female', label: 'Female' },
+				{ value: 'other', label: 'Other' }
+			]
+		},
+		{
+			key: 'disability_type',
+			label: 'Disability Type',
+			type: 'multi-select',
+			options: filterOptions.disability_types?.map(v => ({ label: v, value: v })) || []
+		},
+	] : [
 		{
 			key: 'disability_type',
 			label: 'Disability Type',
@@ -331,29 +431,29 @@ const Reports: React.FC = () => {
 		}
 	];
 
-	// Add dynamic filters — only single_choice and multiple_choice fields show as multi-select dropdowns
-	columns.forEach(col => {
-		if (col.id.startsWith('screening_others.') || col.id.startsWith('counseling_others.')) {
-			const fieldName = col.id.split('.')[1];
-			const fieldDef = dynamicFieldDefs.find(fd => fd.name === fieldName);
+	// Add dynamic filters
+	if (!isTraining) {
+		columns.forEach(col => {
+			if (col.id.startsWith('screening_others.') || col.id.startsWith('counseling_others.')) {
+				const fieldName = col.id.split('.')[1];
+				const fieldDef = dynamicFieldDefs.find(fd => fd.name === fieldName);
 
-			if (fieldDef) {
-				// Match the actual backend field_type values from settingsService
-				const isOptionField = fieldDef.field_type === 'single_choice' || fieldDef.field_type === 'multiple_choice';
+				if (fieldDef) {
+					const isOptionField = fieldDef.field_type === 'single_choice' || fieldDef.field_type === 'multiple_choice';
 
-				filterFields.push({
-					key: col.id,
-					label: col.label,
-					// Both single_choice and multiple_choice render as multi-select checkboxes
-					type: isOptionField ? 'multi-select' : 'text',
-					options: isOptionField ? (fieldDef.options || []).map((o: any) => ({
-						value: typeof o === 'string' ? o : o.value,
-						label: typeof o === 'string' ? o : o.label
-					})) : []
-				});
+					filterFields.push({
+						key: col.id,
+						label: col.label,
+						type: isOptionField ? 'multi-select' : 'text',
+						options: isOptionField ? (fieldDef.options || []).map((o: any) => ({
+							value: typeof o === 'string' ? o : o.value,
+							label: typeof o === 'string' ? o : o.label
+						})) : []
+					});
+				}
 			}
-		}
-	});
+		});
+	}
 
 	return (
 		<Box sx={{
@@ -372,9 +472,9 @@ const Reports: React.FC = () => {
 				borderBottom: '1px solid #eaeded'
 			}}>
 				<ReportHeader
-					onRefresh={fetchData}
+					onRefresh={isTraining ? fetchTrainingData : fetchData}
 					onExport={handleExport}
-					loading={loading}
+					loading={reportLoading}
 					reportType={reportType}
 					onReportTypeChange={setReportType}
 				/>
@@ -382,7 +482,7 @@ const Reports: React.FC = () => {
 				<ReportToolbar
 					search={search}
 					onSearchChange={handleSearchChange}
-					total={total}
+					total={reportTotal}
 					filterCount={Object.values(filters).flat().filter(v => v && (!Array.isArray(v) || v.length > 0)).length}
 					onFilterClick={() => setFilterDrawerOpen(true)}
 				>
@@ -407,11 +507,11 @@ const Reports: React.FC = () => {
 				flexDirection: 'column'
 			}}>
 				<ReportTable
-					loading={loading}
+					loading={reportLoading}
 					columns={columns}
 					visibleColumns={visibleColumns}
-					data={candidates}
-					total={total}
+					data={reportData as any}
+					total={reportTotal}
 					page={page}
 					rowsPerPage={rowsPerPage}
 					onPageChange={setPage}

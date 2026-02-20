@@ -79,3 +79,144 @@ class TrainingCandidateAllocationRepository(BaseRepository[TrainingCandidateAllo
         )
         result = await self.db.execute(query)
         return result.scalar_one_or_none() is None
+
+    async def get_multi(
+        self,
+        *,
+        skip: int = 0,
+        limit: int = 100,
+        search: Optional[str] = None,
+        batch_id: Optional[int] = None,
+        status: Optional[str] = None,
+        is_dropout: Optional[bool] = None,
+        gender: Optional[str] = None,
+        disability_types: Optional[str] = None,
+        sort_by: str = "created_at",
+        sort_order: str = "desc"
+    ) -> tuple[List[TrainingCandidateAllocation], int]:
+        """Global retrieval with expert filtering and metrics aggregation for reports"""
+        from sqlalchemy import func, desc, asc, and_, cast, Numeric, Float
+        from sqlalchemy.orm import selectinload, joinedload
+        from app.models.candidate import Candidate
+        from app.models.training_attendance import TrainingAttendance
+        from app.models.assessment import Assessment, AssessmentResult
+        
+        # 1. Metrics Subqueries (Correlated)
+        # Attendance Percentage: (present / total) * 100
+        attn_present = select(func.count(TrainingAttendance.id)).where(
+            and_(
+                TrainingAttendance.candidate_id == self.model.candidate_id,
+                TrainingAttendance.batch_id == self.model.batch_id,
+                TrainingAttendance.status == 'present'
+            )
+        ).correlate(self.model).scalar_subquery()
+
+        attn_total = select(func.count(TrainingAttendance.id)).where(
+            and_(
+                TrainingAttendance.candidate_id == self.model.candidate_id,
+                TrainingAttendance.batch_id == self.model.batch_id
+            )
+        ).correlate(self.model).scalar_subquery()
+
+        # Postgres round(numeric, int) requires Numeric type
+        attendance_percentage = func.round(
+            cast(
+                cast(attn_present, Float) / cast(func.nullif(attn_total, 0), Float) * 100,
+                Numeric
+            ),
+            2
+        )
+
+        # Assessment Score: average total_score for this candidate in this batch
+        assessment_score = select(func.avg(AssessmentResult.total_score)).join(Assessment).where(
+            and_(
+                AssessmentResult.candidate_id == self.model.candidate_id,
+                Assessment.batch_id == self.model.batch_id
+            )
+        ).correlate(self.model).scalar_subquery()
+
+        assessment_avg = func.round(cast(assessment_score, Numeric), 2)
+
+        # 2. Build main query
+        query = select(
+            self.model, 
+            attendance_percentage.label("attendance_percentage"),
+            assessment_avg.label("assessment_score")
+        ).join(Candidate).where(self.model.is_deleted == False)
+
+        count_query = select(func.count(self.model.id)).where(self.model.is_deleted == False)
+
+        # Apply filters
+        if batch_id:
+            query = query.where(self.model.batch_id == batch_id)
+            count_query = count_query.where(self.model.batch_id == batch_id)
+        
+        if status:
+            query = query.where(self.model.status == status)
+            count_query = count_query.where(self.model.status == status)
+        
+        if is_dropout is not None:
+            query = query.where(self.model.is_dropout == is_dropout)
+            count_query = count_query.where(self.model.is_dropout == is_dropout)
+
+        if gender:
+            query = query.where(Candidate.gender == gender)
+            # count_query might not have joined Candidate yet
+            if not search:
+                count_query = count_query.join(Candidate)
+            count_query = count_query.where(Candidate.gender == gender)
+
+        if disability_types:
+            dt_list = disability_types.split(',') if isinstance(disability_types, str) else disability_types
+            disability_filters = [
+                Candidate.disability_details['disability_type'].as_string() == d_type 
+                for d_type in dt_list if d_type
+            ]
+            if disability_filters:
+                query = query.where(or_(*disability_filters))
+                if not (search or gender):
+                    count_query = count_query.join(Candidate)
+                count_query = count_query.where(or_(*disability_filters))
+
+        if search:
+            search_filter = or_(
+                Candidate.name.ilike(f"%{search}%"),
+                Candidate.email.ilike(f"%{search}%"),
+                Candidate.phone.ilike(f"%{search}%")
+            )
+            query = query.where(search_filter)
+            count_query = count_query.join(Candidate).where(search_filter)
+
+        # Apply sorting
+        if hasattr(self.model, sort_by):
+            sort_attr = getattr(self.model, sort_by)
+        else:
+            sort_attr = getattr(Candidate, sort_by) if hasattr(Candidate, sort_by) else self.model.created_at
+            
+        if sort_order.lower() == "desc":
+            query = query.order_by(desc(sort_attr))
+        else:
+            query = query.order_by(asc(sort_attr))
+
+        # Pagination and Eager Loading
+        query = query.offset(skip).limit(limit).options(
+            selectinload(self.model.candidate),
+            joinedload(self.model.batch)
+        )
+
+        # Execute
+        count_result = await self.db.execute(count_query)
+        total = count_result.scalar() or 0
+        
+        result = await self.db.execute(query)
+        rows = result.all()
+        
+        items = []
+        for row in rows:
+            item = row[0]
+            # Attach metrics to the model instance for pydantic serialization
+            item.attendance_percentage = row[1]
+            item.assessment_score = row[2]
+            items.append(item)
+        
+        return items, total
