@@ -261,7 +261,7 @@ async def send_registration_emails(candidate: Any):
     await send_email(candidate.email, candidate_subject, candidate_html)
     
     # 2. Send to Sourcing Team
-    sourcing_team_email = "info@winvinayafoundation.org"
+    sourcing_team_email = "sourcing@winvinayafoundation.org"
     team_subject = f"New Candidate Registered: {candidate.name}"
     team_html = get_sourcing_team_template(candidate)
     await send_email(sourcing_team_email, team_subject, team_html)
