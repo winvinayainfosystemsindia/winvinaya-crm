@@ -280,19 +280,28 @@ async def update_candidate(
     """
     service = CandidateService(db)
     
-    # Get before state
+    # Snapshot the before state as a plain dict BEFORE the update to avoid
+    # any session detachment issues when the logger reads the old state.
     existing_candidate = await service.get_candidate(public_id)
+    from app.utils.activity_tracker import extract_safe_metadata
+    before_snapshot = extract_safe_metadata(existing_candidate)
     
-    updated_candidate = await service.update_candidate(public_id, candidate_in)
+    # Perform the update
+    await service.update_candidate(public_id, candidate_in)
     
-    # Log the update
+    # CRITICAL: Always re-fetch after update. The object returned by .returning()
+    # or after a db.commit() may be detached from the session.
+    # Re-fetching guarantees a live, session-bound, fully-loaded object.
+    updated_candidate = await service.get_candidate(public_id, with_details=True)
+    
+    # Log the update using the safe dict snapshot for 'before'
     await log_update(
         db=db,
         request=request,
         user_id=current_user.id,
         resource_type="candidate",
         resource_id=updated_candidate.id,
-        before=existing_candidate,
+        before=before_snapshot,
         after=updated_candidate
     )
     
