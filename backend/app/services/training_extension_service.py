@@ -85,7 +85,8 @@ class TrainingExtensionService:
 
     async def get_attendance_by_candidate(self, public_id: UUID):
         query = select(self.attendance_repo.model).join(Candidate).options(
-            selectinload(self.attendance_repo.model.batch)
+            selectinload(self.attendance_repo.model.batch),
+            selectinload(self.attendance_repo.model.period)
         ).where(
             Candidate.public_id == public_id,
             self.attendance_repo.model.is_deleted == False

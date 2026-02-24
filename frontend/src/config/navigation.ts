@@ -8,7 +8,7 @@ import {
 	// Person as PersonIcon,
 	// Assignment as TaskIcon,
 	Group as CandidatesIcon,
-	// School as SchoolIcon,
+	School as SchoolIcon,
 	Assessment as AssessmentIcon,
 	Settings as SettingsIcon,
 	HelpOutline as HelpIcon,
@@ -70,20 +70,20 @@ export const topNavigation: NavigationItem[] = [
 			},
 		],
 	},
-	// {
-	// 	label: 'Training Management',
-	// 	icon: SchoolIcon,
-	// 	children: [
-	// 		{ label: 'Training Batch', path: '/training/batches', roles: ['admin', 'manager', 'trainer'] },
-	// 		{ label: 'Weekly Training Plan', path: '/training/weekly-plan', roles: ['admin', 'manager', 'trainer'] },
-	// 		{ label: 'Candidate Allocation', path: '/training/allocation', roles: ['admin', 'manager', 'trainer'] },
-	// 		{ label: 'Attendance', path: '/training/attendance', roles: ['admin', 'manager', 'trainer'] },
-	// 		{ label: 'Assignment', path: '/training/assignment', roles: ['admin', 'manager', 'trainer'] },
-	// 		{ label: 'Online Assessment', path: '/training/assessment', roles: ['admin', 'manager', 'trainer'] },
-	// 		{ label: 'Mock Interview', path: '/training/mock-interview', roles: ['admin', 'manager', 'trainer'] },
+	{
+		label: 'Training Management',
+		icon: SchoolIcon,
+		children: [
+			{ label: 'Training Batch', path: '/training/batches', roles: ['admin', 'manager', 'trainer'] },
+			{ label: 'Weekly Training Plan', path: '/training/weekly-plan', roles: ['admin', 'manager', 'trainer'] },
+			{ label: 'Candidate Allocation', path: '/training/allocation', roles: ['admin', 'manager', 'trainer'] },
+			{ label: 'Attendance', path: '/training/attendance', roles: ['admin', 'manager', 'trainer'] },
+			// { label: 'Assignment', path: '/training/assignment', roles: ['admin', 'manager', 'trainer'] },
+			// { label: 'Online Assessment', path: '/training/assessment', roles: ['admin', 'manager', 'trainer'] },
+			// { label: 'Mock Interview', path: '/training/mock-interview', roles: ['admin', 'manager', 'trainer'] },
 
-	// 	],
-	// },
+		],
+	},
 ];
 
 export const bottomNavigation: NavigationItem[] = [

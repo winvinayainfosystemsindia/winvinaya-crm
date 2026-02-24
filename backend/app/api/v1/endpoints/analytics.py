@@ -14,6 +14,13 @@ from app.models.candidate_document import CandidateDocument
 from app.models.activity_log import ActivityLog, ActionType
 from app.models.training_candidate_allocation import TrainingCandidateAllocation
 from app.models.training_batch import TrainingBatch
+from app.models.training_attendance import TrainingAttendance
+from app.models.training_assignment import TrainingAssignment
+from app.models.assessment import Assessment, AssessmentResult, AssessmentResponse
+from app.models.training_mock_interview import TrainingMockInterview
+from app.models.training_batch_event import TrainingBatchEvent
+from app.models.training_batch_plan import TrainingBatchPlan
+from app.models.training_batch_extension import TrainingBatchExtension
 from app.models.dynamic_field import DynamicField
 from app.models.ticket import Ticket
 from app.utils.activity_tracker import log_read
@@ -31,7 +38,10 @@ async def export_table_for_power_bi(
     """
     Get a specific table dump for Power BI.
     Returns a plain list of records.
-    Supported tables: users, candidates, screenings, counselings, documents
+    Supported tables: users, candidates, screenings, counselings, documents,
+    activity_logs, allocations, batches, attendance, assignments, assessments,
+    assessment_results, assessment_responses, mock_interviews, batch_events,
+    batch_plans, batch_extensions, fields, tickets
     """
     from fastapi import HTTPException
     
@@ -44,6 +54,15 @@ async def export_table_for_power_bi(
         "activity_logs": ActivityLog,
         "allocations": TrainingCandidateAllocation,
         "batches": TrainingBatch,
+        "attendance": TrainingAttendance,
+        "assignments": TrainingAssignment,
+        "assessments": Assessment,
+        "assessment_results": AssessmentResult,
+        "assessment_responses": AssessmentResponse,
+        "mock_interviews": TrainingMockInterview,
+        "batch_events": TrainingBatchEvent,
+        "batch_plans": TrainingBatchPlan,
+        "batch_extensions": TrainingBatchExtension,
         "fields": DynamicField,
         "tickets": Ticket,
     }
