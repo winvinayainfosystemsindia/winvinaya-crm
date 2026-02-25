@@ -74,9 +74,9 @@ export const topNavigation: NavigationItem[] = [
 		label: 'Training Management',
 		icon: SchoolIcon,
 		children: [
-			{ label: 'Training Batch', path: '/training/batches', roles: ['admin', 'manager', 'trainer'] },
+			{ label: 'Training Batch', path: '/training/batches', roles: ['admin', 'manager', 'trainer', 'sourcing'] },
 			{ label: 'Weekly Training Plan', path: '/training/weekly-plan', roles: ['admin', 'manager', 'trainer'] },
-			{ label: 'Candidate Allocation', path: '/training/allocation', roles: ['admin', 'manager', 'trainer'] },
+			{ label: 'Candidate Allocation', path: '/training/allocation', roles: ['admin', 'manager', 'trainer', 'sourcing'] },
 			{ label: 'Attendance', path: '/training/attendance', roles: ['admin', 'manager', 'trainer'] },
 			// { label: 'Assignment', path: '/training/assignment', roles: ['admin', 'manager', 'trainer'] },
 			// { label: 'Online Assessment', path: '/training/assessment', roles: ['admin', 'manager', 'trainer'] },
