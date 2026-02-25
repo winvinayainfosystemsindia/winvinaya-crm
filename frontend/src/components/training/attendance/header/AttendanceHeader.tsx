@@ -25,8 +25,6 @@ interface AttendanceHeaderProps {
 	currentEvent?: TrainingBatchEvent;
 	onOpenEventDialog: () => void;
 	onDeleteEvent: (eventId: number) => void;
-	onMarkAllPresent: () => void;
-	onMarkAllAbsent: () => void;
 	onSave: () => void;
 	saving: boolean;
 	isDateOutOfRange: boolean;
@@ -41,8 +39,6 @@ const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
 	currentEvent,
 	onOpenEventDialog,
 	onDeleteEvent,
-	onMarkAllPresent,
-	onMarkAllAbsent,
 	onSave,
 	saving,
 	isDateOutOfRange,
@@ -98,22 +94,7 @@ const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
 							Mark Holiday/Event
 						</Button>
 					)}
-					<Button
-						variant="outlined"
-						onClick={onMarkAllPresent}
-						disabled={!!currentEvent || isDateOutOfRange || isFutureDate || hasNoPlan}
-						sx={{ textTransform: 'none', color: '#007d35', borderColor: '#007d35' }}
-					>
-						Mark All Present
-					</Button>
-					<Button
-						variant="outlined"
-						onClick={onMarkAllAbsent}
-						disabled={!!currentEvent || isDateOutOfRange || isFutureDate || hasNoPlan}
-						sx={{ textTransform: 'none', color: '#d13212', borderColor: '#d13212' }}
-					>
-						Mark All Absent
-					</Button>
+
 					<Button
 						variant="contained"
 						startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}

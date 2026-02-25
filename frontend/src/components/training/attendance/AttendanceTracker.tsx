@@ -40,7 +40,11 @@ const ATTENDANCE_STATUSES = [
 	{ value: 'half_day', label: 'Half Day', icon: <HalfDayIcon sx={{ color: '#007eb9' }} />, color: '#007eb9' },
 ];
 
+import { useSelector } from 'react-redux';
+import type { RootState } from '../../../store/store';
+
 const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocations }) => {
+	const currentUser = useSelector((state: RootState) => state.auth.user);
 	const {
 		loading,
 		saving,
@@ -59,8 +63,6 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 		handleRemarkChange,
 		handlePeriodStatusChange,
 		handleTrainerNotesChange,
-		handleMarkAllPresent,
-		handleMarkAllAbsent,
 		handlePeriodMarkAll,
 		handleSave,
 		handleConfirmEvent,
@@ -122,8 +124,6 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 								currentEvent={currentEvent}
 								onOpenEventDialog={() => setEventDialogOpen(true)}
 								onDeleteEvent={handleDeleteEvent}
-								onMarkAllPresent={handleMarkAllPresent}
-								onMarkAllAbsent={handleMarkAllAbsent}
 								onSave={handleSave}
 								saving={saving}
 								isDateOutOfRange={isDateOutOfRange}
@@ -182,6 +182,7 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 								isFutureDate={isFutureDate}
 								isDroppedOut={isDroppedOut}
 								statuses={ATTENDANCE_STATUSES}
+								currentUser={currentUser}
 							/>
 						</Grid>
 

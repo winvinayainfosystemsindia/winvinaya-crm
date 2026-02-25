@@ -31,6 +31,7 @@ interface AttendanceTableProps {
 	isFutureDate: boolean;
 	isDroppedOut: (candidateId: number) => boolean;
 	statuses: Array<{ value: string; label: string; icon: React.ReactNode; color: string }>;
+	currentUser: any;
 }
 
 const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
@@ -47,7 +48,8 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 	isDateOutOfRange,
 	isFutureDate,
 	isDroppedOut,
-	statuses
+	statuses,
+	currentUser
 }) => {
 	const dateStr = format(selectedDate, 'yyyy-MM-dd');
 	const hasPeriods = dailyPlan.length > 0;
@@ -71,6 +73,18 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 	};
 
 	const isActive = !currentEvent && !isDateOutOfRange && !isFutureDate;
+
+	// Check if the current user is authorized to edit a specific period
+	const canEditPeriod = (period: TrainingBatchPlan) => {
+		if (!isActive) return false;
+		if (period.activity_type === 'break') return false; // Never edit breaks
+
+		// If superuser, can edit anything
+		if (currentUser?.is_superuser) return true;
+
+		// If trainer name matches current user's full name
+		return currentUser?.full_name === period.trainer;
+	};
 
 	return (
 		<TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #eaeded', borderRadius: '4px' }}>
@@ -102,42 +116,53 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 												{format(new Date(`2000-01-01T${period.start_time}`), 'h:mm a')} - {format(new Date(`2000-01-01T${period.end_time}`), 'h:mm a')}
 											</Typography>
 											{period.trainer && (
-												<Typography variant="caption" display="block" color="text.secondary">
+												<Typography variant="caption" display="block" sx={{ fontWeight: 600, color: 'primary.main', bgcolor: '#e3f2fd', px: 1, py: 0.5, borderRadius: '4px', mt: 0.5 }}>
 													Trainer: {period.trainer}
 												</Typography>
 											)}
 										</Box>
 
-										<FormControl size="small" sx={{ minWidth: 110 }}>
-											<Select
-												value=""
-												displayEmpty
-												onChange={(e) => onPeriodMarkAll(period.id!, e.target.value as string)}
-												disabled={!isActive}
-												sx={{
-													fontSize: '0.7rem',
-													fontWeight: 700,
-													height: 28,
-													bgcolor: '#fff',
-													'& .MuiOutlinedInput-root': { borderRadius: '4px' }
-												}}
-												renderValue={(selected) => {
-													if (selected === "") {
-														return <Typography variant="caption" sx={{ fontWeight: 700, fontSize: '0.7rem' }}>Mark All</Typography>;
-													}
-													return selected;
-												}}
-											>
-												{statuses.map(s => (
-													<MenuItem key={s.value} value={s.value} sx={{ fontSize: '0.75rem' }}>
-														<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-															{React.cloneElement(s.icon as React.ReactElement<any>, { sx: { fontSize: '1rem' } })}
-															{s.label}
-														</Box>
-													</MenuItem>
-												))}
-											</Select>
-										</FormControl>
+										{period.activity_type === 'break' ? (
+											<Chip
+												label="BREAK"
+												size="small"
+												color="error"
+												sx={{ fontWeight: 700, fontSize: '0.65rem', height: 20, borderRadius: '4px' }}
+											/>
+										) : (
+											<FormControl size="small" sx={{ minWidth: 110 }}>
+												<Select
+													value=""
+													displayEmpty
+													onChange={(e) => onPeriodMarkAll(period.id!, e.target.value as string)}
+													disabled={!canEditPeriod(period)}
+													sx={{
+														fontSize: '0.7rem',
+														fontWeight: 700,
+														height: 28,
+														bgcolor: canEditPeriod(period) ? '#fff' : '#f5f5f5',
+														'& .MuiOutlinedInput-root': { borderRadius: '4px' }
+													}}
+													renderValue={(selected) => {
+														if (selected === "") {
+															return <Typography variant="caption" sx={{ fontWeight: 700, fontSize: '0.7rem' }}>Mark All</Typography>;
+														}
+														return selected;
+													}}
+												>
+													{statuses.map(s => (
+														<MenuItem key={s.value} value={s.value} sx={{ fontSize: '0.75rem', fontWeight: 600 }}>
+															<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+																{React.cloneElement(s.icon as React.ReactElement<any>, {
+																	sx: { ...((s.icon as React.ReactElement<any>).props.sx || {}), fontSize: '1rem' }
+																})}
+																{s.label}
+															</Box>
+														</MenuItem>
+													))}
+												</Select>
+											</FormControl>
+										)}
 									</Box>
 								</TableCell>
 							))
@@ -204,6 +229,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 										statuses={statuses}
 										onPeriodStatusChange={onPeriodStatusChange}
 										onTrainerNotesChange={onTrainerNotesChange}
+										canEditPeriod={canEditPeriod}
 									/>
 								);
 							} else {

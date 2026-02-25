@@ -11,7 +11,8 @@ import {
 	TextField,
 	IconButton,
 	Tooltip,
-	Badge
+	Badge,
+	Chip
 } from '@mui/material';
 import { Notes as NotesIcon, EditNote as EditNoteIcon } from '@mui/icons-material';
 import type { CandidateAllocation, TrainingAttendance, TrainingBatchPlan } from '../../../../models/training';
@@ -34,6 +35,7 @@ interface AttendanceTableRowProps {
 	remark?: string;
 	onStatusChange?: (candidateId: number, status: string) => void;
 	onRemarkChange?: (candidateId: number, remark: string) => void;
+	canEditPeriod?: (period: TrainingBatchPlan) => boolean;
 }
 
 const AttendanceTableRow: React.FC<AttendanceTableRowProps> = memo(({
@@ -47,7 +49,8 @@ const AttendanceTableRow: React.FC<AttendanceTableRowProps> = memo(({
 	status,
 	remark,
 	onStatusChange,
-	onRemarkChange
+	onRemarkChange,
+	canEditPeriod
 }) => {
 	const hasPeriods = dailyPlan && dailyPlan.length > 0;
 
@@ -96,36 +99,46 @@ const AttendanceTableRow: React.FC<AttendanceTableRowProps> = memo(({
 						return (
 							<TableCell key={period.id} align="center">
 								<Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center' }}>
-									{/* Status Dropdown */}
-									<FormControl size="small" sx={{ minWidth: 120 }}>
-										<Select
-											value={periodStatus}
-											onChange={(e) => onPeriodStatusChange!(allocation.candidate_id, period.id!, e.target.value)}
-											disabled={!isActive}
-											sx={{
-												fontSize: '0.8125rem',
-												fontWeight: 600,
-												'& .MuiOutlinedInput-root': { borderRadius: '2px' }
-											}}
-										>
-											{statuses.map(s => (
-												<MenuItem key={s.value} value={s.value} sx={{ fontSize: '0.8125rem' }}>
-													<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-														{s.icon}
-														{s.label}
-													</Box>
-												</MenuItem>
-											))}
-										</Select>
-									</FormControl>
+									{period.activity_type === 'break' ? (
+										<Chip
+											label="BREAK"
+											size="small"
+											variant="outlined"
+											sx={{ fontWeight: 700, fontSize: '0.65rem', height: 20, color: 'error.main', borderColor: 'error.light', bgcolor: '#fff5f5' }}
+										/>
+									) : (
+										<FormControl size="small" sx={{ minWidth: 120 }}>
+											<Select
+												value={periodStatus}
+												onChange={(e) => onPeriodStatusChange!(allocation.candidate_id, period.id!, e.target.value)}
+												disabled={!canEditPeriod!(period)}
+												sx={{
+													fontSize: '0.8125rem',
+													fontWeight: 600,
+													bgcolor: canEditPeriod!(period) ? 'transparent' : '#f5f5f5',
+													'& .MuiOutlinedInput-root': { borderRadius: '2px' }
+												}}
+											>
+												{statuses.map(s => (
+													<MenuItem key={s.value} value={s.value} sx={{ fontSize: '0.8125rem' }}>
+														<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+															{s.icon}
+															{s.label}
+														</Box>
+													</MenuItem>
+												))}
+											</Select>
+										</FormControl>
+									)}
 
 									{/* Trainer Notes Button with Badge */}
-									<Tooltip title={hasNotes ? "View/Edit Notes" : "Add Trainer Notes"}>
+									<Tooltip title={!canEditPeriod!(period) ? "Read-only" : (hasNotes ? "View/Edit Notes" : "Add Trainer Notes")}>
 										<IconButton
 											size="small"
 											onClick={() => handleOpenNotesDialog(period, trainerNotes)}
-											disabled={!isActive}
+											disabled={!isActive || (period.activity_type === 'break')}
 											sx={{
+
 												color: hasNotes ? '#007eb9' : '#545b64',
 												bgcolor: hasNotes ? '#e3f2fd' : 'transparent',
 												'&:hover': {
