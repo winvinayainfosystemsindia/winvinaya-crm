@@ -89,6 +89,8 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		fetchDailyPlan();
 	}, [fetchDailyPlan]);
 
+
+
 	const currentEvent = useMemo(() => {
 		const dateStr = format(selectedDate, 'yyyy-MM-dd');
 		return batchEvents.find(e => e.date === dateStr);
@@ -166,25 +168,7 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		updatePeriodAttendance(candidateId, null, { status: status as any });
 	}, [updatePeriodAttendance, isDroppedOut, isFutureDate, enqueueSnackbar]);
 
-	// Mark all periods for a specific candidate as a specific status
-	const handleCandidateMarkAll = useCallback((candidateId: number, status: string) => {
-		if (isDroppedOut(candidateId)) {
-			enqueueSnackbar('Cannot mark attendance for dropped out candidates', { variant: 'warning' });
-			return;
-		}
-		if (isFutureDate) {
-			enqueueSnackbar('Cannot mark attendance for future dates', { variant: 'warning' });
-			return;
-		}
 
-		if (dailyPlan.length > 0) {
-			dailyPlan.forEach(period => {
-				updatePeriodAttendance(candidateId, period.id, { status: status as any });
-			});
-		} else {
-			updatePeriodAttendance(candidateId, null, { status: status as any });
-		}
-	}, [dailyPlan, updatePeriodAttendance, isDroppedOut, isFutureDate, enqueueSnackbar]);
 
 	// Mark all candidates for a specific period as a specific status
 	const handlePeriodMarkAll = useCallback((periodId: number, status: string) => {
@@ -205,33 +189,7 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		updatePeriodAttendance(candidateId, null, { remarks: remark });
 	}, [updatePeriodAttendance]);
 
-	const handleMarkAllPresent = useCallback(() => {
-		if (isFutureDate) {
-			enqueueSnackbar('Cannot mark attendance for future dates', { variant: 'warning' });
-			return;
-		}
 
-		allocations.forEach(allocation => {
-			if (!isDroppedOut(allocation.candidate_id)) {
-				handleCandidateMarkAll(allocation.candidate_id, 'present');
-			}
-		});
-		enqueueSnackbar('All candidates marked as present for this date', { variant: 'info' });
-	}, [allocations, handleCandidateMarkAll, isDroppedOut, isFutureDate, enqueueSnackbar]);
-
-	const handleMarkAllAbsent = useCallback(() => {
-		if (isFutureDate) {
-			enqueueSnackbar('Cannot mark attendance for future dates', { variant: 'warning' });
-			return;
-		}
-
-		allocations.forEach(allocation => {
-			if (!isDroppedOut(allocation.candidate_id)) {
-				handleCandidateMarkAll(allocation.candidate_id, 'absent');
-			}
-		});
-		enqueueSnackbar('All candidates marked as absent for this date', { variant: 'info' });
-	}, [allocations, handleCandidateMarkAll, isDroppedOut, isFutureDate, enqueueSnackbar]);
 
 	const handleSave = async () => {
 		if (isFutureDate) {
@@ -258,31 +216,7 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		}
 	};
 
-	const handleConfirmEvent = async (eventData: any) => {
-		try {
-			await trainingExtensionService.createBatchEvent({
-				batch_id: batch.id,
-				date: format(selectedDate, 'yyyy-MM-dd'),
-				...eventData
-			});
-			enqueueSnackbar(`${eventData.event_type} added successfully`, { variant: 'success' });
-			fetchData();
-			return true;
-		} catch (error) {
-			enqueueSnackbar('Failed to add event', { variant: 'error' });
-			return false;
-		}
-	};
 
-	const handleDeleteEvent = async (eventId: number) => {
-		try {
-			await trainingExtensionService.deleteBatchEvent(eventId);
-			enqueueSnackbar('Event removed', { variant: 'info' });
-			fetchData();
-		} catch (error) {
-			enqueueSnackbar('Failed to remove event', { variant: 'error' });
-		}
-	};
 
 	const isDateOutOfRange = useMemo(() => {
 		if (!batchBounds) return false;
@@ -307,12 +241,8 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		handleRemarkChange,
 		handlePeriodStatusChange,
 		handleTrainerNotesChange,
-		handleMarkAllPresent,
-		handleMarkAllAbsent,
 		handlePeriodMarkAll,
 		handleSave,
-		handleConfirmEvent,
-		handleDeleteEvent,
 		isDroppedOut
 	};
 };

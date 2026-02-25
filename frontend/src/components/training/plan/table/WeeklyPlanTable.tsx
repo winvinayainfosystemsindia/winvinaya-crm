@@ -17,7 +17,11 @@ import {
 	Add as AddIcon,
 	Edit as EditIcon,
 	Delete as DeleteIcon,
-	ContentCopy as CopyIcon
+	ContentCopy as CopyIcon,
+	EventBusy as HolidayIcon,
+	EventAvailable as EventIcon,
+	CalendarMonth as CalendarIcon,
+	DeleteForever as RemoveEventIcon
 } from '@mui/icons-material';
 import { format, startOfDay, endOfDay } from 'date-fns';
 import type { TrainingBatchPlan } from '../../../../models/training';
@@ -34,6 +38,9 @@ interface WeeklyPlanTableProps {
 	handleEditEntry: (entry: TrainingBatchPlan) => void;
 	handleDeleteEntry: (publicId: string) => void;
 	handleReplicateEntry: (entry: TrainingBatchPlan) => void;
+	batchEvents: any[];
+	handleOpenEventDialog: (date: Date) => void;
+	handleDeleteEvent: (eventId: number) => void;
 }
 
 const WeeklyPlanTable: React.FC<WeeklyPlanTableProps> = ({
@@ -46,7 +53,10 @@ const WeeklyPlanTable: React.FC<WeeklyPlanTableProps> = ({
 	handleOpenDialog,
 	handleEditEntry,
 	handleDeleteEntry,
-	handleReplicateEntry
+	handleReplicateEntry,
+	batchEvents,
+	handleOpenEventDialog,
+	handleDeleteEvent
 }) => {
 	return (
 		<TableContainer component={Paper} elevation={0} variant="outlined">
@@ -54,16 +64,69 @@ const WeeklyPlanTable: React.FC<WeeklyPlanTableProps> = ({
 				<TableHead>
 					<TableRow>
 						<TableCell width={100} align="center">Time</TableCell>
-						{weekDays.map((day) => (
-							<TableCell key={day.toISOString()} align="center">
-								<Typography variant="subtitle2">
-									{format(day, 'EEEE')}
-								</Typography>
-								<Typography variant="body2" color="text.secondary">
-									{format(day, 'MMM d')}
-								</Typography>
-							</TableCell>
-						))}
+						{weekDays.map((day) => {
+							const dateStr = format(day, 'yyyy-MM-dd');
+							const holiday = batchEvents.find(e => e.date === dateStr);
+							const isWithinBatch = day >= startOfDay(minDate) && day <= endOfDay(maxDate);
+
+							return (
+								<TableCell
+									key={day.toISOString()}
+									align="center"
+									sx={{
+										bgcolor: holiday ? (holiday.event_type === 'holiday' ? '#fff5f5' : '#f0f7ff') : 'inherit',
+										position: 'relative',
+										'&:hover .event-action': { opacity: 1 }
+									}}
+								>
+									<Stack direction="row" justifyContent="center" alignItems="center" spacing={1} sx={{ position: 'relative' }}>
+										<Box>
+											<Typography variant="subtitle2">
+												{format(day, 'EEEE')}
+											</Typography>
+											<Typography variant="body2" color="text.secondary">
+												{format(day, 'MMM d')}
+											</Typography>
+										</Box>
+
+										{canEdit && isWithinBatch && (
+											<Box className="event-action" sx={{ opacity: 0, transition: 'opacity 0.2s', position: 'absolute', right: -10 }}>
+												{holiday ? (
+													<IconButton
+														size="small"
+														color="error"
+														onClick={() => handleDeleteEvent(holiday.id)}
+														title={`Remove ${holiday.event_type}`}
+													>
+														<RemoveEventIcon sx={{ fontSize: 18 }} />
+													</IconButton>
+												) : (
+													<IconButton
+														size="small"
+														onClick={() => handleOpenEventDialog(day)}
+														title="Mark as Holiday/Event"
+													>
+														<CalendarIcon sx={{ fontSize: 18 }} />
+													</IconButton>
+												)}
+											</Box>
+										)}
+									</Stack>
+									{holiday && (
+										<Box sx={{ mt: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+											{holiday.event_type === 'holiday' ? (
+												<HolidayIcon sx={{ fontSize: 16, color: 'error.main' }} />
+											) : (
+												<EventIcon sx={{ fontSize: 16, color: 'primary.main' }} />
+											)}
+											<Typography variant="caption" fontWeight="bold" color={holiday.event_type === 'holiday' ? 'error.main' : 'primary.main'}>
+												{holiday.title}
+											</Typography>
+										</Box>
+									)}
+								</TableCell>
+							);
+						})}
 					</TableRow>
 				</TableHead>
 				<TableBody>
@@ -157,16 +220,22 @@ const WeeklyPlanTable: React.FC<WeeklyPlanTableProps> = ({
 												variant="outlined"
 												startIcon={<AddIcon />}
 												onClick={() => handleOpenDialog(day)}
+												disabled={!!batchEvents.find(e => e.date === dateStr)}
 												sx={{
 													height: '100%',
 													minHeight: 60,
 													opacity: 0.6,
 													borderStyle: 'dashed',
 													borderColor: 'divider',
-													'&:hover': { opacity: 1, borderStyle: 'solid' }
+													'&:hover': { opacity: 1, borderStyle: 'solid' },
+													'&.Mui-disabled': {
+														bgcolor: 'action.disabledBackground',
+														color: 'text.disabled',
+														borderStyle: 'solid'
+													}
 												}}
 											>
-												Add Activity
+												{batchEvents.find(e => e.date === dateStr) ? 'Holiday/Event' : 'Add Activity'}
 											</Button>
 										) : null}
 									</TableCell>

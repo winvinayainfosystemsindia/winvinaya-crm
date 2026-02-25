@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Tabs, Tab } from '@mui/material';
+import { format } from 'date-fns';
 import TrainingModuleLayout from '../../components/training/layout/TrainingModuleLayout';
 import type { TrainingBatch } from '../../models/training';
 import { useWeeklyPlanManager } from '../../components/training/plan/hooks/useWeeklyPlanManager';
@@ -9,6 +10,7 @@ import PlanEntryDialog from '../../components/training/plan/dialogs/PlanEntryDia
 import WeeklyPlanStats from '../../components/training/plan/stats/WeeklyPlanStats';
 
 import ConfirmDialog from '../../components/common/ConfirmDialog';
+import BatchEventDialog from '../../components/training/attendance/dialogs/BatchEventDialog';
 
 interface WeeklyPlanManagerProps {
 	selectedBatch: TrainingBatch;
@@ -47,8 +49,19 @@ const WeeklyPlanManager: React.FC<WeeklyPlanManagerProps> = ({ selectedBatch }) 
 		validatePlan,
 		activeTab,
 		setActiveTab,
-		hoursBreakdown
+		hoursBreakdown,
+		batchEvents,
+		handleConfirmEvent,
+		handleDeleteEvent
 	} = useWeeklyPlanManager(selectedBatch);
+
+	const [eventDialogOpen, setEventDialogOpen] = useState(false);
+	const [eventTargetDate, setEventTargetDate] = useState<Date | null>(null);
+
+	const handleOpenEventDialog = (date: Date) => {
+		setEventTargetDate(date);
+		setEventDialogOpen(true);
+	};
 
 	return (
 		<Box>
@@ -85,6 +98,9 @@ const WeeklyPlanManager: React.FC<WeeklyPlanManagerProps> = ({ selectedBatch }) 
 						handleEditEntry={handleEditEntry}
 						handleDeleteEntry={handleDeleteClick}
 						handleReplicateEntry={handleReplicateEntry}
+						batchEvents={batchEvents}
+						handleOpenEventDialog={handleOpenEventDialog}
+						handleDeleteEvent={handleDeleteEvent}
 					/>
 				</>
 			) : (
@@ -102,6 +118,19 @@ const WeeklyPlanManager: React.FC<WeeklyPlanManagerProps> = ({ selectedBatch }) 
 				formErrors={formErrors}
 				setFormErrors={setFormErrors}
 				validatePlan={validatePlan}
+			/>
+
+			<BatchEventDialog
+				open={eventDialogOpen}
+				onClose={() => setEventDialogOpen(false)}
+				onConfirm={async (data) => {
+					const success = await handleConfirmEvent({
+						...data,
+						date: eventTargetDate ? format(eventTargetDate, 'yyyy-MM-dd') : ''
+					});
+					if (success) setEventDialogOpen(false);
+				}}
+				selectedDate={eventTargetDate || new Date()}
 			/>
 
 			<ConfirmDialog

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
 	Box,
 	CircularProgress,
@@ -25,7 +25,7 @@ import { useAttendance } from './hooks/useAttendance';
 import AttendanceHeader from './header/AttendanceHeader';
 import AttendanceTable from './table/AttendanceTable';
 import AttendanceLegend from './table/AttendanceLegend';
-import BatchEventDialog from './dialogs/BatchEventDialog';
+
 import AttendanceReport from './report/AttendanceReport';
 
 interface AttendanceTrackerProps {
@@ -65,12 +65,10 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 		handleTrainerNotesChange,
 		handlePeriodMarkAll,
 		handleSave,
-		handleConfirmEvent,
-		handleDeleteEvent,
 		isDroppedOut
 	} = useAttendance(batch, allocations);
 
-	const [eventDialogOpen, setEventDialogOpen] = useState(false);
+
 
 	if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}><CircularProgress thickness={2} size={40} /></Box>;
 
@@ -122,8 +120,6 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 								onDateChange={setSelectedDate}
 								batchBounds={batchBounds}
 								currentEvent={currentEvent}
-								onOpenEventDialog={() => setEventDialogOpen(true)}
-								onDeleteEvent={handleDeleteEvent}
 								onSave={handleSave}
 								saving={saving}
 								isDateOutOfRange={isDateOutOfRange}
@@ -204,15 +200,7 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 				/>
 			)}
 
-			<BatchEventDialog
-				open={eventDialogOpen}
-				onClose={() => setEventDialogOpen(false)}
-				onConfirm={async (data) => {
-					const success = await handleConfirmEvent(data);
-					if (success) setEventDialogOpen(false);
-				}}
-				selectedDate={selectedDate}
-			/>
+
 		</Box>
 	);
 };

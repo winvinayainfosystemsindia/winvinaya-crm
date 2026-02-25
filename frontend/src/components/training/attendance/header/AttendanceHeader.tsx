@@ -11,9 +11,7 @@ import {
 import {
 	Save as SaveIcon,
 	ChevronLeft as LeftIcon,
-	ChevronRight as RightIcon,
-	EventBusy as HolidayIcon,
-	EventAvailable as EventIcon
+	ChevronRight as RightIcon
 } from '@mui/icons-material';
 import { format, addDays, isWithinInterval, startOfDay } from 'date-fns';
 import type { TrainingBatchEvent } from '../../../../models/training';
@@ -23,8 +21,6 @@ interface AttendanceHeaderProps {
 	onDateChange: (date: Date) => void;
 	batchBounds: { start: Date; end: Date } | null;
 	currentEvent?: TrainingBatchEvent;
-	onOpenEventDialog: () => void;
-	onDeleteEvent: (eventId: number) => void;
 	onSave: () => void;
 	saving: boolean;
 	isDateOutOfRange: boolean;
@@ -37,8 +33,6 @@ const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
 	onDateChange,
 	batchBounds,
 	currentEvent,
-	onOpenEventDialog,
-	onDeleteEvent,
 	onSave,
 	saving,
 	isDateOutOfRange,
@@ -74,26 +68,7 @@ const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
 				</Stack>
 
 				<Stack direction="row" spacing={2}>
-					{currentEvent ? (
-						<Button
-							variant="outlined"
-							color="error"
-							startIcon={<HolidayIcon />}
-							onClick={() => onDeleteEvent(currentEvent.id!)}
-							sx={{ textTransform: 'none' }}
-						>
-							Remove {currentEvent.event_type}
-						</Button>
-					) : (
-						<Button
-							variant="outlined"
-							startIcon={<EventIcon />}
-							onClick={onOpenEventDialog}
-							sx={{ textTransform: 'none', color: '#545b64', borderColor: '#d5dbdb' }}
-						>
-							Mark Holiday/Event
-						</Button>
-					)}
+
 
 					<Button
 						variant="contained"

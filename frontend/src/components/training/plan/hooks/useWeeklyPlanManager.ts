@@ -4,10 +4,11 @@ import { useSnackbar } from 'notistack';
 import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval, parseISO } from 'date-fns';
 import { fetchWeeklyPlan, createPlanEntry, deletePlanEntry, fetchAllBatchPlans } from '../../../../store/slices/trainingPlanSlice';
 import { fetchUsers } from '../../../../store/slices/userSlice';
-import type { TrainingBatch, TrainingBatchPlan } from '../../../../models/training';
 import { DEFAULT_START_TIME, HARD_END_TIME } from '../utils/planConstants';
 import { parseTimeValue, formatTime12h } from '../utils/planFormatters';
 import type { RootState } from '../../../../store/store';
+import trainingExtensionService from '../../../../services/trainingExtensionService';
+import type { TrainingBatch, TrainingBatchPlan, TrainingBatchEvent } from '../../../../models/training';
 
 export const useWeeklyPlanManager = (selectedBatch: TrainingBatch) => {
 	const dispatch = useAppDispatch();
@@ -105,6 +106,49 @@ export const useWeeklyPlanManager = (selectedBatch: TrainingBatch) => {
 		});
 		return groups;
 	}, [weeklyPlan, weekDays]);
+
+	const [batchEvents, setBatchEvents] = useState<TrainingBatchEvent[]>([]);
+
+	const fetchBatchEvents = useCallback(async () => {
+		if (selectedBatch?.id) {
+			try {
+				const events = await trainingExtensionService.getBatchEvents(selectedBatch.id);
+				setBatchEvents(events);
+			} catch (error) {
+				console.error('Failed to fetch batch events', error);
+			}
+		}
+	}, [selectedBatch?.id]);
+
+	useEffect(() => {
+		fetchBatchEvents();
+	}, [fetchBatchEvents]);
+
+	const handleConfirmEvent = async (eventData: any) => {
+		try {
+			await trainingExtensionService.createBatchEvent({
+				batch_id: selectedBatch.id,
+				date: eventData.date,
+				...eventData
+			});
+			enqueueSnackbar(`${eventData.event_type} added successfully`, { variant: 'success' });
+			fetchBatchEvents();
+			return true;
+		} catch (error) {
+			enqueueSnackbar('Failed to add event', { variant: 'error' });
+			return false;
+		}
+	};
+
+	const handleDeleteEvent = async (eventId: number) => {
+		try {
+			await trainingExtensionService.deleteBatchEvent(eventId);
+			enqueueSnackbar('Event removed', { variant: 'info' });
+			fetchBatchEvents();
+		} catch (error) {
+			enqueueSnackbar('Failed to remove event', { variant: 'error' });
+		}
+	};
 
 	const maxPeriods = useMemo(() => {
 		const counts = Object.values(dailyPlans).map(entries => entries.length);
@@ -352,6 +396,9 @@ export const useWeeklyPlanManager = (selectedBatch: TrainingBatch) => {
 		validatePlan,
 		activeTab,
 		setActiveTab,
-		hoursBreakdown
+		hoursBreakdown,
+		batchEvents,
+		handleConfirmEvent,
+		handleDeleteEvent
 	};
 };
