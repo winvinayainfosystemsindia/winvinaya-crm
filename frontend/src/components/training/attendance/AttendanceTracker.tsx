@@ -66,7 +66,7 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 		handlePeriodMarkAll,
 		handleSave,
 		isDroppedOut
-	} = useAttendance(batch, allocations);
+	} = useAttendance(batch, allocations, currentUser);
 
 
 

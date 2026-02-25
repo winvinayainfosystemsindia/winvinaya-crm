@@ -2,9 +2,10 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { format, parseISO, startOfDay, isWithinInterval } from 'date-fns';
 import trainingExtensionService from '../../../../services/trainingExtensionService';
 import type { TrainingBatch, CandidateAllocation, TrainingAttendance, TrainingBatchEvent, TrainingBatchPlan } from '../../../../models/training';
+import type { User } from '../../../../models/auth';
 import { useSnackbar } from 'notistack';
 
-export const useAttendance = (batch: TrainingBatch, allocations: CandidateAllocation[]) => {
+export const useAttendance = (batch: TrainingBatch, allocations: CandidateAllocation[], user: User | null) => {
 	const { enqueueSnackbar } = useSnackbar();
 	const [loading, setLoading] = useState(false);
 	const [saving, setSaving] = useState(false);
@@ -129,6 +130,16 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		});
 	}, [selectedDate, batch.id]);
 
+	// Helper to check if user can edit a specific period
+	const checkCanEditPeriod = useCallback((periodId: number) => {
+		if (user?.is_superuser || user?.role === 'admin') return true;
+
+		const period = dailyPlan.find(p => p.id === periodId);
+		if (!period) return false;
+
+		return user?.full_name === period.trainer;
+	}, [user, dailyPlan]);
+
 	// Handle period-specific status change
 	const handlePeriodStatusChange = useCallback((
 		candidateId: number,
@@ -143,8 +154,14 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 			enqueueSnackbar('Cannot mark attendance for future dates', { variant: 'warning' });
 			return;
 		}
+
+		if (!checkCanEditPeriod(periodId)) {
+			enqueueSnackbar('You are not authorized to mark attendance for this period', { variant: 'error' });
+			return;
+		}
+
 		updatePeriodAttendance(candidateId, periodId, { status: status as any });
-	}, [updatePeriodAttendance, isDroppedOut, isFutureDate, enqueueSnackbar]);
+	}, [updatePeriodAttendance, isDroppedOut, isFutureDate, enqueueSnackbar, checkCanEditPeriod]);
 
 	// Handle trainer notes change
 	const handleTrainerNotesChange = useCallback((
@@ -177,13 +194,18 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 			return;
 		}
 
+		if (!checkCanEditPeriod(periodId)) {
+			enqueueSnackbar('You are not authorized to mark all for this period', { variant: 'error' });
+			return;
+		}
+
 		allocations.forEach(allocation => {
 			if (!isDroppedOut(allocation.candidate_id)) {
 				updatePeriodAttendance(allocation.candidate_id, periodId, { status: status as any });
 			}
 		});
 		enqueueSnackbar(`All candidates marked as ${status} for this period`, { variant: 'info' });
-	}, [allocations, updatePeriodAttendance, isDroppedOut, isFutureDate, enqueueSnackbar]);
+	}, [allocations, updatePeriodAttendance, isDroppedOut, isFutureDate, enqueueSnackbar, checkCanEditPeriod]);
 
 	const handleRemarkChange = useCallback((candidateId: number, remark: string) => {
 		updatePeriodAttendance(candidateId, null, { remarks: remark });

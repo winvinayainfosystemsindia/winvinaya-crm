@@ -79,9 +79,10 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 		if (!isActive) return false;
 		if (period.activity_type === 'break') return false; // Never edit breaks
 
-		// If superuser, can edit anything
-		if (currentUser?.is_superuser) return true;
+		// Admins and Superusers can edit anything
+		if (currentUser?.is_superuser || currentUser?.role === 'admin') return true;
 
+		// Trainers and Managers are restricted to their assigned periods
 		// If trainer name matches current user's full name
 		return currentUser?.full_name === period.trainer;
 	};
