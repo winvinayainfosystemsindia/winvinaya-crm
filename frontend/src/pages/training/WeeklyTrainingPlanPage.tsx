@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Box, Tabs, Tab } from '@mui/material';
 import { format } from 'date-fns';
+import { toPng } from 'html-to-image';
+import { saveAs } from 'file-saver';
 import TrainingModuleLayout from '../../components/training/layout/TrainingModuleLayout';
 import type { TrainingBatch } from '../../models/training';
 import { useWeeklyPlanManager } from '../../components/training/plan/hooks/useWeeklyPlanManager';
@@ -63,6 +65,31 @@ const WeeklyPlanManager: React.FC<WeeklyPlanManagerProps> = ({ selectedBatch }) 
 		setEventDialogOpen(true);
 	};
 
+	const tableRef = useRef<HTMLDivElement>(null);
+	const [isExporting, setIsExporting] = useState(false);
+
+	const handleExportPNG = async () => {
+		if (tableRef.current) {
+			setIsExporting(true);
+			// Wait a bit for the UI to update and icons to hide
+			await new Promise(resolve => setTimeout(resolve, 100));
+			try {
+				const dataUrl = await toPng(tableRef.current, {
+					backgroundColor: '#ffffff',
+					style: {
+						padding: '20px'
+					}
+				});
+				const fileName = `weekly-plan-${selectedBatch.batch_name}-${format(weekStart, 'yyyy-MM-dd')}.png`;
+				saveAs(dataUrl, fileName);
+			} catch (error) {
+				console.error('Failed to export PNG', error);
+			} finally {
+				setIsExporting(false);
+			}
+		}
+	};
+
 	return (
 		<Box>
 			<Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
@@ -86,6 +113,8 @@ const WeeklyPlanManager: React.FC<WeeklyPlanManagerProps> = ({ selectedBatch }) 
 						currentDate={currentDate}
 						setCurrentDate={setCurrentDate}
 						canEdit={canEdit}
+						onExportPNG={handleExportPNG}
+						isExporting={isExporting}
 					/>
 					<WeeklyPlanTable
 						weekDays={weekDays}
@@ -101,6 +130,8 @@ const WeeklyPlanManager: React.FC<WeeklyPlanManagerProps> = ({ selectedBatch }) 
 						batchEvents={batchEvents}
 						handleOpenEventDialog={handleOpenEventDialog}
 						handleDeleteEvent={handleDeleteEvent}
+						tableRef={tableRef}
+						isExporting={isExporting}
 					/>
 				</>
 			) : (
