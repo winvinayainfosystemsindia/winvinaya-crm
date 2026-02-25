@@ -186,6 +186,21 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		}
 	}, [dailyPlan, updatePeriodAttendance, isDroppedOut, isFutureDate, enqueueSnackbar]);
 
+	// Mark all candidates for a specific period as a specific status
+	const handlePeriodMarkAll = useCallback((periodId: number, status: string) => {
+		if (isFutureDate) {
+			enqueueSnackbar('Cannot mark attendance for future dates', { variant: 'warning' });
+			return;
+		}
+
+		allocations.forEach(allocation => {
+			if (!isDroppedOut(allocation.candidate_id)) {
+				updatePeriodAttendance(allocation.candidate_id, periodId, { status: status as any });
+			}
+		});
+		enqueueSnackbar(`All candidates marked as ${status} for this period`, { variant: 'info' });
+	}, [allocations, updatePeriodAttendance, isDroppedOut, isFutureDate, enqueueSnackbar]);
+
 	const handleRemarkChange = useCallback((candidateId: number, remark: string) => {
 		updatePeriodAttendance(candidateId, null, { remarks: remark });
 	}, [updatePeriodAttendance]);
@@ -294,7 +309,7 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		handleTrainerNotesChange,
 		handleMarkAllPresent,
 		handleMarkAllAbsent,
-		handleCandidateMarkAll,
+		handlePeriodMarkAll,
 		handleSave,
 		handleConfirmEvent,
 		handleDeleteEvent,

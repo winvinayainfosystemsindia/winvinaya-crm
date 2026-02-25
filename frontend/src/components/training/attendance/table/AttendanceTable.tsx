@@ -8,7 +8,7 @@ import {
 	TableContainer,
 	TableHead,
 	TableRow,
-	Chip,
+	Chip, FormControl, Select, MenuItem,
 	Box
 } from '@mui/material';
 import { Block as BlockIcon } from '@mui/icons-material';
@@ -25,7 +25,7 @@ interface AttendanceTableProps {
 	onRemarkChange: (candidateId: number, remark: string) => void;
 	onPeriodStatusChange: (candidateId: number, periodId: number, status: string) => void;
 	onTrainerNotesChange: (candidateId: number, periodId: number, notes: string) => void;
-	onMarkCandidateAll: (candidateId: number, status: string) => void;
+	onPeriodMarkAll: (periodId: number, status: string) => void;
 	currentEvent?: TrainingBatchEvent;
 	isDateOutOfRange: boolean;
 	isFutureDate: boolean;
@@ -42,7 +42,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 	onRemarkChange,
 	onPeriodStatusChange,
 	onTrainerNotesChange,
-	onMarkCandidateAll,
+	onPeriodMarkAll,
 	currentEvent,
 	isDateOutOfRange,
 	isFutureDate,
@@ -88,28 +88,56 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 							Student Name
 						</TableCell>
 
-						{hasPeriods && (
-							<TableCell align="center" sx={{ fontWeight: 700, bgcolor: '#f8f9fa', minWidth: 100 }}>
-								Daily Status
-							</TableCell>
-						)}
 
 						{hasPeriods ? (
 							// Period-based columns
 							dailyPlan.map((period) => (
 								<TableCell key={period.id} align="center" sx={{ fontWeight: 700, minWidth: 150 }}>
-									<Box>
-										<Typography variant="body2" sx={{ fontWeight: 700 }}>
-											{period.activity_name}
-										</Typography>
-										<Typography variant="caption" color="text.secondary">
-											{format(new Date(`2000-01-01T${period.start_time}`), 'h:mm a')} - {format(new Date(`2000-01-01T${period.end_time}`), 'h:mm a')}
-										</Typography>
-										{period.trainer && (
-											<Typography variant="caption" display="block" color="text.secondary">
-												Trainer: {period.trainer}
+									<Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center' }}>
+										<Box>
+											<Typography variant="body2" sx={{ fontWeight: 700 }}>
+												{period.activity_name}
 											</Typography>
-										)}
+											<Typography variant="caption" color="text.secondary">
+												{format(new Date(`2000-01-01T${period.start_time}`), 'h:mm a')} - {format(new Date(`2000-01-01T${period.end_time}`), 'h:mm a')}
+											</Typography>
+											{period.trainer && (
+												<Typography variant="caption" display="block" color="text.secondary">
+													Trainer: {period.trainer}
+												</Typography>
+											)}
+										</Box>
+
+										<FormControl size="small" sx={{ minWidth: 110 }}>
+											<Select
+												value=""
+												displayEmpty
+												onChange={(e) => onPeriodMarkAll(period.id!, e.target.value as string)}
+												disabled={!isActive}
+												sx={{
+													fontSize: '0.7rem',
+													fontWeight: 700,
+													height: 28,
+													bgcolor: '#fff',
+													'& .MuiOutlinedInput-root': { borderRadius: '4px' }
+												}}
+												renderValue={(selected) => {
+													if (selected === "") {
+														return <Typography variant="caption" sx={{ fontWeight: 700, fontSize: '0.7rem' }}>Mark All</Typography>;
+													}
+													return selected;
+												}}
+											>
+												{statuses.map(s => (
+													<MenuItem key={s.value} value={s.value} sx={{ fontSize: '0.75rem' }}>
+														<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+															{React.cloneElement(s.icon as React.ReactElement<any>, { sx: { fontSize: '1rem' } })}
+															{s.label}
+														</Box>
+													</MenuItem>
+												))}
+											</Select>
+										</FormControl>
 									</Box>
 								</TableCell>
 							))
@@ -125,7 +153,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 				<TableBody>
 					{allocations.length === 0 ? (
 						<TableRow>
-							<TableCell colSpan={hasPeriods ? dailyPlan.length + 2 : 3} align="center" sx={{ py: 10 }}>
+							<TableCell colSpan={hasPeriods ? dailyPlan.length + 1 : 3} align="center" sx={{ py: 10 }}>
 								<Typography color="text.secondary">No students allocated to this batch.</Typography>
 							</TableCell>
 						</TableRow>
@@ -147,7 +175,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 												</Typography>
 											</Box>
 										</TableCell>
-										<TableCell colSpan={hasPeriods ? dailyPlan.length + 1 : 2} align="center">
+										<TableCell colSpan={hasPeriods ? dailyPlan.length : 2} align="center">
 											<Chip
 												label="Dropped Out"
 												size="small"
@@ -176,7 +204,6 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 										statuses={statuses}
 										onPeriodStatusChange={onPeriodStatusChange}
 										onTrainerNotesChange={onTrainerNotesChange}
-										onMarkCandidateAll={onMarkCandidateAll}
 									/>
 								);
 							} else {

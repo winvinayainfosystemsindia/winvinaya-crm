@@ -28,7 +28,6 @@ interface AttendanceTableRowProps {
 	getPeriodAttendance?: (periodId: number) => TrainingAttendance | undefined;
 	onPeriodStatusChange?: (candidateId: number, periodId: number, status: string) => void;
 	onTrainerNotesChange?: (candidateId: number, periodId: number, notes: string) => void;
-	onMarkCandidateAll?: (candidateId: number, status: string) => void;
 
 	// Legacy full-day props (optional)
 	status?: string;
@@ -45,7 +44,6 @@ const AttendanceTableRow: React.FC<AttendanceTableRowProps> = memo(({
 	getPeriodAttendance,
 	onPeriodStatusChange,
 	onTrainerNotesChange,
-	onMarkCandidateAll,
 	status,
 	remark,
 	onStatusChange,
@@ -86,39 +84,6 @@ const AttendanceTableRow: React.FC<AttendanceTableRowProps> = memo(({
 					</Box>
 				</TableCell>
 
-				{hasPeriods && (
-					<TableCell align="center">
-						<FormControl size="small" sx={{ minWidth: 100 }}>
-							<Select
-								value=""
-								displayEmpty
-								onChange={(e) => onMarkCandidateAll && onMarkCandidateAll(allocation.candidate_id, e.target.value as string)}
-								disabled={!isActive}
-								sx={{
-									fontSize: '0.75rem',
-									fontWeight: 700,
-									bgcolor: '#f8f9fa',
-									'& .MuiOutlinedInput-root': { borderRadius: '2px' }
-								}}
-								renderValue={(selected) => {
-									if (selected === "") {
-										return <Typography variant="caption" sx={{ fontWeight: 700 }}>Mark All</Typography>;
-									}
-									return selected;
-								}}
-							>
-								{statuses.map(s => (
-									<MenuItem key={s.value} value={s.value} sx={{ fontSize: '0.8125rem' }}>
-										<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-											{s.icon}
-											{s.label}
-										</Box>
-									</MenuItem>
-								))}
-							</Select>
-						</FormControl>
-					</TableCell>
-				)}
 
 				{hasPeriods ? (
 					// Period-based cells

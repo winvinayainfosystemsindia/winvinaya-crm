@@ -61,7 +61,7 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 		handleTrainerNotesChange,
 		handleMarkAllPresent,
 		handleMarkAllAbsent,
-		handleCandidateMarkAll,
+		handlePeriodMarkAll,
 		handleSave,
 		handleConfirmEvent,
 		handleDeleteEvent,
@@ -176,7 +176,7 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 								onRemarkChange={handleRemarkChange}
 								onPeriodStatusChange={handlePeriodStatusChange}
 								onTrainerNotesChange={handleTrainerNotesChange}
-								onMarkCandidateAll={handleCandidateMarkAll}
+								onPeriodMarkAll={handlePeriodMarkAll}
 								currentEvent={currentEvent}
 								isDateOutOfRange={isDateOutOfRange}
 								isFutureDate={isFutureDate}
