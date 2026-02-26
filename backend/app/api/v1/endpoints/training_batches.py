@@ -19,7 +19,7 @@ router = APIRouter(prefix="/training-batches", tags=["Training Batches"])
 async def create_training_batch(
     request: Request,
     batch_in: TrainingBatchCreate,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.SOURCING])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.SOURCING, UserRole.MANAGER])),
     db: AsyncSession = Depends(get_db)
 ):
     """
