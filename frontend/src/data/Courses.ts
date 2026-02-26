@@ -18,5 +18,6 @@ export const COURSES = [
 	'AWS',
 	'React JS',
 	'Angular JS',
-	'Speed Typing'
+	'Speed Typing',
+	'Accessibility Testing'
 ];

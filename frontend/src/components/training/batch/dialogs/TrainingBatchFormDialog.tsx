@@ -473,6 +473,7 @@ const TrainingBatchFormDialog: React.FC<TrainingBatchFormDialogProps> = ({
 									</Stack>
 									<Autocomplete
 										multiple
+										freeSolo
 										options={COURSES}
 										value={(formData.courses || []).map(c => typeof c === 'string' ? c : c.name)}
 										onChange={(_e, val) => {
