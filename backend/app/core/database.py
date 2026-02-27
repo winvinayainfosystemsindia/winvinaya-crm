@@ -16,6 +16,8 @@ engine = create_async_engine(
     pool_size=10,
     max_overflow=20,
     poolclass=NullPool if settings.ENVIRONMENT == "testing" else None,
+    # Disable SSL for local connections (avoids SSLKEYLOGFILE env var issues)
+    # connect_args={"ssl": False},  
 )
 
 # Create async session factory
