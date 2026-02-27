@@ -107,11 +107,11 @@ async def update_training_batch(
     request: Request,
     public_id: UUID,
     batch_in: TrainingBatchUpdate,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.SOURCING])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Update a training batch (Admin/Sourcing only)
+    Update a training batch (Admin/Manager only)
     """
     service = TrainingBatchService(db)
     
@@ -139,11 +139,11 @@ async def extend_training_batch(
     request: Request,
     public_id: UUID,
     extend_in: TrainingBatchExtend,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.SOURCING])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Extend a training batch end date (Admin/Sourcing only)
+    Extend a training batch end date (Admin/Manager only)
     """
     service = TrainingBatchService(db)
     

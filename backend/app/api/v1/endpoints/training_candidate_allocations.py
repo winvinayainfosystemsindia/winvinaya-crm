@@ -122,7 +122,7 @@ async def get_candidate_allocations(
 @router.get("/eligible", response_model=List[dict])
 async def get_eligible_candidates(
     batch_public_id: Optional[UUID] = Query(None),
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.SOURCING, UserRole.TRAINER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER])),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -138,11 +138,11 @@ async def update_allocation(
     request: Request,
     public_id: UUID,
     allocation_in: TrainingCandidateAllocationUpdate,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.SOURCING, UserRole.TRAINER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER])),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Update a candidate allocation (Admin/Sourcing/Trainer)
+    Update a candidate allocation (Admin/Manager/Sourcing/Trainer)
     Can be used to mark as dropout.
     """
     service = TrainingCandidateAllocationService(db)
@@ -173,11 +173,11 @@ async def update_allocation(
 async def delete_allocation(
     request: Request,
     public_id: UUID,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.SOURCING])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Remove a candidate allocation (Admin/Sourcing only)
+    Remove a candidate allocation (Admin/Manager only)
     """
     service = TrainingCandidateAllocationService(db)
     allocation = await service.repository.get_by_public_id(str(public_id))
