@@ -33,7 +33,8 @@ class TrainingExtensionService:
     async def get_attendance(self, batch_id: int, start_date: date = None, end_date: date = None):
         query = select(self.attendance_repo.model).options(
             selectinload(self.attendance_repo.model.batch),
-            selectinload(self.attendance_repo.model.period)
+            selectinload(self.attendance_repo.model.period),
+            selectinload(self.attendance_repo.model.candidate)
         ).where(
             self.attendance_repo.model.batch_id == batch_id,
             self.attendance_repo.model.is_deleted == False
@@ -50,7 +51,8 @@ class TrainingExtensionService:
         """Get all attendance records for a specific batch and date"""
         query = select(self.attendance_repo.model).options(
             selectinload(self.attendance_repo.model.batch),
-            selectinload(self.attendance_repo.model.period)
+            selectinload(self.attendance_repo.model.period),
+            selectinload(self.attendance_repo.model.candidate)
         ).where(
             self.attendance_repo.model.batch_id == batch_id,
             self.attendance_repo.model.date == attendance_date,

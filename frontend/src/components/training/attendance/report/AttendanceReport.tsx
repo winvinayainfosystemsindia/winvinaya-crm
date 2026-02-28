@@ -61,18 +61,29 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({ attendance, allocat
 	/** Candidates with records in this batch who are no longer allocated */
 	const orphanedCandidates = useMemo<OrphanedCandidate[]>(() => {
 		const allocatedIds = new Set(allocations.map(a => a.candidate_id));
-		const orphanMap = new Map<number, number>(); // candidateId -> count
+		const orphanMap = new Map<number, { count: number; name?: string }>(); // candidateId -> {count, name}
 
 		attendance.forEach(rec => {
 			if (!allocatedIds.has(rec.candidate_id)) {
-				orphanMap.set(rec.candidate_id, (orphanMap.get(rec.candidate_id) ?? 0) + 1);
+				const existing = orphanMap.get(rec.candidate_id);
+				if (existing) {
+					existing.count += 1;
+					if (!existing.name && rec.candidate?.name) {
+						existing.name = rec.candidate.name;
+					}
+				} else {
+					orphanMap.set(rec.candidate_id, {
+						count: 1,
+						name: rec.candidate?.name,
+					});
+				}
 			}
 		});
 
-		return Array.from(orphanMap.entries()).map(([candidateId, count]) => ({
+		return Array.from(orphanMap.entries()).map(([candidateId, data]) => ({
 			candidateId,
-			name: `Candidate #${candidateId}`,
-			count,
+			name: data.name || `Candidate #${candidateId}`,
+			count: data.count,
 		}));
 	}, [attendance, allocations]);
 

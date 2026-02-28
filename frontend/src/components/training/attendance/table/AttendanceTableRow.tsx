@@ -162,7 +162,7 @@ const AttendanceTableRow: React.FC<AttendanceTableRowProps> = memo(({
 					// Period-based cells
 					dailyPlan!.map((period) => {
 						const periodAttendance = getPeriodAttendance!(period.id!);
-						const periodStatus = periodAttendance?.status || 'present';
+						const periodStatus = periodAttendance?.status || '';
 						const trainerNotes = periodAttendance?.trainer_notes || '';
 						const hasNotes = trainerNotes.trim().length > 0;
 						const isSaved = !!periodAttendance?.id;
@@ -214,7 +214,7 @@ const AttendanceTableRow: React.FC<AttendanceTableRowProps> = memo(({
 					<>
 						<TableCell align="center" sx={{ p: 1.5 }}>
 							<StatusToggle
-								value={status || 'present'}
+								value={status || ''}
 								onChange={(v) => onStatusChange!(allocation.candidate_id, v)}
 								disabled={!isActive}
 								isSaved={false}

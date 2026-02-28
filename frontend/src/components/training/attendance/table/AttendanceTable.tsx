@@ -65,7 +65,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 
 	// Legacy: Get full-day attendance
 	const getCandidateStatus = (candidateId: number) => {
-		return attendance.find(a => a.candidate_id === candidateId && a.date === dateStr && !a.period_id)?.status || 'present';
+		return attendance.find(a => a.candidate_id === candidateId && a.date === dateStr && !a.period_id)?.status || '';
 	};
 
 	const getCandidateRemark = (candidateId: number) => {

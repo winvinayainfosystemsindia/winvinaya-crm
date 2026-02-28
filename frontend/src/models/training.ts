@@ -86,6 +86,7 @@ export interface TrainingAttendance {
 	trainer_notes?: string | null;  // Period-specific trainer observations
 	batch?: TrainingBatch; // Eager loaded batch info
 	period?: TrainingBatchPlan;  // Eager loaded period info
+	candidate?: CandidateAllocation['candidate']; // Eager loaded candidate info
 }
 
 export interface TrainingBatchEvent {
