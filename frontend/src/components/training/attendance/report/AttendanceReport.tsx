@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
 	Box,
 	Paper,
@@ -9,17 +9,31 @@ import {
 	TableContainer,
 	TableHead,
 	TableRow,
-	Tooltip
+	Tooltip,
+	IconButton,
+	Button,
+	Dialog,
+	DialogTitle,
+	DialogContent,
+	DialogContentText,
+	DialogActions,
+	Alert,
+	CircularProgress
 } from '@mui/material';
 import {
 	CheckCircle as PresentIcon,
 	Cancel as AbsentIcon,
 	AccessTime as LateIcon,
 	Contrast as HalfDayIcon,
-	EventBusy as HolidayIcon
+	EventBusy as HolidayIcon,
+	DeleteForever as DeleteForeverIcon,
+	WarningAmber as WarningIcon
 } from '@mui/icons-material';
 import { format, eachDayOfInterval, parseISO, startOfDay, isWeekend } from 'date-fns';
 import type { TrainingAttendance, CandidateAllocation, TrainingBatch, TrainingBatchEvent } from '../../../../models/training';
+import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
+import { deleteAttendanceByCandidate } from '../../../../store/slices/attendanceSlice';
+import { useSnackbar } from 'notistack';
 
 interface AttendanceReportProps {
 	attendance: TrainingAttendance[];
@@ -35,7 +49,52 @@ const STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = 
 	half_day: { label: 'H', color: '#007eb9', icon: <HalfDayIcon fontSize="small" /> },
 };
 
+interface ConfirmDialogState {
+	open: boolean;
+	candidateId: number | null;
+	candidateName: string;
+	recordCount: number;
+}
+
 const AttendanceReport: React.FC<AttendanceReportProps> = ({ attendance, allocations, batch, batchEvents }) => {
+	const dispatch = useAppDispatch();
+	const { enqueueSnackbar } = useSnackbar();
+	const currentUser = useAppSelector(state => state.auth.user);
+	const isAdmin = currentUser?.is_superuser || currentUser?.role === 'admin';
+
+	const [deleting, setDeleting] = useState(false);
+	const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState>({
+		open: false,
+		candidateId: null,
+		candidateName: '',
+		recordCount: 0,
+	});
+
+	// Detect orphaned candidates: they have records in this batch but are no longer allocated
+	const orphanedCandidates = useMemo(() => {
+		const allocatedIds = new Set(allocations.map(a => a.candidate_id));
+		const orphanMap = new Map<number, { count: number }>();
+
+		attendance.forEach(rec => {
+			if (!allocatedIds.has(rec.candidate_id)) {
+				const existing = orphanMap.get(rec.candidate_id);
+				if (existing) {
+					existing.count += 1;
+				} else {
+					orphanMap.set(rec.candidate_id, { count: 1 });
+				}
+			}
+		});
+
+		return Array.from(orphanMap.entries()).map(([candidateId, data]) => ({
+			candidateId,
+			// Try to get name from allocations data (for candidates who were recently removed,
+			// their info might still be in batch.other or we use the id as a fallback)
+			name: `Candidate #${candidateId}`,
+			count: data.count,
+		}));
+	}, [attendance, allocations]);
+
 	// Calculate the full batch duration
 	const days = useMemo(() => {
 		const startStr = batch.start_date || batch.duration?.start_date;
@@ -59,11 +118,116 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({ attendance, allocat
 		return batchEvents.find(e => e.date === dateStr && e.event_type === 'holiday');
 	};
 
+	// Count total attendance records for a candidate in this batch
+	const getCandidateRecordCount = (candidateId: number) =>
+		attendance.filter(a => a.candidate_id === candidateId).length;
+
+	const handleOpenClearDialog = (allocation: CandidateAllocation) => {
+		const count = getCandidateRecordCount(allocation.candidate_id);
+		setConfirmDialog({
+			open: true,
+			candidateId: allocation.candidate_id,
+			candidateName: allocation.candidate?.name || 'Unknown',
+			recordCount: count,
+		});
+	};
+
+	const handleConfirmDelete = async () => {
+		if (!confirmDialog.candidateId) return;
+		setDeleting(true);
+		try {
+			const result = await dispatch(deleteAttendanceByCandidate({
+				candidateId: confirmDialog.candidateId,
+				batchId: batch.id,
+			})).unwrap();
+
+			enqueueSnackbar(
+				`Successfully cleared ${result.deleted_count} attendance record(s) for ${confirmDialog.candidateName}`,
+				{ variant: 'success' }
+			);
+			setConfirmDialog({ open: false, candidateId: null, candidateName: '', recordCount: 0 });
+		} catch (error: any) {
+			enqueueSnackbar(error || 'Failed to clear attendance records', { variant: 'error' });
+		} finally {
+			setDeleting(false);
+		}
+	};
+
+	const handleCloseDialog = () => {
+		if (deleting) return;
+		setConfirmDialog({ open: false, candidateId: null, candidateName: '', recordCount: 0 });
+	};
+
 	return (
 		<Box>
-			<Typography variant="h6" sx={{ color: '#232f3e', fontWeight: 600, mb: 2 }}>
-				Batch Attendance History Matrix
-			</Typography>
+			<Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+				<Typography variant="h6" sx={{ color: '#232f3e', fontWeight: 600 }}>
+					Batch Attendance History Matrix
+				</Typography>
+				{isAdmin && (
+					<Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+						<DeleteForeverIcon sx={{ fontSize: 16, color: 'error.light' }} />
+						Click the delete icon on a candidate row to clear all their records
+					</Typography>
+				)}
+			</Box>
+
+			{/* ── Orphaned Records Warning ── */}
+			{isAdmin && orphanedCandidates.length > 0 && (
+				<Paper
+					variant="outlined"
+					sx={{ mb: 3, borderColor: '#ff9900', borderRadius: '8px', overflow: 'hidden' }}
+				>
+					<Box sx={{ bgcolor: '#fff8ee', px: 2.5, py: 1.5, borderBottom: '1px solid #ffe0a0', display: 'flex', alignItems: 'center', gap: 1 }}>
+						<WarningIcon sx={{ color: '#e65100', fontSize: 20 }} />
+						<Box>
+							<Typography variant="body2" sx={{ fontWeight: 700, color: '#b34900' }}>
+								Orphaned Attendance Records Found
+							</Typography>
+							<Typography variant="caption" color="text.secondary">
+								The following candidate(s) were removed from this batch but still have attendance records here.
+								These records should be cleared to keep the data clean.
+							</Typography>
+						</Box>
+					</Box>
+					{orphanedCandidates.map(oc => (
+						<Box
+							key={oc.candidateId}
+							sx={{
+								display: 'flex',
+								alignItems: 'center',
+								justifyContent: 'space-between',
+								px: 2.5,
+								py: 1.25,
+								borderBottom: '1px solid #fdebd0',
+								'&:last-child': { borderBottom: 'none' },
+								bgcolor: 'white',
+							}}
+						>
+							<Box>
+								<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e' }}>
+									{oc.name}
+								</Typography>
+								<Typography variant="caption" color="text.secondary">
+									{oc.count} attendance record{oc.count !== 1 ? 's' : ''} — no longer allocated to this batch
+								</Typography>
+							</Box>
+							<Tooltip title={`Clear all ${oc.count} records for ${oc.name}`}>
+								<Button
+									variant="outlined"
+									color="error"
+									size="small"
+									startIcon={<DeleteForeverIcon />}
+									onClick={() => setConfirmDialog({ open: true, candidateId: oc.candidateId, candidateName: oc.name, recordCount: oc.count })}
+									sx={{ textTransform: 'none', borderRadius: '6px', fontWeight: 600 }}
+								>
+									Clear {oc.count} Record{oc.count !== 1 ? 's' : ''}
+								</Button>
+							</Tooltip>
+						</Box>
+					))}
+				</Paper>
+			)}
 
 			<TableContainer
 				component={Paper}
@@ -75,7 +239,7 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({ attendance, allocat
 					overflow: 'auto'
 				}}
 			>
-				<Table size="small" stickyHeader sx={{ minWidth: (days.length * 50) + 250 }}>
+				<Table size="small" stickyHeader sx={{ minWidth: (days.length * 50) + 300 }}>
 					<TableHead>
 						<TableRow>
 							<TableCell
@@ -86,8 +250,8 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({ attendance, allocat
 									left: 0,
 									position: 'sticky',
 									borderRight: '1px solid #eaeded',
-									width: 250,
-									minWidth: 250
+									width: 260,
+									minWidth: 260
 								}}
 							>
 								Student Name
@@ -111,6 +275,18 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({ attendance, allocat
 									</Typography>
 								</TableCell>
 							))}
+							{isAdmin && (
+								<TableCell
+									sx={{
+										fontWeight: 700,
+										bgcolor: '#f8f9fa',
+										minWidth: 60,
+										textAlign: 'center'
+									}}
+								>
+									Actions
+								</TableCell>
+							)}
 						</TableRow>
 					</TableHead>
 					<TableBody>
@@ -132,6 +308,11 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({ attendance, allocat
 									<Typography variant="caption" color="text.secondary">
 										{allocation.candidate?.email}
 									</Typography>
+									{getCandidateRecordCount(allocation.candidate_id) === 0 && (
+										<Typography variant="caption" sx={{ display: 'block', color: '#aab7b8', fontStyle: 'italic' }}>
+											No records
+										</Typography>
+									)}
 								</TableCell>
 
 								{days.map(day => {
@@ -178,11 +359,7 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({ attendance, allocat
 										);
 									}
 
-									// Consolidated Status Logic:
-									// 1. All Present -> Present
-									// 2. All Absent -> Absent
-									// 3. Mix -> Half Day
-
+									// Consolidated Status Logic
 									const statusCounts = dayRecords.reduce((acc, rec) => {
 										acc[rec.status] = (acc[rec.status] || 0) + 1;
 										return acc;
@@ -196,7 +373,6 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({ attendance, allocat
 									} else if (statusCounts['present'] === totalRecords) {
 										consolidatedStatus = 'present';
 									} else {
-										// Mix of status or mixed presence
 										consolidatedStatus = 'half_day';
 									}
 
@@ -215,6 +391,30 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({ attendance, allocat
 										</TableCell>
 									);
 								})}
+
+								{/* Admin Actions Column */}
+								{isAdmin && (
+									<TableCell align="center" sx={{ p: 0.5 }}>
+										{getCandidateRecordCount(allocation.candidate_id) > 0 ? (
+											<Tooltip title={`Clear all ${getCandidateRecordCount(allocation.candidate_id)} attendance records for ${allocation.candidate?.name}`}>
+												<IconButton
+													size="small"
+													color="error"
+													onClick={() => handleOpenClearDialog(allocation)}
+													sx={{
+														opacity: 0.7,
+														'&:hover': { opacity: 1, bgcolor: '#fff0f0' },
+														transition: 'all 0.15s'
+													}}
+												>
+													<DeleteForeverIcon fontSize="small" />
+												</IconButton>
+											</Tooltip>
+										) : (
+											<Typography variant="caption" sx={{ color: '#d5dbdb' }}>—</Typography>
+										)}
+									</TableCell>
+								)}
 							</TableRow>
 						))}
 					</TableBody>
@@ -243,6 +443,61 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({ attendance, allocat
 					</Box>
 				</Box>
 			</Paper>
+
+			{/* Confirmation Dialog */}
+			<Dialog
+				open={confirmDialog.open}
+				onClose={handleCloseDialog}
+				maxWidth="sm"
+				fullWidth
+				PaperProps={{ sx: { borderRadius: '8px' } }}
+			>
+				<DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5, pb: 1 }}>
+					<WarningIcon sx={{ color: 'error.main', fontSize: 28 }} />
+					<Box>
+						<Typography variant="h6" sx={{ fontWeight: 700, color: '#232f3e' }}>
+							Clear All Attendance Records
+						</Typography>
+						<Typography variant="body2" color="text.secondary">
+							This action cannot be undone
+						</Typography>
+					</Box>
+				</DialogTitle>
+
+				<DialogContent>
+					<Alert severity="error" sx={{ mb: 2, borderRadius: '6px' }}>
+						You are about to delete <strong>{confirmDialog.recordCount}</strong> attendance
+						record{confirmDialog.recordCount !== 1 ? 's' : ''} for{' '}
+						<strong>{confirmDialog.candidateName}</strong> in this batch.
+					</Alert>
+					<DialogContentText>
+						This is typically used when a candidate was incorrectly added to this batch and needs
+						to be cleaned up. All their marked attendance data for this batch will be soft-deleted
+						and will no longer appear in any reports.
+					</DialogContentText>
+				</DialogContent>
+
+				<DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
+					<Button
+						onClick={handleCloseDialog}
+						disabled={deleting}
+						variant="outlined"
+						sx={{ textTransform: 'none', borderRadius: '6px' }}
+					>
+						Cancel
+					</Button>
+					<Button
+						onClick={handleConfirmDelete}
+						disabled={deleting}
+						variant="contained"
+						color="error"
+						startIcon={deleting ? <CircularProgress size={16} color="inherit" /> : <DeleteForeverIcon />}
+						sx={{ textTransform: 'none', borderRadius: '6px', fontWeight: 700 }}
+					>
+						{deleting ? 'Deleting...' : `Delete ${confirmDialog.recordCount} Record${confirmDialog.recordCount !== 1 ? 's' : ''}`}
+					</Button>
+				</DialogActions>
+			</Dialog>
 		</Box>
 	);
 };

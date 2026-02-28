@@ -25,6 +25,10 @@ const trainingExtensionService = {
 		const response = await api.delete(`/training-extensions/attendance/${attendanceId}`);
 		return response.data;
 	},
+	deleteAttendanceByCandidate: async (candidateId: number, batchId: number) => {
+		const response = await api.delete(`/training-extensions/attendance/candidate/${candidateId}/batch/${batchId}`);
+		return response.data as { message: string; deleted_count: number };
+	},
 
 	// Training Plan
 	getDailyPlan: async (batchPublicId: string, date: string) => {

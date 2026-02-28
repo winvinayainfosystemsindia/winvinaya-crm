@@ -161,3 +161,36 @@ async def delete_attendance(
     from fastapi import HTTPException
     raise HTTPException(status_code=400, detail="Failed to delete attendance record")
 
+
+@router.delete("/candidate/{candidate_id}/batch/{batch_id}")
+async def delete_attendance_by_candidate(
+    candidate_id: int,
+    batch_id: int,
+    request: Request,
+    current_user: User = Depends(require_roles([UserRole.ADMIN])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Bulk soft-delete ALL attendance records for a specific candidate in a batch.
+    Admin only. Used to correct erroneous batch allocations.
+    """
+    service = TrainingExtensionService(db)
+
+    deleted_count = await service.delete_attendance_by_candidate(candidate_id, batch_id)
+
+    await log_update(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="training_attendance",
+        resource_id=candidate_id,
+        before={"action": "bulk_delete_candidate_attendance", "batch_id": batch_id},
+        after={"deleted_count": deleted_count, "candidate_id": candidate_id}
+    )
+
+    return {
+        "message": f"Successfully deleted {deleted_count} attendance record(s) for candidate",
+        "deleted_count": deleted_count,
+        "candidate_id": candidate_id,
+        "batch_id": batch_id
+    }

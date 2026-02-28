@@ -5,9 +5,8 @@ import {
 	Box,
 	Avatar,
 	Typography,
-	FormControl,
-	Select,
-	MenuItem,
+	ToggleButton,
+	ToggleButtonGroup,
 	TextField,
 	IconButton,
 	Tooltip,
@@ -19,10 +18,17 @@ import type { CandidateAllocation, TrainingAttendance, TrainingBatchPlan } from 
 import TrainerNotesDialog from '../dialogs/TrainerNotesDialog';
 import { format } from 'date-fns';
 
+// Status config — single source of truth for color + label
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+	present: { label: 'P', color: '#007d35', bg: '#e8f5e9' },
+	absent: { label: 'A', color: '#c62828', bg: '#ffebee' },
+	late: { label: 'L', color: '#e65100', bg: '#fff3e0' },
+	half_day: { label: 'H', color: '#0277bd', bg: '#e3f2fd' },
+};
+
 interface AttendanceTableRowProps {
 	allocation: CandidateAllocation;
 	isActive: boolean;
-	statuses: Array<{ value: string; label: string; icon: React.ReactNode; color: string }>;
 
 	// Period-based props (optional)
 	dailyPlan?: TrainingBatchPlan[];
@@ -38,10 +44,67 @@ interface AttendanceTableRowProps {
 	canEditPeriod?: (period: TrainingBatchPlan) => boolean;
 }
 
+const StatusToggle: React.FC<{
+	value: string;
+	onChange: (v: string) => void;
+	disabled: boolean;
+	isSaved: boolean;
+}> = ({ value, onChange, disabled, isSaved }) => {
+	const statuses = ['present', 'absent', 'late', 'half_day'];
+
+	return (
+		<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+			<ToggleButtonGroup
+				value={value}
+				exclusive
+				onChange={(_, v) => { if (v) onChange(v); }}
+				disabled={disabled}
+				size="small"
+				sx={{ '& .MuiToggleButton-root': { py: 0.25, px: 0.75, fontSize: '0.7rem', fontWeight: 800, lineHeight: 1.4, border: '1px solid #ddd' } }}
+			>
+				{statuses.map(s => {
+					const cfg = STATUS_CONFIG[s];
+					const active = value === s;
+					return (
+						<ToggleButton
+							key={s}
+							value={s}
+							sx={{
+								color: active ? cfg.color : '#aab7b8',
+								bgcolor: active ? cfg.bg : 'transparent',
+								borderColor: active ? cfg.color : '#ddd',
+								'&.Mui-selected': {
+									color: cfg.color,
+									bgcolor: cfg.bg,
+									borderColor: cfg.color,
+									'&:hover': { bgcolor: cfg.bg },
+								},
+								'&:hover': { bgcolor: '#f5f5f5' },
+								transition: 'all 0.15s',
+							}}
+						>
+							{cfg.label}
+						</ToggleButton>
+					);
+				})}
+			</ToggleButtonGroup>
+			{/* Show saved indicator dot vs unsaved dot */}
+			<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+				<Box sx={{
+					width: 6, height: 6, borderRadius: '50%',
+					bgcolor: isSaved ? '#007d35' : '#ff9900',
+				}} />
+				<Typography variant="caption" sx={{ fontSize: '0.6rem', color: isSaved ? '#007d35' : '#ff9900', fontWeight: 700 }}>
+					{isSaved ? 'SAVED' : 'UNSAVED'}
+				</Typography>
+			</Box>
+		</Box>
+	);
+};
+
 const AttendanceTableRow: React.FC<AttendanceTableRowProps> = memo(({
 	allocation,
 	isActive,
-	statuses,
 	dailyPlan,
 	getPeriodAttendance,
 	onPeriodStatusChange,
@@ -50,7 +113,7 @@ const AttendanceTableRow: React.FC<AttendanceTableRowProps> = memo(({
 	remark,
 	onStatusChange,
 	onRemarkChange,
-	canEditPeriod
+	canEditPeriod,
 }) => {
 	const hasPeriods = dailyPlan && dailyPlan.length > 0;
 
@@ -73,20 +136,27 @@ const AttendanceTableRow: React.FC<AttendanceTableRowProps> = memo(({
 
 	return (
 		<>
-			<TableRow hover sx={{ opacity: isActive ? 1 : 0.6 }}>
+			<TableRow hover sx={{ opacity: isActive ? 1 : 0.6, '&:hover': { bgcolor: '#fafcff' } }}>
 				{/* Student Details Column */}
-				<TableCell>
-					<Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-						<Avatar sx={{ bgcolor: '#eaeded', color: '#545b64', fontSize: '0.875rem', fontWeight: 700 }}>
-							{allocation.candidate?.name?.[0]}
+				<TableCell sx={{ borderRight: '1px solid #eaeded' }}>
+					<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+						<Avatar sx={{
+							width: 34, height: 34,
+							bgcolor: allocation.candidate?.name ? `hsl(${(allocation.candidate.name.charCodeAt(0) * 37) % 360}, 55%, 88%)` : '#eaeded',
+							color: '#232f3e', fontSize: '0.8rem', fontWeight: 700
+						}}>
+							{allocation.candidate?.name?.[0]?.toUpperCase()}
 						</Avatar>
 						<Box>
-							<Typography variant="body2" sx={{ fontWeight: 600 }}>{allocation.candidate?.name}</Typography>
-							<Typography variant="caption" color="text.secondary">{allocation.candidate?.email}</Typography>
+							<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e' }}>
+								{allocation.candidate?.name}
+							</Typography>
+							<Typography variant="caption" color="text.secondary">
+								{allocation.candidate?.email}
+							</Typography>
 						</Box>
 					</Box>
 				</TableCell>
-
 
 				{hasPeriods ? (
 					// Period-based cells
@@ -95,120 +165,60 @@ const AttendanceTableRow: React.FC<AttendanceTableRowProps> = memo(({
 						const periodStatus = periodAttendance?.status || 'present';
 						const trainerNotes = periodAttendance?.trainer_notes || '';
 						const hasNotes = trainerNotes.trim().length > 0;
+						const isSaved = !!periodAttendance?.id;
+						const editable = canEditPeriod!(period);
 
 						return (
-							<TableCell key={period.id} align="center">
-								<Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center' }}>
-									{period.activity_type === 'break' ? (
-										<Chip
-											label="BREAK"
-											size="small"
-											variant="outlined"
-											sx={{ fontWeight: 700, fontSize: '0.65rem', height: 20, color: 'error.main', borderColor: 'error.light', bgcolor: '#fff5f5' }}
+							<TableCell key={period.id} align="center" sx={{ p: 1 }}>
+								{period.activity_type === 'break' ? (
+									<Chip
+										label="BREAK"
+										size="small"
+										variant="outlined"
+										sx={{ fontWeight: 700, fontSize: '0.6rem', height: 18, color: '#999', borderColor: '#ddd' }}
+									/>
+								) : (
+									<Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, alignItems: 'center' }}>
+										<StatusToggle
+											value={periodStatus}
+											onChange={(v) => onPeriodStatusChange!(allocation.candidate_id, period.id!, v)}
+											disabled={!editable}
+											isSaved={isSaved}
 										/>
-									) : (
-										<FormControl size="small" sx={{ minWidth: 120 }}>
-											<Select
-												value={periodStatus}
-												onChange={(e) => onPeriodStatusChange!(allocation.candidate_id, period.id!, e.target.value)}
-												disabled={!canEditPeriod!(period)}
-												sx={{
-													fontSize: '0.8125rem',
-													fontWeight: 600,
-													bgcolor: canEditPeriod!(period) ? 'transparent' : '#f5f5f5',
-													'& .MuiOutlinedInput-root': { borderRadius: '2px' }
-												}}
-											>
-												{statuses.map(s => (
-													<MenuItem key={s.value} value={s.value} sx={{ fontSize: '0.8125rem' }}>
-														<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-															{s.icon}
-															{s.label}
-														</Box>
-													</MenuItem>
-												))}
-											</Select>
-										</FormControl>
-									)}
-
-									{/* Trainer Notes Button with Badge */}
-									<Tooltip title={!canEditPeriod!(period) ? "Read-only" : (hasNotes ? "View/Edit Notes" : "Add Trainer Notes")}>
-										<IconButton
-											size="small"
-											onClick={() => handleOpenNotesDialog(period, trainerNotes)}
-											disabled={!isActive || (period.activity_type === 'break')}
-											sx={{
-
-												color: hasNotes ? '#007eb9' : '#545b64',
-												bgcolor: hasNotes ? '#e3f2fd' : 'transparent',
-												'&:hover': {
-													bgcolor: hasNotes ? '#bbdefb' : '#f0f7ff',
-													color: '#007eb9'
-												},
-												transition: 'all 0.2s'
-											}}
-										>
-											<Badge
-												variant="dot"
-												color="primary"
-												invisible={!hasNotes}
-												sx={{
-													'& .MuiBadge-badge': {
-														bgcolor: '#007eb9'
-													}
-												}}
-											>
-												{hasNotes ? <EditNoteIcon fontSize="small" /> : <NotesIcon fontSize="small" />}
-											</Badge>
-										</IconButton>
-									</Tooltip>
-
-									{/* Notes Preview */}
-									{hasNotes && (
-										<Typography
-											variant="caption"
-											color="text.secondary"
-											sx={{
-												maxWidth: 140,
-												overflow: 'hidden',
-												textOverflow: 'ellipsis',
-												whiteSpace: 'nowrap',
-												fontSize: '0.75rem',
-												fontStyle: 'italic'
-											}}
-										>
-											"{trainerNotes}"
-										</Typography>
-									)}
-								</Box>
+										{/* Trainer Notes Button */}
+										{editable && (
+											<Tooltip title={hasNotes ? 'View / Edit Trainer Notes' : 'Add Trainer Notes'}>
+												<IconButton
+													size="small"
+													onClick={() => handleOpenNotesDialog(period, trainerNotes)}
+													sx={{
+														p: 0.25,
+														color: hasNotes ? '#007eb9' : '#aab7b8',
+														bgcolor: hasNotes ? '#e3f2fd' : 'transparent',
+														'&:hover': { bgcolor: hasNotes ? '#bbdefb' : '#f5f5f5', color: '#007eb9' },
+													}}
+												>
+													<Badge variant="dot" color="primary" invisible={!hasNotes}>
+														{hasNotes ? <EditNoteIcon sx={{ fontSize: 16 }} /> : <NotesIcon sx={{ fontSize: 16 }} />}
+													</Badge>
+												</IconButton>
+											</Tooltip>
+										)}
+									</Box>
+								)}
 							</TableCell>
 						);
 					})
 				) : (
 					// Legacy full-day cells
 					<>
-						<TableCell align="center">
-							<FormControl size="small" sx={{ minWidth: 150 }}>
-								<Select
-									value={status}
-									onChange={(e) => onStatusChange!(allocation.candidate_id, e.target.value)}
-									disabled={!isActive}
-									sx={{
-										fontSize: '0.875rem',
-										fontWeight: 600,
-										'& .MuiOutlinedInput-root': { borderRadius: '2px' }
-									}}
-								>
-									{statuses.map(s => (
-										<MenuItem key={s.value} value={s.value} sx={{ fontSize: '0.875rem' }}>
-											<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-												{s.icon}
-												{s.label}
-											</Box>
-										</MenuItem>
-									))}
-								</Select>
-							</FormControl>
+						<TableCell align="center" sx={{ p: 1.5 }}>
+							<StatusToggle
+								value={status || 'present'}
+								onChange={(v) => onStatusChange!(allocation.candidate_id, v)}
+								disabled={!isActive}
+								isSaved={false}
+							/>
 						</TableCell>
 						<TableCell>
 							<TextField
@@ -218,8 +228,9 @@ const AttendanceTableRow: React.FC<AttendanceTableRowProps> = memo(({
 								value={remark}
 								onChange={(e) => onRemarkChange!(allocation.candidate_id, e.target.value)}
 								disabled={!isActive}
-								variant="standard"
-								InputProps={{ disableUnderline: true, sx: { fontSize: '0.8125rem' } }}
+								variant="outlined"
+								inputProps={{ style: { fontSize: '0.8125rem', padding: '6px 10px' } }}
+								sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px', bgcolor: '#fafafa' } }}
 							/>
 						</TableCell>
 					</>

@@ -275,3 +275,22 @@ class TrainingExtensionService:
 
     async def delete_batch_event(self, event_id: int):
         return await self.event_repo.delete(event_id)
+
+    async def delete_attendance_by_candidate(self, candidate_id: int, batch_id: int) -> int:
+        """
+        Soft-delete ALL attendance records for a specific candidate in a batch.
+        Returns the number of records deleted.
+        """
+        from sqlalchemy import update as sql_update
+        query = (
+            sql_update(self.attendance_repo.model)
+            .where(
+                self.attendance_repo.model.candidate_id == candidate_id,
+                self.attendance_repo.model.batch_id == batch_id,
+                self.attendance_repo.model.is_deleted == False,
+            )
+            .values(is_deleted=True)
+        )
+        result = await self.db.execute(query)
+        await self.db.commit()
+        return result.rowcount

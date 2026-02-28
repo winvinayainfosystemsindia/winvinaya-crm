@@ -4,12 +4,21 @@ import trainingExtensionService from '../../../../services/trainingExtensionServ
 import type { TrainingBatch, CandidateAllocation, TrainingAttendance, TrainingBatchEvent, TrainingBatchPlan } from '../../../../models/training';
 import type { User } from '../../../../models/auth';
 import { useSnackbar } from 'notistack';
+import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
+import {
+	fetchAttendanceByBatch,
+	updateBulkAttendance,
+	updateAttendance as updateAttendanceAction,
+	deleteAttendance as deleteAttendanceAction,
+	updateLocalAttendance
+} from '../../../../store/slices/attendanceSlice';
 
 export const useAttendance = (batch: TrainingBatch, allocations: CandidateAllocation[], user: User | null) => {
 	const { enqueueSnackbar } = useSnackbar();
+	const dispatch = useAppDispatch();
+	const { attendance, loading: attendanceLoading, saving, error } = useAppSelector(state => state.attendance);
+
 	const [loading, setLoading] = useState(false);
-	const [saving, setSaving] = useState(false);
-	const [attendance, setAttendance] = useState<TrainingAttendance[]>([]);
 	const [batchEvents, setBatchEvents] = useState<TrainingBatchEvent[]>([]);
 	const [dailyPlan, setDailyPlan] = useState<TrainingBatchPlan[]>([]);
 	const [activeTab, setActiveTab] = useState<'tracker' | 'report'>('tracker');
@@ -52,11 +61,10 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 	const fetchData = useCallback(async () => {
 		setLoading(true);
 		try {
-			const [attData, eventData] = await Promise.all([
-				trainingExtensionService.getAttendance(batch.id),
-				trainingExtensionService.getBatchEvents(batch.id)
-			]);
-			setAttendance(attData);
+			// Fetch attendance via Redux
+			dispatch(fetchAttendanceByBatch(batch.id));
+
+			const eventData = await trainingExtensionService.getBatchEvents(batch.id);
 			setBatchEvents(eventData);
 		} catch (error) {
 			console.error('Failed to fetch attendance data', error);
@@ -64,7 +72,7 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		} finally {
 			setLoading(false);
 		}
-	}, [batch.id, enqueueSnackbar]);
+	}, [batch.id, dispatch, enqueueSnackbar]);
 
 	// Fetch daily plan when date changes
 	const fetchDailyPlan = useCallback(async () => {
@@ -90,7 +98,11 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		fetchDailyPlan();
 	}, [fetchDailyPlan]);
 
-
+	useEffect(() => {
+		if (error) {
+			enqueueSnackbar(error, { variant: 'error' });
+		}
+	}, [error, enqueueSnackbar]);
 
 	const currentEvent = useMemo(() => {
 		const dateStr = format(selectedDate, 'yyyy-MM-dd');
@@ -104,31 +116,28 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		data: Partial<TrainingAttendance>
 	) => {
 		const dateStr = format(selectedDate, 'yyyy-MM-dd');
-		setAttendance(prev => {
-			const existingIdx = prev.findIndex(a =>
-				a.candidate_id === candidateId &&
-				a.date === dateStr &&
-				a.period_id === periodId
-			);
 
-			if (existingIdx >= 0) {
-				const updated = [...prev];
-				updated[existingIdx] = { ...updated[existingIdx], ...data };
-				return updated;
-			} else {
-				return [...prev, {
-					batch_id: batch.id,
-					candidate_id: candidateId,
-					date: dateStr,
-					period_id: periodId,
-					status: 'present',
-					remarks: null,
-					trainer_notes: null,
-					...data
-				} as TrainingAttendance];
-			}
-		});
-	}, [selectedDate, batch.id]);
+		const existing = attendance.find(a =>
+			a.candidate_id === candidateId &&
+			a.date === dateStr &&
+			a.period_id === periodId
+		);
+
+		const updatedData = existing
+			? { ...existing, ...data }
+			: {
+				batch_id: batch.id,
+				candidate_id: candidateId,
+				date: dateStr,
+				period_id: periodId,
+				status: 'present',
+				remarks: null,
+				trainer_notes: null,
+				...data
+			} as TrainingAttendance;
+
+		dispatch(updateLocalAttendance(updatedData));
+	}, [selectedDate, batch.id, attendance, dispatch]);
 
 	// Helper to check if user can edit a specific period
 	const checkCanEditPeriod = useCallback((periodId: number) => {
@@ -185,8 +194,6 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		updatePeriodAttendance(candidateId, null, { status: status as any });
 	}, [updatePeriodAttendance, isDroppedOut, isFutureDate, enqueueSnackbar]);
 
-
-
 	// Mark all candidates for a specific period as a specific status
 	const handlePeriodMarkAll = useCallback((periodId: number, status: string) => {
 		if (isFutureDate) {
@@ -211,34 +218,44 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		updatePeriodAttendance(candidateId, null, { remarks: remark });
 	}, [updatePeriodAttendance]);
 
-
-
 	const handleSave = async () => {
 		if (isFutureDate) {
 			enqueueSnackbar('Cannot save attendance for future dates', { variant: 'error' });
 			return;
 		}
 
-		setSaving(true);
 		try {
 			const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
 			// Collect all attendance records for the selected date
 			const dailyAttendance = attendance.filter(a => a.date === dateStr);
 
-			await trainingExtensionService.updateBulkAttendance(dailyAttendance);
+			await dispatch(updateBulkAttendance(dailyAttendance)).unwrap();
 			enqueueSnackbar('Attendance saved successfully', { variant: 'success' });
 			fetchData();
 		} catch (error: any) {
 			console.error('Failed to save attendance', error);
-			const errorMessage = error?.response?.data?.detail || 'Failed to save attendance';
-			enqueueSnackbar(errorMessage, { variant: 'error' });
-		} finally {
-			setSaving(false);
+			enqueueSnackbar(error || 'Failed to save attendance', { variant: 'error' });
 		}
 	};
 
+	const handleUpdateSingle = async (attendanceId: number, data: Partial<TrainingAttendance>) => {
+		try {
+			await dispatch(updateAttendanceAction({ attendanceId, data })).unwrap();
+			enqueueSnackbar('Attendance updated successfully', { variant: 'success' });
+		} catch (error: any) {
+			enqueueSnackbar(error || 'Failed to update attendance', { variant: 'error' });
+		}
+	};
 
+	const handleDeleteSingle = async (attendanceId: number) => {
+		try {
+			await dispatch(deleteAttendanceAction(attendanceId)).unwrap();
+			enqueueSnackbar('Attendance record deleted successfully', { variant: 'success' });
+		} catch (error: any) {
+			enqueueSnackbar(error || 'Failed to delete attendance', { variant: 'error' });
+		}
+	};
 
 	const isDateOutOfRange = useMemo(() => {
 		if (!batchBounds) return false;
@@ -246,7 +263,7 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 	}, [selectedDate, batchBounds]);
 
 	return {
-		loading,
+		loading: loading || attendanceLoading,
 		saving,
 		attendance,
 		batchEvents,
@@ -265,6 +282,8 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		handleTrainerNotesChange,
 		handlePeriodMarkAll,
 		handleSave,
+		handleUpdateSingle,
+		handleDeleteSingle,
 		isDroppedOut
 	};
 };

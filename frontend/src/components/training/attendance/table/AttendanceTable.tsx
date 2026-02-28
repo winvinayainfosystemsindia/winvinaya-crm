@@ -49,7 +49,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 	isFutureDate,
 	isDroppedOut,
 	statuses,
-	currentUser
+	currentUser,
 }) => {
 	const dateStr = format(selectedDate, 'yyyy-MM-dd');
 	const hasPeriods = dailyPlan.length > 0;
@@ -227,7 +227,6 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 										dailyPlan={dailyPlan}
 										getPeriodAttendance={(periodId) => getPeriodAttendance(allocation.candidate_id, periodId)}
 										isActive={isActive}
-										statuses={statuses}
 										onPeriodStatusChange={onPeriodStatusChange}
 										onTrainerNotesChange={onTrainerNotesChange}
 										canEditPeriod={canEditPeriod}
@@ -245,7 +244,6 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 										status={status}
 										remark={remark}
 										isActive={isActive}
-										statuses={statuses}
 										onStatusChange={onStatusChange}
 										onRemarkChange={onRemarkChange}
 									/>

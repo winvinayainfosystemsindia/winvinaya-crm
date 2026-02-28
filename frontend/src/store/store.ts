@@ -9,6 +9,7 @@ import notificationReducer from './slices/notificationSlice';
 import settingsReducer from './slices/settingsSlice';
 import mockInterviewReducer from './slices/mockInterviewSlice';
 import trainingPlanReducer from './slices/trainingPlanSlice';
+import attendanceReducer from './slices/attendanceSlice';
 
 import companyReducer from './slices/companySlice';
 import contactReducer from './slices/contactSlice';
@@ -30,6 +31,7 @@ export const store = configureStore({
 		notifications: notificationReducer,
 		mockInterviews: mockInterviewReducer,
 		trainingPlan: trainingPlanReducer,
+		attendance: attendanceReducer,
 		// CRM Slices
 		companies: companyReducer,
 		contacts: contactReducer,
