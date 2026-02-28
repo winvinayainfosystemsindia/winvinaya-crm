@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.api.deps import require_roles
 from app.models.user import User, UserRole
-from app.schemas.training_attendance import TrainingAttendanceCreate, TrainingAttendanceResponse
+from app.schemas.training_attendance import TrainingAttendanceCreate, TrainingAttendanceResponse, TrainingAttendanceUpdate
 from app.services.training_extension_service import TrainingExtensionService
 from app.utils.activity_tracker import log_update
 
@@ -48,7 +48,7 @@ async def update_bulk_attendance(
 @router.get("/{batch_id}", response_model=List[TrainingAttendanceResponse])
 async def get_attendance(
     batch_id: int,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER])),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -62,7 +62,7 @@ async def get_attendance(
 async def get_attendance_by_date(
     batch_id: int,
     attendance_date: date,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER])),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -84,4 +84,80 @@ async def get_candidate_attendance(
     """
     service = TrainingExtensionService(db)
     return await service.get_attendance_by_candidate(public_id)
+
+
+@router.put("/{attendance_id}", response_model=TrainingAttendanceResponse)
+async def update_attendance(
+    attendance_id: int,
+    request: Request,
+    attendance_in: TrainingAttendanceUpdate,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Update a single attendance record.
+    """
+    service = TrainingExtensionService(db)
+    
+    # Get before state for logging
+    before = await service.attendance_repo.get(attendance_id)
+    if not before:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Attendance record not found")
+    
+    before_data = {
+        "status": before.status,
+        "remarks": before.remarks,
+        "trainer_notes": before.trainer_notes
+    }
+    
+    record = await service.update_attendance(attendance_id, attendance_in)
+    
+    await log_update(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="training_attendance",
+        resource_id=attendance_id,
+        before=before_data,
+        after=attendance_in.model_dump(exclude_unset=True)
+    )
+    
+    return record
+
+
+@router.delete("/{attendance_id}")
+async def delete_attendance(
+    attendance_id: int,
+    request: Request,
+    current_user: User = Depends(require_roles([UserRole.ADMIN])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Delete a single attendance record.
+    """
+    service = TrainingExtensionService(db)
+    
+    # Get before state for logging
+    before = await service.attendance_repo.get(attendance_id)
+    if not before:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Attendance record not found")
+    
+    success = await service.delete_attendance(attendance_id)
+    
+    if success:
+        await log_update(
+            db=db,
+            request=request,
+            user_id=current_user.id,
+            resource_type="training_attendance",
+            resource_id=attendance_id,
+            before={"is_deleted": False},
+            after={"is_deleted": True}
+        )
+        return {"message": "Attendance record deleted successfully"}
+    
+    from fastapi import HTTPException
+    raise HTTPException(status_code=400, detail="Failed to delete attendance record")
 

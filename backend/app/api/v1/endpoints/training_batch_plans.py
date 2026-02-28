@@ -46,7 +46,7 @@ async def create_plan_entry(
 async def get_weekly_plan(
     batch_public_id: UUID,
     start_date: date,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER])),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -59,7 +59,7 @@ async def get_weekly_plan(
 @router.get("/batch/{batch_public_id}/all", response_model=List[TrainingBatchPlanResponse])
 async def get_all_batch_plans(
     batch_public_id: UUID,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER])),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -72,7 +72,7 @@ async def get_all_batch_plans(
 @router.get("/{public_id}", response_model=TrainingBatchPlanResponse)
 async def get_plan_entry(
     public_id: UUID,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER])),
     db: AsyncSession = Depends(get_db)
 ):
     """

@@ -19,11 +19,11 @@ router = APIRouter(prefix="/training-batches", tags=["Training Batches"])
 async def create_training_batch(
     request: Request,
     batch_in: TrainingBatchCreate,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.SOURCING, UserRole.MANAGER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Create a new training batch (Admin/Sourcing only)
+    Create a new training batch (Admin/Manager only)
     """
     service = TrainingBatchService(db)
     batch = await service.create_batch(batch_in)

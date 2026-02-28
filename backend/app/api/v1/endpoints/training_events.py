@@ -18,7 +18,7 @@ router = APIRouter(prefix="/events", tags=["Training Events"])
 async def create_batch_event(
     request: Request,
     event_in: TrainingBatchEventCreate,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -41,7 +41,7 @@ async def create_batch_event(
 @router.get("/{batch_id}", response_model=List[TrainingBatchEventResponse])
 async def get_batch_events(
     batch_id: int,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING])),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -55,7 +55,7 @@ async def get_batch_events(
 async def delete_batch_event(
     request: Request,
     event_id: int,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN])),
     db: AsyncSession = Depends(get_db)
 ):
     """

@@ -133,6 +133,24 @@ class TrainingExtensionService:
         result = await self.db.execute(query)
         return result.scalars().all()
 
+    async def update_attendance(self, attendance_id: int, attendance_in: TrainingAttendanceUpdate):
+        """Update a single attendance record"""
+        record = await self.attendance_repo.update(attendance_id, attendance_in.model_dump(exclude_unset=True))
+        if not record:
+            return None
+            
+        # Re-fetch with batch and period
+        query = select(self.attendance_repo.model).options(
+            selectinload(self.attendance_repo.model.batch),
+            selectinload(self.attendance_repo.model.period)
+        ).where(self.attendance_repo.model.id == attendance_id)
+        result = await self.db.execute(query)
+        return result.scalar_one_or_none()
+
+    async def delete_attendance(self, attendance_id: int):
+        """Delete a single attendance record"""
+        return await self.attendance_repo.delete(attendance_id)
+
     # Assignments
     async def get_assignments(self, batch_id: int):
         query = select(self.assignment_repo.model).options(

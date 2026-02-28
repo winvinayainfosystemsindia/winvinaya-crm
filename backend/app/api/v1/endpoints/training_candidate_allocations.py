@@ -58,11 +58,11 @@ async def get_all_allocations(
 async def allocate_candidate(
     request: Request,
     allocation_in: TrainingCandidateAllocationCreate,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Allocate a candidate to a training batch (Admin/Manager/Sourcing only)
+    Allocate a candidate to a training batch (Admin/Manager only)
     """
     service = TrainingCandidateAllocationService(db)
     allocation = await service.allocate_candidate(allocation_in)
@@ -173,7 +173,7 @@ async def update_allocation(
 async def delete_allocation(
     request: Request,
     public_id: UUID,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN])),
     db: AsyncSession = Depends(get_db)
 ):
     """
