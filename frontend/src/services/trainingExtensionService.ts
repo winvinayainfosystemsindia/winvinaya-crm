@@ -17,6 +17,14 @@ const trainingExtensionService = {
 		const response = await api.post<TrainingAttendance[]>('/training-extensions/attendance/bulk', data);
 		return response.data;
 	},
+	updateAttendance: async (attendanceId: number, data: Partial<TrainingAttendance>) => {
+		const response = await api.put<TrainingAttendance>(`/training-extensions/attendance/${attendanceId}`, data);
+		return response.data;
+	},
+	deleteAttendance: async (attendanceId: number) => {
+		const response = await api.delete(`/training-extensions/attendance/${attendanceId}`);
+		return response.data;
+	},
 
 	// Training Plan
 	getDailyPlan: async (batchPublicId: string, date: string) => {
