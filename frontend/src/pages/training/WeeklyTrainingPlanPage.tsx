@@ -54,7 +54,8 @@ const WeeklyPlanManager: React.FC<WeeklyPlanManagerProps> = ({ selectedBatch }) 
 		hoursBreakdown,
 		batchEvents,
 		handleConfirmEvent,
-		handleDeleteEvent
+		handleDeleteEvent,
+		handleCopyPreviousWeek
 	} = useWeeklyPlanManager(selectedBatch);
 
 	const [eventDialogOpen, setEventDialogOpen] = useState(false);
@@ -114,6 +115,7 @@ const WeeklyPlanManager: React.FC<WeeklyPlanManagerProps> = ({ selectedBatch }) 
 						setCurrentDate={setCurrentDate}
 						canEdit={canEdit}
 						onExportPNG={handleExportPNG}
+						handleCopyPreviousWeek={handleCopyPreviousWeek}
 						isExporting={isExporting}
 					/>
 					<WeeklyPlanTable

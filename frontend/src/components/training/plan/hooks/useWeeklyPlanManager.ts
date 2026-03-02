@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { useSnackbar } from 'notistack';
 import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval, parseISO } from 'date-fns';
 import { fetchWeeklyPlan, createPlanEntry, deletePlanEntry, fetchAllBatchPlans } from '../../../../store/slices/trainingPlanSlice';
+import trainingPlanService from '../../../../services/trainingPlanService';
 import { fetchUsers } from '../../../../store/slices/userSlice';
 import { DEFAULT_START_TIME, HARD_END_TIME } from '../utils/planConstants';
 import { parseTimeValue, formatTime12h } from '../utils/planFormatters';
@@ -51,7 +52,21 @@ export const useWeeklyPlanManager = (selectedBatch: TrainingBatch) => {
 
 	const weekStart = useMemo(() => startOfWeek(currentDate, { weekStartsOn: 1 }), [currentDate]);
 	const weekEnd = useMemo(() => endOfWeek(currentDate, { weekStartsOn: 1 }), [currentDate]);
-	const weekDays = useMemo(() => eachDayOfInterval({ start: weekStart, end: weekEnd }).slice(0, 5), [weekStart, weekEnd]);
+	const weekDays = useMemo(() => {
+		const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
+		const weekdayRange = days.slice(0, 5);
+		const saturday = days[5];
+		const sunday = days[6];
+
+		const hasSaturdayEntries = weeklyPlan.some(p => p.date === format(saturday, 'yyyy-MM-dd'));
+		const hasSundayEntries = weeklyPlan.some(p => p.date === format(sunday, 'yyyy-MM-dd'));
+
+		if (hasSaturdayEntries && hasSundayEntries) return days;
+		if (hasSaturdayEntries) return days.slice(0, 6);
+		if (hasSundayEntries) return [...weekdayRange, sunday]; // Rare but possible
+
+		return weekdayRange;
+	}, [weekStart, weekEnd, weeklyPlan]);
 
 	const weekNumber = useMemo(() => {
 		if (!selectedBatch?.start_date) return 1;
@@ -248,7 +263,16 @@ export const useWeeklyPlanManager = (selectedBatch: TrainingBatch) => {
 
 	const handleReplicateEntry = useCallback(async (entry: TrainingBatchPlan) => {
 		if (!canEdit) return;
-		const nextDay = addDays(parseISO(entry.date), 1);
+		let nextDay = addDays(parseISO(entry.date), 1);
+
+		// Skip weekends
+		const dayOfWeek = nextDay.getDay(); // 0 is Sunday, 6 is Saturday
+		if (dayOfWeek === 6) { // Saturday -> Monday
+			nextDay = addDays(nextDay, 2);
+		} else if (dayOfWeek === 0) { // Sunday -> Monday
+			nextDay = addDays(nextDay, 1);
+		}
+
 		if (nextDay > maxDate) {
 			enqueueSnackbar('Cannot replicate beyond batch end date', { variant: 'warning' });
 			return;
@@ -266,6 +290,55 @@ export const useWeeklyPlanManager = (selectedBatch: TrainingBatch) => {
 			enqueueSnackbar(error || 'Failed to replicate entry', { variant: 'error' });
 		}
 	}, [canEdit, maxDate, dispatch, selectedBatch.public_id, enqueueSnackbar]);
+
+	const handleCopyPreviousWeek = useCallback(async () => {
+		if (!canEdit) return;
+		const prevWeekStart = addDays(weekStart, -7);
+		const prevWeekStartStr = format(prevWeekStart, 'yyyy-MM-dd');
+
+		try {
+			setFormLoading(true);
+			const prevWeekPlans = await trainingPlanService.getWeeklyPlan(selectedBatch.public_id, prevWeekStartStr);
+
+			if (prevWeekPlans.length === 0) {
+				enqueueSnackbar('No plans found in the previous week', { variant: 'info' });
+				return;
+			}
+
+			// Check if current week already has plans
+			if (weeklyPlan.length > 0) {
+				const confirm = window.confirm('Current week already has plans. This will add copied plans to existing ones. Continue?');
+				if (!confirm) return;
+			}
+
+			let count = 0;
+			for (const entry of prevWeekPlans) {
+				const entryDate = parseISO(entry.date);
+				const newDate = addDays(entryDate, 7);
+
+				if (newDate <= maxDate) {
+					await dispatch(createPlanEntry({
+						...entry,
+						date: format(newDate, 'yyyy-MM-dd'),
+						batch_public_id: selectedBatch.public_id,
+						public_id: undefined
+					})).unwrap();
+					count++;
+				}
+			}
+
+			enqueueSnackbar(`Successfully copied ${count} entries from previous week`, { variant: 'success' });
+			// Refresh current week
+			dispatch(fetchWeeklyPlan({
+				batchPublicId: selectedBatch.public_id,
+				startDate: format(weekStart, 'yyyy-MM-dd')
+			}));
+		} catch (error: any) {
+			enqueueSnackbar(error || 'Failed to copy previous week', { variant: 'error' });
+		} finally {
+			setFormLoading(false);
+		}
+	}, [canEdit, weekStart, selectedBatch.public_id, weeklyPlan.length, maxDate, dispatch, enqueueSnackbar]);
 
 	const handleDeleteClick = useCallback((publicId: string) => {
 		if (!canEdit) return;
@@ -399,6 +472,7 @@ export const useWeeklyPlanManager = (selectedBatch: TrainingBatch) => {
 		hoursBreakdown,
 		batchEvents,
 		handleConfirmEvent,
-		handleDeleteEvent
+		handleDeleteEvent,
+		handleCopyPreviousWeek
 	};
 };

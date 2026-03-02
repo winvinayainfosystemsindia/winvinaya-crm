@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Stack, Typography, IconButton, Button, Alert } from '@mui/material';
-import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, Download as DownloadIcon } from '@mui/icons-material';
+import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, Download as DownloadIcon, ContentCopy as CopyIcon } from '@mui/icons-material';
 import { format, isSameDay } from 'date-fns';
 
 interface WeeklyPlanHeaderProps {
@@ -16,6 +16,7 @@ interface WeeklyPlanHeaderProps {
 	setCurrentDate: (date: Date) => void;
 	canEdit: boolean;
 	onExportPNG: () => void;
+	handleCopyPreviousWeek: () => void;
 	isExporting?: boolean;
 }
 
@@ -32,6 +33,7 @@ const WeeklyPlanHeader: React.FC<WeeklyPlanHeaderProps> = ({
 	setCurrentDate,
 	canEdit,
 	onExportPNG,
+	handleCopyPreviousWeek,
 	isExporting = false
 }) => {
 	return (
@@ -47,7 +49,7 @@ const WeeklyPlanHeader: React.FC<WeeklyPlanHeaderProps> = ({
 						WEEK {weekNumber}
 					</Typography>
 					<Typography variant="h6">
-						{format(weekStart, 'MMM d')} - {format(weekDays[4], 'MMM d, yyyy')}
+						{format(weekStart, 'MMM d')} - {format(weekDays[weekDays.length - 1], 'MMM d, yyyy')}
 					</Typography>
 				</Box>
 				{!isExporting && (
@@ -63,6 +65,17 @@ const WeeklyPlanHeader: React.FC<WeeklyPlanHeaderProps> = ({
 						>
 							Batch Start
 						</Button>
+						{canEdit && (
+							<Button
+								variant="outlined"
+								size="small"
+								startIcon={<CopyIcon />}
+								onClick={handleCopyPreviousWeek}
+								color="primary"
+							>
+								Copy Previous Week
+							</Button>
+						)}
 						<Button
 							variant="contained"
 							size="small"
