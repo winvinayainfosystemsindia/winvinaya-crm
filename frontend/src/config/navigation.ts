@@ -12,6 +12,8 @@ import {
 	Assessment as AssessmentIcon,
 	Settings as SettingsIcon,
 	HelpOutline as HelpIcon,
+	Folder as ProjectIcon,
+	EventNote as DSRIcon,
 } from '@mui/icons-material';
 import type { SvgIconComponent } from '@mui/icons-material';
 
@@ -36,18 +38,25 @@ export const topNavigation: NavigationItem[] = [
 		icon: UserIcon,
 		roles: ['admin'],
 	},
-	// {
-	// 	label: 'CRM',
-	// 	icon: DealIcon,
-	// 	children: [
-	// 		// { label: 'Dashboard', path: '/crm/dashboard', icon: DashboardIcon },
-	// 		{ label: 'Companies', path: '/crm/companies', icon: BusinessIcon },
-	// 		{ label: 'Contacts', path: '/crm/contacts', icon: PersonIcon },
-	// 		{ label: 'Leads', path: '/crm/leads', icon: LeadIcon },
-	// 		{ label: 'Deals', path: '/crm/deals', icon: DealIcon },
-	// 		{ label: 'Tasks', path: '/crm/tasks', icon: TaskIcon },
-	// 	],
 	// },
+	{
+		label: 'DSR',
+		icon: DSRIcon,
+		children: [
+			{ label: 'Submit DSR', path: '/dsr/submission' },
+			{ label: 'DSR History', path: '/dsr' },
+			{ label: 'DSR Admin', path: '/dsr/admin', roles: ['admin'] },
+		],
+	},
+	{
+		label: 'Project Management',
+		icon: ProjectIcon,
+		roles: ['admin', 'manager'],
+		children: [
+			{ label: 'Projects', path: '/projects' },
+			{ label: 'Activity Planning', path: '/projects/activities' },
+		],
+	},
 	{
 		label: 'Candidate Management',
 		icon: CandidatesIcon,

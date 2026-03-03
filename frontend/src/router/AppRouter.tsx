@@ -35,6 +35,11 @@ import LeadManagement from '../pages/crm/LeadManagement';
 import DealManagement from '../pages/crm/DealManagement';
 import TaskManagement from '../pages/crm/TaskManagement';
 import CRMDashboard from '../pages/crm/CRMDashboard';
+import ProjectManagement from '../pages/projects/ProjectManagement';
+import ActivityPlanning from '../pages/projects/ActivityPlanning';
+import DSRSubmission from '../pages/dsr/DSRSubmission';
+import DSRHistory from '../pages/dsr/DSRHistory';
+import DSRAdminOverview from '../pages/dsr/DSRAdminOverview';
 
 const AppRouter: React.FC = () => {
 	return (
@@ -58,10 +63,8 @@ const AppRouter: React.FC = () => {
 					<Route path="support" element={<Support />} />
 
 					<Route path="candidates">
-
 						<Route index element={<CandidateList />} />
 						<Route path="list" element={<CandidateList />} />
-						{/* <Route path="overview" element={<SourcingAnalytics />} /> */}
 						<Route path="screening" element={<ScreeningList />} />
 						<Route path="counseling" element={<CounselingList />} />
 						<Route path="documents" element={<DocumentCollectionList />} />
@@ -92,8 +95,16 @@ const AppRouter: React.FC = () => {
 						<Route path="tasks" element={<TaskManagement />} />
 					</Route>
 
+					<Route path="projects">
+						<Route index element={<ProjectManagement />} />
+						<Route path=":projectId/activities" element={<ActivityPlanning />} />
+					</Route>
 
-					{/* Add more protected routes here */}
+					<Route path="dsr">
+						<Route index element={<DSRHistory />} />
+						<Route path="submission" element={<DSRSubmission />} />
+						<Route path="admin" element={<DSRAdminOverview />} />
+					</Route>
 				</Route>
 			</Route>
 

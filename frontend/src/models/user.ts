@@ -1,13 +1,14 @@
 // frontend\src\models\user.ts
 export interface User {
 	id: number;
+	public_id: string; // Added for DSR and other modules
 	username: string;
 	email: string;
 	full_name: string;
 	is_active: boolean;
 	is_verified: boolean;
 	is_superuser?: boolean;
-	role: 'admin' | 'manager' | 'sourcing' | 'placement' | 'trainer';
+	role: 'admin' | 'manager' | 'sourcing' | 'placement' | 'trainer' | 'counselor' | 'sales_manager';
 	created_at?: string;
 	updated_at?: string;
 }
