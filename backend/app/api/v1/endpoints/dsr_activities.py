@@ -1,0 +1,116 @@
+"""DSR Activities API endpoints"""
+
+from typing import Optional
+from uuid import UUID
+from fastapi import APIRouter, Depends, Query, UploadFile, File, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.database import get_db
+from app.api.deps import get_current_user
+from app.models.user import User
+from app.models.dsr_activity import DSRActivityStatus
+from app.schemas.dsr_activity import (
+    DSRActivityCreate,
+    DSRActivityUpdate,
+    DSRActivityResponse,
+    DSRActivityListResponse,
+    DSRActivityImportResult,
+)
+from app.services.dsr_activity_service import DSRActivityService
+
+router = APIRouter()
+
+
+@router.post("", response_model=DSRActivityResponse, status_code=status.HTTP_201_CREATED)
+async def create_activity(
+    data: DSRActivityCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Create a planned activity under a project (Project Owner / Admin)."""
+    service = DSRActivityService(db)
+    activity = await service.create_activity(data, current_user)
+    await db.commit()
+    await db.refresh(activity)
+    return activity
+
+
+@router.post("/import", response_model=DSRActivityImportResult, status_code=status.HTTP_200_OK)
+async def import_activities_excel(
+    file: UploadFile = File(
+        ...,
+        description="Excel file (.xlsx). Columns: project_name, name, description, start_date, end_date, status",
+    ),
+    project_public_id: Optional[UUID] = Query(None),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Bulk-import planned activities from Excel (Project Owner / Admin).
+    Each row is only imported for projects the current user owns (Admin bypasses this).
+    """
+    service = DSRActivityService(db)
+    result = await service.import_from_excel(file, current_user, project_public_id)
+    await db.commit()
+    return result
+
+
+@router.get("", response_model=DSRActivityListResponse)
+async def list_activities(
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=100, ge=1, le=500),
+    project_public_id: Optional[UUID] = Query(default=None, description="Filter by project"),
+    status: Optional[DSRActivityStatus] = Query(default=None),
+    active_only: bool = Query(default=False),
+    search: Optional[str] = Query(default=None),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """List activities with filters (all roles). Use project_public_id to scope to a project."""
+    service = DSRActivityService(db)
+    items, total = await service.get_activities(
+        skip=skip,
+        limit=limit,
+        project_public_id=project_public_id,
+        status=status,
+        active_only=active_only,
+        search=search,
+    )
+    return DSRActivityListResponse(items=items, total=total, skip=skip, limit=limit)
+
+
+@router.get("/{public_id}", response_model=DSRActivityResponse)
+async def get_activity(
+    public_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get a single activity (all roles)."""
+    service = DSRActivityService(db)
+    return await service.get_activity(public_id)
+
+
+@router.put("/{public_id}", response_model=DSRActivityResponse)
+async def update_activity(
+    public_id: UUID,
+    data: DSRActivityUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update a planned activity (Project Owner / Admin)."""
+    service = DSRActivityService(db)
+    activity = await service.update_activity(public_id, data, current_user)
+    await db.commit()
+    return activity
+
+
+@router.delete("/{public_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_activity(
+    public_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Soft-delete a planned activity (Project Owner / Admin)."""
+    service = DSRActivityService(db)
+    await service.delete_activity(public_id, current_user)
+    await db.commit()

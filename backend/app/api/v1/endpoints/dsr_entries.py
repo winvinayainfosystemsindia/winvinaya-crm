@@ -1,0 +1,206 @@
+"""DSR Entries API endpoints"""
+
+from datetime import date
+from typing import Optional
+from uuid import UUID
+from fastapi import APIRouter, Depends, Query, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.database import get_db
+from app.api.deps import get_current_user
+from app.models.user import User
+from app.models.dsr_entry import DSRStatus
+from app.schemas.dsr_entry import (
+    DSREntryCreate,
+    DSREntryUpdate,
+    DSREntryResponse,
+    DSREntryListResponse,
+    DSRGrantPreviousDayPermission,
+    DSRSendReminder,
+    DSRMissingUserResponse,
+)
+from app.services.dsr_service import DSRService
+
+router = APIRouter()
+
+
+# ---------------------------------------------------------------
+# Entry CRUD (all authenticated users)
+# ---------------------------------------------------------------
+
+@router.post("/entries", response_model=DSREntryResponse, status_code=status.HTTP_201_CREATED)
+async def create_entry(
+    data: DSREntryCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Create a DSR entry for today (all roles).
+    Submitting for a past date requires admin prior permission.
+    """
+    service = DSRService(db)
+    entry = await service.create_entry(data, current_user)
+    await db.commit()
+    await db.refresh(entry)
+    return entry
+
+
+@router.put("/entries/{public_id}", response_model=DSREntryResponse)
+async def update_entry(
+    public_id: UUID,
+    data: DSREntryUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update a DRAFT DSR entry (owner only)."""
+    service = DSRService(db)
+    entry = await service.update_entry(public_id, data, current_user)
+    await db.commit()
+    return entry
+
+
+@router.post("/entries/{public_id}/submit", response_model=DSREntryResponse)
+async def submit_entry(
+    public_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Submit a DRAFT DSR entry, changing status to SUBMITTED (owner only)."""
+    service = DSRService(db)
+    entry = await service.submit_entry(public_id, current_user)
+    await db.commit()
+    return entry
+
+
+@router.get("/entries/me", response_model=DSREntryListResponse)
+async def get_my_entries(
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=50, ge=1, le=200),
+    date_from: Optional[date] = Query(default=None),
+    date_to: Optional[date] = Query(default=None),
+    status: Optional[DSRStatus] = Query(default=None),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get my own DSR entry history (all roles)."""
+    service = DSRService(db)
+    items, total = await service.get_my_entries(
+        current_user,
+        skip=skip,
+        limit=limit,
+        date_from=date_from,
+        date_to=date_to,
+        status=status,
+    )
+    return DSREntryListResponse(items=items, total=total, skip=skip, limit=limit)
+
+
+@router.get("/entries/{public_id}", response_model=DSREntryResponse)
+async def get_entry(
+    public_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get a single DSR entry detail (owner or Admin)."""
+    service = DSRService(db)
+    return await service.get_entry(public_id, current_user)
+
+
+@router.delete("/entries/{public_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_entry(
+    public_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete a DSR entry (owner can delete DRAFT; Admin can delete any)."""
+    service = DSRService(db)
+    await service.delete_entry(public_id, current_user)
+    await db.commit()
+
+
+# ---------------------------------------------------------------
+# Admin-only
+# ---------------------------------------------------------------
+
+@router.get("/entries", response_model=DSREntryListResponse)
+async def get_all_entries(
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=100, ge=1, le=500),
+    user_id: Optional[int] = Query(default=None, description="Filter by internal user_id"),
+    date_from: Optional[date] = Query(default=None),
+    date_to: Optional[date] = Query(default=None),
+    status: Optional[DSRStatus] = Query(default=None),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """List all users' DSR entries with filters (Admin only)."""
+    service = DSRService(db)
+    items, total = await service.get_all_entries(
+        current_user,
+        skip=skip,
+        limit=limit,
+        user_id=user_id,
+        date_from=date_from,
+        date_to=date_to,
+        status=status,
+    )
+    return DSREntryListResponse(items=items, total=total, skip=skip, limit=limit)
+
+
+@router.post("/entries/grant-permission", response_model=DSREntryResponse)
+async def grant_previous_day_permission(
+    data: DSRGrantPreviousDayPermission,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Admin grants a user permission to submit a DSR for a past date.
+    Creates an empty DRAFT entry with the permission flag set.
+    """
+    service = DSRService(db)
+    entry = await service.grant_previous_day_permission(data, current_user)
+    await db.commit()
+    return entry
+
+
+@router.get("/admin/missing-today", response_model=list[DSRMissingUserResponse])
+async def get_missing_dsr_users_today(
+    report_date: Optional[date] = Query(default=None, description="Defaults to today"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Get list of active users who have NOT submitted their DSR for the given date (Admin only).
+    Defaults to today's date.
+    """
+    from datetime import date as date_cls
+    target_date = report_date or date_cls.today()
+
+    service = DSRService(db)
+    missing_users = await service.get_missing_dsr_users(target_date, current_user)
+
+    return [
+        DSRMissingUserResponse(
+            user_id=u.id,
+            public_id=u.public_id,
+            full_name=u.full_name,
+            username=u.username,
+            email=u.email,
+            report_date=target_date,
+        )
+        for u in missing_users
+    ]
+
+
+@router.post("/admin/send-reminders", status_code=status.HTTP_200_OK)
+async def send_reminders(
+    data: DSRSendReminder,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Admin sends DSR submission reminders to specified users for a given date.
+    Returns a summary of dispatched reminders.
+    """
+    service = DSRService(db)
+    return await service.send_reminders(data, current_user)

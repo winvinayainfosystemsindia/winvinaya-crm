@@ -2,8 +2,9 @@ from __future__ import annotations
 """User model - example database model"""
 
 import enum
+import uuid
 from typing import TYPE_CHECKING
-from sqlalchemy import String, Boolean, Enum, Numeric
+from sqlalchemy import String, Boolean, Enum, Numeric, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
 
@@ -30,6 +31,14 @@ class User(BaseModel):
     """User database model"""
     
     __tablename__ = "users"
+    
+    public_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        unique=True,
+        index=True,
+        nullable=False,
+        default=uuid.uuid4,
+    )
     
     email: Mapped[str] = mapped_column(
         String(255),

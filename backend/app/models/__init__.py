@@ -24,6 +24,9 @@ from app.models.deal import Deal, DealStage, DealType
 from app.models.crm_task import CRMTask, CRMTaskType, CRMTaskPriority, CRMTaskStatus, CRMRelatedToType
 from app.models.crm_activity_log import CRMActivityLog, CRMEntityType, CRMActivityType
 from app.models.system_setting import SystemSetting
+from app.models.dsr_project import DSRProject
+from app.models.dsr_activity import DSRActivity, DSRActivityStatus
+from app.models.dsr_entry import DSREntry, DSRStatus
 
 __all__ = [
     "User",
@@ -73,5 +76,11 @@ __all__ = [
     "CRMEntityType",
     "CRMActivityType",
     "SystemSetting",
+    # DSR Models
+    "DSRProject",
+    "DSRActivity",
+    "DSRActivityStatus",
+    "DSREntry",
+    "DSRStatus",
 ]
 

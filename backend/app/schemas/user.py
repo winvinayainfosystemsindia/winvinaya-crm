@@ -1,5 +1,6 @@
 """User Pydantic schemas for validation"""
 
+import uuid
 from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel, EmailStr, Field, validator
@@ -47,6 +48,7 @@ class UserUpdate(BaseModel):
 class UserResponse(UserBase):
     """Schema for user response"""
     id: int
+    public_id: uuid.UUID
     is_superuser: bool
     role: UserRole
     created_at: datetime

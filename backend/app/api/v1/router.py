@@ -27,7 +27,10 @@ from app.api.v1.endpoints import (
     crm_activities,
     system_settings,
     chat,
-    training_batch_plans
+    training_batch_plans,
+    dsr_projects,
+    dsr_activities,
+    dsr_entries,
 )
 
 
@@ -63,4 +66,9 @@ router.include_router(leads.router, prefix="/crm/leads", tags=["CRM Leads"])
 router.include_router(deals.router, prefix="/crm/deals", tags=["CRM Deals"])
 router.include_router(crm_tasks.router, prefix="/crm/tasks", tags=["CRM Tasks"])
 router.include_router(crm_activities.router, prefix="/crm/activities", tags=["CRM Activities"])
+
+# DSR Routers
+router.include_router(dsr_projects.router, prefix="/dsr/projects", tags=["DSR Projects"])
+router.include_router(dsr_activities.router, prefix="/dsr/activities", tags=["DSR Activities"])
+router.include_router(dsr_entries.router, prefix="/dsr", tags=["DSR Entries"])
 
