@@ -61,7 +61,7 @@ const ProjectManagement: React.FC = () => {
 	};
 
 	const handleManageActivities = (project: DSRProject) => {
-		navigate(`/dashboard/projects/${project.public_id}/activities`);
+		navigate(`/projects/${project.public_id}/activities`);
 	};
 
 	return (

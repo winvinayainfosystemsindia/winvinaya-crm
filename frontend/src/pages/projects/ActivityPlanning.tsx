@@ -39,7 +39,7 @@ const ActivityPlanning: React.FC = () => {
 		if (projectId && !project) {
 			dispatch(fetchProject(projectId)).unwrap().catch(() => {
 				toast.error('Project not found');
-				navigate('/dashboard/projects');
+				navigate('/projects');
 			});
 		}
 	}, [projectId, project, dispatch, navigate, toast]);
@@ -79,7 +79,7 @@ const ActivityPlanning: React.FC = () => {
 			<Container maxWidth="xl">
 				<Breadcrumbs sx={{ mb: 2 }}>
 					<Link component={RouterLink} to="/dashboard" color="inherit">Home</Link>
-					<Link component={RouterLink} to="/dashboard/projects" color="inherit">Projects</Link>
+					<Link component={RouterLink} to="/projects" color="inherit">Projects</Link>
 					<Typography color="text.primary">Activity Planning</Typography>
 				</Breadcrumbs>
 

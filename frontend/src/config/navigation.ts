@@ -54,7 +54,7 @@ export const topNavigation: NavigationItem[] = [
 		roles: ['admin', 'manager'],
 		children: [
 			{ label: 'Projects', path: '/projects' },
-			{ label: 'Activity Planning', path: '/projects/activities' },
+			{ label: 'Activity Planning', path: '/projects' },
 		],
 	},
 	{
