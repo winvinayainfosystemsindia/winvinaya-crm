@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
 	Box,
 	Container,
@@ -6,108 +6,67 @@ import {
 	Paper,
 	Tabs,
 	Tab,
-	Table,
-	TableBody,
-	TableCell,
-	TableContainer,
-	TableHead,
-	TableRow,
 	Button,
-	Chip,
 	IconButton,
 	TextField,
-	Alert,
 	CircularProgress
 } from '@mui/material';
 import {
 	Notifications as RemindIcon,
-	VpnKey as PermissionIcon,
 	Refresh as RefreshIcon
 } from '@mui/icons-material';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import {
-	fetchMissingReports,
-	fetchAdminOverview,
-	sendDSRReminders,
-	grantDSRPermission
-} from '../../store/slices/dsrSlice';
-import useToast from '../../hooks/useToast';
+import { useDSRAdmin } from '../../components/projects/dsr/hooks/useDSRAdmin';
+import MissingReportsTable from '../../components/projects/dsr/admin/MissingReportsTable';
+import AllSubmissionsTable from '../../components/projects/dsr/admin/AllSubmissionsTable';
 import CustomTablePagination from '../../components/common/CustomTablePagination';
 
 const DSRAdminOverview: React.FC = () => {
-	const dispatch = useAppDispatch();
-	const toast = useToast();
 	const {
+		tab,
+		setTab,
+		reportDate,
+		setReportDate,
+		reminding,
 		missingReports,
 		entries,
 		totalEntries,
-		loading
-	} = useAppSelector((state) => state.dsr);
-
-	const [tab, setTab] = useState(0);
-	const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
-	const [reminding, setReminding] = useState(false);
-
-	const [entryPage, setEntryPage] = useState(0);
-	const [entryRowsPerPage, setEntryRowsPerPage] = useState(10);
-
-	useEffect(() => {
-		if (tab === 0) {
-			dispatch(fetchMissingReports(reportDate));
-		} else {
-			dispatch(fetchAdminOverview({
-				skip: entryPage * entryRowsPerPage,
-				limit: entryRowsPerPage,
-				date_from: reportDate,
-				date_to: reportDate
-			}));
-		}
-	}, [dispatch, tab, reportDate, entryPage, entryRowsPerPage]);
-
-	const handleSendReminders = async () => {
-		setReminding(true);
-		try {
-			await dispatch(sendDSRReminders(reportDate)).unwrap();
-			toast.success('Reminders sent successfully');
-		} catch (error: any) {
-			toast.error(error || 'Failed to send reminders');
-		} finally {
-			setReminding(false);
-		}
-	};
-
-	const handleGrantPermission = async (userPublicId: string) => {
-		try {
-			await dispatch(grantDSRPermission({
-				user_public_id: userPublicId,
-				target_date: reportDate,
-				expiry_hours: 24
-			})).unwrap();
-			toast.success('Permission granted for 24 hours');
-			dispatch(fetchMissingReports(reportDate));
-		} catch (error: any) {
-			toast.error(error || 'Failed to grant permission');
-		}
-	};
+		loading,
+		entryPage,
+		setEntryPage,
+		entryRowsPerPage,
+		setEntryRowsPerPage,
+		handleSendReminders,
+		handleGrantPermission,
+		handleRefresh
+	} = useDSRAdmin();
 
 	return (
-		<Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: 3 }}>
+		<Box sx={{ bgcolor: '#f2f3f3', minHeight: '100vh', py: 4 }}>
 			<Container maxWidth="xl">
 				<Box sx={{ mb: 4 }}>
-					<Typography variant="h4" sx={{ fontWeight: 300, color: 'text.primary', mb: 0.5 }}>
+					<Typography variant="h4" sx={{ fontWeight: 300, color: '#232f3e', mb: 0.5, letterSpacing: '-0.01em' }}>
 						DSR Admin Overview
 					</Typography>
-					<Typography variant="body2" color="text.secondary">
+					<Typography variant="body2" sx={{ color: '#5f6368' }}>
 						Monitor submissions, send reminders and manage permissions
 					</Typography>
 				</Box>
 
-				<Paper variant="outlined" sx={{ mb: 3, borderRadius: 1 }}>
-					<Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ borderBottom: 1, borderColor: 'divider' }}>
+				<Paper elevation={0} sx={{ mb: 3, borderRadius: '2px', border: '1px solid #d5dbdb', overflow: 'hidden' }}>
+					<Tabs
+						value={tab}
+						onChange={(_, v) => setTab(v)}
+						sx={{
+							borderBottom: 1,
+							borderColor: 'divider',
+							bgcolor: '#fafafa',
+							'& .MuiTab-root': { textTransform: 'none', fontWeight: 600 }
+						}}
+					>
 						<Tab label="Missing Reports" />
 						<Tab label="All Submissions" />
 					</Tabs>
-					<Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 3, flexWrap: 'wrap' }}>
+					<Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 3, flexWrap: 'wrap', bgcolor: 'white' }}>
 						<TextField
 							label="Report Date"
 							type="date"
@@ -115,6 +74,7 @@ const DSRAdminOverview: React.FC = () => {
 							value={reportDate}
 							onChange={(e) => setReportDate(e.target.value)}
 							InputLabelProps={{ shrink: true }}
+							sx={{ '& .MuiInputBase-root': { borderRadius: '2px' } }}
 						/>
 						{tab === 0 && (
 							<Button
@@ -122,104 +82,46 @@ const DSRAdminOverview: React.FC = () => {
 								startIcon={reminding ? <CircularProgress size={20} color="inherit" /> : <RemindIcon />}
 								onClick={handleSendReminders}
 								disabled={reminding || missingReports.length === 0}
-								sx={{ bgcolor: '#d91d11', '&:hover': { bgcolor: '#b71c1c' } }}
+								sx={{
+									bgcolor: '#d91d11',
+									'&:hover': { bgcolor: '#b71c1c' },
+									borderRadius: '2px',
+									textTransform: 'none',
+									fontWeight: 700
+								}}
 							>
 								Send Reminders ({missingReports.length})
 							</Button>
 						)}
-						<IconButton onClick={() => tab === 0 ? dispatch(fetchMissingReports(reportDate)) : dispatch(fetchAdminOverview({ skip: entryPage * entryRowsPerPage, limit: entryRowsPerPage, date_from: reportDate, date_to: reportDate }))}>
+						<IconButton onClick={handleRefresh}>
 							<RefreshIcon />
 						</IconButton>
 					</Box>
 
-					{tab === 0 ? (
-						<TableContainer>
-							<Table>
-								<TableHead sx={{ bgcolor: '#f2f3f3' }}>
-									<TableRow>
-										<TableCell sx={{ fontWeight: 700 }}>Employee</TableCell>
-										<TableCell sx={{ fontWeight: 700 }}>Email</TableCell>
-										<TableCell sx={{ fontWeight: 700 }}>Role</TableCell>
-										<TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
-									</TableRow>
-								</TableHead>
-								<TableBody>
-									{loading ? (
-										<TableRow>
-											<TableCell colSpan={4} align="center" sx={{ py: 3 }}>
-												<CircularProgress size={24} color="inherit" />
-											</TableCell>
-										</TableRow>
-									) : missingReports.length === 0 ? (
-										<TableRow>
-											<TableCell colSpan={4} align="center" sx={{ py: 3 }}>
-												<Alert severity="success">Everyone has submitted their DSR for this date!</Alert>
-											</TableCell>
-										</TableRow>
-									) : (
-										missingReports.map((user) => (
-											<TableRow key={user.public_id} hover>
-												<TableCell sx={{ fontWeight: 600 }}>{user.full_name || user.username}</TableCell>
-												<TableCell>{user.email}</TableCell>
-												<TableCell><Chip label={user.role} size="small" variant="outlined" /></TableCell>
-												<TableCell align="right">
-													<Button
-														size="small"
-														startIcon={<PermissionIcon />}
-														onClick={() => handleGrantPermission(user.public_id)}
-														sx={{ textTransform: 'none' }}
-													>
-														Grant Permission
-													</Button>
-												</TableCell>
-											</TableRow>
-										))
-									)}
-								</TableBody>
-							</Table>
-						</TableContainer>
-					) : (
-						<TableContainer>
-							<Table>
-								<TableHead sx={{ bgcolor: '#f2f3f3' }}>
-									<TableRow>
-										<TableCell sx={{ fontWeight: 700 }}>Employee</TableCell>
-										<TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-										<TableCell sx={{ fontWeight: 700 }}>Hours</TableCell>
-										<TableCell sx={{ fontWeight: 700 }}>Submitted At</TableCell>
-									</TableRow>
-								</TableHead>
-								<TableBody>
-									{loading ? (
-										<TableRow>
-											<TableCell colSpan={4} align="center" sx={{ py: 3 }}>
-												<CircularProgress size={24} color="inherit" />
-											</TableCell>
-										</TableRow>
-									) : (
-										entries.map((entry) => (
-											<TableRow key={entry.public_id} hover>
-												<TableCell>{entry.user?.username || entry.user?.full_name}</TableCell>
-												<TableCell>
-													<Chip label={entry.status.toUpperCase()} size="small" variant="outlined" />
-												</TableCell>
-												<TableCell>{entry.items.reduce((s, i) => s + i.hours, 0).toFixed(1)} h</TableCell>
-												<TableCell>{entry.submitted_at ? new Date(entry.submitted_at).toLocaleString() : 'N/A'}</TableCell>
-											</TableRow>
-										))
-									)}
-								</TableBody>
-							</Table>
-							<CustomTablePagination
-								count={totalEntries}
-								rowsPerPage={entryRowsPerPage}
-								page={entryPage}
-								onPageChange={(_, p) => setEntryPage(p)}
-								onRowsPerPageChange={(e) => { setEntryRowsPerPage(parseInt(e.target.value, 10)); setEntryPage(0); }}
-								onRowsPerPageSelectChange={(rows) => { setEntryRowsPerPage(rows); setEntryPage(0); }}
+					<Box sx={{ bgcolor: 'white' }}>
+						{tab === 0 ? (
+							<MissingReportsTable
+								missingReports={missingReports}
+								loading={loading}
+								onGrantPermission={handleGrantPermission}
 							/>
-						</TableContainer>
-					)}
+						) : (
+							<>
+								<AllSubmissionsTable
+									entries={entries}
+									loading={loading}
+								/>
+								<CustomTablePagination
+									count={totalEntries}
+									rowsPerPage={entryRowsPerPage}
+									page={entryPage}
+									onPageChange={(_, p) => setEntryPage(p)}
+									onRowsPerPageChange={(e) => { setEntryRowsPerPage(parseInt(e.target.value, 10)); setEntryPage(0); }}
+									onRowsPerPageSelectChange={(rows) => { setEntryRowsPerPage(rows); setEntryPage(0); }}
+								/>
+							</>
+						)}
+					</Box>
 				</Paper>
 			</Container>
 		</Box>

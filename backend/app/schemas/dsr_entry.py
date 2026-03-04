@@ -48,7 +48,7 @@ class DSRGrantPreviousDayPermission(BaseModel):
 
 class DSRSendReminder(BaseModel):
     """Admin sends reminders to a list of users"""
-    user_public_ids: list[uuid.UUID] = Field(..., min_length=1)
+    user_public_ids: Optional[list[uuid.UUID]] = Field(default=None, description="If empty/None, all missing users will be reminded")
     report_date: date
     message: Optional[str] = Field(default=None, description="Optional custom reminder message")
 

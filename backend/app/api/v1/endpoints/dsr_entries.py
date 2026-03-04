@@ -147,7 +147,7 @@ async def get_all_entries(
     return DSREntryListResponse(items=items, total=total, skip=skip, limit=limit)
 
 
-@router.post("/entries/grant-permission", response_model=DSREntryResponse)
+@router.post("/admin/grant-permission", response_model=DSREntryResponse)
 async def grant_previous_day_permission(
     data: DSRGrantPreviousDayPermission,
     current_user: User = Depends(get_current_user),
@@ -163,8 +163,8 @@ async def grant_previous_day_permission(
     return entry
 
 
-@router.get("/admin/missing-today", response_model=list[DSRMissingUserResponse])
-async def get_missing_dsr_users_today(
+@router.get("/admin/missing", response_model=list[DSRMissingUserResponse])
+async def get_missing_dsr_users(
     report_date: Optional[date] = Query(default=None, description="Defaults to today"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),

@@ -311,15 +311,23 @@ class DSRService:
     async def send_reminders(
         self, data: DSRSendReminder, current_user: User
     ) -> dict:
-        """Admin: send DSR reminders to specified users."""
+        """Admin: send DSR reminders to specified users or all missing users if not specified."""
         _require_admin(current_user)
 
         # Resolve public_ids → user_ids
         user_ids = []
-        for uid in data.user_public_ids:
-            users = await self.user_repo.get_by_fields(public_id=uid)
-            if users:
-                user_ids.append(users[0].id)
+        if data.user_public_ids:
+            for uid in data.user_public_ids:
+                users = await self.user_repo.get_by_fields(public_id=uid)
+                if users:
+                    user_ids.append(users[0].id)
+        else:
+            # Recompute missing users for this date
+            missing_users = await self.get_missing_dsr_users(data.report_date, current_user)
+            user_ids = [u.id for u in missing_users]
+
+        if not user_ids:
+            return {"message": "No users to remind", "count": 0}
 
         return await self.notifier.send_dsr_reminder(
             user_ids=user_ids,

@@ -41,26 +41,30 @@ const dsrService = {
 		date_from?: string,
 		date_to?: string
 	): Promise<PaginationResult<DSREntry>> => {
-		const response = await api.get('/dsr/entries/admin/overview', {
+		const response = await api.get('/dsr/entries', {
 			params: { skip, limit, date_from, date_to }
 		});
 		return response.data;
 	},
 
 	getMissingReports: async (date: string): Promise<MissingDSR[]> => {
-		const response = await api.get('/dsr/entries/admin/missing', {
-			params: { date }
+		const response = await api.get('/dsr/admin/missing', {
+			params: { report_date: date }
 		});
 		return response.data;
 	},
 
-	grantPermission: async (data: { user_public_id: string, target_date: string, expiry_hours?: number }): Promise<void> => {
-		await api.post('/dsr/entries/admin/grant-permission', data);
+	grantPermission: async (data: { user_public_id: string, target_date: string }): Promise<void> => {
+		await api.post('/dsr/admin/grant-permission', {
+			user_public_id: data.user_public_id,
+			report_date: data.target_date
+		});
 	},
 
 	sendReminders: async (date: string): Promise<void> => {
-		await api.post('/dsr/entries/admin/send-reminders', null, {
-			params: { date }
+		await api.post('/dsr/admin/send-reminders', {
+			report_date: date,
+			user_public_ids: null // Remind all missing
 		});
 	}
 };
