@@ -10,7 +10,7 @@ const ActivityTableEmpty: React.FC = () => {
 
 	return (
 		<TableRow>
-			<TableCell colSpan={5} align="center" sx={{ py: 6, color: theme.palette.text.secondary, fontSize: '0.8125rem' }}>
+			<TableCell colSpan={6} align="center" sx={{ py: 6, color: theme.palette.text.secondary, fontSize: '0.8125rem' }}>
 				No activities found for this project.
 			</TableCell>
 		</TableRow>

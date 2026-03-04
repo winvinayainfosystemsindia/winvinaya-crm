@@ -50,6 +50,7 @@ export interface DSRActivity {
 	description: string | null;
 	start_date: string;
 	end_date: string;
+	actual_end_date: string | null;
 	status: DSRActivityStatus;
 	is_active: boolean;
 	others?: Record<string, any>;
@@ -97,6 +98,7 @@ export interface DSRActivityCreate {
 	description?: string;
 	start_date: string;
 	end_date: string;
+	actual_end_date?: string | null;
 	status?: DSRActivityStatus;
 	is_active?: boolean;
 	others?: Record<string, any>;

@@ -66,6 +66,11 @@ class DSRActivity(BaseModel):
         nullable=False,
     )
 
+    actual_end_date: Mapped[date | None] = mapped_column(
+        Date,
+        nullable=True,
+    )
+
     status: Mapped[DSRActivityStatus] = mapped_column(
         Enum(DSRActivityStatus, values_callable=lambda x: [e.value for e in x]),
         default=DSRActivityStatus.PLANNED,

@@ -44,6 +44,7 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 	const [description, setDescription] = useState('');
 	const [startDate, setStartDate] = useState('');
 	const [endDate, setEndDate] = useState('');
+	const [actualEndDate, setActualEndDate] = useState<string>('');
 	const [status, setStatus] = useState<DSRActivityStatus>(DSRActivityStatusValues.PLANNED);
 	const [submitting, setSubmitting] = useState(false);
 
@@ -54,12 +55,14 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 				setDescription(activity.description || '');
 				setStartDate(activity.start_date.split('T')[0]);
 				setEndDate(activity.end_date.split('T')[0]);
+				setActualEndDate(activity.actual_end_date ? activity.actual_end_date.split('T')[0] : '');
 				setStatus(activity.status);
 			} else {
 				setName('');
 				setDescription('');
 				setStartDate(new Date().toISOString().split('T')[0]);
 				setEndDate(new Date().toISOString().split('T')[0]);
+				setActualEndDate('');
 				setStatus(DSRActivityStatusValues.PLANNED);
 			}
 		}
@@ -74,6 +77,7 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 				description,
 				start_date: startDate,
 				end_date: endDate,
+				actual_end_date: actualEndDate || null,
 				status
 			};
 
@@ -177,13 +181,39 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 						label="Status"
 						fullWidth
 						value={status}
-						onChange={(e) => setStatus(e.target.value as DSRActivityStatus)}
+						onChange={(e) => {
+							const newStatus = e.target.value as DSRActivityStatus;
+							setStatus(newStatus);
+							if (newStatus === DSRActivityStatusValues.COMPLETED) {
+								if (!actualEndDate) {
+									setActualEndDate(new Date().toISOString().split('T')[0]);
+								}
+							} else {
+								setActualEndDate('');
+							}
+						}}
 						disabled={submitting}
 					>
 						{Object.values(DSRActivityStatusValues).map(s => (
 							<MenuItem key={s} value={s}>{s.toUpperCase()}</MenuItem>
 						))}
 					</TextField>
+
+					{status === DSRActivityStatusValues.COMPLETED && actualEndDate && (
+						<Box sx={{
+							p: 1.5,
+							bgcolor: 'rgba(3, 127, 12, 0.05)',
+							border: '1px solid rgba(3, 127, 12, 0.2)',
+							borderRadius: 1,
+							display: 'flex',
+							alignItems: 'center',
+							gap: 1
+						}}>
+							<Typography variant="body2" sx={{ color: '#037f0c', fontWeight: 500 }}>
+								Auto-recorded completion date: <strong>{new Date(actualEndDate).toLocaleDateString()}</strong>
+							</Typography>
+						</Box>
+					)}
 				</Box>
 			</DialogContent>
 			<DialogActions sx={{ p: 3, bgcolor: theme.palette.background.paper, borderTop: `1px solid ${theme.palette.divider}` }}>

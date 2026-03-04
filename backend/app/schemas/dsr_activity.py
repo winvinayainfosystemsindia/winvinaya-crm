@@ -13,6 +13,7 @@ class DSRActivityCreate(BaseModel):
     description: Optional[str] = Field(default=None, description="Detailed description of the activity")
     start_date: date = Field(..., description="Planned start date")
     end_date: date = Field(..., description="Planned end date")
+    actual_end_date: Optional[date] = Field(default=None, description="Actual completion date")
     status: DSRActivityStatus = Field(default=DSRActivityStatus.PLANNED)
     is_active: bool = Field(default=True)
     others: Optional[dict] = Field(default=None, description="Extensible metadata")
@@ -29,6 +30,7 @@ class DSRActivityUpdate(BaseModel):
     description: Optional[str] = Field(default=None)
     start_date: Optional[date] = Field(default=None)
     end_date: Optional[date] = Field(default=None)
+    actual_end_date: Optional[date] = Field(default=None)
     status: Optional[DSRActivityStatus] = Field(default=None)
     is_active: Optional[bool] = Field(default=None)
     others: Optional[dict] = Field(default=None)
@@ -58,6 +60,7 @@ class DSRActivityResponse(BaseModel):
     description: Optional[str] = None
     start_date: date
     end_date: date
+    actual_end_date: Optional[date] = None
     status: DSRActivityStatus
     is_active: bool
     others: Optional[dict] = None

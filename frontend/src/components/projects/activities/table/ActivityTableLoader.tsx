@@ -8,7 +8,7 @@ import {
 const ActivityTableLoader: React.FC = () => {
 	return (
 		<TableRow>
-			<TableCell colSpan={5} align="center" sx={{ py: 6 }}>
+			<TableCell colSpan={6} align="center" sx={{ py: 6 }}>
 				<CircularProgress size={24} color="primary" />
 			</TableCell>
 		</TableRow>
