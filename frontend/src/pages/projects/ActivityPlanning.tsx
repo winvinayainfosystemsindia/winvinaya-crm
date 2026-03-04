@@ -15,8 +15,9 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchProject, deleteActivity } from '../../store/slices/dsrSlice';
 import useToast from '../../hooks/useToast';
 import dsrActivityService from '../../services/dsrActivityService';
-import ActivityTable from '../../components/projects/activities/ActivityTable';
-import ActivityDialog from '../../components/projects/activities/ActivityDialog';
+import ActivityTable from '../../components/projects/activities/table/ActivityTable';
+import ActivityDialog from '../../components/projects/activities/forms/ActivityDialog';
+import ActivityStats from '../../components/projects/activities/stats/ActivityStats';
 import ExcelImportModal from '../../components/common/ExcelImportModal';
 
 const ActivityPlanning: React.FC = () => {
@@ -123,6 +124,8 @@ const ActivityPlanning: React.FC = () => {
 						</Button>
 					</Box>
 				</Box>
+
+				<ActivityStats projectId={projectId!} refreshKey={refreshKey} />
 
 				<ActivityTable
 					projectId={projectId!}

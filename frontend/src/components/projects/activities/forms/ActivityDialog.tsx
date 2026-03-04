@@ -9,12 +9,19 @@ import {
 	Box,
 	MenuItem,
 	CircularProgress,
-	Divider
+	Typography,
+	IconButton,
+	Fade,
+	useTheme
 } from '@mui/material';
-import type { DSRActivity, DSRActivityStatus } from '../../../models/dsr';
-import { DSRActivityStatusValues } from '../../../models/dsr';
-import { useAppDispatch } from '../../../store/hooks';
-import { createActivity, updateActivity } from '../../../store/slices/dsrSlice';
+import {
+	Close as CloseIcon,
+	ListAlt as ActivityIcon
+} from '@mui/icons-material';
+import type { DSRActivity, DSRActivityStatus } from '../../../../models/dsr';
+import { DSRActivityStatusValues } from '../../../../models/dsr';
+import { useAppDispatch } from '../../../../store/hooks';
+import { createActivity, updateActivity } from '../../../../store/slices/dsrSlice';
 
 interface ActivityDialogProps {
 	open: boolean;
@@ -31,6 +38,7 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 	onClose,
 	onSuccess
 }) => {
+	const theme = useTheme();
 	const dispatch = useAppDispatch();
 	const [name, setName] = useState('');
 	const [description, setDescription] = useState('');
@@ -61,7 +69,7 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 		setSubmitting(true);
 		try {
 			const payload = {
-				project_public_id: projectId as any, // backend expects UUID
+				project_public_id: projectId as any,
 				name,
 				description,
 				start_date: startDate,
@@ -86,11 +94,45 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 	};
 
 	return (
-		<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-			<DialogTitle>{activity ? 'Edit Activity' : 'Add New Activity'}</DialogTitle>
-			<Divider />
+		<Dialog
+			open={open}
+			onClose={onClose}
+			maxWidth="sm"
+			fullWidth
+			TransitionComponent={Fade}
+			TransitionProps={{ timeout: 400 }}
+			PaperProps={{
+				sx: {
+					borderRadius: '4px',
+					boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+				}
+			}}
+		>
+			<DialogTitle sx={{
+				bgcolor: theme.palette.secondary.main,
+				color: '#ffffff',
+				py: 2,
+				display: 'flex',
+				alignItems: 'center',
+				justifyContent: 'space-between'
+			}}>
+				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+					<ActivityIcon />
+					<Box>
+						<Typography variant="h6" sx={{ lineHeight: 1.2, fontWeight: 700 }}>
+							{activity ? 'Edit Activity' : 'Add New Activity'}
+						</Typography>
+						<Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', display: 'block' }}>
+							{activity ? `Activity ID: ${activity.public_id}` : 'Plan a new activity for this project'}
+						</Typography>
+					</Box>
+				</Box>
+				<IconButton onClick={onClose} size="small" sx={{ color: '#ffffff', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+					<CloseIcon fontSize="small" />
+				</IconButton>
+			</DialogTitle>
 			<DialogContent>
-				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 2 }}>
 					<TextField
 						label="Activity Name"
 						fullWidth
@@ -144,16 +186,37 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 					</TextField>
 				</Box>
 			</DialogContent>
-			<Divider />
-			<DialogActions sx={{ p: 2 }}>
-				<Button onClick={onClose} disabled={submitting}>Cancel</Button>
+			<DialogActions sx={{ p: 3, bgcolor: theme.palette.background.paper, borderTop: `1px solid ${theme.palette.divider}` }}>
+				<Button
+					onClick={onClose}
+					disabled={submitting}
+					sx={{
+						color: theme.palette.text.secondary,
+						textTransform: 'none',
+						fontWeight: 700,
+						'&:hover': { bgcolor: '#eaeded' }
+					}}
+				>
+					Cancel
+				</Button>
 				<Button
 					onClick={handleSubmit}
 					variant="contained"
 					disabled={submitting}
-					sx={{ bgcolor: '#ec7211', '&:hover': { bgcolor: '#eb5f07' } }}
+					sx={{
+						bgcolor: theme.palette.primary.main,
+						color: '#ffffff',
+						textTransform: 'none',
+						fontWeight: 700,
+						px: 4,
+						py: 1,
+						borderRadius: '2px',
+						boxShadow: 'none',
+						'&:hover': { bgcolor: '#eb5f07', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' },
+						'&.Mui-disabled': { bgcolor: '#f2f3f3', color: '#959ba1' }
+					}}
 				>
-					{submitting ? <CircularProgress size={24} /> : (activity ? 'Save Changes' : 'Create Activity')}
+					{submitting ? <CircularProgress size={24} /> : (activity ? 'Commit Changes' : 'Plan Activity')}
 				</Button>
 			</DialogActions>
 		</Dialog>
