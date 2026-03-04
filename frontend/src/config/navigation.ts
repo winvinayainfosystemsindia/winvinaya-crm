@@ -51,9 +51,10 @@ export const topNavigation: NavigationItem[] = [
 	{
 		label: 'Project Management',
 		icon: ProjectIcon,
-		roles: ['admin', 'manager'],
+		roles: ['admin', 'manager', 'trainer', 'sourcing'],
 		children: [
 			{ label: 'Projects', path: '/projects' },
+			{ label: 'Activities', path: '/projects/activities' },
 		],
 	},
 	{

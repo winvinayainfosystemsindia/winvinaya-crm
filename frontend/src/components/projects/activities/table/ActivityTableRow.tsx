@@ -14,11 +14,13 @@ import { DSRActivityStatusValues } from '../../../../models/dsr';
 interface ActivityTableRowProps {
 	activity: DSRActivity;
 	onActionClick: (event: React.MouseEvent<HTMLButtonElement>, activity: DSRActivity) => void;
+	canEdit?: boolean;
 }
 
 const ActivityTableRow: React.FC<ActivityTableRowProps> = ({
 	activity,
-	onActionClick
+	onActionClick,
+	canEdit = false
 }) => {
 	const theme = useTheme();
 
@@ -121,15 +123,17 @@ const ActivityTableRow: React.FC<ActivityTableRowProps> = ({
 					{activity.description}
 				</Typography>
 			</TableCell>
-			<TableCell align="right" sx={{ py: 1 }}>
-				<IconButton
-					size="small"
-					onClick={(e) => onActionClick(e, activity)}
-					sx={{ color: theme.palette.text.secondary }}
-				>
-					<MoreIcon fontSize="small" />
-				</IconButton>
-			</TableCell>
+			{canEdit && (
+				<TableCell align="right" sx={{ py: 1 }}>
+					<IconButton
+						size="small"
+						onClick={(e) => onActionClick(e, activity)}
+						sx={{ color: theme.palette.text.secondary }}
+					>
+						<MoreIcon fontSize="small" />
+					</IconButton>
+				</TableCell>
+			)}
 		</TableRow>
 	);
 };

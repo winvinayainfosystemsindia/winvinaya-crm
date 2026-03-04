@@ -97,6 +97,7 @@ const AppRouter: React.FC = () => {
 
 					<Route path="projects">
 						<Route index element={<ProjectManagement />} />
+						<Route path="activities" element={<ActivityPlanning />} />
 						<Route path=":projectId/activities" element={<ActivityPlanning />} />
 					</Route>
 

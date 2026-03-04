@@ -6,7 +6,11 @@ import {
 	useTheme
 } from '@mui/material';
 
-const ActivityTableHead: React.FC = () => {
+interface ActivityTableHeadProps {
+	canEdit?: boolean;
+}
+
+const ActivityTableHead: React.FC<ActivityTableHeadProps> = ({ canEdit = false }) => {
 	const theme = useTheme();
 
 	return (
@@ -17,7 +21,7 @@ const ActivityTableHead: React.FC = () => {
 				<TableCell sx={{ fontWeight: 600, color: theme.palette.text.secondary, fontSize: '0.8125rem', py: 2 }}>Status</TableCell>
 				<TableCell sx={{ fontWeight: 600, color: theme.palette.text.secondary, fontSize: '0.8125rem', py: 2 }}>Timeline</TableCell>
 				<TableCell sx={{ fontWeight: 600, color: theme.palette.text.secondary, fontSize: '0.8125rem', py: 2 }}>Description</TableCell>
-				<TableCell align="right" sx={{ fontWeight: 600, color: theme.palette.text.secondary, fontSize: '0.8125rem', py: 2 }}>Actions</TableCell>
+				{canEdit && <TableCell align="right" sx={{ fontWeight: 600, color: theme.palette.text.secondary, fontSize: '0.8125rem', py: 2 }}>Actions</TableCell>}
 			</TableRow>
 		</TableHead>
 	);

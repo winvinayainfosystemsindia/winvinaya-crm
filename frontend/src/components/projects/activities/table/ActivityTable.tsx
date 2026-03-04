@@ -23,13 +23,15 @@ interface ActivityTableProps {
 	onEdit: (activity: DSRActivity) => void;
 	onDelete: (activity: DSRActivity) => void;
 	refreshKey: number;
+	canEdit?: boolean;
 }
 
 const ActivityTable: React.FC<ActivityTableProps> = ({
 	projectId,
 	onEdit,
 	onDelete,
-	refreshKey
+	refreshKey,
+	canEdit = false
 }) => {
 	const theme = useTheme();
 	const {
@@ -73,7 +75,7 @@ const ActivityTable: React.FC<ActivityTableProps> = ({
 
 			<TableContainer>
 				<Table size="small">
-					<ActivityTableHead />
+					<ActivityTableHead canEdit={canEdit} />
 					<TableBody>
 						{loading ? (
 							<ActivityTableLoader />
@@ -85,6 +87,7 @@ const ActivityTable: React.FC<ActivityTableProps> = ({
 									key={activity.public_id}
 									activity={activity}
 									onActionClick={handleActionClick}
+									canEdit={canEdit}
 								/>
 							))
 						)}
