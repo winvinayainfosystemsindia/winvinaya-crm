@@ -11,10 +11,10 @@ import {
 	CircularProgress,
 	Divider
 } from '@mui/material';
-import type { DSRActivity, DSRActivityStatus } from '../../models/dsr';
-import { DSRActivityStatusValues } from '../../models/dsr';
-import { useAppDispatch } from '../../store/hooks';
-import { createActivity, updateActivity } from '../../store/slices/dsrSlice';
+import type { DSRActivity, DSRActivityStatus } from '../../../models/dsr';
+import { DSRActivityStatusValues } from '../../../models/dsr';
+import { useAppDispatch } from '../../../store/hooks';
+import { createActivity, updateActivity } from '../../../store/slices/dsrSlice';
 
 interface ActivityDialogProps {
 	open: boolean;

@@ -58,7 +58,7 @@ const Sidebar: React.FC = () => {
 			return false;
 		}
 
-		return location.pathname === path || (path !== '/' && location.pathname.startsWith(path));
+		return location.pathname === path || (path !== '/' && path !== '/projects' && location.pathname.startsWith(path));
 	};
 
 	const handleNavigate = (path: string) => {

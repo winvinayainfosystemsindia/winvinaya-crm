@@ -51,9 +51,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend, color = 
 				</Typography>
 				{icon && (
 					<Box sx={{ color: color, opacity: 0.8 }}>
-						{/* Check if icon is a component or node */}
-						{/* @ts-ignore - Handle SvgIconComponent vs value gracefully */}
-						{typeof icon === 'object' ? icon : <SvgIcon component={icon as any} />}
+						{React.isValidElement(icon) ? icon : <SvgIcon component={icon as any} />}
 					</Box>
 				)}
 			</Box>

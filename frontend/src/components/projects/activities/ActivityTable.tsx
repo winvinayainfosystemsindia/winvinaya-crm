@@ -17,11 +17,11 @@ import {
 	Edit as EditIcon,
 	Delete as DeleteIcon
 } from '@mui/icons-material';
-import type { DSRActivity } from '../../models/dsr';
-import { DSRActivityStatusValues } from '../../models/dsr';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { fetchActivities } from '../../store/slices/dsrSlice';
-import CustomTablePagination from '../common/CustomTablePagination';
+import type { DSRActivity } from '../../../models/dsr';
+import { DSRActivityStatusValues } from '../../../models/dsr';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import { fetchActivities } from '../../../store/slices/dsrSlice';
+import CustomTablePagination from '../../common/CustomTablePagination';
 
 interface ActivityTableProps {
 	projectId: string;

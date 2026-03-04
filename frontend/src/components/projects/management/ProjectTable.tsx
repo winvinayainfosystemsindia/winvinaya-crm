@@ -23,12 +23,12 @@ import {
 	ListAlt as ActivityIcon,
 	CloudUpload as ImportIcon
 } from '@mui/icons-material';
-import type { DSRProject } from '../../models/dsr';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { fetchProjects } from '../../store/slices/dsrSlice';
-import dsrProjectService from '../../services/dsrProjectService';
-import ExcelImportModal from '../common/ExcelImportModal';
-import CustomTablePagination from '../common/CustomTablePagination';
+import type { DSRProject } from '../../../models/dsr';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import { fetchProjects } from '../../../store/slices/dsrSlice';
+import dsrProjectService from '../../../services/dsrProjectService';
+import ExcelImportModal from '../../common/ExcelImportModal';
+import CustomTablePagination from '../../common/CustomTablePagination';
 
 interface ProjectTableProps {
 	onEdit: (project: DSRProject) => void;

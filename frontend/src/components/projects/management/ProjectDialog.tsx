@@ -13,11 +13,11 @@ import {
 	FormControlLabel,
 	Switch
 } from '@mui/material';
-import type { DSRProject } from '../../models/dsr';
-import type { User } from '../../models/user';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { createProject, updateProject } from '../../store/slices/dsrSlice';
-import { fetchUsers } from '../../store/slices/userSlice';
+import type { DSRProject } from '../../../models/dsr';
+import type { User } from '../../../models/user';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import { createProject, updateProject } from '../../../store/slices/dsrSlice';
+import { fetchUsers } from '../../../store/slices/userSlice';
 
 interface ProjectDialogProps {
 	open: boolean;

@@ -13,9 +13,10 @@ import type { DSRProject } from '../../models/dsr';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { updateProject } from '../../store/slices/dsrSlice';
 import useToast from '../../hooks/useToast';
-import ProjectTable from '../../components/projects/ProjectTable';
-import ProjectDialog from '../../components/projects/ProjectDialog';
+import ProjectTable from '../../components/projects/management/ProjectTable';
+import ProjectDialog from '../../components/projects/management/ProjectDialog';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
+import ProjectStats from '../../components/projects/management/ProjectStats';
 
 const ProjectManagement: React.FC = () => {
 	const navigate = useNavigate();
@@ -85,6 +86,8 @@ const ProjectManagement: React.FC = () => {
 						New Project
 					</Button>
 				</Box>
+
+				<ProjectStats refreshKey={refreshKey} />
 
 				<ProjectTable
 					onEdit={handleEdit}

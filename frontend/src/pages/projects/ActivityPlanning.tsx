@@ -17,8 +17,8 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchProject, deleteActivity } from '../../store/slices/dsrSlice';
 import useToast from '../../hooks/useToast';
 import dsrActivityService from '../../services/dsrActivityService';
-import ActivityTable from '../../components/projects/ActivityTable';
-import ActivityDialog from '../../components/projects/ActivityDialog';
+import ActivityTable from '../../components/projects/activities/ActivityTable';
+import ActivityDialog from '../../components/projects/activities/ActivityDialog';
 import ExcelImportModal from '../../components/common/ExcelImportModal';
 
 const ActivityPlanning: React.FC = () => {
