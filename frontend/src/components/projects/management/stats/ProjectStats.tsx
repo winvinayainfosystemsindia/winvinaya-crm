@@ -1,20 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Grid } from '@mui/material';
+import { Grid, useTheme } from '@mui/material';
 import {
 	Assignment as ProjectIcon,
 	CheckCircle as ActiveIcon,
 	ListAlt as ActivityIcon,
 	DoneAll as CompletedIcon
 } from '@mui/icons-material';
-import StatCard from '../../common/StatCard';
-import dsrProjectService from '../../../services/dsrProjectService';
-import dsrActivityService from '../../../services/dsrActivityService';
+import StatCard from '../../../common/StatCard';
+import dsrProjectService from '../../../../services/dsrProjectService';
+import dsrActivityService from '../../../../services/dsrActivityService';
 
 interface ProjectStatsProps {
 	refreshKey?: number;
 }
 
 const ProjectStats: React.FC<ProjectStatsProps> = ({ refreshKey = 0 }) => {
+	const theme = useTheme();
 	const [stats, setStats] = useState({
 		totalProjects: 0,
 		activeProjects: 0,
@@ -47,36 +48,36 @@ const ProjectStats: React.FC<ProjectStatsProps> = ({ refreshKey = 0 }) => {
 
 	return (
 		<Grid container spacing={3} sx={{ mb: 4 }}>
-			<Grid size={{ xs: 12, sm: 6, md: 3 } as any}>
+			<Grid size={{ xs: 12, sm: 6, md: 3 }}>
 				<StatCard
 					title="Total Projects"
 					value={stats.totalProjects}
 					icon={ProjectIcon}
-					color="#1a73e8"
+					color={theme.palette.primary.main}
 				/>
 			</Grid>
-			<Grid size={{ xs: 12, sm: 6, md: 3 } as any}>
+			<Grid size={{ xs: 12, sm: 6, md: 3 }}>
 				<StatCard
 					title="Active Projects"
 					value={stats.activeProjects}
 					icon={ActiveIcon}
-					color="#34a853"
+					color="#34a853" // Success color
 				/>
 			</Grid>
-			<Grid size={{ xs: 12, sm: 6, md: 3 } as any}>
+			<Grid size={{ xs: 12, sm: 6, md: 3 }}>
 				<StatCard
 					title="Total Activities"
 					value={stats.totalActivities}
 					icon={ActivityIcon}
-					color="#fbbc04"
+					color={theme.palette.secondary.main}
 				/>
 			</Grid>
-			<Grid size={{ xs: 12, sm: 6, md: 3 } as any}>
+			<Grid size={{ xs: 12, sm: 6, md: 3 }}>
 				<StatCard
 					title="Completed Activities"
 					value={stats.completedActivities}
 					icon={CompletedIcon}
-					color="#ea4335"
+					color="#ea4335" // Error/Warning color
 				/>
 			</Grid>
 		</Grid>

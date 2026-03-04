@@ -11,16 +11,18 @@ import {
 	LinearProgress,
 	List,
 	ListItem,
-	ListItemText,
 	ListItemIcon,
+	ListItemText,
 	Paper,
-	Alert
+	Alert,
+	Fade
 } from '@mui/material';
 import {
 	Close as CloseIcon,
 	Upload as UploadIcon,
 	ErrorOutline as ErrorIcon,
-	Description as FileIcon
+	Description as FileIcon,
+	FilePresent as ExcelIcon
 } from '@mui/icons-material';
 import type { ImportResult } from '../../models/dsr';
 
@@ -79,14 +81,42 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
 	};
 
 	return (
-		<Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-			<DialogTitle>
-				<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-					<Typography variant="h6">{title}</Typography>
-					<IconButton onClick={handleClose} size="small" disabled={loading}>
-						<CloseIcon />
-					</IconButton>
+		<Dialog
+			open={open}
+			onClose={handleClose}
+			maxWidth="sm"
+			fullWidth
+			TransitionComponent={Fade}
+			TransitionProps={{ timeout: 400 }}
+			PaperProps={{
+				sx: {
+					borderRadius: '4px',
+					boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+				}
+			}}
+		>
+			<DialogTitle sx={{
+				bgcolor: '#232f3e',
+				color: '#ffffff',
+				py: 2,
+				display: 'flex',
+				alignItems: 'center',
+				justifyContent: 'space-between'
+			}}>
+				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+					<ExcelIcon />
+					<Box>
+						<Typography variant="h6" sx={{ lineHeight: 1.2, fontWeight: 700 }}>
+							{title}
+						</Typography>
+						<Typography variant="caption" sx={{ color: '#879196', display: 'block' }}>
+							Bulk data ingestion from spreadsheet
+						</Typography>
+					</Box>
 				</Box>
+				<IconButton onClick={handleClose} size="small" disabled={loading} sx={{ color: '#ffffff', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+					<CloseIcon fontSize="small" />
+				</IconButton>
 			</DialogTitle>
 			<DialogContent dividers>
 				{description && (
@@ -172,19 +202,34 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
 					</Box>
 				)}
 			</DialogContent>
-			<DialogActions sx={{ p: 2 }}>
+			<DialogActions sx={{ p: 3, bgcolor: '#ffffff', borderTop: '1px solid #eaeded' }}>
 				{templateUrl && !result && (
 					<Button
 						href={templateUrl}
 						target="_blank"
 						startIcon={<FileIcon />}
-						sx={{ mr: 'auto', textTransform: 'none' }}
+						sx={{
+							mr: 'auto',
+							textTransform: 'none',
+							color: '#0073bb',
+							fontWeight: 700,
+							'&:hover': { bgcolor: '#f5f8fa' }
+						}}
 					>
 						Download Template
 					</Button>
 				)}
-				<Button onClick={handleClose} disabled={loading} color="inherit">
-					{result ? 'Close' : 'Cancel'}
+				<Button
+					onClick={handleClose}
+					disabled={loading}
+					sx={{
+						color: '#545b64',
+						textTransform: 'none',
+						fontWeight: 700,
+						'&:hover': { bgcolor: '#eaeded' }
+					}}
+				>
+					{result ? 'Dismiss' : 'Cancel'}
 				</Button>
 				{!result && (
 					<Button
@@ -192,9 +237,20 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
 						variant="contained"
 						disabled={!file || loading}
 						startIcon={<UploadIcon />}
-						sx={{ bgcolor: '#232f3e', '&:hover': { bgcolor: '#1a242f' } }}
+						sx={{
+							bgcolor: '#ec7211',
+							color: '#ffffff',
+							textTransform: 'none',
+							fontWeight: 700,
+							px: 4,
+							py: 1,
+							borderRadius: '2px',
+							boxShadow: 'none',
+							'&:hover': { bgcolor: '#eb5f07', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' },
+							'&.Mui-disabled': { bgcolor: '#f2f3f3', color: '#959ba1' }
+						}}
 					>
-						Upload & Import
+						{loading ? 'Uploading...' : 'Upload & Import'}
 					</Button>
 				)}
 			</DialogActions>

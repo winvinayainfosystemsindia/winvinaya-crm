@@ -85,10 +85,10 @@ export const updateProject = createAsyncThunk(
 
 export const fetchActivities = createAsyncThunk(
 	'dsr/fetchActivities',
-	async (params: { projectId: string; skip?: number; limit?: number }, { rejectWithValue }) => {
+	async (params: { projectId: string; skip?: number; limit?: number; search?: string; status?: any; active_only?: boolean }, { rejectWithValue }) => {
 		try {
-			const { projectId, skip = 0, limit = 100 } = params;
-			return await dsrActivityService.getActivities(Number(skip), Number(limit), projectId);
+			const { projectId, skip = 0, limit = 100, search, status, active_only } = params;
+			return await dsrActivityService.getActivities(Number(skip), Number(limit), projectId, status, active_only, search);
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.detail || 'Failed to fetch activities');
 		}

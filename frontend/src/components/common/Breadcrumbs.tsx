@@ -7,7 +7,8 @@ import {
 	People as PeopleIcon,
 	PersonAdd as PersonAddIcon,
 	Dashboard as DashboardIcon,
-	Settings as SettingsIcon
+	Settings as SettingsIcon,
+	Folder as ProjectIcon
 } from '@mui/icons-material';
 
 // Map of route paths to display names and icons
@@ -18,6 +19,7 @@ const breadcrumbNameMap: { [key: string]: { name: string; icon?: React.ReactNode
 	'candidate-registration': { name: 'Candidate Registration', icon: <PersonAddIcon sx={{ fontSize: 16, mr: 0.5 }} /> },
 	'profile': { name: 'Profile' },
 	'settings': { name: 'Settings', icon: <SettingsIcon sx={{ fontSize: 16, mr: 0.5 }} /> },
+	'projects': { name: 'Projects', icon: <ProjectIcon sx={{ fontSize: 16, mr: 0.5 }} /> },
 };
 
 const Breadcrumbs: React.FC = () => {

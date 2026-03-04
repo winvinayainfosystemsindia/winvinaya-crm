@@ -7,16 +7,19 @@ import {
 } from '@mui/material';
 import {
 	Add as AddIcon,
+	CloudUpload as ImportIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import type { DSRProject } from '../../models/dsr';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { updateProject } from '../../store/slices/dsrSlice';
 import useToast from '../../hooks/useToast';
-import ProjectTable from '../../components/projects/management/ProjectTable';
-import ProjectDialog from '../../components/projects/management/ProjectDialog';
+import dsrProjectService from '../../services/dsrProjectService';
+import ProjectTable from '../../components/projects/management/table/ProjectTable';
+import ProjectDialog from '../../components/projects/management/forms/ProjectDialog';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
-import ProjectStats from '../../components/projects/management/ProjectStats';
+import ProjectStats from '../../components/projects/management/stats/ProjectStats';
+import ExcelImportModal from '../../components/common/ExcelImportModal';
 
 const ProjectManagement: React.FC = () => {
 	const navigate = useNavigate();
@@ -29,6 +32,7 @@ const ProjectManagement: React.FC = () => {
 	const [confirmOpen, setConfirmOpen] = useState(false);
 	const [deleteProject, setDeleteProject] = useState<DSRProject | null>(null);
 	const [refreshKey, setRefreshKey] = useState(0);
+	const [importModalOpen, setImportModalOpen] = useState(false);
 
 	const handleAdd = () => {
 		setSelectedProject(null);
@@ -77,14 +81,44 @@ const ProjectManagement: React.FC = () => {
 							Manage projects and assign owners for DSR tracking
 						</Typography>
 					</Box>
-					<Button
-						variant="contained"
-						startIcon={<AddIcon />}
-						onClick={handleAdd}
-						sx={{ bgcolor: '#232f3e', '&:hover': { bgcolor: '#1a242f' } }}
-					>
-						New Project
-					</Button>
+					<Box sx={{ display: 'flex', gap: 1 }}>
+						<Button
+							variant="outlined"
+							startIcon={<ImportIcon />}
+							onClick={() => setImportModalOpen(true)}
+							sx={{
+								color: '#545b64',
+								borderColor: '#d5dbdb',
+								textTransform: 'none',
+								fontWeight: 700,
+								fontSize: '0.875rem',
+								height: 36,
+								borderRadius: '2px',
+								'&:hover': {
+									bgcolor: '#f2f3f3',
+									borderColor: '#aab7b7'
+								}
+							}}
+						>
+							Import from Excel
+						</Button>
+						<Button
+							variant="contained"
+							startIcon={<AddIcon />}
+							onClick={handleAdd}
+							sx={{
+								bgcolor: '#ec7211',
+								textTransform: 'none',
+								fontWeight: 700,
+								fontSize: '0.875rem',
+								height: 36,
+								borderRadius: '2px',
+								'&:hover': { bgcolor: '#eb5f07' }
+							}}
+						>
+							Create project
+						</Button>
+					</Box>
 				</Box>
 
 				<ProjectStats refreshKey={refreshKey} />
@@ -114,6 +148,14 @@ const ProjectManagement: React.FC = () => {
 					loading={loading}
 					onClose={() => setConfirmOpen(false)}
 					onConfirm={handleDeleteConfirm}
+				/>
+
+				<ExcelImportModal
+					open={importModalOpen}
+					onClose={() => setImportModalOpen(false)}
+					onImport={(file) => dsrProjectService.importFromExcel(file)}
+					title="Import Projects from Excel"
+					description="Upload an Excel file with 'name' and 'owner_email' columns to bulk-create projects."
 				/>
 			</Container>
 		</Box>

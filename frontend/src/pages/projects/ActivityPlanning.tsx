@@ -4,14 +4,12 @@ import {
 	Container,
 	Typography,
 	Button,
-	Breadcrumbs,
-	Link,
 	CircularProgress
 } from '@mui/material';
 import {
 	Add as AddIcon,
 } from '@mui/icons-material';
-import { useNavigate, useParams, Link as RouterLink } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import type { DSRActivity } from '../../models/dsr';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchProject, deleteActivity } from '../../store/slices/dsrSlice';
@@ -77,11 +75,6 @@ const ActivityPlanning: React.FC = () => {
 	return (
 		<Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: 3 }}>
 			<Container maxWidth="xl">
-				<Breadcrumbs sx={{ mb: 2 }}>
-					<Link component={RouterLink} to="/dashboard" color="inherit">Home</Link>
-					<Link component={RouterLink} to="/projects" color="inherit">Projects</Link>
-					<Typography color="text.primary">Activity Planning</Typography>
-				</Breadcrumbs>
 
 				<Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 					<Box>
@@ -92,11 +85,23 @@ const ActivityPlanning: React.FC = () => {
 							Define and manage activities for this project
 						</Typography>
 					</Box>
-					<Box sx={{ display: 'flex', gap: 2 }}>
+					<Box sx={{ display: 'flex', gap: 1.5 }}>
 						<Button
 							variant="outlined"
 							onClick={() => setImportModalOpen(true)}
-							sx={{ color: '#232f3e', borderColor: '#d5dbdb' }}
+							sx={{
+								color: '#545b64',
+								borderColor: '#d5dbdb',
+								textTransform: 'none',
+								fontWeight: 700,
+								fontSize: '0.875rem',
+								height: 36,
+								borderRadius: '2px',
+								'&:hover': {
+									bgcolor: '#f2f3f3',
+									borderColor: '#aab7b7'
+								}
+							}}
 						>
 							Import Excel
 						</Button>
@@ -104,7 +109,15 @@ const ActivityPlanning: React.FC = () => {
 							variant="contained"
 							startIcon={<AddIcon />}
 							onClick={handleAdd}
-							sx={{ bgcolor: '#232f3e', '&:hover': { bgcolor: '#1a242f' } }}
+							sx={{
+								bgcolor: '#ec7211',
+								textTransform: 'none',
+								fontWeight: 700,
+								fontSize: '0.875rem',
+								height: 36,
+								borderRadius: '2px',
+								'&:hover': { bgcolor: '#eb5f07' }
+							}}
 						>
 							Add Activity
 						</Button>

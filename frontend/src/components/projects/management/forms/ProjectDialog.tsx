@@ -9,15 +9,22 @@ import {
 	Box,
 	Autocomplete,
 	CircularProgress,
-	Divider,
 	FormControlLabel,
-	Switch
+	Switch,
+	Typography,
+	IconButton,
+	Fade,
+	useTheme
 } from '@mui/material';
-import type { DSRProject } from '../../../models/dsr';
-import type { User } from '../../../models/user';
-import { useAppDispatch, useAppSelector } from '../../../store/hooks';
-import { createProject, updateProject } from '../../../store/slices/dsrSlice';
-import { fetchUsers } from '../../../store/slices/userSlice';
+import {
+	Close as CloseIcon,
+	Assignment as ProjectIcon
+} from '@mui/icons-material';
+import type { DSRProject } from '../../../../models/dsr';
+import type { User } from '../../../../models/user';
+import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
+import { createProject, updateProject } from '../../../../store/slices/dsrSlice';
+import { fetchUsers } from '../../../../store/slices/userSlice';
 
 interface ProjectDialogProps {
 	open: boolean;
@@ -32,6 +39,7 @@ const ProjectDialog: React.FC<ProjectDialogProps> = ({
 	onClose,
 	onSuccess
 }) => {
+	const theme = useTheme();
 	const dispatch = useAppDispatch();
 	const { users, loading: loadingUsers } = useAppSelector((state) => state.users);
 
@@ -91,11 +99,45 @@ const ProjectDialog: React.FC<ProjectDialogProps> = ({
 	};
 
 	return (
-		<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-			<DialogTitle>{project ? 'Edit Project' : 'New Project'}</DialogTitle>
-			<Divider />
+		<Dialog
+			open={open}
+			onClose={onClose}
+			maxWidth="sm"
+			fullWidth
+			TransitionComponent={Fade}
+			TransitionProps={{ timeout: 400 }}
+			PaperProps={{
+				sx: {
+					borderRadius: '4px',
+					boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+				}
+			}}
+		>
+			<DialogTitle sx={{
+				bgcolor: theme.palette.secondary.main,
+				color: '#ffffff',
+				py: 2,
+				display: 'flex',
+				alignItems: 'center',
+				justifyContent: 'space-between'
+			}}>
+				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+					<ProjectIcon />
+					<Box>
+						<Typography variant="h6" sx={{ lineHeight: 1.2, fontWeight: 700 }}>
+							{project ? 'Edit Project' : 'Create New Project'}
+						</Typography>
+						<Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', display: 'block' }}>
+							{project ? `Project ID: ${project.public_id}` : 'Setup a new organizational project'}
+						</Typography>
+					</Box>
+				</Box>
+				<IconButton onClick={onClose} size="small" sx={{ color: '#ffffff', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+					<CloseIcon fontSize="small" />
+				</IconButton>
+			</DialogTitle>
 			<DialogContent>
-				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 1 }}>
+				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 2 }}>
 					<TextField
 						label="Project Name"
 						fullWidth
@@ -135,22 +177,44 @@ const ProjectDialog: React.FC<ProjectDialogProps> = ({
 								checked={isActive}
 								onChange={(e) => setIsActive(e.target.checked)}
 								disabled={submitting}
+								color="primary"
 							/>
 						}
 						label="Project Active"
 					/>
 				</Box>
 			</DialogContent>
-			<Divider />
-			<DialogActions sx={{ p: 2 }}>
-				<Button onClick={onClose} disabled={submitting}>Cancel</Button>
+			<DialogActions sx={{ p: 3, bgcolor: theme.palette.background.paper, borderTop: `1px solid ${theme.palette.divider}` }}>
+				<Button
+					onClick={onClose}
+					disabled={submitting}
+					sx={{
+						color: theme.palette.text.secondary,
+						textTransform: 'none',
+						fontWeight: 700,
+						'&:hover': { bgcolor: '#eaeded' }
+					}}
+				>
+					Cancel
+				</Button>
 				<Button
 					onClick={handleSubmit}
 					variant="contained"
 					disabled={submitting || !owner || !name}
-					sx={{ bgcolor: '#ec7211', '&:hover': { bgcolor: '#eb5f07' } }}
+					sx={{
+						bgcolor: theme.palette.primary.main,
+						color: '#ffffff',
+						textTransform: 'none',
+						fontWeight: 700,
+						px: 4,
+						py: 1,
+						borderRadius: '2px',
+						boxShadow: 'none',
+						'&:hover': { bgcolor: '#eb5f07', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' },
+						'&.Mui-disabled': { bgcolor: '#f2f3f3', color: '#959ba1' }
+					}}
 				>
-					{submitting ? <CircularProgress size={24} /> : (project ? 'Save Changes' : 'Create Project')}
+					{submitting ? <CircularProgress size={24} /> : (project ? 'Commit Changes' : 'Initialize Project')}
 				</Button>
 			</DialogActions>
 		</Dialog>
