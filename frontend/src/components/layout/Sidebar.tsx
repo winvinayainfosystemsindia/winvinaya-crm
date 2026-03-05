@@ -32,8 +32,9 @@ const Sidebar: React.FC = () => {
 	const user = useAppSelector((state) => state.auth.user);
 	const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
 		'CRM': false,
-		'Candidate Management': true,
-		'Training Management': false
+		'Candidate Management': false,
+		'Training Management': false,
+		'Project Management': false
 	});
 
 	const isActive = (path?: string) => {
