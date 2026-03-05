@@ -27,13 +27,15 @@ interface HistoryRowProps {
 	isExpanded: boolean;
 	onToggleExpand: () => void;
 	onDelete: (id: string) => void;
+	onEdit?: (id: string) => void;
 }
 
 const HistoryRow: React.FC<HistoryRowProps> = ({
 	entry,
 	isExpanded,
 	onToggleExpand,
-	onDelete
+	onDelete,
+	onEdit
 }) => {
 	const navigate = useNavigate();
 
@@ -76,7 +78,7 @@ const HistoryRow: React.FC<HistoryRowProps> = ({
 					{entry.status === DSRStatusValues.DRAFT && (
 						<Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
 							<Tooltip title="Edit Draft">
-								<IconButton size="small" onClick={() => navigate(`/dashboard/dsr/submission?id=${entry.public_id}`)}>
+								<IconButton size="small" onClick={() => onEdit ? onEdit(entry.public_id) : navigate(`/dashboard/dsr/submission?id=${entry.public_id}`)}>
 									<EditIcon fontSize="small" />
 								</IconButton>
 							</Tooltip>

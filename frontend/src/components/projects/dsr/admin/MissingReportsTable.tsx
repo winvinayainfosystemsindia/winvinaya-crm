@@ -17,13 +17,17 @@ import type { MissingDSR } from '../../../../models/dsr';
 interface MissingReportsTableProps {
 	missingReports: MissingDSR[];
 	loading: boolean;
+	onSendReminders: () => void;
 	onGrantPermission: (publicId: string) => void;
+	reminding: boolean;
 }
 
 const MissingReportsTable: React.FC<MissingReportsTableProps> = ({
 	missingReports,
 	loading,
-	onGrantPermission
+	onSendReminders,
+	onGrantPermission,
+	reminding
 }) => {
 	return (
 		<TableContainer>
@@ -58,8 +62,9 @@ const MissingReportsTable: React.FC<MissingReportsTableProps> = ({
 								<TableCell align="right">
 									<Button
 										size="small"
-										startIcon={<PermissionIcon />}
+										startIcon={reminding ? <CircularProgress size={16} color="inherit" /> : <PermissionIcon />}
 										onClick={() => onGrantPermission(user.public_id)}
+										disabled={reminding}
 										sx={{ textTransform: 'none', fontWeight: 700 }}
 									>
 										Grant Permission

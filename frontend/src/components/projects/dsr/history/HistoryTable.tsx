@@ -18,6 +18,7 @@ interface HistoryTableProps {
 	expandedRow: string | null;
 	onToggleReplace: (id: string | null) => void;
 	onDelete: (id: string) => void;
+	onEdit?: (id: string) => void;
 }
 
 const HistoryTable: React.FC<HistoryTableProps> = ({

@@ -11,10 +11,15 @@ import {
 import useToast from '../../../../hooks/useToast';
 import type { DSRItem } from '../../../../models/dsr';
 
-export const useDSRSubmission = () => {
+interface UseDSRSubmissionProps {
+	onSubmitted?: () => void;
+	externalEntryId?: string | null;
+}
+
+export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
-	const entryId = searchParams.get('id');
+	const entryId = props?.externalEntryId || searchParams.get('id');
 	const dispatch = useAppDispatch();
 	const toast = useToast();
 
@@ -47,6 +52,11 @@ export const useDSRSubmission = () => {
 
 		if (entryId) {
 			loadEntry(entryId);
+		} else {
+			// Reset for new entry
+			setReportDate(new Date().toISOString().split('T')[0]);
+			setItems([{ project_public_id: '', activity_public_id: '', description: '', start_time: '09:00', end_time: '10:00', hours: 1 }]);
+			setPermissionError(null);
 		}
 	}, [dispatch, entryId, loadEntry]);
 
@@ -123,6 +133,7 @@ export const useDSRSubmission = () => {
 			})).unwrap();
 			toast.success('Draft saved successfully');
 			setPermissionError(null);
+			if (props?.onSubmitted) props.onSubmitted();
 		} catch (error: any) {
 			if (error?.toLowerCase().includes('permission') || error?.toLowerCase().includes('date')) {
 				setPermissionError(error);
@@ -144,7 +155,11 @@ export const useDSRSubmission = () => {
 			})).unwrap();
 			await dispatch(submitEntry(entry.public_id)).unwrap();
 			toast.success('DSR submitted successfully!');
-			setTimeout(() => navigate('/dashboard/dsr'), 1500);
+			if (props?.onSubmitted) {
+				props.onSubmitted();
+			} else {
+				setTimeout(() => navigate('/dashboard/dsr'), 1500);
+			}
 		} catch (error: any) {
 			toast.error(error || 'Failed to submit DSR');
 		} finally {

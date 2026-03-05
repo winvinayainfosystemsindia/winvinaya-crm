@@ -9,7 +9,8 @@ import {
 	TableCell,
 	Button,
 	Box,
-	CircularProgress
+	CircularProgress,
+	Typography
 } from '@mui/material';
 import {
 	Add as AddIcon,
@@ -30,6 +31,7 @@ interface SubmissionFormProps {
 	onRemoveRow: (index: number) => void;
 	onSaveDraft: () => void;
 	onSubmit: () => void;
+	showTitle?: boolean;
 }
 
 const SubmissionForm: React.FC<SubmissionFormProps> = ({
@@ -42,10 +44,18 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
 	onAddRow,
 	onRemoveRow,
 	onSaveDraft,
-	onSubmit
+	onSubmit,
+	showTitle = true
 }) => {
 	return (
 		<Box>
+			{showTitle && (
+				<Box sx={{ mb: 2 }}>
+					<Typography variant="h6" sx={{ fontWeight: 700, color: '#232f3e' }}>
+						Activity Details
+					</Typography>
+				</Box>
+			)}
 			<TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 1 }}>
 				<Table sx={{ minWidth: 900 }}>
 					<TableHead sx={{ bgcolor: '#f2f3f3' }}>

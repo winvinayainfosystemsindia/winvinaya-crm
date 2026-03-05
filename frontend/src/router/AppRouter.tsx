@@ -37,9 +37,7 @@ import TaskManagement from '../pages/crm/TaskManagement';
 import CRMDashboard from '../pages/crm/CRMDashboard';
 import ProjectManagement from '../pages/projects/ProjectManagement';
 import ActivityPlanning from '../pages/projects/ActivityPlanning';
-import DSRSubmission from '../pages/dsr/DSRSubmission';
-import DSRHistory from '../pages/dsr/DSRHistory';
-import DSRAdminOverview from '../pages/dsr/DSRAdminOverview';
+import DSRDashboard from '../pages/dsr/DSRDashboard';
 
 const AppRouter: React.FC = () => {
 	return (
@@ -99,13 +97,9 @@ const AppRouter: React.FC = () => {
 						<Route index element={<ProjectManagement />} />
 						<Route path="activities" element={<ActivityPlanning />} />
 						<Route path=":projectId/activities" element={<ActivityPlanning />} />
+						<Route path="dsr" element={<DSRDashboard />} />
 					</Route>
 
-					<Route path="dsr">
-						<Route index element={<DSRHistory />} />
-						<Route path="submission" element={<DSRSubmission />} />
-						<Route path="admin" element={<DSRAdminOverview />} />
-					</Route>
 				</Route>
 			</Route>
 

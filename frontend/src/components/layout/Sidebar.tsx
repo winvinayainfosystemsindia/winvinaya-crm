@@ -43,6 +43,20 @@ const Sidebar: React.FC = () => {
 		}
 
 		// Special handling for All Candidates to avoid highlighting when on sibling routes
+		// Special handling for Projects to avoid highlighting when on sibling routes
+		if (path === '/projects') {
+			if (location.pathname === path) return true;
+			if (location.pathname.startsWith(path + '/')) {
+				const subPath = location.pathname.substring(path.length);
+				// Don't highlight "Projects" if we are on these specific sibling routes
+				if (subPath.startsWith('/activities') || subPath.startsWith('/dsr')) {
+					return false;
+				}
+				return true;
+			}
+			return false;
+		}
+
 		if (path === '/candidates') {
 			if (location.pathname === path) return true;
 			if (location.pathname.startsWith(path + '/')) {
