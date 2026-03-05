@@ -37,7 +37,7 @@ import TaskManagement from '../pages/crm/TaskManagement';
 import CRMDashboard from '../pages/crm/CRMDashboard';
 import ProjectManagement from '../pages/projects/ProjectManagement';
 import ActivityPlanning from '../pages/projects/ActivityPlanning';
-import DSRDashboard from '../pages/dsr/DSRDashboard';
+import DSRDashboard from '../pages/projects/DSRDashboard';
 
 const AppRouter: React.FC = () => {
 	return (
