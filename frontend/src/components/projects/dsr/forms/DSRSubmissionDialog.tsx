@@ -83,47 +83,46 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 				</IconButton>
 			</DialogTitle>
 
-			<DialogContent sx={{ p: 4, bgcolor: '#f2f3f3' }}>
+			<DialogContent sx={{ p: 4, pt: 6, bgcolor: '#f2f3f3' }}>
 				{permissionError && (
-					<Alert severity="error" icon={<WarningIcon />} sx={{ mb: 3, borderRadius: '2px' }}>
+					<Alert severity="error" icon={<WarningIcon />} sx={{ mb: 4, borderRadius: '2px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
 						{permissionError}
 					</Alert>
 				)}
 
-				<Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2 }}>
-					<TextField
-						label="Reporting Date"
-						type="date"
-						value={reportDate}
-						onChange={(e) => setReportDate(e.target.value)}
-						InputLabelProps={{ shrink: true }}
-						size="small"
-						sx={{
-							minWidth: 200,
-							bgcolor: 'white',
-							'& .MuiInputBase-root': { borderRadius: '2px' }
-						}}
-					/>
+				<Box sx={{ mb: 5, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 3 }}>
+					<Box>
+						<TextField
+							label="Reporting Date"
+							type="date"
+							value={reportDate}
+							onChange={(e) => setReportDate(e.target.value)}
+							size="small"
+							sx={{
+								minWidth: 220,
+								bgcolor: 'white',
+								'& .MuiInputBase-root': { borderRadius: '2px' }
+							}}
+						/>
+					</Box>
 
 					<DSRStatsCard
+						sx={{ mt: 2 }}
 						label="Total Hours"
 						value={totalHours.toFixed(2)}
 						color={totalHours > 8 ? '#1d8102' : '#232f3e'}
 					/>
 				</Box>
 
-				<Box sx={{ bgcolor: 'white', p: 1, borderRadius: '1px', border: '1px solid #d5dbdb' }}>
+				<Box sx={{ bgcolor: 'white', p: 2, borderRadius: '4px', border: '1px solid #d5dbdb', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
 					<SubmissionForm
 						items={items}
 						projects={projects}
 						activitiesByProject={activitiesByProject}
 						loading={loading}
-						submitting={submitting}
 						onRowChange={handleRowChange}
 						onAddRow={addRow}
 						onRemoveRow={removeRow}
-						onSaveDraft={handleSaveDraft}
-						onSubmit={handleSubmit}
 						showTitle={false}
 					/>
 				</Box>

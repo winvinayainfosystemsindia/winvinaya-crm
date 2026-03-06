@@ -9,13 +9,10 @@ import {
 	TableCell,
 	Button,
 	Box,
-	CircularProgress,
 	Typography
 } from '@mui/material';
 import {
-	Add as AddIcon,
-	Save as SaveIcon,
-	Send as SendIcon
+	Add as AddIcon
 } from '@mui/icons-material';
 import DSRItemRow from './DSRItemRow';
 import type { DSRItem, DSRProject, DSRActivity } from '../../../../models/dsr';
@@ -25,12 +22,9 @@ interface SubmissionFormProps {
 	projects: DSRProject[];
 	activitiesByProject: Record<string, DSRActivity[]>;
 	loading: boolean;
-	submitting: boolean;
 	onRowChange: (index: number, field: keyof DSRItem, value: any) => void;
 	onAddRow: () => void;
 	onRemoveRow: (index: number) => void;
-	onSaveDraft: () => void;
-	onSubmit: () => void;
 	showTitle?: boolean;
 }
 
@@ -39,12 +33,9 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
 	projects,
 	activitiesByProject,
 	loading,
-	submitting,
 	onRowChange,
 	onAddRow,
 	onRemoveRow,
-	onSaveDraft,
-	onSubmit,
 	showTitle = true
 }) => {
 	return (
@@ -83,37 +74,40 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
 								isDeleteDisabled={items.length === 1}
 							/>
 						))}
-						<TableRow>
-							<TableCell colSpan={7}>
-								<Button startIcon={<AddIcon />} onClick={onAddRow} sx={{ color: '#1a73e8', textTransform: 'none' }}>
-									Add more activities
-								</Button>
-							</TableCell>
-						</TableRow>
+						{(() => {
+							const lastItem = items[items.length - 1];
+							const isLastRowComplete = lastItem &&
+								lastItem.project_public_id &&
+								lastItem.activity_public_id &&
+								lastItem.description &&
+								lastItem.start_time &&
+								lastItem.end_time &&
+								(lastItem.hours || 0) > 0;
+
+							return (
+								<TableRow>
+									<TableCell colSpan={7}>
+										<Button
+											startIcon={<AddIcon />}
+											onClick={onAddRow}
+											disabled={!isLastRowComplete}
+											sx={{
+												color: isLastRowComplete ? '#1a73e8' : '#aab7bd',
+												textTransform: 'none',
+												'&.Mui-disabled': { color: '#aab7bd' }
+											}}
+										>
+											Add more activities
+										</Button>
+									</TableCell>
+								</TableRow>
+							);
+						})()}
 					</TableBody>
 				</Table>
 			</TableContainer>
 
-			<Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-				<Button
-					variant="outlined"
-					startIcon={<SaveIcon />}
-					onClick={onSaveDraft}
-					disabled={submitting}
-					sx={{ color: '#232f3e', borderColor: '#d5dbdb', px: 4, borderRadius: '2px', textTransform: 'none', fontWeight: 700 }}
-				>
-					Save Draft
-				</Button>
-				<Button
-					variant="contained"
-					startIcon={submitting ? <CircularProgress size={20} color="inherit" /> : <SendIcon />}
-					onClick={onSubmit}
-					disabled={submitting}
-					sx={{ bgcolor: '#232f3e', '&:hover': { bgcolor: '#1a242f' }, px: 4, borderRadius: '2px', textTransform: 'none', fontWeight: 700 }}
-				>
-					Submit DSR
-				</Button>
-			</Box>
+			<Box sx={{ mt: 1 }} />
 		</Box>
 	);
 };
