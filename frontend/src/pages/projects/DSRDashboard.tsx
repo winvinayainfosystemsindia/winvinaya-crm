@@ -135,7 +135,6 @@ const DSRDashboard: React.FC = () => {
 										<MissingReportsTable
 											missingReports={admin.missingReports}
 											loading={admin.loading}
-											onSendReminders={admin.handleSendReminders}
 											onGrantPermission={admin.handleGrantPermission}
 											reminding={admin.reminding}
 										/>

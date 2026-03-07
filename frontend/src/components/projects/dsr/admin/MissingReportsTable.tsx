@@ -17,7 +17,6 @@ import type { MissingDSR } from '../../../../models/dsr';
 interface MissingReportsTableProps {
 	missingReports: MissingDSR[];
 	loading: boolean;
-	onSendReminders: () => void;
 	onGrantPermission: (publicId: string) => void;
 	reminding: boolean;
 }
@@ -25,7 +24,6 @@ interface MissingReportsTableProps {
 const MissingReportsTable: React.FC<MissingReportsTableProps> = ({
 	missingReports,
 	loading,
-	onSendReminders,
 	onGrantPermission,
 	reminding
 }) => {
