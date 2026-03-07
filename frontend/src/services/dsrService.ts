@@ -66,6 +66,32 @@ const dsrService = {
 			report_date: date,
 			user_public_ids: null // Remind all missing
 		});
+	},
+
+	// Permission Requests
+	createPermissionRequest: async (data: { report_date: string, reason: string }): Promise<any> => {
+		const response = await api.post('/dsr/permissions/request', data);
+		return response.data;
+	},
+
+	getPermissionRequests: async (
+		skip = 0,
+		limit = 100,
+		user_id?: number,
+		status?: string
+	): Promise<{ items: any[], total: number }> => {
+		const response = await api.get('/dsr/permissions/requests', {
+			params: { skip, limit, user_id, status }
+		});
+		return response.data;
+	},
+
+	handlePermissionRequest: async (
+		publicId: string,
+		data: { status: string, admin_notes?: string }
+	): Promise<any> => {
+		const response = await api.put(`/dsr/permissions/requests/${publicId}`, data);
+		return response.data;
 	}
 };
 

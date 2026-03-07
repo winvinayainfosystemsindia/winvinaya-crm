@@ -18,9 +18,12 @@ import HistoryTable from '../../components/projects/dsr/history/HistoryTable';
 import { useDSRHistory } from '../../components/projects/dsr/hooks/useDSRHistory';
 import AllSubmissionsTable from '../../components/projects/dsr/admin/AllSubmissionsTable';
 import MissingReportsTable from '../../components/projects/dsr/admin/MissingReportsTable';
+import PermissionRequestsTable from '../../components/projects/dsr/admin/PermissionRequestsTable';
 import { useDSRAdmin } from '../../components/projects/dsr/hooks/useDSRAdmin';
 import DSRSubmissionDialog from '../../components/projects/dsr/forms/DSRSubmissionDialog';
+import PermissionRequestDialog from '../../components/projects/dsr/forms/PermissionRequestDialog';
 import DSRModuleLayout from '../../components/projects/dsr/layout/DSRModuleLayout';
+import { RequestQuote as RequestIcon } from '@mui/icons-material';
 
 const DSRDashboard: React.FC = () => {
 	const { user } = useAppSelector((state) => state.auth);
@@ -28,6 +31,7 @@ const DSRDashboard: React.FC = () => {
 
 	const [activeTab, setActiveTab] = useState(0);
 	const [isSubmissionOpen, setIsSubmissionOpen] = useState(false);
+	const [isPermissionRequestOpen, setIsPermissionRequestOpen] = useState(false);
 	const [editEntryId, setEditEntryId] = useState<string | null>(null);
 
 	// Hooks logic
@@ -89,21 +93,37 @@ const DSRDashboard: React.FC = () => {
 								<Box>
 									<Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 										<Typography variant="h6" sx={{ fontWeight: 700 }}>My Submissions</Typography>
-										<Button
-											variant="contained"
-											startIcon={<AddIcon />}
-											onClick={handleOpenSubmission}
-											sx={{
-												bgcolor: '#ec7211',
-												'&:hover': { bgcolor: '#eb5f07' },
-												px: 3,
-												py: 0.75,
-												fontWeight: 700,
-												boxShadow: '0 1px 1px 0 rgba(0,0,0,0.1)'
-											}}
-										>
-											Report Daily Status
-										</Button>
+										<Box sx={{ display: 'flex', gap: 2 }}>
+											<Button
+												variant="outlined"
+												startIcon={<RequestIcon />}
+												onClick={() => setIsPermissionRequestOpen(true)}
+												sx={{
+													color: '#232f3e',
+													borderColor: '#d5dbdb',
+													fontWeight: 700,
+													textTransform: 'none',
+													'&:hover': { bgcolor: '#f3f3f3', borderColor: '#aab7bd' }
+												}}
+											>
+												Raise Request
+											</Button>
+											<Button
+												variant="contained"
+												startIcon={<AddIcon />}
+												onClick={handleOpenSubmission}
+												sx={{
+													bgcolor: '#ec7211',
+													'&:hover': { bgcolor: '#eb5f07' },
+													px: 3,
+													py: 0.75,
+													fontWeight: 700,
+													boxShadow: '0 1px 1px 0 rgba(0,0,0,0.1)'
+												}}
+											>
+												Report Daily Status
+											</Button>
+										</Box>
 									</Box>
 									<HistoryTable
 										entries={history.entries}
@@ -140,6 +160,16 @@ const DSRDashboard: React.FC = () => {
 										/>
 									</Box>
 
+									<Box sx={{ mb: 4 }}>
+										<Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>Pending Permission Requests</Typography>
+										<Divider sx={{ mb: 2 }} />
+										<PermissionRequestsTable
+											requests={admin.permissionRequests}
+											loading={admin.loading}
+											onHandle={admin.handlePermissionAction}
+										/>
+									</Box>
+
 									<Box>
 										<Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>All User Submissions</Typography>
 										<Divider sx={{ mb: 2 }} />
@@ -163,6 +193,12 @@ const DSRDashboard: React.FC = () => {
 						open={isSubmissionOpen}
 						onClose={handleCloseSubmission}
 						entryId={editEntryId}
+					/>
+
+					{/* Permission Request Dialog */}
+					<PermissionRequestDialog
+						open={isPermissionRequestOpen}
+						onClose={() => setIsPermissionRequestOpen(false)}
 					/>
 				</Box>
 			)}

@@ -4,7 +4,9 @@ import {
 	fetchMissingReports,
 	fetchAdminOverview,
 	sendDSRReminders,
-	grantDSRPermission
+	grantDSRPermission,
+	fetchPermissionRequests,
+	handlePermissionRequestAction
 } from '../../../../store/slices/dsrSlice';
 import useToast from '../../../../hooks/useToast';
 
@@ -15,10 +17,10 @@ export const useDSRAdmin = () => {
 		missingReports,
 		entries,
 		totalEntries,
+		permissionRequests,
+		totalPermissionRequests,
 		loading
 	} = useAppSelector((state) => state.dsr);
-
-	const [tab, setTab] = useState(0);
 	const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
 	const [reminding, setReminding] = useState(false);
 
@@ -26,17 +28,16 @@ export const useDSRAdmin = () => {
 	const [entryRowsPerPage, setEntryRowsPerPage] = useState(10);
 
 	const fetchData = useCallback(() => {
-		if (tab === 0) {
-			dispatch(fetchMissingReports(reportDate));
-		} else {
-			dispatch(fetchAdminOverview({
-				skip: entryPage * entryRowsPerPage,
-				limit: entryRowsPerPage,
-				date_from: reportDate,
-				date_to: reportDate
-			}));
-		}
-	}, [dispatch, tab, reportDate, entryPage, entryRowsPerPage]);
+		// Fetch everything needed for the admin dashboard
+		dispatch(fetchMissingReports(reportDate));
+		dispatch(fetchPermissionRequests({ skip: 0, limit: 100, status: 'pending' }));
+		dispatch(fetchAdminOverview({
+			skip: entryPage * entryRowsPerPage,
+			limit: entryRowsPerPage,
+			date_from: reportDate,
+			date_to: reportDate
+		}));
+	}, [dispatch, reportDate, entryPage, entryRowsPerPage]);
 
 	useEffect(() => {
 		fetchData();
@@ -72,15 +73,25 @@ export const useDSRAdmin = () => {
 		fetchData();
 	};
 
+	const handlePermissionAction = async (publicId: string, status: 'granted' | 'rejected') => {
+		try {
+			await dispatch(handlePermissionRequestAction({ publicId, status })).unwrap();
+			toast.success(`Request ${status} successfully`);
+			dispatch(fetchPermissionRequests({ skip: 0, limit: 100, status: 'pending' }));
+		} catch (error: any) {
+			toast.error(error || `Failed to ${status} request`);
+		}
+	};
+
 	return {
-		tab,
-		setTab,
 		reportDate,
 		setReportDate,
 		reminding,
 		missingReports,
 		entries,
 		totalEntries,
+		permissionRequests,
+		totalPermissionRequests,
 		loading,
 		entryPage,
 		setEntryPage,
@@ -88,6 +99,7 @@ export const useDSRAdmin = () => {
 		setEntryRowsPerPage,
 		handleSendReminders,
 		handleGrantPermission,
+		handlePermissionAction,
 		handleRefresh
 	};
 };

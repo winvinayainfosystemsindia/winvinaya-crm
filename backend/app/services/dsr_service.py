@@ -8,6 +8,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.dsr_entry import DSREntry, DSRStatus
+from app.models.dsr_permission_request import DSRPermissionRequest, DSRPermissionStatus
 from app.models.user import User, UserRole
 from app.schemas.dsr_entry import (
     DSREntryCreate,
@@ -15,10 +16,15 @@ from app.schemas.dsr_entry import (
     DSRGrantPreviousDayPermission,
     DSRSendReminder,
 )
+from app.schemas.dsr_permission_request import (
+    DSRPermissionRequestCreate,
+    DSRPermissionRequestUpdate,
+)
 from app.repositories.dsr_entry_repository import DSREntryRepository
 from app.repositories.dsr_project_repository import DSRProjectRepository
 from app.repositories.dsr_activity_repository import DSRActivityRepository
 from app.repositories.user_repository import UserRepository
+from app.repositories.dsr_permission_request_repository import DSRPermissionRequestRepository
 from app.services.dsr_notification_service import DSRNotificationService
 
 
@@ -38,6 +44,7 @@ class DSRService:
         self.project_repo = DSRProjectRepository(db)
         self.activity_repo = DSRActivityRepository(db)
         self.user_repo = UserRepository(db)
+        self.permission_repo = DSRPermissionRequestRepository(db)
         self.notifier = DSRNotificationService(db)
 
     # ------------------------------------------------------------------
@@ -128,13 +135,23 @@ class DSRService:
         # Previous-day guard
         if data.report_date < today:
             if current_user.role != UserRole.ADMIN:
+                # Check for explicit permission (legacy flag or new request)
                 existing = await self.repo.get_by_user_and_date(current_user.id, data.report_date)
-                if not existing or not existing.previous_day_permission_granted_by:
+                
+                has_permission = False
+                if existing and existing.previous_day_permission_granted_by:
+                    has_permission = True
+                else:
+                    permission_request = await self.permission_repo.get_granted_permission(current_user.id, data.report_date)
+                    if permission_request:
+                        has_permission = True
+
+                if not has_permission:
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
                         detail=(
                             f"Submission for {data.report_date} is not allowed. "
-                            "Ask an Admin to grant previous-day permission."
+                            "Please raise a request for past-day submission."
                         ),
                     )
 
@@ -348,3 +365,68 @@ class DSRService:
     def _assert_owner_or_admin(self, entry: DSREntry, current_user: User) -> None:
         if current_user.role != UserRole.ADMIN and entry.user_id != current_user.id:
             raise HTTPException(status_code=403, detail="Not authorized to access this DSR entry")
+
+    # ------------------------------------------------------------------
+    # Permission Requests
+    # ------------------------------------------------------------------
+
+    async def create_permission_request(
+        self, data: DSRPermissionRequestCreate, current_user: User
+    ) -> DSRPermissionRequest:
+        """User requests permission to submit a DSR for a past date."""
+        today = date.today()
+        if data.report_date >= today:
+            raise HTTPException(status_code=422, detail="Permission is only needed for past dates")
+
+        # Check for existing request
+        existing = await self.permission_repo.get_by_user_and_date(current_user.id, data.report_date)
+        if existing:
+            if existing.status == DSRPermissionStatus.PENDING:
+                raise HTTPException(status_code=422, detail="You already have a pending request for this date")
+            if existing.status == DSRPermissionStatus.GRANTED:
+                raise HTTPException(status_code=422, detail="Permission already granted for this date")
+
+        request_data = {
+            "user_id": current_user.id,
+            "report_date": data.report_date,
+            "reason": data.reason,
+            "status": DSRPermissionStatus.PENDING,
+        }
+        return await self.permission_repo.create(request_data)
+
+    async def get_permission_requests(
+        self, current_user: User, skip: int = 0, limit: int = 100, user_id: Optional[int] = None, status: Optional[DSRPermissionStatus] = None
+    ) -> Tuple[List[DSRPermissionRequest], int]:
+        """List permission requests (Users see their own; Admins see all)."""
+        target_user_id = user_id
+        if current_user.role != UserRole.ADMIN:
+            target_user_id = current_user.id
+            
+        return await self.permission_repo.get_requests(
+            user_id=target_user_id, status=status, skip=skip, limit=limit
+        )
+
+    async def get_permission_request(self, public_id: UUID) -> DSRPermissionRequest:
+        """Get a single permission request by its public ID."""
+        request = await self.permission_repo.get_by_public_id(public_id)
+        if not request:
+            raise HTTPException(status_code=404, detail="Permission request not found")
+        return request
+
+    async def handle_permission_request(
+        self, public_id: UUID, data: DSRPermissionRequestUpdate, current_user: User
+    ) -> DSRPermissionRequest:
+        """Admin grants or rejects a permission request."""
+        _require_admin(current_user)
+
+        request = await self.permission_repo.get_by_public_id(public_id)
+        if not request:
+            raise HTTPException(status_code=404, detail="Permission request not found")
+
+        update_data = {
+            "status": data.status,
+            "admin_notes": data.admin_notes,
+            "handled_by": current_user.id,
+            "handled_at": datetime.utcnow(),
+        }
+        return await self.permission_repo.update(request.id, update_data)

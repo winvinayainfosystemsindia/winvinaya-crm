@@ -14,9 +14,11 @@ interface DSRState {
 	activitiesByProject: Record<string, DSRActivity[]>;
 	entries: DSREntry[];
 	missingReports: MissingDSR[];
+	permissionRequests: any[];
 	totalProjects: number;
 	totalActivities: number;
 	totalEntries: number;
+	totalPermissionRequests: number;
 	loading: boolean;
 	error: string | null;
 }
@@ -27,9 +29,11 @@ const initialState: DSRState = {
 	activitiesByProject: {},
 	entries: [],
 	missingReports: [],
+	permissionRequests: [],
 	totalProjects: 0,
 	totalActivities: 0,
 	totalEntries: 0,
+	totalPermissionRequests: 0,
 	loading: false,
 	error: null,
 };
@@ -247,6 +251,29 @@ export const sendDSRReminders = createAsyncThunk(
 	}
 );
 
+export const fetchPermissionRequests = createAsyncThunk(
+	'dsr/fetchPermissionRequests',
+	async (params: { skip?: number; limit?: number; user_id?: number; status?: string } | undefined, { rejectWithValue }) => {
+		try {
+			const { skip = 0, limit = 100, user_id, status } = params || {};
+			return await dsrService.getPermissionRequests(skip, limit, user_id, status);
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.detail || 'Failed to fetch permission requests');
+		}
+	}
+);
+
+export const handlePermissionRequestAction = createAsyncThunk(
+	'dsr/handlePermissionRequest',
+	async ({ publicId, status, admin_notes }: { publicId: string; status: string; admin_notes?: string }, { rejectWithValue }) => {
+		try {
+			return await dsrService.handlePermissionRequest(publicId, { status, admin_notes });
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.detail || 'Failed to handle permission request');
+		}
+	}
+);
+
 const dsrSlice = createSlice({
 	name: 'dsr',
 	initialState,
@@ -352,6 +379,18 @@ const dsrSlice = createSlice({
 			.addCase(fetchMissingReports.fulfilled, (state, action: PayloadAction<MissingDSR[]>) => {
 				state.loading = false;
 				state.missingReports = action.payload;
+			})
+			.addCase(fetchPermissionRequests.fulfilled, (state, action: PayloadAction<{ items: any[]; total: number }>) => {
+				state.loading = false;
+				state.permissionRequests = action.payload.items;
+				state.totalPermissionRequests = action.payload.total;
+			})
+			.addCase(handlePermissionRequestAction.fulfilled, (state, action: PayloadAction<any>) => {
+				state.loading = false;
+				const index = state.permissionRequests.findIndex(r => r.public_id === action.payload.public_id);
+				if (index !== -1) {
+					state.permissionRequests[index] = action.payload;
+				}
 			})
 			.addMatcher(
 				(action) => action.type.startsWith('dsr/') && action.type.endsWith('/pending'),

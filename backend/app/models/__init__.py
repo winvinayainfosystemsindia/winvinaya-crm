@@ -27,6 +27,7 @@ from app.models.system_setting import SystemSetting
 from app.models.dsr_project import DSRProject
 from app.models.dsr_activity import DSRActivity, DSRActivityStatus
 from app.models.dsr_entry import DSREntry, DSRStatus
+from app.models.dsr_permission_request import DSRPermissionRequest, DSRPermissionStatus
 
 __all__ = [
     "User",
@@ -82,5 +83,7 @@ __all__ = [
     "DSRActivityStatus",
     "DSREntry",
     "DSRStatus",
+    "DSRPermissionRequest",
+    "DSRPermissionStatus",
 ]
 

@@ -19,6 +19,12 @@ from app.schemas.dsr_entry import (
     DSRSendReminder,
     DSRMissingUserResponse,
 )
+from app.schemas.dsr_permission_request import (
+    DSRPermissionRequestCreate,
+    DSRPermissionRequestUpdate,
+    DSRPermissionRequestResponse,
+    DSRPermissionRequestListResponse,
+)
 from app.services.dsr_service import DSRService
 
 router = APIRouter()
@@ -204,3 +210,51 @@ async def send_reminders(
     """
     service = DSRService(db)
     return await service.send_reminders(data, current_user)
+
+# ---------------------------------------------------------------
+# Permission Requests
+# ---------------------------------------------------------------
+
+@router.post("/permissions/request", response_model=DSRPermissionRequestResponse)
+async def create_permission_request(
+    data: DSRPermissionRequestCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """User requests permission to submit a DSR for a past date."""
+    service = DSRService(db)
+    request = await service.create_permission_request(data, current_user)
+    await db.commit()
+    return await service.get_permission_request(request.public_id)
+
+@router.get("/permissions/requests", response_model=DSRPermissionRequestListResponse)
+async def get_permission_requests(
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=100, ge=1, le=500),
+    user_id: Optional[int] = Query(default=None),
+    status: Optional[str] = Query(default=None),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """List permission requests (Users see their own; Admins see all)."""
+    service = DSRService(db)
+    from app.models.dsr_permission_request import DSRPermissionStatus
+    req_status = DSRPermissionStatus(status) if status else None
+    
+    items, total = await service.get_permission_requests(
+        current_user, skip=skip, limit=limit, user_id=user_id, status=req_status
+    )
+    return DSRPermissionRequestListResponse(items=items, total=total)
+
+@router.put("/permissions/requests/{public_id}", response_model=DSRPermissionRequestResponse)
+async def handle_permission_request(
+    public_id: UUID,
+    data: DSRPermissionRequestUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Admin grants or rejects a permission request."""
+    service = DSRService(db)
+    request = await service.handle_permission_request(public_id, data, current_user)
+    await db.commit()
+    return await service.get_permission_request(public_id)
