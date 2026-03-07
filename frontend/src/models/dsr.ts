@@ -31,6 +31,7 @@ export interface DSRProject {
 	name: string;
 	owner_id: number;
 	owner?: DSRUserSnapshot;
+	creator?: DSRUserSnapshot;
 	is_active: boolean;
 	others?: Record<string, any>;
 	created_at: string;

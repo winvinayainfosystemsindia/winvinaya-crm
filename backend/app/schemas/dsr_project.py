@@ -38,6 +38,7 @@ class DSRProjectResponse(BaseModel):
     is_active: bool
     owner_id: int
     owner: Optional[DSRUserSnapshot] = None
+    creator: Optional[DSRUserSnapshot] = None
     others: Optional[dict] = None
     created_at: datetime
     updated_at: datetime

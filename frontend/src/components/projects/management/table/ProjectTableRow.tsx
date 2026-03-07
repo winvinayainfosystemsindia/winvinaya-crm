@@ -42,6 +42,9 @@ const ProjectTableRow: React.FC<ProjectTableRowProps> = ({
 			<TableCell sx={{ fontSize: '0.8125rem', py: 2, color: theme.palette.text.primary }}>
 				{project.owner ? (project.owner.full_name || project.owner.username) : 'Unassigned'}
 			</TableCell>
+			<TableCell sx={{ fontSize: '0.8125rem', py: 2, color: theme.palette.text.primary }}>
+				{project.creator ? (project.creator.full_name || project.creator.username) : 'N/A'}
+			</TableCell>
 			<TableCell sx={{ fontSize: '0.8125rem', py: 2, color: theme.palette.text.secondary }}>
 				{formatDate(project.created_at)}
 			</TableCell>
