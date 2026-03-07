@@ -47,6 +47,15 @@ class DSRActivityService:
 
         await self._check_project_ownership(project.id, current_user)
 
+        assigned_to_id = None
+        if data.assigned_to_public_id:
+            from app.repositories.user_repository import UserRepository
+            user_repo = UserRepository(self.db)
+            assigned_user = await user_repo.get_by_fields(public_id=data.assigned_to_public_id)
+            if not assigned_user:
+                raise HTTPException(status_code=404, detail="Assigned user not found")
+            assigned_to_id = assigned_user[0].id
+
         activity_data = {
             "project_id": project.id,
             "name": data.name,
@@ -54,6 +63,7 @@ class DSRActivityService:
             "start_date": data.start_date,
             "end_date": data.end_date,
             "status": data.status,
+            "assigned_to": assigned_to_id,
             "is_active": data.is_active,
             "others": data.others,
         }
@@ -66,6 +76,18 @@ class DSRActivityService:
         await self._check_project_ownership(activity.project_id, current_user)
 
         update_data = data.model_dump(exclude_unset=True)
+
+        if "assigned_to_public_id" in update_data:
+            public_id_to_resolve = update_data.pop("assigned_to_public_id")
+            if public_id_to_resolve:
+                from app.repositories.user_repository import UserRepository
+                user_repo = UserRepository(self.db)
+                assigned_user = await user_repo.get_by_fields(public_id=public_id_to_resolve)
+                if not assigned_user:
+                    raise HTTPException(status_code=404, detail="Assigned user not found")
+                update_data["assigned_to"] = assigned_user[0].id
+            else:
+                update_data["assigned_to"] = None
 
         # Validate date consistency after merge
         merged_start = update_data.get("start_date", activity.start_date)

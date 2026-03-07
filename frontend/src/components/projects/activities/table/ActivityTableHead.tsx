@@ -17,6 +17,7 @@ const ActivityTableHead: React.FC<ActivityTableHeadProps> = ({ canEdit = false }
 		<TableHead>
 			<TableRow sx={{ borderBottom: `1px solid ${theme.palette.divider}` }}>
 				<TableCell sx={{ fontWeight: 600, color: theme.palette.text.secondary, fontSize: '0.8125rem', py: 2 }}>Activity Name</TableCell>
+				<TableCell sx={{ fontWeight: 600, color: theme.palette.text.secondary, fontSize: '0.8125rem', py: 2 }}>Assigned To</TableCell>
 				<TableCell sx={{ fontWeight: 600, color: theme.palette.text.secondary, fontSize: '0.8125rem', py: 2 }}>Period</TableCell>
 				<TableCell sx={{ fontWeight: 600, color: theme.palette.text.secondary, fontSize: '0.8125rem', py: 2 }}>Status</TableCell>
 				<TableCell sx={{ fontWeight: 600, color: theme.palette.text.secondary, fontSize: '0.8125rem', py: 2 }}>Timeline</TableCell>

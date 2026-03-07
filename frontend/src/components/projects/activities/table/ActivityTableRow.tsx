@@ -87,6 +87,9 @@ const ActivityTableRow: React.FC<ActivityTableRowProps> = ({
 					</Typography>
 				</Box>
 			</TableCell>
+			<TableCell sx={{ py: 2, fontSize: '0.8125rem', color: theme.palette.text.primary }}>
+				{activity.assigned_user ? (activity.assigned_user.full_name || activity.assigned_user.username) : 'Unassigned'}
+			</TableCell>
 			<TableCell sx={{ py: 2, fontSize: '0.8125rem', color: theme.palette.text.secondary }}>
 				<Typography sx={{ fontSize: '0.8125rem' }}>{new Date(activity.start_date).toLocaleDateString()} - {new Date(activity.end_date).toLocaleDateString()}</Typography>
 				{activity.actual_end_date && (

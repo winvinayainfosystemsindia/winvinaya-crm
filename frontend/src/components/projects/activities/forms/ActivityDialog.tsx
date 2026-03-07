@@ -20,6 +20,8 @@ import {
 } from '@mui/icons-material';
 import type { DSRActivity, DSRActivityStatus } from '../../../../models/dsr';
 import { DSRActivityStatusValues } from '../../../../models/dsr';
+import type { User } from '../../../../models/user';
+import userService from '../../../../services/userService';
 import { useAppDispatch } from '../../../../store/hooks';
 import { createActivity, updateActivity } from '../../../../store/slices/dsrSlice';
 
@@ -46,7 +48,21 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 	const [endDate, setEndDate] = useState('');
 	const [actualEndDate, setActualEndDate] = useState<string>('');
 	const [status, setStatus] = useState<DSRActivityStatus>(DSRActivityStatusValues.PLANNED);
+	const [assignedToPublicId, setAssignedToPublicId] = useState<string>('');
+	const [users, setUsers] = useState<User[]>([]);
 	const [submitting, setSubmitting] = useState(false);
+
+	useEffect(() => {
+		const fetchUsers = async () => {
+			try {
+				const response = await userService.getAll(0, 500);
+				setUsers(response.items);
+			} catch (error) {
+				console.error('Failed to fetch users:', error);
+			}
+		};
+		fetchUsers();
+	}, []);
 
 	useEffect(() => {
 		if (open) {
@@ -57,6 +73,7 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 				setEndDate(activity.end_date.split('T')[0]);
 				setActualEndDate(activity.actual_end_date ? activity.actual_end_date.split('T')[0] : '');
 				setStatus(activity.status);
+				setAssignedToPublicId(activity.assigned_user?.public_id || '');
 			} else {
 				setName('');
 				setDescription('');
@@ -64,6 +81,7 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 				setEndDate(new Date().toISOString().split('T')[0]);
 				setActualEndDate('');
 				setStatus(DSRActivityStatusValues.PLANNED);
+				setAssignedToPublicId('');
 			}
 		}
 	}, [activity, open]);
@@ -78,7 +96,8 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 				start_date: startDate,
 				end_date: endDate,
 				actual_end_date: actualEndDate || null,
-				status
+				status,
+				assigned_to_public_id: assignedToPublicId || null
 			};
 
 			if (activity) {
@@ -176,28 +195,45 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 							disabled={submitting}
 						/>
 					</Box>
-					<TextField
-						select
-						label="Status"
-						fullWidth
-						value={status}
-						onChange={(e) => {
-							const newStatus = e.target.value as DSRActivityStatus;
-							setStatus(newStatus);
-							if (newStatus === DSRActivityStatusValues.COMPLETED) {
-								if (!actualEndDate) {
-									setActualEndDate(new Date().toISOString().split('T')[0]);
+					<Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+						<TextField
+							select
+							label="Status"
+							fullWidth
+							value={status}
+							onChange={(e) => {
+								const newStatus = e.target.value as DSRActivityStatus;
+								setStatus(newStatus);
+								if (newStatus === DSRActivityStatusValues.COMPLETED) {
+									if (!actualEndDate) {
+										setActualEndDate(new Date().toISOString().split('T')[0]);
+									}
+								} else {
+									setActualEndDate('');
 								}
-							} else {
-								setActualEndDate('');
-							}
-						}}
-						disabled={submitting}
-					>
-						{Object.values(DSRActivityStatusValues).map(s => (
-							<MenuItem key={s} value={s}>{s.toUpperCase()}</MenuItem>
-						))}
-					</TextField>
+							}}
+							disabled={submitting}
+						>
+							{Object.values(DSRActivityStatusValues).map(s => (
+								<MenuItem key={s} value={s}>{s.toUpperCase()}</MenuItem>
+							))}
+						</TextField>
+						<TextField
+							select
+							label="Assigned To"
+							fullWidth
+							value={assignedToPublicId}
+							onChange={(e) => setAssignedToPublicId(e.target.value)}
+							disabled={submitting}
+						>
+							<MenuItem value=""><em>Unassigned</em></MenuItem>
+							{users.map(u => (
+								<MenuItem key={u.public_id} value={u.public_id}>
+									{u.full_name || u.username}
+								</MenuItem>
+							))}
+						</TextField>
+					</Box>
 
 					{status === DSRActivityStatusValues.COMPLETED && actualEndDate && (
 						<Box sx={{

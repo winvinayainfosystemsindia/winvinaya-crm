@@ -99,6 +99,20 @@ class DSRActivity(BaseModel):
         lazy="selectin",
     )
 
+    # Assignment — the user assigned to this activity
+    assigned_to: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+
+    assigned_user: Mapped[User | None] = relationship(
+        "User",
+        foreign_keys=[assigned_to],
+        lazy="selectin",
+    )
+
     def __repr__(self) -> str:
         return (
             f"<DSRActivity(id={self.id}, public_id={self.public_id}, "
