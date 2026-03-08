@@ -5,7 +5,7 @@ import uuid
 import enum
 from datetime import date, datetime
 from typing import TYPE_CHECKING
-from sqlalchemy import Boolean, JSON, Integer, Date, DateTime, ForeignKey, Enum, Uuid
+from sqlalchemy import Boolean, JSON, Integer, Date, DateTime, ForeignKey, Enum, Uuid, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
 
@@ -108,6 +108,26 @@ class DSREntry(BaseModel):
         comment="Extensible metadata, reminder logs, etc.",
     )
 
+    # Admin review fields
+    admin_notes: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+        comment="Admin feedback on approve / rejection",
+    )
+
+    reviewed_by: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        comment="Admin who approved or rejected this entry",
+    )
+
+    reviewed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="Timestamp when admin reviewed",
+    )
+
     # Relationships
     user: Mapped[User] = relationship(
         "User",
@@ -118,6 +138,12 @@ class DSREntry(BaseModel):
     permission_granter: Mapped[User | None] = relationship(
         "User",
         foreign_keys=[previous_day_permission_granted_by],
+        lazy="selectin",
+    )
+
+    reviewer: Mapped[User | None] = relationship(
+        "User",
+        foreign_keys=[reviewed_by],
         lazy="selectin",
     )
 

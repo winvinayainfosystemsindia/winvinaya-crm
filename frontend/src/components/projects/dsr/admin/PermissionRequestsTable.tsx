@@ -20,19 +20,10 @@ import {
 	Info as InfoIcon
 } from '@mui/icons-material';
 
-interface PermissionRequest {
-	id: number;
-	public_id: string;
-	user_id: string;
-	user?: { full_name: string; username: string };
-	report_date: string;
-	reason: string;
-	status: 'pending' | 'granted' | 'rejected';
-	created_at: string;
-}
+import type { DSRPermissionRequest } from '../../../../models/dsr';
 
 interface PermissionRequestsTableProps {
-	requests: PermissionRequest[];
+	requests: DSRPermissionRequest[];
 	loading: boolean;
 	onHandle: (publicId: string, status: 'granted' | 'rejected') => void;
 }

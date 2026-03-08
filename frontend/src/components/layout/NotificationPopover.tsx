@@ -17,10 +17,13 @@ import {
 	PersonAdd as PersonIcon,
 	Notifications as NotificationsIcon,
 	ClearAll as ClearIcon,
-	Circle as DotIcon
+	Circle as DotIcon,
+	CheckCircle as ApprovedIcon,
+	Error as RejectedIcon,
+	VpnKey as PermissionIcon
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { markAllAsRead, clearAllNotifications, markAsRead } from '../../store/slices/notificationSlice';
+import { markAllNotificationsRead, clearAllNotifications, markNotificationRead } from '../../store/slices/notificationSlice';
 import { useNavigate } from 'react-router-dom';
 
 interface NotificationPopoverProps {
@@ -31,11 +34,11 @@ interface NotificationPopoverProps {
 const NotificationPopover: React.FC<NotificationPopoverProps> = ({ anchorEl, onClose }) => {
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
-	const { notifications } = useAppSelector((state) => state.notifications);
+	const { notifications, unreadCount } = useAppSelector((state) => state.notifications);
 	const open = Boolean(anchorEl);
 
 	const handleMarkAllRead = () => {
-		dispatch(markAllAsRead());
+		dispatch(markAllNotificationsRead());
 	};
 
 	const handleClearAll = () => {
@@ -44,11 +47,27 @@ const NotificationPopover: React.FC<NotificationPopoverProps> = ({ anchorEl, onC
 	};
 
 	const handleNotificationClick = (id: string, link?: string) => {
-		dispatch(markAsRead(id));
+		dispatch(markNotificationRead(id));
 		if (link) {
 			navigate(link);
 		}
 		onClose();
+	};
+
+	const getIcon = (type: string) => {
+		switch (type) {
+			case 'dsr_approved':
+				return <ApprovedIcon sx={{ color: '#2e7d32' }} fontSize="small" />;
+			case 'dsr_rejected':
+			case 'permission_rejected':
+				return <RejectedIcon sx={{ color: '#d32f2f' }} fontSize="small" />;
+			case 'permission_granted':
+				return <PermissionIcon sx={{ color: '#ed6c02' }} fontSize="small" />;
+			case 'registration':
+				return <PersonIcon color="primary" fontSize="small" />;
+			default:
+				return <NotificationsIcon color="action" fontSize="small" />;
+		}
 	};
 
 	return (
@@ -72,19 +91,27 @@ const NotificationPopover: React.FC<NotificationPopoverProps> = ({ anchorEl, onC
 					borderRadius: '4px',
 					overflow: 'hidden',
 					display: 'flex',
-					flexDirection: 'column'
+					flexDirection: 'column',
+					boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
 				}
 			}}
 		>
 			<Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8f9fa', borderBottom: '1px solid #e0e0e0' }}>
-				<Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#232f3e' }}>
-					Notifications
-				</Typography>
 				<Box>
-					<Button size="small" onClick={handleMarkAllRead} sx={{ textTransform: 'none', fontWeight: 600, mr: 1 }}>
+					<Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#232f3e' }}>
+						Notifications
+					</Typography>
+					{unreadCount > 0 && (
+						<Typography variant="caption" sx={{ color: '#ec7211', fontWeight: 600 }}>
+							{unreadCount} unread
+						</Typography>
+					)}
+				</Box>
+				<Box>
+					<Button size="small" onClick={handleMarkAllRead} sx={{ textTransform: 'none', fontWeight: 600, mr: 1 }} disabled={unreadCount === 0}>
 						Mark all as read
 					</Button>
-					<IconButton size="small" onClick={handleClearAll} title="Clear all">
+					<IconButton size="small" onClick={handleClearAll} title="Clear visibility">
 						<ClearIcon fontSize="small" />
 					</IconButton>
 				</Box>
@@ -109,6 +136,7 @@ const NotificationPopover: React.FC<NotificationPopoverProps> = ({ anchorEl, onC
 										'&:hover': {
 											backgroundColor: alpha('#000000', 0.04)
 										},
+										transition: 'background-color 0.2s'
 									}}
 								>
 									<ListItemButton
@@ -120,12 +148,12 @@ const NotificationPopover: React.FC<NotificationPopoverProps> = ({ anchorEl, onC
 										}}
 									>
 										<ListItemIcon sx={{ minWidth: 40, mt: 0.5 }}>
-											<PersonIcon color="primary" fontSize="small" />
+											{getIcon(n.type)}
 										</ListItemIcon>
 										<ListItemText
 											primary={
 												<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-													<Typography variant="body2" sx={{ fontWeight: n.read ? 500 : 700, color: '#232f3e' }}>
+													<Typography variant="body2" sx={{ fontWeight: n.read ? 500 : 700, color: '#232f3e', pr: 1 }}>
 														{n.title}
 													</Typography>
 													{!n.read && <DotIcon sx={{ fontSize: 10, color: '#ec7211' }} />}
@@ -154,7 +182,7 @@ const NotificationPopover: React.FC<NotificationPopoverProps> = ({ anchorEl, onC
 			<Divider />
 			<Box sx={{ p: 1, textAlign: 'center', backgroundColor: '#f8f9fa' }}>
 				<Button fullWidth onClick={() => { navigate('/activity-logs'); onClose(); }} sx={{ textTransform: 'none', color: '#0073bb', fontWeight: 600 }}>
-					View all activity
+					View all activity logs
 				</Button>
 			</Box>
 		</Popover>

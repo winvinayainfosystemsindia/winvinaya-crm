@@ -101,3 +101,45 @@ class DSREntryRepository(BaseRepository[DSREntry]):
             .where(DSREntry.is_deleted == False)
         )
         return list(result.scalars().all())
+
+    async def get_entries_by_status(
+        self,
+        status: DSRStatus,
+        skip: int = 0,
+        limit: int = 100,
+    ) -> Tuple[List[DSREntry], int]:
+        """Get all entries across all users matching a given status, ordered oldest first."""
+        base = and_(DSREntry.status == status, DSREntry.is_deleted == False)
+        count_query = select(func.count()).select_from(DSREntry).where(base)
+        total = (await self.db.execute(count_query)).scalar_one()
+
+        query = (
+            select(DSREntry)
+            .where(base)
+            .order_by(DSREntry.submitted_at.asc().nullsfirst())
+            .offset(skip)
+            .limit(limit)
+        )
+        result = await self.db.execute(query)
+        return list(result.scalars().all()), total
+
+    async def count_by_status_for_user(self, user_id: int) -> dict:
+        """Return counts per status for a single user — used for the user dashboard cards."""
+        from sqlalchemy import case
+        result = await self.db.execute(
+            select(
+                func.count(DSREntry.id).filter(DSREntry.status == DSRStatus.SUBMITTED).label("pending_approval"),
+                func.count(DSREntry.id).filter(
+                    and_(DSREntry.status == DSRStatus.DRAFT, DSREntry.admin_notes.isnot(None))
+                ).label("action_required"),
+                func.count(DSREntry.id).filter(DSREntry.status == DSRStatus.APPROVED).label("approved"),
+            )
+            .where(DSREntry.user_id == user_id)
+            .where(DSREntry.is_deleted == False)
+        )
+        row = result.first()
+        return {
+            "pending_approval": row.pending_approval if row else 0,
+            "action_required": row.action_required if row else 0,
+            "approved": row.approved if row else 0,
+        }

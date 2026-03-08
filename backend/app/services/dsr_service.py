@@ -15,6 +15,8 @@ from app.schemas.dsr_entry import (
     DSREntryUpdate,
     DSRGrantPreviousDayPermission,
     DSRSendReminder,
+    DSRApproveEntry,
+    DSRRejectEntry,
 )
 from app.schemas.dsr_permission_request import (
     DSRPermissionRequestCreate,
@@ -36,8 +38,9 @@ def _require_admin(current_user: User) -> None:
         )
 
 
-class DSRService:
+from app.services.notification_service import NotificationService
 
+class DSRService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.repo = DSREntryRepository(db)
@@ -46,6 +49,7 @@ class DSRService:
         self.user_repo = UserRepository(db)
         self.permission_repo = DSRPermissionRequestRepository(db)
         self.notifier = DSRNotificationService(db)
+        self.notif_service = NotificationService(db)
 
     # ------------------------------------------------------------------
     # Item validation helpers
@@ -353,6 +357,133 @@ class DSRService:
         )
 
     # ------------------------------------------------------------------
+    # DSR Review Actions (Admin)
+    # ------------------------------------------------------------------
+
+    async def approve_entry(
+        self, public_id: UUID, data: DSRApproveEntry, current_user: User
+    ) -> DSREntry:
+        """Admin approves a SUBMITTED DSR entry."""
+        _require_admin(current_user)
+        entry = await self._get_or_404(public_id)
+
+        if entry.status != DSRStatus.SUBMITTED:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Only SUBMITTED entries can be approved. Current status: {entry.status}",
+            )
+
+        await self.repo.update(entry.id, {
+            "status": DSRStatus.APPROVED,
+            "admin_notes": data.admin_notes,
+            "reviewed_by": current_user.id,
+            "reviewed_at": datetime.utcnow(),
+        })
+        
+        # Trigger Notification
+        updated_entry = await self._get_or_404(public_id)
+        await self.notif_service.notify_dsr_approved(
+            user_id=updated_entry.user_id,
+            report_date=str(updated_entry.report_date),
+            dsr_public_id=updated_entry.public_id
+        )
+        return updated_entry
+
+    async def reject_entry(
+        self, public_id: UUID, data: DSRRejectEntry, current_user: User
+    ) -> DSREntry:
+        """
+        Admin rejects a SUBMITTED DSR entry.
+        - Reverts status back to DRAFT so the user can fix and re-submit.
+        - Rejection reason is mandatory (enforced by schema min_length=10).
+        """
+        _require_admin(current_user)
+        entry = await self._get_or_404(public_id)
+
+        if entry.status != DSRStatus.SUBMITTED:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Only SUBMITTED entries can be rejected. Current status: {entry.status}",
+            )
+
+        await self.repo.update(entry.id, {
+            "status": DSRStatus.DRAFT,   # Reverts so user can re-edit
+            "admin_notes": data.reason,  # Rejection reason shown to user
+            "reviewed_by": current_user.id,
+            "reviewed_at": datetime.utcnow(),
+        })
+        
+        # Trigger Notification
+        updated_entry = await self._get_or_404(public_id)
+        await self.notif_service.notify_dsr_rejected(
+            user_id=updated_entry.user_id,
+            report_date=str(updated_entry.report_date),
+            reason=data.reason,
+            dsr_public_id=updated_entry.public_id
+        )
+        return updated_entry
+
+    async def get_pending_approval(
+        self,
+        current_user: User,
+        skip: int = 0,
+        limit: int = 100,
+    ) -> Tuple[List[DSREntry], int]:
+        """Admin: list all SUBMITTED entries awaiting admin review, oldest first."""
+        _require_admin(current_user)
+        return await self.repo.get_entries_by_status(
+            status=DSRStatus.SUBMITTED,
+            skip=skip,
+            limit=limit,
+        )
+
+    async def get_pending_submissions(self, current_user: User) -> List[dict]:
+        """
+        Admin: list users who have a GRANTED permission but have NOT yet submitted a DSR.
+        These are 'abandoned' DRAFT entries created when permission was granted.
+        """
+        _require_admin(current_user)
+
+        from sqlalchemy import select, and_
+        from app.models.dsr_permission_request import (
+            DSRPermissionRequest as PRModel,
+            DSRPermissionStatus,
+        )
+
+        # Find all GRANTED permission requests
+        granted_result = await self.db.execute(
+            select(PRModel)
+            .where(PRModel.status == DSRPermissionStatus.GRANTED)
+            .where(PRModel.is_deleted == False)
+        )
+        granted = granted_result.scalars().all()
+
+        pending_submissions = []
+        for perm in granted:
+            # Check if the user has a SUBMITTED or APPROVED entry for this date
+            entry = await self.repo.get_by_user_and_date(perm.user_id, perm.report_date)
+            if not entry or entry.status == DSRStatus.DRAFT:
+                # Load user info
+                from app.models.user import User as UserModel
+                user_result = await self.db.execute(
+                    select(UserModel).where(UserModel.id == perm.user_id)
+                )
+                user = user_result.scalar_one_or_none()
+                if user:
+                    pending_submissions.append({
+                        "permission_request_id": str(perm.public_id),
+                        "user_id": perm.user_id,
+                        "user_public_id": str(user.public_id),
+                        "full_name": user.full_name,
+                        "username": user.username,
+                        "email": user.email,
+                        "report_date": str(perm.report_date),
+                        "granted_at": perm.handled_at.isoformat() if perm.handled_at else None,
+                        "entry_status": entry.status if entry else None,
+                    })
+        return pending_submissions
+
+    # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
 
@@ -429,4 +560,60 @@ class DSRService:
             "handled_by": current_user.id,
             "handled_at": datetime.utcnow(),
         }
-        return await self.permission_repo.update(request.id, update_data)
+        updated_request = await self.permission_repo.update(request.id, update_data)
+        
+        # Determine associated DSR public_id if granted (placeholder entry was created during grant)
+        dsr_public_id = None
+        if data.status == DSRPermissionStatus.GRANTED:
+            # When we grant, we usually create a draft entry. Let's find it.
+            entry = await self.repo.get_by_user_and_date(updated_request.user_id, updated_request.report_date)
+            if entry:
+                dsr_public_id = entry.public_id
+        
+        # Trigger Notification
+        if data.status == DSRPermissionStatus.GRANTED:
+             await self.notif_service.notify_permission_granted(
+                 user_id=updated_request.user_id,
+                 target_date=str(updated_request.report_date),
+                 dsr_public_id=dsr_public_id or public_id # fallback to request id if entry not found (shouldn't happen)
+             )
+        elif data.status == DSRPermissionStatus.REJECTED:
+             await self.notif_service.notify_permission_rejected(
+                 user_id=updated_request.user_id,
+                 target_date=str(updated_request.report_date),
+                 reason=data.admin_notes or "No reason provided."
+             )
+             
+        return updated_request
+
+    async def get_permission_stats(self, current_user: User) -> dict:
+        """Get summary stats of permission requests (raised vs approved)."""
+        # Define statuses to count
+        # PENDING = Raised
+        # GRANTED = Approved
+        # REJECTED = Rejected
+        user_id = None if current_user.role == UserRole.ADMIN else current_user.id
+        
+        from sqlalchemy import func, select
+        from app.models.dsr_permission_request import DSRPermissionRequest as PRModel
+        
+        stats = {
+            "raised": 0,
+            "approved": 0,
+            "rejected": 0
+        }
+        
+        query = select(PRModel.status, func.count(PRModel.id)).group_by(PRModel.status)
+        if user_id:
+            query = query.where(PRModel.user_id == user_id)
+            
+        result = await self.db.execute(query)
+        for status_val, count in result.all():
+            if status_val == DSRPermissionStatus.PENDING:
+                stats["raised"] = count
+            elif status_val == DSRPermissionStatus.GRANTED:
+                stats["approved"] = count
+            elif status_val == DSRPermissionStatus.REJECTED:
+                stats["rejected"] = count
+                
+        return stats

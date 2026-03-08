@@ -84,6 +84,10 @@ export interface DSREntry {
 	previous_day_permission_granted_by: number | null;
 	items: DSRItem[];
 	others?: Record<string, any>;
+	// Admin review fields
+	admin_notes?: string | null;
+	reviewed_by?: number | null;
+	reviewed_at?: string | null;
 	created_at: string;
 	updated_at: string;
 }
@@ -131,4 +135,27 @@ export interface MissingDSR extends DSRUserSnapshot {
 export interface PaginationResult<T> {
 	items: T[];
 	total: number;
+}
+
+export type DSRPermissionStatus = 'pending' | 'granted' | 'rejected';
+
+export interface DSRPermissionRequest {
+	id: number;
+	public_id: string;
+	user_id: number;
+	user?: DSRUserSnapshot;
+	report_date: string;
+	reason: string;
+	status: DSRPermissionStatus;
+	handled_by?: number;
+	handled_at?: string;
+	admin_notes?: string;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface DSRPermissionStats {
+	raised: number;
+	approved: number;
+	rejected: number;
 }

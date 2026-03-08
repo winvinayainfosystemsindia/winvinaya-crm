@@ -92,6 +92,39 @@ const dsrService = {
 	): Promise<any> => {
 		const response = await api.put(`/dsr/permissions/requests/${publicId}`, data);
 		return response.data;
+	},
+
+	getPermissionStats: async (): Promise<any> => {
+		const response = await api.get('/dsr/permissions/stats');
+		return response.data;
+	},
+
+	// Review Actions (Admin)
+	getPendingApproval: async (skip = 0, limit = 100): Promise<any> => {
+		const response = await api.get('/dsr/entries/pending-approval', {
+			params: { skip, limit }
+		});
+		return response.data;
+	},
+
+	approveEntry: async (publicId: string, admin_notes?: string): Promise<any> => {
+		const response = await api.post(`/dsr/entries/${publicId}/approve`, { admin_notes });
+		return response.data;
+	},
+
+	rejectEntry: async (publicId: string, reason: string): Promise<any> => {
+		const response = await api.post(`/dsr/entries/${publicId}/reject`, { reason });
+		return response.data;
+	},
+
+	getMyStats: async (): Promise<any> => {
+		const response = await api.get('/dsr/entries/my-stats');
+		return response.data;
+	},
+
+	getPendingSubmissions: async (): Promise<any> => {
+		const response = await api.get('/dsr/permissions/pending-submissions');
+		return response.data;
 	}
 };
 

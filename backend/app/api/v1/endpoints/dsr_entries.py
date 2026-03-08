@@ -18,6 +18,8 @@ from app.schemas.dsr_entry import (
     DSRGrantPreviousDayPermission,
     DSRSendReminder,
     DSRMissingUserResponse,
+    DSRApproveEntry,
+    DSRRejectEntry,
 )
 from app.schemas.dsr_permission_request import (
     DSRPermissionRequestCreate,
@@ -258,3 +260,93 @@ async def handle_permission_request(
     request = await service.handle_permission_request(public_id, data, current_user)
     await db.commit()
     return await service.get_permission_request(public_id)
+@router.get("/permissions/stats")
+async def get_permission_stats(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get summary stats of permission requests (raised vs approved)."""
+    service = DSRService(db)
+    return await service.get_permission_stats(current_user)
+
+
+# ---------------------------------------------------------------
+# DSR Review Queue (Admin)
+# ---------------------------------------------------------------
+
+@router.get("/entries/pending-approval", response_model=DSREntryListResponse)
+async def get_pending_approval(
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=100, ge=1, le=500),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Admin: list all SUBMITTED DSR entries awaiting review, ordered oldest-first.
+    These are the entries that need admin action (approve or reject).
+    """
+    service = DSRService(db)
+    items, total = await service.get_pending_approval(current_user, skip=skip, limit=limit)
+    return DSREntryListResponse(items=items, total=total, skip=skip, limit=limit)
+
+
+@router.post("/entries/{public_id}/approve", response_model=DSREntryResponse)
+async def approve_entry(
+    public_id: UUID,
+    data: DSRApproveEntry,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Admin approves a SUBMITTED DSR entry.
+    - Optional admin_notes can be sent as feedback.
+    - Transition: SUBMITTED → APPROVED (terminal state).
+    """
+    service = DSRService(db)
+    entry = await service.approve_entry(public_id, data, current_user)
+    await db.commit()
+    return await service.get_entry(entry.public_id, current_user)
+
+
+@router.post("/entries/{public_id}/reject", response_model=DSREntryResponse)
+async def reject_entry(
+    public_id: UUID,
+    data: DSRRejectEntry,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Admin rejects a SUBMITTED DSR entry with a mandatory reason.
+    - reason field is mandatory (min 10 chars).
+    - Transition: SUBMITTED → DRAFT (user must fix and re-submit).
+    """
+    service = DSRService(db)
+    entry = await service.reject_entry(public_id, data, current_user)
+    await db.commit()
+    return await service.get_entry(entry.public_id, current_user)
+
+
+@router.get("/permissions/pending-submissions")
+async def get_pending_submissions(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Admin: list users who have a GRANTED permission request but have not yet submitted their DSR.
+    Returns an 'abandoned' list — useful for follow-up reminders.
+    """
+    service = DSRService(db)
+    return await service.get_pending_submissions(current_user)
+
+
+@router.get("/entries/my-stats")
+async def get_my_dsr_stats(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    User: get a count summary of their own DSR entries by status.
+    Returns: pending_approval, action_required (rejected), approved counts.
+    """
+    service = DSRService(db)
+    return await service.repo.count_by_status_for_user(current_user.id)

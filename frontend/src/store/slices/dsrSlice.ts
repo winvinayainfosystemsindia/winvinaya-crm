@@ -5,7 +5,8 @@ import dsrService from '../../services/dsrService';
 import type {
 	DSRProject, DSRActivity, DSREntry,
 	DSRProjectCreate, DSRActivityCreate, DSREntryCreate,
-	DSRStatus, MissingDSR, PaginationResult
+	DSRStatus, MissingDSR, PaginationResult,
+	DSRPermissionRequest, DSRPermissionStats
 } from '../../models/dsr';
 
 interface DSRState {
@@ -14,7 +15,8 @@ interface DSRState {
 	activitiesByProject: Record<string, DSRActivity[]>;
 	entries: DSREntry[];
 	missingReports: MissingDSR[];
-	permissionRequests: any[];
+	permissionRequests: DSRPermissionRequest[];
+	permissionStats: DSRPermissionStats | null;
 	totalProjects: number;
 	totalActivities: number;
 	totalEntries: number;
@@ -30,6 +32,7 @@ const initialState: DSRState = {
 	entries: [],
 	missingReports: [],
 	permissionRequests: [],
+	permissionStats: null,
 	totalProjects: 0,
 	totalActivities: 0,
 	totalEntries: 0,
@@ -274,6 +277,17 @@ export const handlePermissionRequestAction = createAsyncThunk(
 	}
 );
 
+export const fetchPermissionStats = createAsyncThunk(
+	'dsr/fetchPermissionStats',
+	async (_, { rejectWithValue }) => {
+		try {
+			return await dsrService.getPermissionStats();
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.detail || 'Failed to fetch permission stats');
+		}
+	}
+);
+
 const dsrSlice = createSlice({
 	name: 'dsr',
 	initialState,
@@ -385,12 +399,16 @@ const dsrSlice = createSlice({
 				state.permissionRequests = action.payload.items;
 				state.totalPermissionRequests = action.payload.total;
 			})
-			.addCase(handlePermissionRequestAction.fulfilled, (state, action: PayloadAction<any>) => {
+			.addCase(handlePermissionRequestAction.fulfilled, (state, action: PayloadAction<DSRPermissionRequest>) => {
 				state.loading = false;
 				const index = state.permissionRequests.findIndex(r => r.public_id === action.payload.public_id);
 				if (index !== -1) {
 					state.permissionRequests[index] = action.payload;
 				}
+			})
+			.addCase(fetchPermissionStats.fulfilled, (state, action: PayloadAction<DSRPermissionStats>) => {
+				state.loading = false;
+				state.permissionStats = action.payload;
 			})
 			.addMatcher(
 				(action) => action.type.startsWith('dsr/') && action.type.endsWith('/pending'),

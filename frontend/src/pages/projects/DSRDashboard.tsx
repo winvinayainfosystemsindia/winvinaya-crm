@@ -13,7 +13,7 @@ import {
 	History as HistoryIcon,
 	AdminPanelSettings as AdminIcon,
 } from '@mui/icons-material';
-import { useAppSelector } from '../../store/hooks';
+import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import HistoryTable from '../../components/projects/dsr/history/HistoryTable';
 import { useDSRHistory } from '../../components/projects/dsr/hooks/useDSRHistory';
 import AllSubmissionsTable from '../../components/projects/dsr/admin/AllSubmissionsTable';
@@ -24,9 +24,19 @@ import DSRSubmissionDialog from '../../components/projects/dsr/forms/DSRSubmissi
 import PermissionRequestDialog from '../../components/projects/dsr/forms/PermissionRequestDialog';
 import DSRModuleLayout from '../../components/projects/dsr/layout/DSRModuleLayout';
 import { RequestQuote as RequestIcon } from '@mui/icons-material';
+import {
+	fetchPermissionRequests,
+	fetchPermissionStats
+} from '../../store/slices/dsrSlice';
+import MyPermissionRequests from '../../components/projects/dsr/user/MyPermissionRequests';
+import PermissionStatsCards from '../../components/projects/dsr/common/PermissionStatsCards';
+import DSRReviewQueue from '../../components/projects/dsr/admin/DSRReviewQueue';
+import { Badge } from '@mui/material';
 
 const DSRDashboard: React.FC = () => {
+	const dispatch = useAppDispatch();
 	const { user } = useAppSelector((state) => state.auth);
+	const { permissionRequests, permissionStats, loading: dsrLoading } = useAppSelector((state) => state.dsr);
 	const isAdmin = user?.role === 'admin';
 
 	const [activeTab, setActiveTab] = useState(0);
@@ -37,6 +47,14 @@ const DSRDashboard: React.FC = () => {
 	// Hooks logic
 	const history = useDSRHistory();
 	const admin = useDSRAdmin();
+
+	// Fetch initial data
+	React.useEffect(() => {
+		dispatch(fetchPermissionStats());
+		if (!isAdmin) {
+			dispatch(fetchPermissionRequests({ skip: 0, limit: 100 }));
+		}
+	}, [dispatch, isAdmin]);
 
 	const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
 		setActiveTab(newValue);
@@ -57,7 +75,16 @@ const DSRDashboard: React.FC = () => {
 		setEditEntryId(null);
 		// Refresh data
 		history.fetchHistory();
+		dispatch(fetchPermissionStats());
 		if (isAdmin) admin.handleRefresh();
+	};
+
+	const handlePermissionRequestClose = () => {
+		setIsPermissionRequestOpen(false);
+		dispatch(fetchPermissionStats());
+		if (!isAdmin) {
+			dispatch(fetchPermissionRequests({ skip: 0, limit: 100 }));
+		}
 	};
 
 	return (
@@ -83,8 +110,19 @@ const DSRDashboard: React.FC = () => {
 									'& .MuiTabs-indicator': { backgroundColor: '#ec7211' }
 								}}
 							>
-								<Tab icon={<HistoryIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="Submission History" />
-								{isAdmin && <Tab icon={<AdminIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="Admin Overview" />}
+								<Tab icon={<HistoryIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="My Submissions" />
+								<Tab icon={<RequestIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="My Requests" />
+								{isAdmin && (
+									<Tab
+										icon={
+											<Badge badgeContent={admin.reviewQueueTotal} color="error" max={99} sx={{ mr: 1 }}>
+												<AdminIcon sx={{ fontSize: 18 }} />
+											</Badge>
+										}
+										iconPosition="start"
+										label="Admin Overview"
+									/>
+								)}
 							</Tabs>
 						</Box>
 
@@ -136,8 +174,45 @@ const DSRDashboard: React.FC = () => {
 								</Box>
 							)}
 
-							{activeTab === 1 && isAdmin && (
+							{activeTab === 1 && (
 								<Box>
+									<Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>Request Tracking</Typography>
+									<PermissionStatsCards stats={permissionStats} />
+									<MyPermissionRequests
+										requests={permissionRequests}
+										loading={dsrLoading}
+									/>
+								</Box>
+							)}
+
+							{activeTab === 2 && isAdmin && (
+								<Box>
+									{/* Section 1: Review Queue — highest priority */}
+									<Box sx={{ mb: 5 }}>
+										<Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+											<Typography variant="h6" sx={{ fontWeight: 700 }}>Review Queue</Typography>
+											{admin.reviewQueueTotal > 0 && (
+												<Badge badgeContent={admin.reviewQueueTotal} color="error" max={99} />
+											)}
+										</Box>
+										<Typography variant="body2" sx={{ color: '#545b64', mb: 2 }}>
+											Submitted DSR entries awaiting your approval — oldest first.
+										</Typography>
+										<Divider sx={{ mb: 2 }} />
+										<DSRReviewQueue
+											entries={admin.reviewQueue}
+											loading={admin.reviewLoading}
+											onApprove={admin.handleApproveEntry}
+											onReject={admin.handleRejectEntry}
+										/>
+									</Box>
+
+									{/* Section 2: System Analytics */}
+									<Box sx={{ mb: 4 }}>
+										<Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>Permission Analytics</Typography>
+										<PermissionStatsCards stats={permissionStats} />
+									</Box>
+
 									<Box sx={{ mb: 4 }}>
 										<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
 											<Typography variant="h6" sx={{ fontWeight: 700 }}>Missing Reports Today</Typography>
@@ -198,7 +273,7 @@ const DSRDashboard: React.FC = () => {
 					{/* Permission Request Dialog */}
 					<PermissionRequestDialog
 						open={isPermissionRequestOpen}
-						onClose={() => setIsPermissionRequestOpen(false)}
+						onClose={handlePermissionRequestClose}
 					/>
 				</Box>
 			)}

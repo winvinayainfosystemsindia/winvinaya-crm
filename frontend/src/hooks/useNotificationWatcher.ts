@@ -1,18 +1,21 @@
 import { useEffect, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { addNotification, setLastCandidateId } from '../store/slices/notificationSlice';
+import { addNotification, setLastCandidateId, fetchNotifications } from '../store/slices/notificationSlice';
 import candidateService from '../services/candidateService';
 
 /**
- * Hook to watch for new candidate registrations via polling.
- * Uses a baseline comparison to detect new entries since the last check.
+ * Hook to watch for notifications:
+ * 1. Persistent backend notifications (Approval/Rejection/Permissions)
+ * 2. New candidate registrations (client-side polling)
  */
 export const useNotificationWatcher = () => {
 	const dispatch = useAppDispatch();
 	const { lastCandidateId } = useAppSelector((state) => state.notifications);
+	const { user } = useAppSelector((state) => state.auth);
 
 	const lastSeenIdRef = useRef<string | null>(lastCandidateId);
-	const pollingActive = useRef(false);
+	const candidatePollingActive = useRef(false);
+	const notifPollingActive = useRef(false);
 
 	// Sync ref with Redux state
 	useEffect(() => {
@@ -30,13 +33,10 @@ export const useNotificationWatcher = () => {
 
 	useEffect(() => {
 		const checkForNewCandidates = async () => {
-			if (pollingActive.current) return;
+			if (candidatePollingActive.current) return;
 
 			try {
-				pollingActive.current = true;
-
-				// Fetch last 5 candidates with explicit sorting.
-				// We fetch multiple to handle cases where several registrations occur between polls.
+				candidatePollingActive.current = true;
 				const response = await candidateService.getAll(0, 5, undefined, 'created_at', 'desc');
 				const items = response.items || [];
 
@@ -44,7 +44,6 @@ export const useNotificationWatcher = () => {
 					const latestItem = items[0];
 					const latestId = latestItem.public_id;
 
-					// Case A: First time establishing a baseline for the session/system
 					if (lastSeenIdRef.current === null) {
 						dispatch(setLastCandidateId(latestId));
 						localStorage.setItem('winvinaya_last_candidate_id', latestId);
@@ -52,7 +51,6 @@ export const useNotificationWatcher = () => {
 						return;
 					}
 
-					// Case B: Potential new items detected
 					if (latestId !== lastSeenIdRef.current) {
 						const newItems = [];
 						for (const candidate of items) {
@@ -61,7 +59,6 @@ export const useNotificationWatcher = () => {
 						}
 
 						if (newItems.length > 0) {
-							// Notify for new candidates (oldest first for chronological order)
 							newItems.reverse().forEach((candidate) => {
 								dispatch(addNotification({
 									id: `reg-${candidate.public_id}-${Date.now()}`,
@@ -73,36 +70,50 @@ export const useNotificationWatcher = () => {
 								}));
 							});
 
-							// Update global state and persistence
 							dispatch(setLastCandidateId(latestId));
 							localStorage.setItem('winvinaya_last_candidate_id', latestId);
 							lastSeenIdRef.current = latestId;
 						}
 					}
 				} else if (lastSeenIdRef.current === null) {
-					// Handle completely empty database initially
 					const baseBaseline = 'EMPTY_DB';
 					dispatch(setLastCandidateId(baseBaseline));
 					localStorage.setItem('winvinaya_last_candidate_id', baseBaseline);
 					lastSeenIdRef.current = baseBaseline;
 				}
 			} catch (error) {
-				// Silently fail polling errors to avoid user disruption, but log for dev
-				console.error('[NotificationWatcher] Poll error:', error);
+				console.error('[NotificationWatcher] Candidate poll error:', error);
 			} finally {
-				pollingActive.current = false;
+				candidatePollingActive.current = false;
 			}
 		};
 
-		// Slight delay for initial check on mount
-		const initialTimeout = setTimeout(checkForNewCandidates, 2000);
+		const checkBackendNotifications = async () => {
+			if (!user || notifPollingActive.current) return;
 
-		// Poll every 30 seconds for balance between responsiveness and server load
-		const intervalId = setInterval(checkForNewCandidates, 30000);
+			try {
+				notifPollingActive.current = true;
+				await dispatch(fetchNotifications());
+			} catch (error) {
+				console.error('[NotificationWatcher] Backend notification poll error:', error);
+			} finally {
+				notifPollingActive.current = false;
+			}
+		};
+
+		// Initial checks
+		const initialCandidateTimeout = setTimeout(checkForNewCandidates, 2000);
+		const initialNotifTimeout = setTimeout(checkBackendNotifications, 1000);
+
+		// Intervals
+		const candidateIntervalId = setInterval(checkForNewCandidates, 60000); // 60s for candidates
+		const notifIntervalId = setInterval(checkBackendNotifications, 30000); // 30s for personal notifs
 
 		return () => {
-			clearTimeout(initialTimeout);
-			clearInterval(intervalId);
+			clearTimeout(initialCandidateTimeout);
+			clearTimeout(initialNotifTimeout);
+			clearInterval(candidateIntervalId);
+			clearInterval(notifIntervalId);
 		};
-	}, [dispatch]);
+	}, [dispatch, user]);
 };

@@ -31,6 +31,7 @@ from app.api.v1.endpoints import (
     dsr_projects,
     dsr_activities,
     dsr_entries,
+    notifications,
 )
 
 
@@ -58,6 +59,7 @@ router.include_router(assessments.router, prefix="/assessments", tags=["Assessme
 router.include_router(training_events.router, prefix="/training-extensions")
 router.include_router(training_mock_interviews.router, prefix="/training-extensions")
 router.include_router(training_batch_plans.router)
+router.include_router(notifications.router, prefix="/notifications", tags=["Notifications"])
 
 # CRM Routers
 router.include_router(companies.router, prefix="/crm/companies", tags=["CRM Companies"])

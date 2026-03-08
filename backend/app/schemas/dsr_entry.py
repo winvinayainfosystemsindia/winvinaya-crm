@@ -91,6 +91,10 @@ class DSREntryResponse(BaseModel):
     previous_day_permission_granted_by: Optional[int] = None
     items: list[dict]          # raw JSON; enriched at service layer before returning
     others: Optional[dict] = None
+    # Admin review fields
+    admin_notes: Optional[str] = None
+    reviewed_by: Optional[int] = None
+    reviewed_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
 
@@ -112,3 +116,13 @@ class DSRMissingUserResponse(BaseModel):
     username: str
     email: str
     report_date: date
+
+
+class DSRApproveEntry(BaseModel):
+    """Admin approves a submitted DSR entry"""
+    admin_notes: Optional[str] = Field(default=None, description="Optional feedback for the user")
+
+
+class DSRRejectEntry(BaseModel):
+    """Admin rejects a submitted DSR entry — reason is mandatory"""
+    reason: str = Field(..., min_length=10, description="Why this DSR is being rejected (min 10 chars)")
