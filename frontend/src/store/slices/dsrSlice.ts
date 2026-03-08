@@ -180,6 +180,19 @@ export const fetchMyEntries = createAsyncThunk(
 	}
 );
 
+export const fetchCalendarEntries = createAsyncThunk(
+	'dsr/fetchCalendarEntries',
+	async (params: { date_from?: string; date_to?: string; status?: DSRStatus } | undefined, { rejectWithValue }) => {
+		try {
+			const { date_from, date_to, status } = params || {};
+			// Fetch a large enough limit to cover calendar view (e.g. 100)
+			return await dsrService.getMyEntries(0, 100, date_from, date_to, status);
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.detail || 'Failed to fetch calendar entries');
+		}
+	}
+);
+
 export const fetchEntry = createAsyncThunk(
 	'dsr/fetchEntry',
 	async (publicId: string, { rejectWithValue }) => {
@@ -373,6 +386,10 @@ const dsrSlice = createSlice({
 			})
 			// Entries
 			.addCase(fetchEntries.fulfilled, (state, action: PayloadAction<PaginationResult<DSREntry>>) => {
+				state.loading = false;
+				state.calendarEntries = action.payload.items;
+			})
+			.addCase(fetchCalendarEntries.fulfilled, (state, action: PayloadAction<PaginationResult<DSREntry>>) => {
 				state.loading = false;
 				state.calendarEntries = action.payload.items;
 			})

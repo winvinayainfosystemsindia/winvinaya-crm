@@ -8,7 +8,7 @@ import {
 	submitEntry,
 	fetchEntry,
 	fetchPermissionRequests,
-	fetchMyEntries
+	fetchCalendarEntries
 } from '../../../../store/slices/dsrSlice';
 import useToast from '../../../../hooks/useToast';
 import type { DSRItem } from '../../../../models/dsr';
@@ -48,14 +48,12 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 	}, [reportDate, permissionRequests]);
 
 	const dateStatuses = useMemo(() => {
-		const statusMap: Record<string, 'submitted' | 'missed' | 'granted' | 'none'> = {};
+		const statusMap: Record<string, string> = {};
 		const today = startOfDay(new Date());
 
-		// Mark submitted dates (from entries filtered by current user)
+		// Mark dates from entries (Approved, Submitted, Rejected, Draft)
 		entries.forEach(entry => {
-			if (entry.status !== 'draft') {
-				statusMap[entry.report_date] = 'submitted';
-			}
+			statusMap[entry.report_date] = entry.status;
 		});
 
 		// Mark missed dates (last 30 days) and check for granted permissions
@@ -63,7 +61,8 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 			const d = subDays(today, i);
 			const dateStr = format(d, 'yyyy-MM-dd');
 
-			if (statusMap[dateStr] === 'submitted') continue;
+			// Entries take precedence over permissions
+			if (statusMap[dateStr]) continue;
 
 			// Check if permission granted for this date
 			const hasPermission = permissionRequests.some(req =>
@@ -99,9 +98,9 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		dispatch(fetchProjects({ skip: 0, limit: 500, active_only: true, assigned_to: user?.public_id }));
 		dispatch(fetchPermissionRequests({ skip: 0, limit: 100, user_id: user?.public_id as any }));
 
-		// Fetch last 30 days of entries to determine status - Use fetchMyEntries for personalization
+		// Fetch last 30 days of entries to determine status - Use fetchCalendarEntries for targeted calendar data
 		const dateFrom = format(subDays(new Date(), 30), 'yyyy-MM-dd');
-		dispatch(fetchMyEntries({ date_from: dateFrom, limit: 100 }));
+		dispatch(fetchCalendarEntries({ date_from: dateFrom }));
 
 		if (entryId) {
 			loadEntry(entryId);

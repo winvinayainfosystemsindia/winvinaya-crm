@@ -218,18 +218,36 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 
 					{/* Calendar Status Legend */}
 					{!readOnly && (
-						<Box sx={{ mb: 2, display: 'flex', gap: 3, flexWrap: 'wrap', px: 1 }}>
+						<Box sx={{
+							mb: 3,
+							p: 2,
+							bgcolor: '#f8f9fa',
+							borderRadius: '8px',
+							border: '1px solid #e0e0e0',
+							display: 'flex',
+							gap: 2,
+							flexWrap: 'wrap',
+							justifyContent: 'center'
+						}}>
 							<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-								<Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#e6f4ea', border: '1px solid #34a853' }} />
-								<Typography variant="caption" sx={{ color: '#545b64' }}>Submitted</Typography>
+								<Box sx={{ width: 14, height: 14, borderRadius: '50%', bgcolor: '#e6f4ea', border: '2px solid #34a853' }} />
+								<Typography variant="caption" sx={{ color: '#137333', fontWeight: 600 }}>Approved</Typography>
 							</Box>
 							<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-								<Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#fce8e6', border: '1px solid #ea4335' }} />
-								<Typography variant="caption" sx={{ color: '#545b64' }}>Missed (Permission Needed)</Typography>
+								<Box sx={{ width: 14, height: 14, borderRadius: '50%', bgcolor: '#fef7e0', border: '2px solid #fbbc04' }} />
+								<Typography variant="caption" sx={{ color: '#b06000', fontWeight: 600 }}>Submitted</Typography>
 							</Box>
 							<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-								<Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#e8f0fe', border: '1px solid #4285f4' }} />
-								<Typography variant="caption" sx={{ color: '#545b64' }}>Permission Granted</Typography>
+								<Box sx={{ width: 14, height: 14, borderRadius: '50%', bgcolor: '#e8f0fe', border: '2px solid #4285f4' }} />
+								<Typography variant="caption" sx={{ color: '#1967d2', fontWeight: 600 }}>Permission Granted</Typography>
+							</Box>
+							<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+								<Box sx={{ width: 14, height: 14, borderRadius: '4px', bgcolor: '#f8f9fa', border: '2px dashed #dadce0' }} />
+								<Typography variant="caption" sx={{ color: '#5f6368', fontWeight: 600 }}>Draft</Typography>
+							</Box>
+							<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+								<Box sx={{ width: 14, height: 14, borderRadius: '50%', bgcolor: '#fce8e6' }} />
+								<Typography variant="caption" sx={{ color: '#c5221f', fontWeight: 600 }}>Missed</Typography>
 							</Box>
 						</Box>
 					)}
