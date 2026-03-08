@@ -32,6 +32,7 @@ const ActivityPlanning: React.FC = () => {
 	const [selectedActivity, setSelectedActivity] = useState<DSRActivity | null>(null);
 	const [importModalOpen, setImportModalOpen] = useState(false);
 	const [refreshKey, setRefreshKey] = useState(0);
+	const [exporting, setExporting] = useState(false);
 
 	// Permission Logic: admin, manager, or project owner
 	const isAdmin = user?.role === 'admin';
@@ -61,6 +62,19 @@ const ActivityPlanning: React.FC = () => {
 		}
 	};
 
+	const handleExport = async () => {
+		if (!projectId) return;
+		setExporting(true);
+		try {
+			await dsrActivityService.exportActivities(projectId);
+			toast.success('Activities exported successfully');
+		} catch (error) {
+			toast.error('Failed to export activities');
+		} finally {
+			setExporting(false);
+		}
+	};
+
 	return (
 		<ActivityModuleLayout
 			title="Activity Planning"
@@ -71,6 +85,26 @@ const ActivityPlanning: React.FC = () => {
 					<Box sx={{ mb: 4, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
 						{canEdit && (
 							<Box sx={{ display: 'flex', gap: 1.5 }}>
+								<Button
+									variant="outlined"
+									onClick={handleExport}
+									disabled={exporting}
+									sx={{
+										color: '#545b64',
+										borderColor: '#d5dbdb',
+										textTransform: 'none',
+										fontWeight: 700,
+										fontSize: '0.875rem',
+										height: 36,
+										borderRadius: '2px',
+										'&:hover': {
+											bgcolor: '#f2f3f3',
+											borderColor: '#aab7b7'
+										}
+									}}
+								>
+									{exporting ? 'Exporting...' : 'Export Activities'}
+								</Button>
 								<Button
 									variant="outlined"
 									onClick={() => setImportModalOpen(true)}
@@ -138,6 +172,7 @@ const ActivityPlanning: React.FC = () => {
 						onImport={(file) => dsrActivityService.importFromExcel(file, selectedProject.public_id)}
 						title="Import Activities from Excel"
 						description="Upload an Excel file with 'name', 'description', 'start_date', 'end_date' columns."
+						onDownloadTemplate={dsrActivityService.downloadTemplate}
 					/>
 				</Box>
 			)}

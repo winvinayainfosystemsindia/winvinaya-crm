@@ -87,6 +87,7 @@ const DSRDashboard: React.FC = () => {
 	const [isSubmissionOpen, setIsSubmissionOpen] = useState(false);
 	const [isPermissionRequestOpen, setIsPermissionRequestOpen] = useState(false);
 	const [editEntryId, setEditEntryId] = useState<string | null>(null);
+	const [isViewOnly, setIsViewOnly] = useState(false);
 
 	const history = useDSRHistory();
 	const admin = useDSRAdmin();
@@ -107,17 +108,26 @@ const DSRDashboard: React.FC = () => {
 
 	const handleOpenSubmission = () => {
 		setEditEntryId(null);
+		setIsViewOnly(false);
 		setIsSubmissionOpen(true);
 	};
 
 	const handleEditEntry = (id: string) => {
 		setEditEntryId(id);
+		setIsViewOnly(false);
+		setIsSubmissionOpen(true);
+	};
+
+	const handleViewEntry = (id: string) => {
+		setEditEntryId(id);
+		setIsViewOnly(true);
 		setIsSubmissionOpen(true);
 	};
 
 	const handleCloseSubmission = () => {
 		setIsSubmissionOpen(false);
 		setEditEntryId(null);
+		setIsViewOnly(false);
 		history.fetchHistory();
 		if (activeTab === 1) {
 			dispatch(fetchPermissionStats({ user_id: user?.id }));
@@ -225,11 +235,16 @@ const DSRDashboard: React.FC = () => {
 									</Box>
 									<HistoryTable
 										entries={history.entries}
+										total={history.total}
 										loading={history.loading}
-										expandedRow={history.expandedRow}
-										onToggleReplace={(id) => history.setExpandedRow(id)}
+										page={history.page}
+										rowsPerPage={history.rowsPerPage}
+										onPageChange={(_, p) => history.setPage(p)}
+										onRowsPerPageChange={(e) => history.setRowsPerPage(parseInt(e.target.value, 10))}
+										onRowsPerPageSelectChange={(rows) => history.setRowsPerPage(rows)}
 										onDelete={history.handleDelete}
 										onEdit={handleEditEntry}
+										onView={handleViewEntry}
 									/>
 								</Box>
 							)}
@@ -258,6 +273,7 @@ const DSRDashboard: React.FC = () => {
 						open={isSubmissionOpen}
 						onClose={handleCloseSubmission}
 						entryId={editEntryId}
+						readOnly={isViewOnly}
 					/>
 
 					<PermissionRequestDialog

@@ -156,6 +156,7 @@ const ProjectManagement: React.FC = () => {
 					onImport={(file) => dsrProjectService.importFromExcel(file)}
 					title="Import Projects from Excel"
 					description="Upload an Excel file with 'name' and 'owner_email' columns to bulk-create projects."
+					onDownloadTemplate={dsrProjectService.downloadTemplate}
 				/>
 			</Container>
 		</Box>

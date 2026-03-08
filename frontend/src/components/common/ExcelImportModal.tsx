@@ -31,7 +31,7 @@ interface ExcelImportModalProps {
 	onClose: () => void;
 	onImport: (file: File) => Promise<ImportResult>;
 	title: string;
-	templateUrl?: string;
+	onDownloadTemplate?: () => Promise<void>;
 	description?: string;
 }
 
@@ -40,11 +40,12 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
 	onClose,
 	onImport,
 	title,
-	templateUrl,
+	onDownloadTemplate,
 	description
 }) => {
 	const [file, setFile] = useState<File | null>(null);
 	const [loading, setLoading] = useState(false);
+	const [downloading, setDownloading] = useState(false);
 	const [result, setResult] = useState<ImportResult | null>(null);
 	const [error, setError] = useState<string | null>(null);
 
@@ -69,6 +70,18 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
 			setError(err.response?.data?.detail || 'Failed to import records from Excel.');
 		} finally {
 			setLoading(false);
+		}
+	};
+
+	const handleDownload = async () => {
+		if (!onDownloadTemplate) return;
+		setDownloading(true);
+		try {
+			await onDownloadTemplate();
+		} catch (err) {
+			console.error('Download failed:', err);
+		} finally {
+			setDownloading(false);
 		}
 	};
 
@@ -203,10 +216,10 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
 				)}
 			</DialogContent>
 			<DialogActions sx={{ p: 3, bgcolor: '#ffffff', borderTop: '1px solid #eaeded' }}>
-				{templateUrl && !result && (
+				{onDownloadTemplate && !result && (
 					<Button
-						href={templateUrl}
-						target="_blank"
+						onClick={handleDownload}
+						disabled={downloading}
 						startIcon={<FileIcon />}
 						sx={{
 							mr: 'auto',
@@ -216,7 +229,7 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
 							'&:hover': { bgcolor: '#f5f8fa' }
 						}}
 					>
-						Download Template
+						{downloading ? 'Downloading...' : 'Download Template'}
 					</Button>
 				)}
 				<Button

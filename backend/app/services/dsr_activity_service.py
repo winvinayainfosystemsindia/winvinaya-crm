@@ -249,6 +249,72 @@ class DSRActivityService:
 
         return result
 
+    async def get_import_template(self) -> io.BytesIO:
+        """Generate a blank Excel template for activity import."""
+        try:
+            import openpyxl
+        except ImportError:
+            raise HTTPException(status_code=500, detail="openpyxl not installed.")
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Activity Import Template"
+
+        headers = ["project_name", "name", "description", "start_date", "end_date", "status"]
+        ws.append(headers)
+
+        # Add a sample row
+        ws.append([
+            "Sample Project", 
+            "Design UI", 
+            "Create mockups for main dashboard", 
+            "2024-01-01", 
+            "2024-01-15", 
+            "planned"
+        ])
+
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        return output
+
+    async def export_activities(self, project_public_id: UUID) -> io.BytesIO:
+        """Export all activities for a project to Excel."""
+        try:
+            import openpyxl
+        except ImportError:
+            raise HTTPException(status_code=500, detail="openpyxl not installed.")
+
+        project = await self.project_repo.get_by_public_id(project_public_id)
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+
+        activities, _ = await self.repo.get_multi_paginated(
+            skip=0, limit=1000, project_id=project.id
+        )
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = f"Activities - {project.name}"
+
+        headers = ["project_name", "name", "description", "start_date", "end_date", "status"]
+        ws.append(headers)
+
+        for act in activities:
+            ws.append([
+                project.name,
+                act.name,
+                act.description or "",
+                act.start_date.isoformat(),
+                act.end_date.isoformat(),
+                act.status.value
+            ])
+
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        return output
+
     async def _get_or_404(self, public_id: UUID) -> DSRActivity:
         activity = await self.repo.get_by_public_id(public_id)
         if not activity:

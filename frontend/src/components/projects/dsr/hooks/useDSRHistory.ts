@@ -8,7 +8,7 @@ export const useDSRHistory = () => {
 	const dispatch = useAppDispatch();
 	const toast = useToast();
 
-	const { entries, totalEntries: total, loading } = useAppSelector((state) => state.dsr);
+	const { myEntries: entries, totalMyEntries: total, loading } = useAppSelector((state) => state.dsr);
 
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);

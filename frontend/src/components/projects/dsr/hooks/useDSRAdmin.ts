@@ -17,8 +17,8 @@ export const useDSRAdmin = () => {
 	const toast = useToast();
 	const {
 		missingReports,
-		entries,
-		totalEntries,
+		adminEntries: entries,
+		totalAdminEntries: totalEntries,
 		permissionRequests,
 		totalPermissionRequests,
 		loading

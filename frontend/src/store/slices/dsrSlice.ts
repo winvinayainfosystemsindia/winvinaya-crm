@@ -13,13 +13,16 @@ interface DSRState {
 	projects: DSRProject[];
 	activities: DSRActivity[];
 	activitiesByProject: Record<string, DSRActivity[]>;
-	entries: DSREntry[];
+	myEntries: DSREntry[];
+	adminEntries: DSREntry[];
+	calendarEntries: DSREntry[];
 	missingReports: MissingDSR[];
 	permissionRequests: DSRPermissionRequest[];
 	permissionStats: DSRPermissionStats | null;
 	totalProjects: number;
 	totalActivities: number;
-	totalEntries: number;
+	totalMyEntries: number;
+	totalAdminEntries: number;
 	totalPermissionRequests: number;
 	loading: boolean;
 	error: string | null;
@@ -29,13 +32,16 @@ const initialState: DSRState = {
 	projects: [],
 	activities: [],
 	activitiesByProject: {},
-	entries: [],
+	myEntries: [],
+	adminEntries: [],
+	calendarEntries: [],
 	missingReports: [],
 	permissionRequests: [],
 	permissionStats: null,
 	totalProjects: 0,
 	totalActivities: 0,
-	totalEntries: 0,
+	totalMyEntries: 0,
+	totalAdminEntries: 0,
 	totalPermissionRequests: 0,
 	loading: false,
 	error: null,
@@ -368,45 +374,60 @@ const dsrSlice = createSlice({
 			// Entries
 			.addCase(fetchEntries.fulfilled, (state, action: PayloadAction<PaginationResult<DSREntry>>) => {
 				state.loading = false;
-				state.entries = action.payload.items;
-				state.totalEntries = action.payload.total;
+				state.calendarEntries = action.payload.items;
 			})
 			.addCase(fetchMyEntries.fulfilled, (state, action: PayloadAction<PaginationResult<DSREntry>>) => {
 				state.loading = false;
-				state.entries = action.payload.items;
-				state.totalEntries = action.payload.total;
+				state.myEntries = action.payload.items;
+				state.totalMyEntries = action.payload.total;
 			})
 			.addCase(fetchEntry.fulfilled, (state, action: PayloadAction<DSREntry>) => {
 				state.loading = false;
-				const index = state.entries.findIndex(e => e.public_id === action.payload.public_id);
-				if (index !== -1) {
-					state.entries[index] = action.payload;
-				} else {
-					state.entries.push(action.payload);
-				}
+				// Update in all relevant lists if present
+				[state.myEntries, state.adminEntries, state.calendarEntries].forEach(list => {
+					const index = list.findIndex(e => e.public_id === action.payload.public_id);
+					if (index !== -1) list[index] = action.payload;
+				});
 			})
 			.addCase(createEntry.fulfilled, (state, action: PayloadAction<DSREntry>) => {
 				state.loading = false;
-				state.entries.unshift(action.payload);
-				state.totalEntries += 1;
+
+				// Deduplicate myEntries
+				const myIndex = state.myEntries.findIndex(e => e.public_id === action.payload.public_id);
+				if (myIndex !== -1) {
+					state.myEntries[myIndex] = action.payload;
+				} else {
+					state.myEntries.unshift(action.payload);
+					state.totalMyEntries += 1;
+				}
+
+				// Deduplicate calendarEntries
+				const calIndex = state.calendarEntries.findIndex(e => e.public_id === action.payload.public_id);
+				if (calIndex !== -1) {
+					state.calendarEntries[calIndex] = action.payload;
+				} else {
+					state.calendarEntries.unshift(action.payload);
+				}
 			})
 			.addCase(submitEntry.fulfilled, (state, action: PayloadAction<DSREntry>) => {
 				state.loading = false;
-				const index = state.entries.findIndex(e => e.public_id === action.payload.public_id);
-				if (index !== -1) {
-					state.entries[index] = action.payload;
-				}
+				[state.myEntries, state.adminEntries, state.calendarEntries].forEach(list => {
+					const index = list.findIndex(e => e.public_id === action.payload.public_id);
+					if (index !== -1) list[index] = action.payload;
+				});
 			})
 			.addCase(deleteEntry.fulfilled, (state, action: PayloadAction<string>) => {
 				state.loading = false;
-				state.entries = state.entries.filter(e => e.public_id !== action.payload);
-				state.totalEntries -= 1;
+				state.myEntries = state.myEntries.filter(e => e.public_id !== action.payload);
+				state.totalMyEntries -= 1;
+				state.adminEntries = state.adminEntries.filter(e => e.public_id !== action.payload);
+				state.calendarEntries = state.calendarEntries.filter(e => e.public_id !== action.payload);
 			})
 			// Admin
 			.addCase(fetchAdminOverview.fulfilled, (state, action: PayloadAction<PaginationResult<DSREntry>>) => {
 				state.loading = false;
-				state.entries = action.payload.items;
-				state.totalEntries = action.payload.total;
+				state.adminEntries = action.payload.items;
+				state.totalAdminEntries = action.payload.total;
 			})
 			.addCase(fetchMissingReports.fulfilled, (state, action: PayloadAction<MissingDSR[]>) => {
 				state.loading = false;

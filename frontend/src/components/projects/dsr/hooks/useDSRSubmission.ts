@@ -8,7 +8,7 @@ import {
 	submitEntry,
 	fetchEntry,
 	fetchPermissionRequests,
-	fetchEntries
+	fetchMyEntries
 } from '../../../../store/slices/dsrSlice';
 import useToast from '../../../../hooks/useToast';
 import type { DSRItem } from '../../../../models/dsr';
@@ -27,7 +27,7 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 	const toast = useToast();
 
 	const { user } = useAppSelector((state) => state.auth);
-	const { projects, activitiesByProject, entries, permissionRequests, loading: storeLoading } = useAppSelector((state) => state.dsr);
+	const { projects, activitiesByProject, calendarEntries: entries, permissionRequests, loading: storeLoading } = useAppSelector((state) => state.dsr);
 
 	const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
 	const [items, setItems] = useState<Partial<DSRItem>[]>([
@@ -48,27 +48,37 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 	}, [reportDate, permissionRequests]);
 
 	const dateStatuses = useMemo(() => {
-		const statusMap: Record<string, 'submitted' | 'missed' | 'none'> = {};
+		const statusMap: Record<string, 'submitted' | 'missed' | 'granted' | 'none'> = {};
 		const today = startOfDay(new Date());
 
-		// Mark submitted dates (from history)
+		// Mark submitted dates (from entries filtered by current user)
 		entries.forEach(entry => {
 			if (entry.status !== 'draft') {
 				statusMap[entry.report_date] = 'submitted';
 			}
 		});
 
-		// Mark missed dates (last 30 days)
+		// Mark missed dates (last 30 days) and check for granted permissions
 		for (let i = 1; i <= 30; i++) {
 			const d = subDays(today, i);
 			const dateStr = format(d, 'yyyy-MM-dd');
-			if (!statusMap[dateStr]) {
+
+			if (statusMap[dateStr] === 'submitted') continue;
+
+			// Check if permission granted for this date
+			const hasPermission = permissionRequests.some(req =>
+				req.report_date === dateStr && req.status === 'granted'
+			);
+
+			if (hasPermission) {
+				statusMap[dateStr] = 'granted';
+			} else {
 				statusMap[dateStr] = 'missed';
 			}
 		}
 
 		return statusMap;
-	}, [entries]);
+	}, [entries, permissionRequests]);
 
 	const loadEntry = useCallback(async (id: string) => {
 		try {
@@ -87,11 +97,11 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 
 	useEffect(() => {
 		dispatch(fetchProjects({ skip: 0, limit: 500, active_only: true, assigned_to: user?.public_id }));
-		dispatch(fetchPermissionRequests({ skip: 0, limit: 100 }));
+		dispatch(fetchPermissionRequests({ skip: 0, limit: 100, user_id: user?.public_id as any }));
 
-		// Fetch last 30 days of entries to determine status
+		// Fetch last 30 days of entries to determine status - Use fetchMyEntries for personalization
 		const dateFrom = format(subDays(new Date(), 30), 'yyyy-MM-dd');
-		dispatch(fetchEntries({ date_from: dateFrom, limit: 100 }));
+		dispatch(fetchMyEntries({ date_from: dateFrom, limit: 100 }));
 
 		if (entryId) {
 			loadEntry(entryId);

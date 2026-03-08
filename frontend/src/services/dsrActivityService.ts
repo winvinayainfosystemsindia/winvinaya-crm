@@ -36,19 +36,44 @@ const dsrActivityService = {
 		await api.delete(`/dsr/activities/${publicId}`);
 	},
 
-	importFromExcel: async (file: File, projectPublicId?: string) => {
+	importFromExcel: async (file: File, projectPublicId?: string): Promise<ImportResult> => {
 		const formData = new FormData();
 		formData.append('file', file);
-		if (projectPublicId) {
-			formData.append('project_public_id', projectPublicId);
-		}
-		const response = await api.post<ImportResult>(`/dsr/activities/import`, formData, {
-			headers: {
-				'Content-Type': 'multipart/form-data',
-			},
+		const response = await api.post('/dsr/activities/import', formData, {
+			params: { project_public_id: projectPublicId },
+			headers: { 'Content-Type': 'multipart/form-data' }
 		});
 		return response.data;
 	},
+
+	downloadTemplate: async () => {
+		const response = await api.get('/dsr/activities/template', {
+			responseType: 'blob'
+		});
+
+		const url = window.URL.createObjectURL(new Blob([response.data]));
+		const link = document.createElement('a');
+		link.href = url;
+		link.setAttribute('download', 'activity_import_template.xlsx');
+		document.body.appendChild(link);
+		link.click();
+		link.remove();
+	},
+
+	exportActivities: async (projectPublicId: string) => {
+		const response = await api.get('/dsr/activities/export', {
+			params: { project_public_id: projectPublicId },
+			responseType: 'blob'
+		});
+
+		const url = window.URL.createObjectURL(new Blob([response.data]));
+		const link = document.createElement('a');
+		link.href = url;
+		link.setAttribute('download', 'activities_export.xlsx');
+		document.body.appendChild(link);
+		link.click();
+		link.remove();
+	}
 };
 
 export default dsrActivityService;

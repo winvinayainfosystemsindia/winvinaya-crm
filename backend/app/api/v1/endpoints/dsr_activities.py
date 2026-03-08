@@ -81,6 +81,40 @@ async def list_activities(
     return DSRActivityListResponse(items=items, total=total, skip=skip, limit=limit)
 
 
+@router.get("/template")
+async def get_activity_import_template(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Download a blank Excel template for activity import."""
+    service = DSRActivityService(db)
+    file_content = await service.get_import_template()
+    from fastapi.responses import StreamingResponse
+    return StreamingResponse(
+        file_content,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=activity_import_template.xlsx"}
+    )
+
+
+@router.get("/export")
+async def export_activities_excel(
+    project_public_id: UUID = Query(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Export all activities for a project to Excel (Project Owner / Admin)."""
+    service = DSRActivityService(db)
+    # Check ownership inside service or here
+    file_content = await service.export_activities(project_public_id)
+    from fastapi.responses import StreamingResponse
+    return StreamingResponse(
+        file_content,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=activities_export.xlsx"}
+    )
+
+
 @router.get("/{public_id}", response_model=DSRActivityResponse)
 async def get_activity(
     public_id: UUID,

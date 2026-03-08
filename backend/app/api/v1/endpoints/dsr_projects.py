@@ -3,6 +3,7 @@
 from typing import Optional
 from uuid import UUID
 from fastapi import APIRouter, Depends, Query, UploadFile, File, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -45,6 +46,21 @@ async def import_projects_excel(
     result = await service.import_from_excel(file, current_user)
     await db.commit()
     return result
+
+
+@router.get("/template")
+async def get_project_import_template(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get a blank Excel template for project import."""
+    service = DSRProjectService(db)
+    output = await service.get_import_template()
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=project_import_template.xlsx"},
+    )
 
 
 @router.get("", response_model=DSRProjectListResponse)

@@ -38,6 +38,20 @@ const dsrProjectService = {
 		});
 		return response.data;
 	},
+
+	downloadTemplate: async () => {
+		const response = await api.get('/dsr/projects/template', {
+			responseType: 'blob'
+		});
+
+		const url = window.URL.createObjectURL(new Blob([response.data]));
+		const link = document.createElement('a');
+		link.href = url;
+		link.setAttribute('download', 'project_import_template.xlsx');
+		document.body.appendChild(link);
+		link.click();
+		link.remove();
+	},
 };
 
 export default dsrProjectService;

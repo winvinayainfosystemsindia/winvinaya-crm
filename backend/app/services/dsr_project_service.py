@@ -170,6 +170,35 @@ class DSRProjectService:
 
         return result
 
+    async def get_import_template(self) -> io.BytesIO:
+        """Generate a blank Excel template for project import."""
+        try:
+            import openpyxl
+        except ImportError:
+            raise HTTPException(
+                status_code=500,
+                detail="openpyxl not installed. Add it to requirements.txt.",
+            )
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Project Import Template"
+
+        headers = ["name", "owner_email", "is_active"]
+        ws.append(headers)
+
+        # Add a sample row
+        ws.append([
+            "Sample Project", 
+            "admin@example.com", 
+            "TRUE"
+        ])
+
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        return output
+
     async def _get_or_404(self, public_id: UUID) -> DSRProject:
         project = await self.repo.get_by_public_id(public_id)
         if not project:

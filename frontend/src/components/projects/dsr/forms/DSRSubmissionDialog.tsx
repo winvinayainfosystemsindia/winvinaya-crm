@@ -9,7 +9,8 @@ import {
 	Typography,
 	Box,
 	Alert,
-	Fade
+	Fade,
+	CircularProgress
 } from '@mui/material';
 import {
 	Close as CloseIcon,
@@ -29,6 +30,7 @@ interface DSRSubmissionDialogProps {
 	open: boolean;
 	onClose: () => void;
 	entryId?: string | null;
+	readOnly?: boolean;
 }
 
 // Custom Day component to show status colors
@@ -52,6 +54,13 @@ const StatusDay = (props: PickersDayProps & { dateStatuses: Record<string, strin
 			border: '1px solid #ea4335',
 			'&:hover': { bgcolor: '#f9d2ce' }
 		};
+	} else if (status === 'granted') {
+		style = {
+			bgcolor: '#e8f0fe',
+			color: '#1967d2',
+			border: '1px solid #4285f4',
+			'&:hover': { bgcolor: '#d2e3fc' }
+		};
 	}
 
 	return (
@@ -71,7 +80,7 @@ const StatusDay = (props: PickersDayProps & { dateStatuses: Record<string, strin
 	);
 };
 
-const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose, entryId }) => {
+const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose, entryId, readOnly = false }) => {
 	const {
 		projects,
 		activitiesByProject,
@@ -93,6 +102,11 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 		onSubmitted: onClose,
 		externalEntryId: entryId
 	});
+
+	const getTitle = () => {
+		if (readOnly) return 'View Daily Status Report';
+		return entryId ? 'Edit Daily Status Report' : 'New Daily Status Report';
+	};
 
 	return (
 		<LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -118,10 +132,10 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 						<DSRIcon />
 						<Box>
 							<Typography variant="h6" sx={{ lineHeight: 1.2, fontWeight: 700 }}>
-								{entryId ? 'Edit Daily Status Report' : 'New Daily Status Report'}
+								{getTitle()}
 							</Typography>
 							<Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 400 }}>
-								Log your work activities and hours
+								{readOnly ? 'Detailed report of activities and hours' : 'Log your work activities and hours'}
 							</Typography>
 						</Box>
 					</Box>
@@ -132,7 +146,7 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 
 				<DialogContent sx={{ p: 4, pt: 3, bgcolor: '#f2f3f3' }}>
 					<Box sx={{ mt: 2 }}>
-						{permissionError && (
+						{!readOnly && permissionError && (
 							<Alert
 								severity="error"
 								variant="outlined"
@@ -150,7 +164,7 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 							</Alert>
 						)}
 
-						{!isDateAllowed && (
+						{!readOnly && !isDateAllowed && (
 							<Alert
 								severity="warning"
 								variant="outlined"
@@ -175,7 +189,7 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 								label="Reporting Date"
 								value={dayjs(reportDate)}
 								onChange={(newValue) => setReportDate(newValue ? newValue.format('YYYY-MM-DD') : '')}
-								disabled={!!entryId}
+								disabled={!!entryId || readOnly}
 								maxDate={dayjs()}
 								slots={{
 									day: (props) => <StatusDay {...props} dateStatuses={dateStatuses} />
@@ -202,6 +216,24 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 						/>
 					</Box>
 
+					{/* Calendar Status Legend */}
+					{!readOnly && (
+						<Box sx={{ mb: 2, display: 'flex', gap: 3, flexWrap: 'wrap', px: 1 }}>
+							<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+								<Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#e6f4ea', border: '1px solid #34a853' }} />
+								<Typography variant="caption" sx={{ color: '#545b64' }}>Submitted</Typography>
+							</Box>
+							<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+								<Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#fce8e6', border: '1px solid #ea4335' }} />
+								<Typography variant="caption" sx={{ color: '#545b64' }}>Missed (Permission Needed)</Typography>
+							</Box>
+							<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+								<Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#e8f0fe', border: '1px solid #4285f4' }} />
+								<Typography variant="caption" sx={{ color: '#545b64' }}>Permission Granted</Typography>
+							</Box>
+						</Box>
+					)}
+
 					<Box sx={{ bgcolor: 'white', p: 2, borderRadius: '4px', border: '1px solid #d5dbdb', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
 						<SubmissionForm
 							items={items}
@@ -212,44 +244,51 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 							onAddRow={addRow}
 							onRemoveRow={removeRow}
 							showTitle={false}
+							readOnly={readOnly}
 						/>
 					</Box>
 				</DialogContent>
 
 				<DialogActions sx={{ p: 3, borderTop: '1px solid #d5dbdb', bgcolor: 'white' }}>
 					<Button onClick={onClose} sx={{ color: '#545b64', textTransform: 'none', fontWeight: 700 }}>
-						Cancel
+						{readOnly ? 'Close' : 'Cancel'}
 					</Button>
 					<Box sx={{ flexGrow: 1 }} />
-					<Button
-						variant="outlined"
-						onClick={handleSaveDraft}
-						disabled={submitting || !isDateAllowed}
-						sx={{
-							color: '#232f3e',
-							borderColor: '#d5dbdb',
-							px: 4,
-							textTransform: 'none',
-							fontWeight: 700,
-							'&:hover': { borderColor: '#aab7bd', bgcolor: '#f3f3f3' }
-						}}
-					>
-						Save as Draft
-					</Button>
-					<Button
-						variant="contained"
-						onClick={handleSubmit}
-						disabled={submitting || !isDateAllowed}
-						sx={{
-							bgcolor: '#ec7211',
-							'&:hover': { bgcolor: '#eb5f07' },
-							px: 4,
-							textTransform: 'none',
-							fontWeight: 700
-						}}
-					>
-						Submit Report
-					</Button>
+					{!readOnly && (
+						<>
+							<Button
+								variant="outlined"
+								onClick={handleSaveDraft}
+								disabled={submitting || !isDateAllowed}
+								startIcon={submitting ? <CircularProgress size={16} /> : null}
+								sx={{
+									color: '#232f3e',
+									borderColor: '#d5dbdb',
+									px: 4,
+									textTransform: 'none',
+									fontWeight: 700,
+									'&:hover': { borderColor: '#aab7bd', bgcolor: '#f3f3f3' }
+								}}
+							>
+								{submitting ? 'Saving...' : 'Save as Draft'}
+							</Button>
+							<Button
+								variant="contained"
+								onClick={handleSubmit}
+								disabled={submitting || !isDateAllowed}
+								startIcon={submitting ? <CircularProgress size={16} color="inherit" /> : null}
+								sx={{
+									bgcolor: '#ec7211',
+									'&:hover': { bgcolor: '#eb5f07' },
+									px: 4,
+									textTransform: 'none',
+									fontWeight: 700
+								}}
+							>
+								{submitting ? 'Submitting...' : 'Submit Report'}
+							</Button>
+						</>
+					)}
 				</DialogActions>
 			</Dialog>
 		</LocalizationProvider>
