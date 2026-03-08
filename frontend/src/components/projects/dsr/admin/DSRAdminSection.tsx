@@ -11,14 +11,12 @@ import {
 import {
 	RateReview as ReviewIcon,
 	VpnKey as PermissionIcon,
-	EventBusy as AttendanceIcon,
 	History as HistoryIcon,
 	Refresh as RefreshIcon
 } from '@mui/icons-material';
 import DSRReviewQueue from './DSRReviewQueue';
 import PermissionStatsCards from '../common/PermissionStatsCards';
 import PermissionRequestsTable from './PermissionRequestsTable';
-import MissingReportsTable from './MissingReportsTable';
 import AllSubmissionsTable from './AllSubmissionsTable';
 import type { useDSRAdmin } from '../hooks/useDSRAdmin';
 import type { DSRPermissionStats } from '../../../../models/dsr';
@@ -102,7 +100,7 @@ const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin, permissionStat
 						Admin Control Center
 					</Typography>
 					<Typography variant="body2" color="text.secondary">
-						Manage submissions, permissions, and monitor team attendance.
+						Manage submissions, permissions, and monitor global history.
 					</Typography>
 				</Box>
 				<Button
@@ -175,27 +173,9 @@ const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin, permissionStat
 						<Tab
 							label={
 								<TabLabel
-									icon={<AttendanceIcon sx={{ fontSize: 18 }} />}
-									label="Attendance"
-									count={admin.missingReports.length}
-									color="#0073bb"
-									active={activeTab === 2}
-								/>
-							}
-							sx={{
-								textTransform: 'none',
-								minHeight: 48,
-								px: 3,
-								color: '#545b64',
-								'&.Mui-selected': { color: '#ec7211' }
-							}}
-						/>
-						<Tab
-							label={
-								<TabLabel
 									icon={<HistoryIcon sx={{ fontSize: 18 }} />}
 									label="Full History"
-									active={activeTab === 3}
+									active={activeTab === 2}
 								/>
 							}
 							sx={{
@@ -243,33 +223,6 @@ const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin, permissionStat
 					</TabPanel>
 
 					<TabPanel value={activeTab} index={2}>
-						<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-							<Box>
-								<Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Daily Attendance Monitor</Typography>
-								<Typography variant="body2" color="text.secondary">
-									Users who haven't submitted report for {admin.reportDate}.
-								</Typography>
-							</Box>
-							<Button
-								variant="contained"
-								size="small"
-								onClick={admin.handleSendReminders}
-								disabled={admin.reminding || admin.missingReports.length === 0}
-								sx={{ bgcolor: '#ec7211', '&:hover': { bgcolor: '#eb5f07' }, textTransform: 'none', fontWeight: 700 }}
-							>
-								{admin.reminding ? 'Sending...' : 'Remind All Missing'}
-							</Button>
-						</Box>
-						<Divider sx={{ mb: 3 }} />
-						<MissingReportsTable
-							missingReports={admin.missingReports}
-							loading={admin.loading}
-							onGrantPermission={admin.handleGrantPermission}
-							reminding={admin.reminding}
-						/>
-					</TabPanel>
-
-					<TabPanel value={activeTab} index={3}>
 						<Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>Global Submission History</Typography>
 						<Divider sx={{ mb: 3 }} />
 						<AllSubmissionsTable

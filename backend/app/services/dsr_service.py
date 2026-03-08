@@ -273,11 +273,11 @@ class DSRService:
     async def grant_previous_day_permission(
         self, data: DSRGrantPreviousDayPermission, current_user: User
     ) -> DSREntry:
-        """Admin allows a specific user to submit a DSR for a past date."""
+        """
+        Admin allows a specific user to submit a DSR for a past date.
+        This effectively acts as an administrative override to ensure a DRAFT exists.
+        """
         _require_admin(current_user)
-
-        if data.report_date >= date.today():
-            raise HTTPException(status_code=422, detail="Permission is only needed for past dates")
 
         target_users = await self.user_repo.get_by_fields(public_id=data.user_public_id)
         if not target_users:
@@ -285,29 +285,43 @@ class DSRService:
         target_user = target_users[0]
 
         existing = await self.repo.get_by_user_and_date(target_user.id, data.report_date)
+        
+        # If already submitted or approved, we can't "grant permission" to re-submit
+        # unless we were to reject it first, which is a different flow.
+        if existing and existing.status in (DSRStatus.SUBMITTED, DSRStatus.APPROVED):
+            raise HTTPException(
+                status_code=422,
+                detail=f"User has already {existing.status.value} a DSR for {data.report_date}",
+            )
+
+        is_past_date = data.report_date < date.today()
+
         if existing:
-            if existing.status in (DSRStatus.SUBMITTED, DSRStatus.APPROVED):
-                raise HTTPException(
-                    status_code=422,
-                    detail="User has already submitted a DSR for this date",
-                )
-            # Update existing draft with permission
-            await self.repo.update(existing.id, {
-                "is_previous_day_submission": True,
-                "previous_day_permission_granted_by": current_user.id,
-            })
-            return await self.repo.get_by_public_id(existing.public_id)
+            # If it's a past date, ensure the permission flag is set.
+            # If it's today, we just return the existing draft.
+            update_data = {}
+            if is_past_date:
+                update_data["is_previous_day_submission"] = True
+                update_data["previous_day_permission_granted_by"] = current_user.id
+            
+            if update_data:
+                await self.repo.update(existing.id, update_data)
+                return await self.repo.get_by_public_id(existing.public_id)
+            return existing
         else:
-            # Create an empty DRAFT with the permission flag set
+            # Create a DRAFT entry.
+            # If it's a past date, set the permission flag.
             entry_data = {
                 "user_id": target_user.id,
                 "report_date": data.report_date,
                 "status": DSRStatus.DRAFT,
-                "is_previous_day_submission": True,
-                "previous_day_permission_granted_by": current_user.id,
+                "is_previous_day_submission": is_past_date,
                 "items": [],
-                "others": {"permission_note": f"Granted by admin {current_user.username}"},
+                "others": {"admin_override": True, "granted_by": current_user.username},
             }
+            if is_past_date:
+                entry_data["previous_day_permission_granted_by"] = current_user.id
+                
             return await self.repo.create(entry_data)
 
     async def get_missing_dsr_users(

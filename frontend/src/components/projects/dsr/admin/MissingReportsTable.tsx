@@ -9,7 +9,8 @@ import {
 	CircularProgress,
 	Alert,
 	Chip,
-	Button
+	Button,
+	Tooltip
 } from '@mui/material';
 import { VpnKey as PermissionIcon } from '@mui/icons-material';
 import type { MissingDSR } from '../../../../models/dsr';
@@ -71,15 +72,17 @@ const MissingReportsTable: React.FC<MissingReportsTableProps> = ({
 									/>
 								</TableCell>
 								<TableCell align="right">
-									<Button
-										size="small"
-										startIcon={reminding ? <CircularProgress size={16} color="inherit" /> : <PermissionIcon />}
-										onClick={() => onGrantPermission(user.public_id)}
-										disabled={reminding}
-										sx={{ textTransform: 'none', fontWeight: 700 }}
-									>
-										Grant Permission
-									</Button>
+									<Tooltip title="This will create a DSR draft for the user to fill in for this date." arrow>
+										<Button
+											size="small"
+											startIcon={reminding ? <CircularProgress size={16} color="inherit" /> : <PermissionIcon />}
+											onClick={() => onGrantPermission(user.public_id)}
+											disabled={reminding}
+											sx={{ textTransform: 'none', fontWeight: 700 }}
+										>
+											Grant Permission
+										</Button>
+									</Tooltip>
 								</TableCell>
 							</TableRow>
 						))

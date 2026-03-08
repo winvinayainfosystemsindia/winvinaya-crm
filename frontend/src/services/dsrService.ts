@@ -15,6 +15,19 @@ const dsrService = {
 		return response.data;
 	},
 
+	getMyEntries: async (
+		skip = 0,
+		limit = 10,
+		date_from?: string,
+		date_to?: string,
+		status?: DSRStatus
+	): Promise<PaginationResult<DSREntry>> => {
+		const response = await api.get('/dsr/entries/me', {
+			params: { skip, limit, date_from, date_to, status }
+		});
+		return response.data;
+	},
+
 	getEntry: async (publicId: string): Promise<DSREntry> => {
 		const response = await api.get(`/dsr/entries/${publicId}`);
 		return response.data;

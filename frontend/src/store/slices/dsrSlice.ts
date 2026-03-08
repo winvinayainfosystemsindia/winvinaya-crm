@@ -162,6 +162,18 @@ export const fetchEntries = createAsyncThunk(
 	}
 );
 
+export const fetchMyEntries = createAsyncThunk(
+	'dsr/fetchMyEntries',
+	async (params: { skip?: number; limit?: number; date_from?: string; date_to?: string; status?: DSRStatus } | undefined, { rejectWithValue }) => {
+		try {
+			const { skip = 0, limit = 100, date_from, date_to, status } = params || {};
+			return await dsrService.getMyEntries(Number(skip), Number(limit), date_from, date_to, status);
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.detail || 'Failed to fetch your entries');
+		}
+	}
+);
+
 export const fetchEntry = createAsyncThunk(
 	'dsr/fetchEntry',
 	async (publicId: string, { rejectWithValue }) => {
@@ -355,6 +367,11 @@ const dsrSlice = createSlice({
 			})
 			// Entries
 			.addCase(fetchEntries.fulfilled, (state, action: PayloadAction<PaginationResult<DSREntry>>) => {
+				state.loading = false;
+				state.entries = action.payload.items;
+				state.totalEntries = action.payload.total;
+			})
+			.addCase(fetchMyEntries.fulfilled, (state, action: PayloadAction<PaginationResult<DSREntry>>) => {
 				state.loading = false;
 				state.entries = action.payload.items;
 				state.totalEntries = action.payload.total;

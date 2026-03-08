@@ -79,10 +79,10 @@ export const useDSRAdmin = () => {
 		try {
 			await dispatch(grantDSRPermission({
 				user_public_id: userPublicId,
-				target_date: reportDate,
-				expiry_hours: 24
+				target_date: reportDate
 			})).unwrap();
-			toast.success('Permission granted for 24 hours');
+			const isToday = reportDate === new Date().toISOString().split('T')[0];
+			toast.success(isToday ? 'Draft created for user' : 'Past-date submission permission granted');
 			dispatch(fetchMissingReports(reportDate));
 		} catch (error: any) {
 			toast.error(error || 'Failed to grant permission');

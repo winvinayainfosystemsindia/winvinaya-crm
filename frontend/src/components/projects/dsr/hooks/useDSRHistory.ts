@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
-import { fetchEntries, deleteEntry } from '../../../../store/slices/dsrSlice';
+import { fetchMyEntries, deleteEntry } from '../../../../store/slices/dsrSlice';
 import useToast from '../../../../hooks/useToast';
 import type { DSRStatus } from '../../../../models/dsr';
 
@@ -20,7 +20,7 @@ export const useDSRHistory = () => {
 	const [dateTo, setDateTo] = useState('');
 
 	const fetchHistory = useCallback(() => {
-		dispatch(fetchEntries({
+		dispatch(fetchMyEntries({
 			skip: page * rowsPerPage,
 			limit: rowsPerPage,
 			date_from: dateFrom || undefined,
