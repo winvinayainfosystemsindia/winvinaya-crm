@@ -44,6 +44,7 @@ class DSRActivityRepository(BaseRepository[DSRActivity]):
         project_id: Optional[int] = None,
         status: Optional[DSRActivityStatus] = None,
         active_only: bool = False,
+        assigned_to: Optional[int] = None,
         search: Optional[str] = None,
     ) -> Tuple[List[DSRActivity], int]:
         base_filter = DSRActivity.is_deleted == False
@@ -59,6 +60,9 @@ class DSRActivityRepository(BaseRepository[DSRActivity]):
         if active_only:
             query = query.where(DSRActivity.is_active == True)
             count_query = count_query.where(DSRActivity.is_active == True)
+        if assigned_to:
+            query = query.where(DSRActivity.assigned_to == assigned_to)
+            count_query = count_query.where(DSRActivity.assigned_to == assigned_to)
         if search:
             query = query.where(DSRActivity.name.ilike(f"%{search}%"))
             count_query = count_query.where(DSRActivity.name.ilike(f"%{search}%"))

@@ -52,13 +52,16 @@ async def list_projects(
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=100, ge=1, le=500),
     active_only: bool = Query(default=False),
+    assigned_to: Optional[UUID] = Query(default=None, description="Filter by assigned user"),
     search: Optional[str] = Query(default=None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """List all DSR projects (all roles)."""
     service = DSRProjectService(db)
-    items, total = await service.get_projects(skip=skip, limit=limit, active_only=active_only, search=search)
+    items, total = await service.get_projects(
+        skip=skip, limit=limit, active_only=active_only, assigned_to_public_id=assigned_to, search=search
+    )
     return DSRProjectListResponse(items=items, total=total, skip=skip, limit=limit)
 
 

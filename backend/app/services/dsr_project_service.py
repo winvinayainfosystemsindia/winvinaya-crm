@@ -83,10 +83,17 @@ class DSRProjectService:
         skip: int = 0,
         limit: int = 100,
         active_only: bool = False,
+        assigned_to_public_id: Optional[UUID] = None,
         search: Optional[str] = None,
     ) -> Tuple[List[DSRProject], int]:
+        assigned_to_id = None
+        if assigned_to_public_id:
+            user = await self.user_repo.get_by_fields(public_id=assigned_to_public_id)
+            if user:
+                assigned_to_id = user[0].id
+
         return await self.repo.get_multi_paginated(
-            skip=skip, limit=limit, active_only=active_only, search=search
+            skip=skip, limit=limit, active_only=active_only, assigned_to=assigned_to_id, search=search
         )
 
     async def get_project(self, public_id: UUID) -> DSRProject:

@@ -8,10 +8,11 @@ const dsrActivityService = {
 		project_public_id?: string,
 		status?: DSRActivityStatus,
 		active_only = false,
-		search?: string
+		search?: string,
+		assigned_to?: string
 	) => {
 		const response = await api.get<{ items: DSRActivity[]; total: number }>(`/dsr/activities`, {
-			params: { skip, limit, project_public_id, status, active_only, search },
+			params: { skip, limit, project_public_id, status, active_only, search, assigned_to },
 		});
 		return response.data;
 	},

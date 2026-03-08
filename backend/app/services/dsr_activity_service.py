@@ -113,6 +113,7 @@ class DSRActivityService:
         project_public_id: Optional[UUID] = None,
         status: Optional[DSRActivityStatus] = None,
         active_only: bool = False,
+        assigned_to_public_id: Optional[UUID] = None,
         search: Optional[str] = None,
     ) -> Tuple[List[DSRActivity], int]:
         project_id = None
@@ -122,12 +123,21 @@ class DSRActivityService:
                 raise HTTPException(status_code=404, detail="Project not found")
             project_id = project.id
 
+        assigned_to_id = None
+        if assigned_to_public_id:
+            from app.repositories.user_repository import UserRepository
+            user_repo = UserRepository(self.db)
+            user = await user_repo.get_by_fields(public_id=assigned_to_public_id)
+            if user:
+                assigned_to_id = user[0].id
+
         return await self.repo.get_multi_paginated(
             skip=skip,
             limit=limit,
             project_id=project_id,
             status=status,
             active_only=active_only,
+            assigned_to=assigned_to_id,
             search=search,
         )
 

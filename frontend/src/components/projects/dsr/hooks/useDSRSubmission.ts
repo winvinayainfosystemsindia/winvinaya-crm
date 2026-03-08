@@ -26,6 +26,7 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 	const dispatch = useAppDispatch();
 	const toast = useToast();
 
+	const { user } = useAppSelector((state) => state.auth);
 	const { projects, activitiesByProject, entries, permissionRequests, loading: storeLoading } = useAppSelector((state) => state.dsr);
 
 	const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
@@ -77,15 +78,15 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 
 			const uniqueProjects = Array.from(new Set(entry.items.map(i => i.project_public_id)));
 			uniqueProjects.forEach(pid => {
-				if (pid) dispatch(fetchActivitiesForProject(pid));
+				if (pid) dispatch(fetchActivitiesForProject({ projectId: pid, assigned_to: user?.public_id }));
 			});
 		} catch (error: any) {
 			toast.error(error || 'Failed to load draft');
 		}
-	}, [dispatch, toast]);
+	}, [dispatch, toast, user?.public_id]);
 
 	useEffect(() => {
-		dispatch(fetchProjects({ skip: 0, limit: 500, active_only: true }));
+		dispatch(fetchProjects({ skip: 0, limit: 500, active_only: true, assigned_to: user?.public_id }));
 		dispatch(fetchPermissionRequests({ skip: 0, limit: 100 }));
 
 		// Fetch last 30 days of entries to determine status
@@ -100,7 +101,7 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 			setItems([{ project_public_id: '', activity_public_id: '', description: '', start_time: '09:00', end_time: '10:00', hours: 1 }]);
 			setPermissionError(null);
 		}
-	}, [dispatch, entryId, loadEntry]);
+	}, [dispatch, entryId, loadEntry, user?.public_id]);
 
 	const calculateHours = (start: string, end: string) => {
 		if (!start || !end) return 0;
@@ -119,7 +120,7 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		if (field === 'project_public_id') {
 			newItems[index].activity_public_id = '';
 			if (value) {
-				dispatch(fetchActivitiesForProject(value));
+				dispatch(fetchActivitiesForProject({ projectId: value, assigned_to: user?.public_id }));
 			}
 		}
 

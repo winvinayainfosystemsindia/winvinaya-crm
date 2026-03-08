@@ -20,14 +20,14 @@ class NotificationService:
         notif_type: str,
         link: Optional[str] = None
     ) -> Notification:
-        notif = Notification(
-            user_id=user_id,
-            title=title,
-            message=message,
-            type=notif_type,
-            link=link
-        )
-        return await self.repo.create(notif)
+        notif_data = {
+            "user_id": user_id,
+            "title": title,
+            "message": message,
+            "type": notif_type,
+            "link": link
+        }
+        return await self.repo.create(notif_data)
 
     async def get_my_notifications(
         self, 

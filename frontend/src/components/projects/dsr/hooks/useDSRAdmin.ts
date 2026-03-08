@@ -49,7 +49,7 @@ export const useDSRAdmin = () => {
 
 	const fetchData = useCallback(() => {
 		dispatch(fetchMissingReports(reportDate));
-		dispatch(fetchPermissionRequests({ skip: 0, limit: 100, status: 'pending' }));
+		dispatch(fetchPermissionRequests({ skip: 0, limit: 100 }));
 		dispatch(fetchAdminOverview({
 			skip: entryPage * entryRowsPerPage,
 			limit: entryRowsPerPage,
@@ -95,7 +95,7 @@ export const useDSRAdmin = () => {
 		try {
 			await dispatch(handlePermissionRequestAction({ publicId, status })).unwrap();
 			toast.success(`Request ${status} successfully`);
-			dispatch(fetchPermissionRequests({ skip: 0, limit: 100, status: 'pending' }));
+			dispatch(fetchPermissionRequests({ skip: 0, limit: 100 }));
 		} catch (error: any) {
 			toast.error(error || `Failed to ${status} request`);
 		}

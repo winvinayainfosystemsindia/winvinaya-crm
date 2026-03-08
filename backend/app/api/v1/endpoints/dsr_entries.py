@@ -103,6 +103,35 @@ async def get_my_entries(
     return DSREntryListResponse(items=items, total=total, skip=skip, limit=limit)
 
 
+@router.get("/entries/pending-approval", response_model=DSREntryListResponse)
+async def get_pending_approval(
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=100, ge=1, le=500),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Admin: list all SUBMITTED DSR entries awaiting review, ordered oldest-first.
+    These are the entries that need admin action (approve or reject).
+    """
+    service = DSRService(db)
+    items, total = await service.get_pending_approval(current_user, skip=skip, limit=limit)
+    return DSREntryListResponse(items=items, total=total, skip=skip, limit=limit)
+
+
+@router.get("/entries/my-stats")
+async def get_my_dsr_stats(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    User: get a count summary of their own DSR entries by status.
+    Returns: pending_approval, action_required (rejected), approved counts.
+    """
+    service = DSRService(db)
+    return await service.repo.count_by_status_for_user(current_user.id)
+
+
 @router.get("/entries/{public_id}", response_model=DSREntryResponse)
 async def get_entry(
     public_id: UUID,
@@ -194,6 +223,7 @@ async def get_missing_dsr_users(
             full_name=u.full_name,
             username=u.username,
             email=u.email,
+            role=u.role.value,
             report_date=target_date,
         )
         for u in missing_users
@@ -262,32 +292,19 @@ async def handle_permission_request(
     return await service.get_permission_request(public_id)
 @router.get("/permissions/stats")
 async def get_permission_stats(
+    user_id: Optional[int] = Query(default=None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Get summary stats of permission requests (raised vs approved)."""
     service = DSRService(db)
-    return await service.get_permission_stats(current_user)
+    return await service.get_permission_stats(current_user, user_id=user_id)
 
 
 # ---------------------------------------------------------------
 # DSR Review Queue (Admin)
 # ---------------------------------------------------------------
 
-@router.get("/entries/pending-approval", response_model=DSREntryListResponse)
-async def get_pending_approval(
-    skip: int = Query(default=0, ge=0),
-    limit: int = Query(default=100, ge=1, le=500),
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    """
-    Admin: list all SUBMITTED DSR entries awaiting review, ordered oldest-first.
-    These are the entries that need admin action (approve or reject).
-    """
-    service = DSRService(db)
-    items, total = await service.get_pending_approval(current_user, skip=skip, limit=limit)
-    return DSREntryListResponse(items=items, total=total, skip=skip, limit=limit)
 
 
 @router.post("/entries/{public_id}/approve", response_model=DSREntryResponse)
@@ -339,14 +356,3 @@ async def get_pending_submissions(
     return await service.get_pending_submissions(current_user)
 
 
-@router.get("/entries/my-stats")
-async def get_my_dsr_stats(
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    """
-    User: get a count summary of their own DSR entries by status.
-    Returns: pending_approval, action_required (rejected), approved counts.
-    """
-    service = DSRService(db)
-    return await service.repo.count_by_status_for_user(current_user.id)

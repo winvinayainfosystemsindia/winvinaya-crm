@@ -2,9 +2,9 @@ import api from './api';
 import type { DSRProject, DSRProjectCreate, ImportResult } from '../models/dsr';
 
 const dsrProjectService = {
-	getProjects: async (skip = 0, limit = 100, active_only = false, search?: string) => {
+	getProjects: async (skip = 0, limit = 100, active_only = false, search?: string, assigned_to?: string) => {
 		const response = await api.get<{ items: DSRProject[]; total: number }>(`/dsr/projects`, {
-			params: { skip, limit, active_only, search },
+			params: { skip, limit, active_only, search, assigned_to },
 		});
 		return response.data;
 	},

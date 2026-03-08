@@ -94,8 +94,10 @@ const dsrService = {
 		return response.data;
 	},
 
-	getPermissionStats: async (): Promise<any> => {
-		const response = await api.get('/dsr/permissions/stats');
+	getPermissionStats: async (user_id?: number): Promise<any> => {
+		const response = await api.get('/dsr/permissions/stats', {
+			params: { user_id }
+		});
 		return response.data;
 	},
 

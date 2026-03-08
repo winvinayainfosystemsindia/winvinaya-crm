@@ -62,6 +62,7 @@ async def list_activities(
     project_public_id: Optional[UUID] = Query(default=None, description="Filter by project"),
     status: Optional[DSRActivityStatus] = Query(default=None),
     active_only: bool = Query(default=False),
+    assigned_to: Optional[UUID] = Query(default=None, description="Filter by assigned user"),
     search: Optional[str] = Query(default=None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -74,6 +75,7 @@ async def list_activities(
         project_public_id=project_public_id,
         status=status,
         active_only=active_only,
+        assigned_to_public_id=assigned_to,
         search=search,
     )
     return DSRActivityListResponse(items=items, total=total, skip=skip, limit=limit)

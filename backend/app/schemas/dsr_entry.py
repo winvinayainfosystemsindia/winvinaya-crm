@@ -115,6 +115,7 @@ class DSRMissingUserResponse(BaseModel):
     full_name: Optional[str]
     username: str
     email: str
+    role: str
     report_date: date
 
 

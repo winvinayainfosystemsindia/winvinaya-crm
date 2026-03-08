@@ -44,6 +44,7 @@ class DSRProjectRepository(BaseRepository[DSRProject]):
         skip: int = 0,
         limit: int = 100,
         active_only: bool = False,
+        assigned_to: Optional[int] = None,
         search: Optional[str] = None,
     ) -> Tuple[List[DSRProject], int]:
         query = select(DSRProject).where(DSRProject.is_deleted == False)
@@ -56,6 +57,17 @@ class DSRProjectRepository(BaseRepository[DSRProject]):
         if search:
             query = query.where(DSRProject.name.ilike(f"%{search}%"))
             count_query = count_query.where(DSRProject.name.ilike(f"%{search}%"))
+
+        if assigned_to:
+            from app.models.dsr_activity import DSRActivity
+            # Subquery projects that have at least one activity assigned to this user
+            has_assigned_activity = select(DSRActivity.project_id).where(
+                DSRActivity.assigned_to == assigned_to,
+                DSRActivity.is_deleted == False
+            ).scalar_subquery()
+            
+            query = query.where(DSRProject.id.in_(has_assigned_activity))
+            count_query = count_query.where(DSRProject.id.in_(has_assigned_activity))
 
         total_result = await self.db.execute(count_query)
         total = total_result.scalar_one()

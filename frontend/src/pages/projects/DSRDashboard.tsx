@@ -1,60 +1,105 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
 	Box,
 	Typography,
 	Button,
 	Paper,
 	Tabs,
-	Tab,
-	Divider
+	Tab
 } from '@mui/material';
 import {
 	Add as AddIcon,
 	History as HistoryIcon,
 	AdminPanelSettings as AdminIcon,
+	RequestQuote as RequestIcon
 } from '@mui/icons-material';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import HistoryTable from '../../components/projects/dsr/history/HistoryTable';
 import { useDSRHistory } from '../../components/projects/dsr/hooks/useDSRHistory';
-import AllSubmissionsTable from '../../components/projects/dsr/admin/AllSubmissionsTable';
-import MissingReportsTable from '../../components/projects/dsr/admin/MissingReportsTable';
-import PermissionRequestsTable from '../../components/projects/dsr/admin/PermissionRequestsTable';
+import DSRAdminSection from '../../components/projects/dsr/admin/DSRAdminSection';
 import { useDSRAdmin } from '../../components/projects/dsr/hooks/useDSRAdmin';
 import DSRSubmissionDialog from '../../components/projects/dsr/forms/DSRSubmissionDialog';
 import PermissionRequestDialog from '../../components/projects/dsr/forms/PermissionRequestDialog';
 import DSRModuleLayout from '../../components/projects/dsr/layout/DSRModuleLayout';
-import { RequestQuote as RequestIcon } from '@mui/icons-material';
 import {
 	fetchPermissionRequests,
 	fetchPermissionStats
 } from '../../store/slices/dsrSlice';
 import MyPermissionRequests from '../../components/projects/dsr/user/MyPermissionRequests';
 import PermissionStatsCards from '../../components/projects/dsr/common/PermissionStatsCards';
-import DSRReviewQueue from '../../components/projects/dsr/admin/DSRReviewQueue';
-import { Badge } from '@mui/material';
+
+const TabLabel: React.FC<{
+	icon: React.ReactNode;
+	label: string;
+	count?: number;
+	active?: boolean;
+}> = ({ icon, label, count, active }) => (
+	<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+		<Box sx={{
+			display: 'flex',
+			alignItems: 'center',
+			color: active ? '#ec7211' : '#545b64',
+			transition: 'color 0.2s ease'
+		}}>
+			{icon}
+		</Box>
+		<Typography
+			variant="inherit"
+			sx={{
+				fontWeight: active ? 700 : 600,
+				fontSize: '0.875rem',
+				color: active ? '#232f3e' : '#545b64'
+			}}
+		>
+			{label}
+		</Typography>
+		{count !== undefined && count > 0 && (
+			<Box
+				sx={{
+					display: 'inline-flex',
+					alignItems: 'center',
+					justifyContent: 'center',
+					minWidth: 22,
+					height: 18,
+					px: 0.8,
+					borderRadius: '10px',
+					bgcolor: active ? 'rgba(236, 114, 17, 0.1)' : '#f0f2f5',
+					color: active ? '#ec7211' : '#545b64',
+					fontSize: '0.7rem',
+					fontWeight: 800,
+					transition: 'all 0.2s ease',
+					border: active ? `1px solid rgba(236, 114, 17, 0.2)` : '1px solid transparent'
+				}}
+			>
+				{count}
+			</Box>
+		)}
+	</Box>
+);
 
 const DSRDashboard: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const { user } = useAppSelector((state) => state.auth);
-	const { permissionRequests, permissionStats, loading: dsrLoading } = useAppSelector((state) => state.dsr);
 	const isAdmin = user?.role === 'admin';
+	const { permissionRequests, permissionStats, loading: dsrLoading } = useAppSelector((state) => state.dsr);
 
 	const [activeTab, setActiveTab] = useState(0);
 	const [isSubmissionOpen, setIsSubmissionOpen] = useState(false);
 	const [isPermissionRequestOpen, setIsPermissionRequestOpen] = useState(false);
 	const [editEntryId, setEditEntryId] = useState<string | null>(null);
 
-	// Hooks logic
 	const history = useDSRHistory();
 	const admin = useDSRAdmin();
 
 	// Fetch initial data
-	React.useEffect(() => {
-		dispatch(fetchPermissionStats());
-		if (!isAdmin) {
-			dispatch(fetchPermissionRequests({ skip: 0, limit: 100 }));
+	useEffect(() => {
+		if (activeTab === 1) {
+			dispatch(fetchPermissionStats({ user_id: user?.id }));
+			dispatch(fetchPermissionRequests({ skip: 0, limit: 100, user_id: user?.id }));
+		} else if (activeTab === 2 && isAdmin) {
+			dispatch(fetchPermissionStats());
 		}
-	}, [dispatch, isAdmin]);
+	}, [dispatch, activeTab, user?.id, isAdmin]);
 
 	const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
 		setActiveTab(newValue);
@@ -73,18 +118,20 @@ const DSRDashboard: React.FC = () => {
 	const handleCloseSubmission = () => {
 		setIsSubmissionOpen(false);
 		setEditEntryId(null);
-		// Refresh data
 		history.fetchHistory();
-		dispatch(fetchPermissionStats());
-		if (isAdmin) admin.handleRefresh();
+		if (activeTab === 1) {
+			dispatch(fetchPermissionStats({ user_id: user?.id }));
+			dispatch(fetchPermissionRequests({ skip: 0, limit: 100, user_id: user?.id }));
+		} else if (activeTab === 2 && isAdmin) {
+			dispatch(fetchPermissionStats());
+			admin.handleRefresh();
+		}
 	};
 
 	const handlePermissionRequestClose = () => {
 		setIsPermissionRequestOpen(false);
-		dispatch(fetchPermissionStats());
-		if (!isAdmin) {
-			dispatch(fetchPermissionRequests({ skip: 0, limit: 100 }));
-		}
+		dispatch(fetchPermissionStats({ user_id: user?.id }));
+		dispatch(fetchPermissionRequests({ skip: 0, limit: 100, user_id: user?.id }));
 	};
 
 	return (
@@ -100,27 +147,40 @@ const DSRDashboard: React.FC = () => {
 								value={activeTab}
 								onChange={handleTabChange}
 								sx={{
-									'& .MuiTab-root': {
-										textTransform: 'none',
-										fontWeight: 700,
-										minHeight: 48,
-										color: '#545b64',
-										'&.Mui-selected': { color: '#ec7211' }
-									},
 									'& .MuiTabs-indicator': { backgroundColor: '#ec7211' }
 								}}
 							>
-								<Tab icon={<HistoryIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="My Submissions" />
-								<Tab icon={<RequestIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="My Requests" />
+								<Tab
+									label={
+										<TabLabel
+											icon={<HistoryIcon sx={{ fontSize: 18 }} />}
+											label="My Submissions"
+											active={activeTab === 0}
+										/>
+									}
+									sx={{ textTransform: 'none', minHeight: 48 }}
+								/>
+								<Tab
+									label={
+										<TabLabel
+											icon={<RequestIcon sx={{ fontSize: 18 }} />}
+											label="My Requests"
+											active={activeTab === 1}
+										/>
+									}
+									sx={{ textTransform: 'none', minHeight: 48 }}
+								/>
 								{isAdmin && (
 									<Tab
-										icon={
-											<Badge badgeContent={admin.reviewQueueTotal} color="error" max={99} sx={{ mr: 1 }}>
-												<AdminIcon sx={{ fontSize: 18 }} />
-											</Badge>
+										label={
+											<TabLabel
+												icon={<AdminIcon sx={{ fontSize: 18 }} />}
+												label="Admin Overview"
+												count={admin.reviewQueueTotal}
+												active={activeTab === 2}
+											/>
 										}
-										iconPosition="start"
-										label="Admin Overview"
+										sx={{ textTransform: 'none', minHeight: 48 }}
 									/>
 								)}
 							</Tabs>
@@ -186,91 +246,20 @@ const DSRDashboard: React.FC = () => {
 							)}
 
 							{activeTab === 2 && isAdmin && (
-								<Box>
-									{/* Section 1: Review Queue — highest priority */}
-									<Box sx={{ mb: 5 }}>
-										<Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-											<Typography variant="h6" sx={{ fontWeight: 700 }}>Review Queue</Typography>
-											{admin.reviewQueueTotal > 0 && (
-												<Badge badgeContent={admin.reviewQueueTotal} color="error" max={99} />
-											)}
-										</Box>
-										<Typography variant="body2" sx={{ color: '#545b64', mb: 2 }}>
-											Submitted DSR entries awaiting your approval — oldest first.
-										</Typography>
-										<Divider sx={{ mb: 2 }} />
-										<DSRReviewQueue
-											entries={admin.reviewQueue}
-											loading={admin.reviewLoading}
-											onApprove={admin.handleApproveEntry}
-											onReject={admin.handleRejectEntry}
-										/>
-									</Box>
-
-									{/* Section 2: System Analytics */}
-									<Box sx={{ mb: 4 }}>
-										<Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>Permission Analytics</Typography>
-										<PermissionStatsCards stats={permissionStats} />
-									</Box>
-
-									<Box sx={{ mb: 4 }}>
-										<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-											<Typography variant="h6" sx={{ fontWeight: 700 }}>Missing Reports Today</Typography>
-											<Button
-												size="small"
-												variant="outlined"
-												onClick={admin.handleSendReminders}
-												disabled={admin.reminding || admin.missingReports.length === 0}
-												sx={{ textTransform: 'none', fontWeight: 700 }}
-											>
-												{admin.reminding ? 'Sending...' : 'Remind All Missing'}
-											</Button>
-										</Box>
-										<Divider sx={{ mb: 2 }} />
-										<MissingReportsTable
-											missingReports={admin.missingReports}
-											loading={admin.loading}
-											onGrantPermission={admin.handleGrantPermission}
-											reminding={admin.reminding}
-										/>
-									</Box>
-
-									<Box sx={{ mb: 4 }}>
-										<Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>Pending Permission Requests</Typography>
-										<Divider sx={{ mb: 2 }} />
-										<PermissionRequestsTable
-											requests={admin.permissionRequests}
-											loading={admin.loading}
-											onHandle={admin.handlePermissionAction}
-										/>
-									</Box>
-
-									<Box>
-										<Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>All User Submissions</Typography>
-										<Divider sx={{ mb: 2 }} />
-										<AllSubmissionsTable
-											entries={admin.entries}
-											total={admin.totalEntries}
-											loading={admin.loading}
-											page={admin.entryPage}
-											rowsPerPage={admin.entryRowsPerPage}
-											onPageChange={(_, p: number) => admin.setEntryPage(p)}
-											onRowsPerPageChange={(e: React.ChangeEvent<HTMLInputElement>) => admin.setEntryRowsPerPage(parseInt(e.target.value))}
-										/>
-									</Box>
-								</Box>
+								<DSRAdminSection
+									admin={admin}
+									permissionStats={permissionStats}
+								/>
 							)}
 						</Box>
 					</Paper>
 
-					{/* Submission Dialog */}
 					<DSRSubmissionDialog
 						open={isSubmissionOpen}
 						onClose={handleCloseSubmission}
 						entryId={editEntryId}
 					/>
 
-					{/* Permission Request Dialog */}
 					<PermissionRequestDialog
 						open={isPermissionRequestOpen}
 						onClose={handlePermissionRequestClose}

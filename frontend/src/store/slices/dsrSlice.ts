@@ -45,10 +45,10 @@ const initialState: DSRState = {
 
 export const fetchProjects = createAsyncThunk(
 	'dsr/fetchProjects',
-	async (params: { skip?: number; limit?: number; active_only?: boolean; search?: string } | undefined, { rejectWithValue }) => {
+	async (params: { skip?: number; limit?: number; active_only?: boolean; search?: string; assigned_to?: string } | undefined, { rejectWithValue }) => {
 		try {
-			const { skip = 0, limit = 100, active_only = false, search } = params || {};
-			return await dsrProjectService.getProjects(Number(skip), Number(limit), active_only, search);
+			const { skip = 0, limit = 100, active_only = false, search, assigned_to } = params || {};
+			return await dsrProjectService.getProjects(Number(skip), Number(limit), active_only, search, assigned_to);
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.detail || 'Failed to fetch projects');
 		}
@@ -92,10 +92,10 @@ export const updateProject = createAsyncThunk(
 
 export const fetchActivities = createAsyncThunk(
 	'dsr/fetchActivities',
-	async (params: { projectId: string; skip?: number; limit?: number; search?: string; status?: any; active_only?: boolean }, { rejectWithValue }) => {
+	async (params: { projectId: string; skip?: number; limit?: number; search?: string; status?: any; active_only?: boolean; assigned_to?: string }, { rejectWithValue }) => {
 		try {
-			const { projectId, skip = 0, limit = 100, search, status, active_only } = params;
-			return await dsrActivityService.getActivities(Number(skip), Number(limit), projectId, status, active_only, search);
+			const { projectId, skip = 0, limit = 100, search, status, active_only, assigned_to } = params;
+			return await dsrActivityService.getActivities(Number(skip), Number(limit), projectId, status, active_only, search, assigned_to);
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.detail || 'Failed to fetch activities');
 		}
@@ -104,9 +104,9 @@ export const fetchActivities = createAsyncThunk(
 
 export const fetchActivitiesForProject = createAsyncThunk(
 	'dsr/fetchActivitiesForProject',
-	async (projectId: string, { rejectWithValue }) => {
+	async ({ projectId, assigned_to }: { projectId: string; assigned_to?: string }, { rejectWithValue }) => {
 		try {
-			const res = await dsrActivityService.getActivities(0, 500, projectId);
+			const res = await dsrActivityService.getActivities(0, 500, projectId, undefined, undefined, undefined, assigned_to);
 			return { projectId, activities: res.items };
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.detail || 'Failed to fetch activities');
@@ -279,9 +279,10 @@ export const handlePermissionRequestAction = createAsyncThunk(
 
 export const fetchPermissionStats = createAsyncThunk(
 	'dsr/fetchPermissionStats',
-	async (_, { rejectWithValue }) => {
+	async (params: { user_id?: number } | undefined, { rejectWithValue }) => {
 		try {
-			return await dsrService.getPermissionStats();
+			const { user_id } = params || {};
+			return await dsrService.getPermissionStats(user_id);
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.detail || 'Failed to fetch permission stats');
 		}

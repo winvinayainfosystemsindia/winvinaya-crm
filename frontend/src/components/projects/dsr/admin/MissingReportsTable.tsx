@@ -56,7 +56,20 @@ const MissingReportsTable: React.FC<MissingReportsTableProps> = ({
 							<TableRow key={user.public_id} hover>
 								<TableCell sx={{ fontWeight: 600 }}>{user.full_name || user.username}</TableCell>
 								<TableCell>{user.email}</TableCell>
-								<TableCell><Chip label={user.role} size="small" variant="outlined" sx={{ borderRadius: '2px' }} /></TableCell>
+								<TableCell>
+									<Chip
+										label={user.role}
+										size="small"
+										variant="outlined"
+										sx={{
+											borderRadius: '4px',
+											textTransform: 'capitalize',
+											fontWeight: 600,
+											fontSize: '0.75rem',
+											bgcolor: '#f8f9fa'
+										}}
+									/>
+								</TableCell>
 								<TableCell align="right">
 									<Button
 										size="small"

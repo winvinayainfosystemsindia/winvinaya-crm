@@ -586,13 +586,15 @@ class DSRService:
              
         return updated_request
 
-    async def get_permission_stats(self, current_user: User) -> dict:
+    async def get_permission_stats(self, current_user: User, user_id: Optional[int] = None) -> dict:
         """Get summary stats of permission requests (raised vs approved)."""
         # Define statuses to count
         # PENDING = Raised
         # GRANTED = Approved
         # REJECTED = Rejected
-        user_id = None if current_user.role == UserRole.ADMIN else current_user.id
+        target_user_id = user_id
+        if current_user.role != UserRole.ADMIN:
+            target_user_id = current_user.id
         
         from sqlalchemy import func, select
         from app.models.dsr_permission_request import DSRPermissionRequest as PRModel
@@ -604,8 +606,8 @@ class DSRService:
         }
         
         query = select(PRModel.status, func.count(PRModel.id)).group_by(PRModel.status)
-        if user_id:
-            query = query.where(PRModel.user_id == user_id)
+        if target_user_id:
+            query = query.where(PRModel.user_id == target_user_id)
             
         result = await self.db.execute(query)
         for status_val, count in result.all():
