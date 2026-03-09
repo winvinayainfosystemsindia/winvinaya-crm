@@ -20,7 +20,9 @@ import {
 	Paper,
 	CircularProgress,
 	Alert,
-	Chip
+	Chip,
+	FormControlLabel,
+	Checkbox
 } from '@mui/material';
 import { Close as CloseIcon, Search as SearchIcon } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
@@ -45,6 +47,7 @@ const MoveCandidateDialog: React.FC<MoveCandidateDialogProps> = ({
 
 	const [searchTerm, setSearchTerm] = useState('');
 	const [selectedBatchId, setSelectedBatchId] = useState<string>('');
+	const [transferData, setTransferData] = useState(true);
 	const [submitting, setSubmitting] = useState(false);
 
 	useEffect(() => {
@@ -67,7 +70,8 @@ const MoveCandidateDialog: React.FC<MoveCandidateDialogProps> = ({
 		try {
 			await dispatch(reallocateCandidate({
 				publicId: allocation.public_id,
-				newBatchPublicId: selectedBatchId
+				newBatchPublicId: selectedBatchId,
+				transferData: transferData
 			})).unwrap();
 
 			enqueueSnackbar(`Successfully moved candidate to new batch`, { variant: 'success' });
@@ -183,6 +187,30 @@ const MoveCandidateDialog: React.FC<MoveCandidateDialogProps> = ({
 							</TableBody>
 						</Table>
 					</TableContainer>
+				)}
+
+				{allocation.status !== 'allocated' && (
+					<Box sx={{ mt: 2 }}>
+						<FormControlLabel
+							control={
+								<Checkbox
+									checked={transferData}
+									onChange={(e) => setTransferData(e.target.checked)}
+									sx={{ color: '#ff9900', '&.Mui-checked': { color: '#ff9900' } }}
+								/>
+							}
+							label={
+								<Box>
+									<Typography variant="body2" sx={{ fontWeight: 500 }}>
+										Transfer existing progress (attendance, scores, etc.)
+									</Typography>
+									<Typography variant="caption" color="text.secondary">
+										If checked, current training records will be moved to the new batch.
+									</Typography>
+								</Box>
+							}
+						/>
+					</Box>
 				)}
 			</DialogContent>
 

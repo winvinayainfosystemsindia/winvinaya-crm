@@ -189,7 +189,8 @@ async def reallocate_candidate(
     # 2. Perform reallocation
     new_allocation = await service.reallocate_candidate(
         public_id=public_id,
-        new_batch_public_id=reallocate_in.new_batch_public_id
+        new_batch_public_id=reallocate_in.new_batch_public_id,
+        transfer_data=reallocate_in.transfer_data
     )
     
     # 3. Log the reallocation (combination of delete and create)

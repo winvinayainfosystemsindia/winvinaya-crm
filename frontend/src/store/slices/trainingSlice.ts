@@ -157,12 +157,12 @@ export const removeAllocation = createAsyncThunk(
 
 export const reallocateCandidate = createAsyncThunk(
 	'training/reallocateCandidate',
-	async ({ publicId, newBatchPublicId }: { publicId: string, newBatchPublicId: string }, { rejectWithValue }) => {
+	async ({ publicId, newBatchPublicId, transferData }: { publicId: string; newBatchPublicId: string; transferData: boolean }, { rejectWithValue }) => {
 		try {
-			const response = await trainingService.reallocateCandidate(publicId, newBatchPublicId);
-			return { publicId, newAllocation: response };
+			const data = await trainingService.reallocateCandidate(publicId, newBatchPublicId, transferData);
+			return { publicId, newAllocation: data };
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to reallocate candidate');
+			return rejectWithValue(error.response?.data?.detail || 'Failed to reallocate candidate');
 		}
 	}
 );

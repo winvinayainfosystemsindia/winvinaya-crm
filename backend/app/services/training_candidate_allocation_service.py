@@ -297,7 +297,7 @@ class TrainingCandidateAllocationService:
         await self.repository.update(allocation.id, update_data)
         return await self._get_with_relations(allocation.id)
     
-    async def reallocate_candidate(self, public_id: UUID, new_batch_public_id: UUID) -> TrainingCandidateAllocation:
+    async def reallocate_candidate(self, public_id: UUID, new_batch_public_id: UUID, transfer_data: bool = False) -> TrainingCandidateAllocation:
         """Move a candidate from one batch to another"""
         # 1. Get existing allocation
         old_allocation = await self.repository.get_by_public_id(str(public_id))
@@ -344,6 +344,43 @@ class TrainingCandidateAllocationService:
                     status_code=400, 
                     detail=f"Candidate does not match batch categories. Batch allows: {new_batch.disability_types}, Candidate: {cand_dis_val or 'No Disability'} ({candidate.gender})"
                 )
+
+        # 4.5. Data Migration (Optional)
+        if transfer_data:
+            from app.models.training_attendance import TrainingAttendance
+            from app.models.training_assignment import TrainingAssignment
+            from app.models.training_mock_interview import TrainingMockInterview
+            from sqlalchemy import update
+
+            # Update Attendance
+            await self.db.execute(
+                update(TrainingAttendance)
+                .where(
+                    TrainingAttendance.candidate_id == candidate.id,
+                    TrainingAttendance.batch_id == old_allocation.batch_id
+                )
+                .values(batch_id=new_batch.id)
+            )
+
+            # Update Assignments
+            await self.db.execute(
+                update(TrainingAssignment)
+                .where(
+                    TrainingAssignment.candidate_id == candidate.id,
+                    TrainingAssignment.batch_id == old_allocation.batch_id
+                )
+                .values(batch_id=new_batch.id)
+            )
+
+            # Update Mock Interviews
+            await self.db.execute(
+                update(TrainingMockInterview)
+                .where(
+                    TrainingMockInterview.candidate_id == candidate.id,
+                    TrainingMockInterview.batch_id == old_allocation.batch_id
+                )
+                .values(batch_id=new_batch.id)
+            )
 
         # 5. Soft-delete old allocation
         await self.repository.delete(old_allocation.id)

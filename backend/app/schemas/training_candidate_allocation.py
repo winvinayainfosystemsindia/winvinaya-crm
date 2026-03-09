@@ -32,6 +32,7 @@ class TrainingCandidateAllocationUpdate(BaseModel):
 class TrainingCandidateAllocationReallocate(BaseModel):
     """Schema for reallocating a candidate to a new batch"""
     new_batch_public_id: uuid.UUID
+    transfer_data: bool = False
 
 
 class CandidateMini(BaseModel):

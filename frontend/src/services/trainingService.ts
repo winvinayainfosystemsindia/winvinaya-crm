@@ -75,9 +75,10 @@ const trainingService = {
 		return response.data;
 	},
 
-	reallocateCandidate: async (publicId: string, newBatchPublicId: string) => {
+	reallocateCandidate: async (publicId: string, newBatchPublicId: string, transferData: boolean) => {
 		const response = await api.post<CandidateAllocation>(`/training-candidate-allocations/${publicId}/reallocate`, {
-			new_batch_public_id: newBatchPublicId
+			new_batch_public_id: newBatchPublicId,
+			transfer_data: transferData
 		});
 		return response.data;
 	},
