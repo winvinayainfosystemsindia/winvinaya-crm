@@ -57,20 +57,21 @@ async def get_training_batches(
     Get all training batches with filtering and pagination
     """
     disability_types_list = disability_types.split(',') if disability_types else None
+    status_list = status.split(',') if status else None
     
     service = TrainingBatchService(db)
     items = await service.get_batches(
         skip=skip,
         limit=limit,
         search=search,
-        status=status,
+        status=status_list or status,
         disability_types=disability_types_list,
         sort_by=sort_by,
         sort_order=sort_order
     )
     total = await service.get_total_count(
         search=search,
-        status=status,
+        status=status_list or status,
         disability_types=disability_types_list
     )
     

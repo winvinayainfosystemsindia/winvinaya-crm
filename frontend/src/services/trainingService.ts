@@ -75,6 +75,13 @@ const trainingService = {
 		return response.data;
 	},
 
+	reallocateCandidate: async (publicId: string, newBatchPublicId: string) => {
+		const response = await api.post<CandidateAllocation>(`/training-candidate-allocations/${publicId}/reallocate`, {
+			new_batch_public_id: newBatchPublicId
+		});
+		return response.data;
+	},
+
 	getAllAllocations: async (params: any = {}) => {
 		const query = new URLSearchParams();
 		if (params.skip !== undefined) query.append('skip', params.skip.toString());

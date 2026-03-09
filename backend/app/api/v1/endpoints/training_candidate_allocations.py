@@ -11,7 +11,8 @@ from app.schemas.training_candidate_allocation import (
     TrainingCandidateAllocationCreate, 
     TrainingCandidateAllocationResponse, 
     TrainingCandidateAllocationUpdate,
-    TrainingCandidateAllocationPaginatedResponse
+    TrainingCandidateAllocationPaginatedResponse,
+    TrainingCandidateAllocationReallocate
 )
 from app.services.training_candidate_allocation_service import TrainingCandidateAllocationService
 from app.utils.activity_tracker import log_create, log_update, log_delete
@@ -167,6 +168,51 @@ async def update_allocation(
     )
     
     return updated_allocation
+
+
+@router.post("/{public_id}/reallocate", response_model=TrainingCandidateAllocationResponse)
+async def reallocate_candidate(
+    request: Request,
+    public_id: UUID,
+    reallocate_in: TrainingCandidateAllocationReallocate,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Move a candidate from one batch to another (Admin/Manager only)
+    """
+    service = TrainingCandidateAllocationService(db)
+    
+    # 1. Get current allocation for logging
+    old_allocation = await service.get_allocation(public_id)
+    
+    # 2. Perform reallocation
+    new_allocation = await service.reallocate_candidate(
+        public_id=public_id,
+        new_batch_public_id=reallocate_in.new_batch_public_id
+    )
+    
+    # 3. Log the reallocation (combination of delete and create)
+    # Log deletion of old
+    await log_delete(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="training_candidate_allocation",
+        resource_id=old_allocation.id
+    )
+    
+    # Log creation of new
+    await log_create(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="training_candidate_allocation",
+        resource_id=new_allocation.id,
+        created_object=new_allocation
+    )
+    
+    return new_allocation
 
 
 @router.delete("/{public_id}", status_code=status.HTTP_204_NO_CONTENT)

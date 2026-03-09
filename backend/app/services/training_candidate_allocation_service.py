@@ -1,6 +1,7 @@
 """Training Candidate Allocation Service"""
 from typing import List, Optional, Any
 from uuid import UUID
+from datetime import datetime
 from fastapi import HTTPException
 from sqlalchemy import select, and_, or_, func, desc
 from sqlalchemy.orm import selectinload, joinedload
@@ -104,7 +105,7 @@ class TrainingCandidateAllocationService:
         if allocation_in.batch_public_id:
             batch = await self.batch_repo.get_by_public_id(str(allocation_in.batch_public_id))
         else:
-            batch = await self.batch_repo.get_by_id(allocation_in.batch_id)
+            batch = await self.batch_repo.get(allocation_in.batch_id)
             
         if not batch:
             raise HTTPException(status_code=404, detail="Training batch not found")
@@ -113,7 +114,7 @@ class TrainingCandidateAllocationService:
         if allocation_in.candidate_public_id:
             candidate = await self.candidate_repo.get_by_public_id(allocation_in.candidate_public_id)
         else:
-            candidate = await self.candidate_repo.get_by_id(allocation_in.candidate_id)
+            candidate = await self.candidate_repo.get(allocation_in.candidate_id)
             
         if not candidate:
             raise HTTPException(status_code=404, detail="Candidate not found")
@@ -252,6 +253,13 @@ class TrainingCandidateAllocationService:
             } for c in candidates
         ]
     
+    async def get_allocation(self, public_id: UUID) -> TrainingCandidateAllocation:
+        """Get an allocation by public ID with relations"""
+        allocation = await self.repository.get_by_public_id(str(public_id))
+        if not allocation:
+            raise HTTPException(status_code=404, detail="Allocation not found")
+        return await self._get_with_relations(allocation.id)
+    
     async def update_allocation(self, public_id: UUID, allocation_in: TrainingCandidateAllocationUpdate) -> TrainingCandidateAllocation:
         """Update an allocation (handle dropout logic)"""
         allocation = await self.repository.get_by_public_id(str(public_id))
@@ -289,6 +297,75 @@ class TrainingCandidateAllocationService:
         await self.repository.update(allocation.id, update_data)
         return await self._get_with_relations(allocation.id)
     
+    async def reallocate_candidate(self, public_id: UUID, new_batch_public_id: UUID) -> TrainingCandidateAllocation:
+        """Move a candidate from one batch to another"""
+        # 1. Get existing allocation
+        old_allocation = await self.repository.get_by_public_id(str(public_id))
+        if not old_allocation:
+            raise HTTPException(status_code=404, detail="Allocation not found")
+        
+        # 2. Get new batch
+        new_batch = await self.batch_repo.get_by_public_id(str(new_batch_public_id))
+        if not new_batch:
+            raise HTTPException(status_code=404, detail="Target training batch not found")
+            
+        if old_allocation.batch_id == new_batch.id:
+            raise HTTPException(status_code=400, detail="Candidate is already in this batch")
+
+        # 3. Get candidate
+        candidate = await self.candidate_repo.get(old_allocation.candidate_id)
+        if not candidate:
+            raise HTTPException(status_code=404, detail="Candidate not found")
+
+        # 4. Perform disability match logic (reused from allocate_candidate)
+        if new_batch.disability_types:
+            batch_types_lower = [dt.lower() for dt in new_batch.disability_types]
+            is_women_batch = "women" in batch_types_lower
+            is_female = candidate.gender.lower() == "female" if candidate.gender else False
+            
+            details = candidate.disability_details or {}
+            cand_dis_val = details.get('disability_type') or details.get('type')
+            
+            def normalize(s):
+                if not s: return ""
+                return str(s).lower().replace(" ", "").replace("-", "")
+
+            cand_dis_norm = normalize(cand_dis_val)
+            batch_types_norm = [normalize(dt) for dt in new_batch.disability_types]
+            
+            match_found = False
+            if is_women_batch and is_female:
+                match_found = True
+            elif cand_dis_norm and cand_dis_norm in batch_types_norm:
+                match_found = True
+                
+            if not match_found:
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"Candidate does not match batch categories. Batch allows: {new_batch.disability_types}, Candidate: {cand_dis_val or 'No Disability'} ({candidate.gender})"
+                )
+
+        # 5. Soft-delete old allocation
+        await self.repository.delete(old_allocation.id)
+        
+        # 6. Create new allocation
+        new_data = {
+            "batch_id": new_batch.id,
+            "candidate_id": candidate.id,
+            "status": "allocated",
+            "others": {
+                "moved_from_batch_id": old_allocation.batch_id,
+                "moved_at": datetime.now().isoformat()
+            }
+        }
+        new_allocation = await self.repository.create(new_data)
+        
+        # 7. Update new batch status if it was planned
+        if new_batch.status == "planned":
+            await self.batch_repo.update(new_batch.id, {"status": "running"})
+            
+        return await self._get_with_relations(new_allocation.id)
+
     async def remove_allocation(self, public_id: UUID) -> bool:
         """Soft delete an allocation"""
         allocation = await self.repository.get_by_public_id(str(public_id))

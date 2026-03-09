@@ -30,7 +30,7 @@ class TrainingBatchRepository(BaseRepository[TrainingBatch]):
         query,
         include_deleted: bool = False,
         search: Optional[str] = None,
-        status: Optional[str] = None,
+        status: Optional[Union[str, List[str]]] = None,
         disability_types: Optional[List[str]] = None
     ):
         """Internal helper to apply common filters to queries"""
@@ -48,7 +48,10 @@ class TrainingBatchRepository(BaseRepository[TrainingBatch]):
             )
             
         if status:
-            query = query.where(self.model.status == status)
+            if isinstance(status, list):
+                query = query.where(self.model.status.in_(status))
+            else:
+                query = query.where(self.model.status == status)
             
         if disability_types:
             # PostgreSQL JSONB array overlap / containment or simply check if any of the requested types are in the list
@@ -70,7 +73,7 @@ class TrainingBatchRepository(BaseRepository[TrainingBatch]):
         limit: int = 100,
         include_deleted: bool = False,
         search: Optional[str] = None,
-        status: Optional[str] = None,
+        status: Optional[Union[str, List[str]]] = None,
         disability_types: Optional[List[str]] = None,
         sort_by: str = "created_at",
         sort_order: str = "desc"

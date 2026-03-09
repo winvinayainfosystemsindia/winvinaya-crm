@@ -1,7 +1,7 @@
 """Training Batch Service"""
 
 from datetime import date
-from typing import List, Optional
+from typing import List, Optional, Union
 from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,7 +24,7 @@ class TrainingBatchService:
         skip: int = 0, 
         limit: int = 100,
         search: Optional[str] = None,
-        status: Optional[str] = None,
+        status: Optional[Union[str, List[str]]] = None,
         disability_types: Optional[List[str]] = None,
         sort_by: str = "created_at",
         sort_order: str = "desc"
@@ -43,7 +43,7 @@ class TrainingBatchService:
     async def get_total_count(
         self,
         search: Optional[str] = None,
-        status: Optional[str] = None,
+        status: Optional[Union[str, List[str]]] = None,
         disability_types: Optional[List[str]] = None
     ) -> int:
         """Get total count of batches for pagination"""

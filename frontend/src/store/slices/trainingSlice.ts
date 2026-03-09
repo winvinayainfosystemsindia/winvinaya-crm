@@ -155,6 +155,18 @@ export const removeAllocation = createAsyncThunk(
 	}
 );
 
+export const reallocateCandidate = createAsyncThunk(
+	'training/reallocateCandidate',
+	async ({ publicId, newBatchPublicId }: { publicId: string, newBatchPublicId: string }, { rejectWithValue }) => {
+		try {
+			const response = await trainingService.reallocateCandidate(publicId, newBatchPublicId);
+			return { publicId, newAllocation: response };
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.message || 'Failed to reallocate candidate');
+		}
+	}
+);
+
 export const updateAllocationStatus = createAsyncThunk(
 	'training/updateAllocationStatus',
 	async ({ publicId, status }: { publicId: string, status: string }, { rejectWithValue }) => {
@@ -284,6 +296,19 @@ const trainingSlice = createSlice({
 			})
 			.addCase(removeAllocation.fulfilled, (state, action: PayloadAction<string>) => {
 				state.allocations = state.allocations.filter(a => a.public_id !== action.payload);
+			})
+			.addCase(reallocateCandidate.pending, (state) => {
+				state.loading = true;
+				state.error = null;
+			})
+			.addCase(reallocateCandidate.fulfilled, (state, action: PayloadAction<{ publicId: string, newAllocation: any }>) => {
+				state.loading = false;
+				// Remove the old allocation from the list as it's been soft-deleted and moved
+				state.allocations = state.allocations.filter(a => a.public_id !== action.payload.publicId);
+			})
+			.addCase(reallocateCandidate.rejected, (state, action) => {
+				state.loading = false;
+				state.error = action.payload as string;
 			})
 			.addCase(deleteTrainingBatch.fulfilled, (state, action: PayloadAction<string>) => {
 				state.loading = false;

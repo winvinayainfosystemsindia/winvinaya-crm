@@ -2,13 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import {
 	updateAllocationStatus,
-	removeAllocation,
 	markAsDropout,
 	fetchAllocations
 } from '../../store/slices/trainingSlice';
 import AllocateCandidateDialog from '../../components/training/form/AllocateCandidateDialog';
+import MoveCandidateDialog from '../../components/training/form/MoveCandidateDialog';
 import CandidateAllocationTable from '../../components/training/allocation/CandidateAllocationTable';
-import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { useSnackbar } from 'notistack';
 import TrainingModuleLayout from '../../components/training/layout/TrainingModuleLayout';
 import type { TrainingBatch, CandidateAllocation as CandidateAllocationModel } from '../../models/training';
@@ -28,9 +27,9 @@ const AllocationManager: React.FC<AllocationManagerProps> = ({ selectedBatch, al
 	const [searchQuery, setSearchQuery] = useState('');
 	const [filterDropout, setFilterDropout] = useState<boolean | 'all'>('all');
 
-	// Confirmation Dialog State
-	const [confirmOpen, setConfirmOpen] = useState(false);
-	const [confirmData, setConfirmData] = useState<{ id: string; name: string } | null>(null);
+	// Move Candidate Dialog State
+	const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+	const [selectedAllocation, setSelectedAllocation] = useState<CandidateAllocationModel | null>(null);
 
 	// Synchronize search/filter with layout fetch
 	useEffect(() => {
@@ -58,21 +57,9 @@ const AllocationManager: React.FC<AllocationManagerProps> = ({ selectedBatch, al
 		}
 	};
 
-	const handleRemoveClick = (publicId: string, candidateName: string) => {
-		setConfirmData({ id: publicId, name: candidateName });
-		setConfirmOpen(true);
-	};
-
-	const handleConfirmRemove = async () => {
-		if (!confirmData) return;
-
-		try {
-			await dispatch(removeAllocation(confirmData.id)).unwrap();
-			enqueueSnackbar('Candidate removed from batch', { variant: 'success' });
-			setConfirmOpen(false);
-		} catch (error: any) {
-			enqueueSnackbar(error || 'Failed to remove candidate', { variant: 'error' });
-		}
+	const handleMoveClick = (allocation: CandidateAllocationModel) => {
+		setSelectedAllocation(allocation);
+		setMoveDialogOpen(true);
 	};
 
 	return (
@@ -86,7 +73,7 @@ const AllocationManager: React.FC<AllocationManagerProps> = ({ selectedBatch, al
 				onFilterChange={setFilterDropout}
 				updatingStatusId={updatingStatus}
 				onStatusChange={handleStatusChange}
-				onRemove={handleRemoveClick}
+				onMove={handleMoveClick}
 				onAddClick={() => setDialogOpen(true)}
 			/>
 
@@ -99,14 +86,13 @@ const AllocationManager: React.FC<AllocationManagerProps> = ({ selectedBatch, al
 				batchName={selectedBatch.batch_name}
 			/>
 
-			<ConfirmDialog
-				open={confirmOpen}
-				title="Remove Candidate"
-				message={`Are you sure you want to remove ${confirmData?.name} from this batch? This action cannot be undone.`}
-				confirmText="Remove"
-				severity="error"
-				onClose={() => setConfirmOpen(false)}
-				onConfirm={handleConfirmRemove}
+			<MoveCandidateDialog
+				open={moveDialogOpen}
+				onClose={() => {
+					setMoveDialogOpen(false);
+					setSelectedAllocation(null);
+				}}
+				allocation={selectedAllocation}
 			/>
 		</>
 	);

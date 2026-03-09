@@ -13,9 +13,9 @@ import {
 	Stack
 } from '@mui/material';
 import {
-	Delete as DeleteIcon,
 	MailOutline as MailIcon,
-	PhoneIphone as PhoneIcon
+	PhoneIphone as PhoneIcon,
+	SwapHoriz as MoveIcon
 } from '@mui/icons-material';
 import type { CandidateAllocation } from '../../../models/training';
 
@@ -23,7 +23,7 @@ interface CandidateAllocationTableRowProps {
 	allocation: CandidateAllocation;
 	updatingStatusId: string | null;
 	onStatusChange: (publicId: string, status: string) => void;
-	onRemove: (publicId: string, name: string) => void;
+	onMove: (allocation: CandidateAllocation) => void;
 	getAllocationStatusColor: (status: string) => string;
 	ALLOCATION_STATUSES: string[];
 }
@@ -32,7 +32,7 @@ const CandidateAllocationTableRow: React.FC<CandidateAllocationTableRowProps> = 
 	allocation,
 	updatingStatusId,
 	onStatusChange,
-	onRemove,
+	onMove,
 	getAllocationStatusColor,
 	ALLOCATION_STATUSES
 }) => {
@@ -187,18 +187,20 @@ const CandidateAllocationTableRow: React.FC<CandidateAllocationTableRowProps> = 
 				)}
 			</TableCell>
 			<TableCell align="right">
-				<Tooltip title="Remove candidate from batch">
-					<IconButton
-						size="small"
-						sx={{
-							color: '#545b64',
-							'&:hover': { color: '#d13212', bgcolor: '#fdeeea' }
-						}}
-						onClick={() => onRemove(allocation.public_id, allocation.candidate?.name || 'Candidate')}
-					>
-						<DeleteIcon sx={{ fontSize: 18 }} />
-					</IconButton>
-				</Tooltip>
+				<Stack direction="row" spacing={1} justifyContent="flex-end">
+					<Tooltip title="Move to different batch">
+						<IconButton
+							size="small"
+							onClick={() => onMove(allocation)}
+							sx={{
+								color: '#545b64',
+								'&:hover': { bgcolor: '#eaeded', color: '#007eb9' }
+							}}
+						>
+							<MoveIcon fontSize="small" />
+						</IconButton>
+					</Tooltip>
+				</Stack>
 			</TableCell>
 		</TableRow>
 	);

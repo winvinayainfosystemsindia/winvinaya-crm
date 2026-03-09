@@ -54,7 +54,7 @@ interface CandidateAllocationTableProps {
 	onFilterChange: (value: boolean | 'all') => void;
 	updatingStatusId: string | null;
 	onStatusChange: (publicId: string, status: string, reason?: string) => void;
-	onRemove: (publicId: string, name: string) => void;
+	onMove: (allocation: CandidateAllocation) => void;
 	onAddClick: () => void;
 }
 
@@ -67,7 +67,7 @@ const CandidateAllocationTable: React.FC<CandidateAllocationTableProps> = memo((
 	onFilterChange,
 	updatingStatusId,
 	onStatusChange,
-	onRemove,
+	onMove,
 	onAddClick
 }) => {
 	const [dropoutDialog, setDropoutDialog] = useState<{ open: boolean, publicId: string, name: string } | null>(null);
@@ -202,7 +202,7 @@ const CandidateAllocationTable: React.FC<CandidateAllocationTableProps> = memo((
 									allocation={allocation}
 									updatingStatusId={updatingStatusId}
 									onStatusChange={handleStatusChangeInternal}
-									onRemove={onRemove}
+									onMove={onMove}
 									getAllocationStatusColor={getAllocationStatusColor}
 									ALLOCATION_STATUSES={ALLOCATION_STATUSES}
 								/>
