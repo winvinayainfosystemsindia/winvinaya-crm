@@ -220,6 +220,20 @@ class DSRService:
             "status": DSRStatus.SUBMITTED,
             "submitted_at": datetime.utcnow(),
         })
+
+        # Send Email Alert
+        try:
+            from app.utils.email import send_dsr_submission_email
+            await send_dsr_submission_email(
+                user_name=current_user.full_name or current_user.username,
+                report_date=str(entry.report_date),
+                items=entry.items
+            )
+        except Exception as e:
+            # Don't fail the submission if email fails, just log it
+            import logging
+            logging.getLogger(__name__).error(f"Failed to send DSR submission email: {str(e)}")
+
         return await self._get_or_404(public_id)
 
     async def get_my_entries(
