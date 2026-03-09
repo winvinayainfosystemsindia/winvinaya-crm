@@ -83,6 +83,12 @@ class TrainingExtensionService:
                 detail="Cannot mark attendance for dropped out candidates"
             )
         
+        if allocation.status != "in_training":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Attendance can only be marked for candidates with 'In Training' status. Current status: {allocation.status}"
+            )
+        
         return True
 
     async def get_attendance_by_candidate(self, public_id: UUID):

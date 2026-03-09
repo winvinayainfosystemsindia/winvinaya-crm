@@ -57,6 +57,12 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		return allocation?.is_dropout === true;
 	}, [allocations]);
 
+	// Check if a candidate can mark attendance (must be 'in_training')
+	const canMarkAttendance = useCallback((candidateId: number) => {
+		const allocation = allocations.find(a => a.candidate_id === candidateId);
+		return allocation?.status === 'in_training';
+	}, [allocations]);
+
 	// Fetch attendance and events data
 	const fetchData = useCallback(async () => {
 		setLoading(true);
@@ -164,6 +170,12 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 			return;
 		}
 
+		if (!canMarkAttendance(candidateId)) {
+			const allocation = allocations.find(a => a.candidate_id === candidateId);
+			enqueueSnackbar(`Attendance can only be marked for candidates who are 'In Training'. Current status: ${allocation?.status || 'Unknown'}`, { variant: 'warning' });
+			return;
+		}
+
 		if (!checkCanEditPeriod(periodId)) {
 			enqueueSnackbar('You are not authorized to mark attendance for this period', { variant: 'error' });
 			return;
@@ -191,6 +203,13 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 			enqueueSnackbar('Cannot mark attendance for future dates', { variant: 'warning' });
 			return;
 		}
+
+		if (!canMarkAttendance(candidateId)) {
+			const allocation = allocations.find(a => a.candidate_id === candidateId);
+			enqueueSnackbar(`Attendance can only be marked for candidates who are 'In Training'. Current status: ${allocation?.status || 'Unknown'}`, { variant: 'warning' });
+			return;
+		}
+
 		updatePeriodAttendance(candidateId, null, { status: status as any });
 	}, [updatePeriodAttendance, isDroppedOut, isFutureDate, enqueueSnackbar]);
 
