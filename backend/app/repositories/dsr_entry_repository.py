@@ -143,3 +143,28 @@ class DSREntryRepository(BaseRepository[DSREntry]):
             "action_required": row.action_required if row else 0,
             "approved": row.approved if row else 0,
         }
+
+    async def count_references(
+        self, project_public_id: Optional[UUID] = None, activity_public_id: Optional[UUID] = None
+    ) -> int:
+        """
+        Count DSR entries that reference a specific project or activity in their items JSON.
+        Uses PostgreSQL JSONB containment or text search for efficiency if needed.
+        """
+        query = select(func.count(DSREntry.id)).where(DSREntry.is_deleted == False)
+        
+        # items is a list of dicts. We need to check if any dict has the given public_id.
+        # Format in DB: [{"project_public_id": "...", "activity_public_id": "...", ...}, ...]
+        
+        if project_public_id:
+            # Check if project_public_id exists in ANY of the JSON items
+            # Using cast to string for safety if needed, though UUID is stored as string in JSON
+            target = f'[{{"project_public_id": "{str(project_public_id)}"}} ]'
+            # Note: SQLAlchemy's contains operator for JSONB works well
+            query = query.where(DSREntry.items.contains([{"project_public_id": str(project_public_id)}]))
+            
+        if activity_public_id:
+            query = query.where(DSREntry.items.contains([{"activity_public_id": str(activity_public_id)}]))
+
+        result = await self.db.execute(query)
+        return result.scalar_one()

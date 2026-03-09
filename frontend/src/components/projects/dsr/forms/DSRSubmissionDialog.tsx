@@ -40,18 +40,39 @@ const StatusDay = (props: PickersDayProps & { dateStatuses: Record<string, strin
 	const status = dateStatuses[dateStr];
 
 	let style = {};
-	if (status === 'submitted') {
+	if (status === 'approved') {
 		style = {
 			bgcolor: '#e6f4ea',
 			color: '#1e7e34',
 			border: '1px solid #34a853',
 			'&:hover': { bgcolor: '#d4edda' }
 		};
+	} else if (status === 'submitted') {
+		style = {
+			bgcolor: '#fef7e0',
+			color: '#b06000',
+			border: '1px solid #fbbc04',
+			'&:hover': { bgcolor: '#feefc3' }
+		};
+	} else if (status === 'rejected') {
+		style = {
+			bgcolor: '#fde7e9',
+			color: '#c5221f',
+			border: '1px solid #d93025',
+			'&:hover': { bgcolor: '#fce8e6' }
+		};
+	} else if (status === 'draft') {
+		style = {
+			bgcolor: '#f8f9fa',
+			color: '#5f6368',
+			border: '1px dashed #dadce0',
+			'&:hover': { bgcolor: '#f1f3f4' }
+		};
 	} else if (status === 'missed') {
 		style = {
 			bgcolor: '#fce8e6',
 			color: '#c5221f',
-			border: '1px solid #ea4335',
+			border: '1px solid transparent',
 			'&:hover': { bgcolor: '#f9d2ce' }
 		};
 	} else if (status === 'granted') {
@@ -73,7 +94,8 @@ const StatusDay = (props: PickersDayProps & { dateStatuses: Record<string, strin
 				...(selected ? {
 					bgcolor: '#ec7211 !important',
 					color: 'white !important',
-					border: 'none !important'
+					border: 'none !important',
+					zIndex: 1
 				} : {})
 			}}
 		/>
@@ -240,6 +262,10 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 							<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
 								<Box sx={{ width: 14, height: 14, borderRadius: '50%', bgcolor: '#e8f0fe', border: '2px solid #4285f4' }} />
 								<Typography variant="caption" sx={{ color: '#1967d2', fontWeight: 600 }}>Permission Granted</Typography>
+							</Box>
+							<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+								<Box sx={{ width: 14, height: 14, borderRadius: '50%', bgcolor: '#fde7e9', border: '2px solid #d93025' }} />
+								<Typography variant="caption" sx={{ color: '#c5221f', fontWeight: 600 }}>Rejected</Typography>
 							</Box>
 							<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
 								<Box sx={{ width: 14, height: 14, borderRadius: '4px', bgcolor: '#f8f9fa', border: '2px dashed #dadce0' }} />

@@ -11,6 +11,7 @@ from app.models.user import User, UserRole
 from app.schemas.dsr_project import DSRProjectCreate, DSRProjectUpdate, DSRProjectImportResult
 from app.repositories.dsr_project_repository import DSRProjectRepository
 from app.repositories.user_repository import UserRepository
+from app.repositories.dsr_entry_repository import DSREntryRepository
 
 
 def _require_manager_or_admin(current_user: User) -> None:
@@ -35,6 +36,7 @@ class DSRProjectService:
         self.db = db
         self.repo = DSRProjectRepository(db)
         self.user_repo = UserRepository(db)
+        self.dsr_repo = DSREntryRepository(db)
 
     async def create_project(self, data: DSRProjectCreate, current_user: User) -> DSRProject:
         _require_manager_or_admin(current_user)
@@ -76,6 +78,15 @@ class DSRProjectService:
     async def delete_project(self, public_id: UUID, current_user: User) -> bool:
         _require_admin(current_user)
         project = await self._get_or_404(public_id)
+        
+        # Check if project is used in any DSR entries
+        usage_count = await self.dsr_repo.count_references(project_public_id=project.public_id)
+        if usage_count > 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Project '{project.name}' cannot be deleted because it is referenced in {usage_count} DSR entry/entries. Please deactivate it instead.",
+            )
+            
         return await self.repo.delete(project.id)
 
     async def get_projects(

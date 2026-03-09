@@ -12,6 +12,7 @@ from app.models.user import User, UserRole
 from app.schemas.dsr_activity import DSRActivityCreate, DSRActivityUpdate, DSRActivityImportResult
 from app.repositories.dsr_activity_repository import DSRActivityRepository
 from app.repositories.dsr_project_repository import DSRProjectRepository
+from app.repositories.dsr_entry_repository import DSREntryRepository
 
 
 def _require_admin(current_user: User) -> None:
@@ -28,6 +29,7 @@ class DSRActivityService:
         self.db = db
         self.repo = DSRActivityRepository(db)
         self.project_repo = DSRProjectRepository(db)
+        self.dsr_repo = DSREntryRepository(db)
 
     async def _check_project_ownership(self, project_id: int, current_user: User) -> None:
         """Raise 403 if current_user is not the project owner and not an admin."""
@@ -101,6 +103,15 @@ class DSRActivityService:
     async def delete_activity(self, public_id: UUID, current_user: User) -> bool:
         activity = await self._get_or_404(public_id)
         await self._check_project_ownership(activity.project_id, current_user)
+        
+        # Check if activity is used in any DSR entries
+        usage_count = await self.dsr_repo.count_references(activity_public_id=activity.public_id)
+        if usage_count > 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Activity '{activity.name}' cannot be deleted because it is referenced in {usage_count} DSR entry/entries. Please deactivate it instead.",
+            )
+            
         return await self.repo.delete(activity.id)
 
     async def get_activity(self, public_id: UUID) -> DSRActivity:
