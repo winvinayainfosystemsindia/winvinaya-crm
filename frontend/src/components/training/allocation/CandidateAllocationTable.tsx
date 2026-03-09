@@ -32,14 +32,14 @@ const ALLOCATION_STATUSES = [
 	'in_training',
 	'completed',
 	'dropped_out',
-	'placed'
+	'moved_to_placement'
 ];
 
 const getAllocationStatusColor = (status: string) => {
 	switch (status?.toLowerCase()) {
 		case 'completed': return '#2e7d32';
 		case 'dropped_out': return '#d32f2f';
-		case 'placed': return '#00a3bf';
+		case 'moved_to_placement': return '#00a3bf';
 		case 'in_training': return '#0288d1';
 		default: return '#fb8c00'; // allocated or others
 	}

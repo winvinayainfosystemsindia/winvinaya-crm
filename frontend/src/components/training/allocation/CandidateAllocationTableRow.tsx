@@ -47,7 +47,7 @@ const CandidateAllocationTableRow: React.FC<CandidateAllocationTableRowProps> = 
 			case 'in_training': return 'In Training';
 			case 'completed': return 'Completed';
 			case 'dropped_out': return 'Drop Out';
-			case 'placed': return 'Moved to placement';
+			case 'moved_to_placement': return 'Moved to placement';
 			default: return status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ');
 		}
 	};

@@ -357,7 +357,7 @@ const Reports: React.FC = () => {
 				{ label: 'In Training', value: 'in_training' },
 				{ label: 'Completed', value: 'completed' },
 				{ label: 'Dropped Out', value: 'dropped_out' },
-				{ label: 'Placed', value: 'placed' }
+				{ label: 'Moved to Placement', value: 'moved_to_placement' }
 			]
 		},
 		{ key: 'is_dropout', label: 'Is Dropout', type: 'boolean' },
