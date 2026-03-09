@@ -17,6 +17,7 @@ import ActivityDialog from '../../components/projects/activities/forms/ActivityD
 import ActivityStats from '../../components/projects/activities/stats/ActivityStats';
 import ExcelImportModal from '../../components/common/ExcelImportModal';
 import ActivityModuleLayout from '../../components/projects/activities/layout/ActivityModuleLayout';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
 
 const ActivityPlanning: React.FC = () => {
 	const dispatch = useAppDispatch();
@@ -33,6 +34,9 @@ const ActivityPlanning: React.FC = () => {
 	const [importModalOpen, setImportModalOpen] = useState(false);
 	const [refreshKey, setRefreshKey] = useState(0);
 	const [exporting, setExporting] = useState(false);
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [activityToDelete, setActivityToDelete] = useState<DSRActivity | null>(null);
+	const [deleteLoading, setDeleteLoading] = useState(false);
 
 	// Permission Logic: admin, manager, or project owner
 	const isAdmin = user?.role === 'admin';
@@ -50,15 +54,24 @@ const ActivityPlanning: React.FC = () => {
 		setDialogOpen(true);
 	};
 
-	const handleDelete = async (activity: DSRActivity) => {
-		if (window.confirm(`Are you sure you want to delete activity "${activity.name}"?`)) {
-			try {
-				await dispatch(deleteActivity(activity.public_id)).unwrap();
-				toast.success('Activity deleted successfully');
-				setRefreshKey(prev => prev + 1);
-			} catch (error: any) {
-				toast.error(error || 'Failed to delete activity');
-			}
+	const handleDelete = (activity: DSRActivity) => {
+		setActivityToDelete(activity);
+		setDeleteDialogOpen(true);
+	};
+
+	const handleConfirmDelete = async () => {
+		if (!activityToDelete) return;
+		setDeleteLoading(true);
+		try {
+			await dispatch(deleteActivity(activityToDelete.public_id)).unwrap();
+			toast.success('Activity deleted successfully');
+			setRefreshKey(prev => prev + 1);
+			setDeleteDialogOpen(false);
+		} catch (error: any) {
+			toast.error(error || 'Failed to delete activity');
+		} finally {
+			setDeleteLoading(false);
+			setActivityToDelete(null);
 		}
 	};
 
@@ -173,6 +186,17 @@ const ActivityPlanning: React.FC = () => {
 						title="Import Activities from Excel"
 						description="Upload an Excel file with 'name', 'description', 'start_date', 'end_date' columns."
 						onDownloadTemplate={dsrActivityService.downloadTemplate}
+					/>
+
+					<ConfirmDialog
+						open={deleteDialogOpen}
+						title="Delete Activity"
+						message={`Are you sure you want to delete activity "${activityToDelete?.name}"? This action cannot be undone.`}
+						onClose={() => setDeleteDialogOpen(false)}
+						onConfirm={handleConfirmDelete}
+						confirmText="Delete"
+						loading={deleteLoading}
+						severity="error"
 					/>
 				</Box>
 			)}
