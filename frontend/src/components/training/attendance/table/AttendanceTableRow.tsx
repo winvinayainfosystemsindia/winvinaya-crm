@@ -138,7 +138,20 @@ const AttendanceTableRow: React.FC<AttendanceTableRowProps> = memo(({
 		<>
 			<TableRow hover sx={{ opacity: isActive ? 1 : 0.6, '&:hover': { bgcolor: '#fafcff' } }}>
 				{/* Student Details Column */}
-				<TableCell sx={{ borderRight: '1px solid #eaeded' }}>
+				<TableCell
+					sx={{
+						borderRight: '1px solid #eaeded',
+						position: 'sticky',
+						left: 0,
+						bgcolor: 'white',
+						zIndex: 5,
+						boxShadow: '2px 0 5px -2px rgba(0,0,0,0.1)',
+						// Handle hover background to match the row
+						'.MuiTableRow-root:hover &': {
+							bgcolor: '#fafcff',
+						}
+					}}
+				>
 					<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
 						<Avatar sx={{
 							width: 34, height: 34,

@@ -97,7 +97,12 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 								fontWeight: 700,
 								borderRight: '1px solid #eaeded',
 								width: 250,
-								minWidth: 250
+								minWidth: 250,
+								position: 'sticky',
+								left: 0,
+								bgcolor: '#f8f9fa',
+								zIndex: 10,
+								boxShadow: '2px 0 5px -2px rgba(0,0,0,0.1)'
 							}}
 						>
 							Student Name
@@ -191,7 +196,16 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 							if (droppedOut) {
 								return (
 									<TableRow key={allocation.id} sx={{ bgcolor: '#f5f5f5' }}>
-										<TableCell>
+										<TableCell
+											sx={{
+												position: 'sticky',
+												left: 0,
+												bgcolor: '#f5f5f5',
+												zIndex: 5,
+												borderRight: '1px solid #eaeded',
+												boxShadow: '2px 0 5px -2px rgba(0,0,0,0.1)'
+											}}
+										>
 											<Box>
 												<Typography variant="body2" sx={{ fontWeight: 600 }}>
 													{allocation.candidate?.name || 'Unknown'}
