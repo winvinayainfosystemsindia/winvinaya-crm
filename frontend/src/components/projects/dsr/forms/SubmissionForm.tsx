@@ -80,8 +80,8 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
 						{!readOnly && (() => {
 							const lastItem = items[items.length - 1];
 							const isLastRowComplete = lastItem &&
-								lastItem.project_public_id &&
-								lastItem.activity_public_id &&
+								(lastItem.project_public_id || (lastItem.project_name_other && lastItem.project_name_other.trim() !== '')) &&
+								(lastItem.activity_public_id || (lastItem.activity_name_other && lastItem.activity_name_other.trim() !== '')) &&
 								lastItem.description &&
 								lastItem.start_time &&
 								lastItem.end_time &&

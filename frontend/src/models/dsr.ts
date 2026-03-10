@@ -61,10 +61,12 @@ export interface DSRActivity {
 }
 
 export interface DSRItem {
-	project_public_id: string;
+	project_public_id: string | null;
 	project_name?: string;
-	activity_public_id: string;
+	project_name_other?: string;
+	activity_public_id: string | null;
 	activity_name?: string;
+	activity_name_other?: string;
 	description: string;
 	start_time: string;
 	end_time: string;
@@ -115,7 +117,13 @@ export interface DSRActivityCreate {
 
 export interface DSREntryCreate {
 	report_date: string;
-	items?: Omit<DSRItem, 'project_name' | 'activity_name' | 'hours'> & { hours?: number }[];
+	items?: (Omit<DSRItem, 'project_name' | 'activity_name' | 'hours' | 'project_public_id' | 'activity_public_id'> & { 
+		project_public_id?: string | null;
+		activity_public_id?: string | null;
+		project_name_other?: string;
+		activity_name_other?: string;
+		hours?: number;
+	})[];
 	is_leave?: boolean;
 	leave_type?: string;
 	others?: Record<string, any>;

@@ -31,7 +31,7 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 
 	const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
 	const [items, setItems] = useState<Partial<DSRItem>[]>([
-		{ project_public_id: '', activity_public_id: '', description: '', start_time: '09:00', end_time: '10:00', hours: 1 }
+		{ project_public_id: null as any, activity_public_id: null as any, description: '', start_time: '09:00', end_time: '10:00', hours: 1 }
 	]);
 	const [isLeave, setIsLeave] = useState(false);
 	const [leaveType, setLeaveType] = useState('');
@@ -113,7 +113,7 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		} else {
 			// Reset for new entry
 			setReportDate(new Date().toISOString().split('T')[0]);
-			setItems([{ project_public_id: '', activity_public_id: '', description: '', start_time: '09:00', end_time: '10:00', hours: 1 }]);
+			setItems([{ project_public_id: null as any, activity_public_id: null as any, description: '', start_time: '09:00', end_time: '10:00', hours: 1 }]);
 			setIsLeave(false);
 			setLeaveType('');
 			setPermissionError(null);
@@ -135,7 +135,8 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		newItems[index] = { ...newItems[index], [field]: value };
 
 		if (field === 'project_public_id') {
-			newItems[index].activity_public_id = '';
+			newItems[index].activity_public_id = null as any;
+			newItems[index].activity_name_other = '';
 			if (value) {
 				dispatch(fetchActivitiesForProject({ projectId: value, assigned_to: user?.public_id }));
 			}
@@ -152,8 +153,8 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 	const addRow = () => {
 		const lastItem = items[items.length - 1];
 		setItems([...items, {
-			project_public_id: '',
-			activity_public_id: '',
+			project_public_id: null as any,
+			activity_public_id: null as any,
 			description: '',
 			start_time: lastItem?.end_time || '09:00',
 			end_time: '',
@@ -179,10 +180,19 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 
 		for (let i = 0; i < items.length; i++) {
 			const it = items[i];
-			if (!it.project_public_id || !it.activity_public_id || !it.description || !it.start_time || !it.end_time) {
+			const hasProject = it.project_public_id || it.project_name_other;
+			const hasActivity = it.activity_public_id || it.activity_name_other;
+
+			if (!hasProject || !hasActivity || !it.description || !it.start_time || !it.end_time) {
 				toast.warning(`Please fill all fields in row ${i + 1}`);
 				return false;
 			}
+			
+			if (it.project_name_other === '' || it.activity_name_other === '') {
+				toast.warning(`Please specify the Custom Project/Activity in row ${i + 1}`);
+				return false;
+			}
+
 			if ((it.hours || 0) <= 0) {
 				toast.warning(`Invalid time range in row ${i + 1}`);
 				return false;

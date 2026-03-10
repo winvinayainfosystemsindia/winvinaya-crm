@@ -69,53 +69,72 @@ class DSRService:
         resolved = []
 
         for idx, item in enumerate(raw_items):
-            p_uid = item["project_public_id"] if isinstance(item, dict) else item.project_public_id
-            a_uid = item["activity_public_id"] if isinstance(item, dict) else item.activity_public_id
+            is_dict = isinstance(item, dict)
+            p_uid = item.get("project_public_id") if is_dict else item.project_public_id
+            a_uid = item.get("activity_public_id") if is_dict else item.activity_public_id
+            p_name_other = item.get("project_name_other") if is_dict else getattr(item, 'project_name_other', None)
+            a_name_other = item.get("activity_name_other") if is_dict else getattr(item, 'activity_name_other', None)
+
+            resolved_item = {
+                "description": item.get("description") if is_dict else item.description,
+                "start_time": item.get("start_time") if is_dict else item.start_time,
+                "end_time": item.get("end_time") if is_dict else item.end_time,
+                "hours": item.get("hours") if is_dict else item.hours,
+            }
 
             # Resolve project
-            p_key = str(p_uid)
-            if p_key not in project_cache:
-                project = await self.project_repo.get_by_public_id(p_uid)
-                if not project or not project.is_active:
-                    raise HTTPException(
-                        status_code=422,
-                        detail=f"Item {idx + 1}: Project not found or inactive",
-                    )
-                project_cache[p_key] = project
-
-            project = project_cache[p_key]
+            if p_uid:
+                p_key = str(p_uid)
+                if p_key not in project_cache:
+                    project = await self.project_repo.get_by_public_id(p_uid)
+                    if not project or not project.is_active:
+                        raise HTTPException(
+                            status_code=422,
+                            detail=f"Item {idx + 1}: Project not found or inactive",
+                        )
+                    project_cache[p_key] = project
+                project = project_cache[p_key]
+                resolved_item["project_public_id"] = str(p_uid)
+                resolved_item["project_name"] = project.name
+            else:
+                resolved_item["project_public_id"] = None
+                resolved_item["project_name"] = p_name_other
+                resolved_item["project_name_other"] = p_name_other
 
             # Resolve activity
-            a_key = str(a_uid)
-            if a_key not in activity_cache:
-                activity = await self.activity_repo.get_by_public_id(a_uid)
-                if not activity or not activity.is_active:
-                    raise HTTPException(
-                        status_code=422,
-                        detail=f"Item {idx + 1}: Activity not found or inactive",
-                    )
-                if activity.project_id != project.id:
-                    raise HTTPException(
-                        status_code=422,
-                        detail=(
-                            f"Item {idx + 1}: Activity '{activity.name}' does not "
-                            f"belong to project '{project.name}'"
-                        ),
-                    )
-                activity_cache[a_key] = activity
+            if a_uid:
+                # If we have an activity ID, we MUST have a project ID or it must be valid for the resolved project
+                a_key = str(a_uid)
+                if a_key not in activity_cache:
+                    activity = await self.activity_repo.get_by_public_id(a_uid)
+                    if not activity or not activity.is_active:
+                        raise HTTPException(
+                            status_code=422,
+                            detail=f"Item {idx + 1}: Activity not found or inactive",
+                        )
+                    
+                    # If we had a resolved project, check ownership
+                    if p_uid:
+                        project = project_cache[str(p_uid)]
+                        if activity.project_id != project.id:
+                            raise HTTPException(
+                                status_code=422,
+                                detail=(
+                                    f"Item {idx + 1}: Activity '{activity.name}' does not "
+                                    f"belong to project '{project.name}'"
+                                ),
+                            )
+                    activity_cache[a_key] = activity
+                
+                activity = activity_cache[a_key]
+                resolved_item["activity_public_id"] = str(a_uid)
+                resolved_item["activity_name"] = activity.name
+            else:
+                resolved_item["activity_public_id"] = None
+                resolved_item["activity_name"] = a_name_other
+                resolved_item["activity_name_other"] = a_name_other
 
-            activity = activity_cache[a_key]
-
-            resolved.append({
-                "project_public_id": str(p_uid),
-                "project_name": project.name,
-                "activity_public_id": str(a_uid),
-                "activity_name": activity.name,
-                "description": item["description"] if isinstance(item, dict) else item.description,
-                "start_time": item["start_time"] if isinstance(item, dict) else item.start_time,
-                "end_time": item["end_time"] if isinstance(item, dict) else item.end_time,
-                "hours": item["hours"] if isinstance(item, dict) else item.hours,
-            })
+            resolved.append(resolved_item)
 
         return resolved
 

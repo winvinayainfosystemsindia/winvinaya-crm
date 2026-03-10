@@ -2,18 +2,35 @@
 
 import uuid
 from datetime import date, datetime, time
-from typing import Optional
-from pydantic import BaseModel, Field, model_validator
+from typing import Optional, Any
+from pydantic import BaseModel, Field, model_validator, field_validator
 
 
 class DSRItemCreate(BaseModel):
     """A single project/activity work-log line item within a DSR entry"""
-    project_public_id: uuid.UUID = Field(..., description="Project being worked on")
-    activity_public_id: uuid.UUID = Field(..., description="Activity / task being worked on")
+    project_public_id: Optional[uuid.UUID] = Field(default=None, description="Project being worked on")
+    activity_public_id: Optional[uuid.UUID] = Field(default=None, description="Activity / task being worked on")
+    project_name_other: Optional[str] = Field(default=None, description="Custom project name if not in dropdown")
+    activity_name_other: Optional[str] = Field(default=None, description="Custom activity name if not in dropdown")
     description: str = Field(..., min_length=1, description="What was done")
     start_time: str = Field(..., pattern=r"^\d{2}:\d{2}$", description="HH:MM format, e.g. 09:00")
     end_time: str = Field(..., pattern=r"^\d{2}:\d{2}$", description="HH:MM format, e.g. 17:30")
     hours: Optional[float] = Field(default=None, ge=0, description="Auto-computed if not provided")
+
+    @field_validator("project_public_id", "activity_public_id", mode="before")
+    @classmethod
+    def empty_str_to_none(cls, v: Any) -> Any:
+        if v == "":
+            return None
+        return v
+
+    @model_validator(mode="after")
+    def validate_ids_or_custom_names(self) -> "DSRItemCreate":
+        if not self.project_public_id and not self.project_name_other:
+            raise ValueError("Either project_public_id or project_name_other must be provided")
+        if not self.activity_public_id and not self.activity_name_other:
+            raise ValueError("Either activity_public_id or activity_name_other must be provided")
+        return self
 
     @model_validator(mode="after")
     def compute_hours(self) -> "DSRItemCreate":
