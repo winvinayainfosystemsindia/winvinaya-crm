@@ -33,6 +33,7 @@ interface ExcelImportModalProps {
 	title: string;
 	onDownloadTemplate?: () => Promise<void>;
 	description?: string;
+	onSuccess?: () => void;
 }
 
 const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
@@ -41,7 +42,8 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
 	onImport,
 	title,
 	onDownloadTemplate,
-	description
+	description,
+	onSuccess
 }) => {
 	const [file, setFile] = useState<File | null>(null);
 	const [loading, setLoading] = useState(false);
@@ -65,6 +67,7 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
 		try {
 			const res = await onImport(file);
 			setResult(res);
+			if (onSuccess) onSuccess();
 		} catch (err: any) {
 			console.error('Import failed:', err);
 			setError(err.response?.data?.detail || 'Failed to import records from Excel.');

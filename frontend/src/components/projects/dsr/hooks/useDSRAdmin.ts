@@ -6,7 +6,8 @@ import {
 	sendDSRReminders,
 	grantDSRPermission,
 	fetchPermissionRequests,
-	handlePermissionRequestAction
+	handlePermissionRequestAction,
+	fetchPermissionStats
 } from '../../../../store/slices/dsrSlice';
 import useToast from '../../../../hooks/useToast';
 import dsrService from '../../../../services/dsrService';
@@ -84,6 +85,13 @@ export const useDSRAdmin = () => {
 			const isToday = reportDate === new Date().toISOString().split('T')[0];
 			toast.success(isToday ? 'Draft created for user' : 'Past-date submission permission granted');
 			dispatch(fetchMissingReports(reportDate));
+			dispatch(fetchPermissionStats());
+			dispatch(fetchAdminOverview({
+				skip: entryPage * entryRowsPerPage,
+				limit: entryRowsPerPage,
+				date_from: reportDate,
+				date_to: reportDate
+			}));
 		} catch (error: any) {
 			toast.error(error || 'Failed to grant permission');
 		}
@@ -96,6 +104,13 @@ export const useDSRAdmin = () => {
 			await dispatch(handlePermissionRequestAction({ publicId, status })).unwrap();
 			toast.success(`Request ${status} successfully`);
 			dispatch(fetchPermissionRequests({ skip: 0, limit: 100 }));
+			dispatch(fetchPermissionStats());
+			dispatch(fetchAdminOverview({
+				skip: entryPage * entryRowsPerPage,
+				limit: entryRowsPerPage,
+				date_from: reportDate,
+				date_to: reportDate
+			}));
 		} catch (error: any) {
 			toast.error(error || `Failed to ${status} request`);
 		}
@@ -120,6 +135,12 @@ export const useDSRAdmin = () => {
 			await dsrService.rejectEntry(publicId, reason);
 			toast.success('DSR rejected — user notified to resubmit');
 			await fetchReviewQueue();
+			dispatch(fetchAdminOverview({
+				skip: entryPage * entryRowsPerPage,
+				limit: entryRowsPerPage,
+				date_from: reportDate,
+				date_to: reportDate
+			}));
 		} catch (error: any) {
 			toast.error(error?.response?.data?.detail || 'Failed to reject DSR');
 		}

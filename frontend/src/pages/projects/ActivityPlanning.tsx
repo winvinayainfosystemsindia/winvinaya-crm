@@ -183,6 +183,7 @@ const ActivityPlanning: React.FC = () => {
 						open={importModalOpen}
 						onClose={() => setImportModalOpen(false)}
 						onImport={(file) => dsrActivityService.importFromExcel(file, selectedProject.public_id)}
+						onSuccess={() => setRefreshKey(prev => prev + 1)}
 						title="Import Activities from Excel"
 						description="Upload an Excel file with 'name', 'description', 'start_date', 'end_date' columns."
 						onDownloadTemplate={dsrActivityService.downloadTemplate}

@@ -154,6 +154,7 @@ const ProjectManagement: React.FC = () => {
 					open={importModalOpen}
 					onClose={() => setImportModalOpen(false)}
 					onImport={(file) => dsrProjectService.importFromExcel(file)}
+					onSuccess={() => setRefreshKey(prev => prev + 1)}
 					title="Import Projects from Excel"
 					description="Upload an Excel file with 'name' and 'owner_email' columns to bulk-create projects."
 					onDownloadTemplate={dsrProjectService.downloadTemplate}
