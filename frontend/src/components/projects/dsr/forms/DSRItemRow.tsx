@@ -109,7 +109,7 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 				/>
 			</TableCell>
 			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, textAlign: 'center' }}>
-				<Typography variant="body2" sx={{ fontWeight: 800, color: (item.hours || 0) > 0 ? '#111827' : '#9ca3af' }}>
+				<Typography variant="body2" sx={{ fontWeight: 600, color: (item.hours || 0) > 0 ? '#111827' : '#9ca3af' }}>
 					{item.hours?.toFixed(1) || '0.0'}
 				</Typography>
 			</TableCell>
