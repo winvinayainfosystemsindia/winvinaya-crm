@@ -5,6 +5,9 @@ import {
 	Chip,
 	Tooltip,
 	Stack,
+	Typography,
+	Box,
+	useTheme
 } from '@mui/material';
 import {
 	Edit as EditIcon,
@@ -94,6 +97,7 @@ const HistoryRow: React.FC<HistoryRowProps> = ({
 	const totalHours = entry.items.reduce((sum, item) => sum + item.hours, 0);
 	const isRejected = entry.status === DSRStatusValues.DRAFT && entry.admin_notes;
 	const isDraft = entry.status === DSRStatusValues.DRAFT;
+	const theme = useTheme();
 
 	return (
 		<TableRow
@@ -104,22 +108,42 @@ const HistoryRow: React.FC<HistoryRowProps> = ({
 				borderLeft: isRejected ? '3px solid #d13212' : 'none',
 			}}
 		>
-			<TableCell sx={{ fontWeight: 600 }}>
-				{new Date(entry.report_date).toLocaleDateString('en-GB', {
-					day: '2-digit', month: 'short', year: 'numeric'
-				})}
+			<TableCell sx={{ py: 2, fontSize: '0.8125rem', color: theme.palette.text.primary }}>
+				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+					<Typography variant="body2" sx={{ fontWeight: 500 }}>
+						{new Date(entry.report_date).toLocaleDateString('en-GB', {
+							day: '2-digit', month: 'short', year: 'numeric'
+						})}
+					</Typography>
+				</Box>
 			</TableCell>
+
 			<TableCell>
-				<StatusChip entry={entry} />
+				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+					<StatusChip entry={entry} />
+				</Box>
 			</TableCell>
-			<TableCell>{totalHours.toFixed(1)} hrs</TableCell>
+
 			<TableCell>
-				{entry.submitted_at
-					? new Date(entry.submitted_at).toLocaleString('en-GB', {
-						day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
-					})
-					: '—'}
+				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+					<Typography variant="body2" sx={{ fontWeight: 500 }}>
+						{totalHours.toFixed(1)} hrs
+					</Typography>
+				</Box>
 			</TableCell>
+
+			<TableCell>
+				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+					<Typography variant="body2" sx={{ fontWeight: 500 }}>
+						{entry.submitted_at
+							? new Date(entry.submitted_at).toLocaleString('en-GB', {
+								day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+							})
+							: '—'}
+					</Typography>
+				</Box>
+			</TableCell>
+
 			<TableCell align="right">
 				<Stack direction="row" spacing={0.5} justifyContent="flex-end">
 					<Tooltip title="View Details">
