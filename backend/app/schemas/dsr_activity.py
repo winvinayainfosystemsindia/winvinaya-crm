@@ -15,7 +15,7 @@ class DSRActivityCreate(BaseModel):
     end_date: date = Field(..., description="Planned end date")
     actual_end_date: Optional[date] = Field(default=None, description="Actual completion date")
     status: DSRActivityStatus = Field(default=DSRActivityStatus.PLANNED)
-    assigned_to_public_id: Optional[uuid.UUID] = Field(default=None, description="Public ID of the assigned user")
+    assigned_user_public_ids: list[uuid.UUID] = Field(default_factory=list, description="Public IDs of the assigned users")
     is_active: bool = Field(default=True)
     others: Optional[dict] = Field(default=None, description="Extensible metadata")
 
@@ -33,7 +33,7 @@ class DSRActivityUpdate(BaseModel):
     end_date: Optional[date] = Field(default=None)
     actual_end_date: Optional[date] = Field(default=None)
     status: Optional[DSRActivityStatus] = Field(default=None)
-    assigned_to_public_id: Optional[uuid.UUID] = Field(default=None)
+    assigned_user_public_ids: Optional[list[uuid.UUID]] = Field(default=None)
     is_active: Optional[bool] = Field(default=None)
     others: Optional[dict] = Field(default=None)
 
@@ -75,8 +75,7 @@ class DSRActivityResponse(BaseModel):
     end_date: date
     actual_end_date: Optional[date] = None
     status: DSRActivityStatus
-    assigned_to: Optional[int] = None
-    assigned_user: Optional[DSRUserSnapshot] = None
+    assigned_users: list[DSRUserSnapshot] = []
     is_active: bool
     others: Optional[dict] = None
     created_at: datetime

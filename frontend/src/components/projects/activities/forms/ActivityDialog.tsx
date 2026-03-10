@@ -18,6 +18,7 @@ import {
 	Close as CloseIcon,
 	ListAlt as ActivityIcon
 } from '@mui/icons-material';
+import { Autocomplete, Chip } from '@mui/material';
 import type { DSRActivity, DSRActivityStatus } from '../../../../models/dsr';
 import { DSRActivityStatusValues } from '../../../../models/dsr';
 import type { User } from '../../../../models/user';
@@ -48,7 +49,7 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 	const [endDate, setEndDate] = useState('');
 	const [actualEndDate, setActualEndDate] = useState<string>('');
 	const [status, setStatus] = useState<DSRActivityStatus>(DSRActivityStatusValues.PLANNED);
-	const [assignedToPublicId, setAssignedToPublicId] = useState<string>('');
+	const [assignedUserPublicIds, setAssignedUserPublicIds] = useState<string[]>([]);
 	const [users, setUsers] = useState<User[]>([]);
 	const [submitting, setSubmitting] = useState(false);
 
@@ -73,7 +74,7 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 				setEndDate(activity.end_date.split('T')[0]);
 				setActualEndDate(activity.actual_end_date ? activity.actual_end_date.split('T')[0] : '');
 				setStatus(activity.status);
-				setAssignedToPublicId(activity.assigned_user?.public_id || '');
+				setAssignedUserPublicIds(activity.assigned_users?.map(u => u.public_id) || []);
 			} else {
 				setName('');
 				setDescription('');
@@ -81,7 +82,7 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 				setEndDate(new Date().toISOString().split('T')[0]);
 				setActualEndDate('');
 				setStatus(DSRActivityStatusValues.PLANNED);
-				setAssignedToPublicId('');
+				setAssignedUserPublicIds([]);
 			}
 		}
 	}, [activity, open]);
@@ -97,7 +98,7 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 				end_date: endDate,
 				actual_end_date: actualEndDate || null,
 				status,
-				assigned_to_public_id: assignedToPublicId || null
+				assigned_user_public_ids: assignedUserPublicIds
 			};
 
 			if (activity) {
@@ -218,21 +219,38 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 								<MenuItem key={s} value={s}>{s.toUpperCase()}</MenuItem>
 							))}
 						</TextField>
-						<TextField
-							select
-							label="Assigned To"
-							fullWidth
-							value={assignedToPublicId}
-							onChange={(e) => setAssignedToPublicId(e.target.value)}
+						<Autocomplete
+							multiple
+							options={users}
+							getOptionLabel={(option) => option.full_name || option.username}
+							value={users.filter(u => assignedUserPublicIds.includes(u.public_id))}
+							onChange={(_, newValue) => {
+								setAssignedUserPublicIds(newValue.map(u => u.public_id));
+							}}
 							disabled={submitting}
-						>
-							<MenuItem value=""><em>Unassigned</em></MenuItem>
-							{users.map(u => (
-								<MenuItem key={u.public_id} value={u.public_id}>
-									{u.full_name || u.username}
-								</MenuItem>
-							))}
-						</TextField>
+							renderInput={(params) => (
+								<TextField
+									{...params}
+									label="Assigned To"
+									placeholder="Select users"
+									sx={{
+										'& .MuiOutlinedInput-root': {
+											borderRadius: '2px'
+										}
+									}}
+								/>
+							)}
+							renderTags={(value, getTagProps) =>
+								value.map((option, index) => (
+									<Chip
+										label={option.full_name || option.username}
+										size="small"
+										{...getTagProps({ index })}
+										sx={{ borderRadius: '2px', fontWeight: 600 }}
+									/>
+								))
+							}
+						/>
 					</Box>
 
 					{status === DSRActivityStatusValues.COMPLETED && actualEndDate && (

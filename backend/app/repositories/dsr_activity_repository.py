@@ -61,8 +61,9 @@ class DSRActivityRepository(BaseRepository[DSRActivity]):
             query = query.where(DSRActivity.is_active == True)
             count_query = count_query.where(DSRActivity.is_active == True)
         if assigned_to:
-            query = query.where(DSRActivity.assigned_to == assigned_to)
-            count_query = count_query.where(DSRActivity.assigned_to == assigned_to)
+            from app.models.user import User
+            query = query.where(DSRActivity.assigned_users.any(User.id == assigned_to))
+            count_query = count_query.where(DSRActivity.assigned_users.any(User.id == assigned_to))
         if search:
             query = query.where(DSRActivity.name.ilike(f"%{search}%"))
             count_query = count_query.where(DSRActivity.name.ilike(f"%{search}%"))

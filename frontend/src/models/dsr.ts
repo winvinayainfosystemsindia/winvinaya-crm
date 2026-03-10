@@ -53,8 +53,7 @@ export interface DSRActivity {
 	end_date: string;
 	actual_end_date: string | null;
 	status: DSRActivityStatus;
-	assigned_to?: number;
-	assigned_user?: DSRUserSnapshot;
+	assigned_users: DSRUserSnapshot[];
 	is_active: boolean;
 	others?: Record<string, any>;
 	created_at: string;
@@ -107,7 +106,7 @@ export interface DSRActivityCreate {
 	end_date: string;
 	actual_end_date?: string | null;
 	status?: DSRActivityStatus;
-	assigned_to_public_id?: string;
+	assigned_user_public_ids?: string[];
 	is_active?: boolean;
 	others?: Record<string, any>;
 }

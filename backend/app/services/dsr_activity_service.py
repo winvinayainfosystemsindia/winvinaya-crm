@@ -49,14 +49,15 @@ class DSRActivityService:
 
         await self._check_project_ownership(project.id, current_user)
 
-        assigned_to_id = None
-        if data.assigned_to_public_id:
+        assigned_users = []
+        if data.assigned_user_public_ids:
             from app.repositories.user_repository import UserRepository
             user_repo = UserRepository(self.db)
-            assigned_user = await user_repo.get_by_fields(public_id=data.assigned_to_public_id)
-            if not assigned_user:
-                raise HTTPException(status_code=404, detail="Assigned user not found")
-            assigned_to_id = assigned_user[0].id
+            for upid in data.assigned_user_public_ids:
+                user_list = await user_repo.get_by_fields(public_id=upid)
+                if not user_list:
+                    raise HTTPException(status_code=404, detail=f"User with ID {upid} not found")
+                assigned_users.append(user_list[0])
 
         activity_data = {
             "project_id": project.id,
@@ -65,7 +66,7 @@ class DSRActivityService:
             "start_date": data.start_date,
             "end_date": data.end_date,
             "status": data.status,
-            "assigned_to": assigned_to_id,
+            "assigned_users": assigned_users,
             "is_active": data.is_active,
             "others": data.others,
         }
@@ -79,17 +80,20 @@ class DSRActivityService:
 
         update_data = data.model_dump(exclude_unset=True)
 
-        if "assigned_to_public_id" in update_data:
-            public_id_to_resolve = update_data.pop("assigned_to_public_id")
-            if public_id_to_resolve:
+        if "assigned_user_public_ids" in update_data:
+            assigned_ids = update_data.pop("assigned_user_public_ids")
+            if assigned_ids is not None:
                 from app.repositories.user_repository import UserRepository
                 user_repo = UserRepository(self.db)
-                assigned_user = await user_repo.get_by_fields(public_id=public_id_to_resolve)
-                if not assigned_user:
-                    raise HTTPException(status_code=404, detail="Assigned user not found")
-                update_data["assigned_to"] = assigned_user[0].id
+                assigned_users = []
+                for upid in assigned_ids:
+                    user_list = await user_repo.get_by_fields(public_id=upid)
+                    if not user_list:
+                        raise HTTPException(status_code=404, detail=f"User with ID {upid} not found")
+                    assigned_users.append(user_list[0])
+                activity.assigned_users = assigned_users
             else:
-                update_data["assigned_to"] = None
+                activity.assigned_users = []
 
         # Validate date consistency after merge
         merged_start = update_data.get("start_date", activity.start_date)
@@ -97,7 +101,11 @@ class DSRActivityService:
         if merged_end < merged_start:
             raise HTTPException(status_code=422, detail="end_date must be on or after start_date")
 
-        await self.repo.update(activity.id, update_data)
+        # Set other fields
+        for key, value in update_data.items():
+            setattr(activity, key, value)
+
+        await self.db.flush()
         return await self._get_or_404(public_id)
 
     async def delete_activity(self, public_id: UUID, current_user: User) -> bool:

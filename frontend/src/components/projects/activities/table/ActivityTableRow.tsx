@@ -88,7 +88,9 @@ const ActivityTableRow: React.FC<ActivityTableRowProps> = ({
 				</Box>
 			</TableCell>
 			<TableCell sx={{ py: 2, fontSize: '0.8125rem', color: theme.palette.text.primary }}>
-				{activity.assigned_user ? (activity.assigned_user.full_name || activity.assigned_user.username) : 'Unassigned'}
+				{activity.assigned_users && activity.assigned_users.length > 0 
+					? activity.assigned_users.map(u => u.full_name || u.username).join(', ') 
+					: 'Unassigned'}
 			</TableCell>
 			<TableCell sx={{ py: 2, fontSize: '0.8125rem', color: theme.palette.text.secondary }}>
 				<Typography sx={{ fontSize: '0.8125rem' }}>{new Date(activity.start_date).toLocaleDateString()} - {new Date(activity.end_date).toLocaleDateString()}</Typography>

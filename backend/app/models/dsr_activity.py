@@ -11,6 +11,17 @@ from app.models.base import BaseModel
 
 if TYPE_CHECKING:
     from app.models.dsr_project import DSRProject
+    from app.models.user import User
+
+from sqlalchemy import Table, Column
+
+# Association table for many-to-many relationship between Activities and Users
+activity_assignments = Table(
+    "dsr_activity_assignments",
+    BaseModel.metadata,
+    Column("activity_id", Integer, ForeignKey("dsr_activities.id", ondelete="CASCADE"), primary_key=True),
+    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+)
 
 
 class DSRActivityStatus(str, enum.Enum):
@@ -99,7 +110,14 @@ class DSRActivity(BaseModel):
         lazy="selectin",
     )
 
-    # Assignment — the user assigned to this activity
+    # Assignments — users assigned to this activity
+    assigned_users: Mapped[list[User]] = relationship(
+        "User",
+        secondary=activity_assignments,
+        lazy="selectin",
+    )
+
+    # Legacy Assignment (to be deprecated)
     assigned_to: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("users.id", ondelete="SET NULL"),
