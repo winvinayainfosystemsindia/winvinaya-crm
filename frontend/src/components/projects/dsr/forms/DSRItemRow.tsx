@@ -34,8 +34,8 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 	readOnly = false
 }) => {
 	return (
-		<TableRow>
-			<TableCell>
+		<TableRow sx={{ '&:hover': { bgcolor: '#f9fafb' } }}>
+			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5 }}>
 				<Autocomplete
 					options={projects}
 					getOptionLabel={(option) => option.name}
@@ -43,31 +43,44 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 					onChange={(_, val) => onRowChange(index, 'project_public_id', val?.public_id || '')}
 					loading={loading && projects.length === 0}
 					disabled={readOnly}
-					renderInput={(params) => <TextField {...params} size="small" placeholder="Select Project" />}
+					sx={{
+						'& .MuiOutlinedInput-root': { borderRadius: '6px' },
+						'& .MuiOutlinedInput-input': { fontSize: '0.85rem' }
+					}}
+					renderInput={(params) => <TextField {...params} size="small" placeholder="Project" />}
 				/>
 			</TableCell>
-			<TableCell>
+			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5 }}>
 				<Autocomplete
 					options={activities}
 					getOptionLabel={(option) => option.name}
 					value={activities.find(a => a.public_id === item.activity_public_id) || null}
 					onChange={(_, val) => onRowChange(index, 'activity_public_id', val?.public_id || '')}
 					disabled={readOnly || !item.project_public_id}
-					renderInput={(params) => <TextField {...params} size="small" placeholder="Select Activity" />}
+					sx={{
+						'& .MuiOutlinedInput-root': { borderRadius: '6px' },
+						'& .MuiOutlinedInput-input': { fontSize: '0.85rem' }
+					}}
+					renderInput={(params) => <TextField {...params} size="small" placeholder="Activity" />}
 				/>
 			</TableCell>
-			<TableCell>
+			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5 }}>
 				<TextField
 					fullWidth
 					size="small"
 					multiline
+					maxRows={3}
 					placeholder="What did you work on?"
 					value={item.description}
 					onChange={(e) => onRowChange(index, 'description', e.target.value)}
 					disabled={readOnly}
+					sx={{
+						'& .MuiOutlinedInput-root': { borderRadius: '6px' },
+						'& .MuiOutlinedInput-input': { fontSize: '0.8125rem' }
+					}}
 				/>
 			</TableCell>
-			<TableCell>
+			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5 }}>
 				<TextField
 					type="time"
 					size="small"
@@ -75,9 +88,13 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 					value={item.start_time}
 					onChange={(e) => onRowChange(index, 'start_time', e.target.value)}
 					disabled={readOnly}
+					sx={{
+						'& .MuiOutlinedInput-root': { borderRadius: '6px' },
+						'& .MuiOutlinedInput-input': { fontSize: '0.8125rem', p: '8.5px 12px' }
+					}}
 				/>
 			</TableCell>
-			<TableCell>
+			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5 }}>
 				<TextField
 					type="time"
 					size="small"
@@ -85,17 +102,31 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 					value={item.end_time}
 					onChange={(e) => onRowChange(index, 'end_time', e.target.value)}
 					disabled={readOnly}
+					sx={{
+						'& .MuiOutlinedInput-root': { borderRadius: '6px' },
+						'& .MuiOutlinedInput-input': { fontSize: '0.8125rem', p: '8.5px 12px' }
+					}}
 				/>
 			</TableCell>
-			<TableCell>
-				<Typography variant="body2" fontWeight={700}>
-					{item.hours?.toFixed(1) || '0'}
+			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, textAlign: 'center' }}>
+				<Typography variant="body2" sx={{ fontWeight: 800, color: (item.hours || 0) > 0 ? '#111827' : '#9ca3af' }}>
+					{item.hours?.toFixed(1) || '0.0'}
 				</Typography>
 			</TableCell>
-			<TableCell>
+			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5 }}>
 				{!readOnly && (
-					<IconButton color="error" size="small" onClick={() => onRemoveRow(index)} disabled={isDeleteDisabled}>
-						<DeleteIcon fontSize="small" />
+					<IconButton
+						onClick={() => onRemoveRow(index)}
+						disabled={isDeleteDisabled}
+						size="small"
+						sx={{
+							color: '#9ca3af',
+							transition: 'all 0.2s',
+							'&:hover': { color: '#ef4444', bgcolor: '#fef2f2' },
+							'&.Mui-disabled': { color: '#f3f4f6' }
+						}}
+					>
+						<DeleteIcon fontSize="inherit" sx={{ fontSize: '1.1rem' }} />
 					</IconButton>
 				)}
 			</TableCell>

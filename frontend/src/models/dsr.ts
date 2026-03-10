@@ -82,6 +82,8 @@ export interface DSREntry {
 	is_previous_day_submission: boolean;
 	previous_day_permission_granted_by: number | null;
 	items: DSRItem[];
+	is_leave: boolean;
+	leave_type?: string | null;
 	others?: Record<string, any>;
 	// Admin review fields
 	admin_notes?: string | null;
@@ -113,7 +115,9 @@ export interface DSRActivityCreate {
 
 export interface DSREntryCreate {
 	report_date: string;
-	items: Omit<DSRItem, 'project_name' | 'activity_name' | 'hours'> & { hours?: number }[];
+	items?: Omit<DSRItem, 'project_name' | 'activity_name' | 'hours'> & { hours?: number }[];
+	is_leave?: boolean;
+	leave_type?: string;
 	others?: Record<string, any>;
 }
 

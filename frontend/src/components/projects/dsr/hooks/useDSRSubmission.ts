@@ -33,6 +33,8 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 	const [items, setItems] = useState<Partial<DSRItem>[]>([
 		{ project_public_id: '', activity_public_id: '', description: '', start_time: '09:00', end_time: '10:00', hours: 1 }
 	]);
+	const [isLeave, setIsLeave] = useState(false);
+	const [leaveType, setLeaveType] = useState('');
 	const [submitting, setSubmitting] = useState(false);
 	const [permissionError, setPermissionError] = useState<string | null>(null);
 
@@ -84,11 +86,15 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 			const entry = await dispatch(fetchEntry(id)).unwrap();
 			setReportDate(entry.report_date);
 			setItems(entry.items);
+			setIsLeave(entry.is_leave);
+			setLeaveType(entry.leave_type || '');
 
-			const uniqueProjects = Array.from(new Set(entry.items.map(i => i.project_public_id)));
-			uniqueProjects.forEach(pid => {
-				if (pid) dispatch(fetchActivitiesForProject({ projectId: pid, assigned_to: user?.public_id }));
-			});
+			if (!entry.is_leave) {
+				const uniqueProjects = Array.from(new Set(entry.items.map(i => i.project_public_id)));
+				uniqueProjects.forEach(pid => {
+					if (pid) dispatch(fetchActivitiesForProject({ projectId: pid, assigned_to: user?.public_id }));
+				});
+			}
 		} catch (error: any) {
 			toast.error(error || 'Failed to load draft');
 		}
@@ -108,6 +114,8 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 			// Reset for new entry
 			setReportDate(new Date().toISOString().split('T')[0]);
 			setItems([{ project_public_id: '', activity_public_id: '', description: '', start_time: '09:00', end_time: '10:00', hours: 1 }]);
+			setIsLeave(false);
+			setLeaveType('');
 			setPermissionError(null);
 		}
 	}, [dispatch, entryId, loadEntry, user?.public_id]);
@@ -161,6 +169,14 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 	const totalHours = useMemo(() => items.reduce((sum, item) => sum + (item.hours || 0), 0), [items]);
 
 	const validate = () => {
+		if (isLeave) {
+			if (!leaveType) {
+				toast.warning('Please select a leave type');
+				return false;
+			}
+			return true;
+		}
+
 		for (let i = 0; i < items.length; i++) {
 			const it = items[i];
 			if (!it.project_public_id || !it.activity_public_id || !it.description || !it.start_time || !it.end_time) {
@@ -181,7 +197,9 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		try {
 			await dispatch(createEntry({
 				report_date: reportDate,
-				items: items as any
+				items: isLeave ? [] : items as any,
+				is_leave: isLeave,
+				leave_type: isLeave ? leaveType : undefined
 			})).unwrap();
 			toast.success('Draft saved successfully');
 			setPermissionError(null);
@@ -203,7 +221,9 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		try {
 			const entry = await dispatch(createEntry({
 				report_date: reportDate,
-				items: items as any
+				items: isLeave ? [] : items as any,
+				is_leave: isLeave,
+				leave_type: isLeave ? leaveType : undefined
 			})).unwrap();
 			await dispatch(submitEntry(entry.public_id)).unwrap();
 			toast.success('DSR submitted successfully!');
@@ -227,6 +247,10 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		reportDate,
 		setReportDate,
 		items,
+		isLeave,
+		setIsLeave,
+		leaveType,
+		setLeaveType,
 		totalHours,
 		submitting,
 		permissionError,

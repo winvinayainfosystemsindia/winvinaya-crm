@@ -71,6 +71,23 @@ const StatusChip: React.FC<{ entry: DSREntry }> = ({ entry }) => {
 		},
 	};
 
+	if (entry.is_leave) {
+		return (
+			<Chip
+				label={`Leave: ${entry.leave_type || 'Unspecified'}`}
+				size="small"
+				sx={{
+					bgcolor: '#fff4e5',
+					color: '#ed6c02',
+					border: '1px solid #ffe0b2',
+					fontWeight: 700,
+					fontSize: '0.65rem',
+					borderRadius: '2px',
+				}}
+			/>
+		);
+	}
+
 	const c = config[entry.status] || config[DSRStatusValues.DRAFT];
 	return (
 		<Chip
@@ -126,8 +143,8 @@ const HistoryRow: React.FC<HistoryRowProps> = ({
 
 			<TableCell>
 				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-					<Typography variant="body2" sx={{ fontWeight: 500 }}>
-						{totalHours.toFixed(1)} hrs
+					<Typography variant="body2" sx={{ fontWeight: 500, color: entry.is_leave ? '#ed6c02' : 'inherit' }}>
+						{entry.is_leave ? '—' : `${totalHours.toFixed(1)} hrs`}
 					</Typography>
 				</Box>
 			</TableCell>

@@ -51,15 +51,15 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
 			)}
 			<TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 1 }}>
 				<Table sx={{ minWidth: 900 }}>
-					<TableHead sx={{ bgcolor: '#f2f3f3' }}>
+					<TableHead sx={{ bgcolor: '#f9fafb' }}>
 						<TableRow>
-							<TableCell sx={{ fontWeight: 700, width: '20%' }}>Project</TableCell>
-							<TableCell sx={{ fontWeight: 700, width: '20%' }}>Activity</TableCell>
-							<TableCell sx={{ fontWeight: 700, width: '30%' }}>Description</TableCell>
-							<TableCell sx={{ fontWeight: 700, width: '10%' }}>Start</TableCell>
-							<TableCell sx={{ fontWeight: 700, width: '10%' }}>End</TableCell>
-							<TableCell sx={{ fontWeight: 700, width: '5%' }}>Hrs</TableCell>
-							<TableCell sx={{ width: '5%' }} />
+							<TableCell sx={{ fontWeight: 700, width: '22%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Project</TableCell>
+							<TableCell sx={{ fontWeight: 700, width: '22%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Activity</TableCell>
+							<TableCell sx={{ fontWeight: 700, width: '28%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Description</TableCell>
+							<TableCell sx={{ fontWeight: 700, width: '10%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Start</TableCell>
+							<TableCell sx={{ fontWeight: 700, width: '10%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>End</TableCell>
+							<TableCell sx={{ fontWeight: 700, width: '5%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Hrs</TableCell>
+							<TableCell sx={{ width: '3%', borderBottom: '2px solid #e5e7eb' }} />
 						</TableRow>
 					</TableHead>
 					<TableBody>
@@ -94,13 +94,22 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
 											startIcon={<AddIcon />}
 											onClick={onAddRow}
 											disabled={!isLastRowComplete}
+											variant="text"
 											sx={{
-												color: isLastRowComplete ? '#1a73e8' : '#aab7bd',
+												color: isLastRowComplete ? '#ec7211' : '#aab7bd',
+												fontWeight: 700,
+												fontSize: '0.85rem',
 												textTransform: 'none',
-												'&.Mui-disabled': { color: '#aab7bd' }
+												py: 1,
+												px: 2,
+												'&:hover': {
+													bgcolor: 'rgba(236,114,17,0.05)',
+													color: '#d4660f'
+												},
+												'&.Mui-disabled': { color: '#e5e7eb' }
 											}}
 										>
-											Add more activities
+											Add Activity Row
 										</Button>
 									</TableCell>
 								</TableRow>

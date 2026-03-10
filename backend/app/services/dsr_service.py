@@ -168,11 +168,19 @@ class DSRService:
             )
 
         # If there's already a draft (e.g. permission entry), update it instead of creating new
-        items = await self._validate_and_build_items(data.items)
+        items = []
+        if not data.is_leave:
+            items = await self._validate_and_build_items(data.items)
 
         is_past = data.report_date < today
         if existing and existing.status == DSRStatus.DRAFT:
-            updated = await self.repo.update(existing.id, {"items": items, "others": data.others})
+            update_data = {
+                "items": items,
+                "others": data.others,
+                "is_leave": data.is_leave,
+                "leave_type": data.leave_type
+            }
+            updated = await self.repo.update(existing.id, update_data)
             return await self.repo.get_by_public_id(existing.public_id)
 
         entry_data = {
@@ -182,6 +190,8 @@ class DSRService:
             "is_previous_day_submission": is_past,
             "items": items,
             "others": data.others,
+            "is_leave": data.is_leave,
+            "leave_type": data.leave_type,
         }
         return await self.repo.create(entry_data)
 
@@ -198,8 +208,19 @@ class DSRService:
             )
 
         update_data: dict = {}
-        if data.items is not None:
+        if data.is_leave is not None:
+            update_data["is_leave"] = data.is_leave
+        if data.leave_type is not None:
+            update_data["leave_type"] = data.leave_type
+
+        # Use current state of is_leave if not being updated
+        effective_is_leave = data.is_leave if data.is_leave is not None else entry.is_leave
+
+        if effective_is_leave:
+            update_data["items"] = []
+        elif data.items is not None:
             update_data["items"] = await self._validate_and_build_items(data.items)
+
         if data.others is not None:
             update_data["others"] = data.others
 
@@ -213,8 +234,8 @@ class DSRService:
         if entry.status != DSRStatus.DRAFT:
             raise HTTPException(status_code=400, detail="Only DRAFT entries can be submitted")
 
-        if not entry.items:
-            raise HTTPException(status_code=422, detail="Cannot submit an empty DSR. Add at least one work item.")
+        if not entry.is_leave and not entry.items:
+            raise HTTPException(status_code=422, detail="Cannot submit an empty DSR. Add at least one work item or mark as Leave.")
 
         await self.repo.update(entry.id, {
             "status": DSRStatus.SUBMITTED,

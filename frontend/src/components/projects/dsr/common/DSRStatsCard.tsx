@@ -1,34 +1,45 @@
-import { Card, CardContent, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
 
 interface DSRStatsCardProps {
 	label: string;
 	value: string | number;
+	unit?: string;
 	color?: string;
 	sx?: SxProps<Theme>;
 }
 
-const DSRStatsCard: React.FC<DSRStatsCardProps> = ({ label, value, color = 'text.primary', sx }) => {
+const DSRStatsCard: React.FC<DSRStatsCardProps> = ({ label, value, unit, color = '#111827', sx }) => {
 	return (
-		<Card
-			variant="outlined"
+		<Box
 			sx={{
-				minWidth: 200,
-				bgcolor: '#f8f9fa',
-				borderRadius: '2px',
-				border: '1px solid #d5dbdb',
+				px: 3,
+				py: 1.5,
+				bgcolor: 'white',
+				borderRadius: '8px',
+				border: '1px solid #e5e7eb',
+				minWidth: 160,
+				textAlign: { xs: 'center', md: 'right' },
+				display: 'flex',
+				flexDirection: 'column',
+				justifyContent: 'center',
 				...sx
 			}}
 		>
-			<CardContent sx={{ py: '12px !important', textAlign: 'center' }}>
-				<Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-					{label}
-				</Typography>
-				<Typography variant="h5" sx={{ fontWeight: 700, color }}>
+			<Typography variant="caption" sx={{ color: '#6b7280', fontWeight: 600, mb: 0.25, textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.65rem' }}>
+				{label}
+			</Typography>
+			<Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: { xs: 'center', md: 'flex-end' }, gap: 0.5 }}>
+				<Typography variant="h5" sx={{ fontWeight: 600, color, lineHeight: 1 }}>
 					{value}
 				</Typography>
-			</CardContent>
-		</Card>
+				{unit && (
+					<Typography variant="caption" sx={{ color: '#9ca3af', fontWeight: 600 }}>
+						{unit}
+					</Typography>
+				)}
+			</Box>
+		</Box>
 	);
 };
 

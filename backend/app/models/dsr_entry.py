@@ -5,7 +5,7 @@ import uuid
 import enum
 from datetime import date, datetime
 from typing import TYPE_CHECKING
-from sqlalchemy import Boolean, JSON, Integer, Date, DateTime, ForeignKey, Enum, Uuid, Text
+from sqlalchemy import Boolean, JSON, Integer, Date, DateTime, ForeignKey, Enum, Uuid, Text, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
 
@@ -106,6 +106,19 @@ class DSREntry(BaseModel):
         JSON,
         nullable=True,
         comment="Extensible metadata, reminder logs, etc.",
+    )
+
+    is_leave: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False,
+        index=True,
+    )
+
+    leave_type: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+        index=True,
     )
 
     # Admin review fields

@@ -30,14 +30,29 @@ class DSRItemCreate(BaseModel):
 
 class DSREntryCreate(BaseModel):
     report_date: date = Field(..., description="The day this DSR covers (cannot be a future date)")
-    items: list[DSRItemCreate] = Field(..., min_length=1, description="One or more project/activity rows")
+    items: Optional[list[DSRItemCreate]] = Field(default=None, description="One or more project/activity rows")
     others: Optional[dict] = Field(default=None)
+    is_leave: bool = Field(default=False)
+    leave_type: Optional[str] = Field(default=None, max_length=50)
+
+    @model_validator(mode="after")
+    def validate_leave_or_items(self) -> "DSREntryCreate":
+        if self.is_leave:
+            if not self.leave_type:
+                raise ValueError("leave_type is required when is_leave is True")
+            self.items = []
+        else:
+            if not self.items:
+                raise ValueError("items are required when not on leave")
+        return self
 
 
 class DSREntryUpdate(BaseModel):
     """Update is allowed only while the entry is in DRAFT status"""
-    items: Optional[list[DSRItemCreate]] = Field(default=None, min_length=1)
+    items: Optional[list[DSRItemCreate]] = Field(default=None)
     others: Optional[dict] = Field(default=None)
+    is_leave: Optional[bool] = None
+    leave_type: Optional[str] = None
 
 
 class DSRGrantPreviousDayPermission(BaseModel):
@@ -95,6 +110,8 @@ class DSREntryResponse(BaseModel):
     admin_notes: Optional[str] = None
     reviewed_by: Optional[int] = None
     reviewed_at: Optional[datetime] = None
+    is_leave: bool = False
+    leave_type: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 

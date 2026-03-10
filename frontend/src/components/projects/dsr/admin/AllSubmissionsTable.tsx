@@ -7,7 +7,8 @@ import {
 	TableBody,
 	CircularProgress,
 	Chip,
-	TablePagination
+	TablePagination,
+	Box
 } from '@mui/material';
 import type { DSREntry } from '../../../../models/dsr';
 
@@ -60,14 +61,26 @@ const AllSubmissionsTable: React.FC<AllSubmissionsTableProps> = ({
 								<TableRow key={entry.public_id} hover>
 									<TableCell sx={{ fontWeight: 600 }}>{entry.user?.full_name || entry.user?.username}</TableCell>
 									<TableCell>
-										<Chip
-											label={entry.status.toUpperCase()}
-											size="small"
-											variant="outlined"
-											sx={{ borderRadius: '2px', fontWeight: 700, fontSize: '0.65rem' }}
-										/>
+										<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+											<Chip
+												label={entry.status.toUpperCase()}
+												size="small"
+												variant="outlined"
+												sx={{ borderRadius: '2px', fontWeight: 700, fontSize: '0.65rem' }}
+											/>
+											{entry.is_leave && (
+												<Chip
+													label={entry.leave_type || 'LEAVE'}
+													size="small"
+													color="warning"
+													sx={{ borderRadius: '2px', fontWeight: 700, fontSize: '0.65rem' }}
+												/>
+											)}
+										</Box>
 									</TableCell>
-									<TableCell sx={{ fontWeight: 600 }}>{entry.items.reduce((s, i) => s + (i.hours || 0), 0).toFixed(1)} h</TableCell>
+									<TableCell sx={{ fontWeight: 600 }}>
+										{entry.is_leave ? '—' : `${entry.items.reduce((s, i) => s + (i.hours || 0), 0).toFixed(1)} h`}
+									</TableCell>
 									<TableCell>{entry.submitted_at ? new Date(entry.submitted_at).toLocaleString() : 'N/A'}</TableCell>
 								</TableRow>
 							))
