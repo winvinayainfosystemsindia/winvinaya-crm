@@ -122,8 +122,23 @@ class DSRActivityService:
             
         return await self.repo.delete(activity.id)
 
-    async def get_activity(self, public_id: UUID) -> DSRActivity:
-        return await self._get_or_404(public_id)
+    async def get_activity(self, public_id: UUID, current_user: User) -> DSRActivity:
+        activity = await self._get_or_404(public_id)
+        
+        # Access control
+        is_privileged = current_user.role in (UserRole.ADMIN, UserRole.MANAGER)
+        if not is_privileged:
+            # Check if project owner
+            project = await self.project_repo.get(activity.project_id)
+            if not project or project.owner_id != current_user.id:
+                # Check if assigned to this activity
+                is_assigned = any(u.id == current_user.id for u in activity.assigned_users)
+                if not is_assigned:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="You do not have access to this activity",
+                    )
+        return activity
 
     async def get_activities(
         self,
@@ -146,11 +161,15 @@ class DSRActivityService:
         assigned_to_id = None
         is_privileged = current_user.role in (UserRole.ADMIN, UserRole.MANAGER)
 
-        if assigned_to_public_id and not is_privileged:
+        if assigned_to_public_id:
             user_repo = UserRepository(self.db)
             user = await user_repo.get_by_fields(public_id=assigned_to_public_id)
             if user:
                 assigned_to_id = user[0].id
+        
+        owned_by_or_assigned_to = None
+        if not is_privileged:
+            owned_by_or_assigned_to = current_user.id
 
         return await self.repo.get_multi_paginated(
             skip=skip,
@@ -159,6 +178,7 @@ class DSRActivityService:
             status=status,
             active_only=active_only,
             assigned_to=assigned_to_id,
+            owned_by_or_assigned_to=owned_by_or_assigned_to,
             search=search,
         )
 

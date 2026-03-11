@@ -45,6 +45,7 @@ class DSRActivityRepository(BaseRepository[DSRActivity]):
         status: Optional[DSRActivityStatus] = None,
         active_only: bool = False,
         assigned_to: Optional[int] = None,
+        owned_by_or_assigned_to: Optional[int] = None,
         search: Optional[str] = None,
     ) -> Tuple[List[DSRActivity], int]:
         base_filter = DSRActivity.is_deleted == False
@@ -64,6 +65,20 @@ class DSRActivityRepository(BaseRepository[DSRActivity]):
             from app.models.user import User
             query = query.where(DSRActivity.assigned_users.any(User.id == assigned_to))
             count_query = count_query.where(DSRActivity.assigned_users.any(User.id == assigned_to))
+        if owned_by_or_assigned_to:
+            from app.models.user import User
+            from app.models.dsr_project import DSRProject
+            # Filter where user is project owner OR assigned to the activity
+            ownership_filter = (
+                select(DSRProject.id)
+                .where(DSRProject.owner_id == owned_by_or_assigned_to)
+                .scalar_subquery()
+            )
+            assignment_filter = DSRActivity.assigned_users.any(User.id == owned_by_or_assigned_to)
+            
+            combined_filter = (DSRActivity.project_id.in_(ownership_filter)) | assignment_filter
+            query = query.where(combined_filter)
+            count_query = count_query.where(combined_filter)
         if search:
             query = query.where(DSRActivity.name.ilike(f"%{search}%"))
             count_query = count_query.where(DSRActivity.name.ilike(f"%{search}%"))
