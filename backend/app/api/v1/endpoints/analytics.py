@@ -23,6 +23,10 @@ from app.models.training_batch_plan import TrainingBatchPlan
 from app.models.training_batch_extension import TrainingBatchExtension
 from app.models.dynamic_field import DynamicField
 from app.models.ticket import Ticket
+from app.models.dsr_entry import DSREntry
+from app.models.dsr_project import DSRProject
+from app.models.dsr_activity import DSRActivity
+from app.models.dsr_permission_request import DSRPermissionRequest
 from app.utils.activity_tracker import log_read
 from app.schemas.analytics import ManagementReportResponse, UserReportMetric
 from app.services import analytics_service
@@ -41,7 +45,8 @@ async def export_table_for_power_bi(
     Supported tables: users, candidates, screenings, counselings, documents,
     activity_logs, allocations, batches, attendance, assignments, assessments,
     assessment_results, assessment_responses, mock_interviews, batch_events,
-    batch_plans, batch_extensions, fields, tickets
+    batch_plans, batch_extensions, fields, tickets, dsr_entries, dsr_projects,
+    dsr_activities, dsr_permission_requests
     """
     from fastapi import HTTPException
     
@@ -65,6 +70,10 @@ async def export_table_for_power_bi(
         "batch_extensions": TrainingBatchExtension,
         "fields": DynamicField,
         "tickets": Ticket,
+        "dsr_entries": DSREntry,
+        "dsr_projects": DSRProject,
+        "dsr_activities": DSRActivity,
+        "dsr_permission_requests": DSRPermissionRequest,
     }
     
     if table_name not in model_map:
