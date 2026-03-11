@@ -30,11 +30,11 @@ from app.repositories.dsr_permission_request_repository import DSRPermissionRequ
 from app.services.dsr_notification_service import DSRNotificationService
 
 
-def _require_admin(current_user: User) -> None:
-    if current_user.role != UserRole.ADMIN:
+def _require_privileged_user(current_user: User) -> None:
+    if current_user.role not in (UserRole.ADMIN, UserRole.MANAGER):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only Admins can perform this action",
+            detail="Only Admins and Managers can perform this action",
         )
 
 
@@ -140,7 +140,7 @@ class DSRService:
 
     def _can_submit_for_past_date(self, entry: DSREntry, current_user: User) -> bool:
         """True if the user is allowed to submit for a past date."""
-        if current_user.role == UserRole.ADMIN:
+        if current_user.role in (UserRole.ADMIN, UserRole.MANAGER):
             return True
         return bool(entry and entry.previous_day_permission_granted_by)
 
@@ -157,7 +157,7 @@ class DSRService:
 
         # Previous-day guard
         if data.report_date < today:
-            if current_user.role != UserRole.ADMIN:
+            if current_user.role not in (UserRole.ADMIN, UserRole.MANAGER):
                 # Check for explicit permission (legacy flag or new request)
                 existing = await self.repo.get_by_user_and_date(current_user.id, data.report_date)
                 
@@ -218,7 +218,7 @@ class DSRService:
         self, public_id: UUID, data: DSREntryUpdate, current_user: User
     ) -> DSREntry:
         entry = await self._get_or_404(public_id)
-        self._assert_owner_or_admin(entry, current_user)
+        self._assert_owner_or_privileged_user(entry, current_user)
 
         if entry.status != DSRStatus.DRAFT:
             raise HTTPException(
@@ -248,7 +248,7 @@ class DSRService:
 
     async def submit_entry(self, public_id: UUID, current_user: User) -> DSREntry:
         entry = await self._get_or_404(public_id)
-        self._assert_owner_or_admin(entry, current_user)
+        self._assert_owner_or_privileged_user(entry, current_user)
 
         if entry.status != DSRStatus.DRAFT:
             raise HTTPException(status_code=400, detail="Only DRAFT entries can be submitted")
@@ -300,7 +300,7 @@ class DSRService:
         date_to: Optional[date] = None,
         status: Optional[DSRStatus] = None,
     ) -> Tuple[List[DSREntry], int]:
-        _require_admin(current_user)
+        _require_privileged_user(current_user)
         return await self.repo.get_all_entries(
             skip=skip, limit=limit, user_id=user_id,
             date_from=date_from, date_to=date_to, status=status,
@@ -308,7 +308,7 @@ class DSRService:
 
     async def get_entry(self, public_id: UUID, current_user: User) -> DSREntry:
         entry = await self._get_or_404(public_id)
-        self._assert_owner_or_admin(entry, current_user)
+        self._assert_owner_or_privileged_user(entry, current_user)
         return entry
 
     async def delete_entry(self, public_id: UUID, current_user: User) -> bool:
@@ -331,7 +331,7 @@ class DSRService:
         Admin allows a specific user to submit a DSR for a past date.
         This effectively acts as an administrative override to ensure a DRAFT exists.
         """
-        _require_admin(current_user)
+        _require_privileged_user(current_user)
 
         target_users = await self.user_repo.get_by_fields(public_id=data.user_public_id)
         if not target_users:
@@ -382,7 +382,7 @@ class DSRService:
         self, report_date: date, current_user: User
     ) -> List[User]:
         """Admin: returns active users who have NOT submitted a DSR for the given date."""
-        _require_admin(current_user)
+        _require_privileged_user(current_user)
 
         submitted_ids = set(await self.repo.get_submitted_user_ids_for_date(report_date))
 
@@ -401,7 +401,7 @@ class DSRService:
         self, data: DSRSendReminder, current_user: User
     ) -> dict:
         """Admin: send DSR reminders to specified users or all missing users if not specified."""
-        _require_admin(current_user)
+        _require_privileged_user(current_user)
 
         # Resolve public_ids → user_ids
         user_ids = []
@@ -432,7 +432,7 @@ class DSRService:
         self, public_id: UUID, data: DSRApproveEntry, current_user: User
     ) -> DSREntry:
         """Admin approves a SUBMITTED DSR entry."""
-        _require_admin(current_user)
+        _require_privileged_user(current_user)
         entry = await self._get_or_404(public_id)
 
         if entry.status != DSRStatus.SUBMITTED:
@@ -465,7 +465,7 @@ class DSRService:
         - Reverts status back to DRAFT so the user can fix and re-submit.
         - Rejection reason is mandatory (enforced by schema min_length=10).
         """
-        _require_admin(current_user)
+        _require_privileged_user(current_user)
         entry = await self._get_or_404(public_id)
 
         if entry.status != DSRStatus.SUBMITTED:
@@ -498,7 +498,7 @@ class DSRService:
         limit: int = 100,
     ) -> Tuple[List[DSREntry], int]:
         """Admin: list all SUBMITTED entries awaiting admin review, oldest first."""
-        _require_admin(current_user)
+        _require_privileged_user(current_user)
         return await self.repo.get_entries_by_status(
             status=DSRStatus.SUBMITTED,
             skip=skip,
@@ -510,7 +510,7 @@ class DSRService:
         Admin: list users who have a GRANTED permission but have NOT yet submitted a DSR.
         These are 'abandoned' DRAFT entries created when permission was granted.
         """
-        _require_admin(current_user)
+        _require_privileged_user(current_user)
 
         from sqlalchemy import select, and_
         from app.models.dsr_permission_request import (
@@ -561,8 +561,8 @@ class DSRService:
             raise HTTPException(status_code=404, detail="DSR entry not found")
         return entry
 
-    def _assert_owner_or_admin(self, entry: DSREntry, current_user: User) -> None:
-        if current_user.role != UserRole.ADMIN and entry.user_id != current_user.id:
+    def _assert_owner_or_privileged_user(self, entry: DSREntry, current_user: User) -> None:
+        if current_user.role not in (UserRole.ADMIN, UserRole.MANAGER) and entry.user_id != current_user.id:
             raise HTTPException(status_code=403, detail="Not authorized to access this DSR entry")
 
     # ------------------------------------------------------------------
@@ -616,7 +616,7 @@ class DSRService:
         self, public_id: UUID, data: DSRPermissionRequestUpdate, current_user: User
     ) -> DSRPermissionRequest:
         """Admin grants or rejects a permission request."""
-        _require_admin(current_user)
+        _require_privileged_user(current_user)
 
         request = await self.permission_repo.get_by_public_id(public_id)
         if not request:
