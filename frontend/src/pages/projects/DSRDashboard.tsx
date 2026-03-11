@@ -11,7 +11,8 @@ import {
 	Add as AddIcon,
 	History as HistoryIcon,
 	AdminPanelSettings as AdminIcon,
-	RequestQuote as RequestIcon
+	RequestQuote as RequestIcon,
+	EventBusy as LeaveIcon
 } from '@mui/icons-material';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import HistoryTable from '../../components/projects/dsr/history/HistoryTable';
@@ -19,8 +20,11 @@ import { useDSRHistory } from '../../components/projects/dsr/hooks/useDSRHistory
 import DSRAdminSection from '../../components/projects/dsr/admin/DSRAdminSection';
 import { useDSRAdmin } from '../../components/projects/dsr/hooks/useDSRAdmin';
 import DSRSubmissionDialog from '../../components/projects/dsr/forms/DSRSubmissionDialog';
+import ApplyLeaveDialog from '../../components/projects/dsr/forms/ApplyLeaveDialog';
 import PermissionRequestDialog from '../../components/projects/dsr/forms/PermissionRequestDialog';
 import DSRModuleLayout from '../../components/projects/dsr/layout/DSRModuleLayout';
+import DSRCalendarView from '../../components/projects/dsr/history/DSRCalendarView';
+import MyLeavesTable from '../../components/projects/dsr/user/MyLeavesTable';
 import {
 	fetchPermissionRequests,
 	fetchPermissionStats
@@ -85,6 +89,7 @@ const DSRDashboard: React.FC = () => {
 
 	const [activeTab, setActiveTab] = useState(0);
 	const [isSubmissionOpen, setIsSubmissionOpen] = useState(false);
+	const [isLeaveOpen, setIsLeaveOpen] = useState(false);
 	const [isPermissionRequestOpen, setIsPermissionRequestOpen] = useState(false);
 	const [editEntryId, setEditEntryId] = useState<string | null>(null);
 	const [isViewOnly, setIsViewOnly] = useState(false);
@@ -97,7 +102,7 @@ const DSRDashboard: React.FC = () => {
 		if (activeTab === 1) {
 			dispatch(fetchPermissionStats({ user_id: user?.id }));
 			dispatch(fetchPermissionRequests({ skip: 0, limit: 100, user_id: user?.id }));
-		} else if (activeTab === 2 && isPrivileged) {
+		} else if (activeTab === 3 && isPrivileged) {
 			dispatch(fetchPermissionStats());
 		}
 	}, [dispatch, activeTab, user?.id, isPrivileged]);
@@ -132,7 +137,7 @@ const DSRDashboard: React.FC = () => {
 		if (activeTab === 1) {
 			dispatch(fetchPermissionStats({ user_id: user?.id }));
 			dispatch(fetchPermissionRequests({ skip: 0, limit: 100, user_id: user?.id }));
-		} else if (activeTab === 2 && isPrivileged) {
+		} else if (activeTab === 3 && isPrivileged) {
 			dispatch(fetchPermissionStats());
 			admin.handleRefresh();
 		}
@@ -180,6 +185,16 @@ const DSRDashboard: React.FC = () => {
 									}
 									sx={{ textTransform: 'none', minHeight: 48 }}
 								/>
+								<Tab
+									label={
+										<TabLabel
+											icon={<LeaveIcon sx={{ fontSize: 18 }} />}
+											label="My Leaves"
+											active={activeTab === 2}
+										/>
+									}
+									sx={{ textTransform: 'none', minHeight: 48 }}
+								/>
 								{isPrivileged && (
 									<Tab
 										label={
@@ -187,7 +202,7 @@ const DSRDashboard: React.FC = () => {
 												icon={<AdminIcon sx={{ fontSize: 18 }} />}
 												label="Admin Overview"
 												count={admin.reviewQueueTotal}
-												active={activeTab === 2}
+												active={activeTab === 3}
 											/>
 										}
 										sx={{ textTransform: 'none', minHeight: 48 }}
@@ -217,6 +232,20 @@ const DSRDashboard: React.FC = () => {
 												Raise Request
 											</Button>
 											<Button
+												variant="outlined"
+												startIcon={<LeaveIcon />}
+												onClick={() => setIsLeaveOpen(true)}
+												sx={{
+													color: '#d32f2f',
+													borderColor: '#ffcdd2',
+													fontWeight: 700,
+													textTransform: 'none',
+													'&:hover': { bgcolor: '#fff5f5', borderColor: '#ef9a9a' }
+												}}
+											>
+												Apply for Leave
+											</Button>
+											<Button
 												variant="contained"
 												startIcon={<AddIcon />}
 												onClick={handleOpenSubmission}
@@ -233,19 +262,31 @@ const DSRDashboard: React.FC = () => {
 											</Button>
 										</Box>
 									</Box>
-									<HistoryTable
-										entries={history.entries}
-										total={history.total}
-										loading={history.loading}
-										page={history.page}
-										rowsPerPage={history.rowsPerPage}
-										onPageChange={(_, p) => history.setPage(p)}
-										onRowsPerPageChange={(e) => history.setRowsPerPage(parseInt(e.target.value, 10))}
-										onRowsPerPageSelectChange={(rows) => history.setRowsPerPage(rows)}
-										onDelete={history.handleDelete}
-										onEdit={handleEditEntry}
-										onView={handleViewEntry}
-									/>
+
+									<Box sx={{
+										display: 'grid',
+										gridTemplateColumns: { xs: '1fr', md: '3fr 1fr' },
+										gap: 3
+									}}>
+										<Box>
+											<HistoryTable
+												entries={history.entries}
+												total={history.total}
+												loading={history.loading}
+												page={history.page}
+												rowsPerPage={history.rowsPerPage}
+												onPageChange={(_, p) => history.setPage(p)}
+												onRowsPerPageChange={(e) => history.setRowsPerPage(parseInt(e.target.value, 10))}
+												onRowsPerPageSelectChange={(rows) => history.setRowsPerPage(rows)}
+												onDelete={history.handleDelete}
+												onEdit={handleEditEntry}
+												onView={handleViewEntry}
+											/>
+										</Box>
+										<Box sx={{ minWidth: 0 }}>
+											<DSRCalendarView />
+										</Box>
+									</Box>
 								</Box>
 							)}
 
@@ -260,7 +301,14 @@ const DSRDashboard: React.FC = () => {
 								</Box>
 							)}
 
-							{activeTab === 2 && isPrivileged && (
+							{activeTab === 2 && (
+								<Box>
+									<Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>My Leave Applications</Typography>
+									<MyLeavesTable />
+								</Box>
+							)}
+
+							{activeTab === 3 && isPrivileged && (
 								<DSRAdminSection
 									admin={admin}
 									permissionStats={permissionStats}
@@ -274,6 +322,12 @@ const DSRDashboard: React.FC = () => {
 						onClose={handleCloseSubmission}
 						entryId={editEntryId}
 						readOnly={isViewOnly}
+					/>
+
+					<ApplyLeaveDialog
+						open={isLeaveOpen}
+						onClose={() => setIsLeaveOpen(false)}
+						onSuccess={() => history.fetchHistory()}
 					/>
 
 					<PermissionRequestDialog

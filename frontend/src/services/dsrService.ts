@@ -47,6 +47,30 @@ const dsrService = {
 		await api.delete(`/dsr/entries/${publicId}`);
 	},
 
+	getCalendarStatus: async (date_from: string, date_to: string): Promise<{ entries: any[], leaves: any[] }> => {
+		const response = await api.get('/dsr/entries/calendar-status', {
+			params: { date_from, date_to }
+		});
+		return response.data;
+	},
+
+	applyLeave: async (data: { start_date: string, end_date: string, leave_type: string, reason?: string }): Promise<any> => {
+		const response = await api.post('/dsr/leaves/', data);
+		return response.data;
+	},
+
+	getMyLeaves: async (skip = 0, limit = 50, status?: string): Promise<{ items: any[], total: number }> => {
+		const response = await api.get('/dsr/leaves/my', {
+			params: { skip, limit, status }
+		});
+		return response.data;
+	},
+
+	cancelLeave: async (publicId: string): Promise<any> => {
+		const response = await api.post(`/dsr/leaves/${publicId}/cancel`);
+		return response.data;
+	},
+
 	// Admin Actions
 	getAdminOverview: async (
 		skip = 0,

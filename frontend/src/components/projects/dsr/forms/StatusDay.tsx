@@ -19,7 +19,9 @@ const StatusDay: React.FC<StatusDayProps> = (props) => {
 		rejected: { bgcolor: '#ffebee', color: '#c62828', border: '1px solid #ef9a9a' },
 		draft: { bgcolor: '#fafafa', color: '#616161', border: '1px dashed #bdbdbd' },
 		missed: { bgcolor: '#fff5f5', color: '#d32f2f', border: 'none' },
-		granted: { bgcolor: '#e3f2fd', color: '#1565c0', border: '1px solid #90caf9' }
+		granted: { bgcolor: '#e3f2fd', color: '#1565c0', border: '1px solid #90caf9' },
+		leave: { bgcolor: '#fff3e0', color: '#ef6c00', border: '1px solid #ffcc80' },
+		holiday: { bgcolor: '#f5f5f5', color: '#9e9e9e', border: '1px solid #e0e0e0' }
 	};
 
 	if (status && statusStyles[status]) {

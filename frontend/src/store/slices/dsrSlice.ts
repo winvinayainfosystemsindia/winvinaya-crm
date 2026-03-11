@@ -6,7 +6,8 @@ import type {
 	DSRProject, DSRActivity, DSREntry,
 	DSRProjectCreate, DSRActivityCreate, DSREntryCreate,
 	DSRStatus, MissingDSR, PaginationResult,
-	DSRPermissionRequest, DSRPermissionStats
+	DSRPermissionRequest, DSRPermissionStats,
+	DSRLeaveApplication
 } from '../../models/dsr';
 
 interface DSRState {
@@ -16,6 +17,8 @@ interface DSRState {
 	myEntries: DSREntry[];
 	adminEntries: DSREntry[];
 	calendarEntries: DSREntry[];
+	myLeaves: DSRLeaveApplication[];
+	calendarLeaves: any[];
 	missingReports: MissingDSR[];
 	permissionRequests: DSRPermissionRequest[];
 	permissionStats: DSRPermissionStats | null;
@@ -35,6 +38,8 @@ const initialState: DSRState = {
 	myEntries: [],
 	adminEntries: [],
 	calendarEntries: [],
+	myLeaves: [],
+	calendarLeaves: [],
 	missingReports: [],
 	permissionRequests: [],
 	permissionStats: null,
@@ -182,13 +187,11 @@ export const fetchMyEntries = createAsyncThunk(
 
 export const fetchCalendarEntries = createAsyncThunk(
 	'dsr/fetchCalendarEntries',
-	async (params: { date_from?: string; date_to?: string; status?: DSRStatus } | undefined, { rejectWithValue }) => {
+	async (params: { date_from: string; date_to: string }, { rejectWithValue }) => {
 		try {
-			const { date_from, date_to, status } = params || {};
-			// Fetch a large enough limit to cover calendar view (e.g. 100)
-			return await dsrService.getMyEntries(0, 100, date_from, date_to, status);
+			return await dsrService.getCalendarStatus(params.date_from, params.date_to);
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.detail || 'Failed to fetch calendar entries');
+			return rejectWithValue(error.response?.data?.detail || 'Failed to fetch calendar data');
 		}
 	}
 );
@@ -211,6 +214,40 @@ export const createEntry = createAsyncThunk(
 			return await dsrService.createEntry(data);
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.detail || 'Failed to create DSR entry');
+		}
+	}
+);
+
+export const applyLeave = createAsyncThunk(
+	'dsr/applyLeave',
+	async (data: { start_date: string; end_date: string; leave_type: string; reason?: string }, { rejectWithValue }) => {
+		try {
+			return await dsrService.applyLeave(data);
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.detail || 'Failed to apply leave');
+		}
+	}
+);
+
+export const fetchMyLeaves = createAsyncThunk(
+	'dsr/fetchMyLeaves',
+	async (params: { skip?: number; limit?: number; status?: string } | undefined, { rejectWithValue }) => {
+		try {
+			const { skip = 0, limit = 50, status } = params || {};
+			return await dsrService.getMyLeaves(skip, limit, status);
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.detail || 'Failed to fetch your leaves');
+		}
+	}
+);
+
+export const cancelLeaveAction = createAsyncThunk(
+	'dsr/cancelLeave',
+	async (publicId: string, { rejectWithValue }) => {
+		try {
+			return await dsrService.cancelLeave(publicId);
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.detail || 'Failed to cancel leave');
 		}
 	}
 );
@@ -389,9 +426,10 @@ const dsrSlice = createSlice({
 				state.loading = false;
 				state.calendarEntries = action.payload.items;
 			})
-			.addCase(fetchCalendarEntries.fulfilled, (state, action: PayloadAction<PaginationResult<DSREntry>>) => {
+			.addCase(fetchCalendarEntries.fulfilled, (state, action: PayloadAction<{ entries: any[], leaves: any[] }>) => {
 				state.loading = false;
-				state.calendarEntries = action.payload.items;
+				state.calendarEntries = action.payload.entries as any[];
+				state.calendarLeaves = action.payload.leaves;
 			})
 			.addCase(fetchMyEntries.fulfilled, (state, action: PayloadAction<PaginationResult<DSREntry>>) => {
 				state.loading = false;
@@ -432,6 +470,21 @@ const dsrSlice = createSlice({
 					const index = list.findIndex(e => e.public_id === action.payload.public_id);
 					if (index !== -1) list[index] = action.payload;
 				});
+			})
+			.addCase(applyLeave.fulfilled, (state, action: PayloadAction<DSRLeaveApplication>) => {
+				state.loading = false;
+				state.myLeaves.unshift(action.payload);
+			})
+			.addCase(fetchMyLeaves.fulfilled, (state, action: PayloadAction<{ items: DSRLeaveApplication[], total: number }>) => {
+				state.loading = false;
+				state.myLeaves = action.payload.items;
+			})
+			.addCase(cancelLeaveAction.fulfilled, (state, action: PayloadAction<DSRLeaveApplication>) => {
+				state.loading = false;
+				const index = state.myLeaves.findIndex(l => l.public_id === action.payload.public_id);
+				if (index !== -1) {
+					state.myLeaves[index] = action.payload;
+				}
 			})
 			.addCase(deleteEntry.fulfilled, (state, action: PayloadAction<string>) => {
 				state.loading = false;

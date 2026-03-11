@@ -1,6 +1,6 @@
 """DSR Entry Service — core business logic"""
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import List, Optional, Tuple
 from uuid import UUID
 
@@ -13,6 +13,7 @@ from app.models.user import User, UserRole
 from app.schemas.dsr_entry import (
     DSREntryCreate,
     DSREntryUpdate,
+    DSRBulkLeaveCreate,
     DSRGrantPreviousDayPermission,
     DSRSendReminder,
     DSRApproveEntry,
@@ -27,6 +28,7 @@ from app.repositories.dsr_project_repository import DSRProjectRepository
 from app.repositories.dsr_activity_repository import DSRActivityRepository
 from app.repositories.user_repository import UserRepository
 from app.repositories.dsr_permission_request_repository import DSRPermissionRequestRepository
+from app.repositories.dsr_leave_application_repository import DSRLeaveApplicationRepository
 from app.services.dsr_notification_service import DSRNotificationService
 
 
@@ -48,6 +50,7 @@ class DSRService:
         self.activity_repo = DSRActivityRepository(db)
         self.user_repo = UserRepository(db)
         self.permission_repo = DSRPermissionRequestRepository(db)
+        self.leave_repo = DSRLeaveApplicationRepository(db)
         self.notifier = DSRNotificationService(db)
         self.notif_service = NotificationService(db)
 
@@ -686,4 +689,19 @@ class DSRService:
             elif status_val == DSRPermissionStatus.REJECTED:
                 stats["rejected"] = count
                 
+        return stats
+
+    async def get_calendar_leave_data(self, user_id: int, start_date: date, end_date: date) -> List[dict]:
+        """Fetch approved leaves for a user and date range, formatted for the calendar."""
+        leaves = await self.leave_repo.get_leaves_for_calendar(user_id, start_date, end_date)
+        return [
+            {
+                "start_date": l.start_date,
+                "end_date": l.end_date,
+                "leave_type": l.leave_type,
+                "status": l.status,
+            }
+            for l in leaves
+        ]
+
         return stats

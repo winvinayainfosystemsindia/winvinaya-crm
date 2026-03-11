@@ -53,6 +53,8 @@ async def create_entry(
     return entry
 
 
+
+
 @router.put("/entries/{public_id}", response_model=DSREntryResponse)
 async def update_entry(
     public_id: UUID,
@@ -117,6 +119,33 @@ async def get_pending_approval(
     service = DSRService(db)
     items, total = await service.get_pending_approval(current_user, skip=skip, limit=limit)
     return DSREntryListResponse(items=items, total=total, skip=skip, limit=limit)
+
+
+@router.get("/entries/calendar-status")
+async def get_calendar_status(
+    date_from: date = Query(...),
+    date_to: date = Query(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get DSR and Leave status for a user within a range (for calendar)."""
+    service = DSRService(db)
+    
+    # 1. Get DSR entries
+    entries, _ = await service.repo.get_entries_by_user(
+        current_user.id, limit=31, date_from=date_from, date_to=date_to
+    )
+    
+    # 2. Get Leave applications
+    leaves = await service.get_calendar_leave_data(current_user.id, date_from, date_to)
+    
+    return {
+        "entries": [
+            {"report_date": e.report_date, "status": e.status, "is_leave": e.is_leave}
+            for e in entries
+        ],
+        "leaves": leaves
+    }
 
 
 @router.get("/entries/my-stats")

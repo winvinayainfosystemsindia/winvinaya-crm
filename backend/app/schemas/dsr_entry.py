@@ -64,6 +64,18 @@ class DSREntryCreate(BaseModel):
         return self
 
 
+class DSRBulkLeaveCreate(BaseModel):
+    start_date: date
+    end_date: date
+    leave_type: str = Field(..., max_length=50)
+
+    @model_validator(mode="after")
+    def validate_dates(self) -> "DSRBulkLeaveCreate":
+        if self.end_date < self.start_date:
+            raise ValueError("end_date cannot be before start_date")
+        return self
+
+
 class DSREntryUpdate(BaseModel):
     """Update is allowed only while the entry is in DRAFT status"""
     items: Optional[list[DSRItemCreate]] = Field(default=None)

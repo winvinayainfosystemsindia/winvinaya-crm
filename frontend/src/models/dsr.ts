@@ -170,3 +170,21 @@ export interface DSRPermissionStats {
 	approved: number;
 	rejected: number;
 }
+
+export type DSRLeaveStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
+
+export interface DSRLeaveApplication {
+	id: number;
+	public_id: string;
+	user_id: number;
+	start_date: string;
+	end_date: string;
+	leave_type: string;
+	reason: string | null;
+	status: DSRLeaveStatus;
+	admin_notes: string | null;
+	handled_by: number | null;
+	handled_at: string | null;
+	created_at: string;
+	updated_at: string;
+}
