@@ -51,6 +51,12 @@ class DSRActivityService:
 
         await self._check_project_ownership(project.id, current_user)
 
+        if data.end_date < data.start_date:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="end_date must be on or after start_date",
+            )
+
         assigned_users = []
         if data.assigned_user_public_ids:
             user_repo = UserRepository(self.db)

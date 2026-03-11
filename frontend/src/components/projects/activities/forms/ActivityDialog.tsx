@@ -52,6 +52,7 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 	const [assignedUserPublicIds, setAssignedUserPublicIds] = useState<string[]>([]);
 	const [users, setUsers] = useState<User[]>([]);
 	const [submitting, setSubmitting] = useState(false);
+	const [dateError, setDateError] = useState<string | null>(null);
 
 	useEffect(() => {
 		const fetchUsers = async () => {
@@ -88,6 +89,11 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 	}, [activity, open]);
 
 	const handleSubmit = async () => {
+		if (new Date(endDate) < new Date(startDate)) {
+			setDateError('End date cannot be before start date');
+			return;
+		}
+		setDateError(null);
 		setSubmitting(true);
 		try {
 			const payload = {
@@ -191,7 +197,12 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 							fullWidth
 							required
 							value={endDate}
-							onChange={(e) => setEndDate(e.target.value)}
+							onChange={(e) => {
+								setEndDate(e.target.value);
+								if (dateError) setDateError(null);
+							}}
+							error={!!dateError}
+							helperText={dateError}
 							InputLabelProps={{ shrink: true }}
 							disabled={submitting}
 						/>
