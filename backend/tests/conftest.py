@@ -1,4 +1,11 @@
-"""Pytest configuration and fixtures"""
+import os
+
+# Set dummy environment variables BEFORE importing any app modules to satisfy Pydantic Settings
+os.environ.setdefault("POSTGRES_SERVER", "localhost")
+os.environ.setdefault("POSTGRES_USER", "postgres")
+os.environ.setdefault("POSTGRES_PASSWORD", "password")
+os.environ.setdefault("POSTGRES_DB", "testdb")
+os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 import pytest
 from typing import AsyncGenerator

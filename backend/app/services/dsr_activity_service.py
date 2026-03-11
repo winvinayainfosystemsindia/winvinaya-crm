@@ -138,9 +138,9 @@ class DSRActivityService:
     ) -> Tuple[List[DSRActivity], int]:
         project_id = None
         if project_public_id:
-            project = await self.project_repo.get_by_public_id(project_public_id)
-            if not project:
-                raise HTTPException(status_code=404, detail="Project not found")
+            from app.services.dsr_project_service import DSRProjectService
+            project_service = DSRProjectService(self.db)
+            project = await project_service.get_project(project_public_id, current_user)
             project_id = project.id
 
         assigned_to_id = None

@@ -89,7 +89,7 @@ async def get_project(
 ):
     """Get a single DSR project by public_id (all roles)."""
     service = DSRProjectService(db)
-    return await service.get_project(public_id)
+    return await service.get_project(public_id, current_user)
 
 
 @router.put("/{public_id}", response_model=DSRProjectResponse)

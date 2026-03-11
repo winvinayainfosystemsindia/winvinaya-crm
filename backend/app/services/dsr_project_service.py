@@ -99,25 +99,46 @@ class DSRProjectService:
         search: Optional[str] = None,
     ) -> Tuple[List[DSRProject], int]:
         assigned_to_id = None
-        
-        # If user is not Admin/Manager, or if they explicitly want to filter
-        # (Though in submission form, we usually want all if Admin/Manager)
-        # For now, let's say: Admins/Managers see all unless they are not them.
-        # Actually, let's check the role.
-        
         is_privileged = current_user.role in (UserRole.ADMIN, UserRole.MANAGER)
         
-        if assigned_to_public_id and not is_privileged:
+        if assigned_to_public_id:
             user = await self.user_repo.get_by_fields(public_id=assigned_to_public_id)
             if user:
                 assigned_to_id = user[0].id
+        
+        owned_or_assigned_to = None
+        if not is_privileged:
+            owned_or_assigned_to = current_user.id
 
         return await self.repo.get_multi_paginated(
-            skip=skip, limit=limit, active_only=active_only, assigned_to=assigned_to_id, search=search
+            skip=skip, 
+            limit=limit, 
+            active_only=active_only, 
+            assigned_to=assigned_to_id, 
+            owned_or_assigned_to=owned_or_assigned_to,
+            search=search
         )
 
-    async def get_project(self, public_id: UUID) -> DSRProject:
-        return await self._get_or_404(public_id)
+    async def get_project(self, public_id: UUID, current_user: User) -> DSRProject:
+        project = await self._get_or_404(public_id)
+        
+        # Access control
+        if current_user.role not in (UserRole.ADMIN, UserRole.MANAGER):
+            if project.owner_id != current_user.id:
+                # Check if assigned to any activities in this project
+                items, total = await self.repo.get_multi_paginated(
+                    limit=1,
+                    owned_or_assigned_to=current_user.id,
+                    search=project.name # A bit hacky but works since we know the project exists
+                )
+                # Verify if the returned project matches our public_id
+                if not any(p.public_id == public_id for p in items):
+                     raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="You do not have access to this project",
+                    )
+                    
+        return project
 
     async def import_from_excel(
         self, file: UploadFile, current_user: User
