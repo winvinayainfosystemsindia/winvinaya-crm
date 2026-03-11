@@ -13,6 +13,8 @@ from app.schemas.dsr_activity import DSRActivityCreate, DSRActivityUpdate, DSRAc
 from app.repositories.dsr_activity_repository import DSRActivityRepository
 from app.repositories.dsr_project_repository import DSRProjectRepository
 from app.repositories.dsr_entry_repository import DSREntryRepository
+from app.repositories.user_repository import UserRepository
+
 
 
 def _require_admin(current_user: User) -> None:
@@ -33,7 +35,7 @@ class DSRActivityService:
 
     async def _check_project_ownership(self, project_id: int, current_user: User) -> None:
         """Raise 403 if current_user is not the project owner and not an admin."""
-        if current_user.role == UserRole.ADMIN:
+        if current_user.role in (UserRole.ADMIN, UserRole.MANAGER):
             return
         project = await self.project_repo.get(project_id)
         if not project or project.owner_id != current_user.id:
@@ -51,7 +53,6 @@ class DSRActivityService:
 
         assigned_users = []
         if data.assigned_user_public_ids:
-            from app.repositories.user_repository import UserRepository
             user_repo = UserRepository(self.db)
             for upid in data.assigned_user_public_ids:
                 user_list = await user_repo.get_by_fields(public_id=upid)
@@ -83,7 +84,6 @@ class DSRActivityService:
         if "assigned_user_public_ids" in update_data:
             assigned_ids = update_data.pop("assigned_user_public_ids")
             if assigned_ids is not None:
-                from app.repositories.user_repository import UserRepository
                 user_repo = UserRepository(self.db)
                 assigned_users = []
                 for upid in assigned_ids:
@@ -127,6 +127,7 @@ class DSRActivityService:
 
     async def get_activities(
         self,
+        current_user: User,
         skip: int = 0,
         limit: int = 100,
         project_public_id: Optional[UUID] = None,
@@ -143,8 +144,9 @@ class DSRActivityService:
             project_id = project.id
 
         assigned_to_id = None
-        if assigned_to_public_id:
-            from app.repositories.user_repository import UserRepository
+        is_privileged = current_user.role in (UserRole.ADMIN, UserRole.MANAGER)
+
+        if assigned_to_public_id and not is_privileged:
             user_repo = UserRepository(self.db)
             user = await user_repo.get_by_fields(public_id=assigned_to_public_id)
             if user:
@@ -183,7 +185,7 @@ class DSRActivityService:
             if not forced_project:
                 raise HTTPException(status_code=404, detail="Target project not found")
             # Ownership check for forced project
-            if current_user.role != UserRole.ADMIN and forced_project.owner_id != current_user.id:
+            if current_user.role not in (UserRole.ADMIN, UserRole.MANAGER) and forced_project.owner_id != current_user.id:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="You do not own the target project",
@@ -227,7 +229,7 @@ class DSRActivityService:
                     continue
 
                 # Ownership check
-                if current_user.role != UserRole.ADMIN and project.owner_id != current_user.id:
+                if current_user.role not in (UserRole.ADMIN, UserRole.MANAGER) and project.owner_id != current_user.id:
                     result.skipped += 1
                     result.errors.append({
                         "row": row_idx,

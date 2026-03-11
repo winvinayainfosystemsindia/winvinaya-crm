@@ -91,6 +91,7 @@ class DSRProjectService:
 
     async def get_projects(
         self,
+        current_user: User,
         skip: int = 0,
         limit: int = 100,
         active_only: bool = False,
@@ -98,7 +99,15 @@ class DSRProjectService:
         search: Optional[str] = None,
     ) -> Tuple[List[DSRProject], int]:
         assigned_to_id = None
-        if assigned_to_public_id:
+        
+        # If user is not Admin/Manager, or if they explicitly want to filter
+        # (Though in submission form, we usually want all if Admin/Manager)
+        # For now, let's say: Admins/Managers see all unless they are not them.
+        # Actually, let's check the role.
+        
+        is_privileged = current_user.role in (UserRole.ADMIN, UserRole.MANAGER)
+        
+        if assigned_to_public_id and not is_privileged:
             user = await self.user_repo.get_by_fields(public_id=assigned_to_public_id)
             if user:
                 assigned_to_id = user[0].id

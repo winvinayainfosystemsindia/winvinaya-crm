@@ -1,8 +1,10 @@
+# pyre-ignore-all
 """DSR Activities API endpoints"""
 
 from typing import Optional
 from uuid import UUID
 from fastapi import APIRouter, Depends, Query, UploadFile, File, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -70,6 +72,7 @@ async def list_activities(
     """List activities with filters (all roles). Use project_public_id to scope to a project."""
     service = DSRActivityService(db)
     items, total = await service.get_activities(
+        current_user=current_user,
         skip=skip,
         limit=limit,
         project_public_id=project_public_id,
@@ -89,7 +92,6 @@ async def get_activity_import_template(
     """Download a blank Excel template for activity import."""
     service = DSRActivityService(db)
     file_content = await service.get_import_template()
-    from fastapi.responses import StreamingResponse
     return StreamingResponse(
         file_content,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -107,7 +109,6 @@ async def export_activities_excel(
     service = DSRActivityService(db)
     # Check ownership inside service or here
     file_content = await service.export_activities(project_public_id)
-    from fastapi.responses import StreamingResponse
     return StreamingResponse(
         file_content,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

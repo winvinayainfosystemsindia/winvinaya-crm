@@ -313,7 +313,7 @@ class DSRService:
 
     async def delete_entry(self, public_id: UUID, current_user: User) -> bool:
         entry = await self._get_or_404(public_id)
-        if current_user.role != UserRole.ADMIN:
+        if current_user.role not in (UserRole.ADMIN, UserRole.MANAGER):
             if entry.user_id != current_user.id:
                 raise HTTPException(status_code=403, detail="Not authorized")
             if entry.status != DSRStatus.DRAFT:
@@ -598,7 +598,7 @@ class DSRService:
     ) -> Tuple[List[DSRPermissionRequest], int]:
         """List permission requests (Users see their own; Admins see all)."""
         target_user_id = user_id
-        if current_user.role != UserRole.ADMIN:
+        if current_user.role not in (UserRole.ADMIN, UserRole.MANAGER):
             target_user_id = current_user.id
             
         return await self.permission_repo.get_requests(
@@ -661,7 +661,7 @@ class DSRService:
         # GRANTED = Approved
         # REJECTED = Rejected
         target_user_id = user_id
-        if current_user.role != UserRole.ADMIN:
+        if current_user.role not in (UserRole.ADMIN, UserRole.MANAGER):
             target_user_id = current_user.id
         
         from sqlalchemy import func, select

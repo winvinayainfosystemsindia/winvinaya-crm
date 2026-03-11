@@ -59,12 +59,17 @@ class DSRProjectRepository(BaseRepository[DSRProject]):
             count_query = count_query.where(DSRProject.name.ilike(f"%{search}%"))
 
         if assigned_to:
-            from app.models.dsr_activity import DSRActivity
+            from app.models.dsr_activity import DSRActivity, activity_assignments
             # Subquery projects that have at least one activity assigned to this user
-            has_assigned_activity = select(DSRActivity.project_id).where(
-                DSRActivity.assigned_to == assigned_to,
-                DSRActivity.is_deleted == False
-            ).scalar_subquery()
+            has_assigned_activity = (
+                select(DSRActivity.project_id)
+                .join(activity_assignments, DSRActivity.id == activity_assignments.c.activity_id)
+                .where(
+                    activity_assignments.c.user_id == assigned_to,
+                    DSRActivity.is_deleted == False
+                )
+                .scalar_subquery()
+            )
             
             query = query.where(DSRProject.id.in_(has_assigned_activity))
             count_query = count_query.where(DSRProject.id.in_(has_assigned_activity))

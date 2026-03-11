@@ -76,7 +76,7 @@ async def list_projects(
     """List all DSR projects (all roles)."""
     service = DSRProjectService(db)
     items, total = await service.get_projects(
-        skip=skip, limit=limit, active_only=active_only, assigned_to_public_id=assigned_to, search=search
+        current_user=current_user, skip=skip, limit=limit, active_only=active_only, assigned_to_public_id=assigned_to, search=search
     )
     return DSRProjectListResponse(items=items, total=total, skip=skip, limit=limit)
 
