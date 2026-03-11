@@ -104,3 +104,6 @@ class DSRLeaveService:
 
         update_data = {"status": DSRLeaveStatus.CANCELLED}
         return await self.repo.update(application.id, update_data)
+
+    async def get_leave_stats(self, current_user: User) -> dict:
+        return await self.repo.get_stats(current_user.id)

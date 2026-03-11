@@ -41,3 +41,14 @@ class DSRLeaveApplicationRead(DSRLeaveApplicationBase):
 class DSRLeaveApplicationList(BaseModel):
     items: List[DSRLeaveApplicationRead]
     total: int
+
+
+class DSRLeaveStats(BaseModel):
+    total_apps: int
+    total_days: int
+    pending_apps: int
+    pending_days: int
+    approved_apps: int
+    approved_days: int
+    rejected_apps: int
+    rejected_days: int

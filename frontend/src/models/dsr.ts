@@ -188,3 +188,14 @@ export interface DSRLeaveApplication {
 	created_at: string;
 	updated_at: string;
 }
+
+export interface DSRLeaveStats {
+	total_apps: number;
+	total_days: number;
+	pending_apps: number;
+	pending_days: number;
+	approved_apps: number;
+	approved_days: number;
+	rejected_apps: number;
+	rejected_days: number;
+}

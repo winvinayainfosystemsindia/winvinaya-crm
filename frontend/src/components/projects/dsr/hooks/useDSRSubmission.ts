@@ -106,7 +106,8 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 
 		// Fetch last 30 days of entries to determine status - Use fetchCalendarEntries for targeted calendar data
 		const dateFrom = format(subDays(new Date(), 30), 'yyyy-MM-dd');
-		dispatch(fetchCalendarEntries({ date_from: dateFrom }));
+		const today = format(new Date(), 'yyyy-MM-dd');
+		dispatch(fetchCalendarEntries({ date_from: dateFrom, date_to: today }));
 
 		if (entryId) {
 			loadEntry(entryId);

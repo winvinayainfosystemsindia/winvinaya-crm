@@ -90,3 +90,52 @@ class DSRLeaveApplicationRepository(BaseRepository[DSRLeaveApplication]):
         )
         result = await self.db.execute(query)
         return list(result.scalars().all())
+
+    async def get_stats(self, user_id: int) -> dict:
+        """Get aggregate counts of leave applications and total days by status for a specific user"""
+        # Note: end_date - start_date returns an interval, we need to extract days or use Julian Day for sum
+        # In PostgreSQL/SQLAlchemy, (end_date - start_date) + 1 gives the inclusive duration
+        query = (
+            select(
+                DSRLeaveApplication.status, 
+                func.count().label("apps"),
+                func.sum(DSRLeaveApplication.end_date - DSRLeaveApplication.start_date + 1).label("days")
+            )
+            .where(DSRLeaveApplication.user_id == user_id)
+            .where(DSRLeaveApplication.is_deleted == False)
+            .group_by(DSRLeaveApplication.status)
+        )
+        result = await self.db.execute(query)
+        
+        stats = {
+            "total_apps": 0,
+            "total_days": 0,
+            "pending_apps": 0,
+            "pending_days": 0,
+            "approved_apps": 0,
+            "approved_days": 0,
+            "rejected_apps": 0,
+            "rejected_days": 0
+        }
+        
+        for row in result.all():
+            status_val, apps, days = row
+            # days might be returned as a timedelta or duration in some DB drivers, 
+            # but usually SQLAlchemy handles basic subtraction if the DB supports it.
+            # Convert timedelta to int if necessary
+            days_count = int(days.days) if hasattr(days, 'days') else int(days) if days is not None else 0
+            
+            stats["total_apps"] += apps
+            stats["total_days"] += days_count
+            
+            if status_val == DSRLeaveStatus.PENDING:
+                stats["pending_apps"] = apps
+                stats["pending_days"] = days_count
+            elif status_val == DSRLeaveStatus.APPROVED:
+                stats["approved_apps"] = apps
+                stats["approved_days"] = days_count
+            elif status_val == DSRLeaveStatus.REJECTED:
+                stats["rejected_apps"] = apps
+                stats["rejected_days"] = days_count
+        
+        return stats

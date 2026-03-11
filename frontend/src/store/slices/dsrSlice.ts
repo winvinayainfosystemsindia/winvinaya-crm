@@ -7,7 +7,7 @@ import type {
 	DSRProjectCreate, DSRActivityCreate, DSREntryCreate,
 	DSRStatus, MissingDSR, PaginationResult,
 	DSRPermissionRequest, DSRPermissionStats,
-	DSRLeaveApplication
+	DSRLeaveApplication, DSRLeaveStats
 } from '../../models/dsr';
 
 interface DSRState {
@@ -22,6 +22,7 @@ interface DSRState {
 	missingReports: MissingDSR[];
 	permissionRequests: DSRPermissionRequest[];
 	permissionStats: DSRPermissionStats | null;
+	leaveStats: DSRLeaveStats | null;
 	totalProjects: number;
 	totalActivities: number;
 	totalMyEntries: number;
@@ -43,6 +44,7 @@ const initialState: DSRState = {
 	missingReports: [],
 	permissionRequests: [],
 	permissionStats: null,
+	leaveStats: null,
 	totalProjects: 0,
 	totalActivities: 0,
 	totalMyEntries: 0,
@@ -187,9 +189,10 @@ export const fetchMyEntries = createAsyncThunk(
 
 export const fetchCalendarEntries = createAsyncThunk(
 	'dsr/fetchCalendarEntries',
-	async (params: { date_from: string; date_to: string }, { rejectWithValue }) => {
+	async (params: { date_from: string; date_to?: string }, { rejectWithValue }) => {
 		try {
-			return await dsrService.getCalendarStatus(params.date_from, params.date_to);
+			const date_to = params.date_to || new Date().toISOString().split('T')[0];
+			return await dsrService.getCalendarStatus(params.date_from, date_to);
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.detail || 'Failed to fetch calendar data');
 		}
@@ -248,6 +251,17 @@ export const cancelLeaveAction = createAsyncThunk(
 			return await dsrService.cancelLeave(publicId);
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.detail || 'Failed to cancel leave');
+		}
+	}
+);
+
+export const fetchLeaveStats = createAsyncThunk(
+	'dsr/fetchLeaveStats',
+	async (_, { rejectWithValue }) => {
+		try {
+			return await dsrService.getLeaveStats();
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.detail || 'Failed to fetch leave statistics');
 		}
 	}
 );
@@ -518,6 +532,10 @@ const dsrSlice = createSlice({
 			.addCase(fetchPermissionStats.fulfilled, (state, action: PayloadAction<DSRPermissionStats>) => {
 				state.loading = false;
 				state.permissionStats = action.payload;
+			})
+			.addCase(fetchLeaveStats.fulfilled, (state, action: PayloadAction<DSRLeaveStats>) => {
+				state.loading = false;
+				state.leaveStats = action.payload;
 			})
 			.addMatcher(
 				(action) => action.type.startsWith('dsr/') && action.type.endsWith('/pending'),

@@ -1,5 +1,5 @@
 import api from './api';
-import type { DSREntry, DSREntryCreate, DSRStatus, MissingDSR, PaginationResult } from '../models/dsr';
+import type { DSREntry, DSREntryCreate, DSRStatus, MissingDSR, PaginationResult, DSRLeaveStats } from '../models/dsr';
 
 const dsrService = {
 	getEntries: async (
@@ -68,6 +68,11 @@ const dsrService = {
 
 	cancelLeave: async (publicId: string): Promise<any> => {
 		const response = await api.post(`/dsr/leaves/${publicId}/cancel`);
+		return response.data;
+	},
+
+	getLeaveStats: async (): Promise<DSRLeaveStats> => {
+		const response = await api.get('/dsr/leaves/stats');
 		return response.data;
 	},
 

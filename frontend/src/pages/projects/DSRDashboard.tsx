@@ -25,9 +25,11 @@ import PermissionRequestDialog from '../../components/projects/dsr/forms/Permiss
 import DSRModuleLayout from '../../components/projects/dsr/layout/DSRModuleLayout';
 import DSRCalendarView from '../../components/projects/dsr/history/DSRCalendarView';
 import MyLeavesTable from '../../components/projects/dsr/user/MyLeavesTable';
+import MyLeaveStatsCards from '../../components/projects/dsr/common/MyLeaveStatsCards';
 import {
 	fetchPermissionRequests,
-	fetchPermissionStats
+	fetchPermissionStats,
+	fetchLeaveStats
 } from '../../store/slices/dsrSlice';
 import MyPermissionRequests from '../../components/projects/dsr/user/MyPermissionRequests';
 import PermissionStatsCards from '../../components/projects/dsr/common/PermissionStatsCards';
@@ -85,7 +87,7 @@ const DSRDashboard: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const { user } = useAppSelector((state) => state.auth);
 	const isPrivileged = user?.role === 'admin' || user?.role === 'manager';
-	const { permissionRequests, permissionStats, loading: dsrLoading } = useAppSelector((state) => state.dsr);
+	const { permissionRequests, permissionStats, leaveStats, loading: dsrLoading } = useAppSelector((state) => state.dsr);
 
 	const [activeTab, setActiveTab] = useState(0);
 	const [isSubmissionOpen, setIsSubmissionOpen] = useState(false);
@@ -102,6 +104,8 @@ const DSRDashboard: React.FC = () => {
 		if (activeTab === 1) {
 			dispatch(fetchPermissionStats({ user_id: user?.id }));
 			dispatch(fetchPermissionRequests({ skip: 0, limit: 100, user_id: user?.id }));
+		} else if (activeTab === 2) {
+			dispatch(fetchLeaveStats());
 		} else if (activeTab === 3 && isPrivileged) {
 			dispatch(fetchPermissionStats());
 		}
@@ -137,6 +141,8 @@ const DSRDashboard: React.FC = () => {
 		if (activeTab === 1) {
 			dispatch(fetchPermissionStats({ user_id: user?.id }));
 			dispatch(fetchPermissionRequests({ skip: 0, limit: 100, user_id: user?.id }));
+		} else if (activeTab === 2) {
+			dispatch(fetchLeaveStats());
 		} else if (activeTab === 3 && isPrivileged) {
 			dispatch(fetchPermissionStats());
 			admin.handleRefresh();
@@ -304,6 +310,7 @@ const DSRDashboard: React.FC = () => {
 							{activeTab === 2 && (
 								<Box>
 									<Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>My Leave Applications</Typography>
+									<MyLeaveStatsCards stats={leaveStats} loading={dsrLoading} />
 									<MyLeavesTable />
 								</Box>
 							)}
@@ -327,7 +334,10 @@ const DSRDashboard: React.FC = () => {
 					<ApplyLeaveDialog
 						open={isLeaveOpen}
 						onClose={() => setIsLeaveOpen(false)}
-						onSuccess={() => history.fetchHistory()}
+						onSuccess={() => {
+							history.fetchHistory();
+							dispatch(fetchLeaveStats());
+						}}
 					/>
 
 					<PermissionRequestDialog

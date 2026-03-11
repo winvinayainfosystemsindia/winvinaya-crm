@@ -14,6 +14,7 @@ from app.schemas.dsr_leave_application import (
     DSRLeaveApplicationRead,
     DSRLeaveApplicationUpdate,
     DSRLeaveApplicationList,
+    DSRLeaveStats,
 )
 from app.services.dsr_leave_service import DSRLeaveService
 
@@ -43,6 +44,16 @@ async def list_my_leaves(
     service = DSRLeaveService(db)
     items, total = await service.get_my_leaves(current_user, skip=skip, limit=limit, status=status)
     return DSRLeaveApplicationList(items=items, total=total)
+
+
+@router.get("/stats", response_model=DSRLeaveStats)
+async def get_leave_stats(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """User: Get personal leave statistics."""
+    service = DSRLeaveService(db)
+    return await service.get_leave_stats(current_user)
 
 
 @router.get("/all", response_model=DSRLeaveApplicationList)
