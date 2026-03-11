@@ -7,8 +7,8 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.api.deps import get_current_user
-from app.models.user import User
+from app.api.deps import get_current_user, require_roles
+from app.models.user import User, UserRole
 from app.schemas.dsr_project import (
     DSRProjectCreate,
     DSRProjectUpdate,
@@ -24,7 +24,7 @@ router = APIRouter()
 @router.post("", response_model=DSRProjectResponse, status_code=status.HTTP_201_CREATED)
 async def create_project(
     data: DSRProjectCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new DSR project (Manager / Admin). Assigns an owner user."""
@@ -38,7 +38,7 @@ async def create_project(
 @router.post("/import", response_model=DSRProjectImportResult, status_code=status.HTTP_200_OK)
 async def import_projects_excel(
     file: UploadFile = File(..., description="Excel file (.xlsx). Columns: name, owner_email, is_active"),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
     db: AsyncSession = Depends(get_db),
 ):
     """Bulk-import DSR projects from an Excel file (Manager / Admin)."""
@@ -50,7 +50,7 @@ async def import_projects_excel(
 
 @router.get("/template")
 async def get_project_import_template(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
     db: AsyncSession = Depends(get_db),
 ):
     """Get a blank Excel template for project import."""
@@ -70,7 +70,7 @@ async def list_projects(
     active_only: bool = Query(default=False),
     assigned_to: Optional[UUID] = Query(default=None, description="Filter by assigned user"),
     search: Optional[str] = Query(default=None),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.SALES_MANAGER])),
     db: AsyncSession = Depends(get_db),
 ):
     """List all DSR projects (all roles)."""
@@ -84,7 +84,7 @@ async def list_projects(
 @router.get("/{public_id}", response_model=DSRProjectResponse)
 async def get_project(
     public_id: UUID,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.SALES_MANAGER])),
     db: AsyncSession = Depends(get_db),
 ):
     """Get a single DSR project by public_id (all roles)."""
@@ -96,7 +96,7 @@ async def get_project(
 async def update_project(
     public_id: UUID,
     data: DSRProjectUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
     db: AsyncSession = Depends(get_db),
 ):
     """Update a DSR project (Manager / Admin)."""
@@ -109,7 +109,7 @@ async def update_project(
 @router.delete("/{public_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_project(
     public_id: UUID,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
     db: AsyncSession = Depends(get_db),
 ):
     """Soft-delete a DSR project (Admin only)."""

@@ -8,8 +8,8 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.api.deps import get_current_user
-from app.models.user import User
+from app.api.deps import get_current_user, require_roles
+from app.models.user import User, UserRole
 from app.models.dsr_activity import DSRActivityStatus
 from app.schemas.dsr_activity import (
     DSRActivityCreate,
@@ -26,7 +26,7 @@ router = APIRouter()
 @router.post("", response_model=DSRActivityResponse, status_code=status.HTTP_201_CREATED)
 async def create_activity(
     data: DSRActivityCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER])),
     db: AsyncSession = Depends(get_db),
 ):
     """Create a planned activity under a project (Project Owner / Admin)."""
@@ -44,7 +44,7 @@ async def import_activities_excel(
         description="Excel file (.xlsx). Columns: project_name, name, description, start_date, end_date, status",
     ),
     project_public_id: Optional[UUID] = Query(None),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER])),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -66,7 +66,7 @@ async def list_activities(
     active_only: bool = Query(default=False),
     assigned_to: Optional[UUID] = Query(default=None, description="Filter by assigned user"),
     search: Optional[str] = Query(default=None),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.TRAINER, UserRole.MANAGER])),
     db: AsyncSession = Depends(get_db),
 ):
     """List activities with filters (all roles). Use project_public_id to scope to a project."""
@@ -86,7 +86,7 @@ async def list_activities(
 
 @router.get("/template")
 async def get_activity_import_template(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
     db: AsyncSession = Depends(get_db),
 ):
     """Download a blank Excel template for activity import."""
@@ -102,7 +102,7 @@ async def get_activity_import_template(
 @router.get("/export")
 async def export_activities_excel(
     project_public_id: UUID = Query(...),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER])),
     db: AsyncSession = Depends(get_db),
 ):
     """Export all activities for a project to Excel (Project Owner / Admin)."""
@@ -119,7 +119,7 @@ async def export_activities_excel(
 @router.get("/{public_id}", response_model=DSRActivityResponse)
 async def get_activity(
     public_id: UUID,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.TRAINER, UserRole.MANAGER])),
     db: AsyncSession = Depends(get_db),
 ):
     """Get a single activity (all roles)."""
@@ -131,7 +131,7 @@ async def get_activity(
 async def update_activity(
     public_id: UUID,
     data: DSRActivityUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER])),
     db: AsyncSession = Depends(get_db),
 ):
     """Update a planned activity (Project Owner / Admin)."""
@@ -144,7 +144,7 @@ async def update_activity(
 @router.delete("/{public_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_activity(
     public_id: UUID,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
     db: AsyncSession = Depends(get_db),
 ):
     """Soft-delete a planned activity (Project Owner / Admin)."""

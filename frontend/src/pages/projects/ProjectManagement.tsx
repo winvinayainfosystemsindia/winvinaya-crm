@@ -26,6 +26,8 @@ const ProjectManagement: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const toast = useToast();
 	const { loading } = useAppSelector((state) => state.dsr);
+	const { user } = useAppSelector((state) => state.auth);
+	const isPrivileged = user?.role === 'admin' || user?.role === 'manager';
 
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [selectedProject, setSelectedProject] = useState<DSRProject | null>(null);
@@ -81,44 +83,46 @@ const ProjectManagement: React.FC = () => {
 							Manage projects and assign owners for DSR tracking
 						</Typography>
 					</Box>
-					<Box sx={{ display: 'flex', gap: 1 }}>
-						<Button
-							variant="outlined"
-							startIcon={<ImportIcon />}
-							onClick={() => setImportModalOpen(true)}
-							sx={{
-								color: '#545b64',
-								borderColor: '#d5dbdb',
-								textTransform: 'none',
-								fontWeight: 700,
-								fontSize: '0.875rem',
-								height: 36,
-								borderRadius: '2px',
-								'&:hover': {
-									bgcolor: '#f2f3f3',
-									borderColor: '#aab7b7'
-								}
-							}}
-						>
-							Import from Excel
-						</Button>
-						<Button
-							variant="contained"
-							startIcon={<AddIcon />}
-							onClick={handleAdd}
-							sx={{
-								bgcolor: '#ec7211',
-								textTransform: 'none',
-								fontWeight: 700,
-								fontSize: '0.875rem',
-								height: 36,
-								borderRadius: '2px',
-								'&:hover': { bgcolor: '#eb5f07' }
-							}}
-						>
-							Create project
-						</Button>
-					</Box>
+					{isPrivileged && (
+						<Box sx={{ display: 'flex', gap: 1 }}>
+							<Button
+								variant="outlined"
+								startIcon={<ImportIcon />}
+								onClick={() => setImportModalOpen(true)}
+								sx={{
+									color: '#545b64',
+									borderColor: '#d5dbdb',
+									textTransform: 'none',
+									fontWeight: 700,
+									fontSize: '0.875rem',
+									height: 36,
+									borderRadius: '2px',
+									'&:hover': {
+										bgcolor: '#f2f3f3',
+										borderColor: '#aab7b7'
+									}
+								}}
+							>
+								Import from Excel
+							</Button>
+							<Button
+								variant="contained"
+								startIcon={<AddIcon />}
+								onClick={handleAdd}
+								sx={{
+									bgcolor: '#ec7211',
+									textTransform: 'none',
+									fontWeight: 700,
+									fontSize: '0.875rem',
+									height: 36,
+									borderRadius: '2px',
+									'&:hover': { bgcolor: '#eb5f07' }
+								}}
+							>
+								Create project
+							</Button>
+						</Box>
+					)}
 				</Box>
 
 				<ProjectStats refreshKey={refreshKey} />

@@ -76,8 +76,15 @@ class DSRProjectService:
         return await self._get_or_404(public_id)
 
     async def delete_project(self, public_id: UUID, current_user: User) -> bool:
-        _require_admin(current_user)
+        _require_manager_or_admin(current_user)
         project = await self._get_or_404(public_id)
+
+        # Managers can only delete projects they created
+        if current_user.role == UserRole.MANAGER and project.created_by != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Managers can only delete projects they created",
+            )
         
         # Check if project is used in any DSR entries
         usage_count = await self.dsr_repo.count_references(project_public_id=project.public_id)

@@ -10,6 +10,8 @@ import {
 } from '@mui/icons-material';
 import type { DSRProject } from '../../../../models/dsr';
 
+import { useAppSelector } from '../../../../store/hooks';
+
 interface ProjectTableActionsProps {
 	anchorEl: null | HTMLElement;
 	open: boolean;
@@ -29,6 +31,9 @@ const ProjectTableActions: React.FC<ProjectTableActionsProps> = ({
 	onDelete,
 	onManageActivities
 }) => {
+	const { user } = useAppSelector((state) => state.auth);
+	const isPrivileged = user?.role === 'admin' || user?.role === 'manager';
+
 	if (!activeProject) return null;
 
 	return (
@@ -43,14 +48,18 @@ const ProjectTableActions: React.FC<ProjectTableActionsProps> = ({
 				<ActivityIcon sx={{ fontSize: 18, mr: 1, color: '#0073bb' }} />
 				Manage Activities
 			</MenuItem>
-			<MenuItem onClick={() => { onEdit(activeProject); onClose(); }}>
-				<EditIcon sx={{ fontSize: 18, mr: 1, color: '#545b64' }} />
-				Edit
-			</MenuItem>
-			<MenuItem onClick={() => { onDelete(activeProject); onClose(); }} sx={{ color: '#d13212' }}>
-				<DeleteIcon sx={{ fontSize: 18, mr: 1, color: '#d13212' }} />
-				Delete
-			</MenuItem>
+			{isPrivileged && (
+				<MenuItem onClick={() => { onEdit(activeProject); onClose(); }}>
+					<EditIcon sx={{ fontSize: 18, mr: 1, color: '#545b64' }} />
+					Edit
+				</MenuItem>
+			)}
+			{user?.role === 'admin' && (
+				<MenuItem onClick={() => { onDelete(activeProject); onClose(); }} sx={{ color: '#d13212' }}>
+					<DeleteIcon sx={{ fontSize: 18, mr: 1, color: '#d13212' }} />
+					Delete
+				</MenuItem>
+			)}
 		</Menu>
 	);
 };
