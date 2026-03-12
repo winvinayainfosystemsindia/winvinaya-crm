@@ -18,6 +18,8 @@ import DSRReviewQueue from './DSRReviewQueue';
 import PermissionStatsCards from '../common/PermissionStatsCards';
 import PermissionRequestsTable from './PermissionRequestsTable';
 import AllSubmissionsTable from './AllSubmissionsTable';
+import DSRProjectRequestsTable from './DSRProjectRequestsTable';
+import DSRActivityTypeManagement from './DSRActivityTypeManagement';
 import type { useDSRAdmin } from '../hooks/useDSRAdmin';
 import type { DSRPermissionStats } from '../../../../models/dsr';
 
@@ -186,6 +188,39 @@ const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin, permissionStat
 								'&.Mui-selected': { color: '#ec7211' }
 							}}
 						/>
+						<Tab
+							label={
+								<TabLabel
+									icon={<ReviewIcon sx={{ fontSize: 18 }} />}
+									label="Project Requests"
+									count={admin.projectRequestsTotal}
+									active={activeTab === 3}
+								/>
+							}
+							sx={{
+								textTransform: 'none',
+								minHeight: 48,
+								px: 3,
+								color: '#545b64',
+								'&.Mui-selected': { color: '#ec7211' }
+							}}
+						/>
+						<Tab
+							label={
+								<TabLabel
+									icon={<ReviewIcon sx={{ fontSize: 18 }} />}
+									label="Activity Types"
+									active={activeTab === 4}
+								/>
+							}
+							sx={{
+								textTransform: 'none',
+								minHeight: 48,
+								px: 3,
+								color: '#545b64',
+								'&.Mui-selected': { color: '#ec7211' }
+							}}
+						/>
 					</Tabs>
 				</Box>
 
@@ -234,6 +269,24 @@ const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin, permissionStat
 							onPageChange={(_, p) => admin.setEntryPage(p)}
 							onRowsPerPageChange={(e) => admin.setEntryRowsPerPage(parseInt(e.target.value))}
 						/>
+					</TabPanel>
+
+					<TabPanel value={activeTab} index={3}>
+						<Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>User Project Requests</Typography>
+						<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+							Review and approve requests for new projects from team members. 
+							Approved projects will be automatically created.
+						</Typography>
+						<Divider sx={{ mb: 3 }} />
+						<DSRProjectRequestsTable
+							requests={admin.projectRequests}
+							loading={admin.projectLoading}
+							onHandle={admin.handleProjectRequest}
+						/>
+					</TabPanel>
+
+					<TabPanel value={activeTab} index={4}>
+						<DSRActivityTypeManagement />
 					</TabPanel>
 				</Box>
 			</Paper>

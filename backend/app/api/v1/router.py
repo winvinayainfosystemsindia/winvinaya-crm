@@ -32,6 +32,8 @@ from app.api.v1.endpoints import (
     dsr_activities,
     dsr_entries,
     dsr_leaves,
+    dsr_activity_types,
+    dsr_project_requests,
     notifications,
 )
 
@@ -75,4 +77,6 @@ router.include_router(dsr_projects.router, prefix="/dsr/projects", tags=["DSR Pr
 router.include_router(dsr_activities.router, prefix="/dsr/activities", tags=["DSR Activities"])
 router.include_router(dsr_entries.router, prefix="/dsr", tags=["DSR Entries"])
 router.include_router(dsr_leaves.router, prefix="/dsr/leaves", tags=["DSR Leaves"])
+router.include_router(dsr_activity_types.router, prefix="/dsr/activity-types", tags=["DSR Activity Types"])
+router.include_router(dsr_project_requests.router, prefix="/dsr/project-requests", tags=["DSR Project Requests"])
 

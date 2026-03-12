@@ -15,12 +15,13 @@ import {
 	Add as AddIcon
 } from '@mui/icons-material';
 import DSRItemRow from './DSRItemRow';
-import type { DSRItem, DSRProject, DSRActivity } from '../../../../models/dsr';
+import type { DSRItem, DSRProject, DSRActivity, DSRActivityType } from '../../../../models/dsr';
 
 interface SubmissionFormProps {
 	items: Partial<DSRItem>[];
 	projects: DSRProject[];
 	activitiesByProject: Record<string, DSRActivity[]>;
+	activityTypes: DSRActivityType[];
 	loading: boolean;
 	onRowChange: (index: number, field: keyof DSRItem, value: any) => void;
 	onAddRow: () => void;
@@ -33,6 +34,7 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
 	items,
 	projects,
 	activitiesByProject,
+	activityTypes,
 	loading,
 	onRowChange,
 	onAddRow,
@@ -53,9 +55,10 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
 				<Table sx={{ minWidth: 900 }}>
 					<TableHead sx={{ bgcolor: '#f9fafb' }}>
 						<TableRow>
-							<TableCell sx={{ fontWeight: 700, width: '22%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Project</TableCell>
-							<TableCell sx={{ fontWeight: 700, width: '22%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Activity</TableCell>
-							<TableCell sx={{ fontWeight: 700, width: '28%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Description</TableCell>
+							<TableCell sx={{ fontWeight: 700, width: '18%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Project</TableCell>
+							<TableCell sx={{ fontWeight: 700, width: '15%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Type</TableCell>
+							<TableCell sx={{ fontWeight: 700, width: '18%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Activity / Task</TableCell>
+							<TableCell sx={{ fontWeight: 700, width: '25%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Description</TableCell>
 							<TableCell sx={{ fontWeight: 700, width: '10%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Start</TableCell>
 							<TableCell sx={{ fontWeight: 700, width: '10%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>End</TableCell>
 							<TableCell sx={{ fontWeight: 700, width: '5%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Hrs</TableCell>
@@ -69,6 +72,7 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
 								index={index}
 								item={item}
 								projects={projects}
+								activityTypes={activityTypes}
 								activities={item.project_public_id ? (activitiesByProject[item.project_public_id] || []) : []}
 								loading={loading}
 								onRowChange={onRowChange}
@@ -89,7 +93,7 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
 
 							return (
 								<TableRow>
-									<TableCell colSpan={7}>
+									<TableCell colSpan={8}>
 										<Button
 											startIcon={<AddIcon />}
 											onClick={onAddRow}

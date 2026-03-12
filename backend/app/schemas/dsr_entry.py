@@ -10,8 +10,15 @@ class DSRItemCreate(BaseModel):
     """A single project/activity work-log line item within a DSR entry"""
     project_public_id: Optional[uuid.UUID] = Field(default=None, description="Project being worked on")
     activity_public_id: Optional[uuid.UUID] = Field(default=None, description="Activity / task being worked on")
-    project_name_other: Optional[str] = Field(default=None, description="Custom project name if not in dropdown")
-    activity_name_other: Optional[str] = Field(default=None, description="Custom activity name if not in dropdown")
+    # activity_type_code: standardized taxonomy code (e.g. 'DEV', 'TEST', 'MEET')
+    activity_type_code: Optional[str] = Field(
+        default=None,
+        max_length=20,
+        description="Activity type code from dsr_activity_types (e.g. 'DEV')",
+    )
+    # Legacy free-text fallbacks — kept for backwards compatibility, no longer encouraged
+    project_name_other: Optional[str] = Field(default=None, description="Custom project name (legacy)")
+    activity_name_other: Optional[str] = Field(default=None, description="Custom activity name (legacy)")
     description: str = Field(..., min_length=1, description="What was done")
     start_time: str = Field(..., pattern=r"^\d{2}:\d{2}$", description="HH:MM format, e.g. 09:00")
     end_time: str = Field(..., pattern=r"^\d{2}:\d{2}$", description="HH:MM format, e.g. 17:30")
@@ -24,12 +31,19 @@ class DSRItemCreate(BaseModel):
             return None
         return v
 
+    @field_validator("activity_type_code", mode="before")
+    @classmethod
+    def normalise_activity_type_code(cls, v: Any) -> Any:
+        """Uppercase + strip the code so 'dev' and 'DEV' both work."""
+        if isinstance(v, str) and v.strip():
+            return v.strip().upper()
+        return v
+
     @model_validator(mode="after")
-    def validate_ids_or_custom_names(self) -> "DSRItemCreate":
+    def validate_project_identifier(self) -> "DSRItemCreate":
+        """Project must come from either the controlled list or a legacy custom name."""
         if not self.project_public_id and not self.project_name_other:
-            raise ValueError("Either project_public_id or project_name_other must be provided")
-        if not self.activity_public_id and not self.activity_name_other:
-            raise ValueError("Either activity_public_id or activity_name_other must be provided")
+            raise ValueError("project_public_id is required (select a project from the list)")
         return self
 
     @model_validator(mode="after")
@@ -101,10 +115,13 @@ class DSRSendReminder(BaseModel):
 
 class DSRItemResponse(BaseModel):
     """Enriched line item — includes project/activity names resolved from IDs"""
-    project_public_id: uuid.UUID
+    project_public_id: Optional[uuid.UUID] = None
     project_name: Optional[str] = None
-    activity_public_id: uuid.UUID
+    project_name_other: Optional[str] = None
+    activity_public_id: Optional[uuid.UUID] = None
     activity_name: Optional[str] = None
+    activity_name_other: Optional[str] = None
+    activity_type_code: Optional[str] = None
     description: str
     start_time: str
     end_time: str

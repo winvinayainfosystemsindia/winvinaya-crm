@@ -63,8 +63,7 @@ class DSRService:
         Validate each line item:
         - Project must exist and be active
         - Activity must exist, be active, and belong to the referenced project
-        - Hours auto-computed from start/end time if not set (schema already does it,
-          but we store the resolved project/activity info)
+        - activity_type_code is stored as-is (validated by schema normaliser)
         Returns the resolved items list (with internal IDs stripped out for JSON storage).
         """
         project_cache: dict = {}
@@ -77,12 +76,14 @@ class DSRService:
             a_uid = item.get("activity_public_id") if is_dict else item.activity_public_id
             p_name_other = item.get("project_name_other") if is_dict else getattr(item, 'project_name_other', None)
             a_name_other = item.get("activity_name_other") if is_dict else getattr(item, 'activity_name_other', None)
+            activity_type_code = item.get("activity_type_code") if is_dict else getattr(item, 'activity_type_code', None)
 
             resolved_item = {
                 "description": item.get("description") if is_dict else item.description,
                 "start_time": item.get("start_time") if is_dict else item.start_time,
                 "end_time": item.get("end_time") if is_dict else item.end_time,
                 "hours": item.get("hours") if is_dict else item.hours,
+                "activity_type_code": activity_type_code,
             }
 
             # Resolve project
@@ -106,7 +107,6 @@ class DSRService:
 
             # Resolve activity
             if a_uid:
-                # If we have an activity ID, we MUST have a project ID or it must be valid for the resolved project
                 a_key = str(a_uid)
                 if a_key not in activity_cache:
                     activity = await self.activity_repo.get_by_public_id(a_uid)
@@ -115,7 +115,6 @@ class DSRService:
                             status_code=422,
                             detail=f"Item {idx + 1}: Activity not found or inactive",
                         )
-                    
                     # If we had a resolved project, check ownership
                     if p_uid:
                         project = project_cache[str(p_uid)]
@@ -128,7 +127,7 @@ class DSRService:
                                 ),
                             )
                     activity_cache[a_key] = activity
-                
+
                 activity = activity_cache[a_key]
                 resolved_item["activity_public_id"] = str(a_uid)
                 resolved_item["activity_name"] = activity.name
@@ -140,6 +139,7 @@ class DSRService:
             resolved.append(resolved_item)
 
         return resolved
+
 
     def _can_submit_for_past_date(self, entry: DSREntry, current_user: User) -> bool:
         """True if the user is allowed to submit for a past date."""

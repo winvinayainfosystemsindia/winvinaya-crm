@@ -7,11 +7,13 @@ import {
 	grantDSRPermission,
 	fetchPermissionRequests,
 	handlePermissionRequestAction,
-	fetchPermissionStats
+	fetchPermissionStats,
+	fetchProjects
 } from '../../../../store/slices/dsrSlice';
 import useToast from '../../../../hooks/useToast';
 import dsrService from '../../../../services/dsrService';
-import type { DSREntry } from '../../../../models/dsr';
+import dsrProjectRequestService from '../../../../services/dsrProjectRequestService';
+import type { DSREntry, DSRProjectRequest } from '../../../../models/dsr';
 
 export const useDSRAdmin = () => {
 	const dispatch = useAppDispatch();
@@ -29,6 +31,11 @@ export const useDSRAdmin = () => {
 	const [reminding, setReminding] = useState(false);
 	const [entryPage, setEntryPage] = useState(0);
 	const [entryRowsPerPage, setEntryRowsPerPage] = useState(10);
+
+	// Project requests state
+	const [projectRequests, setProjectRequests] = useState<DSRProjectRequest[]>([]);
+	const [projectRequestsTotal, setProjectRequestsTotal] = useState(0);
+	const [projectLoading, setProjectLoading] = useState(false);
 
 	// Review queue state (submitted DSRs awaiting admin approval)
 	const [reviewQueue, setReviewQueue] = useState<DSREntry[]>([]);
@@ -48,6 +55,19 @@ export const useDSRAdmin = () => {
 		}
 	}, []);
 
+	const fetchProjectRequests = useCallback(async () => {
+		setProjectLoading(true);
+		try {
+			const data = await dsrProjectRequestService.getRequests(0, 50, 'pending');
+			setProjectRequests(data.items || []);
+			setProjectRequestsTotal(data.total || 0);
+		} catch {
+			// Non-blocking
+		} finally {
+			setProjectLoading(false);
+		}
+	}, []);
+
 	const fetchData = useCallback(() => {
 		dispatch(fetchMissingReports(reportDate));
 		dispatch(fetchPermissionRequests({ skip: 0, limit: 100 }));
@@ -58,7 +78,8 @@ export const useDSRAdmin = () => {
 			date_to: reportDate
 		}));
 		fetchReviewQueue();
-	}, [dispatch, reportDate, entryPage, entryRowsPerPage, fetchReviewQueue]);
+		fetchProjectRequests();
+	}, [dispatch, reportDate, entryPage, entryRowsPerPage, fetchReviewQueue, fetchProjectRequests]);
 
 	useEffect(() => {
 		fetchData();
@@ -146,6 +167,18 @@ export const useDSRAdmin = () => {
 		}
 	};
 
+	const handleProjectRequest = async (publicId: string, status: 'approved' | 'rejected') => {
+		try {
+			await dsrProjectRequestService.handleRequest(publicId, { status });
+			toast.success(`Project request ${status} successfully`);
+			await fetchProjectRequests();
+			// Re-fetch projects in case one was created
+			dispatch(fetchProjects({ skip: 0, limit: 500, active_only: true }));
+		} catch (error: any) {
+			toast.error(error?.response?.data?.detail || `Failed to ${status} project request`);
+		}
+	};
+
 	return {
 		reportDate,
 		setReportDate,
@@ -170,5 +203,10 @@ export const useDSRAdmin = () => {
 		reviewLoading,
 		handleApproveEntry,
 		handleRejectEntry,
+		// Project requests
+		projectRequests,
+		projectRequestsTotal,
+		projectLoading,
+		handleProjectRequest
 	};
 };

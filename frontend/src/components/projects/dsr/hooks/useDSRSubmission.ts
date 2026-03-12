@@ -10,6 +10,7 @@ import {
 	fetchPermissionRequests,
 	fetchCalendarEntries
 } from '../../../../store/slices/dsrSlice';
+import { fetchActivityTypes } from '../../../../store/slices/dsrActivityTypeSlice';
 import useToast from '../../../../hooks/useToast';
 import type { DSRItem } from '../../../../models/dsr';
 import { subDays, format, startOfDay } from 'date-fns';
@@ -27,11 +28,22 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 	const toast = useToast();
 
 	const { user } = useAppSelector((state) => state.auth);
-	const { projects, activitiesByProject, calendarEntries: entries, permissionRequests, loading: storeLoading } = useAppSelector((state) => state.dsr);
+	const { projects, activitiesByProject, calendarEntries: entries, permissionRequests, loading: dsrLoading } = useAppSelector((state) => state.dsr);
+	const { activityTypes, loading: typesLoading } = useAppSelector((state) => state.dsrActivityType);
+
+	const loading = dsrLoading || typesLoading;
 
 	const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
 	const [items, setItems] = useState<Partial<DSRItem>[]>([
-		{ project_public_id: null as any, activity_public_id: null as any, description: '', start_time: '09:00', end_time: '10:00', hours: 1 }
+		{ 
+			project_public_id: null as any, 
+			activity_public_id: null as any, 
+			activity_type_code: null,
+			description: '', 
+			start_time: '09:00', 
+			end_time: '10:00', 
+			hours: 1 
+		}
 	]);
 	const [isLeave, setIsLeave] = useState(false);
 	const [leaveType, setLeaveType] = useState('');
@@ -103,6 +115,7 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 	useEffect(() => {
 		dispatch(fetchProjects({ skip: 0, limit: 500, active_only: true, assigned_to: user?.public_id }));
 		dispatch(fetchPermissionRequests({ skip: 0, limit: 100, user_id: user?.public_id as any }));
+		dispatch(fetchActivityTypes({ skip: 0, limit: 100, onlyActive: true }));
 
 		// Fetch last 30 days of entries to determine status - Use fetchCalendarEntries for targeted calendar data
 		const dateFrom = format(subDays(new Date(), 30), 'yyyy-MM-dd');
@@ -137,7 +150,6 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 
 		if (field === 'project_public_id') {
 			newItems[index].activity_public_id = null as any;
-			newItems[index].activity_name_other = '';
 			if (value) {
 				dispatch(fetchActivitiesForProject({ projectId: value, assigned_to: user?.public_id }));
 			}
@@ -156,6 +168,7 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		setItems([...items, {
 			project_public_id: null as any,
 			activity_public_id: null as any,
+			activity_type_code: null,
 			description: '',
 			start_time: lastItem?.end_time || '09:00',
 			end_time: '',
@@ -181,16 +194,16 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 
 		for (let i = 0; i < items.length; i++) {
 			const it = items[i];
-			const hasProject = it.project_public_id || it.project_name_other;
-			const hasActivity = it.activity_public_id || it.activity_name_other;
+			const hasProject = !!it.project_public_id;
+			const hasType = !!it.activity_type_code;
 
-			if (!hasProject || !hasActivity || !it.description || !it.start_time || !it.end_time) {
+			if (!hasProject || !hasType || !it.description || !it.start_time || !it.end_time) {
 				toast.warning(`Please fill all fields in row ${i + 1}`);
 				return false;
 			}
 			
-			if (it.project_name_other === '' || it.activity_name_other === '') {
-				toast.warning(`Please specify the Custom Project/Activity in row ${i + 1}`);
+			if (!it.activity_public_id && !it.activity_name_other) {
+				toast.warning(`Please specify the Activity in row ${i + 1}`);
 				return false;
 			}
 
@@ -254,7 +267,8 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		entryId,
 		projects,
 		activitiesByProject,
-		loading: storeLoading,
+		activityTypes,
+		loading,
 		reportDate,
 		setReportDate,
 		items,

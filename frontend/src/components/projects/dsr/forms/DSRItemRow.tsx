@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
 	TableRow,
 	TableCell,
@@ -7,20 +7,22 @@ import {
 	Typography,
 	IconButton,
 	Box,
-	Tooltip,
-	InputAdornment
+	InputAdornment,
+	Link
 } from '@mui/material';
 import { 
 	Delete as DeleteIcon,
-	InfoOutlined as InfoIcon,
-	EditNote as EditIcon
+	EditNote as EditIcon,
+	AddCircleOutline as RequestIcon
 } from '@mui/icons-material';
-import type { DSRItem, DSRProject, DSRActivity } from '../../../../models/dsr';
+import type { DSRItem, DSRProject, DSRActivity, DSRActivityType } from '../../../../models/dsr';
+import DSRProjectRequestDialog from './DSRProjectRequestDialog';
 
 interface DSRItemRowProps {
 	index: number;
 	item: Partial<DSRItem>;
 	projects: DSRProject[];
+	activityTypes: DSRActivityType[];
 	activities: DSRActivity[];
 	loading: boolean;
 	onRowChange: (index: number, field: keyof DSRItem, value: any) => void;
@@ -31,11 +33,6 @@ interface DSRItemRowProps {
 
 const OTHER_ID = '__other__';
 
-const OTHER_PROJECT: Partial<DSRProject> = {
-	public_id: OTHER_ID,
-	name: 'Other (Specify...)'
-};
-
 const OTHER_ACTIVITY: Partial<DSRActivity> = {
 	public_id: OTHER_ID,
 	name: 'Other (Specify...)'
@@ -45,6 +42,7 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 	index,
 	item,
 	projects,
+	activityTypes,
 	activities,
 	loading,
 	onRowChange,
@@ -52,41 +50,37 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 	isDeleteDisabled,
 	readOnly = false
 }) => {
-	const projectOptions = React.useMemo(() => [...projects, OTHER_PROJECT as DSRProject], [projects]);
-	
+	const [requestDialogOpen, setRequestDialogOpen] = useState(false);
+
 	const activityOptions = React.useMemo(() => {
 		return [...activities, OTHER_ACTIVITY as DSRActivity];
 	}, [activities]);
 
 	const selectedProject = React.useMemo(() => {
-		if (item.project_name_other !== undefined && item.project_name_other !== null) return OTHER_PROJECT;
 		return projects.find(p => p.public_id === item.project_public_id) || null;
-	}, [item.project_public_id, item.project_name_other, projects]);
+	}, [item.project_public_id, projects]);
+
+	const selectedType = React.useMemo(() => {
+		return activityTypes.find(at => at.code === item.activity_type_code) || null;
+	}, [item.activity_type_code, activityTypes]);
 
 	const selectedActivity = React.useMemo(() => {
 		if (item.activity_name_other !== undefined && item.activity_name_other !== null) return OTHER_ACTIVITY;
 		return activities.find(a => a.public_id === item.activity_public_id) || null;
 	}, [item.activity_public_id, item.activity_name_other, activities]);
 
-	const isOtherProject = selectedProject?.public_id === OTHER_ID;
 	const isOtherActivity = selectedActivity?.public_id === OTHER_ID;
 
 	return (
 		<TableRow sx={{ '&:hover': { bgcolor: '#f9fafb' } }}>
-			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top', minWidth: 200 }}>
-				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top', minWidth: 180 }}>
+				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
 					<Autocomplete
-						options={projectOptions}
+						options={projects}
 						getOptionLabel={(option) => option.name || ''}
 						value={selectedProject}
 						onChange={(_, val) => {
-							if (val?.public_id === OTHER_ID) {
-								onRowChange(index, 'project_public_id', null);
-								onRowChange(index, 'project_name_other', '');
-							} else {
-								onRowChange(index, 'project_public_id', val?.public_id || null);
-								onRowChange(index, 'project_name_other', undefined);
-							}
+							onRowChange(index, 'project_public_id', val?.public_id || null);
 						}}
 						loading={loading && projects.length === 0}
 						disabled={readOnly}
@@ -99,53 +93,52 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 								{...params} 
 								size="small" 
 								placeholder="Project"
-								InputProps={{
-									...params.InputProps,
-									endAdornment: (
-										<React.Fragment>
-											{params.InputProps.endAdornment}
-											<Tooltip title="Select a project from the list, or choose 'Other' to enter a custom name." arrow>
-												<InputAdornment position="end" sx={{ mr: 1, cursor: 'help' }}>
-													<InfoIcon sx={{ fontSize: '1rem', color: '#9ca3af' }} />
-												</InputAdornment>
-											</Tooltip>
-										</React.Fragment>
-									),
-								}}
 							/>
 						)}
 					/>
-					{isOtherProject && (
-						<Box sx={{ position: 'relative' }}>
-							<TextField
-								size="small"
-								fullWidth
-								autoFocus
-								placeholder="Enter Custom Project Name"
-								value={item.project_name_other || ''}
-								onChange={(e) => onRowChange(index, 'project_name_other', e.target.value)}
-								disabled={readOnly}
-								sx={{
-									'& .MuiOutlinedInput-root': { 
-										borderRadius: '6px',
-										bgcolor: '#fffbeb',
-										borderColor: '#fbbf24'
-									},
-									'& .MuiOutlinedInput-input': { fontSize: '0.8125rem' }
-								}}
-								InputProps={{
-									startAdornment: (
-										<InputAdornment position="start">
-											<EditIcon sx={{ fontSize: '1rem', color: '#d97706' }} />
-										</InputAdornment>
-									),
-								}}
-							/>
-						</Box>
+					{!readOnly && (
+						<Link 
+							component="button"
+							variant="caption"
+							onClick={() => setRequestDialogOpen(true)}
+							sx={{ 
+								display: 'flex', 
+								alignItems: 'center', 
+								gap: 0.5, 
+								mt: 0.5, 
+								color: '#ec7211', 
+								textDecoration: 'none',
+								'&:hover': { textDecoration: 'underline' }
+							}}
+						>
+							<RequestIcon sx={{ fontSize: '0.875rem' }} />
+							Request New Project
+						</Link>
 					)}
+					<DSRProjectRequestDialog 
+						open={requestDialogOpen}
+						onClose={() => setRequestDialogOpen(false)}
+						initialName=""
+					/>
 				</Box>
 			</TableCell>
-			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top', minWidth: 200 }}>
+			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top', minWidth: 140 }}>
+				<Autocomplete
+					options={activityTypes}
+					getOptionLabel={(option) => option.name || ''}
+					value={selectedType}
+					onChange={(_, val) => {
+						onRowChange(index, 'activity_type_code', val?.code || null);
+					}}
+					disabled={readOnly}
+					sx={{
+						'& .MuiOutlinedInput-root': { borderRadius: '6px' },
+						'& .MuiOutlinedInput-input': { fontSize: '0.85rem' }
+					}}
+					renderInput={(params) => <TextField {...params} size="small" placeholder="Type" />}
+				/>
+			</TableCell>
+			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top', minWidth: 180 }}>
 				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
 					<Autocomplete
 						options={activityOptions}
@@ -160,19 +153,19 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 								onRowChange(index, 'activity_name_other', undefined);
 							}
 						}}
-						disabled={readOnly || (!item.project_public_id && item.project_name_other === undefined)}
+						disabled={readOnly || !item.project_public_id}
 						sx={{
 							'& .MuiOutlinedInput-root': { borderRadius: '6px' },
 							'& .MuiOutlinedInput-input': { fontSize: '0.85rem' }
 						}}
-						renderInput={(params) => <TextField {...params} size="small" placeholder="Activity" />}
+						renderInput={(params) => <TextField {...params} size="small" placeholder="Activity / Task" />}
 					/>
 					{isOtherActivity && (
 						<TextField
 							size="small"
 							fullWidth
 							autoFocus
-							placeholder="Enter Custom Activity Name"
+							placeholder="Specify activity..."
 							value={item.activity_name_other || ''}
 							onChange={(e) => onRowChange(index, 'activity_name_other', e.target.value)}
 							disabled={readOnly}
@@ -201,7 +194,7 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 					size="small"
 					multiline
 					maxRows={4}
-					placeholder="Describe your work..."
+					placeholder="What did you do?"
 					value={item.description}
 					onChange={(e) => onRowChange(index, 'description', e.target.value)}
 					disabled={readOnly}

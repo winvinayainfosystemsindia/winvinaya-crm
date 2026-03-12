@@ -60,13 +60,26 @@ export interface DSRActivity {
 	updated_at: string;
 }
 
+export interface DSRActivityType {
+	id: number;
+	public_id: string;
+	name: string;
+	code: string;
+	description: string | null;
+	is_active: boolean;
+	sort_order: number;
+	created_at: string;
+	updated_at: string;
+}
+
 export interface DSRItem {
-	project_public_id: string | null;
+	project_public_id: string| null;
 	project_name?: string;
 	project_name_other?: string;
 	activity_public_id: string | null;
 	activity_name?: string;
 	activity_name_other?: string;
+	activity_type_code?: string | null;
 	description: string;
 	start_time: string;
 	end_time: string;
@@ -117,9 +130,10 @@ export interface DSRActivityCreate {
 
 export interface DSREntryCreate {
 	report_date: string;
-	items?: (Omit<DSRItem, 'project_name' | 'activity_name' | 'hours' | 'project_public_id' | 'activity_public_id'> & { 
+	items?: (Omit<DSRItem, 'project_name' | 'activity_name' | 'hours' | 'project_public_id' | 'activity_public_id' | 'activity_type_code'> & { 
 		project_public_id?: string | null;
 		activity_public_id?: string | null;
+		activity_type_code?: string | null;
 		project_name_other?: string;
 		activity_name_other?: string;
 		hours?: number;
@@ -169,6 +183,24 @@ export interface DSRPermissionStats {
 	raised: number;
 	approved: number;
 	rejected: number;
+}
+
+export type DSRProjectRequestStatus = 'pending' | 'approved' | 'rejected';
+
+export interface DSRProjectRequest {
+	id: number;
+	public_id: string;
+	project_name: string;
+	reason: string | null;
+	status: DSRProjectRequestStatus;
+	admin_notes: string | null;
+	requested_by: number;
+	requester?: DSRUserSnapshot;
+	handled_by?: number;
+	handled_at?: string;
+	created_project_id?: number;
+	created_at: string;
+	updated_at: string;
 }
 
 export type DSRLeaveStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
