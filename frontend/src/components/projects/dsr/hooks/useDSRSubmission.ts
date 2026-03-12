@@ -15,6 +15,8 @@ import useToast from '../../../../hooks/useToast';
 import type { DSRItem } from '../../../../models/dsr';
 import { subDays, format, startOfDay } from 'date-fns';
 
+export const GENERAL_PROJECT_ID = 'general_internal';
+
 interface UseDSRSubmissionProps {
 	onSubmitted?: () => void;
 	externalEntryId?: string | null;
@@ -28,7 +30,16 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 	const toast = useToast();
 
 	const { user } = useAppSelector((state) => state.auth);
-	const { projects, activitiesByProject, calendarEntries: entries, permissionRequests, loading: dsrLoading } = useAppSelector((state) => state.dsr);
+	const { projects: rawProjects, activitiesByProject, calendarEntries: entries, permissionRequests, loading: dsrLoading } = useAppSelector((state) => state.dsr);
+
+	const projects = useMemo(() => {
+		const generalProject: any = {
+			public_id: GENERAL_PROJECT_ID,
+			name: 'General / Internal Work',
+			description: 'General activities like meetings, training, etc.'
+		};
+		return [generalProject, ...rawProjects];
+	}, [rawProjects]);
 	const { activityTypes, loading: typesLoading } = useAppSelector((state) => state.dsrActivityType);
 
 	const loading = dsrLoading || typesLoading;
@@ -150,7 +161,14 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 
 		if (field === 'project_public_id') {
 			newItems[index].activity_public_id = null as any;
-			if (value) {
+			newItems[index].activity_name_other = undefined;
+			
+			if (value === GENERAL_PROJECT_ID) {
+				// General project requires Activity Type
+				newItems[index].activity_type_code = null;
+			} else if (value) {
+				// Specific project requires Activity selection, clear Activity Type
+				newItems[index].activity_type_code = null;
 				dispatch(fetchActivitiesForProject({ projectId: value, assigned_to: user?.public_id }));
 			}
 		}
@@ -194,17 +212,23 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 
 		for (let i = 0; i < items.length; i++) {
 			const it = items[i];
-			const hasProject = !!it.project_public_id;
-			const hasType = !!it.activity_type_code;
+			const isGeneral = it.project_public_id === GENERAL_PROJECT_ID;
 
-			if (!hasProject || !hasType || !it.description || !it.start_time || !it.end_time) {
+			if (!it.project_public_id || !it.description || !it.start_time || !it.end_time) {
 				toast.warning(`Please fill all fields in row ${i + 1}`);
 				return false;
 			}
 			
-			if (!it.activity_public_id && !it.activity_name_other) {
-				toast.warning(`Please specify the Activity in row ${i + 1}`);
-				return false;
+			if (isGeneral) {
+				if (!it.activity_type_code) {
+					toast.warning(`Please select an Activity Type for General work in row ${i + 1}`);
+					return false;
+				}
+			} else {
+				if (!it.activity_public_id && !it.activity_name_other) {
+					toast.warning(`Please select an Activity for row ${i + 1}`);
+					return false;
+				}
 			}
 
 			if ((it.hours || 0) <= 0) {
@@ -218,10 +242,15 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 	const handleSaveDraft = async () => {
 		if (!validate()) return;
 		setSubmitting(true);
+		const sanitizedItems = items.map(item => ({
+			...item,
+			project_public_id: item.project_public_id === GENERAL_PROJECT_ID ? null : item.project_public_id
+		}));
+
 		try {
 			await dispatch(createEntry({
 				report_date: reportDate,
-				items: isLeave ? [] : items as any,
+				items: isLeave ? [] : sanitizedItems as any,
 				is_leave: isLeave,
 				leave_type: isLeave ? leaveType : undefined
 			})).unwrap();
@@ -242,10 +271,15 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 	const handleSubmit = async () => {
 		if (!validate()) return;
 		setSubmitting(true);
+		const sanitizedItems = items.map(item => ({
+			...item,
+			project_public_id: item.project_public_id === GENERAL_PROJECT_ID ? null : item.project_public_id
+		}));
+
 		try {
 			const entry = await dispatch(createEntry({
 				report_date: reportDate,
-				items: isLeave ? [] : items as any,
+				items: isLeave ? [] : sanitizedItems as any,
 				is_leave: isLeave,
 				leave_type: isLeave ? leaveType : undefined
 			})).unwrap();

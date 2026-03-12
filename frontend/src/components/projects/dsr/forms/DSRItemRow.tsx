@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
 	TableRow,
 	TableCell,
@@ -7,16 +7,14 @@ import {
 	Typography,
 	IconButton,
 	Box,
-	InputAdornment,
-	Link
+	InputAdornment
 } from '@mui/material';
 import { 
 	Delete as DeleteIcon,
-	EditNote as EditIcon,
-	AddCircleOutline as RequestIcon
+	EditNote as EditIcon
 } from '@mui/icons-material';
 import type { DSRItem, DSRProject, DSRActivity, DSRActivityType } from '../../../../models/dsr';
-import DSRProjectRequestDialog from './DSRProjectRequestDialog';
+import { GENERAL_PROJECT_ID } from '../hooks/useDSRSubmission';
 
 interface DSRItemRowProps {
 	index: number;
@@ -50,8 +48,6 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 	isDeleteDisabled,
 	readOnly = false
 }) => {
-	const [requestDialogOpen, setRequestDialogOpen] = useState(false);
-
 	const activityOptions = React.useMemo(() => {
 		return [...activities, OTHER_ACTIVITY as DSRActivity];
 	}, [activities]);
@@ -70,123 +66,110 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 	}, [item.activity_public_id, item.activity_name_other, activities]);
 
 	const isOtherActivity = selectedActivity?.public_id === OTHER_ID;
+	const isGeneral = item.project_public_id === GENERAL_PROJECT_ID;
 
 	return (
 		<TableRow sx={{ '&:hover': { bgcolor: '#f9fafb' } }}>
 			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top', minWidth: 180 }}>
-				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-					<Autocomplete
-						options={projects}
-						getOptionLabel={(option) => option.name || ''}
-						value={selectedProject}
-						onChange={(_, val) => {
-							onRowChange(index, 'project_public_id', val?.public_id || null);
-						}}
-						loading={loading && projects.length === 0}
-						disabled={readOnly}
-						sx={{
-							'& .MuiOutlinedInput-root': { borderRadius: '6px' },
-							'& .MuiOutlinedInput-input': { fontSize: '0.85rem' }
-						}}
-						renderInput={(params) => (
-							<TextField 
-								{...params} 
-								size="small" 
-								placeholder="Project"
-							/>
-						)}
-					/>
-					{!readOnly && (
-						<Link 
-							component="button"
-							variant="caption"
-							onClick={() => setRequestDialogOpen(true)}
-							sx={{ 
-								display: 'flex', 
-								alignItems: 'center', 
-								gap: 0.5, 
-								mt: 0.5, 
-								color: '#ec7211', 
-								textDecoration: 'none',
-								'&:hover': { textDecoration: 'underline' }
-							}}
-						>
-							<RequestIcon sx={{ fontSize: '0.875rem' }} />
-							Request New Project
-						</Link>
-					)}
-					<DSRProjectRequestDialog 
-						open={requestDialogOpen}
-						onClose={() => setRequestDialogOpen(false)}
-						initialName=""
-					/>
-				</Box>
-			</TableCell>
-			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top', minWidth: 140 }}>
 				<Autocomplete
-					options={activityTypes}
+					options={projects}
 					getOptionLabel={(option) => option.name || ''}
-					value={selectedType}
+					value={selectedProject}
 					onChange={(_, val) => {
-						onRowChange(index, 'activity_type_code', val?.code || null);
+						onRowChange(index, 'project_public_id', val?.public_id || null);
 					}}
+					loading={loading && projects.length === 0}
 					disabled={readOnly}
 					sx={{
 						'& .MuiOutlinedInput-root': { borderRadius: '6px' },
 						'& .MuiOutlinedInput-input': { fontSize: '0.85rem' }
 					}}
-					renderInput={(params) => <TextField {...params} size="small" placeholder="Type" />}
+					renderInput={(params) => (
+						<TextField 
+							{...params} 
+							size="small" 
+							placeholder="Project"
+						/>
+					)}
 				/>
 			</TableCell>
-			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top', minWidth: 180 }}>
-				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top', minWidth: 140 }}>
+				{isGeneral ? (
 					<Autocomplete
-						options={activityOptions}
+						options={activityTypes}
 						getOptionLabel={(option) => option.name || ''}
-						value={selectedActivity}
+						value={selectedType}
 						onChange={(_, val) => {
-							if (val?.public_id === OTHER_ID) {
-								onRowChange(index, 'activity_public_id', null);
-								onRowChange(index, 'activity_name_other', '');
-							} else {
-								onRowChange(index, 'activity_public_id', val?.public_id || null);
-								onRowChange(index, 'activity_name_other', undefined);
-							}
+							onRowChange(index, 'activity_type_code', val?.code || null);
 						}}
-						disabled={readOnly || !item.project_public_id}
+						disabled={readOnly}
 						sx={{
 							'& .MuiOutlinedInput-root': { borderRadius: '6px' },
 							'& .MuiOutlinedInput-input': { fontSize: '0.85rem' }
 						}}
-						renderInput={(params) => <TextField {...params} size="small" placeholder="Activity / Task" />}
+						renderInput={(params) => <TextField {...params} size="small" placeholder="Type" required />}
 					/>
-					{isOtherActivity && (
-						<TextField
-							size="small"
-							fullWidth
-							autoFocus
-							placeholder="Specify activity..."
-							value={item.activity_name_other || ''}
-							onChange={(e) => onRowChange(index, 'activity_name_other', e.target.value)}
-							disabled={readOnly}
+				) : (
+					<Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic', fontSize: '0.75rem' }}>
+						N/A for Projects
+					</Typography>
+				)}
+			</TableCell>
+			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top', minWidth: 180 }}>
+				{!isGeneral ? (
+					<Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+						<Autocomplete
+							options={activityOptions}
+							getOptionLabel={(option) => option.name || ''}
+							value={selectedActivity}
+							onChange={(_, val) => {
+								if (val?.public_id === OTHER_ID) {
+									onRowChange(index, 'activity_public_id', null);
+									onRowChange(index, 'activity_name_other', '');
+								} else {
+									onRowChange(index, 'activity_public_id', val?.public_id || null);
+									onRowChange(index, 'activity_name_other', undefined);
+								}
+							}}
+							disabled={readOnly || !item.project_public_id}
 							sx={{
-								'& .MuiOutlinedInput-root': { 
-									borderRadius: '6px',
-									bgcolor: '#fffbeb',
-									borderColor: '#fbbf24'
-								},
-								'& .MuiOutlinedInput-input': { fontSize: '0.8125rem' }
+								'& .MuiOutlinedInput-root': { borderRadius: '6px' },
+								'& .MuiOutlinedInput-input': { fontSize: '0.85rem' }
 							}}
-							InputProps={{
-								startAdornment: (
-									<InputAdornment position="start">
-										<EditIcon sx={{ fontSize: '1rem', color: '#d97706' }} />
-									</InputAdornment>
-								),
-							}}
+							renderInput={(params) => <TextField {...params} size="small" placeholder="Activity / Task" />}
 						/>
-					)}
-				</Box>
+						{isOtherActivity && (
+							<TextField
+								size="small"
+								fullWidth
+								autoFocus
+								placeholder="Specify activity..."
+								value={item.activity_name_other || ''}
+								onChange={(e) => onRowChange(index, 'activity_name_other', e.target.value)}
+								disabled={readOnly}
+								sx={{
+									'& .MuiOutlinedInput-root': { 
+										borderRadius: '6px',
+										bgcolor: '#fffbeb',
+										borderColor: '#fbbf24'
+									},
+									'& .MuiOutlinedInput-input': { fontSize: '0.8125rem' }
+								}}
+								InputProps={{
+									startAdornment: (
+										<InputAdornment position="start">
+											<EditIcon sx={{ fontSize: '1rem', color: '#d97706' }} />
+										</InputAdornment>
+									),
+								}}
+							/>
+						)}
+					</Box>
+				) : (
+					<Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic', fontSize: '0.75rem' }}>
+						N/A for General
+					</Typography>
+				)}
 			</TableCell>
 			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top' }}>
 				<TextField

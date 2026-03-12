@@ -102,7 +102,9 @@ class DSRService:
                 resolved_item["project_name"] = project.name
             else:
                 resolved_item["project_public_id"] = None
-                resolved_item["project_name"] = p_name_other
+                # If it has an activity type and no project, it's "General"
+                default_name = "General / Internal Work" if activity_type_code else p_name_other
+                resolved_item["project_name"] = default_name
                 resolved_item["project_name_other"] = p_name_other
 
             # Resolve activity

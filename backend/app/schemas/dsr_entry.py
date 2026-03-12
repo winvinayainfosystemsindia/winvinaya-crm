@@ -41,7 +41,13 @@ class DSRItemCreate(BaseModel):
 
     @model_validator(mode="after")
     def validate_project_identifier(self) -> "DSRItemCreate":
-        """Project must come from either the controlled list or a legacy custom name."""
+        """Project must come from either the controlled list or a legacy custom name.
+        IF activity_type_code is provided, we allow project_public_id to be None (General Work).
+        """
+        if self.activity_type_code:
+            # General work category — project is optional
+            return self
+            
         if not self.project_public_id and not self.project_name_other:
             raise ValueError("project_public_id is required (select a project from the list)")
         return self
