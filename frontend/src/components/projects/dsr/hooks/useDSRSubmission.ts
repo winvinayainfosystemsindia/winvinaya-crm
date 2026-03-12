@@ -160,16 +160,19 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		newItems[index] = { ...newItems[index], [field]: value };
 
 		if (field === 'project_public_id') {
-			newItems[index].activity_public_id = null as any;
-			newItems[index].activity_name_other = undefined;
-			
-			if (value === GENERAL_PROJECT_ID) {
-				// General project requires Activity Type
-				newItems[index].activity_type_code = null;
-			} else if (value) {
-				// Specific project requires Activity selection, clear Activity Type
-				newItems[index].activity_type_code = null;
-				dispatch(fetchActivitiesForProject({ projectId: value, assigned_to: user?.public_id }));
+			const currentProjectId = items[index].project_public_id;
+			if (currentProjectId !== value) {
+				newItems[index].activity_public_id = null as any;
+				newItems[index].activity_name_other = undefined;
+				
+				if (value === GENERAL_PROJECT_ID) {
+					// General project requires Activity Type
+					newItems[index].activity_type_code = null;
+				} else if (value) {
+					// Specific project requires Activity selection, clear Activity Type
+					newItems[index].activity_type_code = null;
+					dispatch(fetchActivitiesForProject({ projectId: value, assigned_to: user?.public_id }));
+				}
 			}
 		}
 

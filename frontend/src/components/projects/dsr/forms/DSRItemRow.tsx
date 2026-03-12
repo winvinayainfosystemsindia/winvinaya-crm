@@ -53,6 +53,11 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 	}, [activities]);
 
 	const selectedProject = React.useMemo(() => {
+		if (!item.project_public_id) return null;
+		// Handle the virtual general project
+		if (item.project_public_id === GENERAL_PROJECT_ID) {
+			return projects.find(p => p.public_id === GENERAL_PROJECT_ID) || null;
+		}
 		return projects.find(p => p.public_id === item.project_public_id) || null;
 	}, [item.project_public_id, projects]);
 
@@ -76,10 +81,11 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 					getOptionLabel={(option) => option.name || ''}
 					value={selectedProject}
 					onChange={(_, val) => {
-						onRowChange(index, 'project_public_id', val?.public_id || null);
+					onRowChange(index, 'project_public_id', val?.public_id || null);
 					}}
 					loading={loading && projects.length === 0}
 					disabled={readOnly}
+					isOptionEqualToValue={(option, value) => option.public_id === value.public_id}
 					sx={{
 						'& .MuiOutlinedInput-root': { borderRadius: '6px' },
 						'& .MuiOutlinedInput-input': { fontSize: '0.85rem' }
@@ -103,6 +109,7 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 							onRowChange(index, 'activity_type_code', val?.code || null);
 						}}
 						disabled={readOnly}
+						isOptionEqualToValue={(option, value) => option.code === value.code}
 						sx={{
 							'& .MuiOutlinedInput-root': { borderRadius: '6px' },
 							'& .MuiOutlinedInput-input': { fontSize: '0.85rem' }
@@ -128,10 +135,11 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 									onRowChange(index, 'activity_name_other', '');
 								} else {
 									onRowChange(index, 'activity_public_id', val?.public_id || null);
-									onRowChange(index, 'activity_name_other', undefined);
+								onRowChange(index, 'activity_name_other', undefined);
 								}
 							}}
 							disabled={readOnly || !item.project_public_id}
+							isOptionEqualToValue={(option, value) => option.public_id === value.public_id}
 							sx={{
 								'& .MuiOutlinedInput-root': { borderRadius: '6px' },
 								'& .MuiOutlinedInput-input': { fontSize: '0.85rem' }

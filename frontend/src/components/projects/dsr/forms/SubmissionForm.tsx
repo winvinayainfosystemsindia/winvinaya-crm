@@ -73,7 +73,7 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
 								item={item}
 								projects={projects}
 								activityTypes={activityTypes}
-								activities={item.project_public_id ? (activitiesByProject[item.project_public_id] || []) : []}
+								activities={item.project_public_id && item.project_public_id !== 'general_internal' ? (activitiesByProject[item.project_public_id] || []) : []}
 								loading={loading}
 								onRowChange={onRowChange}
 								onRemoveRow={onRemoveRow}
@@ -83,13 +83,20 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
 						))}
 						{!readOnly && (() => {
 							const lastItem = items[items.length - 1];
-							const isLastRowComplete = lastItem &&
-								(lastItem.project_public_id || (lastItem.project_name_other && lastItem.project_name_other.trim() !== '')) &&
-								(lastItem.activity_public_id || (lastItem.activity_name_other && lastItem.activity_name_other.trim() !== '')) &&
-								lastItem.description &&
-								lastItem.start_time &&
-								lastItem.end_time &&
-								(lastItem.hours || 0) > 0;
+							const isGeneral = lastItem?.project_public_id === 'general_internal';
+							
+							const hasProject = !!lastItem?.project_public_id;
+							const hasDescription = !!lastItem?.description && lastItem.description.trim().length > 0;
+							const hasTime = !!lastItem?.start_time && !!lastItem?.end_time && (lastItem.hours || 0) > 0;
+							
+							let isCategorized = false;
+							if (isGeneral) {
+								isCategorized = !!lastItem?.activity_type_code;
+							} else {
+								isCategorized = !!lastItem?.activity_public_id || (!!lastItem?.activity_name_other && lastItem.activity_name_other.trim() !== '');
+							}
+
+							const isLastRowComplete = hasProject && isCategorized && hasDescription && hasTime;
 
 							return (
 								<TableRow>
