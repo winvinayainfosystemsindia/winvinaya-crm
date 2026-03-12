@@ -16,6 +16,7 @@ import {
 } from '@mui/icons-material';
 import DSRItemRow from './DSRItemRow';
 import type { DSRItem, DSRProject, DSRActivity, DSRActivityType } from '../../../../models/dsr';
+import { GENERAL_PROJECT_ID } from '../hooks/useDSRSubmission';
 
 interface SubmissionFormProps {
 	items: Partial<DSRItem>[];
@@ -73,7 +74,7 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
 								item={item}
 								projects={projects}
 								activityTypes={activityTypes}
-								activities={item.project_public_id && item.project_public_id !== 'general_internal' ? (activitiesByProject[item.project_public_id] || []) : []}
+								activities={item.project_public_id && item.project_public_id !== GENERAL_PROJECT_ID ? (activitiesByProject[item.project_public_id] || []) : []}
 								loading={loading}
 								onRowChange={onRowChange}
 								onRemoveRow={onRemoveRow}
@@ -83,7 +84,7 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
 						))}
 						{!readOnly && (() => {
 							const lastItem = items[items.length - 1];
-							const isGeneral = lastItem?.project_public_id === 'general_internal';
+							const isGeneral = lastItem?.project_public_id === GENERAL_PROJECT_ID;
 							
 							const hasProject = !!lastItem?.project_public_id;
 							const hasDescription = !!lastItem?.description && lastItem.description.trim().length > 0;

@@ -156,32 +156,35 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 	};
 
 	const handleRowChange = (index: number, field: keyof DSRItem, value: any) => {
-		const newItems = [...items];
-		newItems[index] = { ...newItems[index], [field]: value };
+		setItems((prevItems) => {
+			const newItems = [...prevItems];
+			const currentItem = newItems[index];
 
-		if (field === 'project_public_id') {
-			const currentProjectId = items[index].project_public_id;
-			if (currentProjectId !== value) {
-				newItems[index].activity_public_id = null as any;
-				newItems[index].activity_name_other = undefined;
-				
-				if (value === GENERAL_PROJECT_ID) {
-					// General project requires Activity Type
-					newItems[index].activity_type_code = null;
-				} else if (value) {
-					// Specific project requires Activity selection, clear Activity Type
-					newItems[index].activity_type_code = null;
-					dispatch(fetchActivitiesForProject({ projectId: value, assigned_to: user?.public_id }));
+			// Create a new object for the item being changed
+			const updatedItem = { ...currentItem, [field]: value };
+			
+			// Handle logical dependencies
+			if (field === 'project_public_id') {
+				// If project actually changed, clear its children
+				if (currentItem.project_public_id !== value) {
+					updatedItem.activity_public_id = null as any;
+					updatedItem.activity_name_other = undefined;
+					updatedItem.activity_type_code = null;
 				}
 			}
-		}
 
-		if (field === 'start_time' || field === 'end_time') {
-			const hours = calculateHours(newItems[index].start_time || '', newItems[index].end_time || '');
-			newItems[index].hours = hours;
-		}
+			if (field === 'start_time' || field === 'end_time') {
+				updatedItem.hours = calculateHours(updatedItem.start_time || '', updatedItem.end_time || '');
+			}
 
-		setItems(newItems);
+			newItems[index] = updatedItem;
+			return newItems;
+		});
+
+		// Handle side effects (Redux dispatches) outside the state update
+		if (field === 'project_public_id' && value && value !== GENERAL_PROJECT_ID) {
+			dispatch(fetchActivitiesForProject({ projectId: value, assigned_to: user?.public_id }));
+		}
 	};
 
 	const addRow = () => {
