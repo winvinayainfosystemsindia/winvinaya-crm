@@ -4,7 +4,6 @@ import {
 	Typography,
 	Tabs,
 	Tab,
-	Divider,
 	Button,
 	Paper
 } from '@mui/material';
@@ -14,16 +13,13 @@ import {
 	History as HistoryIcon,
 	Refresh as RefreshIcon
 } from '@mui/icons-material';
-import PermissionStatsCards from '../common/PermissionStatsCards';
 import PermissionRequestsTable from './PermissionRequestsTable';
 import AllSubmissionsTable from './AllSubmissionsTable';
 import DSRActivityTypeManagement from './DSRActivityTypeManagement';
 import type { useDSRAdmin } from '../hooks/useDSRAdmin';
-import type { DSRPermissionStats } from '../../../../models/dsr';
 
 interface DSRAdminSectionProps {
 	admin: ReturnType<typeof useDSRAdmin>;
-	permissionStats: DSRPermissionStats | null;
 }
 
 const TabLabel: React.FC<{
@@ -77,7 +73,7 @@ const TabLabel: React.FC<{
 	</Box>
 );
 
-const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin, permissionStats }) => {
+const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin }) => {
 	const [activeTab, setActiveTab] = useState(0);
 
 	const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
@@ -191,24 +187,24 @@ const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin, permissionStat
 				<Box sx={{ p: 3 }}>
 
 					<TabPanel value={activeTab} index={0}>
-						<Box sx={{ mb: 4 }}>
-							<Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Permission Analytics</Typography>
-							<PermissionStatsCards stats={permissionStats} />
-						</Box>
 						<Box>
-							<Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>Pending Requests</Typography>
-							<Divider sx={{ mb: 3 }} />
 							<PermissionRequestsTable
 								requests={admin.permissionRequests}
 								loading={admin.loading}
 								onHandle={admin.handlePermissionAction}
+								onRefresh={admin.handleRefresh}
+								searchTerm={admin.permissionsSearchTerm}
+								onSearchChange={admin.setPermissionsSearchTerm}
+								page={admin.permissionPage}
+								rowsPerPage={admin.permissionRowsPerPage}
+								onPageChange={(_, p) => admin.setPermissionPage(p)}
+								onRowsPerPageChange={(e) => admin.setPermissionRowsPerPage(parseInt(e.target.value))}
+								onRowsPerPageSelectChange={(r) => admin.setPermissionRowsPerPage(r)}
 							/>
 						</Box>
 					</TabPanel>
 
 					<TabPanel value={activeTab} index={1}>
-						<Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>Global Submission History</Typography>
-						<Divider sx={{ mb: 3 }} />
 						<AllSubmissionsTable
 							entries={admin.entries}
 							total={admin.totalEntries}
@@ -217,6 +213,12 @@ const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin, permissionStat
 							rowsPerPage={admin.entryRowsPerPage}
 							onPageChange={(_, p) => admin.setEntryPage(p)}
 							onRowsPerPageChange={(e) => admin.setEntryRowsPerPage(parseInt(e.target.value))}
+							onRowsPerPageSelectChange={(r) => admin.setEntryRowsPerPage(r)}
+							onRefresh={admin.handleRefresh}
+							searchTerm={admin.submissionsSearchTerm}
+							onSearchChange={admin.setSubmissionsSearchTerm}
+							statusFilter={admin.statusFilter}
+							onStatusFilterChange={admin.setStatusFilter}
 						/>
 					</TabPanel>
 

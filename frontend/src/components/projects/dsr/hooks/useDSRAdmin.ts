@@ -6,8 +6,7 @@ import {
 	sendDSRReminders,
 	grantDSRPermission,
 	fetchPermissionRequests,
-	handlePermissionRequestAction,
-	fetchPermissionStats
+	handlePermissionRequestAction
 } from '../../../../store/slices/dsrSlice';
 import useToast from '../../../../hooks/useToast';
 
@@ -16,17 +15,24 @@ export const useDSRAdmin = () => {
 	const toast = useToast();
 	const {
 		missingReports,
-		adminEntries: entries,
+		adminEntries,
 		totalAdminEntries: totalEntries,
 		permissionRequests,
 		totalPermissionRequests,
 		loading
 	} = useAppSelector((state) => state.dsr);
 
+	const entries = adminEntries;
+
 	const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
 	const [reminding, setReminding] = useState(false);
 	const [entryPage, setEntryPage] = useState(0);
 	const [entryRowsPerPage, setEntryRowsPerPage] = useState(10);
+	const [submissionsSearchTerm, setSubmissionsSearchTerm] = useState('');
+	const [permissionsSearchTerm, setPermissionsSearchTerm] = useState('');
+	const [statusFilter, setStatusFilter] = useState<string | null>(null);
+	const [permissionPage, setPermissionPage] = useState(0);
+	const [permissionRowsPerPage, setPermissionRowsPerPage] = useState(10);
 
 	const fetchData = useCallback(() => {
 		dispatch(fetchMissingReports(reportDate));
@@ -64,7 +70,6 @@ export const useDSRAdmin = () => {
 			const isToday = reportDate === new Date().toISOString().split('T')[0];
 			toast.success(isToday ? 'Draft created for user' : 'Past-date submission permission granted');
 			dispatch(fetchMissingReports(reportDate));
-			dispatch(fetchPermissionStats());
 			dispatch(fetchAdminOverview({
 				skip: entryPage * entryRowsPerPage,
 				limit: entryRowsPerPage,
@@ -83,7 +88,6 @@ export const useDSRAdmin = () => {
 			await dispatch(handlePermissionRequestAction({ publicId, status })).unwrap();
 			toast.success(`Request ${status} successfully`);
 			dispatch(fetchPermissionRequests({ skip: 0, limit: 100 }));
-			dispatch(fetchPermissionStats());
 			dispatch(fetchAdminOverview({
 				skip: entryPage * entryRowsPerPage,
 				limit: entryRowsPerPage,
@@ -95,6 +99,8 @@ export const useDSRAdmin = () => {
 		}
 	};
 
+	const reviewQueueTotal = adminEntries.filter(e => e.status === 'submitted').length;
+
 	return {
 		reportDate,
 		setReportDate,
@@ -104,11 +110,22 @@ export const useDSRAdmin = () => {
 		totalEntries,
 		permissionRequests,
 		totalPermissionRequests,
+		reviewQueueTotal,
 		loading,
 		entryPage,
 		setEntryPage,
 		entryRowsPerPage,
 		setEntryRowsPerPage,
+		submissionsSearchTerm,
+		setSubmissionsSearchTerm,
+		permissionsSearchTerm,
+		setPermissionsSearchTerm,
+		statusFilter,
+		setStatusFilter,
+		permissionPage,
+		setPermissionPage,
+		permissionRowsPerPage,
+		setPermissionRowsPerPage,
 		handleSendReminders,
 		handleGrantPermission,
 		handlePermissionAction,

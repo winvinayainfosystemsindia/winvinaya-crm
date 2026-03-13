@@ -37,6 +37,7 @@ import {
 } from '../../../../store/slices/dsrActivityTypeSlice';
 import useToast from '../../../../hooks/useToast';
 import type { DSRActivityType } from '../../../../models/dsr';
+import DSRAdminTableHeader from './DSRAdminTableHeader';
 
 const DSRActivityTypeManagement: React.FC = () => {
 	const dispatch = useAppDispatch();
@@ -51,6 +52,17 @@ const DSRActivityTypeManagement: React.FC = () => {
 		description: '',
 		sort_order: 0
 	});
+	const [searchTerm, setSearchTerm] = useState('');
+
+	const filteredActivityTypes = React.useMemo(() => {
+		if (!searchTerm) return activityTypes;
+		const s = searchTerm.toLowerCase();
+		return activityTypes.filter(t =>
+			t.name.toLowerCase().includes(s) ||
+			t.code.toLowerCase().includes(s) ||
+			(t.description || '').toLowerCase().includes(s)
+		);
+	}, [activityTypes, searchTerm]);
 
 	useEffect(() => {
 		dispatch(fetchActivityTypes({ onlyActive: false }));
@@ -113,81 +125,103 @@ const DSRActivityTypeManagement: React.FC = () => {
 
 	return (
 		<Box>
-			<Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-				<Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-					Manage Activity Taxonomy
-				</Typography>
-				<Button
-					startIcon={<AddIcon />}
-					variant="contained"
-					size="small"
-					onClick={() => handleOpenDialog()}
-					sx={{ bgcolor: '#ec7211', '&:hover': { bgcolor: '#eb5f07' } }}
-				>
-					Add Activity Type
-				</Button>
-			</Box>
+			<Paper sx={{ border: '1px solid #d5dbdb', boxShadow: 'none', borderRadius: '8px', overflow: 'hidden' }}>
+				<DSRAdminTableHeader
+					title="Activity Taxonomy"
+					searchTerm={searchTerm}
+					onSearchChange={setSearchTerm}
+					onRefresh={() => dispatch(fetchActivityTypes({ onlyActive: false }))}
+					placeholder="Search activity types..."
+					actions={
+						<Button
+							startIcon={<AddIcon />}
+							variant="contained"
+							size="small"
+							onClick={() => handleOpenDialog()}
+							sx={{
+								bgcolor: '#ec7211',
+								'&:hover': { bgcolor: '#eb5f07' },
+								textTransform: 'none',
+								fontWeight: 700,
+								boxShadow: 'none',
+								height: '36px'
+							}}
+						>
+							Add Activity Type
+						</Button>
+					}
+				/>
 
-			<TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 1 }}>
-				<Table size="small">
-					<TableHead sx={{ bgcolor: '#f9fafb' }}>
-						<TableRow>
-							<TableCell sx={{ fontWeight: 700 }}>Code</TableCell>
-							<TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
-							<TableCell sx={{ fontWeight: 700 }}>Description</TableCell>
-							<TableCell sx={{ fontWeight: 700 }}>Order</TableCell>
-							<TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-							<TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
-						</TableRow>
-					</TableHead>
-					<TableBody>
-						{loading && activityTypes.length === 0 ? (
+				<TableContainer>
+					<Table size="small">
+						<TableHead sx={{ bgcolor: '#fafafa' }}>
 							<TableRow>
-								<TableCell colSpan={6} align="center" sx={{ py: 3 }}>
-									<CircularProgress size={24} />
-								</TableCell>
+								<TableCell sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem', borderBottom: '2px solid #d5dbdb' }}>Code</TableCell>
+								<TableCell sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem', borderBottom: '2px solid #d5dbdb' }}>Name</TableCell>
+								<TableCell sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem', borderBottom: '2px solid #d5dbdb' }}>Description</TableCell>
+								<TableCell sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem', borderBottom: '2px solid #d5dbdb' }}>Order</TableCell>
+								<TableCell sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem', borderBottom: '2px solid #d5dbdb' }}>Status</TableCell>
+								<TableCell align="right" sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem', borderBottom: '2px solid #d5dbdb' }}>Actions</TableCell>
 							</TableRow>
-						) : activityTypes.length === 0 ? (
-							<TableRow>
-								<TableCell colSpan={6} align="center" sx={{ py: 3 }}>
-									<Typography variant="body2" color="text.secondary">No activity types found.</Typography>
-								</TableCell>
-							</TableRow>
-						) : (
-							activityTypes.map((type) => (
-								<TableRow key={type.public_id}>
-									<TableCell>
-										<Typography variant="body2" sx={{ fontWeight: 700, color: '#232f3e' }}>
-											{type.code}
-										</Typography>
-									</TableCell>
-									<TableCell>{type.name}</TableCell>
-									<TableCell sx={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-										{type.description || '-'}
-									</TableCell>
-									<TableCell>{type.sort_order}</TableCell>
-									<TableCell>
-										<Chip
-											label={type.is_active ? 'Active' : 'Inactive'}
-											size="small"
-											color={type.is_active ? 'success' : 'default'}
-											variant="outlined"
-										/>
-									</TableCell>
-									<TableCell align="right">
-										<IconButton size="small" onClick={() => handleOpenDialog(type)}>
-											<EditIcon fontSize="small" />
-										</IconButton>
-										<IconButton size="small" onClick={() => handleDelete(type.public_id)} color="error">
-											<DeleteIcon fontSize="small" />
-										</IconButton>
+						</TableHead>
+						<TableBody>
+							{loading && activityTypes.length === 0 ? (
+								<TableRow>
+									<TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+										<CircularProgress size={24} />
 									</TableCell>
 								</TableRow>
-							))
-						)}
-					</TableBody>
-				</Table>
-			</TableContainer>
+							) : filteredActivityTypes.length === 0 ? (
+								<TableRow>
+									<TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+										<Typography variant="body2" color="text.secondary">
+											{searchTerm ? 'No results found.' : 'No activity types found.'}
+										</Typography>
+									</TableCell>
+								</TableRow>
+							) : (
+								filteredActivityTypes.map((type) => (
+									<TableRow
+										key={type.public_id}
+										sx={{
+											'&:hover': { bgcolor: '#f5f8fa' },
+											'&:last-child td': { borderBottom: 0 }
+										}}
+									>
+										<TableCell>
+											<Typography variant="body2" sx={{ fontWeight: 700, color: '#232f3e' }}>
+												{type.code}
+											</Typography>
+										</TableCell>
+										<TableCell sx={{ fontWeight: 500 }}>{type.name}</TableCell>
+										<TableCell sx={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'text.secondary' }}>
+											{type.description || '-'}
+										</TableCell>
+										<TableCell>{type.sort_order}</TableCell>
+										<TableCell>
+											<Chip
+												label={type.is_active ? 'Active' : 'Inactive'}
+												size="small"
+												color={type.is_active ? 'success' : 'default'}
+												variant="outlined"
+												sx={{ borderRadius: '4px', fontWeight: 700, fontSize: '0.7rem' }}
+											/>
+										</TableCell>
+										<TableCell align="right">
+											<IconButton size="small" onClick={() => handleOpenDialog(type)}>
+												<EditIcon fontSize="small" />
+											</IconButton>
+											<IconButton size="small" onClick={() => handleDelete(type.public_id)} color="error">
+												<DeleteIcon fontSize="small" />
+											</IconButton>
+										</TableCell>
+									</TableRow>
+								))
+							)}
+						</TableBody>
+					</Table>
+				</TableContainer>
+			</Paper>
 
 			<Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
 				<DialogTitle sx={{ fontWeight: 700 }}>

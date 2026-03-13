@@ -28,11 +28,10 @@ import MyLeavesTable from '../../components/projects/dsr/user/MyLeavesTable';
 import MyLeaveStatsCards from '../../components/projects/dsr/common/MyLeaveStatsCards';
 import {
 	fetchPermissionRequests,
-	fetchPermissionStats,
 	fetchLeaveStats
 } from '../../store/slices/dsrSlice';
 import MyPermissionRequests from '../../components/projects/dsr/user/MyPermissionRequests';
-import PermissionStatsCards from '../../components/projects/dsr/common/PermissionStatsCards';
+// PermissionStatsCards removed
 
 const TabLabel: React.FC<{
 	icon: React.ReactNode;
@@ -87,7 +86,8 @@ const DSRDashboard: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const { user } = useAppSelector((state) => state.auth);
 	const isPrivileged = user?.role === 'admin' || user?.role === 'manager';
-	const { permissionRequests, permissionStats, leaveStats, loading: dsrLoading } = useAppSelector((state) => state.dsr);
+	const { permissionRequests, leaveStats, loading: dsrLoading } = useAppSelector((state) => state.dsr);
+// permissionStats removed
 
 	const [activeTab, setActiveTab] = useState(0);
 	const [isSubmissionOpen, setIsSubmissionOpen] = useState(false);
@@ -102,12 +102,11 @@ const DSRDashboard: React.FC = () => {
 	// Fetch initial data
 	useEffect(() => {
 		if (activeTab === 1) {
-			dispatch(fetchPermissionStats({ user_id: user?.id }));
 			dispatch(fetchPermissionRequests({ skip: 0, limit: 100, user_id: user?.id }));
 		} else if (activeTab === 2) {
 			dispatch(fetchLeaveStats());
 		} else if (activeTab === 3 && isPrivileged) {
-			dispatch(fetchPermissionStats());
+			// fetchPermissionStats removed
 		}
 	}, [dispatch, activeTab, user?.id, isPrivileged]);
 
@@ -139,19 +138,16 @@ const DSRDashboard: React.FC = () => {
 		setIsViewOnly(false);
 		history.fetchHistory();
 		if (activeTab === 1) {
-			dispatch(fetchPermissionStats({ user_id: user?.id }));
 			dispatch(fetchPermissionRequests({ skip: 0, limit: 100, user_id: user?.id }));
 		} else if (activeTab === 2) {
 			dispatch(fetchLeaveStats());
 		} else if (activeTab === 3 && isPrivileged) {
-			dispatch(fetchPermissionStats());
 			admin.handleRefresh();
 		}
 	};
 
 	const handlePermissionRequestClose = () => {
 		setIsPermissionRequestOpen(false);
-		dispatch(fetchPermissionStats({ user_id: user?.id }));
 		dispatch(fetchPermissionRequests({ skip: 0, limit: 100, user_id: user?.id }));
 	};
 
@@ -299,7 +295,7 @@ const DSRDashboard: React.FC = () => {
 							{activeTab === 1 && (
 								<Box>
 									<Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>Request Tracking</Typography>
-									<PermissionStatsCards stats={permissionStats} />
+									{/* PermissionStatsCards removed */}
 									<MyPermissionRequests
 										requests={permissionRequests}
 										loading={dsrLoading}
@@ -318,7 +314,6 @@ const DSRDashboard: React.FC = () => {
 							{activeTab === 3 && isPrivileged && (
 								<DSRAdminSection
 									admin={admin}
-									permissionStats={permissionStats}
 								/>
 							)}
 						</Box>
