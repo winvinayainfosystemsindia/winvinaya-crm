@@ -14,7 +14,6 @@ import { useDSRSubmission } from '../hooks/useDSRSubmission';
 import SubmissionForm from './SubmissionForm';
 import DSRDialogHeader from './DSRDialogHeader';
 import ReportingHeader from './ReportingHeader';
-import LeaveSection from './LeaveSection';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
@@ -37,9 +36,7 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 		dateStatuses,
 		items,
 		isLeave,
-		setIsLeave,
 		leaveType,
-		setLeaveType,
 		totalHours,
 		submitting,
 		permissionError,
@@ -109,15 +106,6 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 							readOnly={readOnly}
 							totalHours={totalHours}
 							isLeave={isLeave}
-						/>
-
-						<LeaveSection
-							isLeave={isLeave}
-							setIsLeave={setIsLeave}
-							leaveType={leaveType}
-							onLeaveTypeChange={setLeaveType}
-							readOnly={readOnly}
-							entryId={entryId}
 						/>
 
 						{!isLeave ? (

@@ -67,29 +67,7 @@ const ReportingHeader: React.FC<ReportingHeaderProps> = ({
 					/>
 				</Box>
 
-				<Box sx={{ height: 40, width: '1px', bgcolor: '#e5e7eb', display: { xs: 'none', sm: 'block' } }} />
-
-				<Box>
-					<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mb: 0.5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-						Status Legend
-					</Typography>
-					<Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
-						{[
-							{ label: 'Approved', color: '#2e7d32', dot: '#a5d6a7' },
-							{ label: 'Submitted', color: '#f9a825', dot: '#fff59d' },
-							{ label: 'Permission', color: '#1565c0', dot: '#90caf9' }, // Label changed for brevity
-							{ label: 'Missed', color: '#d32f2f', dot: '#ffcdd2' }
-						].map((item) => (
-							<Box key={item.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-								<Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: item.dot }} />
-								<Typography sx={{ fontSize: '0.7rem', fontWeight: 400, color: 'text.secondary' }}>
-									{item.label}
-								</Typography>
-							</Box>
-						))}
-					</Box>
 				</Box>
-			</Box>
 
 			<Box sx={{ justifySelf: { md: 'end' } }}>
 				<DSRStatsCard
