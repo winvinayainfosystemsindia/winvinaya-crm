@@ -261,9 +261,13 @@ class DSRService:
         if not entry.is_leave and not entry.items:
             raise HTTPException(status_code=422, detail="Cannot submit an empty DSR. Add at least one work item or mark as Leave.")
 
+        # Transition directly to APPROVED as per new requirement
         await self.repo.update(entry.id, {
-            "status": DSRStatus.SUBMITTED,
+            "status": DSRStatus.APPROVED,
             "submitted_at": datetime.utcnow(),
+            "reviewed_by": current_user.id, # Auto-approved by system/self
+            "reviewed_at": datetime.utcnow(),
+            "admin_notes": "Auto-approved upon submission"
         })
 
         # Send Email Alert
@@ -279,7 +283,15 @@ class DSRService:
             import logging
             logging.getLogger(__name__).error(f"Failed to send DSR submission email: {str(e)}")
 
-        return await self._get_or_404(public_id)
+        # Trigger Approval Notification
+        updated_entry = await self._get_or_404(public_id)
+        await self.notif_service.notify_dsr_approved(
+            user_id=updated_entry.user_id,
+            report_date=str(updated_entry.report_date),
+            dsr_public_id=updated_entry.public_id
+        )
+
+        return updated_entry
 
     async def get_my_entries(
         self,

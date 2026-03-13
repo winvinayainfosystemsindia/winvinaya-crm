@@ -14,7 +14,6 @@ import {
 	History as HistoryIcon,
 	Refresh as RefreshIcon
 } from '@mui/icons-material';
-import DSRReviewQueue from './DSRReviewQueue';
 import PermissionStatsCards from '../common/PermissionStatsCards';
 import PermissionRequestsTable from './PermissionRequestsTable';
 import AllSubmissionsTable from './AllSubmissionsTable';
@@ -139,28 +138,11 @@ const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin, permissionStat
 						<Tab
 							label={
 								<TabLabel
-									icon={<ReviewIcon sx={{ fontSize: 18 }} />}
-									label="Review Queue"
-									count={admin.reviewQueueTotal}
-									active={activeTab === 0}
-								/>
-							}
-							sx={{
-								textTransform: 'none',
-								minHeight: 48,
-								px: 3,
-								color: '#545b64',
-								'&.Mui-selected': { color: '#ec7211' }
-							}}
-						/>
-						<Tab
-							label={
-								<TabLabel
 									icon={<PermissionIcon sx={{ fontSize: 18 }} />}
 									label="Permissions"
 									count={pendingPermissions}
 									color="#ed6c02"
-									active={activeTab === 1}
+									active={activeTab === 0}
 								/>
 							}
 							sx={{
@@ -176,7 +158,7 @@ const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin, permissionStat
 								<TabLabel
 									icon={<HistoryIcon sx={{ fontSize: 18 }} />}
 									label="Full History"
-									active={activeTab === 2}
+									active={activeTab === 1}
 								/>
 							}
 							sx={{
@@ -192,7 +174,7 @@ const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin, permissionStat
 								<TabLabel
 									icon={<ReviewIcon sx={{ fontSize: 18 }} />}
 									label="Activity Types"
-									active={activeTab === 3}
+									active={activeTab === 2}
 								/>
 							}
 							sx={{
@@ -207,23 +189,8 @@ const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin, permissionStat
 				</Box>
 
 				<Box sx={{ p: 3 }}>
-					<TabPanel value={activeTab} index={0}>
-						<Box sx={{ mb: 2 }}>
-							<Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 0.5 }}>DSR Review Queue</Typography>
-							<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-								Approve or reject submitted DSRs. Oldest submissions appear first.
-							</Typography>
-							<Divider sx={{ mb: 3 }} />
-							<DSRReviewQueue
-								entries={admin.reviewQueue}
-								loading={admin.reviewLoading}
-								onApprove={admin.handleApproveEntry}
-								onReject={admin.handleRejectEntry}
-							/>
-						</Box>
-					</TabPanel>
 
-					<TabPanel value={activeTab} index={1}>
+					<TabPanel value={activeTab} index={0}>
 						<Box sx={{ mb: 4 }}>
 							<Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Permission Analytics</Typography>
 							<PermissionStatsCards stats={permissionStats} />
@@ -239,7 +206,7 @@ const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin, permissionStat
 						</Box>
 					</TabPanel>
 
-					<TabPanel value={activeTab} index={2}>
+					<TabPanel value={activeTab} index={1}>
 						<Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>Global Submission History</Typography>
 						<Divider sx={{ mb: 3 }} />
 						<AllSubmissionsTable
@@ -254,7 +221,7 @@ const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin, permissionStat
 					</TabPanel>
 
 
-					<TabPanel value={activeTab} index={3}>
+					<TabPanel value={activeTab} index={2}>
 						<DSRActivityTypeManagement />
 					</TabPanel>
 				</Box>

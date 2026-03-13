@@ -10,8 +10,6 @@ import {
 	fetchPermissionStats
 } from '../../../../store/slices/dsrSlice';
 import useToast from '../../../../hooks/useToast';
-import dsrService from '../../../../services/dsrService';
-import type { DSREntry } from '../../../../models/dsr';
 
 export const useDSRAdmin = () => {
 	const dispatch = useAppDispatch();
@@ -30,24 +28,6 @@ export const useDSRAdmin = () => {
 	const [entryPage, setEntryPage] = useState(0);
 	const [entryRowsPerPage, setEntryRowsPerPage] = useState(10);
 
-	// Review queue state (submitted DSRs awaiting admin approval)
-	const [reviewQueue, setReviewQueue] = useState<DSREntry[]>([]);
-	const [reviewQueueTotal, setReviewQueueTotal] = useState(0);
-	const [reviewLoading, setReviewLoading] = useState(false);
-
-	const fetchReviewQueue = useCallback(async () => {
-		setReviewLoading(true);
-		try {
-			const data = await dsrService.getPendingApproval();
-			setReviewQueue(data.items || []);
-			setReviewQueueTotal(data.total || 0);
-		} catch {
-			// Non-blocking — admin still sees rest of dashboard
-		} finally {
-			setReviewLoading(false);
-		}
-	}, []);
-
 	const fetchData = useCallback(() => {
 		dispatch(fetchMissingReports(reportDate));
 		dispatch(fetchPermissionRequests({ skip: 0, limit: 100 }));
@@ -57,8 +37,7 @@ export const useDSRAdmin = () => {
 			date_from: reportDate,
 			date_to: reportDate
 		}));
-		fetchReviewQueue();
-	}, [dispatch, reportDate, entryPage, entryRowsPerPage, fetchReviewQueue]);
+	}, [dispatch, reportDate, entryPage, entryRowsPerPage]);
 
 	useEffect(() => {
 		fetchData();
@@ -116,36 +95,6 @@ export const useDSRAdmin = () => {
 		}
 	};
 
-	const handleApproveEntry = async (publicId: string, adminNotes?: string) => {
-		try {
-			await dsrService.approveEntry(publicId, adminNotes);
-			toast.success('DSR approved successfully');
-			await fetchReviewQueue();
-			dispatch(fetchAdminOverview({
-				skip: 0, limit: entryRowsPerPage,
-				date_from: reportDate, date_to: reportDate
-			}));
-		} catch (error: any) {
-			toast.error(error?.response?.data?.detail || 'Failed to approve DSR');
-		}
-	};
-
-	const handleRejectEntry = async (publicId: string, reason: string) => {
-		try {
-			await dsrService.rejectEntry(publicId, reason);
-			toast.success('DSR rejected — user notified to resubmit');
-			await fetchReviewQueue();
-			dispatch(fetchAdminOverview({
-				skip: entryPage * entryRowsPerPage,
-				limit: entryRowsPerPage,
-				date_from: reportDate,
-				date_to: reportDate
-			}));
-		} catch (error: any) {
-			toast.error(error?.response?.data?.detail || 'Failed to reject DSR');
-		}
-	};
-
 	return {
 		reportDate,
 		setReportDate,
@@ -163,12 +112,6 @@ export const useDSRAdmin = () => {
 		handleSendReminders,
 		handleGrantPermission,
 		handlePermissionAction,
-		handleRefresh,
-		// Review queue
-		reviewQueue,
-		reviewQueueTotal,
-		reviewLoading,
-		handleApproveEntry,
-		handleRejectEntry
+		handleRefresh
 	};
 };
