@@ -4,7 +4,7 @@ from datetime import date
 from typing import Optional, List, Tuple
 from uuid import UUID
 from sqlalchemy import select, func, and_
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, contains_eager
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.dsr_permission_request import DSRPermissionRequest, DSRPermissionStatus
 from app.repositories.base import BaseRepository
@@ -37,17 +37,25 @@ class DSRPermissionRequestRepository(BaseRepository[DSRPermissionRequest]):
         self,
         user_id: Optional[int] = None,
         status: Optional[DSRPermissionStatus] = None,
+        search: Optional[str] = None,
         skip: int = 0,
         limit: int = 100,
     ) -> Tuple[List[DSRPermissionRequest], int]:
+        from app.models.user import User
         base = DSRPermissionRequest.is_deleted == False
         if user_id:
             base = and_(base, DSRPermissionRequest.user_id == user_id)
         if status:
             base = and_(base, DSRPermissionRequest.status == status)
+        
+        if search:
+            search_filter = func.lower(User.full_name).contains(search.lower()) | \
+                            func.lower(User.username).contains(search.lower()) | \
+                            func.lower(DSRPermissionRequest.reason).contains(search.lower())
+            base = and_(base, search_filter)
 
-        query = select(DSRPermissionRequest).where(base).options(joinedload(DSRPermissionRequest.user))
-        count_query = select(func.count()).select_from(DSRPermissionRequest).where(base)
+        query = select(DSRPermissionRequest).join(User, DSRPermissionRequest.user_id == User.id).where(base).options(contains_eager(DSRPermissionRequest.user))
+        count_query = select(func.count()).select_from(DSRPermissionRequest).join(User, DSRPermissionRequest.user_id == User.id).where(base)
 
         total = (await self.db.execute(count_query)).scalar_one()
         query = query.order_by(DSRPermissionRequest.created_at.desc()).offset(skip).limit(limit)

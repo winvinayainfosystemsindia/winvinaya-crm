@@ -196,6 +196,7 @@ async def get_all_entries(
     date_from: Optional[date] = Query(default=None),
     date_to: Optional[date] = Query(default=None),
     status: Optional[DSRStatus] = Query(default=None),
+    search: Optional[str] = Query(default=None, description="Search by user name or username"),
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
     db: AsyncSession = Depends(get_db),
 ):
@@ -209,6 +210,7 @@ async def get_all_entries(
         date_from=date_from,
         date_to=date_to,
         status=status,
+        search=search,
     )
     return DSREntryListResponse(items=items, total=total, skip=skip, limit=limit)
 
@@ -294,6 +296,7 @@ async def get_permission_requests(
     limit: int = Query(default=100, ge=1, le=500),
     user_id: Optional[int] = Query(default=None),
     status: Optional[str] = Query(default=None),
+    search: Optional[str] = Query(default=None),
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.SALES_MANAGER])),
     db: AsyncSession = Depends(get_db),
 ):
@@ -303,7 +306,7 @@ async def get_permission_requests(
     req_status = DSRPermissionStatus(status) if status else None
     
     items, total = await service.get_permission_requests(
-        current_user, skip=skip, limit=limit, user_id=user_id, status=req_status
+        current_user, skip=skip, limit=limit, user_id=user_id, status=req_status, search=search
     )
     return DSRPermissionRequestListResponse(items=items, total=total)
 

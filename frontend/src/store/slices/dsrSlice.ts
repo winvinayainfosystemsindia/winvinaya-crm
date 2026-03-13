@@ -293,10 +293,10 @@ export const deleteEntry = createAsyncThunk(
 
 export const fetchAdminOverview = createAsyncThunk(
 	'dsr/fetchAdminOverview',
-	async (params: { skip?: number; limit?: number; date_from?: string; date_to?: string } | undefined, { rejectWithValue }) => {
+	async (params: { skip?: number; limit?: number; date_from?: string; date_to?: string; search?: string; status?: string } | undefined, { rejectWithValue }) => {
 		try {
-			const { skip = 0, limit = 100, date_from, date_to } = params || {};
-			return await dsrService.getAdminOverview(Number(skip), Number(limit), date_from, date_to);
+			const { skip = 0, limit = 100, date_from, date_to, search, status } = params || {};
+			return await dsrService.getAdminOverview(Number(skip), Number(limit), date_from, date_to, search, status);
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.detail || 'Failed to fetch admin overview');
 		}
@@ -338,10 +338,10 @@ export const sendDSRReminders = createAsyncThunk(
 
 export const fetchPermissionRequests = createAsyncThunk(
 	'dsr/fetchPermissionRequests',
-	async (params: { skip?: number; limit?: number; user_id?: number; status?: string } | undefined, { rejectWithValue }) => {
+	async (params: { skip?: number; limit?: number; user_id?: number; status?: string; search?: string } | undefined, { rejectWithValue }) => {
 		try {
-			const { skip = 0, limit = 100, user_id, status } = params || {};
-			return await dsrService.getPermissionRequests(skip, limit, user_id, status);
+			const { skip = 0, limit = 100, user_id, status, search } = params || {};
+			return await dsrService.getPermissionRequests(skip, limit, user_id, status, search);
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.detail || 'Failed to fetch permission requests');
 		}

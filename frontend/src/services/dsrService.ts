@@ -81,10 +81,12 @@ const dsrService = {
 		skip = 0,
 		limit = 10,
 		date_from?: string,
-		date_to?: string
+		date_to?: string,
+		search?: string,
+		status?: string
 	): Promise<PaginationResult<DSREntry>> => {
 		const response = await api.get('/dsr/entries', {
-			params: { skip, limit, date_from, date_to }
+			params: { skip, limit, date_from, date_to, search, status }
 		});
 		return response.data;
 	},
@@ -120,10 +122,11 @@ const dsrService = {
 		skip = 0,
 		limit = 100,
 		user_id?: number,
-		status?: string
+		status?: string,
+		search?: string
 	): Promise<{ items: any[], total: number }> => {
 		const response = await api.get('/dsr/permissions/requests', {
-			params: { skip, limit, user_id, status }
+			params: { skip, limit, user_id, status, search }
 		});
 		return response.data;
 	},

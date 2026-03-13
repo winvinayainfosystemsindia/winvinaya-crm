@@ -5,10 +5,7 @@ import {
 	Button,
 	InputAdornment,
 	Badge,
-	Typography,
-	Select,
-	MenuItem,
-	FormControl
+	Typography
 } from '@mui/material';
 import { Search, FilterList, Refresh } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
@@ -22,9 +19,6 @@ interface DSRAdminTableHeaderProps {
 	onFilterOpen?: () => void;
 	placeholder?: string;
 	actions?: React.ReactNode;
-	statusFilter?: string | null;
-	onStatusFilterChange?: (status: string | null) => void;
-	statusOptions?: { label: string; value: string }[];
 }
 
 const DSRAdminTableHeader: React.FC<DSRAdminTableHeaderProps> = ({
@@ -35,10 +29,7 @@ const DSRAdminTableHeader: React.FC<DSRAdminTableHeaderProps> = ({
 	activeFilterCount = 0,
 	onFilterOpen,
 	placeholder = "Search...",
-	actions,
-	statusFilter,
-	onStatusFilterChange,
-	statusOptions
+	actions
 }) => {
 	const theme = useTheme();
 
@@ -86,26 +77,6 @@ const DSRAdminTableHeader: React.FC<DSRAdminTableHeaderProps> = ({
 						),
 					}}
 				/>
-				{onStatusFilterChange && statusOptions && (
-					<FormControl size="small" sx={{ minWidth: 150, display: { xs: 'none', sm: 'block' } }}>
-						<Select
-							value={statusFilter || 'all'}
-							onChange={(e) => onStatusFilterChange(e.target.value === 'all' ? null : (e.target.value as string))}
-							displayEmpty
-							sx={{
-								height: '36px',
-								bgcolor: 'white',
-								'& .MuiOutlinedInput-notchedOutline': { borderColor: '#d5dbdb' },
-								'&:hover .MuiOutlinedInput-notchedOutline': { borderColor: theme.palette.primary.main }
-							}}
-						>
-							<MenuItem value="all">All Statuses</MenuItem>
-							{statusOptions.map(opt => (
-								<MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-							))}
-						</Select>
-					</FormControl>
-				)}
 			</Box>
 
 			<Box sx={{ display: 'flex', gap: 1, alignItems: 'center', justifyContent: { xs: 'space-between', md: 'flex-end' } }}>

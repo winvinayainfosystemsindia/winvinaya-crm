@@ -68,11 +68,14 @@ class DSREntryRepository(BaseRepository[DSREntry]):
         date_from: Optional[date] = None,
         date_to: Optional[date] = None,
         status: Optional[DSRStatus] = None,
+        search: Optional[str] = None,
     ) -> Tuple[List[DSREntry], int]:
-        """Admin view — all entries across all users"""
+        """Admin view — all entries across all users with filters and search"""
+        from app.models.user import User
+        
         base = DSREntry.is_deleted == False
-        query = select(DSREntry).where(base)
-        count_query = select(func.count()).select_from(DSREntry).where(base)
+        query = select(DSREntry).join(User, DSREntry.user_id == User.id).where(base)
+        count_query = select(func.count()).select_from(DSREntry).join(User, DSREntry.user_id == User.id).where(base)
 
         if user_id:
             query = query.where(DSREntry.user_id == user_id)
@@ -86,6 +89,14 @@ class DSREntryRepository(BaseRepository[DSREntry]):
         if status:
             query = query.where(DSREntry.status == status)
             count_query = count_query.where(DSREntry.status == status)
+        
+        if search:
+            search_filter = and_(
+                base,
+                (User.full_name.ilike(f"%{search}%")) | (User.username.ilike(f"%{search}%"))
+            )
+            query = query.where(search_filter)
+            count_query = count_query.where(search_filter)
 
         total = (await self.db.execute(count_query)).scalar_one()
         query = query.order_by(DSREntry.report_date.desc(), DSREntry.user_id).offset(skip).limit(limit)

@@ -73,18 +73,18 @@ const TabLabel: React.FC<{
 	</Box>
 );
 
+const TabPanel: React.FC<{ children: React.ReactNode; index: number; value: number }> = ({ children, value, index }) => (
+	<div role="tabpanel" hidden={value !== index} style={{ height: value === index ? 'auto' : 0 }}>
+		{value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
+	</div>
+);
+
 const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin }) => {
 	const [activeTab, setActiveTab] = useState(0);
 
 	const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
 		setActiveTab(newValue);
 	};
-
-	const TabPanel: React.FC<{ children: React.ReactNode; index: number; value: number }> = ({ children, value, index }) => (
-		<div role="tabpanel" hidden={value !== index}>
-			{value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
-		</div>
-	);
 
 	const pendingPermissions = admin.permissionRequests.filter(r => r.status === 'pending').length;
 
@@ -188,19 +188,24 @@ const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin }) => {
 
 					<TabPanel value={activeTab} index={0}>
 						<Box>
-							<PermissionRequestsTable
-								requests={admin.permissionRequests}
-								loading={admin.loading}
-								onHandle={admin.handlePermissionAction}
-								onRefresh={admin.handleRefresh}
-								searchTerm={admin.permissionsSearchTerm}
-								onSearchChange={admin.setPermissionsSearchTerm}
-								page={admin.permissionPage}
-								rowsPerPage={admin.permissionRowsPerPage}
-								onPageChange={(_, p) => admin.setPermissionPage(p)}
-								onRowsPerPageChange={(e) => admin.setPermissionRowsPerPage(parseInt(e.target.value))}
-								onRowsPerPageSelectChange={(r) => admin.setPermissionRowsPerPage(r)}
-							/>
+						<PermissionRequestsTable
+							requests={admin.permissionRequests}
+							total={admin.totalPermissionRequests}
+							loading={admin.loading}
+							onHandle={admin.handlePermissionAction}
+							onRefresh={admin.handleRefresh}
+							searchTerm={admin.permissionsSearchTerm}
+							onSearchChange={admin.setPermissionsSearchTerm}
+							page={admin.permissionPage}
+							rowsPerPage={admin.permissionRowsPerPage}
+							onPageChange={(_: unknown, p: number) => admin.setPermissionPage(p)}
+							onRowsPerPageChange={(e: React.ChangeEvent<HTMLInputElement>) => admin.setPermissionRowsPerPage(parseInt(e.target.value, 10))}
+							onRowsPerPageSelectChange={(r: number) => admin.setPermissionRowsPerPage(r)}
+							statusFilter={admin.permissionStatusFilter}
+							onStatusFilterChange={admin.setPermissionStatusFilter}
+							filterDrawerOpen={admin.permissionFilterDrawerOpen}
+							onFilterDrawerOpen={admin.setPermissionFilterDrawerOpen}
+						/>
 						</Box>
 					</TabPanel>
 
@@ -211,14 +216,20 @@ const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin }) => {
 							loading={admin.loading}
 							page={admin.entryPage}
 							rowsPerPage={admin.entryRowsPerPage}
-							onPageChange={(_, p) => admin.setEntryPage(p)}
-							onRowsPerPageChange={(e) => admin.setEntryRowsPerPage(parseInt(e.target.value))}
-							onRowsPerPageSelectChange={(r) => admin.setEntryRowsPerPage(r)}
+							onPageChange={(_: unknown, p: number) => admin.setEntryPage(p)}
+							onRowsPerPageChange={(e: React.ChangeEvent<HTMLInputElement>) => admin.setEntryRowsPerPage(parseInt(e.target.value, 10))}
+							onRowsPerPageSelectChange={(r: number) => admin.setEntryRowsPerPage(r)}
 							onRefresh={admin.handleRefresh}
 							searchTerm={admin.submissionsSearchTerm}
 							onSearchChange={admin.setSubmissionsSearchTerm}
 							statusFilter={admin.statusFilter}
 							onStatusFilterChange={admin.setStatusFilter}
+							dateFrom={admin.historyDateFrom}
+							onDateFromChange={admin.setHistoryDateFrom}
+							dateTo={admin.historyDateTo}
+							onDateToChange={admin.setHistoryDateTo}
+							filterDrawerOpen={admin.historyFilterDrawerOpen}
+							onFilterDrawerOpen={admin.setHistoryFilterDrawerOpen}
 						/>
 					</TabPanel>
 

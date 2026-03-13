@@ -14,6 +14,10 @@ import {
 	TextField
 } from '@mui/material';
 import { Close, FilterAlt } from '@mui/icons-material';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs from 'dayjs';
 
 // Types for filter configuration
 export interface FilterOption {
@@ -24,7 +28,7 @@ export interface FilterOption {
 export interface FilterField {
 	key: string;
 	label: string;
-	type: 'multi-select' | 'single-select' | 'boolean' | 'range' | 'text';
+	type: 'multi-select' | 'single-select' | 'boolean' | 'range' | 'text' | 'date';
 	options?: FilterOption[];
 }
 
@@ -195,6 +199,21 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
 								value={activeFilters[field.key] || ''}
 								onChange={(e) => onFilterChange(field.key, e.target.value)}
 							/>
+						) : field.type === 'date' ? (
+							<LocalizationProvider dateAdapter={AdapterDayjs}>
+								<DatePicker
+									label={field.label}
+									format="DD/MMM/YYYY"
+									value={activeFilters[field.key] ? dayjs(activeFilters[field.key]) : null}
+									onChange={(newValue) => onFilterChange(field.key, newValue ? newValue.format('YYYY-MM-DD') : null)}
+									slotProps={{
+										textField: {
+											size: 'small',
+											fullWidth: true,
+										}
+									}}
+								/>
+							</LocalizationProvider>
 						) : (
 							<FormControlLabel
 								control={

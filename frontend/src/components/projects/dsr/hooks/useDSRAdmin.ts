@@ -29,21 +29,45 @@ export const useDSRAdmin = () => {
 	const [entryPage, setEntryPage] = useState(0);
 	const [entryRowsPerPage, setEntryRowsPerPage] = useState(10);
 	const [submissionsSearchTerm, setSubmissionsSearchTerm] = useState('');
+	const [debouncedSubmissionsSearch, setDebouncedSubmissionsSearch] = useState('');
 	const [permissionsSearchTerm, setPermissionsSearchTerm] = useState('');
+	const [debouncedPermissionsSearch, setDebouncedPermissionsSearch] = useState('');
 	const [statusFilter, setStatusFilter] = useState<string | null>(null);
+	const [historyDateFrom, setHistoryDateFrom] = useState<string | null>(null);
+	const [historyDateTo, setHistoryDateTo] = useState<string | null>(null);
 	const [permissionPage, setPermissionPage] = useState(0);
 	const [permissionRowsPerPage, setPermissionRowsPerPage] = useState(10);
+	const [historyFilterDrawerOpen, setHistoryFilterDrawerOpen] = useState(false);
+	const [permissionFilterDrawerOpen, setPermissionFilterDrawerOpen] = useState(false);
+	const [permissionStatusFilter, setPermissionStatusFilter] = useState<string | null>(null);
+
+	useEffect(() => {
+		const timer = setTimeout(() => setDebouncedSubmissionsSearch(submissionsSearchTerm), 300);
+		return () => clearTimeout(timer);
+	}, [submissionsSearchTerm]);
+
+	useEffect(() => {
+		const timer = setTimeout(() => setDebouncedPermissionsSearch(permissionsSearchTerm), 300);
+		return () => clearTimeout(timer);
+	}, [permissionsSearchTerm]);
 
 	const fetchData = useCallback(() => {
 		dispatch(fetchMissingReports(reportDate));
-		dispatch(fetchPermissionRequests({ skip: 0, limit: 100 }));
+		dispatch(fetchPermissionRequests({ 
+			skip: permissionPage * permissionRowsPerPage, 
+			limit: permissionRowsPerPage,
+			status: permissionStatusFilter || undefined,
+			search: debouncedPermissionsSearch || undefined
+		}));
 		dispatch(fetchAdminOverview({
 			skip: entryPage * entryRowsPerPage,
 			limit: entryRowsPerPage,
-			date_from: reportDate,
-			date_to: reportDate
+			date_from: historyDateFrom || undefined,
+			date_to: historyDateTo || undefined,
+			search: debouncedSubmissionsSearch || undefined,
+			status: (statusFilter as any) || undefined
 		}));
-	}, [dispatch, reportDate, entryPage, entryRowsPerPage]);
+	}, [dispatch, reportDate, entryPage, entryRowsPerPage, historyDateFrom, historyDateTo, debouncedSubmissionsSearch, statusFilter, permissionPage, permissionRowsPerPage, debouncedPermissionsSearch, permissionStatusFilter]);
 
 	useEffect(() => {
 		fetchData();
@@ -122,10 +146,20 @@ export const useDSRAdmin = () => {
 		setPermissionsSearchTerm,
 		statusFilter,
 		setStatusFilter,
+		historyDateFrom,
+		setHistoryDateFrom,
+		historyDateTo,
+		setHistoryDateTo,
 		permissionPage,
 		setPermissionPage,
 		permissionRowsPerPage,
 		setPermissionRowsPerPage,
+		historyFilterDrawerOpen,
+		setHistoryFilterDrawerOpen,
+		permissionFilterDrawerOpen,
+		setPermissionFilterDrawerOpen,
+		permissionStatusFilter,
+		setPermissionStatusFilter,
 		handleSendReminders,
 		handleGrantPermission,
 		handlePermissionAction,

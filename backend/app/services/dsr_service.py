@@ -316,11 +316,13 @@ class DSRService:
         date_from: Optional[date] = None,
         date_to: Optional[date] = None,
         status: Optional[DSRStatus] = None,
+        search: Optional[str] = None,
     ) -> Tuple[List[DSREntry], int]:
         _require_privileged_user(current_user)
         return await self.repo.get_all_entries(
             skip=skip, limit=limit, user_id=user_id,
             date_from=date_from, date_to=date_to, status=status,
+            search=search,
         )
 
     async def get_entry(self, public_id: UUID, current_user: User) -> DSREntry:
@@ -611,7 +613,8 @@ class DSRService:
         return await self.permission_repo.create(request_data)
 
     async def get_permission_requests(
-        self, current_user: User, skip: int = 0, limit: int = 100, user_id: Optional[int] = None, status: Optional[DSRPermissionStatus] = None
+        self, current_user: User, skip: int = 0, limit: int = 100, user_id: Optional[int] = None, 
+        status: Optional[DSRPermissionStatus] = None, search: Optional[str] = None
     ) -> Tuple[List[DSRPermissionRequest], int]:
         """List permission requests (Users see their own; Admins see all)."""
         target_user_id = user_id
@@ -619,7 +622,7 @@ class DSRService:
             target_user_id = current_user.id
             
         return await self.permission_repo.get_requests(
-            user_id=target_user_id, status=status, skip=skip, limit=limit
+            user_id=target_user_id, status=status, search=search, skip=skip, limit=limit
         )
 
     async def get_permission_request(self, public_id: UUID) -> DSRPermissionRequest:
