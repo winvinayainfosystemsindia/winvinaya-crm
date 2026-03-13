@@ -83,7 +83,7 @@ class DSRLeaveApplicationRepository(BaseRepository[DSRLeaveApplication]):
             and_(
                 DSRLeaveApplication.user_id == user_id,
                 DSRLeaveApplication.is_deleted == False,
-                DSRLeaveApplication.status == DSRLeaveStatus.APPROVED,
+                DSRLeaveApplication.status.in_([DSRLeaveStatus.APPROVED, DSRLeaveStatus.PENDING]),
                 DSRLeaveApplication.start_date <= end_date,
                 DSRLeaveApplication.end_date >= start_date
             )

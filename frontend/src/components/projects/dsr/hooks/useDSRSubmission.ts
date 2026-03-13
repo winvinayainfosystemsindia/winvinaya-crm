@@ -122,10 +122,19 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 				const uniqueProjects = Array.from(new Set(mappedItems.map(i => i.project_public_id)));
 				uniqueProjects.forEach(pid => {
 					if (pid && pid !== GENERAL_PROJECT_ID) {
-						dispatch(fetchActivitiesForProject({ projectId: pid, assigned_to: user?.public_id }));
+						dispatch(fetchActivitiesForProject({ projectId: pid, assigned_to: entry.user?.public_id }));
 					}
 				});
 			}
+
+			// Update calendar for this specific user
+			const dateFrom = format(subDays(new Date(), 30), 'yyyy-MM-dd');
+			const today = format(new Date(), 'yyyy-MM-dd');
+			dispatch(fetchCalendarEntries({ 
+				date_from: dateFrom, 
+				date_to: today,
+				user_id: entry.user_id
+			}));
 		} catch (error: any) {
 			toast.error(error || 'Failed to load DSR');
 		}
@@ -136,10 +145,14 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		dispatch(fetchPermissionRequests({ skip: 0, limit: 100, user_id: user?.id as any }));
 		dispatch(fetchActivityTypes({ skip: 0, limit: 100, onlyActive: true }));
 
-		// Fetch last 30 days of entries to determine status
-		const dateFrom = format(subDays(new Date(), 30), 'yyyy-MM-dd');
-		const today = format(new Date(), 'yyyy-MM-dd');
-		dispatch(fetchCalendarEntries({ date_from: dateFrom, date_to: today }));
+		// Fetch calendar status with month range (scoped to viewed user if present)
+		const start = format(subDays(startOfDay(new Date()), 7), 'yyyy-MM-dd'); // start with some buffer
+		const end = format(subDays(startOfDay(new Date()), -30), 'yyyy-MM-dd'); // end in 30 days
+		dispatch(fetchCalendarEntries({ 
+			date_from: start, 
+			date_to: end,
+			user_id: user?.id as any 
+		}));
 
 		if (entryId) {
 			loadEntry(entryId);

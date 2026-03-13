@@ -47,9 +47,9 @@ const dsrService = {
 		await api.delete(`/dsr/entries/${publicId}`);
 	},
 
-	getCalendarStatus: async (date_from: string, date_to: string): Promise<{ entries: any[], leaves: any[] }> => {
+	getCalendarStatus: async (date_from: string, date_to: string, user_id?: number): Promise<{ entries: any[], leaves: any[] }> => {
 		const response = await api.get('/dsr/entries/calendar-status', {
-			params: { date_from, date_to }
+			params: { date_from, date_to, user_id }
 		});
 		return response.data;
 	},

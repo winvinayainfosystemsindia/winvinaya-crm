@@ -125,19 +125,25 @@ async def get_pending_approval(
 async def get_calendar_status(
     date_from: date = Query(...),
     date_to: date = Query(...),
+    user_id: Optional[int] = Query(default=None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Get DSR and Leave status for a user within a range (for calendar)."""
     service = DSRService(db)
     
+    # Permission check: Only Admin/Manager can view others' calendar
+    target_user_id = current_user.id
+    if user_id is not None and current_user.role in (UserRole.ADMIN, UserRole.MANAGER):
+        target_user_id = user_id
+    
     # 1. Get DSR entries
     entries, _ = await service.repo.get_entries_by_user(
-        current_user.id, limit=31, date_from=date_from, date_to=date_to
+        target_user_id, limit=31, date_from=date_from, date_to=date_to
     )
     
     # 2. Get Leave applications
-    leaves = await service.get_calendar_leave_data(current_user.id, date_from, date_to)
+    leaves = await service.get_calendar_leave_data(target_user_id, date_from, date_to)
     
     return {
         "entries": [

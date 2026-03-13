@@ -29,7 +29,10 @@ async def create_leave(
 ):
     """Apply for multi-day leave."""
     service = DSRLeaveService(db)
-    return await service.create_leave_application(data, current_user)
+    leave = await service.create_leave_application(data, current_user)
+    await db.commit()
+    await db.refresh(leave)
+    return leave
 
 
 @router.get("/my", response_model=DSRLeaveApplicationList)
@@ -80,7 +83,10 @@ async def handle_leave_request(
 ):
     """Admin/Manager: Approve or Reject a leave application."""
     service = DSRLeaveService(db)
-    return await service.handle_leave_application(public_id, data, current_user)
+    leave = await service.handle_leave_application(public_id, data, current_user)
+    await db.commit()
+    await db.refresh(leave)
+    return leave
 
 
 @router.post("/{public_id}/cancel", response_model=DSRLeaveApplicationRead)
@@ -91,4 +97,7 @@ async def cancel_leave(
 ):
     """User/Admin: Cancel a leave application."""
     service = DSRLeaveService(db)
-    return await service.cancel_leave_application(public_id, current_user)
+    leave = await service.cancel_leave_application(public_id, current_user)
+    await db.commit()
+    await db.refresh(leave)
+    return leave

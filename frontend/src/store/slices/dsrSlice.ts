@@ -189,10 +189,10 @@ export const fetchMyEntries = createAsyncThunk(
 
 export const fetchCalendarEntries = createAsyncThunk(
 	'dsr/fetchCalendarEntries',
-	async (params: { date_from: string; date_to?: string }, { rejectWithValue }) => {
+	async (params: { date_from: string; date_to?: string; user_id?: number }, { rejectWithValue }) => {
 		try {
 			const date_to = params.date_to || new Date().toISOString().split('T')[0];
-			return await dsrService.getCalendarStatus(params.date_from, date_to);
+			return await dsrService.getCalendarStatus(params.date_from, date_to, params.user_id);
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.detail || 'Failed to fetch calendar data');
 		}

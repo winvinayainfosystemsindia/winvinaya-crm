@@ -26,9 +26,11 @@ import DSRModuleLayout from '../../components/projects/dsr/layout/DSRModuleLayou
 import DSRCalendarView from '../../components/projects/dsr/history/DSRCalendarView';
 import MyLeavesTable from '../../components/projects/dsr/user/MyLeavesTable';
 import MyLeaveStatsCards from '../../components/projects/dsr/common/MyLeaveStatsCards';
+import dayjs from 'dayjs';
 import {
 	fetchPermissionRequests,
-	fetchLeaveStats
+	fetchLeaveStats,
+	fetchCalendarEntries
 } from '../../store/slices/dsrSlice';
 import MyPermissionRequests from '../../components/projects/dsr/user/MyPermissionRequests';
 // PermissionStatsCards removed
@@ -332,6 +334,10 @@ const DSRDashboard: React.FC = () => {
 						onSuccess={() => {
 							history.fetchHistory();
 							dispatch(fetchLeaveStats());
+							// Refresh calendar data too - use full range
+							const start = dayjs().startOf('month').subtract(7, 'day').format('YYYY-MM-DD');
+							const end = dayjs().endOf('month').add(7, 'day').format('YYYY-MM-DD');
+							dispatch(fetchCalendarEntries({ date_from: start, date_to: end }));
 						}}
 					/>
 
