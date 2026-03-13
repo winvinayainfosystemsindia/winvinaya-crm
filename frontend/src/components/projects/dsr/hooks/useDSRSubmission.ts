@@ -108,27 +108,35 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		try {
 			const entry = await dispatch(fetchEntry(id)).unwrap();
 			setReportDate(entry.report_date);
-			setItems(entry.items);
+			
+			// Map null project_public_id to GENERAL_PROJECT_ID for UI consistency
+			const mappedItems = entry.items.map(item => ({
+				...item,
+				project_public_id: item.project_public_id || GENERAL_PROJECT_ID
+			}));
+			setItems(mappedItems);
 			setIsLeave(entry.is_leave);
 			setLeaveType(entry.leave_type || '');
 
 			if (!entry.is_leave) {
-				const uniqueProjects = Array.from(new Set(entry.items.map(i => i.project_public_id)));
+				const uniqueProjects = Array.from(new Set(mappedItems.map(i => i.project_public_id)));
 				uniqueProjects.forEach(pid => {
-					if (pid) dispatch(fetchActivitiesForProject({ projectId: pid, assigned_to: user?.public_id }));
+					if (pid && pid !== GENERAL_PROJECT_ID) {
+						dispatch(fetchActivitiesForProject({ projectId: pid, assigned_to: user?.public_id }));
+					}
 				});
 			}
 		} catch (error: any) {
-			toast.error(error || 'Failed to load draft');
+			toast.error(error || 'Failed to load DSR');
 		}
 	}, [dispatch, toast, user?.public_id]);
 
 	useEffect(() => {
 		dispatch(fetchProjects({ skip: 0, limit: 500, active_only: true, assigned_to: user?.public_id }));
-		dispatch(fetchPermissionRequests({ skip: 0, limit: 100, user_id: user?.public_id as any }));
+		dispatch(fetchPermissionRequests({ skip: 0, limit: 100, user_id: user?.id as any }));
 		dispatch(fetchActivityTypes({ skip: 0, limit: 100, onlyActive: true }));
 
-		// Fetch last 30 days of entries to determine status - Use fetchCalendarEntries for targeted calendar data
+		// Fetch last 30 days of entries to determine status
 		const dateFrom = format(subDays(new Date(), 30), 'yyyy-MM-dd');
 		const today = format(new Date(), 'yyyy-MM-dd');
 		dispatch(fetchCalendarEntries({ date_from: dateFrom, date_to: today }));
@@ -143,7 +151,7 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 			setLeaveType('');
 			setPermissionError(null);
 		}
-	}, [dispatch, entryId, loadEntry, user?.public_id]);
+	}, [dispatch, entryId, loadEntry, user?.public_id, user?.id]);
 
 	const calculateHours = (start: string, end: string) => {
 		if (!start || !end) return 0;
