@@ -139,11 +139,11 @@ async def update_allocation(
     request: Request,
     public_id: UUID,
     allocation_in: TrainingCandidateAllocationUpdate,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Update a candidate allocation (Admin/Manager/Sourcing/Trainer)
+    Update a candidate allocation (Admin/Manager)
     Can be used to mark as dropout.
     """
     service = TrainingCandidateAllocationService(db)
