@@ -39,6 +39,7 @@ const DealsTab: React.FC<DealsTabProps> = ({ company, columns }) => {
 				rowsPerPage={100}
 				onPageChange={() => { }}
 				onRowsPerPageChange={() => { }}
+				onRowsPerPageSelectChange={() => { }}
 				emptyMessage="No deals associated with this company."
 			/>
 		</Paper>

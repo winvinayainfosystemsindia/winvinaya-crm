@@ -39,6 +39,7 @@ const ContactsTab: React.FC<ContactsTabProps> = ({ company, columns }) => {
 				rowsPerPage={100}
 				onPageChange={() => { }}
 				onRowsPerPageChange={() => { }}
+				onRowsPerPageSelectChange={() => { }}
 				emptyMessage="No contacts associated with this company."
 			/>
 		</Paper>

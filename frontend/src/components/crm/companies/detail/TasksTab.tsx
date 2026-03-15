@@ -81,6 +81,7 @@ const TasksTab: React.FC<TasksTabProps> = ({ company, columns }) => {
 					rowsPerPage={100}
 					onPageChange={() => { }}
 					onRowsPerPageChange={() => { }}
+					onRowsPerPageSelectChange={() => { }}
 					emptyMessage="No tasks associated with this company."
 					onRowClick={handleEditTask}
 				/>

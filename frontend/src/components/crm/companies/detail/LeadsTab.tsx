@@ -39,6 +39,7 @@ const LeadsTab: React.FC<LeadsTabProps> = ({ company, columns }) => {
 				rowsPerPage={100}
 				onPageChange={() => { }}
 				onRowsPerPageChange={() => { }}
+				onRowsPerPageSelectChange={() => { }}
 				emptyMessage="No leads associated with this company."
 			/>
 		</Paper>
