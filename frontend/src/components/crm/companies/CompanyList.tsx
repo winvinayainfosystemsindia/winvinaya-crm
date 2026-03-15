@@ -1,25 +1,37 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Button, TextField, InputAdornment, Grid, Stack, IconButton, Tooltip } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { 
+	Box, 
+	Button, 
+	TextField, 
+	InputAdornment, 
+	Stack, 
+	IconButton, 
+	Tooltip, 
+	Container
+} from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import {
 	Add as AddIcon,
 	Search as SearchIcon,
 	FilterList as FilterIcon,
 	Refresh as RefreshIcon,
 	Business as BusinessIcon,
-	Visibility as ViewIcon,
-	Edit as EditIcon,
-	Delete as DeleteIcon
+	Category as IndustryIcon,
+	Groups as TeamIcon,
+	Assessment as StatsIcon
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchCompanies, fetchCompanyStats, createCompany, updateCompany, deleteCompany } from '../../../store/slices/companySlice';
 import CRMPageHeader from '../common/CRMPageHeader';
 import CRMTable from '../common/CRMTable';
-import CRMStatsCard from '../common/CRMStatsCard';
 import CRMStatusBadge from '../common/CRMStatusBadge';
 import CompanyFormDialog from './CompanyFormDialog';
 import ConfirmDialog from '../../common/ConfirmDialog';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
+import CRMStatSection from '../common/CRMStatSection';
+import type { StatItem } from '../common/CRMStatSection';
+import CRMRowActions from '../common/CRMRowActions';
+import CRMAvatar from '../common/CRMAvatar';
 import type { CompanyCreate, CompanyUpdate, Company } from '../../../models/company';
 import { useSnackbar } from 'notistack';
 
@@ -27,7 +39,7 @@ const CompanyList: React.FC = () => {
 	const navigate = useNavigate();
 	const dispatch = useAppDispatch();
 	const { enqueueSnackbar } = useSnackbar();
-	const { list, total, stats, loading } = useAppSelector((state) => state.companies);
+	const { list, total, loading } = useAppSelector((state) => state.companies);
 	const { user } = useAppSelector((state) => state.auth);
 	const isAdmin = user?.role === 'admin';
 
@@ -181,7 +193,7 @@ const CompanyList: React.FC = () => {
 			sortable: true,
 			format: (value: string) => (
 				<Stack direction="row" spacing={1.5} alignItems="center">
-					<BusinessIcon sx={{ color: '#545b64', fontSize: 20 }} />
+					<CRMAvatar name={value} size={28} />
 					<Box sx={{ fontWeight: 700, color: '#007eb9' }}>{value}</Box>
 				</Stack>
 			)
@@ -195,48 +207,42 @@ const CompanyList: React.FC = () => {
 			id: 'actions',
 			label: 'Actions',
 			minWidth: 100,
+			align: 'right' as const,
 			format: (_: any, row: Company) => (
-				<Stack direction="row" spacing={1}>
-					<Tooltip title="View Details">
-						<IconButton
-							size="small"
-							onClick={(e) => {
-								e.stopPropagation();
-								navigate(`/crm/companies/${row.public_id}`);
-							}}
-							sx={{ color: '#007eb9' }}
-						>
-							<ViewIcon fontSize="small" />
-						</IconButton>
-					</Tooltip>
-					<Tooltip title="Edit">
-						<IconButton
-							size="small"
-							onClick={(e) => {
-								e.stopPropagation();
-								handleOpenEdit(row);
-							}}
-							sx={{ color: '#545b64' }}
-						>
-							<EditIcon fontSize="small" />
-						</IconButton>
-					</Tooltip>
-					{isAdmin && (
-						<Tooltip title="Delete">
-							<IconButton
-								size="small"
-								onClick={(e) => {
-									e.stopPropagation();
-									handleDeleteClick(row);
-								}}
-								sx={{ color: '#d32f2f' }}
-							>
-								<DeleteIcon fontSize="small" />
-							</IconButton>
-						</Tooltip>
-					)}
-				</Stack>
+				<CRMRowActions
+					row={row}
+					onView={() => navigate(`/crm/companies/${row.public_id}`)}
+					onEdit={() => handleOpenEdit(row)}
+					onDelete={isAdmin ? () => handleDeleteClick(row) : undefined}
+				/>
 			)
+		}
+	];
+
+	const dashboardStats: StatItem[] = [
+		{
+			label: 'Total Companies',
+			value: list.length,
+			icon: <BusinessIcon />,
+			color: '#007eb9'
+		},
+		{
+			label: 'Active Clients',
+			value: list.filter(c => c.status === 'active' || c.status === 'customer').length,
+			icon: <TeamIcon />,
+			color: '#1d8102'
+		},
+		{
+			label: 'Prospects',
+			value: list.filter(c => c.status === 'prospect').length,
+			icon: <StatsIcon />,
+			color: '#ec7211'
+		},
+		{
+			label: 'Industries',
+			value: new Set(list.map(c => c.industry).filter(Boolean)).size,
+			icon: <IndustryIcon />,
+			color: '#ff9900'
 		}
 	];
 
@@ -270,43 +276,14 @@ const CompanyList: React.FC = () => {
 	);
 
 	return (
-		<Box sx={{ bgcolor: '#f5f5f5', minHeight: '100vh', py: 3 }}>
-			<Box sx={{ px: { xs: 2, sm: 3 } }}>
-				<CRMPageHeader
-					title="Companies"
-					actions={actions}
-				/>
+		<Box sx={{ bgcolor: '#f2f3f3', minHeight: '100vh', pb: 6 }}>
+			<CRMPageHeader
+				title="Companies"
+				actions={actions}
+			/>
 
-				<Grid container spacing={2} sx={{ mb: 4 }}>
-					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-						<CRMStatsCard
-							label="Total Companies"
-							value={stats?.total || 0}
-							loading={loading}
-						/>
-					</Grid>
-					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-						<CRMStatsCard
-							label="Active Clients"
-							value={stats?.by_status?.active || stats?.by_status?.customer || 0}
-							loading={loading}
-						/>
-					</Grid>
-					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-						<CRMStatsCard
-							label="Prospects"
-							value={stats?.by_status?.prospect || 0}
-							loading={loading}
-						/>
-					</Grid>
-					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-						<CRMStatsCard
-							label="Industries"
-							value={stats?.top_industries?.length || 0}
-							loading={loading}
-						/>
-					</Grid>
-				</Grid>
+			<Container maxWidth="xl" sx={{ mt: 3 }}>
+				<CRMStatSection stats={dashboardStats} />
 
 				<Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 					<TextField
@@ -389,7 +366,7 @@ const CompanyList: React.FC = () => {
 					loading={deleting}
 					severity="error"
 				/>
-			</Box>
+			</Container>
 		</Box>
 	);
 };

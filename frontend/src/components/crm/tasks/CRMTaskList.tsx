@@ -1,5 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, TextField, InputAdornment, Stack, IconButton, Tooltip, Typography, Checkbox } from '@mui/material';
+import { 
+	Box, 
+	Button, 
+	TextField, 
+	InputAdornment, 
+	Stack, 
+	IconButton, 
+	Tooltip, 
+	Typography, 
+	Checkbox,
+	Container
+} from '@mui/material';
 import {
 	Add as AddIcon,
 	Search as SearchIcon,
@@ -7,9 +18,9 @@ import {
 	Refresh as RefreshIcon,
 	Schedule as DueIcon,
 	PriorityHigh as PriorityIcon,
-	Person as PersonIcon,
-	Delete as DeleteIcon
+	Person as PersonIcon
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchCRMTasks, updateCRMTask, createCRMTask, deleteCRMTask } from '../../../store/slices/crmTaskSlice';
 import CRMPageHeader from '../common/CRMPageHeader';
@@ -17,10 +28,14 @@ import CRMTable from '../common/CRMTable';
 import CRMTaskFormDialog from './CRMTaskFormDialog';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
 import ConfirmDialog from '../../common/ConfirmDialog';
+import CRMRowActions from '../common/CRMRowActions';
 import type { CRMTask } from '../../../models/crmTask';
+import { useSnackbar } from 'notistack';
 
 const CRMTaskList: React.FC = () => {
+	const navigate = useNavigate();
 	const dispatch = useAppDispatch();
+	const { enqueueSnackbar } = useSnackbar();
 	const { list, total, loading } = useAppSelector((state) => state.crmTasks);
 	const { user: currentUser } = useAppSelector((state) => state.auth);
 
@@ -81,18 +96,19 @@ const CRMTaskList: React.FC = () => {
 		try {
 			if (selectedTaskForEdit) {
 				await dispatch(updateCRMTask({ publicId: selectedTaskForEdit.public_id, task: data })).unwrap();
+				enqueueSnackbar('Task updated successfully', { variant: 'success' });
 			} else {
 				await dispatch(createCRMTask(data)).unwrap();
+				enqueueSnackbar('Task created successfully', { variant: 'success' });
 			}
 			setDialogOpen(false);
 			handleRefresh();
-		} catch (error) {
-			console.error('Failed to save task:', error);
+		} catch (error: any) {
+			enqueueSnackbar(error || 'Failed to save task', { variant: 'error' });
 		}
 	};
 
-	const handleDeleteClick = (e: React.MouseEvent, task: CRMTask) => {
-		e.stopPropagation();
+	const handleDeleteClick = (task: CRMTask) => {
 		setTaskToDelete(task);
 		setDeleteDialogOpen(true);
 	};
@@ -102,11 +118,12 @@ const CRMTaskList: React.FC = () => {
 			setDeleting(true);
 			try {
 				await dispatch(deleteCRMTask(taskToDelete.public_id)).unwrap();
+				enqueueSnackbar('Task deleted successfully', { variant: 'success' });
 				setDeleteDialogOpen(false);
 				setTaskToDelete(null);
 				handleRefresh();
-			} catch (error) {
-				console.error('Failed to delete task:', error);
+			} catch (error: any) {
+				enqueueSnackbar(error || 'Failed to delete task', { variant: 'error' });
 			} finally {
 				setDeleting(false);
 			}
@@ -185,6 +202,7 @@ const CRMTaskList: React.FC = () => {
 			publicId: task.public_id,
 			task: { status: newStatus }
 		})).unwrap();
+		enqueueSnackbar(`Task marked as ${newStatus}`, { variant: 'info' });
 		handleRefresh();
 	};
 
@@ -269,6 +287,7 @@ const CRMTaskList: React.FC = () => {
 			minWidth: 160,
 			sortable: true,
 			format: (value: string, row: CRMTask) => {
+				if (!value) return '-';
 				const date = new Date(value);
 				const isOverdue = date < new Date() && row.status !== 'completed';
 				return (
@@ -301,157 +320,165 @@ const CRMTaskList: React.FC = () => {
 			minWidth: 100,
 			align: 'right' as const,
 			format: (_: any, row: CRMTask) => (
-				<Stack direction="row" spacing={1} justifyContent="flex-end">
-					{isAdmin && (
-						<Tooltip title="Delete Task">
-							<IconButton 
-								size="small" 
-								onClick={(e) => handleDeleteClick(e, row)}
-								sx={{ color: '#d13212', '&:hover': { bgcolor: 'rgba(209, 50, 18, 0.04)' } }}
-							>
-								<DeleteIcon fontSize="small" />
-							</IconButton>
-						</Tooltip>
-					)}
-				</Stack>
+				<CRMRowActions
+					row={row}
+					onView={() => navigate(`/crm/tasks/${row.public_id}`)}
+					onEdit={() => handleEditTask(row)}
+					onDelete={isAdmin ? () => handleDeleteClick(row) : undefined}
+				/>
 			)
 		}
 	];
 
+	const actions = (
+		<>
+			<Button
+				variant="outlined"
+				startIcon={<RefreshIcon />}
+				onClick={handleRefresh}
+				sx={{ color: '#545b64', borderColor: '#d5dbdb' }}
+			>
+				Refresh
+			</Button>
+			{isManager && (
+				<Button
+					variant="contained"
+					color="primary"
+					startIcon={<AddIcon />}
+					onClick={handleAddTask}
+					sx={{ 
+						px: 3,
+						bgcolor: '#ff9900',
+						'&:hover': { bgcolor: '#ec7211' },
+						textTransform: 'none',
+						fontWeight: 600,
+						boxShadow: 'none'
+					}}
+				>
+					Create Task
+				</Button>
+			)}
+		</>
+	);
+
 	return (
-		<Box>
+		<Box sx={{ bgcolor: '#f2f3f3', minHeight: '100vh', pb: 6 }}>
 			<CRMPageHeader
 				title="Tasks"
-				actions={
-					<>
-						<Button
-							variant="outlined"
-							startIcon={<RefreshIcon />}
-							onClick={handleRefresh}
-							sx={{ color: '#545b64', borderColor: '#d5dbdb' }}
-						>
-							Refresh
-						</Button>
-						{isManager && (
-							<Button
-								variant="contained"
-								color="primary"
-								startIcon={<AddIcon />}
-								onClick={handleAddTask}
-								sx={{ px: 3 }}
-							>
-								Create Task
-							</Button>
-						)}
-					</>
-				}
+				actions={actions}
 			/>
 
-			<Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-				<TextField
-					size="small"
-					placeholder="Search tasks..."
-					value={search}
-					onChange={handleSearchChange}
-					sx={{ width: 320, bgcolor: 'white' }}
-					InputProps={{
-						startAdornment: (
-							<InputAdornment position="start">
-								<SearchIcon fontSize="small" sx={{ color: '#545b64' }} />
-							</InputAdornment>
-						),
-					}}
-				/>
+			<Container maxWidth="xl" sx={{ mt: 3 }}>
+				<Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+					<TextField
+						size="small"
+						placeholder="Search tasks..."
+						value={search}
+						onChange={handleSearchChange}
+						sx={{ width: 320, bgcolor: 'white' }}
+						InputProps={{
+							startAdornment: (
+								<InputAdornment position="start">
+									<SearchIcon fontSize="small" sx={{ color: '#545b64' }} />
+								</InputAdornment>
+							),
+						}}
+					/>
 
-				<Stack direction="row" spacing={1}>
-					<Button
-						size="small"
-						variant="outlined"
-						onClick={() => handleQuickFilter('upcoming')}
-						sx={{
-							color: activeFilters.dueSoonOnly ? '#ec7211' : '#545b64',
-							borderColor: activeFilters.dueSoonOnly ? '#ec7211' : '#d5dbdb'
-						}}
-					>
-						Upcoming
-					</Button>
-					<Button
-						size="small"
-						variant="outlined"
-						onClick={() => handleQuickFilter('overdue')}
-						sx={{
-							color: activeFilters.overdueOnly ? '#ec7211' : '#545b64',
-							borderColor: activeFilters.overdueOnly ? '#ec7211' : '#d5dbdb'
-						}}
-					>
-						Overdue
-					</Button>
-					<Tooltip title="Filter">
-						<IconButton
-							onClick={() => setFilterDrawerOpen(true)}
+					<Stack direction="row" spacing={1}>
+						<Button
+							size="small"
+							variant="outlined"
+							onClick={() => handleQuickFilter('upcoming')}
 							sx={{
-								border: '1px solid #d5dbdb',
-								borderRadius: '2px',
-								bgcolor: activeFilters.status || activeFilters.priority ? '#f5f8fa' : 'white'
+								color: activeFilters.dueSoonOnly ? '#ec7211' : '#545b64',
+								borderColor: activeFilters.dueSoonOnly ? '#ec7211' : '#d5dbdb',
+								textTransform: 'none',
+								fontWeight: 700
 							}}
 						>
-							<FilterIcon fontSize="small" sx={{ color: activeFilters.status || activeFilters.priority ? '#ec7211' : '#545b64' }} />
-						</IconButton>
-					</Tooltip>
-				</Stack>
-			</Box>
+							Upcoming
+						</Button>
+						<Button
+							size="small"
+							variant="outlined"
+							onClick={() => handleQuickFilter('overdue')}
+							sx={{
+								color: activeFilters.overdueOnly ? '#ec7211' : '#545b64',
+								borderColor: activeFilters.overdueOnly ? '#ec7211' : '#d5dbdb',
+								textTransform: 'none',
+								fontWeight: 700
+							}}
+						>
+							Overdue
+						</Button>
+						<Tooltip title="Filter">
+							<IconButton
+								onClick={() => setFilterDrawerOpen(true)}
+								sx={{
+									border: '1px solid #d5dbdb',
+									borderRadius: '2px',
+									bgcolor: activeFilters.status || activeFilters.priority ? '#f5f8fa' : 'white'
+								}}
+							>
+								<FilterIcon fontSize="small" sx={{ color: activeFilters.status || activeFilters.priority ? '#ec7211' : '#545b64' }} />
+							</IconButton>
+						</Tooltip>
+					</Stack>
+				</Box>
 
-			<CRMTable
-				columns={columns}
-				rows={list}
-				total={total}
-				page={page}
-				rowsPerPage={rowsPerPage}
-				onPageChange={(_, newPage) => setPage(newPage)}
-				onRowsPerPageChange={(e) => {
-					setRowsPerPage(parseInt(e.target.value, 10));
-					setPage(0);
-				}}
-				onRowsPerPageSelectChange={(rows) => {
-					setRowsPerPage(rows);
-					setPage(0);
-				}}
-				orderBy={sortBy}
-				order={sortOrder}
-				onSort={handleSort}
-				loading={loading}
-				emptyMessage="No tasks found. Stay on top of your deals by creating tasks."
-				onRowClick={(row) => handleEditTask(row)}
-			/>
+				<CRMTable
+					columns={columns}
+					rows={list}
+					total={total}
+					page={page}
+					rowsPerPage={rowsPerPage}
+					onPageChange={(_, newPage) => setPage(newPage)}
+					onRowsPerPageChange={(e) => {
+						setRowsPerPage(parseInt(e.target.value, 10));
+						setPage(0);
+					}}
+					onRowsPerPageSelectChange={(rows) => {
+						setRowsPerPage(rows);
+						setPage(0);
+					}}
+					orderBy={sortBy}
+					order={sortOrder}
+					onSort={handleSort}
+					loading={loading}
+					emptyMessage="No tasks found. Stay on top of your deals by creating tasks."
+					onRowClick={(row) => navigate(`/crm/tasks/${row.public_id}`)}
+				/>
 
-			<CRMTaskFormDialog
-				open={dialogOpen}
-				onClose={() => setDialogOpen(false)}
-				onSubmit={handleDialogSubmit}
-				task={selectedTaskForEdit}
-				loading={loading}
-			/>
+				<CRMTaskFormDialog
+					open={dialogOpen}
+					onClose={() => setDialogOpen(false)}
+					onSubmit={handleDialogSubmit}
+					task={selectedTaskForEdit}
+					loading={loading}
+				/>
 
-			<FilterDrawer
-				open={filterDrawerOpen}
-				onClose={() => setFilterDrawerOpen(false)}
-				fields={filterFields}
-				activeFilters={activeFilters}
-				onFilterChange={handleFilterChange}
-				onClearFilters={handleClearFilters}
-				onApplyFilters={handleApplyFilters}
-			/>
+				<FilterDrawer
+					open={filterDrawerOpen}
+					onClose={() => setFilterDrawerOpen(false)}
+					fields={filterFields}
+					activeFilters={activeFilters}
+					onFilterChange={handleFilterChange}
+					onClearFilters={handleClearFilters}
+					onApplyFilters={handleApplyFilters}
+				/>
 
-			<ConfirmDialog
-				open={deleteDialogOpen}
-				title="Delete Task"
-				message={`Are you sure you want to delete task "${taskToDelete?.title}"? This action cannot be undone.`}
-				confirmText="Delete"
-				onClose={() => setDeleteDialogOpen(false)}
-				onConfirm={handleDeleteConfirm}
-				loading={deleting}
-				severity="error"
-			/>
+				<ConfirmDialog
+					open={deleteDialogOpen}
+					title="Delete Task"
+					message={`Are you sure you want to delete task "${taskToDelete?.title}"? This action cannot be undone.`}
+					confirmText="Delete"
+					onClose={() => setDeleteDialogOpen(false)}
+					onConfirm={handleDeleteConfirm}
+					loading={deleting}
+					severity="error"
+				/>
+			</Container>
 		</Box>
 	);
 };

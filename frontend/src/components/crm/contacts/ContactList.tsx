@@ -1,5 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, TextField, InputAdornment, Stack, IconButton, Tooltip, Avatar, Typography, Chip } from '@mui/material';
+import { 
+	Box, 
+	Button, 
+	TextField, 
+	InputAdornment, 
+	Stack, 
+	IconButton, 
+	Tooltip, 
+	Typography, 
+	Chip,
+	Container
+} from '@mui/material';
 import {
 	Add as AddIcon,
 	Search as SearchIcon,
@@ -8,10 +19,9 @@ import {
 	Email as EmailIcon,
 	Phone as PhoneIcon,
 	Star as StarIcon,
-	Edit as EditIcon,
-	WhatsApp as WhatsAppIcon,
-	Delete as DeleteIcon
+	WhatsApp as WhatsAppIcon
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchContacts, createContact, updateContact, deleteContact } from '../../../store/slices/contactSlice';
 import { fetchCompanies } from '../../../store/slices/companySlice';
@@ -20,10 +30,13 @@ import CRMTable from '../common/CRMTable';
 import ContactFormDialog from './ContactFormDialog';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
 import ConfirmDialog from '../../common/ConfirmDialog';
+import CRMRowActions from '../common/CRMRowActions';
+import CRMAvatar from '../common/CRMAvatar';
 import type { Contact, ContactCreate, ContactUpdate } from '../../../models/contact';
 import { useSnackbar } from 'notistack';
 
 const ContactList: React.FC = () => {
+	const navigate = useNavigate();
 	const dispatch = useAppDispatch();
 	const { enqueueSnackbar } = useSnackbar();
 	const { list, total, loading } = useAppSelector((state) => state.contacts);
@@ -173,18 +186,7 @@ const ContactList: React.FC = () => {
 			sortable: true,
 			format: (_: any, row: Contact) => (
 				<Stack direction="row" spacing={1.5} alignItems="center">
-					<Avatar
-						sx={{
-							width: 32,
-							height: 32,
-							fontSize: '0.875rem',
-							bgcolor: '#f2f3f3',
-							color: '#545b64',
-							fontWeight: 700
-						}}
-					>
-						{row.first_name[0]}{row.last_name[0]}
-					</Avatar>
+					<CRMAvatar name={`${row.first_name} ${row.last_name}`} size={32} />
 					<Box>
 						<Stack direction="row" spacing={0.5} alignItems="center">
 							<Box sx={{ fontWeight: 700, color: '#007eb9' }}>{row.first_name} {row.last_name}</Box>
@@ -280,35 +282,14 @@ const ContactList: React.FC = () => {
 			id: 'actions',
 			label: 'Actions',
 			minWidth: 100,
+			align: 'right' as const,
 			format: (_: any, row: Contact) => (
-				<Stack direction="row" spacing={1}>
-					<Tooltip title="Edit">
-						<IconButton
-							size="small"
-							onClick={(e) => {
-								e.stopPropagation();
-								handleOpenEdit(row);
-							}}
-							sx={{ color: '#545b64' }}
-						>
-							<EditIcon fontSize="small" sx={{ color: '#007eb9' }} />
-						</IconButton>
-					</Tooltip>
-					{isAdmin && (
-						<Tooltip title="Delete">
-							<IconButton
-								size="small"
-								onClick={(e) => {
-									e.stopPropagation();
-									handleDeleteClick(row);
-								}}
-								sx={{ color: '#d32f2f' }}
-							>
-								<DeleteIcon fontSize="small" />
-							</IconButton>
-						</Tooltip>
-					)}
-				</Stack>
+				<CRMRowActions
+					row={row}
+					onView={() => navigate(`/crm/contacts/${row.public_id}`)}
+					onEdit={() => handleOpenEdit(row)}
+					onDelete={isAdmin ? () => handleDeleteClick(row) : undefined}
+				/>
 			)
 		}
 	];
@@ -331,10 +312,9 @@ const ContactList: React.FC = () => {
 				sx={{
 					px: 3,
 					bgcolor: '#ff9900',
-					color: '#232f3e',
 					'&:hover': { bgcolor: '#ec7211' },
 					textTransform: 'none',
-					fontWeight: 800,
+					fontWeight: 600,
 					boxShadow: 'none'
 				}}
 			>
@@ -344,13 +324,13 @@ const ContactList: React.FC = () => {
 	);
 
 	return (
-		<Box sx={{ bgcolor: '#f5f5f5', minHeight: '100vh', py: 3 }}>
-			<Box sx={{ px: { xs: 2, sm: 3 } }}>
-				<CRMPageHeader
-					title="Contacts"
-					actions={actions}
-				/>
+		<Box sx={{ bgcolor: '#f2f3f3', minHeight: '100vh', pb: 6 }}>
+			<CRMPageHeader
+				title="Contacts"
+				actions={actions}
+			/>
 
+			<Container maxWidth="xl" sx={{ mt: 3 }}>
 				<Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 					<TextField
 						size="small"
@@ -401,7 +381,7 @@ const ContactList: React.FC = () => {
 					onSort={handleSort}
 					loading={loading}
 					emptyMessage="No contacts found. Add contacts to your companies."
-					onRowClick={(row) => handleOpenEdit(row)}
+					onRowClick={(row) => navigate(`/crm/contacts/${row.public_id}`)}
 				/>
 
 				<ContactFormDialog
@@ -432,7 +412,7 @@ const ContactList: React.FC = () => {
 					loading={deleting}
 					severity="error"
 				/>
-			</Box>
+			</Container>
 		</Box>
 	);
 };

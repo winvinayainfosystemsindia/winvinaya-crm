@@ -21,6 +21,7 @@ import {
 	Groups as TeamIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import CRMAvatar from '../../common/CRMAvatar';
 import type { Company } from '../../../../models/company';
 
 interface CompanyDetailHeaderProps {
@@ -55,25 +56,30 @@ const CompanyDetailHeader: React.FC<CompanyDetailHeaderProps> = ({ company, onEd
 				<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
 					<Box>
 						<Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 1 }}>
-							<Typography variant="h4" sx={{ fontWeight: 300, letterSpacing: '-0.02em', fontSize: isMobile ? '1.5rem' : '2rem' }}>
-								{company.name}
-							</Typography>
-							<Chip
-								label={company.status.toUpperCase()}
-								size="small"
-								sx={{
-									height: 20,
-									fontSize: '0.65rem',
-									fontWeight: 900,
-									bgcolor: company.status === 'active' ? '#1d8102' : '#5f6368',
-									color: 'white',
-									borderRadius: '2px'
-								}}
-							/>
+							<CRMAvatar name={company.name} size={48} variant="rounded" />
+							<Box>
+								<Stack direction="row" spacing={1.5} alignItems="center">
+									<Typography variant="h4" sx={{ fontWeight: 300, letterSpacing: '-0.02em', fontSize: isMobile ? '1.5rem' : '2rem' }}>
+										{company.name}
+									</Typography>
+									<Chip
+										label={company.status.toUpperCase()}
+										size="small"
+										sx={{
+											height: 20,
+											fontSize: '0.65rem',
+											fontWeight: 900,
+											bgcolor: company.status === 'active' ? '#1d8102' : '#d13212',
+											color: 'white',
+											borderRadius: '2px'
+										}}
+									/>
+								</Stack>
+								<Typography variant="body2" sx={{ color: '#aab7bd', maxWidth: 600, mt: 0.5 }}>
+									Organizational ID: <Box component="span" sx={{ color: '#ff9900', fontWeight: 700 }}>{company.public_id}</Box>
+								</Typography>
+							</Box>
 						</Stack>
-						<Typography variant="body2" sx={{ color: '#aab7bd', maxWidth: 600 }}>
-							Detailed organizational profile for {company.name}. Manage contacts, track leads, and monitor active deal flow with precision.
-						</Typography>
 					</Box>
 
 					<Stack direction="row" spacing={1.5}>
@@ -118,11 +124,11 @@ const CompanyDetailHeader: React.FC<CompanyDetailHeaderProps> = ({ company, onEd
 						border: '1px solid rgba(255, 255, 255, 0.1)',
 						display: 'flex',
 						flexWrap: 'wrap',
-						gap: 4
+						gap: { xs: 2, md: 4 }
 					}}
 				>
-					<Box>
-						<Typography variant="caption" sx={{ color: '#aab7bd', display: 'block', mb: 0.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+					<Box sx={{ minWidth: 120 }}>
+						<Typography variant="caption" sx={{ color: '#aab7bd', display: 'block', mb: 0.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.65rem' }}>
 							Industry
 						</Typography>
 						<Stack direction="row" spacing={1} alignItems="center">
@@ -132,20 +138,20 @@ const CompanyDetailHeader: React.FC<CompanyDetailHeaderProps> = ({ company, onEd
 							</Typography>
 						</Stack>
 					</Box>
-					<Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-					<Box>
-						<Typography variant="caption" sx={{ color: '#aab7bd', display: 'block', mb: 0.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-							Size
+					<Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', display: { xs: 'none', sm: 'block' } }} />
+					<Box sx={{ minWidth: 100 }}>
+						<Typography variant="caption" sx={{ color: '#aab7bd', display: 'block', mb: 0.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.65rem' }}>
+							Company Size
 						</Typography>
 						<Stack direction="row" spacing={1} alignItems="center">
 							<TeamIcon sx={{ fontSize: 14, color: '#aab7bd' }} />
-							<Typography variant="body2" sx={{ color: 'white' }}>{company.company_size || 'Unknown'}</Typography>
+							<Typography variant="body2" sx={{ color: 'white', fontWeight: 600 }}>{company.company_size || 'N/A'}</Typography>
 						</Stack>
 					</Box>
-					<Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-					<Box>
-						<Typography variant="caption" sx={{ color: '#aab7bd', display: 'block', mb: 0.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-							Website
+					<Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', display: { xs: 'none', md: 'block' } }} />
+					<Box sx={{ minWidth: 150 }}>
+						<Typography variant="caption" sx={{ color: '#aab7bd', display: 'block', mb: 0.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.65rem' }}>
+							Official Website
 						</Typography>
 						<Stack direction="row" spacing={1} alignItems="center">
 							<WebsiteIcon sx={{ fontSize: 14, color: '#aab7bd' }} />
@@ -153,21 +159,21 @@ const CompanyDetailHeader: React.FC<CompanyDetailHeaderProps> = ({ company, onEd
 								href={company.website}
 								target="_blank"
 								underline="none"
-								sx={{ variant: 'body2', color: '#ff9900', fontWeight: 600, fontSize: '0.875rem' }}
+								sx={{ variant: 'body2', color: '#ff9900', fontWeight: 600, fontSize: '0.875rem', '&:hover': { color: '#ec7211' } }}
 							>
-								{company.website?.replace(/^https?:\/\//, '') || 'Not set'}
+								{company.website?.replace(/^https?:\/\//, '') || 'Not configured'}
 							</Link>
 						</Stack>
 					</Box>
-					<Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-					<Box>
-						<Typography variant="caption" sx={{ color: '#aab7bd', display: 'block', mb: 0.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-							Location
+					<Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255, 255, 255, 0.1)', display: { xs: 'none', lg: 'block' } }} />
+					<Box sx={{ minWidth: 150 }}>
+						<Typography variant="caption" sx={{ color: '#aab7bd', display: 'block', mb: 0.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.65rem' }}>
+							Headquarters
 						</Typography>
 						<Stack direction="row" spacing={1} alignItems="center">
 							<LocationIcon sx={{ fontSize: 14, color: '#aab7bd' }} />
 							<Typography variant="body2" sx={{ fontWeight: 600, color: 'white' }}>
-								{company.address?.city && company.address?.state ? `${company.address.city}, ${company.address.state}` : 'Not set'}
+								{company.address?.city && company.address?.state ? `${company.address.city}, ${company.address.state}` : 'N/A'}
 							</Typography>
 						</Stack>
 					</Box>

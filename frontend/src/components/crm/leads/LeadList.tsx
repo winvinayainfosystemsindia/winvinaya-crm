@@ -1,5 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, TextField, InputAdornment, Grid, Stack, IconButton, Tooltip, LinearProgress, Typography, Chip } from '@mui/material';
+import { 
+	Box, 
+	Button, 
+	TextField, 
+	InputAdornment, 
+	Stack, 
+	IconButton, 
+	Tooltip, 
+	LinearProgress, 
+	Typography, 
+	Chip,
+	Container
+} from '@mui/material';
 import {
 	Add as AddIcon,
 	Search as SearchIcon,
@@ -7,22 +19,26 @@ import {
 	Refresh as RefreshIcon,
 	FilterCenterFocus as LeadIcon,
 	Person as PersonIcon,
-	WhatsApp as WhatsAppIcon,
-	Delete as DeleteIcon
+	WhatsApp as WhatsAppIcon
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchLeads, fetchLeadStats, createLead, updateLead, deleteLead } from '../../../store/slices/leadSlice';
 import CRMPageHeader from '../common/CRMPageHeader';
 import LeadFormDialog from './LeadFormDialog';
 import CRMTable from '../common/CRMTable';
-import CRMStatsCard from '../common/CRMStatsCard';
 import CRMStatusBadge from '../common/CRMStatusBadge';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
 import ConfirmDialog from '../../common/ConfirmDialog';
+import CRMStatSection, { type StatItem } from '../common/CRMStatSection';
+import CRMRowActions from '../common/CRMRowActions';
 import type { Lead } from '../../../models/lead';
+import { useSnackbar } from 'notistack';
 
 const LeadList: React.FC = () => {
+	const navigate = useNavigate();
 	const dispatch = useAppDispatch();
+	const { enqueueSnackbar } = useSnackbar();
 	const { list, total, stats, loading } = useAppSelector((state) => state.leads);
 	const { user: currentUser } = useAppSelector((state) => state.auth);
 
@@ -85,18 +101,19 @@ const LeadList: React.FC = () => {
 		try {
 			if (selectedLeadForEdit) {
 				await dispatch(updateLead({ publicId: selectedLeadForEdit.public_id, lead: data })).unwrap();
+				enqueueSnackbar('Lead updated successfully', { variant: 'success' });
 			} else {
 				await dispatch(createLead(data)).unwrap();
+				enqueueSnackbar('Lead created successfully', { variant: 'success' });
 			}
 			setDialogOpen(false);
 			handleRefresh();
-		} catch (error) {
-			console.error('Failed to save lead:', error);
+		} catch (error: any) {
+			enqueueSnackbar(error || 'Failed to save lead', { variant: 'error' });
 		}
 	};
 
-	const handleDeleteClick = (e: React.MouseEvent, lead: Lead) => {
-		e.stopPropagation();
+	const handleDeleteClick = (lead: Lead) => {
 		setLeadToDelete(lead);
 		setDeleteDialogOpen(true);
 	};
@@ -106,11 +123,12 @@ const LeadList: React.FC = () => {
 			setDeleting(true);
 			try {
 				await dispatch(deleteLead(leadToDelete.public_id)).unwrap();
+				enqueueSnackbar('Lead deleted successfully', { variant: 'success' });
 				setDeleteDialogOpen(false);
 				setLeadToDelete(null);
 				handleRefresh();
-			} catch (error) {
-				console.error('Failed to delete lead:', error);
+			} catch (error: any) {
+				enqueueSnackbar(error || 'Failed to delete lead', { variant: 'error' });
 			} finally {
 				setDeleting(false);
 			}
@@ -263,7 +281,6 @@ const LeadList: React.FC = () => {
 								fontSize: '0.7rem',
 								height: 20,
 								'& .MuiChip-label': { px: 0.75 },
-								animation: 'none',
 							}}
 						/>
 					);
@@ -279,32 +296,45 @@ const LeadList: React.FC = () => {
 			}
 		},
 		{
-			id: 'expected_close_date',
-			label: 'Close Date',
-			minWidth: 130,
-			sortable: true,
-			format: (value: string) => value ? new Date(value).toLocaleDateString() : '-'
-		},
-		{
 			id: 'actions',
 			label: 'Actions',
 			minWidth: 100,
 			align: 'right' as const,
 			format: (_: any, row: Lead) => (
-				<Stack direction="row" spacing={1} justifyContent="flex-end">
-					{isAdmin && (
-						<Tooltip title="Delete Lead">
-							<IconButton 
-								size="small" 
-								onClick={(e) => handleDeleteClick(e, row)}
-								sx={{ color: '#d13212', '&:hover': { bgcolor: 'rgba(209, 50, 18, 0.04)' } }}
-							>
-								<DeleteIcon fontSize="small" />
-							</IconButton>
-						</Tooltip>
-					)}
-				</Stack>
+				<CRMRowActions
+					row={row}
+					onView={() => navigate(`/crm/leads/${row.public_id}`)}
+					onEdit={() => handleEditLead(row)}
+					onDelete={isAdmin ? () => handleDeleteClick(row) : undefined}
+				/>
 			)
+		}
+	];
+
+	const dashboardStats: StatItem[] = [
+		{
+			label: 'Total Active Leads',
+			value: stats?.total || 0,
+			icon: <LeadIcon />,
+			color: '#007eb9'
+		},
+		{
+			label: 'Qualified Leads',
+			value: stats?.by_status?.qualified || 0,
+			icon: <PersonIcon />,
+			color: '#1d8102'
+		},
+		{
+			label: 'Avg. Score',
+			value: `${stats?.average_score?.toFixed(1) || 0}%`,
+			icon: <SearchIcon />,
+			color: '#ec7211'
+		},
+		{
+			label: 'Conversion Rate',
+			value: `${stats?.conversion_rate || 0}%`,
+			icon: <RefreshIcon />,
+			color: '#ff9900'
 		}
 	];
 
@@ -324,7 +354,14 @@ const LeadList: React.FC = () => {
 					color="primary"
 					startIcon={<AddIcon />}
 					onClick={handleAddLead}
-					sx={{ px: 3 }}
+					sx={{ 
+						px: 3,
+						bgcolor: '#ff9900',
+						'&:hover': { bgcolor: '#ec7211' },
+						textTransform: 'none',
+						fontWeight: 600,
+						boxShadow: 'none'
+					}}
 				>
 					Add Lead
 				</Button>
@@ -333,124 +370,97 @@ const LeadList: React.FC = () => {
 	);
 
 	return (
-		<Box>
+		<Box sx={{ bgcolor: '#f2f3f3', minHeight: '100vh', pb: 6 }}>
 			<CRMPageHeader
 				title="Leads"
 				actions={actions}
 			/>
 
-			<Grid container spacing={2} sx={{ mb: 4 }}>
-				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-					<CRMStatsCard
-						label="Total Active Leads"
-						value={stats?.total || 0}
-						loading={loading}
-					/>
-				</Grid>
-				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-					<CRMStatsCard
-						label="Qualified Leads"
-						value={stats?.by_status?.qualified || 0}
-						loading={loading}
-					/>
-				</Grid>
-				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-					<CRMStatsCard
-						label="Avg. Score"
-						value={`${stats?.average_score?.toFixed(1) || 0}%`}
-						loading={loading}
-					/>
-				</Grid>
-				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-					<CRMStatsCard
-						label="Conversion Rate"
-						value={`${stats?.conversion_rate || 0}%`}
-						loading={loading}
-					/>
-				</Grid>
-			</Grid>
+			<Container maxWidth="xl" sx={{ mt: 3 }}>
+				<CRMStatSection stats={dashboardStats} />
 
-			<Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-				<TextField
-					size="small"
-					placeholder="Search leads..."
-					value={search}
-					onChange={handleSearchChange}
-					sx={{ width: 320, bgcolor: 'white' }}
-					InputProps={{
-						startAdornment: (
-							<InputAdornment position="start">
-								<SearchIcon fontSize="small" sx={{ color: '#545b64' }} />
-							</InputAdornment>
-						),
+				<Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+					<TextField
+						size="small"
+						placeholder="Search leads..."
+						value={search}
+						onChange={handleSearchChange}
+						sx={{ width: 320, bgcolor: 'white' }}
+						InputProps={{
+							startAdornment: (
+								<InputAdornment position="start">
+									<SearchIcon fontSize="small" sx={{ color: '#545b64' }} />
+								</InputAdornment>
+							),
+						}}
+					/>
+
+					<Tooltip title="Filter">
+						<IconButton
+							onClick={() => setFilterDrawerOpen(true)}
+							sx={{
+								border: '1px solid #d5dbdb',
+								borderRadius: '2px',
+								bgcolor: activeFilters.status || activeFilters.source ? '#f5f8fa' : 'white'
+							}}
+						>
+							<FilterIcon fontSize="small" sx={{ color: activeFilters.status || activeFilters.source ? '#ec7211' : '#545b64' }} />
+						</IconButton>
+					</Tooltip>
+				</Box>
+
+				<CRMTable
+					columns={columns}
+					rows={list}
+					total={total}
+					page={page}
+					rowsPerPage={rowsPerPage}
+					onPageChange={(_, newPage) => setPage(newPage)}
+					onRowsPerPageChange={(e) => {
+						setRowsPerPage(parseInt(e.target.value, 10));
+						setPage(0);
 					}}
+					onRowsPerPageSelectChange={(rows) => {
+						setRowsPerPage(rows);
+						setPage(0);
+					}}
+					orderBy={sortBy}
+					order={sortOrder}
+					onSort={handleSort}
+					loading={loading}
+					emptyMessage="No leads found. Start by adding a new lead."
+					onRowClick={(row) => navigate(`/crm/leads/${row.public_id}`)}
 				/>
 
-				<Tooltip title="Filter">
-					<IconButton
-						onClick={() => setFilterDrawerOpen(true)}
-						sx={{
-							border: '1px solid #d5dbdb',
-							borderRadius: '2px',
-							bgcolor: activeFilters.status || activeFilters.source ? '#f5f8fa' : 'white'
-						}}
-					>
-						<FilterIcon fontSize="small" sx={{ color: activeFilters.status || activeFilters.source ? '#ec7211' : '#545b64' }} />
-					</IconButton>
-				</Tooltip>
-			</Box>
+				<LeadFormDialog
+					open={dialogOpen}
+					onClose={() => setDialogOpen(false)}
+					onSubmit={handleDialogSubmit}
+					lead={selectedLeadForEdit}
+					loading={loading}
+				/>
 
-			<CRMTable
-				columns={columns}
-				rows={list}
-				total={total}
-				page={page}
-				rowsPerPage={rowsPerPage}
-				onPageChange={(_, newPage) => setPage(newPage)}
-				onRowsPerPageChange={(e) => {
-					setRowsPerPage(parseInt(e.target.value, 10));
-					setPage(0);
-				}}
-				onRowsPerPageSelectChange={(rows) => {
-					setRowsPerPage(rows);
-					setPage(0);
-				}}
-				orderBy={sortBy}
-				order={sortOrder}
-				onSort={handleSort}
-				loading={loading}
-				emptyMessage="No leads found. Start by adding a new lead."
-				onRowClick={(row) => handleEditLead(row)}
-			/>
+				<FilterDrawer
+					open={filterDrawerOpen}
+					onClose={() => setFilterDrawerOpen(false)}
+					fields={filterFields}
+					activeFilters={activeFilters}
+					onFilterChange={handleFilterChange}
+					onClearFilters={handleClearFilters}
+					onApplyFilters={handleApplyFilters}
+				/>
 
-			<LeadFormDialog
-				open={dialogOpen}
-				onClose={() => setDialogOpen(false)}
-				onSubmit={handleDialogSubmit}
-				lead={selectedLeadForEdit}
-				loading={loading}
-			/>
-
-			<FilterDrawer
-				open={filterDrawerOpen}
-				onClose={() => setFilterDrawerOpen(false)}
-				fields={filterFields}
-				activeFilters={activeFilters}
-				onFilterChange={handleFilterChange}
-				onClearFilters={handleClearFilters}
-				onApplyFilters={handleApplyFilters}
-			/>
-
-			<ConfirmDialog
-				open={deleteDialogOpen}
-				title="Delete Lead"
-				message={`Are you sure you want to delete lead "${leadToDelete?.title}"? This action cannot be undone.`}
-				confirmText="Delete"
-				onClose={() => setDeleteDialogOpen(false)}
-				onConfirm={handleConfirmDelete}
-				loading={deleting}
-				severity="error"
-			/>
+				<ConfirmDialog
+					open={deleteDialogOpen}
+					title="Delete Lead"
+					message={`Are you sure you want to delete lead "${leadToDelete?.title}"? This action cannot be undone.`}
+					confirmText="Delete"
+					onClose={() => setDeleteDialogOpen(false)}
+					onConfirm={handleConfirmDelete}
+					loading={deleting}
+					severity="error"
+				/>
+			</Container>
 		</Box>
 	);
 };

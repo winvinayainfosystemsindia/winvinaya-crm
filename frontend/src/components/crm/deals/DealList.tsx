@@ -1,5 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, TextField, InputAdornment, Grid, Stack, IconButton, Tooltip, Typography } from '@mui/material';
+import { 
+	Box, 
+	Button, 
+	TextField, 
+	InputAdornment, 
+	Stack, 
+	IconButton, 
+	Tooltip, 
+	Typography,
+	Container
+} from '@mui/material';
 import {
 	Add as AddIcon,
 	Search as SearchIcon,
@@ -7,23 +17,26 @@ import {
 	Refresh as RefreshIcon,
 	Handshake as DealIcon,
 	TrendingUp as TrendIcon,
-	Person as PersonIcon,
-	Delete as DeleteIcon
+	Person as PersonIcon
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchDeals, fetchPipelineSummary, createDeal, updateDeal, deleteDeal } from '../../../store/slices/dealSlice';
 import CRMPageHeader from '../common/CRMPageHeader';
 import CRMTable from '../common/CRMTable';
 import DealFormDialog from './DealFormDialog';
-import CRMStatsCard from '../common/CRMStatsCard';
 import CRMStatusBadge from '../common/CRMStatusBadge';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
 import ConfirmDialog from '../../common/ConfirmDialog';
-
+import CRMStatSection, { type StatItem } from '../common/CRMStatSection';
+import CRMRowActions from '../common/CRMRowActions';
 import type { Deal } from '../../../models/deal';
+import { useSnackbar } from 'notistack';
 
 const DealList: React.FC = () => {
+	const navigate = useNavigate();
 	const dispatch = useAppDispatch();
+	const { enqueueSnackbar } = useSnackbar();
 	const { list, total, pipeline, loading } = useAppSelector((state) => state.deals);
 	const { user: currentUser } = useAppSelector((state) => state.auth);
 
@@ -86,18 +99,19 @@ const DealList: React.FC = () => {
 		try {
 			if (selectedDealForEdit) {
 				await dispatch(updateDeal({ publicId: selectedDealForEdit.public_id, deal: data })).unwrap();
+				enqueueSnackbar('Deal updated successfully', { variant: 'success' });
 			} else {
 				await dispatch(createDeal(data)).unwrap();
+				enqueueSnackbar('Deal created successfully', { variant: 'success' });
 			}
 			setDialogOpen(false);
 			handleRefresh();
-		} catch (error) {
-			console.error('Failed to save deal:', error);
+		} catch (error: any) {
+			enqueueSnackbar(error || 'Failed to save deal', { variant: 'error' });
 		}
 	};
 
-	const handleDeleteClick = (e: React.MouseEvent, deal: Deal) => {
-		e.stopPropagation();
+	const handleDeleteClick = (deal: Deal) => {
 		setDealToDelete(deal);
 		setDeleteDialogOpen(true);
 	};
@@ -107,11 +121,12 @@ const DealList: React.FC = () => {
 			setDeleting(true);
 			try {
 				await dispatch(deleteDeal(dealToDelete.public_id)).unwrap();
+				enqueueSnackbar('Deal deleted successfully', { variant: 'success' });
 				setDeleteDialogOpen(false);
 				setDealToDelete(null);
 				handleRefresh();
-			} catch (error) {
-				console.error('Failed to delete deal:', error);
+			} catch (error: any) {
+				enqueueSnackbar(error || 'Failed to delete deal', { variant: 'error' });
 			} finally {
 				setDeleting(false);
 			}
@@ -242,20 +257,40 @@ const DealList: React.FC = () => {
 			minWidth: 100,
 			align: 'right' as const,
 			format: (_: any, row: Deal) => (
-				<Stack direction="row" spacing={1} justifyContent="flex-end">
-					{isAdmin && (
-						<Tooltip title="Delete Deal">
-							<IconButton
-								size="small"
-								onClick={(e) => handleDeleteClick(e, row)}
-								sx={{ color: '#d13212', '&:hover': { bgcolor: 'rgba(209, 50, 18, 0.04)' } }}
-							>
-								<DeleteIcon fontSize="small" />
-							</IconButton>
-						</Tooltip>
-					)}
-				</Stack>
+				<CRMRowActions
+					row={row}
+					onView={() => navigate(`/crm/deals/${row.public_id}`)}
+					onEdit={() => handleEditDeal(row)}
+					onDelete={isAdmin ? () => handleDeleteClick(row) : undefined}
+				/>
 			)
+		}
+	];
+
+	const dashboardStats: StatItem[] = [
+		{
+			label: 'Total Deals',
+			value: pipeline?.total_count || 0,
+			icon: <DealIcon />,
+			color: '#007eb9'
+		},
+		{
+			label: 'Pipeline Value',
+			value: `₹${(pipeline?.total_value || 0).toLocaleString()}`,
+			icon: <TrendIcon />,
+			color: '#1d8102'
+		},
+		{
+			label: 'Closed Won',
+			value: pipeline?.stages?.closed_won?.count || 0,
+			icon: <PersonIcon />,
+			color: '#ff9900'
+		},
+		{
+			label: 'Proposal Stage',
+			value: pipeline?.stages?.proposal?.count || 0,
+			icon: <AddIcon />,
+			color: '#ec7211'
 		}
 	];
 
@@ -275,7 +310,14 @@ const DealList: React.FC = () => {
 					color="primary"
 					startIcon={<AddIcon />}
 					onClick={handleAddDeal}
-					sx={{ px: 3 }}
+					sx={{ 
+						px: 3,
+						bgcolor: '#ff9900',
+						'&:hover': { bgcolor: '#ec7211' },
+						textTransform: 'none',
+						fontWeight: 600,
+						boxShadow: 'none'
+					}}
 				>
 					New Deal
 				</Button>
@@ -284,124 +326,97 @@ const DealList: React.FC = () => {
 	);
 
 	return (
-		<Box>
+		<Box sx={{ bgcolor: '#f2f3f3', minHeight: '100vh', pb: 6 }}>
 			<CRMPageHeader
 				title="Deals"
 				actions={actions}
 			/>
 
-			<Grid container spacing={2} sx={{ mb: 4 }}>
-				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-					<CRMStatsCard
-						label="Total Deals"
-						value={pipeline?.total_count || 0}
-						loading={loading}
-					/>
-				</Grid>
-				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-					<CRMStatsCard
-						label="Pipeline Value"
-						value={`₹${(pipeline?.total_value || 0).toLocaleString()}`}
-						loading={loading}
-					/>
-				</Grid>
-				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-					<CRMStatsCard
-						label="Closed Won"
-						value={pipeline?.stages?.closed_won?.count || 0}
-						loading={loading}
-					/>
-				</Grid>
-				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-					<CRMStatsCard
-						label="Proposal Stage"
-						value={pipeline?.stages?.proposal?.count || 0}
-						loading={loading}
-					/>
-				</Grid>
-			</Grid>
+			<Container maxWidth="xl" sx={{ mt: 3 }}>
+				<CRMStatSection stats={dashboardStats} />
 
-			<Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-				<TextField
-					size="small"
-					placeholder="Search deals..."
-					value={search}
-					onChange={handleSearchChange}
-					sx={{ width: 320, bgcolor: 'white' }}
-					InputProps={{
-						startAdornment: (
-							<InputAdornment position="start">
-								<SearchIcon fontSize="small" sx={{ color: '#545b64' }} />
-							</InputAdornment>
-						),
+				<Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+					<TextField
+						size="small"
+						placeholder="Search deals..."
+						value={search}
+						onChange={handleSearchChange}
+						sx={{ width: 320, bgcolor: 'white' }}
+						InputProps={{
+							startAdornment: (
+								<InputAdornment position="start">
+									<SearchIcon fontSize="small" sx={{ color: '#545b64' }} />
+								</InputAdornment>
+							),
+						}}
+					/>
+
+					<Tooltip title="Filter">
+						<IconButton
+							onClick={() => setFilterDrawerOpen(true)}
+							sx={{
+								border: '1px solid #d5dbdb',
+								borderRadius: '2px',
+								bgcolor: activeFilters.stage || activeFilters.dealType ? '#f5f8fa' : 'white'
+							}}
+						>
+							<FilterIcon fontSize="small" sx={{ color: activeFilters.stage || activeFilters.dealType ? '#ec7211' : '#545b64' }} />
+						</IconButton>
+					</Tooltip>
+				</Box>
+
+				<CRMTable
+					columns={columns}
+					rows={list}
+					total={total}
+					page={page}
+					rowsPerPage={rowsPerPage}
+					onPageChange={(_, newPage) => setPage(newPage)}
+					onRowsPerPageChange={(e) => {
+						setRowsPerPage(parseInt(e.target.value, 10));
+						setPage(0);
 					}}
+					onRowsPerPageSelectChange={(rows) => {
+						setRowsPerPage(rows);
+						setPage(0);
+					}}
+					orderBy={sortBy}
+					order={sortOrder}
+					onSort={handleSort}
+					loading={loading}
+					emptyMessage="No deals found. Open a new deal to track your sales."
+					onRowClick={(row) => navigate(`/crm/deals/${row.public_id}`)}
 				/>
 
-				<Tooltip title="Filter">
-					<IconButton
-						onClick={() => setFilterDrawerOpen(true)}
-						sx={{
-							border: '1px solid #d5dbdb',
-							borderRadius: '2px',
-							bgcolor: activeFilters.stage || activeFilters.dealType ? '#f5f8fa' : 'white'
-						}}
-					>
-						<FilterIcon fontSize="small" sx={{ color: activeFilters.stage || activeFilters.dealType ? '#ec7211' : '#545b64' }} />
-					</IconButton>
-				</Tooltip>
-			</Box>
+				<DealFormDialog
+					open={dialogOpen}
+					onClose={() => setDialogOpen(false)}
+					onSubmit={handleDialogSubmit}
+					deal={selectedDealForEdit}
+					loading={loading}
+				/>
 
-			<CRMTable
-				columns={columns}
-				rows={list}
-				total={total}
-				page={page}
-				rowsPerPage={rowsPerPage}
-				onPageChange={(_, newPage) => setPage(newPage)}
-				onRowsPerPageChange={(e) => {
-					setRowsPerPage(parseInt(e.target.value, 10));
-					setPage(0);
-				}}
-				onRowsPerPageSelectChange={(rows) => {
-					setRowsPerPage(rows);
-					setPage(0);
-				}}
-				orderBy={sortBy}
-				order={sortOrder}
-				onSort={handleSort}
-				loading={loading}
-				emptyMessage="No deals found. Open a new deal to track your sales."
-				onRowClick={(row) => handleEditDeal(row)}
-			/>
+				<FilterDrawer
+					open={filterDrawerOpen}
+					onClose={() => setFilterDrawerOpen(false)}
+					fields={filterFields}
+					activeFilters={activeFilters}
+					onFilterChange={handleFilterChange}
+					onClearFilters={handleClearFilters}
+					onApplyFilters={handleApplyFilters}
+				/>
 
-			<DealFormDialog
-				open={dialogOpen}
-				onClose={() => setDialogOpen(false)}
-				onSubmit={handleDialogSubmit}
-				deal={selectedDealForEdit}
-				loading={loading}
-			/>
-
-			<FilterDrawer
-				open={filterDrawerOpen}
-				onClose={() => setFilterDrawerOpen(false)}
-				fields={filterFields}
-				activeFilters={activeFilters}
-				onFilterChange={handleFilterChange}
-				onClearFilters={handleClearFilters}
-				onApplyFilters={handleApplyFilters}
-			/>
-
-			<ConfirmDialog
-				open={deleteDialogOpen}
-				title="Delete Deal"
-				message={`Are you sure you want to delete deal "${dealToDelete?.title}"? This action cannot be undone.`}
-				confirmText="Delete"
-				onClose={() => setDeleteDialogOpen(false)}
-				onConfirm={handleConfirmDelete}
-				loading={deleting}
-				severity="error"
-			/>
+				<ConfirmDialog
+					open={deleteDialogOpen}
+					title="Delete Deal"
+					message={`Are you sure you want to delete deal "${dealToDelete?.title}"? This action cannot be undone.`}
+					confirmText="Delete"
+					onClose={() => setDeleteDialogOpen(false)}
+					onConfirm={handleConfirmDelete}
+					loading={deleting}
+					severity="error"
+				/>
+			</Container>
 		</Box>
 	);
 };
