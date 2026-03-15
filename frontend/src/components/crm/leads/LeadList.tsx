@@ -7,10 +7,12 @@ import {
 	Refresh as RefreshIcon,
 	FilterCenterFocus as LeadIcon,
 	Person as PersonIcon,
-	WhatsApp as WhatsAppIcon
+	WhatsApp as WhatsAppIcon,
+	Delete as DeleteIcon
 } from '@mui/icons-material';
+import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
-import { fetchLeads, fetchLeadStats, createLead, updateLead } from '../../../store/slices/leadSlice';
+import { fetchLeads, fetchLeadStats, createLead, updateLead, deleteLead } from '../../../store/slices/leadSlice';
 import CRMPageHeader from '../common/CRMPageHeader';
 import LeadFormDialog from './LeadFormDialog';
 import CRMTable from '../common/CRMTable';
@@ -35,6 +37,8 @@ const LeadList: React.FC = () => {
 	const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [selectedLeadForEdit, setSelectedLeadForEdit] = useState<Lead | null>(null);
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
 
 	useEffect(() => {
 		dispatch(fetchLeads({
@@ -86,6 +90,25 @@ const LeadList: React.FC = () => {
 			handleRefresh();
 		} catch (error) {
 			console.error('Failed to save lead:', error);
+		}
+	};
+
+	const handleDeleteClick = (e: React.MouseEvent, lead: Lead) => {
+		e.stopPropagation();
+		setLeadToDelete(lead);
+		setDeleteDialogOpen(true);
+	};
+
+	const handleConfirmDelete = async () => {
+		if (leadToDelete) {
+			try {
+				await dispatch(deleteLead(leadToDelete.public_id)).unwrap();
+				setDeleteDialogOpen(false);
+				setLeadToDelete(null);
+				handleRefresh();
+			} catch (error) {
+				console.error('Failed to delete lead:', error);
+			}
 		}
 	};
 
@@ -256,6 +279,23 @@ const LeadList: React.FC = () => {
 			minWidth: 130,
 			sortable: true,
 			format: (value: string) => value ? new Date(value).toLocaleDateString() : '-'
+		},
+		{
+			id: 'actions',
+			label: '',
+			minWidth: 50,
+			align: 'right' as const,
+			format: (_: any, row: Lead) => (
+				<Tooltip title="Delete Lead">
+					<IconButton 
+						size="small" 
+						onClick={(e) => handleDeleteClick(e, row)}
+						sx={{ color: '#d13212', '&:hover': { bgcolor: 'rgba(209, 50, 18, 0.04)' } }}
+					>
+						<DeleteIcon fontSize="small" />
+					</IconButton>
+				</Tooltip>
+			)
 		}
 	];
 
@@ -387,6 +427,43 @@ const LeadList: React.FC = () => {
 				onClearFilters={handleClearFilters}
 				onApplyFilters={handleApplyFilters}
 			/>
+
+			{/* Delete Confirmation Dialog */}
+			<Dialog
+				open={deleteDialogOpen}
+				onClose={() => setDeleteDialogOpen(false)}
+				PaperProps={{
+					sx: { borderRadius: '2px', width: '400px' }
+				}}
+			>
+				<DialogTitle sx={{ fontWeight: 700, px: 3, pt: 3 }}>Delete Lead</DialogTitle>
+				<DialogContent sx={{ px: 3, pb: 1 }}>
+					<DialogContentText sx={{ color: '#16191f', fontSize: '0.875rem' }}>
+						Are you sure you want to delete lead <strong>{leadToDelete?.title}</strong>? This action cannot be undone.
+					</DialogContentText>
+				</DialogContent>
+				<DialogActions sx={{ p: 3, pt: 1 }}>
+					<Button 
+						onClick={() => setDeleteDialogOpen(false)} 
+						sx={{ color: '#545b64', textTransform: 'none', fontWeight: 700 }}
+					>
+						Cancel
+					</Button>
+					<Button 
+						onClick={handleConfirmDelete}
+						variant="contained" 
+						sx={{ 
+							bgcolor: '#d13212', 
+							'&:hover': { bgcolor: '#a6280f' },
+							textTransform: 'none',
+							fontWeight: 700,
+							boxShadow: 'none'
+						}}
+					>
+						Delete
+					</Button>
+				</DialogActions>
+			</Dialog>
 		</Box>
 	);
 };

@@ -208,9 +208,12 @@ class WhatsAppBotService:
             enquiry_summary = extracted.get("enquiry_summary", "Forwarded Lead")
             client_name = extracted.get("sender_name") or "WhatsApp Enquirer"
             company_name = extracted.get("company_name")
-            client_phone = extracted.get("phone_number")
+            client_phone_raw = extracted.get("phone_number")
             client_email = extracted.get("email")
             ai_lead_title = extracted.get("lead_title")
+
+            # Normalise client phone from AI extraction
+            client_phone = self._normalize_phone(client_phone_raw) if client_phone_raw else None
 
             # 2. Locate or Create Company
             company = None
@@ -260,7 +263,7 @@ class WhatsAppBotService:
                 )
                 self.db.add(contact)
                 await self.db.flush()
-                logger.info(f"Forward-to-CRM: Created new contact '{client_name}'")
+                logger.info(f"Forward-to-CRM: Created new contact '{client_name}' (normalized phone: {client_phone})")
             else:
                 # Link existing contact to company if not already linked
                 if company and not contact.company_id:
@@ -341,7 +344,8 @@ class WhatsAppBotService:
 
     async def _find_user_by_phone(self, phone: str) -> Optional[User]:
         """Look up an internal User by their mobile number."""
-        stripped = phone.lstrip("91").lstrip("0") if len(phone) > 10 else phone
+        stripped = self._normalize_phone(phone)
+        stripped = stripped[-10:] if len(stripped) >= 10 else stripped
         stmt = select(User).where(
             User.is_active == True
         ).where(
@@ -424,7 +428,7 @@ class WhatsAppBotService:
         contact = Contact(
             first_name=first_name,
             last_name=last_name,
-            mobile=from_phone,
+            mobile=self._normalize_phone(from_phone),
             company_id=company.id if company else None,
             contact_source=ContactSource.WHATSAPP,
             custom_fields={"whatsapp_phone": from_phone},
@@ -618,16 +622,25 @@ class WhatsAppBotService:
     # Helpers
     # ------------------------------------------------------------------
 
+    def _normalize_phone(self, phone: str) -> str:
+        """Strip all non-digit characters from the phone number."""
+        if not phone:
+            return ""
+        return "".join(filter(str.isdigit, phone))
+
     async def _find_contact_by_phone(self, phone: str) -> Optional[Contact]:
         """Look up a Contact by mobile or phone (E.164 or local format)."""
-        # Normalise: strip leading zeros / country code variations
-        stripped = phone.lstrip("91").lstrip("0") if len(phone) > 10 else phone
+        # Normalise: strip all non-digits
+        stripped = self._normalize_phone(phone)
+        # Match trailing 10 digits to bypass country code variations (+91 etc)
+        match_suffix = stripped[-10:] if len(stripped) >= 10 else stripped
+        
         stmt = (
             select(Contact)
             .where(Contact.is_deleted == False)
             .where(
-                Contact.mobile.like(f"%{stripped}")
-                | Contact.phone.like(f"%{stripped}")
+                Contact.mobile.like(f"%{match_suffix}")
+                | Contact.phone.like(f"%{match_suffix}")
             )
         )
         result = await self.db.execute(stmt)
