@@ -1,12 +1,7 @@
 import {
 	Home as HomeIcon,
 	ManageAccounts as UserIcon,
-	// Dashboard as DashboardIcon,
-	// FilterCenterFocus as LeadIcon,
-	// Handshake as DealIcon,
-	// Business as BusinessIcon,
-	// Person as PersonIcon,
-	// Assignment as TaskIcon,
+	Business as BusinessIcon,
 	Group as CandidatesIcon,
 	School as SchoolIcon,
 	Assessment as AssessmentIcon,
@@ -46,6 +41,19 @@ export const topNavigation: NavigationItem[] = [
 			{ label: 'Projects', path: '/projects' },
 			{ label: 'Activities', path: '/projects/activities' },
 			{ label: 'Daily Status Report', path: '/projects/dsr' },
+		],
+	},
+	{
+		label: 'CRM Management',
+		icon: BusinessIcon,
+		roles: ['admin', 'manager', 'sourcing'],
+		children: [
+			{ label: 'Dashboard', path: '/crm/dashboard' },
+			{ label: 'Companies', path: '/crm/companies' },
+			{ label: 'Contacts', path: '/crm/contacts' },
+			{ label: 'Leads', path: '/crm/leads' },
+			{ label: 'Deals', path: '/crm/deals' },
+			{ label: 'Tasks', path: '/crm/tasks' },
 		],
 	},
 	{
