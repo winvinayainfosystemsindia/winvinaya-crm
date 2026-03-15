@@ -206,9 +206,10 @@ class WhatsAppBotService:
             raw_msg.ai_confidence = extracted.get("confidence", 0.0)
 
             enquiry_summary = extracted.get("enquiry_summary", "Forwarded Lead")
-            client_name = extracted.get("sender_name") or "Unknown Client"
+            client_name = extracted.get("sender_name") or "WhatsApp Enquirer"
             company_name = extracted.get("company_name")
-            client_phone = extracted.get("phone_number")  # E.164 if found
+            client_phone = extracted.get("phone_number")
+            ai_lead_title = extracted.get("lead_title")
 
             # 2. Check if client already exists (if phone found)
             existing_contact = None
@@ -223,15 +224,14 @@ class WhatsAppBotService:
                     entity_id=existing_contact.id,
                     activity_type=CRMActivityType.WHATSAPP_MESSAGE,
                     performed_by=user.id,
-                    summary=f"Forwarded enquiry from {user.full_name}: {enquiry_summary[:200]}",
+                    summary=f"Forwarded from {user.full_name}: {enquiry_summary[:200]}",
                     extra_data={"forwarded_by": user.id, "original_msg": message_body},
                 )
                 self.db.add(activity)
                 crm_action = {"contact_id": existing_contact.id, "activity_id": "logged"}
-                confirm_header = f"📝 *Existing Contact linked: {existing_contact.full_name}*"
+                confirm_header = f"📝 *Linked to: {existing_contact.full_name}*"
             else:
                 # Create NEW Lead flow, assigned to the FORWARDER
-                # Create Company
                 company = None
                 if company_name:
                     company = Company(name=company_name, status=CompanyStatus.PROSPECT)
@@ -253,13 +253,20 @@ class WhatsAppBotService:
                 self.db.add(contact)
                 await self.db.flush()
 
+                # Build professional title
+                if ai_lead_title:
+                    lead_title = f"FWD: {ai_lead_title}"
+                else:
+                    company_part = f" @ {company_name}" if company_name else ""
+                    lead_title = f"FWD: Enquiry from {client_name}{company_part}"
+
                 # Create Lead assigned to the forwarder
                 lead = Lead(
-                    title=f"FWD: {client_name} — {enquiry_summary[:50]}",
-                    description=f"Forwarded by {user.full_name}.\n\n{message_body}",
+                    title=lead_title[:255],
+                    description=f"Forwarded by {user.full_name}.\n\nOriginal Message:\n{message_body}",
                     lead_source=LeadSource.WHATSAPP,
                     lead_status=LeadStatus.NEW,
-                    assigned_to=user.id,  # <--- Assigned to the employee who forwarded it
+                    assigned_to=user.id,
                     company_id=company.id if company else None,
                     contact_id=contact.id,
                     tags=["forwarded", "whatsapp"],
@@ -269,8 +276,8 @@ class WhatsAppBotService:
 
                 # Auto-Task for the forwarder
                 task = CRMTask(
-                    title=f"Action Forwarded Lead: {client_name}",
-                    description=f"You forwarded this lead via WhatsApp.\nEnquiry: {enquiry_summary}",
+                    title=f"Review: {lead_title[:100]}",
+                    description=f"Enquiry from {client_name}.\nSummary: {enquiry_summary}",
                     task_type=CRMTaskType.FOLLOW_UP,
                     priority=CRMTaskPriority.HIGH,
                     status=CRMTaskStatus.PENDING,
@@ -282,7 +289,7 @@ class WhatsAppBotService:
                 )
                 self.db.add(task)
                 crm_action = {"lead_id": lead.id, "contact_id": contact.id, "task_id": "created"}
-                confirm_header = f"🚀 *Lead created and assigned to YOU: {client_name}*"
+                confirm_header = f"🚀 *Lead Created & Assigned to YOU: {client_name}*"
 
             raw_msg.crm_action_taken = crm_action
             raw_msg.processing_status = WAProcessingStatus.PROCESSED

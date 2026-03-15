@@ -309,27 +309,27 @@ Respond with ONLY valid JSON, no markdown, no explanation:
         Returns a dict:
             {sender_name, company_name, phone_number, enquiry_summary, confidence}
         """
-        prompt = f"""You are a CRM intake bot for WinVinaya Foundation.
-An employee has FORWARDED a client enquiry to you. Extract the client's information from the text.
+        prompt = f"""You are a high-precision CRM extraction assistant for WinVinaya Foundation.
+An employee has FORWARDED a client enquiry to you via WhatsApp. Your job is to extract the actual CLIENT'S information (the person the employee is talking about or forwarding from).
 
-Extract the following:
-- sender_name: The client's name (not the employee's)
-- company_name: Client's company/org
-- phone_number: The client's phone number if mentioned in the text (E.164 format)
-- enquiry_summary: One-line summary of what the client wants
+Identify:
+1. The **Client Name**: Look for "I am...", "My name is...", or names mentioned alongside company names.
+2. The **Company Name**: Look for "from [Company]", "working at [Company]", or email domains.
+3. The **Enquiry**: What does the client want? (Testing, training, placement, etc.)
+
+Extract into this JSON format:
+- sender_name: Full name of the client (null if not found)
+- company_name: Name of the client's company (null if not found)
+- phone_number: Client's phone if mentioned (E.164 format)
+- enquiry_summary: A concise, professional summary of the request (max 100 chars)
+- lead_title: A professional title for the lead, e.g., "AI Testing Enquiry - [Company]" or "Placement Request from [Name]"
 - confidence: Your confidence score 0.0 to 1.0
 
-Forwarded Message:
+Text to analyze:
 \"\"\"{message_body}\"\"\"
 
-Respond with ONLY valid JSON:
-{{
-  "sender_name": "<string or null>",
-  "company_name": "<string or null>",
-  "phone_number": "<string or null>",
-  "enquiry_summary": "<string>",
-  "confidence": <float>
-}}"""
+Respond ONLY with valid JSON.
+"""
 
         default_result = {
             "sender_name": "Unknown Client",
