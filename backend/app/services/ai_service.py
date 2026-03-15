@@ -40,12 +40,19 @@ class AIService:
         config = {s.key: s.value for s in settings}
         
         self.enabled = config.get("ai_enabled", "false").lower() == "true"
-        self.api_key = (config.get("ai_api_key") or "").strip()
-        self.provider_url = (config.get("ai_provider_url") or "").strip()
-        self.model_name = (config.get("ai_model") or "gemini-pro").strip()
+        self.provider = config.get("ai_provider", "google").lower()
+        self.model_name = config.get("ai_model_name", "gemini-1.5-flash-002").strip()
+        self.provider_url = (config.get("ai_base_url") or "").strip()
         
-        # Adaptive Provider Detection
-        self.provider = self._detect_provider()
+        # Normalize provider_url: Strip '/chat/completions' if present, as SDK appends it
+        if self.provider_url:
+            self.provider_url = self.provider_url.rstrip('/')
+            if self.provider_url.endswith('/chat/completions'):
+                self.provider_url = self.provider_url.replace('/chat/completions', '')
+            elif self.provider_url.endswith('/chat'): # Handle some edge cases
+                self.provider_url = self.provider_url.replace('/chat', '')
+
+        self.api_key = (config.get("ai_api_key") or "").strip()
         
         if not self.enabled or not self.api_key:
             logger.warning("AI Service is disabled or missing API key")
@@ -67,13 +74,13 @@ class AIService:
                     tools=tools,
                     system_instruction=self.SYSTEM_INSTRUCTION
                 )
-                logger.info(f"AI Service (Adaptive -> Google) initialized with model: {self.model_name}")
+                logger.info(f"AI Service (Google) initialized with model: {self.model_name}")
             else:
                 self.openai_client = AsyncOpenAI(
                     api_key=self.api_key,
-                    base_url=self.provider_url or "https://api.groq.com/openai/v1"
+                    base_url=self.provider_url or "https://api.openai.com/v1"
                 )
-                logger.info(f"AI Service (Adaptive -> OpenAI-compatible) initialized at: {self.openai_client.base_url}")
+                logger.info(f"AI Service (OpenAI-compatible) initialized at: {self.openai_client.base_url}")
         except Exception as e:
             logger.error(f"Failed to initialize AI client: {e}")
             self.enabled = False
@@ -317,13 +324,15 @@ An employee has FORWARDED a client enquiry to you via WhatsApp. Your job is to e
 2. **Company Name**: Extract the name of the Client's company.
 3. **Lead Title**: Create a short, professional title focused on the SERVICE. Example: "Document Remediation Service" or "Accessibility Audit".
 4. **Phone**: Extract any phone number mentioned in the text.
+5. **Email**: Extract any email address mentioned in the text.
 
 ### EXAMPLES:
-Message: "Hi this is daran from winvinaya infosystems. I need service on document remediation. My no. Is 88760 39474"
+Message: "Hi this is daran from winvinaya infosystems. I need service on document remediation. My no. Is 88760 39474 and email is daran@winvinaya.com"
 Response: {{
   "sender_name": "Daran",
   "company_name": "WinVinaya Infosystems",
   "phone_number": "8876039474",
+  "email": "daran@winvinaya.com",
   "enquiry_summary": "Inquiry about document remediation services",
   "lead_title": "Document Remediation Service",
   "confidence": 0.95
@@ -334,6 +343,7 @@ Response: {{
   "sender_name": "Suresh",
   "company_name": "ABC Tech",
   "phone_number": null,
+  "email": null,
   "enquiry_summary": "Pricing inquiry for testing services",
   "lead_title": "Testing Services Inquiry",
   "confidence": 0.8
@@ -349,6 +359,7 @@ Respond ONLY with valid JSON.
             "sender_name": "WhatsApp Enquirer",
             "company_name": None,
             "phone_number": None,
+            "email": None,
             "enquiry_summary": message_body[:100],
             "lead_title": "New WhatsApp Lead",
             "confidence": 0.5,

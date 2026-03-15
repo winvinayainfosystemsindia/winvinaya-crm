@@ -13,10 +13,12 @@ import {
 	FactCheck as CounselingIcon,
 	SmartToy as AIIcon,
 	School as SchoolIcon,
-	WhatsApp as WhatsAppIcon
+	WhatsApp as WhatsAppIcon,
+	ChatOutlined as ChatIcon
 } from '@mui/icons-material';
 import DynamicFieldsSection from '../../components/settings/DynamicFieldsSection';
 import AIConfigurationSection from '../../components/settings/AIConfigurationSection';
+import ChatbotConfigurationSection from '../../components/settings/ChatbotConfigurationSection';
 import TrainingConfigurationSection from '../../components/settings/TrainingConfigurationSection';
 import WhatsAppConfigurationSection from '../../components/settings/WhatsAppConfigurationSection';
 
@@ -43,9 +45,11 @@ const Settings: React.FC = () => {
 			case 2:
 				return <AIConfigurationSection />;
 			case 3:
-				return <TrainingConfigurationSection />;
+				return <ChatbotConfigurationSection />;
 			case 4:
 				return <WhatsAppConfigurationSection />;
+			case 5:
+				return <TrainingConfigurationSection />;
 			default:
 				return (
 					<Box sx={{ p: 8, textAlign: 'center' }}>
@@ -77,7 +81,7 @@ const Settings: React.FC = () => {
 							System Settings
 						</Typography>
 						<Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
-							Manage your CRM's custom fields, AI configurations, and overall system behavior.
+							Manage your CRM's core engine, communication channels, and custom behavior.
 						</Typography>
 					</Box>
 				</Stack>
@@ -85,6 +89,8 @@ const Settings: React.FC = () => {
 				<Tabs
 					value={tabValue}
 					onChange={handleTabChange}
+					variant="scrollable"
+					scrollButtons="auto"
 					sx={{
 						'& .MuiTab-root': {
 							textTransform: 'none',
@@ -108,9 +114,10 @@ const Settings: React.FC = () => {
 				>
 					<Tab icon={<ScreeningIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Screening Fields" />
 					<Tab icon={<CounselingIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Counseling Fields" />
-					<Tab icon={<AIIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="AI Configuration" />
+					<Tab icon={<AIIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="AI Engine" />
+					<Tab icon={<ChatIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Chatbot Config" />
+					<Tab icon={<WhatsAppIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="WhatsApp Channel" />
 					<Tab icon={<SchoolIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Training Config" />
-					<Tab icon={<WhatsAppIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="WhatsApp Config" />
 				</Tabs>
 			</Box>
 

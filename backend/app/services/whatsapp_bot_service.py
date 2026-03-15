@@ -209,35 +209,40 @@ class WhatsAppBotService:
             client_name = extracted.get("sender_name") or "WhatsApp Enquirer"
             company_name = extracted.get("company_name")
             client_phone = extracted.get("phone_number")
+            client_email = extracted.get("email")
             ai_lead_title = extracted.get("lead_title")
 
-            # 2. Check if client or company already exists
-            existing_contact = None
-            if client_phone:
-                existing_contact = await self._find_contact_by_phone(client_phone)
-            
-            # If no phone, maybe search by name (optional but risky, stick to phone for now)
-
-            # Search existing company by name
-            existing_company = None
+            # 2. Locate or Create Company
+            company = None
             if company_name:
                 from app.repositories.company_repository import CompanyRepository
                 comp_repo = CompanyRepository(self.db)
                 companies, _ = await comp_repo.get_multi(search=company_name, limit=1)
-                # Ensure exact match or close match by comparing strings
+                
+                # Check for exact or closely matching company
                 if companies:
                     target = companies[0]
                     if company_name.lower() in target.name.lower() or target.name.lower() in company_name.lower():
-                        existing_company = target
+                        company = target
+                
+                if not company:
+                    # Create the company as it doesn't exist
+                    company = Company(
+                        name=company_name, 
+                        status=CompanyStatus.PROSPECT,
+                        email=client_email if "@" in (company_name or "") else None # minor heuristic
+                    )
+                    self.db.add(company)
+                    await self.db.flush()
+                    logger.info(f"Forward-to-CRM: Created new company '{company_name}'")
 
-            # 3. Create/Update records
-            contact = existing_contact
-            company = existing_company
+            # 3. Locate or Create Contact
+            contact = None
+            if client_phone:
+                contact = await self._find_contact_by_phone(client_phone)
             
-            if not company and company_name:
-                company = Company(name=company_name, status=CompanyStatus.PROSPECT)
-                self.db.add(company)
-                await self.db.flush()
+            if not contact and client_email:
+                contact = await self._find_contact_by_email(client_email)
 
             if not contact:
                 # Create Contact
@@ -249,17 +254,21 @@ class WhatsAppBotService:
                     first_name=first_name,
                     last_name=last_name,
                     mobile=client_phone if client_phone else f"FWD-{wa_message_id[:10]}",
+                    email=client_email,
                     company_id=company.id if company else None,
                     contact_source=ContactSource.WHATSAPP,
                 )
                 self.db.add(contact)
                 await self.db.flush()
-            elif company and not contact.company_id:
-                # Link existing contact to company if not linked
-                contact.company_id = company.id
-                await self.db.flush()
+                logger.info(f"Forward-to-CRM: Created new contact '{client_name}'")
+            else:
+                # Link existing contact to company if not already linked
+                if company and not contact.company_id:
+                    contact.company_id = company.id
+                    await self.db.flush()
+                    logger.info(f"Forward-to-CRM: Linked existing contact '{contact.full_name}' to company '{company.name}'")
 
-            # 4. ALWAYS Create Lead (the goal of forwarding)
+            # 4. Create Lead (Always)
             final_lead_title = ai_lead_title if ai_lead_title else f"Enquiry from {client_name}"
             if company and not ai_lead_title:
                 final_lead_title = f"{final_lead_title} @ {company.name}"
@@ -277,7 +286,7 @@ class WhatsAppBotService:
             self.db.add(lead)
             await self.db.flush()
 
-            # Log activity on Lead/Contact
+            # Log activity
             activity = CRMActivityLog(
                 entity_type=CRMEntityType.LEAD,
                 entity_id=lead.id,
@@ -288,7 +297,7 @@ class WhatsAppBotService:
             )
             self.db.add(activity)
 
-            # 5. Auto-Task for the forwarder
+            # 5. Create Task
             task = CRMTask(
                 title=f"Action: {final_lead_title[:100]}",
                 description=f"Initial Enquiry: {enquiry_summary}\nClient: {contact.full_name}",
@@ -303,21 +312,25 @@ class WhatsAppBotService:
             )
             self.db.add(task)
             
-            crm_action = {"lead_id": lead.id, "contact_id": contact.id, "company_id": company.id if company else None}
+            crm_action = {
+                "lead_id": lead.id, 
+                "contact_id": contact.id, 
+                "company_id": company.id if company else None,
+                "task_id": "created"
+            }
             confirm_header = f"🚀 *Lead Sync Successful: {contact.full_name}*"
 
             raw_msg.crm_action_taken = crm_action
             raw_msg.processing_status = WAProcessingStatus.PROCESSED
 
-            # 4. Confirmation back to the EMPLOYEE
+            # Confirmation back to employee
             reply = (
                 f"{confirm_header}\n"
                 f"📋 Summary: {enquiry_summary}\n"
-                f"🏢 Company: {company_name or '—'}\n"
+                f"🏢 Company: {company.name if company else '—'}\n"
                 f"Sync successful. View in CRM."
             )
             await self._send_confirmation(from_phone, reply)
-
             await self.db.commit()
 
         except Exception as e:
@@ -616,6 +629,16 @@ class WhatsAppBotService:
                 Contact.mobile.like(f"%{stripped}")
                 | Contact.phone.like(f"%{stripped}")
             )
+        )
+        result = await self.db.execute(stmt)
+        return result.scalars().first()
+
+    async def _find_contact_by_email(self, email: str) -> Optional[Contact]:
+        """Look up a Contact by email address."""
+        stmt = (
+            select(Contact)
+            .where(Contact.is_deleted == False)
+            .where(Contact.email.ilike(email.strip()))
         )
         result = await self.db.execute(stmt)
         return result.scalars().first()

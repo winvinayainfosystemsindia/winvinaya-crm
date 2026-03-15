@@ -4,13 +4,11 @@ import {
 	Typography,
 	Stack,
 	CircularProgress,
-	Switch,
 	TextField,
 	IconButton,
 	Button,
 	Paper,
 	useTheme,
-	alpha,
 	Tooltip
 } from '@mui/material';
 import {
@@ -24,6 +22,8 @@ import {
 import { settingsService, type SystemSetting } from '../../services/settingsService';
 import { chatService } from '../../services/chatService';
 import { useSnackbar } from 'notistack';
+
+const CORE_AI_KEYS = ['ai_provider', 'ai_api_key', 'ai_model_name', 'ai_base_url'];
 
 const AIConfigurationSection: React.FC = () => {
 	const theme = useTheme();
@@ -42,7 +42,9 @@ const AIConfigurationSection: React.FC = () => {
 		setLoading(true);
 		try {
 			const data = await settingsService.getSystemSettings();
-			setSystemSettings(data);
+			// Whitelist only core AI engine keys
+			const filtered = data.filter((s: SystemSetting) => CORE_AI_KEYS.includes(s.key));
+			setSystemSettings(filtered);
 		} catch (error) {
 			enqueueSnackbar('Failed to load system settings', { variant: 'error' });
 		} finally {
@@ -68,10 +70,10 @@ const AIConfigurationSection: React.FC = () => {
 				.map((s: SystemSetting) => settingsService.updateSystemSetting(s.id, { value: s.value.trim() }));
 
 			await Promise.all(savePromises);
-			enqueueSnackbar('All AI settings saved successfully', { variant: 'success' });
+			enqueueSnackbar('AI Engine settings saved successfully', { variant: 'success' });
 			loadSystemSettings();
 		} catch (error) {
-			enqueueSnackbar('Failed to save some settings', { variant: 'error' });
+			enqueueSnackbar('Failed to save settings', { variant: 'error' });
 		} finally {
 			setSavingSettings(false);
 		}
@@ -116,10 +118,10 @@ const AIConfigurationSection: React.FC = () => {
 			}}>
 				<Box>
 					<Typography variant="h6" sx={{ fontWeight: 700, color: '#1a1c21', mb: 0.5 }}>
-						Sarathi Engine Configuration
+						AI Core Engine (Sarathi)
 					</Typography>
 					<Typography variant="body2" sx={{ color: '#64748b' }}>
-						Manage API keys and global settings for Sarathi, your AI-powered candidate screening and counseling assistant.
+						Manage central AI credentials. These settings power analysis, counseling, and automation across the platform.
 					</Typography>
 				</Box>
 				<Stack direction="row" spacing={2}>
@@ -137,7 +139,7 @@ const AIConfigurationSection: React.FC = () => {
 							'&:hover': { borderColor: '#cbd5e1', bgcolor: '#f8fafc' }
 						}}
 					>
-						Test Connectivity
+						Test Connection
 					</Button>
 					<Button
 						variant="contained"
@@ -153,14 +155,17 @@ const AIConfigurationSection: React.FC = () => {
 							px: 3
 						}}
 					>
-						Save All Settings
+						Save Core Settings
 					</Button>
 				</Stack>
 			</Box>
 
 			<Stack spacing={3}>
 				{systemSettings
-					.filter((s: SystemSetting) => s.key !== 'ai_provider')
+					.sort((a: SystemSetting, b: SystemSetting) => {
+						const order = ['ai_provider', 'ai_model_name', 'ai_base_url', 'ai_api_key'];
+						return order.indexOf(a.key) - order.indexOf(b.key);
+					})
 					.map((setting: SystemSetting) => (
 						<Paper
 							key={setting.id}
@@ -180,60 +185,55 @@ const AIConfigurationSection: React.FC = () => {
 							<Box sx={{ flexGrow: 1, minWidth: { sm: 250 } }}>
 								<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
 									<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1e293b' }}>
-										{setting.description || setting.key.replace(/_/g, ' ').toUpperCase()}
+										{setting.key === 'ai_provider' ? "Active AI Provider" :
+										 setting.key === 'ai_model_name' ? "AI Model Selection" :
+										 setting.key === 'ai_base_url' ? "Base API URL (Gateway)" :
+										 setting.key === 'ai_api_key' ? "Provider API Key" :
+										 setting.description || setting.key.replace(/_/g, ' ').toUpperCase()}
 									</Typography>
 									{setting.is_secret && (
-										<Tooltip title="Secure Sensitive Information">
+										<Tooltip title="Secure Key">
 											<LockIcon sx={{ fontSize: '0.875rem', color: '#94a3b8' }} />
 										</Tooltip>
 									)}
 								</Stack>
-								<Typography variant="caption" sx={{ color: '#64748b' }}>
-									Internal Key: <code>{setting.key}</code>
+								<Typography variant="caption" sx={{ color: '#64748b', display: 'block' }}>
+									{setting.description || `Configuration for ${setting.key}`}
 								</Typography>
 							</Box>
 
 							<Box sx={{ width: '100%', maxWidth: { sm: 500 } }}>
-								{setting.key === 'ai_enabled' ? (
-									<Box sx={{
-										display: 'flex',
-										alignItems: 'center',
-										justifyContent: 'space-between',
-										px: 2,
-										py: 1,
-										bgcolor: setting.value === 'true' ? alpha(theme.palette.success.main, 0.05) : '#f8fafc',
-										borderRadius: '6px',
-										border: '1px solid',
-										borderColor: setting.value === 'true' ? alpha(theme.palette.success.main, 0.2) : '#e2e8f0'
-									}}>
-										<Typography variant="body2" sx={{
-											fontWeight: 600,
-											color: setting.value === 'true' ? theme.palette.success.main : '#64748b'
-										}}>
-											{setting.value === 'true' ? "Currently Enabled" : "Currently Disabled"}
-										</Typography>
-										<Switch
-											size="small"
-											checked={setting.value === 'true'}
-											onChange={(e) => {
-												const val = e.target.checked ? 'true' : 'false';
-												setSystemSettings((prev: SystemSetting[]) => prev.map((s: SystemSetting) => s.id === setting.id ? { ...s, value: val } : s));
-												handleSaveSetting(setting.id, val);
-											}}
-										/>
-									</Box>
+								{setting.key === 'ai_provider' ? (
+									<TextField
+										select
+										fullWidth
+										size="small"
+										value={setting.value || 'google'}
+										onChange={(e) => {
+											const val = e.target.value;
+											setSystemSettings((prev: SystemSetting[]) => prev.map((s: SystemSetting) => s.id === setting.id ? { ...s, value: val } : s));
+											handleSaveSetting(setting.id, val);
+										}}
+										SelectProps={{
+											native: true,
+											sx: { borderRadius: '6px' }
+										}}
+									>
+										<option value="google">Google Gemini</option>
+										<option value="openai">OpenAI</option>
+									</TextField>
 								) : (
 									<TextField
 										fullWidth
 										size="small"
 										type={setting.is_secret ? (showSecrets[setting.id] ? "text" : "password") : "text"}
-										value={setting.value}
+										value={setting.value === '********' ? '' : setting.value}
 										onChange={(e) => {
 											const val = e.target.value;
 											setSystemSettings((prev: SystemSetting[]) => prev.map((s: SystemSetting) => s.id === setting.id ? { ...s, value: val } : s));
 										}}
 										onBlur={(e) => handleSaveSetting(setting.id, e.target.value)}
-										placeholder={setting.is_secret ? "••••••••••••••••" : `Enter ${setting.key}`}
+										placeholder={setting.is_secret ? "••••••••••••••••" : `Enter ${setting.description || setting.key}`}
 										InputProps={{
 											sx: { borderRadius: '6px' },
 											endAdornment: setting.is_secret ? (
@@ -243,7 +243,7 @@ const AIConfigurationSection: React.FC = () => {
 													)}
 													<IconButton
 														size="small"
-														onClick={() => setShowSecrets(prev => ({ ...prev, [setting.id]: !prev[setting.id] }))}
+														onClick={() => setShowSecrets((prev: Record<number, boolean>) => ({ ...prev, [setting.id]: !prev[setting.id] }))}
 														sx={{ color: '#94a3b8' }}
 													>
 														{showSecrets[setting.id] ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
@@ -253,7 +253,7 @@ const AIConfigurationSection: React.FC = () => {
 										}}
 										helperText={
 											setting.is_secret && setting.value === '********'
-												? "API key is securely stored."
+												? "Credential is encrypted and securely stored."
 												: null
 										}
 										FormHelperTextProps={{ sx: { color: theme.palette.success.main, fontWeight: 500 } }}
