@@ -11,7 +11,7 @@ class ContactBase(BaseModel):
     company_id: Optional[int] = None
     first_name: str = Field(..., max_length=100)
     last_name: str = Field(..., max_length=100)
-    email: EmailStr
+    email: Optional[EmailStr] = None
     phone: Optional[str] = Field(None, max_length=50)
     mobile: Optional[str] = Field(None, max_length=50)
     designation: Optional[str] = Field(None, max_length=100)
