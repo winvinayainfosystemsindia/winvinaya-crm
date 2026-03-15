@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, TextField, InputAdornment, Stack, IconButton, Tooltip, Avatar, Typography } from '@mui/material';
+import { Box, Button, TextField, InputAdornment, Stack, IconButton, Tooltip, Avatar, Typography, Chip } from '@mui/material';
 import {
 	Add as AddIcon,
 	Search as SearchIcon,
@@ -7,7 +7,8 @@ import {
 	Refresh as RefreshIcon,
 	Email as EmailIcon,
 	Phone as PhoneIcon,
-	Star as StarIcon
+	Star as StarIcon,
+	WhatsApp as WhatsAppIcon
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchContacts, createContact, updateContact } from '../../../store/slices/contactSlice';
@@ -120,6 +121,20 @@ const ContactList: React.FC = () => {
 			key: 'is_decision_maker',
 			label: 'Decision Maker',
 			type: 'boolean'
+		},
+		{
+			key: 'contact_source',
+			label: 'Source',
+			type: 'single-select',
+			options: [
+				{ value: 'whatsapp', label: '💬 WhatsApp' },
+				{ value: 'linkedin', label: 'LinkedIn' },
+				{ value: 'website', label: 'Website' },
+				{ value: 'referral', label: 'Referral' },
+				{ value: 'cold_call', label: 'Cold Call' },
+				{ value: 'event', label: 'Event' },
+				{ value: 'other', label: 'Other' }
+			]
 		}
 	];
 
@@ -167,12 +182,12 @@ const ContactList: React.FC = () => {
 			id: 'email',
 			label: 'Email',
 			minWidth: 200,
-			format: (value: string) => (
+			format: (value: string | undefined) => value ? (
 				<Stack direction="row" spacing={1} alignItems="center">
 					<EmailIcon sx={{ fontSize: 16, color: '#aab7b7' }} />
 					<Typography variant="body2">{value}</Typography>
 				</Stack>
-			)
+			) : <Typography variant="body2" sx={{ color: '#aab7b7' }}>—</Typography>
 		},
 		{
 			id: 'phone',
@@ -193,6 +208,39 @@ const ContactList: React.FC = () => {
 			format: (value: boolean) => value ? (
 				<Box sx={{ color: '#1d8102', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>Yes</Box>
 			) : '-'
+		},
+		{
+			id: 'contact_source',
+			label: 'Source',
+			minWidth: 130,
+			format: (value: string | undefined) => {
+				if (value === 'whatsapp') {
+					return (
+						<Chip
+							icon={<WhatsAppIcon sx={{ fontSize: '14px !important', color: '#fff !important' }} />}
+							label="WhatsApp"
+							size="small"
+							sx={{
+								bgcolor: '#25D366',
+								color: '#fff',
+								fontWeight: 700,
+								fontSize: '0.7rem',
+								height: 20,
+								'& .MuiChip-label': { px: 0.75 },
+							}}
+						/>
+					);
+				}
+				if (!value) return <Typography variant="body2" sx={{ color: '#aab7b7' }}>—</Typography>;
+				return (
+					<Chip
+						label={value.replace(/_/g, ' ')}
+						size="small"
+						variant="outlined"
+						sx={{ fontSize: '0.7rem', height: 20, textTransform: 'capitalize', '& .MuiChip-label': { px: 0.75 } }}
+					/>
+				);
+			}
 		},
 		{
 			id: 'created_at',

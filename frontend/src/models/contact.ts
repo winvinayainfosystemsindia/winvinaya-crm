@@ -1,6 +1,6 @@
 import type { Company } from './company';
 
-export type ContactSource = 'linkedin' | 'website' | 'referral' | 'cold_call' | 'event' | 'other';
+export type ContactSource = 'linkedin' | 'website' | 'referral' | 'cold_call' | 'event' | 'other' | 'whatsapp';
 
 export interface Contact {
 	id: number;
@@ -8,7 +8,7 @@ export interface Contact {
 	company_id?: number;
 	first_name: string;
 	last_name: string;
-	email: string;
+	email?: string;
 	phone?: string;
 	mobile?: string;
 	designation?: string;

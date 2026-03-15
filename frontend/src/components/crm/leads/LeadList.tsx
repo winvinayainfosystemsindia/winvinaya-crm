@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, TextField, InputAdornment, Grid, Stack, IconButton, Tooltip, LinearProgress, Typography } from '@mui/material';
+import { Box, Button, TextField, InputAdornment, Grid, Stack, IconButton, Tooltip, LinearProgress, Typography, Chip } from '@mui/material';
 import {
 	Add as AddIcon,
 	Search as SearchIcon,
 	FilterList as FilterIcon,
 	Refresh as RefreshIcon,
 	FilterCenterFocus as LeadIcon,
-	Person as PersonIcon
+	Person as PersonIcon,
+	WhatsApp as WhatsAppIcon
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchLeads, fetchLeadStats, createLead, updateLead } from '../../../store/slices/leadSlice';
@@ -140,7 +141,7 @@ const LeadList: React.FC = () => {
 				{ value: 'cold_call', label: 'Cold Call' },
 				{ value: 'social_media', label: 'Social Media' },
 				{ value: 'event', label: 'Event' },
-				{ value: 'email_campaign', label: 'Email Campaign' },
+				{ value: 'whatsapp', label: '💬 WhatsApp' },
 				{ value: 'other', label: 'Other' }
 			]
 		}
@@ -215,6 +216,39 @@ const LeadList: React.FC = () => {
 			minWidth: 140,
 			sortable: true,
 			format: (value: number, row: Lead) => value ? `${row.currency} ${value.toLocaleString()}` : '-'
+		},
+		{
+			id: 'lead_source',
+			label: 'Source',
+			minWidth: 130,
+			format: (value: string) => {
+				if (value === 'whatsapp') {
+					return (
+						<Chip
+							icon={<WhatsAppIcon sx={{ fontSize: '14px !important', color: '#fff !important' }} />}
+							label="WhatsApp"
+							size="small"
+							sx={{
+								bgcolor: '#25D366',
+								color: '#fff',
+								fontWeight: 700,
+								fontSize: '0.7rem',
+								height: 20,
+								'& .MuiChip-label': { px: 0.75 },
+								animation: 'none',
+							}}
+						/>
+					);
+				}
+				return (
+					<Chip
+						label={value ? value.replace(/_/g, ' ') : '—'}
+						size="small"
+						variant="outlined"
+						sx={{ fontSize: '0.7rem', height: 20, textTransform: 'capitalize', '& .MuiChip-label': { px: 0.75 } }}
+					/>
+				);
+			}
 		},
 		{
 			id: 'expected_close_date',

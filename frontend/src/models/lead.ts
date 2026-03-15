@@ -2,7 +2,7 @@ import type { Company } from './company';
 import type { Contact } from './contact';
 
 export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'unqualified' | 'lost';
-export type LeadSource = 'website' | 'referral' | 'campaign' | 'event' | 'cold_call' | 'social_media' | 'partner';
+export type LeadSource = 'website' | 'referral' | 'campaign' | 'event' | 'cold_call' | 'social_media' | 'partner' | 'whatsapp';
 
 export interface Lead {
 	id: number;
