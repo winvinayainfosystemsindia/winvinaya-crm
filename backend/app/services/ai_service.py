@@ -310,32 +310,47 @@ Respond with ONLY valid JSON, no markdown, no explanation:
             {sender_name, company_name, phone_number, enquiry_summary, confidence}
         """
         prompt = f"""You are a high-precision CRM extraction assistant for WinVinaya Foundation.
-An employee has FORWARDED a client enquiry to you via WhatsApp. Your job is to extract the actual CLIENT'S information (the person the employee is talking about or forwarding from).
+An employee has FORWARDED a client enquiry to you via WhatsApp. Your job is to extract the actual CLIENT'S information from the text.
 
-Identify:
-1. The **Client Name**: Look for "I am...", "My name is...", or names mentioned alongside company names.
-2. The **Company Name**: Look for "from [Company]", "working at [Company]", or email domains.
-3. The **Enquiry**: What does the client want? (Testing, training, placement, etc.)
+### GUIDELINES:
+1. **Client Name**: Extract the name of the person asking for service. Avoid "Unknown" if a name is present.
+2. **Company Name**: Extract the name of the Client's company.
+3. **Lead Title**: Create a short, professional title focused on the SERVICE. Example: "Document Remediation Service" or "Accessibility Audit".
+4. **Phone**: Extract any phone number mentioned in the text.
 
-Extract into this JSON format:
-- sender_name: Full name of the client (null if not found)
-- company_name: Name of the client's company (null if not found)
-- phone_number: Client's phone if mentioned (E.164 format)
-- enquiry_summary: A concise, professional summary of the request (max 100 chars)
-- lead_title: A professional title for the lead, e.g., "AI Testing Enquiry - [Company]" or "Placement Request from [Name]"
-- confidence: Your confidence score 0.0 to 1.0
+### EXAMPLES:
+Message: "Hi this is daran from winvinaya infosystems. I need service on document remediation. My no. Is 88760 39474"
+Response: {{
+  "sender_name": "Daran",
+  "company_name": "WinVinaya Infosystems",
+  "phone_number": "8876039474",
+  "enquiry_summary": "Inquiry about document remediation services",
+  "lead_title": "Document Remediation Service",
+  "confidence": 0.95
+}}
 
-Text to analyze:
+Message: "Fwd: Suresh from ABC Tech wants to know about our testing rates."
+Response: {{
+  "sender_name": "Suresh",
+  "company_name": "ABC Tech",
+  "phone_number": null,
+  "enquiry_summary": "Pricing inquiry for testing services",
+  "lead_title": "Testing Services Inquiry",
+  "confidence": 0.8
+}}
+
+### ANALYZE THIS:
 \"\"\"{message_body}\"\"\"
 
 Respond ONLY with valid JSON.
 """
 
         default_result = {
-            "sender_name": "Unknown Client",
+            "sender_name": "WhatsApp Enquirer",
             "company_name": None,
             "phone_number": None,
             "enquiry_summary": message_body[:100],
+            "lead_title": "New WhatsApp Lead",
             "confidence": 0.5,
         }
 

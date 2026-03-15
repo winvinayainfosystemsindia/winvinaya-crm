@@ -211,33 +211,35 @@ class WhatsAppBotService:
             client_phone = extracted.get("phone_number")
             ai_lead_title = extracted.get("lead_title")
 
-            # 2. Check if client already exists (if phone found)
+            # 2. Check if client or company already exists
             existing_contact = None
             if client_phone:
                 existing_contact = await self._find_contact_by_phone(client_phone)
+            
+            # If no phone, maybe search by name (optional but risky, stick to phone for now)
+
+            # Search existing company by name
+            existing_company = None
+            if company_name:
+                from app.repositories.company_repository import CompanyRepository
+                comp_repo = CompanyRepository(self.db)
+                companies, _ = await comp_repo.get_multi(search=company_name, limit=1)
+                # Ensure exact match or close match by comparing strings
+                if companies:
+                    target = companies[0]
+                    if company_name.lower() in target.name.lower() or target.name.lower() in company_name.lower():
+                        existing_company = target
 
             # 3. Create/Update records
-            if existing_contact:
-                # Log activity on existing contact
-                activity = CRMActivityLog(
-                    entity_type=CRMEntityType.CONTACT,
-                    entity_id=existing_contact.id,
-                    activity_type=CRMActivityType.WHATSAPP_MESSAGE,
-                    performed_by=user.id,
-                    summary=f"Forwarded from {user.full_name}: {enquiry_summary[:200]}",
-                    extra_data={"forwarded_by": user.id, "original_msg": message_body},
-                )
-                self.db.add(activity)
-                crm_action = {"contact_id": existing_contact.id, "activity_id": "logged"}
-                confirm_header = f"📝 *Linked to: {existing_contact.full_name}*"
-            else:
-                # Create NEW Lead flow, assigned to the FORWARDER
-                company = None
-                if company_name:
-                    company = Company(name=company_name, status=CompanyStatus.PROSPECT)
-                    self.db.add(company)
-                    await self.db.flush()
+            contact = existing_contact
+            company = existing_company
+            
+            if not company and company_name:
+                company = Company(name=company_name, status=CompanyStatus.PROSPECT)
+                self.db.add(company)
+                await self.db.flush()
 
+            if not contact:
                 # Create Contact
                 name_parts = client_name.strip().split(" ", 1)
                 first_name = name_parts[0]
@@ -252,44 +254,57 @@ class WhatsAppBotService:
                 )
                 self.db.add(contact)
                 await self.db.flush()
-
-                # Build professional title
-                if ai_lead_title:
-                    lead_title = f"FWD: {ai_lead_title}"
-                else:
-                    company_part = f" @ {company_name}" if company_name else ""
-                    lead_title = f"FWD: Enquiry from {client_name}{company_part}"
-
-                # Create Lead assigned to the forwarder
-                lead = Lead(
-                    title=lead_title[:255],
-                    description=f"Forwarded by {user.full_name}.\n\nOriginal Message:\n{message_body}",
-                    lead_source=LeadSource.WHATSAPP,
-                    lead_status=LeadStatus.NEW,
-                    assigned_to=user.id,
-                    company_id=company.id if company else None,
-                    contact_id=contact.id,
-                    tags=["forwarded", "whatsapp"],
-                )
-                self.db.add(lead)
+            elif company and not contact.company_id:
+                # Link existing contact to company if not linked
+                contact.company_id = company.id
                 await self.db.flush()
 
-                # Auto-Task for the forwarder
-                task = CRMTask(
-                    title=f"Review: {lead_title[:100]}",
-                    description=f"Enquiry from {client_name}.\nSummary: {enquiry_summary}",
-                    task_type=CRMTaskType.FOLLOW_UP,
-                    priority=CRMTaskPriority.HIGH,
-                    status=CRMTaskStatus.PENDING,
-                    assigned_to=user.id,
-                    created_by=user.id,
-                    related_to_type=CRMRelatedToType.LEAD,
-                    related_to_id=lead.id,
-                    due_date=datetime.utcnow() + timedelta(hours=2),
-                )
-                self.db.add(task)
-                crm_action = {"lead_id": lead.id, "contact_id": contact.id, "task_id": "created"}
-                confirm_header = f"🚀 *Lead Created & Assigned to YOU: {client_name}*"
+            # 4. ALWAYS Create Lead (the goal of forwarding)
+            final_lead_title = ai_lead_title if ai_lead_title else f"Enquiry from {client_name}"
+            if company and not ai_lead_title:
+                final_lead_title = f"{final_lead_title} @ {company.name}"
+
+            lead = Lead(
+                title=final_lead_title[:255],
+                description=f"Forwarded by {user.full_name}.\n\nAI Summary: {enquiry_summary}\n\nOriginal Message:\n{message_body}",
+                lead_source=LeadSource.WHATSAPP,
+                lead_status=LeadStatus.NEW,
+                assigned_to=user.id,
+                company_id=company.id if company else None,
+                contact_id=contact.id,
+                tags=["forwarded", "whatsapp"],
+            )
+            self.db.add(lead)
+            await self.db.flush()
+
+            # Log activity on Lead/Contact
+            activity = CRMActivityLog(
+                entity_type=CRMEntityType.LEAD,
+                entity_id=lead.id,
+                activity_type=CRMActivityType.CREATED,
+                performed_by=user.id,
+                summary=f"Lead created from forwarded WhatsApp message by {user.full_name}",
+                extra_data={"forwarded_by": user.id, "original_msg": message_body},
+            )
+            self.db.add(activity)
+
+            # 5. Auto-Task for the forwarder
+            task = CRMTask(
+                title=f"Action: {final_lead_title[:100]}",
+                description=f"Initial Enquiry: {enquiry_summary}\nClient: {contact.full_name}",
+                task_type=CRMTaskType.FOLLOW_UP,
+                priority=CRMTaskPriority.HIGH,
+                status=CRMTaskStatus.PENDING,
+                assigned_to=user.id,
+                created_by=user.id,
+                related_to_type=CRMRelatedToType.LEAD,
+                related_to_id=lead.id,
+                due_date=datetime.utcnow() + timedelta(hours=2),
+            )
+            self.db.add(task)
+            
+            crm_action = {"lead_id": lead.id, "contact_id": contact.id, "company_id": company.id if company else None}
+            confirm_header = f"🚀 *Lead Sync Successful: {contact.full_name}*"
 
             raw_msg.crm_action_taken = crm_action
             raw_msg.processing_status = WAProcessingStatus.PROCESSED
