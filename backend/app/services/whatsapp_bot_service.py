@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.whatsapp_message import WhatsAppMessage, WAProcessingStatus
+from app.models.user import User
 from app.models.contact import Contact, ContactSource
 from app.models.company import Company, CompanyStatus
 from app.models.lead import Lead, LeadSource, LeadStatus
@@ -120,6 +121,12 @@ class WhatsAppBotService:
             self.db.add(raw_msg)
             await self.db.flush()  # get raw_msg.id
 
+            # ── Check if sender is an internal user ────────────────────
+            internal_user = await self._find_user_by_phone(from_phone)
+
+            if internal_user:
+                return await self._handle_internal_forwarding(internal_user, message_body or "", wa_message_id, from_phone)
+
             # ── Lookup existing contact ────────────────────────────────
             existing_contact = await self._find_contact_by_phone(from_phone)
             existing_deal = None
@@ -173,6 +180,140 @@ class WhatsAppBotService:
         except Exception as e:
             logger.error(f"WhatsApp handle_inbound critical error: {e}", exc_info=True)
             await self.db.rollback()
+
+    async def _handle_internal_forwarding(
+        self,
+        user: User,
+        message_body: str,
+        wa_message_id: str,
+        from_phone: str,
+    ) -> None:
+        """
+        Handle a message forwarded by an internal WinVinaya employee.
+        Extracts lead info and creates records assigned to that employee.
+        """
+        raw_msg = await self._get_message_by_wa_id(wa_message_id)
+        if not raw_msg:
+            return  # Should not happen
+
+        try:
+            # 1. AI Analysis of the forwarded text
+            ai = AIService(self.db)
+            await ai.initialize()
+            extracted = await ai.analyze_forwarded_lead(message_body)
+
+            raw_msg.ai_intent = "forwarded_lead"
+            raw_msg.ai_confidence = extracted.get("confidence", 0.0)
+
+            enquiry_summary = extracted.get("enquiry_summary", "Forwarded Lead")
+            client_name = extracted.get("sender_name") or "Unknown Client"
+            company_name = extracted.get("company_name")
+            client_phone = extracted.get("phone_number")  # E.164 if found
+
+            # 2. Check if client already exists (if phone found)
+            existing_contact = None
+            if client_phone:
+                existing_contact = await self._find_contact_by_phone(client_phone)
+
+            # 3. Create/Update records
+            if existing_contact:
+                # Log activity on existing contact
+                activity = CRMActivityLog(
+                    entity_type=CRMEntityType.CONTACT,
+                    entity_id=existing_contact.id,
+                    activity_type=CRMActivityType.WHATSAPP_MESSAGE,
+                    performed_by=user.id,
+                    summary=f"Forwarded enquiry from {user.full_name}: {enquiry_summary[:200]}",
+                    extra_data={"forwarded_by": user.id, "original_msg": message_body},
+                )
+                self.db.add(activity)
+                crm_action = {"contact_id": existing_contact.id, "activity_id": "logged"}
+                confirm_header = f"📝 *Existing Contact linked: {existing_contact.full_name}*"
+            else:
+                # Create NEW Lead flow, assigned to the FORWARDER
+                # Create Company
+                company = None
+                if company_name:
+                    company = Company(name=company_name, status=CompanyStatus.PROSPECT)
+                    self.db.add(company)
+                    await self.db.flush()
+
+                # Create Contact
+                name_parts = client_name.strip().split(" ", 1)
+                first_name = name_parts[0]
+                last_name = name_parts[1] if len(name_parts) > 1 else "."
+
+                contact = Contact(
+                    first_name=first_name,
+                    last_name=last_name,
+                    mobile=client_phone if client_phone else f"FWD-{wa_message_id[:10]}",
+                    company_id=company.id if company else None,
+                    contact_source=ContactSource.WHATSAPP,
+                )
+                self.db.add(contact)
+                await self.db.flush()
+
+                # Create Lead assigned to the forwarder
+                lead = Lead(
+                    title=f"FWD: {client_name} — {enquiry_summary[:50]}",
+                    description=f"Forwarded by {user.full_name}.\n\n{message_body}",
+                    lead_source=LeadSource.WHATSAPP,
+                    lead_status=LeadStatus.NEW,
+                    assigned_to=user.id,  # <--- Assigned to the employee who forwarded it
+                    company_id=company.id if company else None,
+                    contact_id=contact.id,
+                    tags=["forwarded", "whatsapp"],
+                )
+                self.db.add(lead)
+                await self.db.flush()
+
+                # Auto-Task for the forwarder
+                task = CRMTask(
+                    title=f"Action Forwarded Lead: {client_name}",
+                    description=f"You forwarded this lead via WhatsApp.\nEnquiry: {enquiry_summary}",
+                    task_type=CRMTaskType.FOLLOW_UP,
+                    priority=CRMTaskPriority.HIGH,
+                    status=CRMTaskStatus.PENDING,
+                    assigned_to=user.id,
+                    created_by=user.id,
+                    related_to_type=CRMRelatedToType.LEAD,
+                    related_to_id=lead.id,
+                    due_date=datetime.utcnow() + timedelta(hours=2),
+                )
+                self.db.add(task)
+                crm_action = {"lead_id": lead.id, "contact_id": contact.id, "task_id": "created"}
+                confirm_header = f"🚀 *Lead created and assigned to YOU: {client_name}*"
+
+            raw_msg.crm_action_taken = crm_action
+            raw_msg.processing_status = WAProcessingStatus.PROCESSED
+
+            # 4. Confirmation back to the EMPLOYEE
+            reply = (
+                f"{confirm_header}\n"
+                f"📋 Summary: {enquiry_summary}\n"
+                f"🏢 Company: {company_name or '—'}\n"
+                f"Sync successful. View in CRM."
+            )
+            await self._send_confirmation(from_phone, reply)
+
+            await self.db.commit()
+
+        except Exception as e:
+            logger.error(f"Internal forwarding error: {e}", exc_info=True)
+            raw_msg.processing_status = WAProcessingStatus.FAILED
+            raw_msg.error_message = str(e)
+            await self.db.commit()
+
+    async def _find_user_by_phone(self, phone: str) -> Optional[User]:
+        """Look up an internal User by their mobile number."""
+        stripped = phone.lstrip("91").lstrip("0") if len(phone) > 10 else phone
+        stmt = select(User).where(
+            User.is_active == True
+        ).where(
+            User.mobile.like(f"%{stripped}")
+        )
+        result = await self.db.execute(stmt)
+        return result.scalars().first()
 
     # ------------------------------------------------------------------
     # AI Classification

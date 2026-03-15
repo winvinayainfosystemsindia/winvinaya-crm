@@ -303,6 +303,69 @@ Respond with ONLY valid JSON, no markdown, no explanation:
 
         return default_result
 
+    async def analyze_forwarded_lead(self, message_body: str) -> Dict[str, Any]:
+        """
+        Analyze a message forwarded by an internal user to extract client details.
+        Returns a dict:
+            {sender_name, company_name, phone_number, enquiry_summary, confidence}
+        """
+        prompt = f"""You are a CRM intake bot for WinVinaya Foundation.
+An employee has FORWARDED a client enquiry to you. Extract the client's information from the text.
+
+Extract the following:
+- sender_name: The client's name (not the employee's)
+- company_name: Client's company/org
+- phone_number: The client's phone number if mentioned in the text (E.164 format)
+- enquiry_summary: One-line summary of what the client wants
+- confidence: Your confidence score 0.0 to 1.0
+
+Forwarded Message:
+\"\"\"{message_body}\"\"\"
+
+Respond with ONLY valid JSON:
+{{
+  "sender_name": "<string or null>",
+  "company_name": "<string or null>",
+  "phone_number": "<string or null>",
+  "enquiry_summary": "<string>",
+  "confidence": <float>
+}}"""
+
+        default_result = {
+            "sender_name": "Unknown Client",
+            "company_name": None,
+            "phone_number": None,
+            "enquiry_summary": message_body[:100],
+            "confidence": 0.5,
+        }
+
+        if not self.enabled:
+            return default_result
+
+        try:
+            if self.provider == "google" and self.google_client:
+                import google.generativeai as genai
+                model = genai.GenerativeModel(
+                    model_name=self.model_name,
+                    generation_config={"response_mime_type": "application/json"},
+                )
+                response = await model.generate_content_async(prompt)
+                return json.loads(response.text)
+
+            elif self.openai_client:
+                response = await self.openai_client.chat.completions.create(
+                    model=self.model_name,
+                    messages=[{"role": "user", "content": prompt}],
+                    response_format={"type": "json_object"},
+                    temperature=0.1,
+                )
+                return json.loads(response.choices[0].message.content or "{}")
+
+        except Exception as e:
+            logger.error(f"analyze_forwarded_lead error: {e}")
+
+        return default_result
+
     async def chat(self, message: str, history: List[Dict[str, str]] = []) -> str:
         """Send a message to the AI and get a response"""
         if not self.enabled:

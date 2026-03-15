@@ -88,6 +88,13 @@ class User(BaseModel):
         nullable=False,
         index=True,
     )
+
+    mobile: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+        index=True,
+        comment="Professional/Personal mobile number for WhatsApp link"
+    )
     
     # CRM-specific fields
     team: Mapped[str | None] = mapped_column(
