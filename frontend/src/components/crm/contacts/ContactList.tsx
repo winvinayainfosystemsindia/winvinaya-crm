@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { 
-	Box, 
-	Button, 
-	TextField, 
-	InputAdornment, 
-	Stack, 
-	IconButton, 
-	Tooltip, 
-	Typography, 
+import {
+	Box,
+	Button,
+	TextField,
+	InputAdornment,
+	Stack,
+	IconButton,
+	Tooltip,
+	Typography,
 	Chip,
-	Container
+	Container,
+	Grid
 } from '@mui/material';
 import {
 	Add as AddIcon,
@@ -19,7 +20,11 @@ import {
 	Email as EmailIcon,
 	Phone as PhoneIcon,
 	Star as StarIcon,
-	WhatsApp as WhatsAppIcon
+	WhatsApp as WhatsAppIcon,
+	People as PeopleIcon,
+	VerifiedUser as DecisionIcon,
+	Stars as PrimaryIcon,
+	History as RecentIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
@@ -30,6 +35,7 @@ import CRMTable from '../common/CRMTable';
 import ContactFormDialog from './ContactFormDialog';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
 import ConfirmDialog from '../../common/ConfirmDialog';
+import StatCard from '../../common/StatCard';
 import CRMRowActions from '../common/CRMRowActions';
 import CRMAvatar from '../common/CRMAvatar';
 import type { Contact, ContactCreate, ContactUpdate } from '../../../models/contact';
@@ -311,8 +317,8 @@ const ContactList: React.FC = () => {
 				onClick={handleOpenAdd}
 				sx={{
 					px: 3,
-					bgcolor: '#ff9900',
-					'&:hover': { bgcolor: '#ec7211' },
+					bgcolor: '#ec7211',
+					'&:hover': { bgcolor: '#eb5f07' },
 					textTransform: 'none',
 					fontWeight: 600,
 					boxShadow: 'none'
@@ -323,6 +329,15 @@ const ContactList: React.FC = () => {
 		</>
 	);
 
+	// Calculate stats from the list
+	const primaryCount = list.filter(c => c.is_primary).length;
+	const decisionMakerCount = list.filter(c => c.is_decision_maker).length;
+	const recentCount = list.filter(c => {
+		const weekAgo = new Date();
+		weekAgo.setDate(weekAgo.getDate() - 7);
+		return new Date(c.created_at) > weekAgo;
+	}).length;
+
 	return (
 		<Box sx={{ bgcolor: '#f2f3f3', minHeight: '100vh', pb: 6 }}>
 			<CRMPageHeader
@@ -331,6 +346,41 @@ const ContactList: React.FC = () => {
 			/>
 
 			<Container maxWidth="xl" sx={{ mt: 3 }}>
+				<Grid container spacing={3} sx={{ mb: 4 }}>
+					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
+						<StatCard
+							title="Total Contacts"
+							value={total}
+							icon={<PeopleIcon />}
+							color="#007eb9"
+						/>
+					</Grid>
+					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
+						<StatCard
+							title="Primary Contacts"
+							value={primaryCount}
+							icon={<PrimaryIcon />}
+							color="#1d8102"
+						/>
+					</Grid>
+					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
+						<StatCard
+							title="Decision Makers"
+							value={decisionMakerCount}
+							icon={<DecisionIcon />}
+							color="#ff9900"
+						/>
+					</Grid>
+					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
+						<StatCard
+							title="Added this week"
+							value={recentCount}
+							icon={<RecentIcon />}
+							color="#ec7211"
+						/>
+					</Grid>
+				</Grid>
+
 				<Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 					<TextField
 						size="small"

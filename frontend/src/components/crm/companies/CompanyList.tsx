@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-	Box, 
-	Button, 
-	TextField, 
-	InputAdornment, 
-	Stack, 
-	IconButton, 
-	Tooltip, 
-	Container
+import {
+	Box,
+	Button,
+	TextField,
+	InputAdornment,
+	Stack,
+	IconButton,
+	Tooltip,
+	Container,
+	Grid
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -28,8 +29,7 @@ import CRMStatusBadge from '../common/CRMStatusBadge';
 import CompanyFormDialog from './CompanyFormDialog';
 import ConfirmDialog from '../../common/ConfirmDialog';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
-import CRMStatSection from '../common/CRMStatSection';
-import type { StatItem } from '../common/CRMStatSection';
+import StatCard from '../../common/StatCard';
 import CRMRowActions from '../common/CRMRowActions';
 import CRMAvatar from '../common/CRMAvatar';
 import type { CompanyCreate, CompanyUpdate, Company } from '../../../models/company';
@@ -219,32 +219,7 @@ const CompanyList: React.FC = () => {
 		}
 	];
 
-	const dashboardStats: StatItem[] = [
-		{
-			label: 'Total Companies',
-			value: list.length,
-			icon: <BusinessIcon />,
-			color: '#007eb9'
-		},
-		{
-			label: 'Active Clients',
-			value: list.filter(c => c.status === 'active' || c.status === 'customer').length,
-			icon: <TeamIcon />,
-			color: '#1d8102'
-		},
-		{
-			label: 'Prospects',
-			value: list.filter(c => c.status === 'prospect').length,
-			icon: <StatsIcon />,
-			color: '#ec7211'
-		},
-		{
-			label: 'Industries',
-			value: new Set(list.map(c => c.industry).filter(Boolean)).size,
-			icon: <IndustryIcon />,
-			color: '#ff9900'
-		}
-	];
+
 
 	const actions = (
 		<>
@@ -263,8 +238,8 @@ const CompanyList: React.FC = () => {
 				onClick={handleOpenAdd}
 				sx={{
 					px: 3,
-					bgcolor: '#ff9900',
-					'&:hover': { bgcolor: '#ec7211' },
+					bgcolor: '#ec7211',
+					'&:hover': { bgcolor: '#eb5f07' },
 					textTransform: 'none',
 					fontWeight: 600,
 					boxShadow: 'none'
@@ -283,7 +258,40 @@ const CompanyList: React.FC = () => {
 			/>
 
 			<Container maxWidth="xl" sx={{ mt: 3 }}>
-				<CRMStatSection stats={dashboardStats} />
+				<Grid container spacing={3} sx={{ mb: 4 }}>
+					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
+						<StatCard
+							title="Total Companies"
+							value={list.length}
+							icon={<BusinessIcon />}
+							color="#007eb9"
+						/>
+					</Grid>
+					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
+						<StatCard
+							title="Active Clients"
+							value={list.filter(c => c.status === 'active' || c.status === 'customer').length}
+							icon={<TeamIcon />}
+							color="#1d8102"
+						/>
+					</Grid>
+					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
+						<StatCard
+							title="Prospects"
+							value={list.filter(c => c.status === 'prospect').length}
+							icon={<StatsIcon />}
+							color="#ec7211"
+						/>
+					</Grid>
+					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
+						<StatCard
+							title="Industries"
+							value={new Set(list.map(c => c.industry).filter(Boolean)).size}
+							icon={<IndustryIcon />}
+							color="#ff9900"
+						/>
+					</Grid>
+				</Grid>
 
 				<Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 					<TextField

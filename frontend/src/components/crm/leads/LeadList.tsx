@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { 
-	Box, 
-	Button, 
-	TextField, 
-	InputAdornment, 
-	Stack, 
-	IconButton, 
-	Tooltip, 
-	LinearProgress, 
-	Typography, 
+import {
+	Box,
+	Button,
+	TextField,
+	InputAdornment,
+	Stack,
+	IconButton,
+	Tooltip,
+	LinearProgress,
+	Typography,
 	Chip,
-	Container
+	Container,
+	Grid
 } from '@mui/material';
 import {
 	Add as AddIcon,
@@ -30,7 +31,7 @@ import CRMTable from '../common/CRMTable';
 import CRMStatusBadge from '../common/CRMStatusBadge';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
 import ConfirmDialog from '../../common/ConfirmDialog';
-import CRMStatSection, { type StatItem } from '../common/CRMStatSection';
+import StatCard from '../../common/StatCard';
 import CRMRowActions from '../common/CRMRowActions';
 import type { Lead } from '../../../models/lead';
 import { useSnackbar } from 'notistack';
@@ -311,33 +312,6 @@ const LeadList: React.FC = () => {
 		}
 	];
 
-	const dashboardStats: StatItem[] = [
-		{
-			label: 'Total Active Leads',
-			value: stats?.total || 0,
-			icon: <LeadIcon />,
-			color: '#007eb9'
-		},
-		{
-			label: 'Qualified Leads',
-			value: stats?.by_status?.qualified || 0,
-			icon: <PersonIcon />,
-			color: '#1d8102'
-		},
-		{
-			label: 'Avg. Score',
-			value: `${stats?.average_score?.toFixed(1) || 0}%`,
-			icon: <SearchIcon />,
-			color: '#ec7211'
-		},
-		{
-			label: 'Conversion Rate',
-			value: `${stats?.conversion_rate || 0}%`,
-			icon: <RefreshIcon />,
-			color: '#ff9900'
-		}
-	];
-
 	const actions = (
 		<>
 			<Button
@@ -354,10 +328,10 @@ const LeadList: React.FC = () => {
 					color="primary"
 					startIcon={<AddIcon />}
 					onClick={handleAddLead}
-					sx={{ 
+					sx={{
 						px: 3,
-						bgcolor: '#ff9900',
-						'&:hover': { bgcolor: '#ec7211' },
+						bgcolor: '#ec7211',
+						'&:hover': { bgcolor: '#eb5f07' },
 						textTransform: 'none',
 						fontWeight: 600,
 						boxShadow: 'none'
@@ -377,7 +351,40 @@ const LeadList: React.FC = () => {
 			/>
 
 			<Container maxWidth="xl" sx={{ mt: 3 }}>
-				<CRMStatSection stats={dashboardStats} />
+				<Grid container spacing={3} sx={{ mb: 4 }}>
+					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
+						<StatCard
+							title="Total Active Leads"
+							value={stats?.total || 0}
+							icon={<LeadIcon />}
+							color="#007eb9"
+						/>
+					</Grid>
+					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
+						<StatCard
+							title="Qualified Leads"
+							value={stats?.by_status?.qualified || 0}
+							icon={<PersonIcon />}
+							color="#1d8102"
+						/>
+					</Grid>
+					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
+						<StatCard
+							title="Avg. Score"
+							value={`${stats?.average_score?.toFixed(1) || 0}%`}
+							icon={<SearchIcon />}
+							color="#ec7211"
+						/>
+					</Grid>
+					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
+						<StatCard
+							title="Conversion Rate"
+							value={`${stats?.conversion_rate || 0}%`}
+							icon={<RefreshIcon />}
+							color="#ff9900"
+						/>
+					</Grid>
+				</Grid>
 
 				<Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 					<TextField

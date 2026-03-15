@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { 
-	Box, 
-	Button, 
-	TextField, 
-	InputAdornment, 
-	Stack, 
-	IconButton, 
-	Tooltip, 
-	Typography, 
+import {
+	Box,
+	Button,
+	TextField,
+	InputAdornment,
+	Stack,
+	IconButton,
+	Tooltip,
+	Typography,
 	Checkbox,
-	Container
+	Container,
+	Grid
 } from '@mui/material';
 import {
 	Add as AddIcon,
@@ -18,7 +19,11 @@ import {
 	Refresh as RefreshIcon,
 	Schedule as DueIcon,
 	PriorityHigh as PriorityIcon,
-	Person as PersonIcon
+	Person as PersonIcon,
+	CheckCircle as CompletedIcon,
+	Pending as PendingIcon,
+	Error as OverdueIcon,
+	Assignment as TaskIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
@@ -28,6 +33,7 @@ import CRMTable from '../common/CRMTable';
 import CRMTaskFormDialog from './CRMTaskFormDialog';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
 import ConfirmDialog from '../../common/ConfirmDialog';
+import StatCard from '../../common/StatCard';
 import CRMRowActions from '../common/CRMRowActions';
 import type { CRMTask } from '../../../models/crmTask';
 import { useSnackbar } from 'notistack';
@@ -336,7 +342,7 @@ const CRMTaskList: React.FC = () => {
 				variant="outlined"
 				startIcon={<RefreshIcon />}
 				onClick={handleRefresh}
-				sx={{ color: '#545b64', borderColor: '#d5dbdb' }}
+				sx={{ color: '#545b64', borderColor: '#d5dbdb', textTransform: 'none', fontWeight: 700 }}
 			>
 				Refresh
 			</Button>
@@ -346,10 +352,10 @@ const CRMTaskList: React.FC = () => {
 					color="primary"
 					startIcon={<AddIcon />}
 					onClick={handleAddTask}
-					sx={{ 
+					sx={{
 						px: 3,
-						bgcolor: '#ff9900',
-						'&:hover': { bgcolor: '#ec7211' },
+						bgcolor: '#ec7211',
+						'&:hover': { bgcolor: '#eb5f07' },
 						textTransform: 'none',
 						fontWeight: 600,
 						boxShadow: 'none'
@@ -361,6 +367,11 @@ const CRMTaskList: React.FC = () => {
 		</>
 	);
 
+	// Calculate stats from the list
+	const overdueCount = list.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length;
+	const pendingCount = list.filter(t => t.status !== 'completed').length;
+	const completedCount = list.filter(t => t.status === 'completed').length;
+
 	return (
 		<Box sx={{ bgcolor: '#f2f3f3', minHeight: '100vh', pb: 6 }}>
 			<CRMPageHeader
@@ -369,6 +380,41 @@ const CRMTaskList: React.FC = () => {
 			/>
 
 			<Container maxWidth="xl" sx={{ mt: 3 }}>
+				<Grid container spacing={3} sx={{ mb: 4 }}>
+					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
+						<StatCard
+							title="Total Tasks"
+							value={total}
+							icon={<TaskIcon />}
+							color="#007eb9"
+						/>
+					</Grid>
+					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
+						<StatCard
+							title="Pending"
+							value={pendingCount}
+							icon={<PendingIcon />}
+							color="#ff9900"
+						/>
+					</Grid>
+					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
+						<StatCard
+							title="Overdue"
+							value={overdueCount}
+							icon={<OverdueIcon />}
+							color="#d13212"
+						/>
+					</Grid>
+					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
+						<StatCard
+							title="Completed"
+							value={completedCount}
+							icon={<CompletedIcon />}
+							color="#1d8102"
+						/>
+					</Grid>
+				</Grid>
+
 				<Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 					<TextField
 						size="small"

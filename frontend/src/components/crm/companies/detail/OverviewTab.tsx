@@ -18,7 +18,7 @@ import {
 	MonetizationOn as DealIcon,
 	Info as InfoIcon
 } from '@mui/icons-material';
-import CRMStatsCard from '../../common/CRMStatsCard';
+import StatCard from '../../../common/StatCard';
 import type { Company } from '../../../../models/company';
 
 interface OverviewTabProps {
@@ -169,36 +169,24 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ company }) => {
 
 			<Grid size={{ xs: 12, md: 4 }}>
 				<Stack spacing={3}>
-					<Paper 
-						elevation={0}
-						sx={{ 
-							p: 3, 
-							borderRadius: '2px', 
-							border: '1px solid #eaeded',
-							bgcolor: 'white'
-						}}
-					>
-						<Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 3, color: '#16191f', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-							System summary
-						</Typography>
-						<Stack spacing={2}>
-							<CRMStatsCard
-								label="Associated Contacts"
-								value={company.contacts?.length || 0}
-								icon={<PeopleIcon sx={{ color: '#007eb9' }} />}
-							/>
-							<CRMStatsCard
-								label="Active Leads"
-								value={activeLeads.length}
-								icon={<LeadIcon sx={{ color: '#ff9900' }} />}
-							/>
-							<CRMStatsCard
-								label="Pipeline Value"
-								value={`₹${totalDealValue.toLocaleString()}`}
-								icon={<DealIcon sx={{ color: '#1d8102' }} />}
-							/>
-						</Stack>
-					</Paper>
+					<StatCard
+						title="Associated Contacts"
+						value={company.contacts?.length || 0}
+						icon={<PeopleIcon />}
+						color="#007eb9"
+					/>
+					<StatCard
+						title="Active Leads"
+						value={activeLeads.length}
+						icon={<LeadIcon />}
+						color="#ff9900"
+					/>
+					<StatCard
+						title="Pipeline Value"
+						value={`₹${totalDealValue.toLocaleString()}`}
+						icon={<DealIcon />}
+						color="#1d8102"
+					/>
 				</Stack>
 			</Grid>
 		</Grid>
