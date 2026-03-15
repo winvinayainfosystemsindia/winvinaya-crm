@@ -107,7 +107,7 @@ async def convert_lead(
 async def delete_lead(
     public_id: UUID,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.require_roles([UserRole.MANAGER, UserRole.ADMIN, UserRole.SALES_MANAGER]))
+    current_user: User = Depends(deps.require_roles([UserRole.ADMIN]))
 ) -> Any:
     """Delete lead"""
     service = LeadService(db)

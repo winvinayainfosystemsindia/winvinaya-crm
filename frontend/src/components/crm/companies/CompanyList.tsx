@@ -7,16 +7,18 @@ import {
 	Refresh as RefreshIcon,
 	Business as BusinessIcon,
 	Visibility as ViewIcon,
-	Edit as EditIcon
+	Edit as EditIcon,
+	Delete as DeleteIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
-import { fetchCompanies, fetchCompanyStats, createCompany, updateCompany } from '../../../store/slices/companySlice';
+import { fetchCompanies, fetchCompanyStats, createCompany, updateCompany, deleteCompany } from '../../../store/slices/companySlice';
 import CRMPageHeader from '../common/CRMPageHeader';
 import CRMTable from '../common/CRMTable';
 import CRMStatsCard from '../common/CRMStatsCard';
 import CRMStatusBadge from '../common/CRMStatusBadge';
 import CompanyFormDialog from './CompanyFormDialog';
+import ConfirmDialog from '../../common/ConfirmDialog';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
 import type { CompanyCreate, CompanyUpdate, Company } from '../../../models/company';
 import { useSnackbar } from 'notistack';
@@ -26,6 +28,8 @@ const CompanyList: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const { enqueueSnackbar } = useSnackbar();
 	const { list, total, stats, loading } = useAppSelector((state) => state.companies);
+	const { user } = useAppSelector((state) => state.auth);
+	const isAdmin = user?.role === 'admin';
 
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -37,6 +41,8 @@ const CompanyList: React.FC = () => {
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
 	const [formLoading, setFormLoading] = useState(false);
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [deleting, setDeleting] = useState(false);
 
 	useEffect(() => {
 		dispatch(fetchCompanies({
@@ -93,6 +99,26 @@ const CompanyList: React.FC = () => {
 			enqueueSnackbar(error || 'Failed to save company', { variant: 'error' });
 		} finally {
 			setFormLoading(false);
+		}
+	};
+
+	const handleDeleteClick = (company: Company) => {
+		setSelectedCompany(company);
+		setDeleteDialogOpen(true);
+	};
+
+	const handleDeleteConfirm = async () => {
+		if (!selectedCompany) return;
+		setDeleting(true);
+		try {
+			await dispatch(deleteCompany(selectedCompany.public_id)).unwrap();
+			enqueueSnackbar('Company deleted successfully', { variant: 'success' });
+			setDeleteDialogOpen(false);
+			handleRefresh();
+		} catch (error: any) {
+			enqueueSnackbar(error || 'Failed to delete company', { variant: 'error' });
+		} finally {
+			setDeleting(false);
 		}
 	};
 
@@ -195,6 +221,20 @@ const CompanyList: React.FC = () => {
 							<EditIcon fontSize="small" />
 						</IconButton>
 					</Tooltip>
+					{isAdmin && (
+						<Tooltip title="Delete">
+							<IconButton
+								size="small"
+								onClick={(e) => {
+									e.stopPropagation();
+									handleDeleteClick(row);
+								}}
+								sx={{ color: '#d32f2f' }}
+							>
+								<DeleteIcon fontSize="small" />
+							</IconButton>
+						</Tooltip>
+					)}
 				</Stack>
 			)
 		}
@@ -309,6 +349,10 @@ const CompanyList: React.FC = () => {
 						setRowsPerPage(parseInt(e.target.value, 10));
 						setPage(0);
 					}}
+					onRowsPerPageSelectChange={(rows) => {
+						setRowsPerPage(rows);
+						setPage(0);
+					}}
 					orderBy={sortBy}
 					order={sortOrder}
 					onSort={handleSort}
@@ -333,6 +377,17 @@ const CompanyList: React.FC = () => {
 					onFilterChange={handleFilterChange}
 					onClearFilters={handleClearFilters}
 					onApplyFilters={handleApplyFilters}
+				/>
+
+				<ConfirmDialog
+					open={deleteDialogOpen}
+					title="Delete Company"
+					message={`Are you sure you want to delete "${selectedCompany?.name}"? This will remove all associated data and cannot be undone.`}
+					confirmText="Delete"
+					onClose={() => setDeleteDialogOpen(false)}
+					onConfirm={handleDeleteConfirm}
+					loading={deleting}
+					severity="error"
 				/>
 			</Box>
 		</Box>

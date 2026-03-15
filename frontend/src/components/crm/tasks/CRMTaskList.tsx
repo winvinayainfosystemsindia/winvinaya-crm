@@ -7,14 +7,16 @@ import {
 	Refresh as RefreshIcon,
 	Schedule as DueIcon,
 	PriorityHigh as PriorityIcon,
-	Person as PersonIcon
+	Person as PersonIcon,
+	Delete as DeleteIcon
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
-import { fetchCRMTasks, updateCRMTask, createCRMTask } from '../../../store/slices/crmTaskSlice';
+import { fetchCRMTasks, updateCRMTask, createCRMTask, deleteCRMTask } from '../../../store/slices/crmTaskSlice';
 import CRMPageHeader from '../common/CRMPageHeader';
 import CRMTable from '../common/CRMTable';
 import CRMTaskFormDialog from './CRMTaskFormDialog';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
+import ConfirmDialog from '../../common/ConfirmDialog';
 import type { CRMTask } from '../../../models/crmTask';
 
 const CRMTaskList: React.FC = () => {
@@ -23,6 +25,7 @@ const CRMTaskList: React.FC = () => {
 	const { user: currentUser } = useAppSelector((state) => state.auth);
 
 	const isManager = currentUser?.role === 'manager' || currentUser?.role === 'admin' || currentUser?.role === 'sales_manager';
+	const isAdmin = currentUser?.role === 'admin';
 
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -33,6 +36,9 @@ const CRMTaskList: React.FC = () => {
 	const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [selectedTaskForEdit, setSelectedTaskForEdit] = useState<CRMTask | null>(null);
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [taskToDelete, setTaskToDelete] = useState<CRMTask | null>(null);
+	const [deleting, setDeleting] = useState(false);
 
 	useEffect(() => {
 		dispatch(fetchCRMTasks({
@@ -82,6 +88,28 @@ const CRMTaskList: React.FC = () => {
 			handleRefresh();
 		} catch (error) {
 			console.error('Failed to save task:', error);
+		}
+	};
+
+	const handleDeleteClick = (e: React.MouseEvent, task: CRMTask) => {
+		e.stopPropagation();
+		setTaskToDelete(task);
+		setDeleteDialogOpen(true);
+	};
+
+	const handleDeleteConfirm = async () => {
+		if (taskToDelete) {
+			setDeleting(true);
+			try {
+				await dispatch(deleteCRMTask(taskToDelete.public_id)).unwrap();
+				setDeleteDialogOpen(false);
+				setTaskToDelete(null);
+				handleRefresh();
+			} catch (error) {
+				console.error('Failed to delete task:', error);
+			} finally {
+				setDeleting(false);
+			}
 		}
 	};
 
@@ -266,6 +294,27 @@ const CRMTaskList: React.FC = () => {
 					<Typography variant="body2">{value?.full_name || 'Unassigned'}</Typography>
 				</Stack>
 			)
+		},
+		{
+			id: 'actions',
+			label: 'Actions',
+			minWidth: 100,
+			align: 'right' as const,
+			format: (_: any, row: CRMTask) => (
+				<Stack direction="row" spacing={1} justifyContent="flex-end">
+					{isAdmin && (
+						<Tooltip title="Delete Task">
+							<IconButton 
+								size="small" 
+								onClick={(e) => handleDeleteClick(e, row)}
+								sx={{ color: '#d13212', '&:hover': { bgcolor: 'rgba(209, 50, 18, 0.04)' } }}
+							>
+								<DeleteIcon fontSize="small" />
+							</IconButton>
+						</Tooltip>
+					)}
+				</Stack>
+			)
 		}
 	];
 
@@ -363,6 +412,10 @@ const CRMTaskList: React.FC = () => {
 					setRowsPerPage(parseInt(e.target.value, 10));
 					setPage(0);
 				}}
+				onRowsPerPageSelectChange={(rows) => {
+					setRowsPerPage(rows);
+					setPage(0);
+				}}
 				orderBy={sortBy}
 				order={sortOrder}
 				onSort={handleSort}
@@ -387,6 +440,17 @@ const CRMTaskList: React.FC = () => {
 				onFilterChange={handleFilterChange}
 				onClearFilters={handleClearFilters}
 				onApplyFilters={handleApplyFilters}
+			/>
+
+			<ConfirmDialog
+				open={deleteDialogOpen}
+				title="Delete Task"
+				message={`Are you sure you want to delete task "${taskToDelete?.title}"? This action cannot be undone.`}
+				confirmText="Delete"
+				onClose={() => setDeleteDialogOpen(false)}
+				onConfirm={handleDeleteConfirm}
+				loading={deleting}
+				severity="error"
 			/>
 		</Box>
 	);

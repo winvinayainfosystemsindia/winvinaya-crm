@@ -7,16 +7,19 @@ import {
 	Refresh as RefreshIcon,
 	Handshake as DealIcon,
 	TrendingUp as TrendIcon,
-	Person as PersonIcon
+	Person as PersonIcon,
+	Delete as DeleteIcon
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
-import { fetchDeals, fetchPipelineSummary, createDeal, updateDeal } from '../../../store/slices/dealSlice';
+import { fetchDeals, fetchPipelineSummary, createDeal, updateDeal, deleteDeal } from '../../../store/slices/dealSlice';
 import CRMPageHeader from '../common/CRMPageHeader';
 import CRMTable from '../common/CRMTable';
 import DealFormDialog from './DealFormDialog';
 import CRMStatsCard from '../common/CRMStatsCard';
 import CRMStatusBadge from '../common/CRMStatusBadge';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
+import ConfirmDialog from '../../common/ConfirmDialog';
+
 import type { Deal } from '../../../models/deal';
 
 const DealList: React.FC = () => {
@@ -25,6 +28,7 @@ const DealList: React.FC = () => {
 	const { user: currentUser } = useAppSelector((state) => state.auth);
 
 	const isManager = currentUser?.role === 'manager' || currentUser?.role === 'admin' || currentUser?.role === 'sales_manager';
+	const isAdmin = currentUser?.role === 'admin';
 
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -35,6 +39,9 @@ const DealList: React.FC = () => {
 	const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [selectedDealForEdit, setSelectedDealForEdit] = useState<Deal | null>(null);
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [dealToDelete, setDealToDelete] = useState<Deal | null>(null);
+	const [deleting, setDeleting] = useState(false);
 
 	useEffect(() => {
 		dispatch(fetchDeals({
@@ -86,6 +93,28 @@ const DealList: React.FC = () => {
 			handleRefresh();
 		} catch (error) {
 			console.error('Failed to save deal:', error);
+		}
+	};
+
+	const handleDeleteClick = (e: React.MouseEvent, deal: Deal) => {
+		e.stopPropagation();
+		setDealToDelete(deal);
+		setDeleteDialogOpen(true);
+	};
+
+	const handleConfirmDelete = async () => {
+		if (dealToDelete) {
+			setDeleting(true);
+			try {
+				await dispatch(deleteDeal(dealToDelete.public_id)).unwrap();
+				setDeleteDialogOpen(false);
+				setDealToDelete(null);
+				handleRefresh();
+			} catch (error) {
+				console.error('Failed to delete deal:', error);
+			} finally {
+				setDeleting(false);
+			}
 		}
 	};
 
@@ -206,6 +235,27 @@ const DealList: React.FC = () => {
 					<Typography variant="body2">{value?.full_name || 'Unassigned'}</Typography>
 				</Stack>
 			)
+		},
+		{
+			id: 'actions',
+			label: 'Actions',
+			minWidth: 100,
+			align: 'right' as const,
+			format: (_: any, row: Deal) => (
+				<Stack direction="row" spacing={1} justifyContent="flex-end">
+					{isAdmin && (
+						<Tooltip title="Delete Deal">
+							<IconButton
+								size="small"
+								onClick={(e) => handleDeleteClick(e, row)}
+								sx={{ color: '#d13212', '&:hover': { bgcolor: 'rgba(209, 50, 18, 0.04)' } }}
+							>
+								<DeleteIcon fontSize="small" />
+							</IconButton>
+						</Tooltip>
+					)}
+				</Stack>
+			)
 		}
 	];
 
@@ -312,6 +362,10 @@ const DealList: React.FC = () => {
 					setRowsPerPage(parseInt(e.target.value, 10));
 					setPage(0);
 				}}
+				onRowsPerPageSelectChange={(rows) => {
+					setRowsPerPage(rows);
+					setPage(0);
+				}}
 				orderBy={sortBy}
 				order={sortOrder}
 				onSort={handleSort}
@@ -336,6 +390,17 @@ const DealList: React.FC = () => {
 				onFilterChange={handleFilterChange}
 				onClearFilters={handleClearFilters}
 				onApplyFilters={handleApplyFilters}
+			/>
+
+			<ConfirmDialog
+				open={deleteDialogOpen}
+				title="Delete Deal"
+				message={`Are you sure you want to delete deal "${dealToDelete?.title}"? This action cannot be undone.`}
+				confirmText="Delete"
+				onClose={() => setDeleteDialogOpen(false)}
+				onConfirm={handleConfirmDelete}
+				loading={deleting}
+				severity="error"
 			/>
 		</Box>
 	);

@@ -8,10 +8,10 @@ import {
 	TableRow,
 	Paper,
 	Typography,
-	TablePagination,
 	Skeleton,
 	TableSortLabel
 } from '@mui/material';
+import CustomTablePagination from '../../common/CustomTablePagination';
 
 interface Column<T = any> {
 	id: string;
@@ -30,6 +30,7 @@ interface CRMTableProps<T = any> {
 	rowsPerPage: number;
 	onPageChange: (event: unknown, newPage: number) => void;
 	onRowsPerPageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+	onRowsPerPageSelectChange: (rows: number) => void;
 	orderBy?: string;
 	order?: 'asc' | 'desc';
 	onSort?: (id: string) => void;
@@ -46,6 +47,7 @@ const CRMTable = <T extends any>({
 	rowsPerPage,
 	onPageChange,
 	onRowsPerPageChange,
+	onRowsPerPageSelectChange,
 	orderBy,
 	order = 'desc',
 	onSort,
@@ -157,24 +159,13 @@ const CRMTable = <T extends any>({
 					</TableBody>
 				</Table>
 			</TableContainer>
-			<TablePagination
-				rowsPerPageOptions={[10, 25, 100]}
-				component="div"
+			<CustomTablePagination
 				count={total}
-				rowsPerPage={rowsPerPage}
 				page={page}
+				rowsPerPage={rowsPerPage}
 				onPageChange={onPageChange}
 				onRowsPerPageChange={onRowsPerPageChange}
-				sx={{
-					borderTop: '1px solid #eaeded',
-					'.MuiTablePagination-toolbar': {
-						minHeight: 48
-					},
-					'.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
-						fontSize: '0.75rem',
-						color: '#545b64'
-					}
-				}}
+				onRowsPerPageSelectChange={onRowsPerPageSelectChange}
 			/>
 		</Paper>
 	);

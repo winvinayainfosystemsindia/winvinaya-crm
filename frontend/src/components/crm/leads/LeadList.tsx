@@ -10,7 +10,6 @@ import {
 	WhatsApp as WhatsAppIcon,
 	Delete as DeleteIcon
 } from '@mui/icons-material';
-import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchLeads, fetchLeadStats, createLead, updateLead, deleteLead } from '../../../store/slices/leadSlice';
 import CRMPageHeader from '../common/CRMPageHeader';
@@ -19,6 +18,7 @@ import CRMTable from '../common/CRMTable';
 import CRMStatsCard from '../common/CRMStatsCard';
 import CRMStatusBadge from '../common/CRMStatusBadge';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
+import ConfirmDialog from '../../common/ConfirmDialog';
 import type { Lead } from '../../../models/lead';
 
 const LeadList: React.FC = () => {
@@ -27,6 +27,7 @@ const LeadList: React.FC = () => {
 	const { user: currentUser } = useAppSelector((state) => state.auth);
 
 	const isManager = currentUser?.role === 'manager' || currentUser?.role === 'admin' || currentUser?.role === 'sales_manager';
+	const isAdmin = currentUser?.role === 'admin';
 
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -39,6 +40,7 @@ const LeadList: React.FC = () => {
 	const [selectedLeadForEdit, setSelectedLeadForEdit] = useState<Lead | null>(null);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
+	const [deleting, setDeleting] = useState(false);
 
 	useEffect(() => {
 		dispatch(fetchLeads({
@@ -101,6 +103,7 @@ const LeadList: React.FC = () => {
 
 	const handleConfirmDelete = async () => {
 		if (leadToDelete) {
+			setDeleting(true);
 			try {
 				await dispatch(deleteLead(leadToDelete.public_id)).unwrap();
 				setDeleteDialogOpen(false);
@@ -108,6 +111,8 @@ const LeadList: React.FC = () => {
 				handleRefresh();
 			} catch (error) {
 				console.error('Failed to delete lead:', error);
+			} finally {
+				setDeleting(false);
 			}
 		}
 	};
@@ -282,19 +287,23 @@ const LeadList: React.FC = () => {
 		},
 		{
 			id: 'actions',
-			label: '',
-			minWidth: 50,
+			label: 'Actions',
+			minWidth: 100,
 			align: 'right' as const,
 			format: (_: any, row: Lead) => (
-				<Tooltip title="Delete Lead">
-					<IconButton 
-						size="small" 
-						onClick={(e) => handleDeleteClick(e, row)}
-						sx={{ color: '#d13212', '&:hover': { bgcolor: 'rgba(209, 50, 18, 0.04)' } }}
-					>
-						<DeleteIcon fontSize="small" />
-					</IconButton>
-				</Tooltip>
+				<Stack direction="row" spacing={1} justifyContent="flex-end">
+					{isAdmin && (
+						<Tooltip title="Delete Lead">
+							<IconButton 
+								size="small" 
+								onClick={(e) => handleDeleteClick(e, row)}
+								sx={{ color: '#d13212', '&:hover': { bgcolor: 'rgba(209, 50, 18, 0.04)' } }}
+							>
+								<DeleteIcon fontSize="small" />
+							</IconButton>
+						</Tooltip>
+					)}
+				</Stack>
 			)
 		}
 	];
@@ -402,6 +411,10 @@ const LeadList: React.FC = () => {
 					setRowsPerPage(parseInt(e.target.value, 10));
 					setPage(0);
 				}}
+				onRowsPerPageSelectChange={(rows) => {
+					setRowsPerPage(rows);
+					setPage(0);
+				}}
 				orderBy={sortBy}
 				order={sortOrder}
 				onSort={handleSort}
@@ -428,42 +441,16 @@ const LeadList: React.FC = () => {
 				onApplyFilters={handleApplyFilters}
 			/>
 
-			{/* Delete Confirmation Dialog */}
-			<Dialog
+			<ConfirmDialog
 				open={deleteDialogOpen}
+				title="Delete Lead"
+				message={`Are you sure you want to delete lead "${leadToDelete?.title}"? This action cannot be undone.`}
+				confirmText="Delete"
 				onClose={() => setDeleteDialogOpen(false)}
-				PaperProps={{
-					sx: { borderRadius: '2px', width: '400px' }
-				}}
-			>
-				<DialogTitle sx={{ fontWeight: 700, px: 3, pt: 3 }}>Delete Lead</DialogTitle>
-				<DialogContent sx={{ px: 3, pb: 1 }}>
-					<DialogContentText sx={{ color: '#16191f', fontSize: '0.875rem' }}>
-						Are you sure you want to delete lead <strong>{leadToDelete?.title}</strong>? This action cannot be undone.
-					</DialogContentText>
-				</DialogContent>
-				<DialogActions sx={{ p: 3, pt: 1 }}>
-					<Button 
-						onClick={() => setDeleteDialogOpen(false)} 
-						sx={{ color: '#545b64', textTransform: 'none', fontWeight: 700 }}
-					>
-						Cancel
-					</Button>
-					<Button 
-						onClick={handleConfirmDelete}
-						variant="contained" 
-						sx={{ 
-							bgcolor: '#d13212', 
-							'&:hover': { bgcolor: '#a6280f' },
-							textTransform: 'none',
-							fontWeight: 700,
-							boxShadow: 'none'
-						}}
-					>
-						Delete
-					</Button>
-				</DialogActions>
-			</Dialog>
+				onConfirm={handleConfirmDelete}
+				loading={deleting}
+				severity="error"
+			/>
 		</Box>
 	);
 };

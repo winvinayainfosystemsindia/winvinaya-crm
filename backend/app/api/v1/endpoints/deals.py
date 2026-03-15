@@ -92,7 +92,7 @@ async def update_deal(
 async def delete_deal(
     public_id: UUID,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.require_roles([UserRole.MANAGER, UserRole.ADMIN, UserRole.SALES_MANAGER]))
+    current_user: User = Depends(deps.require_roles([UserRole.ADMIN]))
 ) -> Any:
     """Delete deal"""
     service = DealService(db)

@@ -100,7 +100,7 @@ async def get_tasks_for_entity(
 async def delete_task(
     public_id: UUID,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.require_roles([UserRole.MANAGER, UserRole.ADMIN, UserRole.SALES_MANAGER]))
+    current_user: User = Depends(deps.require_roles([UserRole.ADMIN]))
 ) -> Any:
     """Delete task"""
     service = CRMTaskService(db)

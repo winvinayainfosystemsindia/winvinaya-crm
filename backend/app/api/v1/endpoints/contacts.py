@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api import deps
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas.contact import ContactCreate, ContactUpdate, ContactRead, ContactListResponse
 from app.services.contact_service import ContactService
 
@@ -87,7 +87,7 @@ async def set_primary_contact(
 async def delete_contact(
     public_id: UUID,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user)
+    current_user: User = Depends(deps.require_roles([UserRole.ADMIN]))
 ) -> Any:
     """Delete contact"""
     service = ContactService(db)

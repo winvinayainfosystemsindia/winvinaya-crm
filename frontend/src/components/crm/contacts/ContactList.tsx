@@ -8,15 +8,18 @@ import {
 	Email as EmailIcon,
 	Phone as PhoneIcon,
 	Star as StarIcon,
-	WhatsApp as WhatsAppIcon
+	Edit as EditIcon,
+	WhatsApp as WhatsAppIcon,
+	Delete as DeleteIcon
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
-import { fetchContacts, createContact, updateContact } from '../../../store/slices/contactSlice';
+import { fetchContacts, createContact, updateContact, deleteContact } from '../../../store/slices/contactSlice';
 import { fetchCompanies } from '../../../store/slices/companySlice';
 import CRMPageHeader from '../common/CRMPageHeader';
 import CRMTable from '../common/CRMTable';
 import ContactFormDialog from './ContactFormDialog';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
+import ConfirmDialog from '../../common/ConfirmDialog';
 import type { Contact, ContactCreate, ContactUpdate } from '../../../models/contact';
 import { useSnackbar } from 'notistack';
 
@@ -24,6 +27,8 @@ const ContactList: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const { enqueueSnackbar } = useSnackbar();
 	const { list, total, loading } = useAppSelector((state) => state.contacts);
+	const { user } = useAppSelector((state) => state.auth);
+	const isAdmin = user?.role === 'admin';
 
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -35,6 +40,8 @@ const ContactList: React.FC = () => {
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
 	const [formLoading, setFormLoading] = useState(false);
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [deleting, setDeleting] = useState(false);
 
 	useEffect(() => {
 		dispatch(fetchContacts({
@@ -91,6 +98,26 @@ const ContactList: React.FC = () => {
 			enqueueSnackbar(error || 'Failed to save contact', { variant: 'error' });
 		} finally {
 			setFormLoading(false);
+		}
+	};
+
+	const handleDeleteClick = (contact: Contact) => {
+		setSelectedContact(contact);
+		setDeleteDialogOpen(true);
+	};
+
+	const handleDeleteConfirm = async () => {
+		if (!selectedContact) return;
+		setDeleting(true);
+		try {
+			await dispatch(deleteContact(selectedContact.public_id)).unwrap();
+			enqueueSnackbar('Contact deleted successfully', { variant: 'success' });
+			setDeleteDialogOpen(false);
+			handleRefresh();
+		} catch (error: any) {
+			enqueueSnackbar(error || 'Failed to delete contact', { variant: 'error' });
+		} finally {
+			setDeleting(false);
 		}
 	};
 
@@ -248,6 +275,41 @@ const ContactList: React.FC = () => {
 			minWidth: 130,
 			sortable: true,
 			format: (value: string) => new Date(value).toLocaleDateString()
+		},
+		{
+			id: 'actions',
+			label: 'Actions',
+			minWidth: 100,
+			format: (_: any, row: Contact) => (
+				<Stack direction="row" spacing={1}>
+					<Tooltip title="Edit">
+						<IconButton
+							size="small"
+							onClick={(e) => {
+								e.stopPropagation();
+								handleOpenEdit(row);
+							}}
+							sx={{ color: '#545b64' }}
+						>
+							<EditIcon fontSize="small" sx={{ color: '#007eb9' }} />
+						</IconButton>
+					</Tooltip>
+					{isAdmin && (
+						<Tooltip title="Delete">
+							<IconButton
+								size="small"
+								onClick={(e) => {
+									e.stopPropagation();
+									handleDeleteClick(row);
+								}}
+								sx={{ color: '#d32f2f' }}
+							>
+								<DeleteIcon fontSize="small" />
+							</IconButton>
+						</Tooltip>
+					)}
+				</Stack>
+			)
 		}
 	];
 
@@ -330,6 +392,10 @@ const ContactList: React.FC = () => {
 						setRowsPerPage(parseInt(e.target.value, 10));
 						setPage(0);
 					}}
+					onRowsPerPageSelectChange={(rows) => {
+						setRowsPerPage(rows);
+						setPage(0);
+					}}
 					orderBy={sortBy}
 					order={sortOrder}
 					onSort={handleSort}
@@ -354,6 +420,17 @@ const ContactList: React.FC = () => {
 					onFilterChange={handleFilterChange}
 					onClearFilters={handleClearFilters}
 					onApplyFilters={handleApplyFilters}
+				/>
+
+				<ConfirmDialog
+					open={deleteDialogOpen}
+					title="Delete Contact"
+					message={`Are you sure you want to delete "${selectedContact?.first_name} ${selectedContact?.last_name}"? This action cannot be undone.`}
+					confirmText="Delete"
+					onClose={() => setDeleteDialogOpen(false)}
+					onConfirm={handleDeleteConfirm}
+					loading={deleting}
+					severity="error"
 				/>
 			</Box>
 		</Box>
