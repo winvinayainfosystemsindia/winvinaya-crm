@@ -42,7 +42,8 @@ class UserRepository(BaseRepository[User]):
             search_filter = (
                 User.full_name.ilike(f"%{query}%") |
                 User.email.ilike(f"%{query}%") |
-                User.username.ilike(f"%{query}%")
+                User.username.ilike(f"%{query}%") |
+                User.mobile.ilike(f"%{query}%")
             )
             stmt = stmt.where(search_filter)
             

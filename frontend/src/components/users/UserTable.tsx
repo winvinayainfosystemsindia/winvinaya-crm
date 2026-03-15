@@ -82,7 +82,8 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 	const filteredUsers = users.filter(user =>
 		user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 		user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-		user.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
+		user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+		user.mobile?.toLowerCase().includes(searchTerm.toLowerCase())
 	);
 
 	const getRoleColor = (role: string): 'error' | 'warning' | 'info' | 'success' => {
@@ -174,6 +175,9 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 							<TableCell sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem', borderBottom: '2px solid #d5dbdb' }}>
 								Email
 							</TableCell>
+							<TableCell sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem', borderBottom: '2px solid #d5dbdb' }}>
+								WhatsApp
+							</TableCell>
 							<TableCell sx={{
 								fontWeight: 'bold',
 								color: 'text.secondary',
@@ -252,6 +256,11 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 									<TableCell>
 										<Typography variant="body2" color="text.secondary">
 											{user.email}
+										</Typography>
+									</TableCell>
+									<TableCell>
+										<Typography variant="body2" color="#25D366" sx={{ fontWeight: 500 }}>
+											{user.mobile || '-'}
 										</Typography>
 									</TableCell>
 									<TableCell sx={{ display: isMedium ? 'none' : 'table-cell' }}>

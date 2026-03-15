@@ -56,6 +56,7 @@ const UserDialog: React.FC<UserDialogProps> = ({
 		role: 'trainer',
 		is_active: true,
 		is_verified: false,
+		mobile: '',
 		confirmPassword: ''
 	});
 
@@ -72,6 +73,7 @@ const UserDialog: React.FC<UserDialogProps> = ({
 					role: user.role,
 					is_active: user.is_active,
 					is_verified: user.is_verified,
+					mobile: user.mobile || '',
 					password: '',
 					confirmPassword: ''
 				});
@@ -84,6 +86,7 @@ const UserDialog: React.FC<UserDialogProps> = ({
 					role: 'trainer',
 					is_active: true,
 					is_verified: false,
+					mobile: '',
 					confirmPassword: ''
 				});
 			}
@@ -122,7 +125,8 @@ const UserDialog: React.FC<UserDialogProps> = ({
 			} else if (mode === 'edit' && user) {
 				const updateData: any = {
 					is_active: formData.is_active,
-					role: formData.role
+					role: formData.role,
+					mobile: formData.mobile
 				};
 				if (formData.password) {
 					updateData.password = formData.password;
@@ -229,6 +233,7 @@ const UserDialog: React.FC<UserDialogProps> = ({
 							<AWSInfoRow label="Full Name" value={user.full_name} />
 							<AWSInfoRow label="Username" value={user.username} />
 							<AWSInfoRow label="Email Address" value={user.email} />
+							<AWSInfoRow label="WhatsApp Number" value={user.mobile} />
 							<AWSInfoRow
 								label="System Role"
 								value={
@@ -314,6 +319,19 @@ const UserDialog: React.FC<UserDialogProps> = ({
 											onChange={(e) => handleChange('email', e.target.value)}
 											disabled={loading || mode === 'edit'} // Email usually immutable
 											placeholder="user@example.com"
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+										/>
+									</Box>
+									<Box sx={{ gridColumn: isMobile ? 'span 1' : 'span 2' }}>
+										<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 0.5 }}>WhatsApp Number (for Forward-to-CRM)</Typography>
+										<TextField
+											fullWidth
+											size="small"
+											value={formData.mobile}
+											onChange={(e) => handleChange('mobile', e.target.value)}
+											disabled={loading}
+											placeholder="e.g. 919876543210"
+											helperText="Enter in E.164 format (e.g. 91 followed by 10 digit number)"
 											sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
 										/>
 									</Box>

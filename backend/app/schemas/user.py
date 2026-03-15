@@ -16,6 +16,7 @@ class UserBase(BaseModel):
     is_active: bool = True
     is_verified: bool = False
     role: UserRole = UserRole.PLACEMENT
+    mobile: Optional[str] = Field(None, max_length=20)
 
 
 class UserCreate(UserBase):
@@ -43,6 +44,7 @@ class UserUpdate(BaseModel):
     is_verified: Optional[bool] = None
     password: Optional[str] = Field(None, min_length=8, max_length=100)
     role: Optional[UserRole] = None
+    mobile: Optional[str] = Field(None, max_length=20)
 
 
 class UserResponse(UserBase):

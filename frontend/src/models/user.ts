@@ -9,6 +9,7 @@ export interface User {
 	is_verified: boolean;
 	is_superuser?: boolean;
 	role: 'admin' | 'manager' | 'sourcing' | 'placement' | 'trainer' | 'counselor' | 'sales_manager';
+	mobile?: string;
 	created_at?: string;
 	updated_at?: string;
 }
@@ -21,6 +22,7 @@ export interface UserCreate {
 	is_active: boolean;
 	is_verified: boolean;
 	role: string;
+	mobile?: string;
 }
 
 export interface UserUpdate {
@@ -31,4 +33,5 @@ export interface UserUpdate {
 	is_active?: boolean;
 	is_verified?: boolean;
 	role?: string;
+	mobile?: string;
 }
