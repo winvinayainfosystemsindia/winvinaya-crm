@@ -214,6 +214,95 @@ class AIService:
 
     # --- Chat Implementation ---
 
+    # --- WhatsApp Intent Classification ---
+
+    async def classify_whatsapp_intent(
+        self,
+        message_body: str,
+        from_name: Optional[str],
+        contact_exists: bool,
+        deal_exists: bool,
+    ) -> Dict[str, Any]:
+        """
+        Classify an inbound WhatsApp message into one of four CRM action scenarios.
+        Returns a dict matching IntentResult schema:
+            {scenario, sender_name, company_name, enquiry_summary, deal_stage_hint, confidence}
+        Falls back to safe defaults if AI is unavailable.
+        """
+        prompt = f"""You are a CRM intake bot for WinVinaya Foundation.
+Classify the following WhatsApp message into exactly one scenario and extract structured data.
+
+Scenarios:
+- "new_person": Unknown sender making first contact, wants info, enquiry, or service
+- "known_contact": Existing contact sending an update, query, or general message
+- "follow_up": Message clearly references an existing deal/proposal/quotation
+- "ignore": Spam, OTP, irrelevant automated message, or read receipts
+
+Extract the following:
+- sender_name: The person's name if mentioned (or null)
+- company_name: Company/organization name if mentioned (or null)
+- enquiry_summary: One-line plain-English summary of the enquiry (max 100 chars)
+- deal_stage_hint: If follow_up, suggest the deal stage: discovery|qualification|proposal|negotiation (or null)
+- confidence: Your confidence in the classification as a float 0.0 to 1.0
+
+Context:
+- Contact already exists in CRM: {contact_exists}
+- Open deal exists for this contact: {deal_exists}
+- Sender display name: {from_name or 'Unknown'}
+
+Message:
+\"\"\"{message_body}\"\"\"
+
+Respond with ONLY valid JSON, no markdown, no explanation:
+{{
+  "scenario": "<new_person|known_contact|follow_up|ignore>",
+  "sender_name": "<string or null>",
+  "company_name": "<string or null>",
+  "enquiry_summary": "<string>",
+  "deal_stage_hint": "<string or null>",
+  "confidence": <float>
+}}"""
+
+        default_result = {
+            "scenario": "new_person" if not contact_exists else "known_contact",
+            "sender_name": from_name,
+            "company_name": None,
+            "enquiry_summary": (message_body or "")[:100],
+            "deal_stage_hint": None,
+            "confidence": 0.5,
+        }
+
+        if not self.enabled:
+            logger.warning("AI classify_whatsapp_intent: AI disabled, using defaults")
+            return default_result
+
+        try:
+            if self.provider == "google" and self.google_client:
+                # Use a plain generative model call (no tools, no chat)
+                import google.generativeai as genai
+                model = genai.GenerativeModel(
+                    model_name=self.model_name,
+                    generation_config={"response_mime_type": "application/json"},
+                )
+                response = await model.generate_content_async(prompt)
+                result = json.loads(response.text)
+                return result
+
+            elif self.openai_client:
+                response = await self.openai_client.chat.completions.create(
+                    model=self.model_name,
+                    messages=[{"role": "user", "content": prompt}],
+                    response_format={"type": "json_object"},
+                    temperature=0.1,
+                )
+                result = json.loads(response.choices[0].message.content or "{}")
+                return result if result else default_result
+
+        except Exception as e:
+            logger.error(f"classify_whatsapp_intent error: {e}")
+
+        return default_result
+
     async def chat(self, message: str, history: List[Dict[str, str]] = []) -> str:
         """Send a message to the AI and get a response"""
         if not self.enabled:

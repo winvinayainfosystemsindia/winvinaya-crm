@@ -28,6 +28,7 @@ class LeadSource(str, enum.Enum):
     COLD_CALL = "cold_call"
     SOCIAL_MEDIA = "social_media"
     PARTNER = "partner"
+    WHATSAPP = "whatsapp"
 
 
 class LeadStatus(str, enum.Enum):

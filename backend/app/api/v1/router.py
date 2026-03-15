@@ -35,6 +35,7 @@ from app.api.v1.endpoints import (
     dsr_activity_types,
     dsr_project_requests,
     notifications,
+    whatsapp_webhook,
 )
 
 
@@ -80,3 +81,5 @@ router.include_router(dsr_leaves.router, prefix="/dsr/leaves", tags=["DSR Leaves
 router.include_router(dsr_activity_types.router, prefix="/dsr/activity-types", tags=["DSR Activity Types"])
 router.include_router(dsr_project_requests.router, prefix="/dsr/project-requests", tags=["DSR Project Requests"])
 
+# WhatsApp Integration
+router.include_router(whatsapp_webhook.router)

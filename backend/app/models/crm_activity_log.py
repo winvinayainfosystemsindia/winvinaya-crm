@@ -34,6 +34,7 @@ class CRMActivityType(str, enum.Enum):
     NOTE_ADDED = "note_added"
     STAGE_CHANGED = "stage_changed"
     CONVERTED = "converted"
+    WHATSAPP_MESSAGE = "whatsapp_message"
 
 
 class CRMActivityLog(BaseModel):

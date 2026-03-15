@@ -23,6 +23,7 @@ class ContactSource(str, enum.Enum):
     COLD_CALL = "cold_call"
     LINKEDIN = "linkedin"
     OTHER = "other"
+    WHATSAPP = "whatsapp"
 
 
 class Contact(BaseModel):
@@ -60,11 +61,12 @@ class Contact(BaseModel):
         index=True,
     )
     
-    email: Mapped[str] = mapped_column(
+    email: Mapped[str | None] = mapped_column(
         String(255),
-        unique=True,
+        unique=False,
         index=True,
-        nullable=False,
+        nullable=True,
+        comment="Optional for WhatsApp-sourced contacts",
     )
     
     phone: Mapped[str | None] = mapped_column(
