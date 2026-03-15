@@ -12,11 +12,13 @@ import {
 	Assignment as ScreeningIcon,
 	FactCheck as CounselingIcon,
 	SmartToy as AIIcon,
-	School as SchoolIcon
+	School as SchoolIcon,
+	WhatsApp as WhatsAppIcon
 } from '@mui/icons-material';
 import DynamicFieldsSection from '../../components/settings/DynamicFieldsSection';
 import AIConfigurationSection from '../../components/settings/AIConfigurationSection';
 import TrainingConfigurationSection from '../../components/settings/TrainingConfigurationSection';
+import WhatsAppConfigurationSection from '../../components/settings/WhatsAppConfigurationSection';
 
 const Settings: React.FC = () => {
 	const [tabValue, setTabValue] = useState(() => {
@@ -42,6 +44,8 @@ const Settings: React.FC = () => {
 				return <AIConfigurationSection />;
 			case 3:
 				return <TrainingConfigurationSection />;
+			case 4:
+				return <WhatsAppConfigurationSection />;
 			default:
 				return (
 					<Box sx={{ p: 8, textAlign: 'center' }}>
@@ -106,6 +110,7 @@ const Settings: React.FC = () => {
 					<Tab icon={<CounselingIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Counseling Fields" />
 					<Tab icon={<AIIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="AI Configuration" />
 					<Tab icon={<SchoolIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Training Config" />
+					<Tab icon={<WhatsAppIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="WhatsApp Config" />
 				</Tabs>
 			</Box>
 
