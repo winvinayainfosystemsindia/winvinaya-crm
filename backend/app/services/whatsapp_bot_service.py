@@ -601,6 +601,25 @@ class WhatsAppBotService:
         result = await self.db.execute(stmt)
         return result.scalars().first()
 
+    async def _find_contact_by_name_in_company(self, name: str, company_id: int) -> Optional[Contact]:
+        """Look up a Contact by name within a specific company (fuzzy match)."""
+        parts = name.strip().split(" ", 1)
+        first = parts[0]
+        last = parts[1] if len(parts) > 1 else ""
+        
+        # Match by first name AND company
+        stmt = (
+            select(Contact)
+            .where(Contact.company_id == company_id)
+            .where(Contact.is_deleted == False)
+            .where(Contact.first_name.ilike(f"%{first}%"))
+        )
+        if last:
+            stmt = stmt.where(Contact.last_name.ilike(f"%{last}%"))
+            
+        result = await self.db.execute(stmt)
+        return result.scalars().first()
+
     async def _get_or_create_company(self, name: str, email: Optional[str] = None) -> Company:
         """Find existing company by name or create a new one."""
         from app.repositories.company_repository import CompanyRepository
@@ -643,6 +662,10 @@ class WhatsAppBotService:
         if not contact and email:
             contact = await self._find_contact_by_email(email)
             
+        # 3. Lookup by name within company (if company_id provided)
+        if not contact and company_id and name:
+            contact = await self._find_contact_by_name_in_company(name, company_id)
+
         if contact:
             # Ensure linked to company if provided and not already linked
             if company_id and not contact.company_id:

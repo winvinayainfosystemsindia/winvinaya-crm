@@ -323,7 +323,7 @@ An employee has FORWARDED a client enquiry to you via WhatsApp. Your job is to e
 1. **Client Name**: Extract the name of the person asking for service. Avoid "Unknown" if a name is present.
 2. **Company Name**: Extract the name of the Client's company.
 3. **Lead Title**: Create a short, professional title focused on the SERVICE. Example: "Document Remediation Service" or "Accessibility Audit".
-4. **Phone**: Extract any phone number mentioned in the text.
+4. **Phone**: Extract any phone number mentioned in the text. Strip spaces/dashes.
 5. **Email**: Extract any email address mentioned in the text.
 
 ### EXAMPLES:
@@ -338,15 +338,15 @@ Response: {{
   "confidence": 0.95
 }}
 
-Message: "Fwd: Suresh from ABC Tech wants to know about our testing rates."
+Message: "Forwarded: One of our clients, Suresh, just called. He is from ABC Tech and wants to know about our testing rates. Give him a call at 98450 12345."
 Response: {{
   "sender_name": "Suresh",
   "company_name": "ABC Tech",
-  "phone_number": null,
+  "phone_number": "9845012345",
   "email": null,
   "enquiry_summary": "Pricing inquiry for testing services",
   "lead_title": "Testing Services Inquiry",
-  "confidence": 0.8
+  "confidence": 0.9
 }}
 
 ### ANALYZE THIS:
