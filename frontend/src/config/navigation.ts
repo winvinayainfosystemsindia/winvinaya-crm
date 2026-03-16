@@ -40,7 +40,7 @@ export const topNavigation: NavigationItem[] = [
 		children: [
 			{ label: 'Projects', path: '/projects' },
 			{ label: 'Activities', path: '/projects/activities' },
-			{ label: 'Time Sheet Management', path: '/projects/dsr' },
+			{ label: 'Timesheet', path: '/projects/timesheet' },
 		],
 	},
 	{

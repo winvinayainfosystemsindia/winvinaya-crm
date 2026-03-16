@@ -52,12 +52,12 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 	});
 
 	const getTitle = () => {
-		if (readOnly) return 'View Daily Status Report';
-		return entryId ? 'Edit Daily Status Report' : 'New Daily Status Report';
+		if (readOnly) return 'View Timesheet';
+		return entryId ? 'Edit Timesheet' : 'New Timesheet Submission';
 	};
 
 	const getSubtitle = () => {
-		return readOnly ? 'Detailed review of activities' : 'Daily status and activity logging';
+		return readOnly ? 'Detailed review of activities' : 'Timesheet and activity logging';
 	};
 
 	return (
@@ -197,7 +197,7 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 									fontWeight: 700
 								}}
 							>
-								{submitting ? 'Submitting...' : 'Submit Report'}
+								{submitting ? 'Submitting...' : 'Submit Timesheet'}
 							</Button>
 						</>
 					)}

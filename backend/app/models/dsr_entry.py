@@ -5,7 +5,8 @@ import uuid
 import enum
 from datetime import date, datetime
 from typing import TYPE_CHECKING
-from sqlalchemy import Boolean, JSON, Integer, Date, DateTime, ForeignKey, Enum, Uuid, Text, String
+from sqlalchemy import Boolean, Integer, Date, DateTime, ForeignKey, Enum, Uuid, Text, String
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
 
@@ -95,7 +96,7 @@ class DSREntry(BaseModel):
 
     # Line items — one element per project/activity log
     items: Mapped[list] = mapped_column(
-        JSON,
+        JSONB,
         nullable=False,
         default=list,
         comment="Array of work log items: project, activity, description, start_time, end_time, hours",
@@ -103,7 +104,7 @@ class DSREntry(BaseModel):
 
     # Extensible metadata (also used to log reminder events)
     others: Mapped[dict | None] = mapped_column(
-        JSON,
+        JSONB,
         nullable=True,
         comment="Extensible metadata, reminder logs, etc.",
     )

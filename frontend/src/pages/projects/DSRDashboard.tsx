@@ -155,8 +155,8 @@ const DSRDashboard: React.FC = () => {
 
 	return (
 		<DSRModuleLayout
-			title="Daily Status Reports"
-			subtitle="Track work progress, manage submissions, and review team activity."
+			title="Timesheets"
+			subtitle="Track work hours, manage submissions, and review team activity."
 		>
 			{() => (
 				<Box>
@@ -262,7 +262,7 @@ const DSRDashboard: React.FC = () => {
 													boxShadow: '0 1px 1px 0 rgba(0,0,0,0.1)'
 												}}
 											>
-												Report Daily Status
+												Submit Timesheet
 											</Button>
 										</Box>
 									</Box>
