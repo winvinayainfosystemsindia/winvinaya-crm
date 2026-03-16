@@ -26,7 +26,10 @@ from app.models.ticket import Ticket
 from app.models.dsr_entry import DSREntry
 from app.models.dsr_project import DSRProject
 from app.models.dsr_activity import DSRActivity
+from app.models.dsr_activity_type import DSRActivityType
 from app.models.dsr_permission_request import DSRPermissionRequest
+from app.models.dsr_leave_application import DSRLeaveApplication
+from app.models.dsr_project_request import DSRProjectRequest
 from app.utils.activity_tracker import log_read
 from app.schemas.analytics import ManagementReportResponse, UserReportMetric
 from app.services import analytics_service
@@ -46,7 +49,8 @@ async def export_table_for_power_bi(
     activity_logs, allocations, batches, attendance, assignments, assessments,
     assessment_results, assessment_responses, mock_interviews, batch_events,
     batch_plans, batch_extensions, fields, tickets, dsr_entries, dsr_projects,
-    dsr_activities, dsr_permission_requests
+    dsr_activities, dsr_activity_types, dsr_permission_requests,
+    dsr_leave_applications, dsr_project_requests
     """
     from fastapi import HTTPException
     
@@ -73,7 +77,10 @@ async def export_table_for_power_bi(
         "dsr_entries": DSREntry,
         "dsr_projects": DSRProject,
         "dsr_activities": DSRActivity,
+        "dsr_activity_types": DSRActivityType,
         "dsr_permission_requests": DSRPermissionRequest,
+        "dsr_leave_applications": DSRLeaveApplication,
+        "dsr_project_requests": DSRProjectRequest,
     }
     
     if table_name not in model_map:
