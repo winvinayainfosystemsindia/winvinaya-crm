@@ -49,7 +49,7 @@ async def get_leads(
 async def create_lead(
     lead_in: LeadCreate,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.require_roles([UserRole.MANAGER, UserRole.ADMIN, UserRole.SALES_MANAGER]))
+    current_user: User = Depends(deps.require_roles([UserRole.MANAGER, UserRole.ADMIN, UserRole.PROJECT_COORDINATOR]))
 ) -> Any:
     """Create a new lead"""
     service = LeadService(db)

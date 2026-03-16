@@ -23,8 +23,8 @@ class UserRole(str, enum.Enum):
     PLACEMENT = "placement"
     TRAINER = "trainer"
     COUNSELOR = "counselor"
-    # CRM Roles
-    SALES_MANAGER = "sales_manager"
+    PROJECT_COORDINATOR = "project_coordinator"
+    DEVELOPER = "developer"
 
 
 class User(BaseModel):

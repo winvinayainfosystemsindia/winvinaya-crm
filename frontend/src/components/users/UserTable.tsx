@@ -86,12 +86,14 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 		user.mobile?.toLowerCase().includes(searchTerm.toLowerCase())
 	);
 
-	const getRoleColor = (role: string): 'error' | 'warning' | 'info' | 'success' => {
+	const getRoleColor = (role: string): 'error' | 'warning' | 'info' | 'success' | 'secondary' | 'primary' => {
 		switch (role.toLowerCase()) {
 			case 'admin': return 'error';
 			case 'manager': return 'warning';
 			case 'trainer': return 'info';
 			case 'counselor': return 'success';
+			case 'project_coordinator': return 'secondary';
+			case 'developer': return 'primary';
 			default: return 'info';
 		}
 	};

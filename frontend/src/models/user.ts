@@ -8,7 +8,7 @@ export interface User {
 	is_active: boolean;
 	is_verified: boolean;
 	is_superuser?: boolean;
-	role: 'admin' | 'manager' | 'sourcing' | 'placement' | 'trainer' | 'counselor' | 'sales_manager';
+	role: 'admin' | 'manager' | 'sourcing' | 'placement' | 'trainer' | 'counselor' | 'project_coordinator' | 'developer';
 	mobile?: string;
 	created_at?: string;
 	updated_at?: string;

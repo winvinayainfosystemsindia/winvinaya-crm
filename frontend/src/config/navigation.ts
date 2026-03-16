@@ -36,7 +36,7 @@ export const topNavigation: NavigationItem[] = [
 	{
 		label: 'Project Management',
 		icon: ProjectIcon,
-		roles: ['admin', 'manager', 'trainer', 'sourcing'],
+		roles: ['admin', 'manager', 'trainer', 'sourcing', 'project_coordinator', 'developer'],
 		children: [
 			{ label: 'Projects', path: '/projects' },
 			{ label: 'Activities', path: '/projects/activities' },
@@ -46,7 +46,7 @@ export const topNavigation: NavigationItem[] = [
 	{
 		label: 'CRM Management',
 		icon: BusinessIcon,
-		roles: ['admin', 'manager', 'sourcing'],
+		roles: ['admin', 'manager', 'sourcing', 'project_coordinator', 'developer'],
 		children: [
 			{ label: 'Dashboard', path: '/crm/dashboard' },
 			{ label: 'Companies', path: '/crm/companies' },
@@ -64,17 +64,17 @@ export const topNavigation: NavigationItem[] = [
 			{
 				label: 'Screening',
 				path: '/candidates/screening',
-				roles: ['admin', 'sourcing', 'manager']
+				roles: ['admin', 'sourcing', 'manager', 'project_coordinator', 'developer']
 			},
 			{
 				label: 'Counseling',
 				path: '/candidates/counseling',
-				roles: ['admin', 'trainer', 'manager']
+				roles: ['admin', 'trainer', 'manager', 'project_coordinator', 'developer']
 			},
 			{
 				label: 'Document Collection',
 				path: '/candidates/documents',
-				roles: ['admin', 'sourcing', 'manager']
+				roles: ['admin', 'sourcing', 'manager', 'project_coordinator', 'developer']
 			},
 		],
 	},
@@ -82,10 +82,10 @@ export const topNavigation: NavigationItem[] = [
 		label: 'Training Management',
 		icon: SchoolIcon,
 		children: [
-			{ label: 'Training Batch', path: '/training/batches', roles: ['admin', 'manager', 'trainer', 'sourcing'] },
-			{ label: 'Weekly Training Plan', path: '/training/weekly-plan', roles: ['admin', 'manager', 'trainer'] },
-			{ label: 'Candidate Allocation', path: '/training/allocation', roles: ['admin', 'manager', 'trainer', 'sourcing'] },
-			{ label: 'Attendance', path: '/training/attendance', roles: ['admin', 'manager', 'trainer'] },
+			{ label: 'Training Batch', path: '/training/batches', roles: ['admin', 'manager', 'trainer', 'sourcing', 'project_coordinator', 'developer'] },
+			{ label: 'Weekly Training Plan', path: '/training/weekly-plan', roles: ['admin', 'manager', 'trainer', 'project_coordinator', 'developer'] },
+			{ label: 'Candidate Allocation', path: '/training/allocation', roles: ['admin', 'manager', 'trainer', 'sourcing', 'project_coordinator', 'developer'] },
+			{ label: 'Attendance', path: '/training/attendance', roles: ['admin', 'manager', 'trainer', 'project_coordinator', 'developer'] },
 			// { label: 'Assignment', path: '/training/assignment', roles: ['admin', 'manager', 'trainer'] },
 			// { label: 'Online Assessment', path: '/training/assessment', roles: ['admin', 'manager', 'trainer'] },
 			// { label: 'Mock Interview', path: '/training/mock-interview', roles: ['admin', 'manager', 'trainer'] },

@@ -246,7 +246,9 @@ const UserDialog: React.FC<UserDialogProps> = ({
 											bgcolor:
 												user.role === 'admin' ? '#d91d11' :
 													user.role === 'manager' ? '#ec7211' :
-														user.role === 'trainer' ? '#116cc3' : '#68b266',
+														user.role === 'trainer' ? '#116cc3' :
+															user.role === 'project_coordinator' ? '#8c31b4' :
+																user.role === 'developer' ? '#31b48c' : '#68b266',
 											color: 'white',
 											fontSize: '0.65rem'
 										}}
@@ -361,6 +363,8 @@ const UserDialog: React.FC<UserDialogProps> = ({
 												<MenuItem value="counselor">Counselor</MenuItem>
 												<MenuItem value="placement">Placement</MenuItem>
 												<MenuItem value="sourcing">Sourcing</MenuItem>
+												<MenuItem value="project_coordinator">Project Coordinator</MenuItem>
+												<MenuItem value="developer">Developer</MenuItem>
 											</Select>
 										</FormControl>
 									</Box>

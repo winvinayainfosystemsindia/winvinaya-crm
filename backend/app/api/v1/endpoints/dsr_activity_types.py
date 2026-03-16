@@ -26,7 +26,8 @@ _ALL_ROLES = [
     UserRole.SOURCING,
     UserRole.PLACEMENT,
     UserRole.COUNSELOR,
-    UserRole.SALES_MANAGER,
+    UserRole.PROJECT_COORDINATOR,
+    UserRole.DEVELOPER,
 ]
 
 

@@ -46,7 +46,7 @@ async def get_deals(
 async def create_deal(
     deal_in: DealCreate,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.require_roles([UserRole.MANAGER, UserRole.ADMIN, UserRole.SALES_MANAGER]))
+    current_user: User = Depends(deps.require_roles([UserRole.MANAGER, UserRole.ADMIN, UserRole.PROJECT_COORDINATOR]))
 ) -> Any:
     """Create a new deal"""
     service = DealService(db)

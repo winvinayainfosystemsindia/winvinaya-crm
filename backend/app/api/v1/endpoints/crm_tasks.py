@@ -53,7 +53,7 @@ async def get_tasks(
 async def create_task(
     task_in: CRMTaskCreate,
     db: AsyncSession = Depends(deps.get_db),
-    current_user: User = Depends(deps.require_roles([UserRole.MANAGER, UserRole.ADMIN, UserRole.SALES_MANAGER]))
+    current_user: User = Depends(deps.require_roles([UserRole.MANAGER, UserRole.ADMIN, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER]))
 ) -> Any:
     """Create a new task"""
     service = CRMTaskService(db)
