@@ -241,11 +241,13 @@ const Sidebar: React.FC = () => {
 			}}
 		>
 			<Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-				<Box sx={{
-					flexGrow: 1,
-					overflowY: 'auto',
-					py: 1,
-				}}>
+				<Box 
+					sx={{
+						flexGrow: 1,
+						overflowY: 'auto',
+						py: 1,
+					}}
+				>
 					<List disablePadding>
 						{topNavigation.map((item, index) => (
 							item.children ? (

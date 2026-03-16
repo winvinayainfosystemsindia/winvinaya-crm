@@ -7,7 +7,6 @@ import { SnackbarProvider } from 'notistack';
 import { store } from './store/store';
 import { BrowserRouter as Router } from 'react-router-dom';
 import AppRouter from './router/AppRouter';
-import SmoothScroll from "./components/layout/SmoothScroll";
 import AuthInitializer from './components/auth/AuthInitializer';
 import ChatWidget from './components/chat/ChatWidget';
 
@@ -18,13 +17,11 @@ function App() {
         <CssBaseline />
         <SnackbarProvider maxSnack={3}>
           <Router>
-            <SmoothScroll>
-              <AuthProvider>
-                <AuthInitializer>
-                  <AppRouter />
-                </AuthInitializer>
-              </AuthProvider>
-            </SmoothScroll>
+            <AuthProvider>
+              <AuthInitializer>
+                <AppRouter />
+              </AuthInitializer>
+            </AuthProvider>
             <ChatWidget />
           </Router>
         </SnackbarProvider>

@@ -145,10 +145,12 @@ const CompanyFormDialog: React.FC<CompanyFormDialogProps> = ({
 			</DialogTitle>
 
 			<Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-				<DialogContent sx={{
-					p: 0,
-					bgcolor: theme.palette.background.default,
-				}}>
+				<DialogContent 
+					sx={{
+						p: 0,
+						bgcolor: theme.palette.background.default,
+					}}
+				>
 					<Box sx={{ p: 4 }}>
 						<Stack spacing={4}>
 							<Paper elevation={0} sx={awsPanelStyle}>
