@@ -237,19 +237,6 @@ const Sidebar: React.FC = () => {
 					backgroundColor: '#ffffff',
 					borderRight: '1px solid #d5dbdb',
 					boxShadow: '2px 0 5px rgba(0,0,0,0.02)',
-					'& ::-webkit-scrollbar': {
-						width: '6px',
-					},
-					'& ::-webkit-scrollbar-track': {
-						background: 'transparent',
-					},
-					'& ::-webkit-scrollbar-thumb': {
-						background: '#d5dbdb',
-						borderRadius: '10px',
-					},
-					'& ::-webkit-scrollbar-thumb:hover': {
-						background: '#aab7b7',
-					},
 				},
 			}}
 		>
@@ -258,8 +245,6 @@ const Sidebar: React.FC = () => {
 					flexGrow: 1,
 					overflowY: 'auto',
 					py: 1,
-					scrollbarWidth: 'thin',
-					scrollbarColor: '#d5dbdb transparent'
 				}}>
 					<List disablePadding>
 						{topNavigation.map((item, index) => (

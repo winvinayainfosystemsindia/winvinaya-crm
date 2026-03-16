@@ -102,22 +102,47 @@ const theme = createTheme({
 					scrollBehavior: 'smooth',
 				},
 				body: {
-					scrollbarColor: "#6b7a90 #f2f3f3",
+					"&, & *": {
+						scrollbarColor: "#d5dbdb transparent",
+						scrollbarWidth: 'thin',
+					},
 					"&::-webkit-scrollbar, & *::-webkit-scrollbar": {
-						backgroundColor: "#f2f3f3",
-						width: '8px',
-						height: '8px',
+						width: '4px',
+						height: '4px',
+					},
+					"&::-webkit-scrollbar-track, & *::-webkit-scrollbar-track": {
+						background: 'transparent',
 					},
 					"&::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb": {
-						borderRadius: 8,
-						backgroundColor: "#6b7a90",
-						minHeight: 24,
-						border: "2px solid #f2f3f3",
+						background: '#d5dbdb',
+						borderRadius: '10px',
+					},
+					"&::-webkit-scrollbar-thumb:hover, & *::-webkit-scrollbar-thumb:hover": {
+						background: '#aab7b7',
 					},
 				},
 			},
 		},
 	},
 });
+
+// Extend the theme with custom AWS console styles
+export const awsStyles = {
+	sectionTitle: (theme: any) => ({
+		fontWeight: 700,
+		fontSize: '0.875rem',
+		color: theme.palette.text.secondary,
+		mb: 1.5,
+		textTransform: 'uppercase' as const,
+		letterSpacing: '0.05em'
+	}),
+	awsPanel: (theme: any) => ({
+		border: `1px solid ${theme.palette.divider}`,
+		borderRadius: '2px',
+		p: 3,
+		bgcolor: theme.palette.background.paper,
+		boxShadow: 'none'
+	})
+};
 
 export default theme;

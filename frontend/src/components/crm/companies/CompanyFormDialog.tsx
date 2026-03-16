@@ -16,10 +16,14 @@ import {
 	Box,
 	IconButton,
 	Paper,
-	Divider
+	Divider,
+	useTheme,
+	Autocomplete
 } from '@mui/material';
 import { Close as CloseIcon, Info as InfoIcon, Email as EmailIcon, LocationOn as LocationIcon } from '@mui/icons-material';
-import type { Company, CompanyCreate, CompanyUpdate, CompanySize, CompanyStatus } from '../../../models/company';
+import type { Company, CompanyCreate, CompanyUpdate } from '../../../models/company';
+import { COMPANY_SIZES, COMPANY_STATUSES, COMPANY_INDUSTRIES } from '../../../data/companyData';
+import { awsStyles } from '../../../theme/theme';
 
 interface CompanyFormDialogProps {
 	open: boolean;
@@ -29,21 +33,6 @@ interface CompanyFormDialogProps {
 	loading?: boolean;
 }
 
-const COMPANY_SIZES: { value: CompanySize; label: string }[] = [
-	{ value: 'micro', label: 'Micro (1-10)' },
-	{ value: 'small', label: 'Small (11-50)' },
-	{ value: 'medium', label: 'Medium (51-250)' },
-	{ value: 'large', label: 'Large (251-1000)' },
-	{ value: 'enterprise', label: 'Enterprise (1000+)' }
-];
-
-const COMPANY_STATUSES: { value: CompanyStatus; label: string }[] = [
-	{ value: 'active', label: 'Active' },
-	{ value: 'inactive', label: 'Inactive' },
-	{ value: 'prospect', label: 'Prospect' },
-	{ value: 'customer', label: 'Customer' }
-];
-
 const CompanyFormDialog: React.FC<CompanyFormDialogProps> = ({
 	open,
 	onClose,
@@ -51,6 +40,7 @@ const CompanyFormDialog: React.FC<CompanyFormDialogProps> = ({
 	company,
 	loading = false
 }) => {
+	const theme = useTheme();
 	const [formData, setFormData] = useState<Partial<Company>>({
 		name: '',
 		industry: '',
@@ -112,21 +102,8 @@ const CompanyFormDialog: React.FC<CompanyFormDialogProps> = ({
 		onSubmit(formData as CompanyCreate);
 	};
 
-	const sectionTitleStyle = {
-		fontWeight: 700,
-		fontSize: '0.875rem',
-		color: '#545b64',
-		mb: 2,
-		textTransform: 'uppercase' as const,
-		letterSpacing: '0.025em'
-	};
-
-	const awsPanelStyle = {
-		border: '1px solid #d5dbdb',
-		borderRadius: '2px',
-		p: 3,
-		bgcolor: '#ffffff'
-	};
+	const sectionTitleStyle = awsStyles.sectionTitle(theme);
+	const awsPanelStyle = awsStyles.awsPanel(theme);
 
 	return (
 		<Dialog
@@ -134,28 +111,49 @@ const CompanyFormDialog: React.FC<CompanyFormDialogProps> = ({
 			onClose={onClose}
 			maxWidth="md"
 			fullWidth
+			scroll="paper"
 			PaperProps={{
-				sx: { borderRadius: 0, boxShadow: 'none', border: '1px solid #d5dbdb' }
+				sx: {
+					borderRadius: 0,
+					boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+					border: `1px solid ${theme.palette.divider}`
+				}
 			}}
 		>
-			<DialogTitle sx={{ bgcolor: '#232f3e', color: '#ffffff', py: 2 }}>
+			<DialogTitle sx={{
+				bgcolor: theme.palette.secondary.main,
+				color: '#ffffff',
+				py: 2,
+				px: 3,
+				borderBottom: `1px solid ${theme.palette.divider}`
+			}}>
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
-					<Typography variant="h6" sx={{ fontSize: '1.25rem', fontWeight: 700 }}>
-						{company ? 'Edit Company' : 'New Company'}
-					</Typography>
-					<IconButton onClick={onClose} sx={{ color: '#ffffff' }}>
+					<Box>
+						<Typography variant="h6" sx={{ color: '#ffffff', fontWeight: 700, mb: 0.5 }}>
+							{company ? 'Edit Company' : 'Create Company'}
+						</Typography>
+						{company && (
+							<Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+								ID: {company.public_id || company.id}
+							</Typography>
+						)}
+					</Box>
+					<IconButton onClick={onClose} size="small" sx={{ color: '#ffffff', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
 						<CloseIcon />
 					</IconButton>
 				</Stack>
 			</DialogTitle>
 
-			<Box component="form" onSubmit={handleSubmit}>
-				<DialogContent sx={{ p: 0, bgcolor: '#f2f3f3' }}>
-					<Box sx={{ px: 4, py: 4 }}>
-						<Stack spacing={3}>
+			<Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+				<DialogContent sx={{
+					p: 0,
+					bgcolor: theme.palette.background.default,
+				}}>
+					<Box sx={{ p: 4 }}>
+						<Stack spacing={4}>
 							<Paper elevation={0} sx={awsPanelStyle}>
-								<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-									<InfoIcon sx={{ color: '#545b64', fontSize: 20 }} />
+								<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2 }}>
+									<InfoIcon sx={{ color: theme.palette.primary.main, fontSize: 20 }} />
 									<Typography sx={sectionTitleStyle}>Basic Information</Typography>
 								</Stack>
 								<Grid container spacing={3}>
@@ -185,13 +183,23 @@ const CompanyFormDialog: React.FC<CompanyFormDialogProps> = ({
 										</FormControl>
 									</Grid>
 									<Grid size={{ xs: 12, md: 6 }}>
-										<TextField
+										<Autocomplete
 											fullWidth
-											label="Industry"
-											value={formData.industry}
-											onChange={(e) => handleChange('industry', e.target.value)}
 											size="small"
-											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+											options={COMPANY_INDUSTRIES}
+											value={formData.industry || null}
+											onChange={(_event, newValue) => handleChange('industry', newValue)}
+											onInputChange={() => {
+												// Just keep it for filtering for now.
+											}}
+											renderInput={(params) => (
+												<TextField
+													{...params}
+													label="Industry"
+													variant="outlined"
+													sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+												/>
+											)}
 										/>
 									</Grid>
 									<Grid size={{ xs: 12, md: 6 }}>
@@ -211,8 +219,8 @@ const CompanyFormDialog: React.FC<CompanyFormDialogProps> = ({
 							</Paper>
 
 							<Paper elevation={0} sx={awsPanelStyle}>
-								<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-									<EmailIcon sx={{ color: '#545b64', fontSize: 20 }} />
+								<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2 }}>
+									<EmailIcon sx={{ color: theme.palette.primary.main, fontSize: 20 }} />
 									<Typography sx={sectionTitleStyle}>Contact Details</Typography>
 								</Stack>
 								<Grid container spacing={3}>
@@ -251,8 +259,8 @@ const CompanyFormDialog: React.FC<CompanyFormDialogProps> = ({
 							</Paper>
 
 							<Paper elevation={0} sx={awsPanelStyle}>
-								<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-									<LocationIcon sx={{ color: '#545b64', fontSize: 20 }} />
+								<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2 }}>
+									<LocationIcon sx={{ color: theme.palette.primary.main, fontSize: 20 }} />
 									<Typography sx={sectionTitleStyle}>Headquarters Address</Typography>
 								</Stack>
 								<Grid container spacing={3}>
@@ -312,33 +320,41 @@ const CompanyFormDialog: React.FC<CompanyFormDialogProps> = ({
 					</Box>
 				</DialogContent>
 
-				<Divider sx={{ borderColor: '#d5dbdb' }} />
-				<DialogActions sx={{ p: 3, bgcolor: '#ffffff' }}>
+				<Divider sx={{ borderColor: theme.palette.divider }} />
+				<DialogActions sx={{ p: 3, px: 4, bgcolor: theme.palette.background.paper, justifyContent: 'flex-end', gap: 2 }}>
 					<Button
 						onClick={onClose}
-						variant="text"
-						sx={{ color: '#545b64', fontWeight: 700, px: 3, textTransform: 'none' }}
+						variant="outlined"
+						sx={{
+							color: theme.palette.text.primary,
+							borderColor: theme.palette.divider,
+							fontWeight: 700,
+							px: 3,
+							borderRadius: '2px',
+							textTransform: 'none',
+							'&:hover': {
+								borderColor: theme.palette.text.secondary,
+								bgcolor: 'rgba(0,0,0,0.02)'
+							}
+						}}
 					>
 						Cancel
 					</Button>
 					<Button
 						type="submit"
 						variant="contained"
+						color="primary"
 						disabled={loading || !formData.name}
 						sx={{
-							bgcolor: '#ec7211',
-							color: '#ffffff',
 							px: 4,
 							py: 1,
 							fontWeight: 700,
 							borderRadius: '2px',
 							textTransform: 'none',
-							border: '1px solid #ec7211',
-							'&:hover': { bgcolor: '#eb5f07', borderColor: '#eb5f07' },
 							boxShadow: 'none'
 						}}
 					>
-						{loading ? 'Saving...' : (company ? 'Update Company' : 'Save Company')}
+						{loading ? 'Saving...' : (company ? 'Save Changes' : 'Create Company')}
 					</Button>
 				</DialogActions>
 			</Box>
