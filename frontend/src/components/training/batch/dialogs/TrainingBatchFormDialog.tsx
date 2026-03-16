@@ -25,7 +25,6 @@ import {
 	Info as InfoIcon,
 	School as SchoolIcon,
 	Assignment as AssignmentIcon,
-	Category as CategoryIcon,
 	Language as LanguageIcon,
 	People as PeopleIcon,
 	History as HistoryIcon,
@@ -358,10 +357,6 @@ const TrainingBatchFormDialog: React.FC<TrainingBatchFormDialogProps> = ({
 								</Box>
 
 								<FormControl fullWidth size="small">
-									<Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 1 }}>
-										<CategoryIcon sx={{ color: '#879196', fontSize: 14 }} />
-										<Typography variant="caption" color="textSecondary">Target Candidate Category</Typography>
-									</Stack>
 									<Autocomplete
 										multiple
 										options={disabilityTypes}
@@ -371,9 +366,12 @@ const TrainingBatchFormDialog: React.FC<TrainingBatchFormDialogProps> = ({
 										renderInput={(params) => (
 											<TextField
 												{...params}
+												label="Target Candidate Category"
+												required
 												placeholder="Select Disability Types"
 												size="small"
 												variant="outlined"
+												error={!formData.disability_types || formData.disability_types.length === 0}
 												sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
 											/>
 										)}
@@ -595,7 +593,7 @@ const TrainingBatchFormDialog: React.FC<TrainingBatchFormDialogProps> = ({
 				<Button
 					onClick={handleSubmit}
 					variant="contained"
-					disabled={!formData.batch_name}
+					disabled={!formData.batch_name || !formData.disability_types || formData.disability_types.length === 0}
 					sx={{
 						bgcolor: '#ec7211',
 						color: '#ffffff',

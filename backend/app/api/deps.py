@@ -16,12 +16,14 @@ api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
 async def verify_api_key(
-    api_key: Optional[str] = Depends(api_key_header),
+    api_key_query: Optional[str] = Query(None, alias="api_key"),
+    api_key_header: Optional[str] = Depends(api_key_header),
 ) -> str:
     """
     Verify the API key for analytics export.
-    Checks X-API-Key header.
+    Checks api_key query parameter first, then X-API-Key header.
     """
+    api_key = api_key_query or api_key_header
     if api_key is None or api_key != settings.ANALYTICS_SECRET_KEY:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
