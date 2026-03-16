@@ -1,4 +1,5 @@
 import { createTheme } from '@mui/material/styles';
+import './smoothScroll';
 
 const theme = createTheme({
 	palette: {
@@ -99,7 +100,6 @@ const theme = createTheme({
 		MuiCssBaseline: {
 			styleOverrides: {
 				html: {
-					scrollBehavior: 'smooth',
 				},
 				body: {
 					"&, & *": {
