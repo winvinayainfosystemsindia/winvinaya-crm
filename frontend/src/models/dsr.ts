@@ -55,6 +55,9 @@ export interface DSRActivity {
 	status: DSRActivityStatus;
 	assigned_users: DSRUserSnapshot[];
 	is_active: boolean;
+	estimated_hours: number | null;
+	total_actual_hours: number;
+	actual_start_date: string | null;
 	others?: Record<string, any>;
 	created_at: string;
 	updated_at: string;
@@ -125,6 +128,7 @@ export interface DSRActivityCreate {
 	status?: DSRActivityStatus;
 	assigned_user_public_ids?: string[];
 	is_active?: boolean;
+	estimated_hours?: number | null;
 	others?: Record<string, any>;
 }
 

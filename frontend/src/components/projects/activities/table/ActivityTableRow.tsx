@@ -8,6 +8,7 @@ import {
 	useTheme
 } from '@mui/material';
 import { MoreVert as MoreIcon } from '@mui/icons-material';
+import dayjs from 'dayjs';
 import type { DSRActivity } from '../../../../models/dsr';
 import { DSRActivityStatusValues } from '../../../../models/dsr';
 
@@ -65,7 +66,7 @@ const ActivityTableRow: React.FC<ActivityTableRowProps> = ({
 			}
 		}
 
-		return { label: activity.actual_end_date ? `Actual: ${new Date(activity.actual_end_date).toLocaleDateString()}` : 'On track', color: '#545b64', bgcolor: 'transparent' };
+		return { label: activity.actual_end_date ? `Actual: ${dayjs(activity.actual_end_date).format('DD-MMM-YYYY')}` : 'On track', color: '#545b64', bgcolor: 'transparent' };
 	};
 
 	const timeline = getTimelineInfo();
@@ -93,10 +94,22 @@ const ActivityTableRow: React.FC<ActivityTableRowProps> = ({
 					: 'Unassigned'}
 			</TableCell>
 			<TableCell sx={{ py: 2, fontSize: '0.8125rem', color: theme.palette.text.secondary }}>
-				<Typography sx={{ fontSize: '0.8125rem' }}>{new Date(activity.start_date).toLocaleDateString()} - {new Date(activity.end_date).toLocaleDateString()}</Typography>
+				<Typography sx={{ fontSize: '0.75rem', color: theme.palette.text.secondary }}>
+					Est: {dayjs(activity.start_date).format('DD-MMM-YYYY')}
+				</Typography>
+				{activity.actual_start_date && (
+					<Typography sx={{ fontSize: '0.75rem', color: theme.palette.primary.main, fontWeight: 600 }}>
+						Act: {dayjs(activity.actual_start_date).format('DD-MMM-YYYY')}
+					</Typography>
+				)}
+			</TableCell>
+			<TableCell sx={{ py: 2, fontSize: '0.8125rem', color: theme.palette.text.secondary }}>
+				<Typography sx={{ fontSize: '0.75rem', color: theme.palette.text.secondary }}>
+					Est: {dayjs(activity.end_date).format('DD-MMM-YYYY')}
+				</Typography>
 				{activity.actual_end_date && (
-					<Typography sx={{ fontSize: '0.75rem', color: '#037f0c', mt: 0.5, fontWeight: 500 }}>
-						Actual Finish: {new Date(activity.actual_end_date).toLocaleDateString()}
+					<Typography sx={{ fontSize: '0.75rem', color: '#037f0c', fontWeight: 600 }}>
+						Act: {dayjs(activity.actual_end_date).format('DD-MMM-YYYY')}
 					</Typography>
 				)}
 			</TableCell>
@@ -112,6 +125,14 @@ const ActivityTableRow: React.FC<ActivityTableRowProps> = ({
 						{activity.status.charAt(0) + activity.status.slice(1).toLowerCase()}
 					</Typography>
 				</Box>
+			</TableCell>
+			<TableCell sx={{ py: 2 }}>
+				<Typography sx={{ fontSize: '0.75rem', color: theme.palette.text.secondary }}>
+					Est: {activity.estimated_hours ? `${activity.estimated_hours}h` : 'N/A'}
+				</Typography>
+				<Typography sx={{ fontSize: '0.75rem', color: theme.palette.text.primary, fontWeight: 700 }}>
+					Act: {activity.total_actual_hours || 0}h
+				</Typography>
 			</TableCell>
 			<TableCell sx={{ py: 2 }}>
 				<Box sx={{

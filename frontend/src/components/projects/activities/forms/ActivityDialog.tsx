@@ -49,6 +49,8 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 	const [endDate, setEndDate] = useState('');
 	const [actualEndDate, setActualEndDate] = useState<string>('');
 	const [status, setStatus] = useState<DSRActivityStatus>(DSRActivityStatusValues.PLANNED);
+	const [estimatedHours, setEstimatedHours] = useState<string>('');
+	const [totalActualHours, setTotalActualHours] = useState<number>(0);
 	const [assignedUserPublicIds, setAssignedUserPublicIds] = useState<string[]>([]);
 	const [users, setUsers] = useState<User[]>([]);
 	const [submitting, setSubmitting] = useState(false);
@@ -75,6 +77,8 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 				setEndDate(activity.end_date.split('T')[0]);
 				setActualEndDate(activity.actual_end_date ? activity.actual_end_date.split('T')[0] : '');
 				setStatus(activity.status);
+				setEstimatedHours(activity.estimated_hours?.toString() || '');
+				setTotalActualHours(activity.total_actual_hours || 0);
 				setAssignedUserPublicIds(activity.assigned_users?.map(u => u.public_id) || []);
 			} else {
 				setName('');
@@ -83,6 +87,8 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 				setEndDate(new Date().toISOString().split('T')[0]);
 				setActualEndDate('');
 				setStatus(DSRActivityStatusValues.PLANNED);
+				setEstimatedHours('');
+				setTotalActualHours(0);
 				setAssignedUserPublicIds([]);
 			}
 		}
@@ -104,6 +110,7 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 				end_date: endDate,
 				actual_end_date: actualEndDate || null,
 				status,
+				estimated_hours: estimatedHours ? parseFloat(estimatedHours) : null,
 				assigned_user_public_ids: assignedUserPublicIds
 			};
 
@@ -261,6 +268,26 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 									/>
 								))
 							}
+						/>
+					</Box>
+
+					<Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+						<TextField
+							label="Estimated Effort (Hours)"
+							type="number"
+							fullWidth
+							value={estimatedHours}
+							onChange={(e) => setEstimatedHours(e.target.value)}
+							disabled={submitting}
+							InputProps={{ inputProps: { min: 0, step: 0.5 } }}
+						/>
+						<TextField
+							label="Total Actual Hours"
+							type="number"
+							fullWidth
+							value={totalActualHours}
+							disabled
+							helperText="Calculated from DSR submissions"
 						/>
 					</Box>
 

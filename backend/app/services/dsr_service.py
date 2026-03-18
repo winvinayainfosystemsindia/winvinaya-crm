@@ -281,6 +281,28 @@ class DSRService:
             "admin_notes": "Auto-approved upon submission"
         })
 
+        # Update Activity Actuals
+        if not entry.is_leave and entry.items:
+            for item in entry.items:
+                a_uid = item.get("activity_public_id")
+                if a_uid:
+                    activity = await self.activity_repo.get_by_public_id(a_uid)
+                    if activity:
+                        update_act = {}
+                        # Set actual start date if not set or if this report is earlier
+                        if not activity.actual_start_date or entry.report_date < activity.actual_start_date:
+                            update_act["actual_start_date"] = entry.report_date
+                        
+                        # Increment total actual hours
+                        update_act["total_actual_hours"] = activity.total_actual_hours + (item.get("hours") or 0.0)
+                        
+                        if update_act:
+                            # We update the activity object directly and let the session handle it
+                            for k, v in update_act.items():
+                                setattr(activity, k, v)
+        
+        await self.db.flush()
+
         # Send Email Alert
         try:
             from app.utils.email import send_dsr_submission_email

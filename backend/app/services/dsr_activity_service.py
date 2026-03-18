@@ -75,7 +75,9 @@ class DSRActivityService:
             "status": data.status,
             "assigned_users": assigned_users,
             "is_active": data.is_active,
+            "estimated_hours": data.estimated_hours,
             "others": data.others,
+            "actual_end_date": date.today() if data.status == DSRActivityStatus.COMPLETED else None
         }
         return await self.repo.create(activity_data)
 
@@ -110,6 +112,12 @@ class DSRActivityService:
         # Set other fields
         for key, value in update_data.items():
             setattr(activity, key, value)
+            
+        # Automated actual_end_date tracking
+        if activity.status == DSRActivityStatus.COMPLETED and not activity.actual_end_date:
+            activity.actual_end_date = date.today()
+        elif activity.status != DSRActivityStatus.COMPLETED:
+            activity.actual_end_date = None
 
         await self.db.flush()
         return await self._get_or_404(public_id)
@@ -229,6 +237,9 @@ class DSRActivityService:
         if missing := required - set(headers):
             raise HTTPException(status_code=422, detail=f"Excel missing required columns: {missing}")
 
+        # Optional columns
+        has_effort = "estimated_hours" in headers
+
         result = DSRActivityImportResult(total_rows=0, created=0, skipped=0, errors=[])
 
         for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
@@ -290,6 +301,7 @@ class DSRActivityService:
                 "end_date": end_date,
                 "status": act_status,
                 "is_active": True,
+                "estimated_hours": float(row_data.get("estimated_hours")) if has_effort and row_data.get("estimated_hours") is not None else None,
                 "others": None,
             })
             result.created += 1
@@ -307,7 +319,7 @@ class DSRActivityService:
         ws = wb.active
         ws.title = "Activity Import Template"
 
-        headers = ["project_name", "name", "description", "start_date", "end_date", "status"]
+        headers = ["project_name", "name", "description", "start_date", "end_date", "estimated_hours", "status"]
         ws.append(headers)
 
         # Add a sample row
@@ -317,6 +329,7 @@ class DSRActivityService:
             "Create mockups for main dashboard", 
             "2024-01-01", 
             "2024-01-15", 
+            40,
             "planned"
         ])
 
@@ -344,7 +357,7 @@ class DSRActivityService:
         ws = wb.active
         ws.title = f"Activities - {project.name}"
 
-        headers = ["project_name", "name", "description", "start_date", "end_date", "status"]
+        headers = ["project_name", "name", "description", "start_date", "end_date", "estimated_hours", "actual_start_date", "actual_end_date", "total_actual_hours", "status"]
         ws.append(headers)
 
         for act in activities:
@@ -354,6 +367,10 @@ class DSRActivityService:
                 act.description or "",
                 act.start_date.isoformat(),
                 act.end_date.isoformat(),
+                act.estimated_hours,
+                act.actual_start_date.isoformat() if act.actual_start_date else "",
+                act.actual_end_date.isoformat() if act.actual_end_date else "",
+                act.total_actual_hours,
                 act.status.value
             ])
 

@@ -5,7 +5,7 @@ import uuid
 import enum
 from datetime import date
 from typing import TYPE_CHECKING
-from sqlalchemy import String, Text, Boolean, Integer, Date, ForeignKey, Enum, Uuid
+from sqlalchemy import String, Text, Boolean, Integer, Date, ForeignKey, Enum, Uuid, Float
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
@@ -81,6 +81,22 @@ class DSRActivity(BaseModel):
     actual_end_date: Mapped[date | None] = mapped_column(
         Date,
         nullable=True,
+    )
+
+    actual_start_date: Mapped[date | None] = mapped_column(
+        Date,
+        nullable=True,
+    )
+
+    estimated_hours: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+    )
+
+    total_actual_hours: Mapped[float] = mapped_column(
+        Float,
+        default=0.0,
+        nullable=False,
     )
 
     status: Mapped[DSRActivityStatus] = mapped_column(

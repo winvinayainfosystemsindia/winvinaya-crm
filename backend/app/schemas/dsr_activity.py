@@ -17,6 +17,7 @@ class DSRActivityCreate(BaseModel):
     status: DSRActivityStatus = Field(default=DSRActivityStatus.PLANNED)
     assigned_user_public_ids: list[uuid.UUID] = Field(default_factory=list, description="Public IDs of the assigned users")
     is_active: bool = Field(default=True)
+    estimated_hours: Optional[float] = Field(default=None, description="Planned effort in hours")
     others: Optional[dict] = Field(default=None, description="Extensible metadata")
 
     @model_validator(mode="after")
@@ -35,6 +36,7 @@ class DSRActivityUpdate(BaseModel):
     status: Optional[DSRActivityStatus] = Field(default=None)
     assigned_user_public_ids: Optional[list[uuid.UUID]] = Field(default=None)
     is_active: Optional[bool] = Field(default=None)
+    estimated_hours: Optional[float] = Field(default=None)
     others: Optional[dict] = Field(default=None)
 
     @model_validator(mode="after")
@@ -77,6 +79,9 @@ class DSRActivityResponse(BaseModel):
     status: DSRActivityStatus
     assigned_users: list[DSRUserSnapshot] = []
     is_active: bool
+    estimated_hours: Optional[float] = None
+    total_actual_hours: float = 0.0
+    actual_start_date: Optional[date] = None
     others: Optional[dict] = None
     created_at: datetime
     updated_at: datetime
