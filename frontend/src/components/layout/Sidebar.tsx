@@ -50,7 +50,9 @@ const Sidebar: React.FC = () => {
 			if (location.pathname.startsWith(path + '/')) {
 				const subPath = location.pathname.substring(path.length);
 				// Don't highlight "Projects" if we are on these specific sibling routes
-				if (subPath.startsWith('/activities') || subPath.startsWith('/dsr')) {
+				if (subPath.startsWith('/activities') ||
+					subPath.startsWith('/dsr') ||
+					subPath.startsWith('/timesheet')) {
 					return false;
 				}
 				return true;
@@ -241,7 +243,7 @@ const Sidebar: React.FC = () => {
 			}}
 		>
 			<Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-				<Box 
+				<Box
 					sx={{
 						flexGrow: 1,
 						overflowY: 'auto',

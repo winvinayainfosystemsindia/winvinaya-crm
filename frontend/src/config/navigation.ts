@@ -41,7 +41,6 @@ export const topNavigation: NavigationItem[] = [
 			{ label: 'Projects', path: '/projects' },
 			{ label: 'Activities', path: '/projects/activities' },
 			{ label: 'Timesheet', path: '/projects/timesheet' },
-			{ label: 'Holidays', path: '/projects/holidays', roles: ['admin'] },
 		],
 	},
 	{
