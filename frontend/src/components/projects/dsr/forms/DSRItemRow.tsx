@@ -27,6 +27,7 @@ interface DSRItemRowProps {
 	onRemoveRow: (index: number) => void;
 	isDeleteDisabled: boolean;
 	readOnly?: boolean;
+	reportDate: string;
 }
 
 const OTHER_ID = '__other__';
@@ -46,11 +47,31 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 	onRowChange,
 	onRemoveRow,
 	isDeleteDisabled,
-	readOnly = false
+	readOnly = false,
+	reportDate
 }) => {
 	const activityOptions = React.useMemo(() => {
-		return [...activities, OTHER_ACTIVITY as DSRActivity];
-	}, [activities]);
+		const filtered = activities.filter(a => {
+			// Always keep the currently selected activity to avoid UI break
+			if (a.public_id === item.activity_public_id) return true;
+
+			// Exclude inactive or cancelled
+			if (!a.is_active || a.status === 'cancelled') return false;
+
+			// Exclude future activities
+			if (a.start_date > reportDate) return false;
+
+			// Handle completed activities
+			if (a.status === 'completed') {
+				const endDate = a.actual_end_date || a.end_date;
+				// If report date is after completion date, hide it
+				if (reportDate > endDate) return false;
+			}
+
+			return true;
+		});
+		return [...filtered, OTHER_ACTIVITY as DSRActivity];
+	}, [activities, reportDate, item.activity_public_id]);
 
 	const selectedProject = React.useMemo(() => {
 		if (!item.project_public_id) return null;

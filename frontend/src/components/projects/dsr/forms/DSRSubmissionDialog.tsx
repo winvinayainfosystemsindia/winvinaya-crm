@@ -150,6 +150,7 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 										onRemoveRow={removeRow}
 										showTitle={false}
 										readOnly={readOnly}
+										reportDate={reportDate}
 									/>
 								</Box>
 							</Box>

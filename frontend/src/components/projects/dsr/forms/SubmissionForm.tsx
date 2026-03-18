@@ -29,6 +29,7 @@ interface SubmissionFormProps {
 	onRemoveRow: (index: number) => void;
 	showTitle?: boolean;
 	readOnly?: boolean;
+	reportDate: string;
 }
 
 const SubmissionForm: React.FC<SubmissionFormProps> = ({
@@ -41,7 +42,8 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
 	onAddRow,
 	onRemoveRow,
 	showTitle = true,
-	readOnly = false
+	readOnly = false,
+	reportDate
 }) => {
 	return (
 		<Box>
@@ -80,6 +82,7 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
 								onRemoveRow={onRemoveRow}
 								isDeleteDisabled={items.length === 1}
 								readOnly={readOnly}
+								reportDate={reportDate}
 							/>
 						))}
 						{!readOnly && (() => {
