@@ -383,7 +383,7 @@ def get_dsr_submission_template(user_name: str, report_date: str, items: List[di
 
 async def send_dsr_submission_email(user_name: str, report_date: str, items: List[dict]):
     """Sends DSR submission notification to info@winvinaya.com"""
-    recipient = "dharanidaran.a@winvinaya.com"
+    recipient = "timesheet.submission@winvinaya.com"
     subject = f"DSR Submitted: {user_name} - {report_date}"
     html_content = get_dsr_submission_template(user_name, report_date, items)
     await send_email(recipient, subject, html_content)
