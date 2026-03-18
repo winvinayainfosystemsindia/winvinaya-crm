@@ -13,14 +13,15 @@ const DSRCalendarView: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const { calendarEntries: entries, calendarLeaves, permissionRequests } = useAppSelector((state) => state.dsr);
 	const { holidays } = useAppSelector((state) => state.holidays);
+	const [viewDate, setViewDate] = React.useState(dayjs());
 
 	// Fetch data for the current view
 	React.useEffect(() => {
-		const start = dayjs().startOf('month').subtract(7, 'day').format('YYYY-MM-DD');
-		const end = dayjs().endOf('month').add(7, 'day').format('YYYY-MM-DD');
+		const start = viewDate.startOf('month').subtract(7, 'day').format('YYYY-MM-DD');
+		const end = viewDate.endOf('month').add(7, 'day').format('YYYY-MM-DD');
 		dispatch(fetchCalendarEntries({ date_from: start, date_to: end }));
 		dispatch(fetchHolidays({ date_from: start, date_to: end }));
-	}, [dispatch]);
+	}, [dispatch, viewDate]);
 
 	const dateStatuses = useMemo(() => {
 		const statusMap: Record<string, string> = {};
@@ -36,10 +37,24 @@ const DSRCalendarView: React.FC = () => {
 			}
 		});
 
-		// 1b. Mark company holidays
+		// 1b. Mark company holidays from database
 		holidays.forEach(holiday => {
 			statusMap[holiday.holiday_date] = 'holiday';
 		});
+
+		// 1c. Mark 2nd Saturdays as holidays
+		const startOfMonth = viewDate.startOf('month');
+		const daysInMonth = viewDate.daysInMonth();
+		let saturdayCount = 0;
+		for (let i = 1; i <= daysInMonth; i++) {
+			const d = startOfMonth.date(i);
+			if (d.day() === 6) { // Saturday
+				saturdayCount++;
+				if (saturdayCount === 2) {
+					statusMap[d.format('YYYY-MM-DD')] = 'holiday';
+				}
+			}
+		}
 
 		// 2. Mark entries (overwrites leave if specific DSR exists, showing actual status)
 		entries.forEach(entry => {
@@ -51,8 +66,10 @@ const DSRCalendarView: React.FC = () => {
 		});
 
 		// 3. Mark missed dates (last 30 days) and granted permissions
-		for (let i = 1; i <= 30; i++) {
-			const d = dayjs().subtract(i, 'day');
+		// Note: We check if the date is in the past relative to NOW
+		const today = dayjs();
+		for (let i = 1; i <= 60; i++) { // Check a wider range for historical views
+			const d = today.subtract(i, 'day');
 			const dateStr = d.format('YYYY-MM-DD');
 
 			if (statusMap[dateStr]) continue;
@@ -64,12 +81,43 @@ const DSRCalendarView: React.FC = () => {
 			if (hasPermission) {
 				statusMap[dateStr] = 'granted';
 			} else if (d.day() !== 0) { // Not Sunday
-				statusMap[dateStr] = 'missed';
+				// Also check if it's the 2nd Saturday of its month
+				const isSecondSaturday = d.day() === 6 && d.date() >= 8 && d.date() <= 14;
+				if (!isSecondSaturday) {
+					statusMap[dateStr] = 'missed';
+				}
 			}
 		}
 
 		return statusMap;
-	}, [entries, calendarLeaves, permissionRequests, holidays]);
+	}, [entries, calendarLeaves, permissionRequests, holidays, viewDate]);
+
+	const monthlyHolidays = useMemo(() => {
+		const list: { name: string, date: string }[] = [];
+		
+		// 1. Add DB holidays
+		holidays.forEach(h => {
+			if (dayjs(h.holiday_date).isSame(viewDate, 'month')) {
+				list.push({ name: h.holiday_name, date: h.holiday_date });
+			}
+		});
+
+		// 2. Add 2nd Saturday
+		const startOfMonth = viewDate.startOf('month');
+		const daysInMonth = viewDate.daysInMonth();
+		let saturdayCount = 0;
+		for (let i = 1; i <= daysInMonth; i++) {
+			const d = startOfMonth.date(i);
+			if (d.day() === 6) {
+				saturdayCount++;
+				if (saturdayCount === 2) {
+					list.push({ name: 'Second Saturday', date: d.format('YYYY-MM-DD') });
+				}
+			}
+		}
+
+		return list.sort((a, b) => a.date.localeCompare(b.date));
+	}, [holidays, viewDate]);
 
 	return (
 		<Paper variant="outlined" sx={{ p: 0, borderRadius: '8px', bgcolor: 'white', height: '100%', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
@@ -81,7 +129,8 @@ const DSRCalendarView: React.FC = () => {
 			<LocalizationProvider dateAdapter={AdapterDayjs}>
 				<StaticDatePicker
 					displayStaticWrapperAs="desktop"
-					value={dayjs()}
+					value={viewDate}
+					onMonthChange={(newMonth) => setViewDate(newMonth)}
 					readOnly
 					slots={{
 						day: (props) => {
@@ -116,6 +165,30 @@ const DSRCalendarView: React.FC = () => {
 				/>
 			</LocalizationProvider>
 
+			<Box sx={{ p: 2, borderTop: '1px solid #f0f0f0', bgcolor: '#ffffff' }}>
+				<Typography variant="caption" sx={{ color: '#4a5568', fontWeight: 600, display: 'block', mb: 1, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+					Holidays for {viewDate.format('MMMM YYYY')}
+				</Typography>
+				{monthlyHolidays.length > 0 ? (
+					<Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+						{monthlyHolidays.map((holiday, idx) => (
+							<Box key={idx} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+								<Typography sx={{ fontSize: '0.75rem', color: '#2d3748', fontWeight: 500 }}>
+									{holiday.name}
+								</Typography>
+								<Typography sx={{ fontSize: '0.7rem', color: '#718096' }}>
+									{dayjs(holiday.date).format('DD MMM')}
+								</Typography>
+							</Box>
+						))}
+					</Box>
+				) : (
+					<Typography sx={{ fontSize: '0.75rem', color: '#a0aec0', fontStyle: 'italic' }}>
+						No holidays listed for this month.
+					</Typography>
+				)}
+			</Box>
+
 			<Box sx={{ p: 2.5, borderTop: '1px solid #f0f0f0', bgcolor: '#fafafa' }}>
 				<Typography variant="caption" sx={{ color: '#4a5568', fontWeight: 600, display: 'block', mb: 1.5, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
 					Status Legend
@@ -131,7 +204,7 @@ const DSRCalendarView: React.FC = () => {
 					].map((item) => (
 						<Box key={item.label} sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
 							<Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: item.dot, boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)' }} />
-							<Typography sx={{ fontSize: '0.3rem', color: '#4a5568', fontWeight: 400 }}>
+							<Typography sx={{ fontSize: '0.75rem', color: '#4a5568', fontWeight: 400 }}>
 								{item.label}
 							</Typography>
 						</Box>

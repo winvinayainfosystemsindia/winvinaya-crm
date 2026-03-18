@@ -61,6 +61,17 @@ export const importHolidays = createAsyncThunk(
 	}
 );
 
+export const updateHoliday = createAsyncThunk(
+	'holiday/updateHoliday',
+	async ({ public_id, data }: { public_id: string; data: { holiday_date?: string; holiday_name?: string } }, { rejectWithValue }) => {
+		try {
+			return await holidayService.updateHoliday(public_id, data);
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.detail || 'Failed to update holiday');
+		}
+	}
+);
+
 const holidaySlice = createSlice({
 	name: 'holiday',
 	initialState,
@@ -85,13 +96,27 @@ const holidaySlice = createSlice({
 				state.error = action.payload;
 			})
 			.addCase(createHoliday.fulfilled, (state, action: PayloadAction<CompanyHoliday>) => {
-				state.holidays.push(action.payload);
+				// If it was restored (existing ID), replace or just refresh. 
+				// For simplicity, if it's already in state (restored), update it.
+				const index = state.holidays.findIndex(h => h.public_id === action.payload.public_id);
+				if (index !== -1) {
+					state.holidays[index] = action.payload;
+				} else {
+					state.holidays.push(action.payload);
+					state.totalHolidays += 1;
+				}
 				state.holidays.sort((a, b) => a.holiday_date.localeCompare(b.holiday_date));
-				state.totalHolidays += 1;
 			})
 			.addCase(deleteHoliday.fulfilled, (state, action: PayloadAction<string>) => {
 				state.holidays = state.holidays.filter((h) => h.public_id !== action.payload);
 				state.totalHolidays -= 1;
+			})
+			.addCase(updateHoliday.fulfilled, (state, action: PayloadAction<CompanyHoliday>) => {
+				const index = state.holidays.findIndex(h => h.public_id === action.payload.public_id);
+				if (index !== -1) {
+					state.holidays[index] = action.payload;
+					state.holidays.sort((a, b) => a.holiday_date.localeCompare(b.holiday_date));
+				}
 			});
 	},
 });

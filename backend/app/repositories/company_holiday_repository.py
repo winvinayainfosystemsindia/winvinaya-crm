@@ -22,12 +22,12 @@ class CompanyHolidayRepository(BaseRepository[CompanyHoliday]):
         )
         return result.scalar_one_or_none()
 
-    async def get_by_date(self, holiday_date: date) -> Optional[CompanyHoliday]:
-        result = await self.db.execute(
-            select(CompanyHoliday)
-            .where(CompanyHoliday.holiday_date == holiday_date)
-            .where(CompanyHoliday.is_deleted == False)
-        )
+    async def get_by_date(self, holiday_date: date, include_deleted: bool = False) -> Optional[CompanyHoliday]:
+        query = select(CompanyHoliday).where(CompanyHoliday.holiday_date == holiday_date)
+        if not include_deleted:
+            query = query.where(CompanyHoliday.is_deleted == False)
+        
+        result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
     async def get_all_holidays(

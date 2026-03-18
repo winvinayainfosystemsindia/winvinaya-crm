@@ -9,6 +9,7 @@ from app.api.deps import get_db, get_current_active_user
 from app.models.user import User
 from app.schemas.company_holiday import (
     CompanyHolidayCreate,
+    CompanyHolidayUpdate,
     CompanyHolidayResponse,
     CompanyHolidayListResponse,
 )
@@ -53,6 +54,18 @@ async def delete_holiday(
     service = CompanyHolidayService(db)
     success = await service.delete_holiday(public_id, current_user)
     return {"success": success}
+
+
+@router.put("/{public_id}", response_model=CompanyHolidayResponse)
+async def update_holiday(
+    public_id: UUID,
+    data: CompanyHolidayUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Update a holiday (Admin/Manager only)"""
+    service = CompanyHolidayService(db)
+    return await service.update_holiday(public_id, data, current_user)
 
 
 @router.post("/import")

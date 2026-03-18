@@ -34,6 +34,11 @@ const holidayService = {
 		return response.data;
 	},
 
+	updateHoliday: async (public_id: string, data: { holiday_date?: string; holiday_name?: string }) => {
+		const response = await api.put<CompanyHoliday>(`/dsr/holidays/${public_id}`, data);
+		return response.data;
+	},
+
 	importHolidays: async (file: File) => {
 		const formData = new FormData();
 		formData.append('file', file);

@@ -19,24 +19,34 @@ import {
 	DialogActions,
 	TextField
 } from '@mui/material';
-import { Delete as DeleteIcon, Add as AddIcon, CloudUpload as UploadIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon, Add as AddIcon, CloudUpload as UploadIcon, Edit as EditIcon } from '@mui/icons-material';
 import CustomTablePagination from '../../../common/CustomTablePagination';
 import DSRAdminTableHeader from './DSRAdminTableHeader';
 import ExcelImportModal from '../../../common/ExcelImportModal';
+import ConfirmDialog from '../../../common/ConfirmDialog';
 import dayjs from 'dayjs';
 import { useHolidayAdmin } from '../hooks/useHolidayAdmin';
-import { useAppDispatch } from '../../../../store/hooks';
-import { createHoliday, importHolidays } from '../../../../store/slices/holidaySlice';
+import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
+import { createHoliday, importHolidays, deleteHoliday, updateHoliday } from '../../../../store/slices/holidaySlice';
 import useToast from '../../../../hooks/useToast';
+import type { CompanyHoliday } from '../../../../services/holidayService';
 
 const HolidayTable: React.FC = () => {
 	const admin = useHolidayAdmin();
 	const dispatch = useAppDispatch();
 	const toast = useToast();
+	const { user } = useAppSelector((state) => state.auth);
+	const isAdmin = user?.role === 'admin';
 
 	const [openAdd, setOpenAdd] = useState(false);
 	const [openImport, setOpenImport] = useState(false);
+	const [openEdit, setOpenEdit] = useState(false);
+	const [openConfirmDelete, setOpenConfirmDelete] = useState(false);
+	
 	const [newHoliday, setNewHoliday] = useState({ holiday_date: '', holiday_name: '' });
+	const [editingHoliday, setEditingHoliday] = useState<CompanyHoliday | null>(null);
+	const [holidayToDelete, setHolidayToDelete] = useState<string | null>(null);
+	const [deleting, setDeleting] = useState(false);
 
 	const handleAddHoliday = async () => {
 		if (newHoliday.holiday_date && newHoliday.holiday_name) {
@@ -48,6 +58,43 @@ const HolidayTable: React.FC = () => {
 				admin.handleRefresh();
 			} catch (err: any) {
 				toast.error(err || 'Failed to add holiday');
+			}
+		}
+	};
+
+	const handleEditHoliday = async () => {
+		if (editingHoliday && editingHoliday.holiday_date && editingHoliday.holiday_name) {
+			try {
+				await dispatch(updateHoliday({
+					public_id: editingHoliday.public_id,
+					data: {
+						holiday_date: editingHoliday.holiday_date,
+						holiday_name: editingHoliday.holiday_name
+					}
+				})).unwrap();
+				setOpenEdit(false);
+				setEditingHoliday(null);
+				toast.success('Holiday updated successfully');
+				admin.handleRefresh();
+			} catch (err: any) {
+				toast.error(err || 'Failed to update holiday');
+			}
+		}
+	};
+
+	const handleDeleteConfirm = async () => {
+		if (holidayToDelete) {
+			setDeleting(true);
+			try {
+				await dispatch(deleteHoliday(holidayToDelete)).unwrap();
+				toast.success('Holiday deleted successfully');
+				setOpenConfirmDelete(false);
+				setHolidayToDelete(null);
+				admin.handleRefresh();
+			} catch (err: any) {
+				toast.error(err || 'Failed to delete holiday');
+			} finally {
+				setDeleting(false);
 			}
 		}
 	};
@@ -154,15 +201,34 @@ const HolidayTable: React.FC = () => {
 										<TableCell sx={{ fontWeight: 500 }}>{holiday.holiday_name}</TableCell>
 										<TableCell>{dayjs(holiday.holiday_date).format('dddd')}</TableCell>
 										<TableCell align="right">
-											<Tooltip title="Delete Holiday">
-												<IconButton
-													size="small"
-													onClick={() => admin.handleDelete(holiday.public_id)}
-													sx={{ color: '#d13212' }}
-												>
-													<DeleteIcon fontSize="small" />
-												</IconButton>
-											</Tooltip>
+											{isAdmin && (
+												<Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
+													<Tooltip title="Edit Holiday">
+														<IconButton
+															size="small"
+															onClick={() => {
+																setEditingHoliday(holiday);
+																setOpenEdit(true);
+															}}
+															sx={{ color: '#232f3e' }}
+														>
+															<EditIcon fontSize="small" />
+														</IconButton>
+													</Tooltip>
+													<Tooltip title="Delete Holiday">
+														<IconButton
+															size="small"
+															onClick={() => {
+																setHolidayToDelete(holiday.public_id);
+																setOpenConfirmDelete(true);
+															}}
+															sx={{ color: '#d13212' }}
+														>
+															<DeleteIcon fontSize="small" />
+														</IconButton>
+													</Tooltip>
+												</Box>
+											)}
 										</TableCell>
 									</TableRow>
 								))
@@ -192,6 +258,20 @@ const HolidayTable: React.FC = () => {
 				onSuccess={() => admin.handleRefresh()}
 			/>
 
+			<ConfirmDialog
+				open={openConfirmDelete}
+				title="Delete Holiday"
+				message="Are you sure you want to delete this holiday? This action cannot be undone."
+				onClose={() => {
+					setOpenConfirmDelete(false);
+					setHolidayToDelete(null);
+				}}
+				onConfirm={handleDeleteConfirm}
+				confirmText="Delete"
+				severity="error"
+				loading={deleting}
+			/>
+
 			{/* Add Holiday Dialog */}
 			<Dialog open={openAdd} onClose={() => setOpenAdd(false)} maxWidth="xs" fullWidth>
 				<DialogTitle sx={{ fontWeight: 700 }}>Add New Holiday</DialogTitle>
@@ -218,6 +298,36 @@ const HolidayTable: React.FC = () => {
 					<Button onClick={() => setOpenAdd(false)} color="inherit" sx={{ textTransform: 'none' }}>Cancel</Button>
 					<Button onClick={handleAddHoliday} variant="contained" disabled={!newHoliday.holiday_date || !newHoliday.holiday_name} sx={{ textTransform: 'none', bgcolor: '#ec7211', '&:hover': { bgcolor: '#eb5f07' } }}>
 						Save Holiday
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Edit Holiday Dialog */}
+			<Dialog open={openEdit} onClose={() => setOpenEdit(false)} maxWidth="xs" fullWidth>
+				<DialogTitle sx={{ fontWeight: 700 }}>Edit Holiday</DialogTitle>
+				<DialogContent>
+					<Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+						<TextField
+							label="Holiday Date"
+							type="date"
+							fullWidth
+							InputLabelProps={{ shrink: true }}
+							value={editingHoliday?.holiday_date || ''}
+							onChange={(e) => setEditingHoliday(editingHoliday ? { ...editingHoliday, holiday_date: e.target.value } : null)}
+						/>
+						<TextField
+							label="Holiday Name"
+							fullWidth
+							placeholder="e.g. Independence Day"
+							value={editingHoliday?.holiday_name || ''}
+							onChange={(e) => setEditingHoliday(editingHoliday ? { ...editingHoliday, holiday_name: e.target.value } : null)}
+						/>
+					</Box>
+				</DialogContent>
+				<DialogActions sx={{ px: 3, pb: 2 }}>
+					<Button onClick={() => setOpenEdit(false)} color="inherit" sx={{ textTransform: 'none' }}>Cancel</Button>
+					<Button onClick={handleEditHoliday} variant="contained" disabled={!editingHoliday?.holiday_date || !editingHoliday?.holiday_name} sx={{ textTransform: 'none', bgcolor: '#ec7211', '&:hover': { bgcolor: '#eb5f07' } }}>
+						Update Holiday
 					</Button>
 				</DialogActions>
 			</Dialog>
