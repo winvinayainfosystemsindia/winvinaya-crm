@@ -125,7 +125,17 @@ class CompanyHolidayService:
             )
 
         content = await file.read()
-        decoded = content.decode("utf-8")
+        
+        # Robust decoding strategy
+        try:
+            decoded = content.decode("utf-8")
+        except UnicodeDecodeError:
+            try:
+                decoded = content.decode("utf-8-sig")
+            except UnicodeDecodeError:
+                # Fallback to cp1252 which is common for Excel-exported CSVs on Windows
+                decoded = content.decode("cp1252", errors="replace")
+        
         reader = list(csv.DictReader(io.StringIO(decoded)))
 
         total_rows = len(reader)
@@ -157,10 +167,18 @@ class CompanyHolidayService:
 
                 h_name = row["name"].strip()
 
-                existing = await self.repo.get_by_date(h_date)
+                existing = await self.repo.get_by_date(h_date, include_deleted=True)
                 if existing:
-                    # Update existing holiday
-                    await self.repo.update(existing.id, {"holiday_name": h_name})
+                    if existing.is_deleted:
+                        # Restore deleted holiday
+                        existing.is_deleted = False
+                        existing.deleted_at = None
+                        existing.holiday_name = h_name
+                        existing.created_by_id = current_user.id
+                    else:
+                        # Update existing holiday
+                        existing.holiday_name = h_name
+                    await self.db.flush()
                 else:
                     # Create new holiday
                     await self.repo.create({
