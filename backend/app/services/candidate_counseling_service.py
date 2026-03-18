@@ -21,9 +21,17 @@ class CandidateCounselingService:
     async def get_counseling(self, candidate_public_id: UUID) -> Optional[CandidateCounseling]:
         """Get counseling record for a candidate"""
         candidate = await self.candidate_repo.get_by_public_id_with_details(candidate_public_id)
-        if not candidate:
+        if not candidate or not candidate.counseling:
             return None
-        return candidate.counseling
+        
+        counseling = candidate.counseling
+        # Populate suitable_job_roles from others
+        if counseling.others and "suitable_job_roles" in counseling.others:
+            counseling.suitable_job_roles = counseling.others["suitable_job_roles"]
+        else:
+            counseling.suitable_job_roles = []
+            
+        return counseling
     
     
     async def create_counseling(
@@ -47,6 +55,14 @@ class CandidateCounselingService:
         
         # Create counseling
         counseling_data = counseling_in.model_dump()
+        
+        # Move suitable_job_roles to others
+        if "suitable_job_roles" in counseling_data:
+            roles = counseling_data.pop("suitable_job_roles")
+            others = counseling_data.get("others") or {}
+            others["suitable_job_roles"] = roles
+            counseling_data["others"] = others
+            
         counseling_data["candidate_id"] = candidate.id
         
         # Set counselor_id if provided (from current user)
@@ -76,6 +92,14 @@ class CandidateCounselingService:
         # Update counseling
         update_data = counseling_in.model_dump(exclude_unset=True)
         
+        # Move suitable_job_roles to others
+        if "suitable_job_roles" in update_data:
+            roles = update_data.pop("suitable_job_roles")
+            # Get existing others to merge
+            others = update_data.get("others", candidate.counseling.others or {})
+            others["suitable_job_roles"] = roles
+            update_data["others"] = others
+        
         # Protect original counselor info: 
         # Only set counselor_id and counseling_date if they don't already exist
         if counselor_id and (candidate.counseling.counselor_id is None):
@@ -89,7 +113,13 @@ class CandidateCounselingService:
              from datetime import datetime
              update_data["counseling_date"] = datetime.now()
         
-        return await self.repository.update(candidate.counseling.id, update_data)
+        counseling = await self.repository.update(candidate.counseling.id, update_data)
+        
+        # Populate for response
+        if counseling.others and "suitable_job_roles" in counseling.others:
+            counseling.suitable_job_roles = counseling.others["suitable_job_roles"]
+            
+        return counseling
     
     async def delete_counseling(self, candidate_public_id: UUID) -> bool:
         """Delete counseling record"""

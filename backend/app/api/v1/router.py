@@ -37,6 +37,7 @@ from app.api.v1.endpoints import (
     company_holidays,
     notifications,
     whatsapp_webhook,
+    x0pa,
 )
 
 
@@ -85,3 +86,6 @@ router.include_router(company_holidays.router, prefix="/dsr/holidays", tags=["Co
 
 # WhatsApp Integration
 router.include_router(whatsapp_webhook.router)
+
+# X0PA Integration
+router.include_router(x0pa.router)

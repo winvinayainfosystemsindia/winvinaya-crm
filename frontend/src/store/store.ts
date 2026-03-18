@@ -21,6 +21,7 @@ import dsrReducer from './slices/dsrSlice';
 import dsrActivityTypeReducer from './slices/dsrActivityTypeSlice';
 import holidayReducer from './slices/holidaySlice';
 import healthReducer from './slices/healthSlice';
+import x0paReducer from './slices/x0paSlice';
 
 export const store = configureStore({
 	reducer: {
@@ -47,6 +48,7 @@ export const store = configureStore({
 		holidays: holidayReducer,
 		// System Health
 		health: healthReducer,
+		x0pa: x0paReducer,
 	},
 	middleware: (getDefaultMiddleware) =>
 		getDefaultMiddleware({

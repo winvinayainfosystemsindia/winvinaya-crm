@@ -92,6 +92,7 @@ export interface CandidateCounseling {
 	others?: Record<string, any>;
 	workexperience?: CounselingWorkExperience[];
 	counselor_name?: string;
+	suitable_job_roles?: string[];
 	status: 'pending' | 'selected' | 'rejected';
 	counselor_id?: number;
 	counseling_date?: string;
@@ -106,6 +107,7 @@ export interface CandidateCounselingCreate {
 	others?: Record<string, any>;
 	workexperience?: CounselingWorkExperience[];
 	counselor_name?: string;
+	suitable_job_roles?: string[];
 	status?: 'pending' | 'selected' | 'rejected';
 	counseling_date?: string;
 }

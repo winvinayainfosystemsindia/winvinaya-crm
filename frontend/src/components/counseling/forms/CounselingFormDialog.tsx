@@ -92,7 +92,8 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 		counselor_name: '',
 		counseling_date: new Date().toISOString().split('T')[0],
 		others: {},
-		workexperience: []
+		workexperience: [],
+		suitable_job_roles: []
 	});
 
 	useEffect(() => {
@@ -110,7 +111,8 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 						others: initialData.others || {},
 						workexperience: initialData.workexperience || [],
 						counseling_date: initialData.counseling_date ? initialData.counseling_date.split('T')[0] : new Date().toISOString().split('T')[0],
-						status: initialData.status || 'pending'
+						status: initialData.status || 'pending',
+						suitable_job_roles: initialData.suitable_job_roles || []
 					});
 				} else {
 					const defaultQuestions = PREDEFINED_QUESTIONS.map(q => ({
@@ -125,7 +127,8 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 						counselor_name: user ? (user.full_name || user.username) : '',
 						counseling_date: new Date().toISOString().split('T')[0],
 						others: {},
-						workexperience: []
+						workexperience: [],
+						suitable_job_roles: []
 					});
 				}
 			};
@@ -331,6 +334,7 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 									onRemoveQuestion={handleRemoveQuestion}
 									onQuestionChange={handleQuestionChange}
 									onFeedbackChange={(val) => handleChange('feedback', val)}
+									onJobRolesChange={(roles) => handleChange('suitable_job_roles', roles)}
 								/>
 							</TabPanel>
 
