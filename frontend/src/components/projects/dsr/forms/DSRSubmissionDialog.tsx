@@ -14,6 +14,7 @@ import { useDSRSubmission } from '../hooks/useDSRSubmission';
 import SubmissionForm from './SubmissionForm';
 import DSRDialogHeader from './DSRDialogHeader';
 import ReportingHeader from './ReportingHeader';
+import PermissionRequestDialog from './PermissionRequestDialog';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
@@ -26,6 +27,8 @@ interface DSRSubmissionDialogProps {
 }
 
 const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose, entryId, readOnly = false }) => {
+	const [permissionDialogOpen, setPermissionDialogOpen] = React.useState(false);
+	
 	const {
 		projects,
 		activitiesByProject,
@@ -84,13 +87,27 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 							<Fade in>
 								<Alert
 									severity={permissionError ? "error" : "warning"}
+									action={
+										!isDateAllowed && (
+											<Button 
+												color="inherit" 
+												size="small" 
+												variant="outlined"
+												onClick={() => setPermissionDialogOpen(true)}
+												sx={{ fontWeight: 700, textTransform: 'none' }}
+											>
+												Request Permission
+											</Button>
+										)
+									}
 									sx={{
 										mb: 3,
 										borderRadius: '6px',
 										border: '1px solid',
 										bgcolor: permissionError ? '#fff5f5' : '#fff9f2',
 										borderColor: permissionError ? '#feb2b2' : '#ffebcc',
-										'& .MuiAlert-icon': { color: permissionError ? '#dc2626' : '#d97706' }
+										'& .MuiAlert-icon': { color: permissionError ? '#dc2626' : '#d97706' },
+										'& .MuiAlert-action': { alignItems: 'center', pt: 0 }
 									}}
 								>
 									{permissionError || "You do not have permission to submit for this past date. Please raise a request first."}
@@ -202,6 +219,12 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 						</>
 					)}
 				</DialogActions>
+
+				<PermissionRequestDialog 
+					open={permissionDialogOpen} 
+					onClose={() => setPermissionDialogOpen(false)} 
+					initialDate={reportDate}
+				/>
 			</Dialog>
 		</LocalizationProvider>
 	);

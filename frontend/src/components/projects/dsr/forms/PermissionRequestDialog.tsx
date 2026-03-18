@@ -18,17 +18,27 @@ import {
 } from '@mui/icons-material';
 import dsrService from '../../../../services/dsrService';
 import useToast from '../../../../hooks/useToast';
+import { useAppSelector } from '../../../../store/hooks';
 
 interface PermissionRequestDialogProps {
 	open: boolean;
 	onClose: () => void;
+	initialDate?: string;
 }
 
-const PermissionRequestDialog: React.FC<PermissionRequestDialogProps> = ({ open, onClose }) => {
-	const [reportDate, setReportDate] = useState(new Date(Date.now() - 86400000).toISOString().split('T')[0]);
+const PermissionRequestDialog: React.FC<PermissionRequestDialogProps> = ({ open, onClose, initialDate }) => {
+	const [reportDate, setReportDate] = useState(initialDate || new Date(Date.now() - 86400000).toISOString().split('T')[0]);
 	const [reason, setReason] = useState('');
 	const [submitting, setSubmitting] = useState(false);
 	const toast = useToast();
+	const { holidays } = useAppSelector((state) => state.holidays);
+
+	// Sync with initialDate if it changes
+	React.useEffect(() => {
+		if (initialDate) {
+			setReportDate(initialDate);
+		}
+	}, [initialDate, open]);
 
 	const handleSubmit = async () => {
 		if (!reportDate || !reason) {
@@ -41,8 +51,9 @@ const PermissionRequestDialog: React.FC<PermissionRequestDialogProps> = ({ open,
 			return;
 		}
 
-		if (new Date(reportDate) >= new Date(new Date().setHours(0, 0, 0, 0))) {
-			toast.warning('Permission is only needed for past dates');
+		const isHoliday = holidays.some(h => h.holiday_date === reportDate);
+		if (new Date(reportDate) >= new Date(new Date().setHours(0, 0, 0, 0)) && !isHoliday) {
+			toast.warning('Permission is only needed for past dates or holidays');
 			return;
 		}
 
@@ -82,7 +93,7 @@ const PermissionRequestDialog: React.FC<PermissionRequestDialogProps> = ({ open,
 					<RequestIcon />
 					<Box>
 						<Typography variant="h6" sx={{ lineHeight: 1.2, fontWeight: 700 }}>
-							Request Past-Date Submission
+							Request Submission Permission
 						</Typography>
 					</Box>
 				</Box>
@@ -94,7 +105,7 @@ const PermissionRequestDialog: React.FC<PermissionRequestDialogProps> = ({ open,
 			<DialogContent sx={{ p: 4, pt: 6, bgcolor: '#f2f3f3' }}>
 				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
 					<Alert severity="info" sx={{ borderRadius: '2px' }}>
-						Admins must approve requests for past-date submissions before you can file the report.
+						Admins must approve requests for past-date or holiday submissions before you can file the report.
 					</Alert>
 
 					<TextField
@@ -110,13 +121,13 @@ const PermissionRequestDialog: React.FC<PermissionRequestDialogProps> = ({ open,
 					/>
 
 					<TextField
-						label="Reason for Delay"
+						label="Reason for Request"
 						multiline
 						rows={3}
 						fullWidth
 						value={reason}
 						onChange={(e) => setReason(e.target.value)}
-						placeholder="Explain why this DSR was delayed..."
+						placeholder="Explain why you need to submit for this date (e.g. worked on holiday, delayed entry)..."
 						size="small"
 						sx={{ bgcolor: 'white' }}
 						disabled={submitting}

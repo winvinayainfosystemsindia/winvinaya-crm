@@ -65,18 +65,22 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 	const isDateAllowed = useMemo(() => {
 		const today = new Date().toISOString().split('T')[0];
 		
+		// Check if there's a granted permission for this date (handles both past and holiday)
+		const hasPermission = permissionRequests.some(req =>
+			req.report_date === reportDate && req.status === 'granted'
+		);
+
 		// Holiday Check
 		const isHoliday = holidays.some(h => h.holiday_date === reportDate);
-		if (isHoliday) return false;
+		if (isHoliday) {
+			return hasPermission || user?.role === 'ADMIN' || user?.role === 'MANAGER';
+		}
 
 		if (reportDate === today) return true;
 		if (reportDate > today) return false;
 
-		// Check if there's a granted permission for this date
-		return permissionRequests.some(req =>
-			req.report_date === reportDate && req.status === 'granted'
-		);
-	}, [reportDate, permissionRequests, holidays]);
+		return hasPermission;
+	}, [reportDate, permissionRequests, holidays, user?.role]);
 
 	const dateStatuses = useMemo(() => {
 		const statusMap: Record<string, string> = {};
@@ -88,7 +92,7 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		});
 
 		// Mark missed dates (last 30 days) and check for granted permissions
-		for (let i = 1; i <= 30; i++) {
+		for (let i = 1; i <= 60; i++) { // Extend range for better visibility
 			const d = subDays(today, i);
 			const dateStr = format(d, 'yyyy-MM-dd');
 
@@ -103,12 +107,16 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 			if (hasPermission) {
 				statusMap[dateStr] = 'granted';
 			} else {
-				statusMap[dateStr] = 'missed';
+				// Only mark as "missed" if it's NOT a holiday
+				const isHoliday = holidays.some(h => h.holiday_date === dateStr);
+				if (!isHoliday) {
+					statusMap[dateStr] = 'missed';
+				}
 			}
 		}
 
 		return statusMap;
-	}, [entries, permissionRequests]);
+	}, [entries, permissionRequests, holidays]);
 
 	const loadEntry = useCallback(async (id: string) => {
 		try {
@@ -174,16 +182,22 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 
 	// Update permissionError if it's a holiday
 	useEffect(() => {
+		const today = new Date().toISOString().split('T')[0];
+		const hasPermission = permissionRequests.some(req =>
+			req.report_date === reportDate && req.status === 'granted'
+		);
+		
 		const holiday = holidays.find(h => h.holiday_date === reportDate);
-		if (holiday) {
-			setPermissionError(`Cannot submit DSR for ${holiday.holiday_date} as it is a company holiday (${holiday.holiday_name}).`);
-		} else if (!isDateAllowed && reportDate < new Date().toISOString().split('T')[0]) {
-			// Only show the generic permission error if it's NOT a holiday
+		
+		if (holiday && !hasPermission && user?.role !== 'ADMIN' && user?.role !== 'MANAGER') {
+			setPermissionError(`Cannot submit DSR for ${holiday.holiday_date} as it is a company holiday (${holiday.holiday_name}). Please request permission if you worked on this day.`);
+		} else if (!isDateAllowed && reportDate < today) {
+			// Only show the generic permission error if it's NOT a holiday or permission wasn't granted
 			setPermissionError("You do not have permission to submit for this past date. Please raise a request first.");
 		} else {
 			setPermissionError(null);
 		}
-	}, [reportDate, holidays, isDateAllowed]);
+	}, [reportDate, holidays, isDateAllowed, permissionRequests, user?.role]);
 
 	const calculateHours = (start: string, end: string) => {
 		if (!start || !end) return 0;

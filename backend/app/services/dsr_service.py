@@ -164,10 +164,12 @@ class DSRService:
 
         # Holiday check
         if await self.holiday_service.is_holiday(data.report_date):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Cannot submit DSR for {data.report_date} as it is a company holiday."
-            )
+            permission_request = await self.permission_repo.get_granted_permission(current_user.id, data.report_date)
+            if not permission_request and current_user.role not in (UserRole.ADMIN, UserRole.MANAGER):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"Cannot submit DSR for {data.report_date} as it is a company holiday. Please request permission if you worked on this day."
+                )
 
         # Previous-day guard
         if data.report_date < today:
@@ -602,8 +604,10 @@ class DSRService:
     ) -> DSRPermissionRequest:
         """User requests permission to submit a DSR for a past date."""
         today = date.today()
-        if data.report_date >= today:
-            raise HTTPException(status_code=422, detail="Permission is only needed for past dates")
+        is_holiday = await self.holiday_service.is_holiday(data.report_date)
+        
+        if data.report_date >= today and not is_holiday:
+            raise HTTPException(status_code=422, detail="Permission is only needed for past dates or holidays")
 
         # Check for existing request
         existing = await self.permission_repo.get_by_user_and_date(current_user.id, data.report_date)
