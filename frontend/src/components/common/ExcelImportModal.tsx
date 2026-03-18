@@ -34,6 +34,7 @@ interface ExcelImportModalProps {
 	onDownloadTemplate?: () => Promise<void>;
 	description?: string;
 	onSuccess?: () => void;
+	accept?: string;
 }
 
 const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
@@ -43,7 +44,8 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
 	title,
 	onDownloadTemplate,
 	description,
-	onSuccess
+	onSuccess,
+	accept = ".xlsx, .xls"
 }) => {
 	const [file, setFile] = useState<File | null>(null);
 	const [loading, setLoading] = useState(false);
@@ -154,7 +156,7 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
 					>
 						<input
 							type="file"
-							accept=".xlsx, .xls"
+							accept={accept}
 							onChange={handleFileChange}
 							style={{
 								opacity: 0,
@@ -171,7 +173,7 @@ const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
 							{file ? file.name : 'Click or drag to upload Excel file'}
 						</Typography>
 						<Typography variant="caption" color="text.secondary">
-							Supports .xlsx and .xls formats
+							Supports {accept.split(',').join(' and ')} formats
 						</Typography>
 					</Box>
 				) : (

@@ -11,11 +11,13 @@ import {
 	RateReview as ReviewIcon,
 	VpnKey as PermissionIcon,
 	History as HistoryIcon,
-	Refresh as RefreshIcon
+	Refresh as RefreshIcon,
+	EventBusy as HolidayIcon
 } from '@mui/icons-material';
 import PermissionRequestsTable from './PermissionRequestsTable';
 import AllSubmissionsTable from './AllSubmissionsTable';
 import DSRActivityTypeManagement from './DSRActivityTypeManagement';
+import HolidayTable from './HolidayTable';
 import type { useDSRAdmin } from '../hooks/useDSRAdmin';
 
 interface DSRAdminSectionProps {
@@ -181,6 +183,22 @@ const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin }) => {
 								'&.Mui-selected': { color: '#ec7211' }
 							}}
 						/>
+						<Tab
+							label={
+								<TabLabel
+									icon={<HolidayIcon sx={{ fontSize: 18 }} />}
+									label="Holidays"
+									active={activeTab === 3}
+								/>
+							}
+							sx={{
+								textTransform: 'none',
+								minHeight: 48,
+								px: 3,
+								color: '#545b64',
+								'&.Mui-selected': { color: '#ec7211' }
+							}}
+						/>
 					</Tabs>
 				</Box>
 
@@ -236,6 +254,10 @@ const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin }) => {
 
 					<TabPanel value={activeTab} index={2}>
 						<DSRActivityTypeManagement />
+					</TabPanel>
+
+					<TabPanel value={activeTab} index={3}>
+						<HolidayTable />
 					</TabPanel>
 				</Box>
 			</Paper>

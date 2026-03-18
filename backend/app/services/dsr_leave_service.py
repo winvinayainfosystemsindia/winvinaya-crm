@@ -14,6 +14,7 @@ from app.schemas.dsr_leave_application import (
 )
 from app.repositories.dsr_leave_application_repository import DSRLeaveApplicationRepository
 from app.repositories.dsr_entry_repository import DSREntryRepository
+from app.services.company_holiday_service import CompanyHolidayService
 
 
 class DSRLeaveService:
@@ -21,6 +22,7 @@ class DSRLeaveService:
         self.db = db
         self.repo = DSRLeaveApplicationRepository(db)
         self.entry_repo = DSREntryRepository(db)
+        self.holiday_service = CompanyHolidayService(db)
 
     async def create_leave_application(
         self, data: DSRLeaveApplicationCreate, current_user: User
@@ -39,6 +41,15 @@ class DSRLeaveService:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Leave application overlaps with an existing requested or approved leave."
+            )
+
+        # Holiday check
+        holidays = await self.holiday_service.get_holidays_in_range(data.start_date, data.end_date)
+        if holidays:
+            holiday_str = ", ".join([str(h) for h in holidays])
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Leave application covers company holidays: {holiday_str}. Leaves cannot be applied on holidays."
             )
 
         leave_data = {

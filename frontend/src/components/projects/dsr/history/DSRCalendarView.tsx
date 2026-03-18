@@ -7,16 +7,19 @@ import dayjs from 'dayjs';
 import StatusDay from '../forms/StatusDay';
 import { useAppSelector, useAppDispatch } from '../../../../store/hooks';
 import { fetchCalendarEntries } from '../../../../store/slices/dsrSlice';
+import { fetchHolidays } from '../../../../store/slices/holidaySlice';
 
 const DSRCalendarView: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const { calendarEntries: entries, calendarLeaves, permissionRequests } = useAppSelector((state) => state.dsr);
+	const { holidays } = useAppSelector((state) => state.holidays);
 
 	// Fetch data for the current view
 	React.useEffect(() => {
 		const start = dayjs().startOf('month').subtract(7, 'day').format('YYYY-MM-DD');
 		const end = dayjs().endOf('month').add(7, 'day').format('YYYY-MM-DD');
 		dispatch(fetchCalendarEntries({ date_from: start, date_to: end }));
+		dispatch(fetchHolidays({ date_from: start, date_to: end }));
 	}, [dispatch]);
 
 	const dateStatuses = useMemo(() => {
@@ -31,6 +34,11 @@ const DSRCalendarView: React.FC = () => {
 				statusMap[curr.format('YYYY-MM-DD')] = 'leave';
 				curr = curr.add(1, 'day');
 			}
+		});
+
+		// 1b. Mark company holidays
+		holidays.forEach(holiday => {
+			statusMap[holiday.holiday_date] = 'holiday';
 		});
 
 		// 2. Mark entries (overwrites leave if specific DSR exists, showing actual status)
@@ -61,7 +69,7 @@ const DSRCalendarView: React.FC = () => {
 		}
 
 		return statusMap;
-	}, [entries, calendarLeaves, permissionRequests]);
+	}, [entries, calendarLeaves, permissionRequests, holidays]);
 
 	return (
 		<Paper variant="outlined" sx={{ p: 0, borderRadius: '8px', bgcolor: 'white', height: '100%', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>

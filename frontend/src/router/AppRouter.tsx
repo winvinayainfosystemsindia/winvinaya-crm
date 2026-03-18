@@ -38,6 +38,7 @@ import CRMDashboard from '../pages/crm/CRMDashboard';
 import ProjectManagement from '../pages/projects/ProjectManagement';
 import ActivityPlanning from '../pages/projects/ActivityPlanning';
 import DSRDashboard from '../pages/projects/DSRDashboard';
+import HolidayManagement from '../pages/projects/HolidayManagement';
 
 const AppRouter: React.FC = () => {
 	return (
@@ -98,6 +99,7 @@ const AppRouter: React.FC = () => {
 						<Route path="activities" element={<ActivityPlanning />} />
 						<Route path=":projectId/activities" element={<ActivityPlanning />} />
 						<Route path="timesheet" element={<DSRDashboard />} />
+						<Route path="holidays" element={<HolidayManagement />} />
 					</Route>
 
 				</Route>

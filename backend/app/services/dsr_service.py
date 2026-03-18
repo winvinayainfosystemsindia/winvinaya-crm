@@ -30,6 +30,7 @@ from app.repositories.user_repository import UserRepository
 from app.repositories.dsr_permission_request_repository import DSRPermissionRequestRepository
 from app.repositories.dsr_leave_application_repository import DSRLeaveApplicationRepository
 from app.services.dsr_notification_service import DSRNotificationService
+from app.services.company_holiday_service import CompanyHolidayService
 
 
 def _require_privileged_user(current_user: User) -> None:
@@ -53,6 +54,7 @@ class DSRService:
         self.leave_repo = DSRLeaveApplicationRepository(db)
         self.notifier = DSRNotificationService(db)
         self.notif_service = NotificationService(db)
+        self.holiday_service = CompanyHolidayService(db)
 
     # ------------------------------------------------------------------
     # Item validation helpers
@@ -159,6 +161,13 @@ class DSRService:
         # Future dates not allowed
         if data.report_date > today:
             raise HTTPException(status_code=422, detail="Cannot create a DSR for a future date")
+
+        # Holiday check
+        if await self.holiday_service.is_holiday(data.report_date):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Cannot submit DSR for {data.report_date} as it is a company holiday."
+            )
 
         # Previous-day guard
         if data.report_date < today:

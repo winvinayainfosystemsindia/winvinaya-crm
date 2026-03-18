@@ -19,6 +19,7 @@ import crmTaskReducer from './slices/crmTaskSlice';
 import crmActivityReducer from './slices/crmActivitySlice';
 import dsrReducer from './slices/dsrSlice';
 import dsrActivityTypeReducer from './slices/dsrActivityTypeSlice';
+import holidayReducer from './slices/holidaySlice';
 import healthReducer from './slices/healthSlice';
 
 export const store = configureStore({
@@ -43,6 +44,7 @@ export const store = configureStore({
 		crmActivities: crmActivityReducer,
 		dsr: dsrReducer,
 		dsrActivityType: dsrActivityTypeReducer,
+		holidays: holidayReducer,
 		// System Health
 		health: healthReducer,
 	},

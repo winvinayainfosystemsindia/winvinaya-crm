@@ -31,6 +31,7 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 
 	const { user } = useAppSelector((state) => state.auth);
 	const { projects: rawProjects, activitiesByProject, calendarEntries: entries, permissionRequests, loading: dsrLoading } = useAppSelector((state) => state.dsr);
+	const { holidays } = useAppSelector((state) => state.holidays);
 
 	const projects = useMemo(() => {
 		const generalProject: any = {
@@ -63,6 +64,11 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 
 	const isDateAllowed = useMemo(() => {
 		const today = new Date().toISOString().split('T')[0];
+		
+		// Holiday Check
+		const isHoliday = holidays.some(h => h.holiday_date === reportDate);
+		if (isHoliday) return false;
+
 		if (reportDate === today) return true;
 		if (reportDate > today) return false;
 
@@ -70,7 +76,7 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		return permissionRequests.some(req =>
 			req.report_date === reportDate && req.status === 'granted'
 		);
-	}, [reportDate, permissionRequests]);
+	}, [reportDate, permissionRequests, holidays]);
 
 	const dateStatuses = useMemo(() => {
 		const statusMap: Record<string, string> = {};
@@ -164,7 +170,20 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 			setLeaveType('');
 			setPermissionError(null);
 		}
-	}, [dispatch, entryId, loadEntry, user?.public_id, user?.id]);
+	}, [dispatch, entryId, loadEntry, user?.public_id, user?.id, holidays]);
+
+	// Update permissionError if it's a holiday
+	useEffect(() => {
+		const holiday = holidays.find(h => h.holiday_date === reportDate);
+		if (holiday) {
+			setPermissionError(`Cannot submit DSR for ${holiday.holiday_date} as it is a company holiday (${holiday.holiday_name}).`);
+		} else if (!isDateAllowed && reportDate < new Date().toISOString().split('T')[0]) {
+			// Only show the generic permission error if it's NOT a holiday
+			setPermissionError("You do not have permission to submit for this past date. Please raise a request first.");
+		} else {
+			setPermissionError(null);
+		}
+	}, [reportDate, holidays, isDateAllowed]);
 
 	const calculateHours = (start: string, end: string) => {
 		if (!start || !end) return 0;

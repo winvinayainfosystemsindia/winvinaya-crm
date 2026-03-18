@@ -18,7 +18,7 @@ import {
 	Close as CloseIcon,
 	EventBusy as LeaveIcon
 } from '@mui/icons-material';
-import { useAppDispatch } from '../../../../store/hooks';
+import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { applyLeave } from '../../../../store/slices/dsrSlice';
 import useToast from '../../../../hooks/useToast';
 import dayjs from 'dayjs';
@@ -41,6 +41,7 @@ const LEAVE_TYPES = [
 const ApplyLeaveDialog: React.FC<ApplyLeaveDialogProps> = ({ open, onClose, onSuccess }) => {
 	const dispatch = useAppDispatch();
 	const toast = useToast();
+	const { holidays } = useAppSelector((state) => state.holidays);
 	
 	const [startDate, setStartDate] = useState(dayjs().format('YYYY-MM-DD'));
 	const [endDate, setEndDate] = useState(dayjs().format('YYYY-MM-DD'));
@@ -52,6 +53,19 @@ const ApplyLeaveDialog: React.FC<ApplyLeaveDialogProps> = ({ open, onClose, onSu
 	const handleSubmit = async () => {
 		if (new Date(endDate) < new Date(startDate)) {
 			setError('End date cannot be before start date');
+			return;
+		}
+
+		// Holiday check
+		const holidayInRange = holidays.filter(h => {
+			const d = dayjs(h.holiday_date);
+			return (d.isSame(startDate, 'day') || d.isAfter(startDate, 'day')) && 
+				   (d.isSame(endDate, 'day') || d.isBefore(endDate, 'day'));
+		});
+
+		if (holidayInRange.length > 0) {
+			const holidayNames = holidayInRange.map(h => h.holiday_name).join(', ');
+			setError(`Selected range include company holidays: ${holidayNames}. You cannot apply for leave on holidays.`);
 			return;
 		}
 
