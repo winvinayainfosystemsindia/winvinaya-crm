@@ -5,9 +5,13 @@ import {
 	Box,
 	Typography,
 	IconButton,
+	Stack,
 	useTheme
 } from '@mui/material';
-import { MoreVert as MoreIcon } from '@mui/icons-material';
+import { 
+	MoreVert as MoreIcon,
+	AssignmentOutlined as ActivityIcon
+} from '@mui/icons-material';
 import dayjs from 'dayjs';
 import type { DSRActivity } from '../../../../models/dsr';
 import { DSRActivityStatusValues } from '../../../../models/dsr';
@@ -71,102 +75,154 @@ const ActivityTableRow: React.FC<ActivityTableRowProps> = ({
 
 	const timeline = getTimelineInfo();
 
-	const toTitleCase = (str: string) => {
-		if (!str) return '';
-		return str.replace(
-			/\w\S*/g,
-			(txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
-		);
-	};
-
 	return (
-		<TableRow hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-			<TableCell sx={{ py: 2, fontSize: '0.8125rem', color: theme.palette.text.primary }}>
-				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-					<Typography variant="body2" sx={{ fontWeight: 500 }}>
-						{toTitleCase(activity.name)}
+		<TableRow hover sx={{ '&:last-child td, &:last-child th': { border: 0 }, '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.02)' } }}>
+			<TableCell sx={{ py: 2.5, minWidth: 200 }}>
+				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
+					<ActivityIcon sx={{ color: '#0073bb', fontSize: 18, opacity: 0.8 }} />
+					<Typography variant="body2" sx={{ fontWeight: 700, color: '#232f3e' }}>
+						{activity.name}
 					</Typography>
 				</Box>
-			</TableCell>
-			<TableCell sx={{ py: 2, fontSize: '0.8125rem', color: theme.palette.text.primary }}>
-				{activity.assigned_users && activity.assigned_users.length > 0 
-					? activity.assigned_users.map(u => u.full_name || u.username).join(', ') 
-					: 'Unassigned'}
-			</TableCell>
-			<TableCell sx={{ py: 2, fontSize: '0.8125rem', color: theme.palette.text.secondary }}>
-				<Typography sx={{ fontSize: '0.75rem', color: theme.palette.text.secondary }}>
-					Est: {dayjs(activity.start_date).format('DD-MMM-YYYY')}
-				</Typography>
-				{activity.actual_start_date && (
-					<Typography sx={{ fontSize: '0.75rem', color: theme.palette.primary.main, fontWeight: 600 }}>
-						Act: {dayjs(activity.actual_start_date).format('DD-MMM-YYYY')}
+				{activity.description && (
+					<Typography variant="caption" sx={{ 
+						color: 'text.secondary',
+						display: '-webkit-box',
+						WebkitLineClamp: 1,
+						WebkitBoxOrient: 'vertical',
+						overflow: 'hidden',
+						maxWidth: 250
+					}}>
+						{activity.description}
 					</Typography>
 				)}
 			</TableCell>
-			<TableCell sx={{ py: 2, fontSize: '0.8125rem', color: theme.palette.text.secondary }}>
-				<Typography sx={{ fontSize: '0.75rem', color: theme.palette.text.secondary }}>
-					Est: {dayjs(activity.end_date).format('DD-MMM-YYYY')}
-				</Typography>
-				{activity.actual_end_date && (
-					<Typography sx={{ fontSize: '0.75rem', color: '#037f0c', fontWeight: 600 }}>
-						Act: {dayjs(activity.actual_end_date).format('DD-MMM-YYYY')}
-					</Typography>
-				)}
+
+			{/* Assigned To Column */}
+			<TableCell sx={{ py: 2.5 }}>
+				<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+					{activity.assigned_users && activity.assigned_users.length > 0 ? (
+						activity.assigned_users.map((u) => (
+							<Typography key={u.id} variant="body2" sx={{ color: 'text.primary', fontSize: '0.8125rem' }}>
+								{u.full_name || u.username}
+							</Typography>
+						))
+					) : (
+						<Typography variant="body2" color="text.disabled" sx={{ fontStyle: 'italic', fontSize: '0.8125rem' }}>
+							Unassigned
+						</Typography>
+					)}
+				</Box>
 			</TableCell>
-			<TableCell sx={{ py: 2 }}>
+
+			{/* Start Date Column */}
+			<TableCell sx={{ py: 2.5 }}>
+				<Stack spacing={0.5}>
+					<Box sx={{ fontSize: '0.8125rem', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}>
+						<Box component="span" sx={{ color: 'text.secondary', fontWeight: 600, minWidth: 40 }}>Est:</Box>
+						<Typography variant="body2" sx={{ fontSize: '0.8125rem' }}>
+							{dayjs(activity.start_date).format('DD MMM YYYY')}
+						</Typography>
+					</Box>
+					{activity.actual_start_date && (
+						<Box sx={{ fontSize: '0.8125rem', color: theme.palette.primary.main, fontWeight: 700, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}>
+							<Box component="span" sx={{ opacity: 0.8, fontWeight: 600, minWidth: 40 }}>Act:</Box>
+							<Typography variant="body2" sx={{ fontSize: '0.8125rem', fontWeight: 700 }}>
+								{dayjs(activity.actual_start_date).format('DD MMM YYYY')}
+							</Typography>
+						</Box>
+					)}
+				</Stack>
+			</TableCell>
+
+			{/* End Date Column */}
+			<TableCell sx={{ py: 2.5 }}>
+				<Stack spacing={0.5}>
+					<Box sx={{ fontSize: '0.8125rem', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}>
+						<Box component="span" sx={{ color: 'text.secondary', fontWeight: 600, minWidth: 40 }}>Est:</Box>
+						<Typography variant="body2" sx={{ fontSize: '0.8125rem' }}>
+							{dayjs(activity.end_date).format('DD MMM YYYY')}
+						</Typography>
+					</Box>
+					{activity.actual_end_date && (
+						<Box sx={{ fontSize: '0.8125rem', color: '#037f0c', fontWeight: 700, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}>
+							<Box component="span" sx={{ opacity: 0.8, fontWeight: 600, minWidth: 40 }}>Act:</Box>
+							<Typography variant="body2" sx={{ fontSize: '0.8125rem', fontWeight: 700 }}>
+								{dayjs(activity.actual_end_date).format('DD MMM YYYY')}
+							</Typography>
+						</Box>
+					)}
+				</Stack>
+			</TableCell>
+
+			{/* Status Column */}
+			<TableCell sx={{ py: 2.5 }}>
 				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
 					<Box sx={{
 						width: 8,
 						height: 8,
 						borderRadius: '50%',
-						bgcolor: getStatusColorCode(activity.status)
+						bgcolor: getStatusColorCode(activity.status),
+						flexShrink: 0
 					}} />
-					<Typography sx={{ fontSize: '0.8125rem', color: getStatusColorCode(activity.status), fontWeight: 500 }}>
-						{activity.status.charAt(0) + activity.status.slice(1).toLowerCase()}
+					<Typography sx={{ 
+						fontSize: '0.8125rem', 
+						color: '#232f3e',
+						fontWeight: 600,
+						textTransform: 'capitalize',
+						whiteSpace: 'nowrap'
+					}}>
+						{activity.status.replace('_', ' ')}
 					</Typography>
 				</Box>
 			</TableCell>
-			<TableCell sx={{ py: 2 }}>
-				<Typography sx={{ fontSize: '0.75rem', color: theme.palette.text.secondary }}>
-					Est: {activity.estimated_hours ? `${activity.estimated_hours}h` : 'N/A'}
-				</Typography>
-				<Typography sx={{ fontSize: '0.75rem', color: theme.palette.text.primary, fontWeight: 700 }}>
-					Act: {activity.total_actual_hours || 0}h
-				</Typography>
+
+			{/* Effort Column */}
+			<TableCell sx={{ py: 2.5 }}>
+				<Stack spacing={0.5}>
+					<Box sx={{ fontSize: '0.8125rem', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}>
+						<Box component="span" sx={{ color: 'text.secondary', fontWeight: 600, minWidth: 70 }}>Estimate:</Box>
+						<Typography variant="body2" sx={{ fontSize: '0.8125rem', fontWeight: 500 }}>
+							{activity.estimated_hours ? `${activity.estimated_hours}h` : 'N/A'}
+						</Typography>
+					</Box>
+					<Box sx={{ fontSize: '0.8125rem', fontWeight: 700, color: '#232f3e', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}>
+						<Box component="span" sx={{ color: 'text.secondary', fontWeight: 600, minWidth: 70 }}>Actual:</Box>
+						<Typography variant="body2" sx={{ fontSize: '0.8125rem', fontWeight: 700 }}>
+							{activity.total_actual_hours || 0}h
+						</Typography>
+					</Box>
+				</Stack>
 			</TableCell>
-			<TableCell sx={{ py: 2 }}>
+
+			{/* Timeline Column */}
+			<TableCell sx={{ py: 2.5 }}>
 				<Box sx={{
 					px: 1.5,
-					py: 0.5,
-					borderRadius: 1,
-					display: 'inline-block',
-					bgcolor: timeline.bgcolor,
+					py: 0.75,
+					borderRadius: '16px',
+					display: 'inline-flex',
+					alignItems: 'center',
+					bgcolor: timeline.bgcolor === 'transparent' ? '#f2f3f3' : timeline.bgcolor,
 					color: timeline.color,
 					fontSize: '0.75rem',
-					fontWeight: timeline.fontWeight || 500,
-					border: timeline.bgcolor !== 'transparent' ? `1px solid ${timeline.color}40` : 'none'
+					fontWeight: 700,
+					border: timeline.bgcolor !== 'transparent' ? `1px solid ${timeline.color}30` : '1px solid #d5dbdb'
 				}}>
 					{timeline.label}
 				</Box>
 			</TableCell>
-			<TableCell sx={{ py: 2 }}>
-				<Typography variant="body2" sx={{
-					maxWidth: 200,
-					overflow: 'hidden',
-					textOverflow: 'ellipsis',
-					whiteSpace: 'nowrap',
-					fontSize: '0.8125rem',
-					color: theme.palette.text.secondary
-				}}>
-					{activity.description}
-				</Typography>
-			</TableCell>
+
+			{/* Action Column */}
 			{canEdit && (
-				<TableCell align="right" sx={{ py: 1 }}>
+				<TableCell align="right" sx={{ py: 2.5 }}>
 					<IconButton
 						size="small"
 						onClick={(e) => onActionClick(e, activity)}
-						sx={{ color: theme.palette.text.secondary }}
+						sx={{ 
+							color: '#545b64',
+							'&:hover': { bgcolor: '#eaeded', color: '#232f3e' }
+						}}
 					>
 						<MoreIcon fontSize="small" />
 					</IconButton>
