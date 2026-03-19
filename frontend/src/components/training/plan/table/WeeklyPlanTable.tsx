@@ -43,6 +43,9 @@ interface WeeklyPlanTableProps {
 	handleDeleteEvent: (eventId: number) => void;
 	tableRef: React.RefObject<HTMLDivElement | null>;
 	isExporting?: boolean;
+	batchName?: string;
+	weekNumber?: number;
+	weekStart?: Date;
 }
 
 const WeeklyPlanTable: React.FC<WeeklyPlanTableProps> = ({
@@ -60,10 +63,30 @@ const WeeklyPlanTable: React.FC<WeeklyPlanTableProps> = ({
 	handleOpenEventDialog,
 	handleDeleteEvent,
 	tableRef,
-	isExporting = false
+	isExporting = false,
+	batchName,
+	weekNumber,
+	weekStart
 }) => {
 	return (
 		<div ref={tableRef} style={{ background: '#fff' }}>
+			{isExporting && (
+				<Box sx={{ p: 3, textAlign: 'center', borderBottom: '2px solid #232f3e', mb: 2 }}>
+					<Typography variant="h4" fontWeight="800" sx={{ color: '#232f3e', mb: 1, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+						{batchName || 'Weekly Lesson Plan'}
+					</Typography>
+					<Stack direction="row" spacing={3} justifyContent="center" alignItems="center">
+						<Box sx={{ bgcolor: '#232f3e', color: 'white', px: 2, py: 0.5, borderRadius: 1, fontWeight: 700 }}>
+							WEEK {weekNumber}
+						</Box>
+						<Typography variant="h6" sx={{ color: '#545b64', fontWeight: 600 }}>
+							{weekStart && weekDays.length > 0 ? (
+								`${format(weekStart, 'MMM d, yyyy')} - ${format(weekDays[weekDays.length - 1], 'MMM d, yyyy')}`
+							) : ''}
+						</Typography>
+					</Stack>
+				</Box>
+			)}
 			<TableContainer component={Paper} elevation={0} variant="outlined">
 				<Table sx={{ minWidth: 800 }}>
 					<TableHead>

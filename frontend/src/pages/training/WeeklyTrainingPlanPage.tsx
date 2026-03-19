@@ -134,6 +134,9 @@ const WeeklyPlanManager: React.FC<WeeklyPlanManagerProps> = ({ selectedBatch }) 
 						handleDeleteEvent={handleDeleteEvent}
 						tableRef={tableRef}
 						isExporting={isExporting}
+						batchName={selectedBatch.batch_name}
+						weekNumber={weekNumber}
+						weekStart={weekStart}
 					/>
 				</>
 			) : (
