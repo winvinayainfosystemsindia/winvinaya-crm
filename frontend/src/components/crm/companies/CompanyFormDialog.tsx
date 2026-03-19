@@ -102,8 +102,8 @@ const CompanyFormDialog: React.FC<CompanyFormDialogProps> = ({
 		onSubmit(formData as CompanyCreate);
 	};
 
-	const sectionTitleStyle = awsStyles.sectionTitle(theme);
-	const awsPanelStyle = awsStyles.awsPanel(theme);
+	const sectionTitleStyle = awsStyles.sectionTitle;
+	const awsPanelStyle = awsStyles.awsPanel;
 
 	return (
 		<Dialog

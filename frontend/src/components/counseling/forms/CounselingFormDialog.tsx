@@ -222,7 +222,11 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 	return (
 		<Dialog
 			open={open}
-			onClose={onClose}
+			onClose={(_event, reason) => {
+				if (reason === 'backdropClick') return;
+				onClose();
+			}}
+			disableEscapeKeyDown
 			maxWidth="md"
 			fullWidth
 			scroll="paper"

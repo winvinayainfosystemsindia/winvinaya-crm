@@ -327,7 +327,11 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 	return (
 		<Dialog
 			open={open}
-			onClose={onClose}
+			onClose={(_event, reason) => {
+				if (reason === 'backdropClick') return;
+				onClose();
+			}}
+			disableEscapeKeyDown
 			maxWidth="md"
 			fullWidth
 			PaperProps={{ sx: { borderRadius: '2px', bgcolor: '#f2f3f3' } }}
