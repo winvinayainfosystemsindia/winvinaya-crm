@@ -3,15 +3,14 @@ import {
 	Box,
 	TextField,
 	FormControl,
-	FormLabel,
-	RadioGroup,
-	FormControlLabel,
-	Radio,
-	FormGroup,
-	Checkbox,
 	Stack,
-	Typography
+	Typography,
+	Select,
+	MenuItem,
+	Autocomplete,
+	Chip
 } from '@mui/material';
+import { awsStyles } from '../../theme/theme';
 import type { DynamicField } from '../../services/settingsService';
 
 interface DynamicFieldRendererProps {
@@ -27,159 +26,119 @@ const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
 	onUpdateField,
 	sectionTitle = 'Additional Information'
 }) => {
+	const { sectionTitle: sectionTitleStyle, fieldLabel } = awsStyles;
+
 	if (fields.length === 0) return null;
 
-	const sectionTitleStyle = {
-		fontWeight: 700,
-		fontSize: '0.875rem',
-		color: '#545b64',
-		mb: 2,
-		textTransform: 'uppercase' as const,
-		letterSpacing: '0.025em'
+	const inputSx = {
+		'& .MuiOutlinedInput-root': {
+			borderRadius: '2px',
+			bgcolor: '#fcfcfc',
+			'& fieldset': { borderColor: '#d5dbdb' },
+			'&:hover fieldset': { borderColor: '#879596' },
+			'&.Mui-focused fieldset': { borderColor: '#ec7211' }
+		}
 	};
 
 	return (
-		<Box sx={{ mt: 3 }}>
-			<Typography sx={sectionTitleStyle}>{sectionTitle}</Typography>
-			<Stack spacing={3}>
+		<Box sx={{ mt: 1 }}>
+			<Typography sx={{ ...sectionTitleStyle, mb: 3 }}>{sectionTitle}</Typography>
+			<Stack spacing={3.5}>
 				{fields.map((field) => (
 					<Box key={field.id}>
-						{field.field_type === 'text' && (
-							<TextField
-								label={field.label}
-								fullWidth
-								size="small"
-								required={field.is_required}
-								value={formData?.[field.name] || ''}
-								onChange={(e) => onUpdateField(field.name, e.target.value)}
-								sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-							/>
-						)}
-						{field.field_type === 'textarea' && (
-							<TextField
-								label={field.label}
-								fullWidth
-								multiline
-								rows={3}
-								required={field.is_required}
-								value={formData?.[field.name] || ''}
-								onChange={(e) => onUpdateField(field.name, e.target.value)}
-								sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-							/>
-						)}
-						{field.field_type === 'number' && (
-							<TextField
-								label={field.label}
-								fullWidth
-								size="small"
-								type="number"
-								required={field.is_required}
-								value={formData?.[field.name] || ''}
-								onChange={(e) => onUpdateField(field.name, e.target.value)}
-								sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-							/>
-						)}
-						{field.field_type === 'phone_number' && (
-							<TextField
-								label={field.label}
-								fullWidth
-								size="small"
-								required={field.is_required}
-								value={formData?.[field.name] || ''}
-								onChange={(e) => onUpdateField(field.name, e.target.value)}
-								sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-							/>
-						)}
-						{field.field_type === 'single_choice' && (
-							<FormControl component="fieldset" required={field.is_required} fullWidth>
-								<FormLabel sx={{ fontSize: '0.875rem', color: '#545b64', fontWeight: 600, mb: 1.5, '&.Mui-focused': { color: '#545b64' } }}>
-									{field.label}
-								</FormLabel>
-								<RadioGroup
-									row
+						{(field.field_type === 'text' || field.field_type === 'number' || field.field_type === 'phone_number') && (
+							<Box>
+								<Typography sx={fieldLabel}>
+									{field.label} {field.is_required && <Box component="span" sx={{ color: '#d91d11' }}>*</Box>}
+								</Typography>
+								<TextField
+									fullWidth
+									size="small"
+									type={field.field_type === 'number' ? 'number' : 'text'}
+									placeholder={`Enter ${field.label.toLowerCase()}`}
 									value={formData?.[field.name] || ''}
 									onChange={(e) => onUpdateField(field.name, e.target.value)}
-									sx={{ gap: 1.5 }}
-								>
-									{field.options?.map((opt) => {
-										const isSelected = formData?.[field.name] === opt;
-										return (
-											<Box
-												key={opt}
-												sx={{
-													flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '0 1 auto' },
-													minWidth: { md: '140px' },
-													border: '1px solid',
-													borderColor: isSelected ? '#ec7211' : '#eaeded',
-													borderRadius: '4px',
-													transition: 'all 0.2s ease',
-													backgroundColor: isSelected ? '#fffaf6' : 'transparent',
-													'&:hover': {
-														borderColor: isSelected ? '#ec7211' : '#d5dbdb',
-														backgroundColor: isSelected ? '#fffaf6' : '#f8f9fa'
-													}
-												}}
-											>
-												<FormControlLabel
-													value={opt}
-													control={<Radio size="small" sx={{ color: '#d5dbdb', '&.Mui-checked': { color: '#ec7211' } }} />}
-													label={<Typography sx={{ fontSize: '0.875rem', fontWeight: isSelected ? 600 : 400, color: isSelected ? '#ec7211' : '#545b64' }}>{opt}</Typography>}
-													sx={{ margin: 0, padding: '8px 12px', width: '100%', height: '100%' }}
-												/>
-											</Box>
-										);
-									})}
-								</RadioGroup>
-							</FormControl>
+									sx={inputSx}
+								/>
+							</Box>
+						)}
+						{field.field_type === 'textarea' && (
+							<Box>
+								<Typography sx={fieldLabel}>
+									{field.label} {field.is_required && <Box component="span" sx={{ color: '#d91d11' }}>*</Box>}
+								</Typography>
+								<TextField
+									fullWidth
+									multiline
+									rows={3}
+									placeholder={`Provide details...`}
+									value={formData?.[field.name] || ''}
+									onChange={(e) => onUpdateField(field.name, e.target.value)}
+									sx={inputSx}
+								/>
+							</Box>
+						)}
+						{field.field_type === 'single_choice' && (
+							<Box>
+								<Typography sx={fieldLabel}>
+									{field.label} {field.is_required && <Box component="span" sx={{ color: '#d91d11' }}>*</Box>}
+								</Typography>
+								<FormControl fullWidth size="small">
+									<Select
+										value={formData?.[field.name] || ''}
+										onChange={(e) => onUpdateField(field.name, e.target.value)}
+										displayEmpty
+										renderValue={(selected) => selected || <Typography variant="body2" color="text.secondary">Select an option</Typography>}
+										sx={{
+											borderRadius: '2px',
+											bgcolor: '#fcfcfc',
+											'& .MuiOutlinedInput-notchedOutline': { borderColor: '#d5dbdb' },
+											'&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#879596' },
+											'&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#ec7211' }
+										}}
+									>
+										{field.options?.map((opt) => (
+											<MenuItem key={opt} value={opt}>{opt}</MenuItem>
+										))}
+									</Select>
+								</FormControl>
+							</Box>
 						)}
 						{field.field_type === 'multiple_choice' && (
-							<FormControl component="fieldset" required={field.is_required} fullWidth>
-								<FormLabel sx={{ fontSize: '0.875rem', color: '#545b64', fontWeight: 600, mb: 1.5, '&.Mui-focused': { color: '#545b64' } }}>
-									{field.label}
-								</FormLabel>
-								<FormGroup row sx={{ gap: 1.5 }}>
-									{field.options?.map((opt) => {
-										const isSelected = (formData?.[field.name] || []).includes(opt);
-										return (
-											<Box
-												key={opt}
-												sx={{
-													flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '0 1 auto' },
-													minWidth: { md: '140px' },
-													border: '1px solid',
-													borderColor: isSelected ? '#ec7211' : '#eaeded',
-													borderRadius: '4px',
-													transition: 'all 0.2s ease',
-													backgroundColor: isSelected ? '#fffaf6' : 'transparent',
-													'&:hover': {
-														borderColor: isSelected ? '#ec7211' : '#d5dbdb',
-														backgroundColor: isSelected ? '#fffaf6' : '#f8f9fa'
-													}
+							<Box>
+								<Typography sx={fieldLabel}>
+									{field.label} {field.is_required && <Box component="span" sx={{ color: '#d91d11' }}>*</Box>}
+								</Typography>
+								<Autocomplete
+									multiple
+									options={field.options || []}
+									value={formData?.[field.name] || []}
+									onChange={(_e, newValue) => onUpdateField(field.name, newValue)}
+									renderTags={(value, getTagProps) =>
+										value.map((option, index) => (
+											<Chip
+												label={option}
+												{...getTagProps({ index })}
+												size="small"
+												sx={{ 
+													borderRadius: '2px',
+													bgcolor: '#f2f3f3',
+													fontWeight: 600,
+													color: '#545b64'
 												}}
-											>
-												<FormControlLabel
-													control={
-														<Checkbox
-															size="small"
-															checked={isSelected}
-															onChange={(e) => {
-																const prev = formData?.[field.name] || [];
-																const next = e.target.checked
-																	? [...prev, opt]
-																	: prev.filter((v: string) => v !== opt);
-																onUpdateField(field.name, next);
-															}}
-															sx={{ color: '#d5dbdb', '&.Mui-checked': { color: '#ec7211' } }}
-														/>
-													}
-													label={<Typography sx={{ fontSize: '0.875rem', fontWeight: isSelected ? 600 : 400, color: isSelected ? '#ec7211' : '#545b64' }}>{opt}</Typography>}
-													sx={{ margin: 0, padding: '8px 12px', width: '100%', height: '100%' }}
-												/>
-											</Box>
-										);
-									})}
-								</FormGroup>
-							</FormControl>
+											/>
+										))
+									}
+									renderInput={(params) => (
+										<TextField
+											{...params}
+											placeholder="Select options..."
+											size="small"
+											sx={inputSx}
+										/>
+									)}
+								/>
+							</Box>
 						)}
 					</Box>
 				))}
