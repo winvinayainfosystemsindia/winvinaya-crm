@@ -209,6 +209,11 @@ export interface CandidateListItem {
 	screening_comments?: string;
 	screening?: CandidateScreening;
 	counseling?: CandidateCounseling;
+
+	is_experienced?: boolean;
+	year_of_experience?: string;
+	currently_employed?: boolean;
+	year_of_passing?: number;
 }
 
 

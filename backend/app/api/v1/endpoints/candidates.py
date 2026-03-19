@@ -86,6 +86,9 @@ async def get_candidates(
     disability_percentages: str = None, # Comma-separated list (or single range string)
     screening_reasons: str = None, # Comma-separated list
     gender: str = None,
+    year_of_passing: str = None, # Comma-separated list
+    year_of_experience: str = None,
+    currently_employed: bool = None,
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
     db: AsyncSession = Depends(get_db)
 ):
@@ -100,6 +103,7 @@ async def get_candidates(
     cities_list = cities.split(',') if cities else None
     disability_percentages_list = disability_percentages.split(',') if disability_percentages else None
     screening_reasons_list = screening_reasons.split(',') if screening_reasons else None
+    year_of_passing_list = year_of_passing.split(',') if year_of_passing else None
     
     # Collect dynamic filters from query params
     extra_filters = {}
@@ -123,6 +127,9 @@ async def get_candidates(
         disability_percentages=disability_percentages_list,
         screening_reasons=screening_reasons_list,
         gender=gender,
+        year_of_passing=year_of_passing_list,
+        year_of_experience=year_of_experience,
+        currently_employed=currently_employed,
         extra_filters=extra_filters
     )
 

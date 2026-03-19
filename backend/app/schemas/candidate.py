@@ -172,6 +172,12 @@ class CandidateListResponse(BaseModel):
     screening: Optional[dict] = None
     counseling: Optional[dict] = None
     
+    # Flattened Experience & Education
+    is_experienced: bool = False
+    year_of_experience: Optional[str] = None
+    currently_employed: bool = False
+    year_of_passing: Optional[int] = None
+    
     @model_validator(mode='before')
     @classmethod
     def extract_flattened_data(cls, data: Any) -> Any:
@@ -213,12 +219,24 @@ class CandidateListResponse(BaseModel):
             disability_type = details.get('disability_type')
             disability_percentage = details.get('disability_percentage')
 
+        # 1.1 Work Experience Data
+        is_experienced = False
+        year_of_experience = None
+        currently_employed = False
+        work_exp = get_val(data, 'work_experience')
+        if work_exp and isinstance(work_exp, dict):
+            is_experienced = work_exp.get('is_experienced', False)
+            year_of_experience = work_exp.get('year_of_experience')
+            currently_employed = work_exp.get('currently_employed', False)
+
         # 2. Education Data
+        year_of_passing = None
         edu_details = get_val(data, 'education_details')
         if edu_details and isinstance(edu_details, dict):
             degrees = edu_details.get('degrees', [])
             if degrees and len(degrees) > 0:
                 education_level = degrees[0].get('degree_name')
+                year_of_passing = degrees[0].get('year_of_passing')
 
         # 3. Screening Data
         screening = None
@@ -328,7 +346,11 @@ class CandidateListResponse(BaseModel):
                 'screening_date': screening_date,
                 'screening_updated_at': screening_updated_at,
                 'screening': screening_data,
-                'counseling': counseling_data
+                'counseling': counseling_data,
+                'is_experienced': is_experienced,
+                'year_of_experience': year_of_experience,
+                'currently_employed': currently_employed,
+                'year_of_passing': year_of_passing
             })
             return data
             
@@ -368,7 +390,11 @@ class CandidateListResponse(BaseModel):
             'screening_date': screening_date,
             'screening_updated_at': screening_updated_at,
             'screening': screening_data,
-            'counseling': counseling_data
+            'counseling': counseling_data,
+            'is_experienced': is_experienced,
+            'year_of_experience': year_of_experience,
+            'currently_employed': currently_employed,
+            'year_of_passing': year_of_passing
         }
 
 

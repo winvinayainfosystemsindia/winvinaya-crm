@@ -83,7 +83,7 @@ const ColumnSelector: React.FC<ColumnSelectorProps> = ({
 				</Box>
 				<Divider />
 				<Box sx={{ py: 1 }}>
-					{['general', 'screening', 'counseling', 'candidate', 'batch', 'progress'].map(group => {
+					{['general', 'screening', 'counseling', 'experience', 'candidate', 'batch', 'progress'].map(group => {
 						const groupCols = columns.filter(c => (c as any).group === group);
 						if (groupCols.length === 0) return null;
 
@@ -92,6 +92,7 @@ const ColumnSelector: React.FC<ColumnSelectorProps> = ({
 								case 'general': return 'General Info';
 								case 'screening': return 'Screening Info';
 								case 'counseling': return 'Counseling Info';
+								case 'experience': return 'Work Experience';
 								case 'candidate': return 'Candidate Details';
 								case 'batch': return 'Batch Details';
 								case 'progress': return 'Progress Metrics';

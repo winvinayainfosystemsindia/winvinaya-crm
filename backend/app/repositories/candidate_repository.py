@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Optional, List
 from uuid import UUID
-from sqlalchemy import select, func, Integer, or_, and_, case
+from sqlalchemy import select, func, Integer, or_, and_, case, cast, Numeric
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.candidate import Candidate
@@ -69,6 +69,9 @@ class CandidateRepository(BaseRepository[Candidate]):
         disability_percentages: Optional[list] = None,
         screening_reasons: Optional[list] = None,
         gender: Optional[str] = None,
+        year_of_passing: Optional[list] = None,
+        year_of_experience: Optional[str] = None,
+        currently_employed: Optional[bool] = None,
         extra_filters: Optional[dict] = None
     ):
         """Get multiples candidates with counseling loaded for list view, with optional search filtering, category filters, and sorting"""
@@ -213,9 +216,70 @@ class CandidateRepository(BaseRepository[Candidate]):
             count_stmt = count_stmt.where(CandidateCounseling.status == counseling_status)
         
         if is_experienced is not None:
-            is_exp_val = 'true' if is_experienced else 'false'
-            stmt = stmt.where(Candidate.work_experience['is_experienced'].as_string() == is_exp_val)
-            count_stmt = count_stmt.where(Candidate.work_experience['is_experienced'].as_string() == is_exp_val)
+            if is_experienced:
+                stmt = stmt.where(Candidate.work_experience['is_experienced'].as_string() == 'true')
+                count_stmt = count_stmt.where(Candidate.work_experience['is_experienced'].as_string() == 'true')
+            else:
+                stmt = stmt.where(or_(
+                    Candidate.work_experience['is_experienced'].as_string() == 'false',
+                    Candidate.work_experience['is_experienced'].as_string().is_(None),
+                    Candidate.work_experience.is_(None)
+                ))
+                count_stmt = count_stmt.where(or_(
+                    Candidate.work_experience['is_experienced'].as_string() == 'false',
+                    Candidate.work_experience['is_experienced'].as_string().is_(None),
+                    Candidate.work_experience.is_(None)
+                ))
+        
+        if currently_employed is not None:
+            if currently_employed:
+                stmt = stmt.where(Candidate.work_experience['currently_employed'].as_string() == 'true')
+                count_stmt = count_stmt.where(Candidate.work_experience['currently_employed'].as_string() == 'true')
+            else:
+                stmt = stmt.where(or_(
+                    Candidate.work_experience['currently_employed'].as_string() == 'false',
+                    Candidate.work_experience['currently_employed'].as_string().is_(None),
+                    Candidate.work_experience.is_(None)
+                ))
+                count_stmt = count_stmt.where(or_(
+                    Candidate.work_experience['currently_employed'].as_string() == 'false',
+                    Candidate.work_experience['currently_employed'].as_string().is_(None),
+                    Candidate.work_experience.is_(None)
+                ))
+
+        if year_of_experience:
+            print(f"[DEBUG] Experience Filter: {year_of_experience}")
+            if '-' in year_of_experience:
+                try:
+                    min_exp, max_exp = map(float, year_of_experience.split('-'))
+                    # Extract numeric part and cast to numeric for range comparison
+                    # astext is used for Postgres JSON access. Use NULLIF for safety if regex returns empty.
+                    numeric_expr = cast(
+                        func.nullif(
+                            func.regexp_replace(Candidate.work_experience['year_of_experience'].as_string(), '[^0-9.]', '', 'g'),
+                            ''
+                        ),
+                        Numeric
+                    )
+                    stmt = stmt.where(numeric_expr >= min_exp).where(numeric_expr <= max_exp)
+                    count_stmt = count_stmt.where(numeric_expr >= min_exp).where(numeric_expr <= max_exp)
+                except (ValueError, TypeError):
+                    stmt = stmt.where(Candidate.work_experience['year_of_experience'].as_string().ilike(f"%{year_of_experience}%"))
+                    count_stmt = count_stmt.where(Candidate.work_experience['year_of_experience'].as_string().ilike(f"%{year_of_experience}%"))
+            else:
+                stmt = stmt.where(Candidate.work_experience['year_of_experience'].as_string().ilike(f"%{year_of_experience}%"))
+                count_stmt = count_stmt.where(Candidate.work_experience['year_of_experience'].as_string().ilike(f"%{year_of_experience}%"))
+
+        if year_of_passing and len(year_of_passing) > 0:
+            yop_filters = []
+            for yop in year_of_passing:
+                if yop:
+                    yop_filters.append(
+                        Candidate.education_details['degrees'].as_string().ilike(f'%"year_of_passing": {yop}%')
+                    )
+            if yop_filters:
+                stmt = stmt.where(or_(*yop_filters))
+                count_stmt = count_stmt.where(or_(*yop_filters))
         
         if screening_status:
             if screening_status == 'Pending':
@@ -828,6 +892,18 @@ class CandidateRepository(BaseRepository[Candidate]):
                             if degree_name:
                                 education_levels.add(degree_name)
             
+            # Get unique years of passing
+            result_education_yop = await self.db.execute(stmt_education)
+            years_of_passing = set()
+            for row in result_education_yop.scalars().all():
+                if row and isinstance(row, dict):
+                    degrees = row.get('degrees', [])
+                    for degree in degrees:
+                        if isinstance(degree, dict):
+                            yop = degree.get('year_of_passing')
+                            if yop:
+                                years_of_passing.add(str(yop))
+            
             # Get unique cities
             stmt_cities = select(func.distinct(Candidate.city)).where(
                 Candidate.city.isnot(None),
@@ -881,7 +957,8 @@ class CandidateRepository(BaseRepository[Candidate]):
                 "counseling_statuses": counseling_statuses,
                 "screening_statuses": sorted(screening_statuses),
                 "disability_percentages": sorted(list(disability_percentages)),
-                "screening_reasons": sorted(list(screening_reasons))
+                "screening_reasons": sorted(list(screening_reasons)),
+                "years_of_passing": sorted(list(years_of_passing), reverse=True)
             }
         except Exception as e:
             import traceback

@@ -103,6 +103,9 @@ class CandidateService:
         disability_percentages: Optional[list] = None,
         screening_reasons: Optional[list] = None,
         gender: Optional[str] = None,
+        year_of_passing: Optional[list] = None,
+        year_of_experience: Optional[str] = None,
+        currently_employed: Optional[bool] = None,
         extra_filters: Optional[dict] = None
     ) -> dict:
         """Get list of candidates with total count, supporting optional search, filters, and sorting"""
@@ -121,6 +124,9 @@ class CandidateService:
             disability_percentages=disability_percentages,
             screening_reasons=screening_reasons,
             gender=gender,
+            year_of_passing=year_of_passing,
+            year_of_experience=year_of_experience,
+            currently_employed=currently_employed,
             extra_filters=extra_filters
         )
         return {"items": items, "total": total}

@@ -27,6 +27,7 @@ const ALL_COLUMNS = [
 	{ id: 'district', label: 'District', default: false, group: 'general' },
 	{ id: 'state', label: 'State', default: false, group: 'general' },
 	{ id: 'pincode', label: 'Pincode', default: false, group: 'general' },
+	{ id: 'year_of_passing', label: 'Year of Passing', default: false, group: 'general' },
 	{ id: 'education_level', label: 'Education', default: false, group: 'general' },
 	{ id: 'disability_type', label: 'Disability Type', default: true, group: 'general' },
 	{ id: 'disability_percentage', label: 'Disability Percentage', default: false, group: 'general' },
@@ -51,6 +52,11 @@ const ALL_COLUMNS = [
 	{ id: 'skills', label: 'Counseling Skills', default: false, group: 'counseling' },
 	{ id: 'questions', label: 'Assignment Q&A', default: false, group: 'counseling' },
 	{ id: 'workexperience', label: 'Counseling Work Experience', default: false, group: 'counseling' },
+
+	// Work Experience (Direct)
+	{ id: 'is_experienced', label: 'Is Experienced?', default: false, group: 'experience' },
+	{ id: 'year_of_experience', label: 'Years of Experience', default: false, group: 'experience' },
+	{ id: 'currently_employed', label: 'Currently Employed?', default: false, group: 'experience' },
 ];
 
 const TRAINING_COLUMNS = [
@@ -165,6 +171,10 @@ const Reports: React.FC = () => {
 			screening_status: filters.screening_status,
 			disability_percentages: filters.disability_percentage ? `${filters.disability_percentage.min || 0}-${filters.disability_percentage.max || 100}` : undefined,
 			screening_reasons: filters.screening_reason?.join(','),
+			year_of_passing: filters.year_of_passing?.join(','),
+			year_of_experience: filters.year_of_experience ? `${filters.year_of_experience.min || 0}-${filters.year_of_experience.max || 50}` : undefined,
+			is_experienced: filters.is_experienced === 'true' ? true : filters.is_experienced === 'false' ? false : undefined,
+			currently_employed: filters.currently_employed === 'true' ? true : filters.currently_employed === 'false' ? false : undefined,
 			extraFilters: Object.keys(filters)
 				.filter(key => key.startsWith('screening_others.') || key.startsWith('counseling_others.'))
 				.reduce((acc, key) => {
@@ -427,6 +437,35 @@ const Reports: React.FC = () => {
 				{ value: 'male', label: 'Male' },
 				{ value: 'female', label: 'Female' },
 				{ value: 'other', label: 'Other' }
+			]
+		},
+		{
+			key: 'year_of_passing',
+			label: 'Year of Passing',
+			type: 'multi-select',
+			options: (filterOptions.years_of_passing || []).map(v => ({ value: v, label: v }))
+		},
+		{
+			key: 'is_experienced',
+			label: 'Is Experienced?',
+			type: 'single-select',
+			options: [
+				{ value: 'true', label: 'Yes' },
+				{ value: 'false', label: 'No' }
+			]
+		},
+		{
+			key: 'year_of_experience',
+			label: 'Years of Experience (Min-Max)',
+			type: 'range'
+		},
+		{
+			key: 'currently_employed',
+			label: 'Currently Employed?',
+			type: 'single-select',
+			options: [
+				{ value: 'true', label: 'Yes' },
+				{ value: 'false', label: 'No' }
 			]
 		}
 	];

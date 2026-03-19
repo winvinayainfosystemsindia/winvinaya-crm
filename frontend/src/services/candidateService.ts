@@ -35,6 +35,9 @@ export const candidateService = {
 		disabilityPercentages?: string,
 		screeningReasons?: string,
 		gender?: string,
+		yearOfPassing?: string,
+		yearOfExperience?: string,
+		currentlyEmployed?: boolean,
 		extraFilters?: Record<string, string>
 	): Promise<CandidatePaginatedResponse> => {
 		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
@@ -48,7 +51,10 @@ export const candidateService = {
 			isExperienced !== undefined ? `&is_experienced=${isExperienced}` : '',
 			disabilityPercentages ? `&disability_percentages=${encodeURIComponent(disabilityPercentages)}` : '',
 			screeningReasons ? `&screening_reasons=${encodeURIComponent(screeningReasons)}` : '',
-			gender ? `&gender=${encodeURIComponent(gender)}` : ''
+			gender ? `&gender=${encodeURIComponent(gender)}` : '',
+			yearOfPassing ? `&year_of_passing=${encodeURIComponent(yearOfPassing)}` : '',
+			yearOfExperience ? `&year_of_experience=${encodeURIComponent(yearOfExperience)}` : '',
+			currentlyEmployed !== undefined ? `&currently_employed=${currentlyEmployed}` : ''
 		].join('');
 
 		// Append dynamic (screening_others.* / counseling_others.*) filters
@@ -150,7 +156,10 @@ export const candidateService = {
 		educationLevels?: string,
 		cities?: string,
 		screeningStatus?: string,
-		isExperienced?: boolean
+		isExperienced?: boolean,
+		yearOfPassing?: string,
+		yearOfExperience?: string,
+		currentlyEmployed?: boolean
 	): Promise<CandidatePaginatedResponse> => {
 		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
 		const docStatusParam = documentStatus ? `&document_status=${documentStatus}` : '';
@@ -160,7 +169,10 @@ export const candidateService = {
 			educationLevels ? `&education_levels=${encodeURIComponent(educationLevels)}` : '',
 			cities ? `&cities=${encodeURIComponent(cities)}` : '',
 			screeningStatus ? `&screening_status=${encodeURIComponent(screeningStatus)}` : '',
-			isExperienced !== undefined ? `&is_experienced=${isExperienced}` : ''
+			isExperienced !== undefined ? `&is_experienced=${isExperienced}` : '',
+			yearOfPassing ? `&year_of_passing=${encodeURIComponent(yearOfPassing)}` : '',
+			yearOfExperience ? `&year_of_experience=${encodeURIComponent(yearOfExperience)}` : '',
+			currentlyEmployed !== undefined ? `&currently_employed=${currentlyEmployed}` : ''
 		].join('');
 
 		const response = await api.get<CandidatePaginatedResponse>(`/candidates/screened?skip=${skip}&limit=${limit}${counselingStatus ? `&counseling_status=${counselingStatus}` : ''}${docStatusParam}${searchParam}${sortParam}${filterParams}`);
