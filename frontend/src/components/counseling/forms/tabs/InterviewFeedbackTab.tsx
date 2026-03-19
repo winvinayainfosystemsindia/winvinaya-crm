@@ -7,17 +7,11 @@ import {
 	Stack,
 	TextField,
 	IconButton,
-	Paper,
-	Autocomplete,
-	CircularProgress,
-	Chip
+	Paper
 } from '@mui/material';
-import { Add, Delete, Work as WorkIcon } from '@mui/icons-material';
-import InfoIcon from '@mui/icons-material/Info';
-import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
-import { fetchX0PAJobs } from '../../../../store/slices/x0paSlice';
-import type { X0PAJob } from '../../../../services/x0paService';
-
+import { Add as AddIcon, DeleteOutline as DeleteIcon, InfoOutlined as InfoIcon, AssignmentOutlined as InterviewIcon, StarOutline as FeedbackIcon } from '@mui/icons-material';
+import { awsStyles } from '../../../../theme/theme';
+import JobRoleSearch from '../../../common/JobRoleSearch';
 import type { CandidateCounselingCreate } from '../../../../models/candidate';
 
 interface InterviewFeedbackTabProps {
@@ -29,145 +23,6 @@ interface InterviewFeedbackTabProps {
 	onJobRolesChange: (roles: string[]) => void;
 }
 
-// Isolated component for high-performance job search to prevent tab re-renders from affecting typing
-const JobRoleSearch: React.FC<{
-	value: string[];
-	onChange: (roles: string[]) => void;
-}> = ({ value, onChange }) => {
-	const dispatch = useAppDispatch();
-	const { jobs: jobOptions, loading: loadingJobs } = useAppSelector((state) => state.x0pa);
-	const [inputValue, setInputValue] = React.useState('');
-
-	// Initial load and debounced search
-	React.useEffect(() => {
-		const timer = setTimeout(() => {
-			dispatch(fetchX0PAJobs({ searchKey: inputValue, limit: 100 }));
-		}, 500);
-		return () => clearTimeout(timer);
-	}, [dispatch, inputValue]);
-
-	const formatJobRole = (job: X0PAJob | any) => {
-		if (typeof job === 'string') return job;
-		if (!job) return '';
-		return `${job.jobName} - ${job.companyId} (${job.statusName})`;
-	};
-
-	return (
-		<Autocomplete
-			multiple
-			freeSolo // Crucial for enterprise-level search: prevents input resets during API fetches
-			options={jobOptions}
-			loading={loadingJobs}
-			filterOptions={(x) => x}
-			getOptionLabel={formatJobRole}
-			inputValue={inputValue}
-			onInputChange={(_, newInputValue) => {
-				setInputValue(newInputValue);
-			}}
-			isOptionEqualToValue={(option, val) => {
-				const optStr = typeof option === 'string' ? option : formatJobRole(option);
-				const valStr = typeof val === 'string' ? val : formatJobRole(val);
-				return optStr === valStr;
-			}}
-			// Stable identity mapping
-			value={value.map(role => {
-				const parts = role.split(' (');
-				const main = parts[0] || '';
-				const status = parts[1]?.replace(')', '') || '';
-				const subparts = main.split(' - ');
-				const name = subparts[0] || '';
-				const company = subparts[1] || '';
-				return { jobId: role, jobName: name, companyId: company, statusName: status } as X0PAJob;
-			})}
-			onChange={(_, newValue) => {
-				const roles = newValue.map(v => typeof v === 'string' ? v : formatJobRole(v));
-				onChange(roles);
-				setInputValue(''); // Reset input on selection
-			}}
-			renderOption={(props, option) => (
-				<li {...props} key={option.jobId}>
-					<Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-						<Box sx={{ display: 'flex', flexDirection: 'column' }}>
-							<Typography sx={{ fontSize: '0.7rem', fontWeight: 500 }}>{option.jobName}</Typography>
-							<Typography sx={{ fontSize: '0.6rem' }} color="textSecondary">ID: {option.companyId}</Typography>
-						</Box>
-						<Chip
-							label={option.statusName}
-							size="small"
-							variant="outlined"
-							sx={{
-								ml: 1,
-								fontSize: '0.7rem',
-								height: 20,
-								bgcolor: option.statusName.toLowerCase() === 'active' ? '#e7f4e4' : '#f2f3f3',
-								color: option.statusName.toLowerCase() === 'active' ? '#1d8102' : '#545b64',
-								borderColor: option.statusName.toLowerCase() === 'active' ? '#1d8102' : '#d5dbdb'
-							}}
-						/>
-					</Box>
-				</li>
-			)}
-			renderInput={(params) => (
-				<TextField
-					{...params}
-					variant="outlined"
-					size="small"
-					placeholder="Search by job name or company ID..."
-					InputProps={{
-						...params.InputProps,
-						endAdornment: (
-							<React.Fragment>
-								{loadingJobs ? <CircularProgress color="inherit" size={20} /> : null}
-								{params.InputProps.endAdornment}
-							</React.Fragment>
-						),
-						sx: { borderRadius: '2px', bgcolor: '#fafafa' }
-					}}
-				/>
-			)}
-			renderTags={(value, getTagProps) =>
-				value.map((option: X0PAJob | string, index: number) => {
-					const roleStr = typeof option === 'string' ? option : formatJobRole(option);
-					const parts = roleStr.split(' (');
-					const main = parts[0];
-					const status = parts[1]?.replace(')', '') || '';
-
-					return (
-						<Chip
-							{...getTagProps({ index })}
-							key={index}
-							label={
-								<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-									<Typography sx={{ fontSize: '0.5rem', fontWeight: 400 }}>{main}</Typography>
-									<Chip
-										label={status}
-										size="small"
-										sx={{
-											height: 14,
-											fontSize: '0.55rem',
-											bgcolor: 'rgba(255,255,255,0.7)',
-											fontWeight: 700,
-											px: 0.5
-										}}
-									/>
-								</Box>
-							}
-							sx={{
-								borderRadius: '2px',
-								bgcolor: '#f1faff',
-								color: '#007eb9',
-								border: '1px solid #007eb9',
-								p: 0.5
-							}}
-						/>
-					);
-				})
-			}
-			sx={{ '& .MuiAutocomplete-listbox': { fontSize: '0.875rem' } }}
-		/>
-	);
-};
-
 const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 	formData,
 	onAddQuestion,
@@ -176,124 +31,156 @@ const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 	onFeedbackChange,
 	onJobRolesChange
 }) => {
-	const sectionTitleStyle = {
-		fontWeight: 700,
-		fontSize: '0.875rem',
-		color: '#545b64',
-		mb: 2,
-		textTransform: 'uppercase' as const,
-		letterSpacing: '0.025em'
-	};
+	const { sectionTitle, awsPanel, fieldLabel, helperBox } = awsStyles;
 
-	const awsPanelStyle = {
-		border: '1px solid #d5dbdb',
-		borderRadius: '2px',
-		p: 3,
-		bgcolor: '#ffffff'
-	};
-
-	const infoBoxStyle = {
-		bgcolor: '#f1faff',
-		border: '1px solid #007eb9',
-		borderRadius: '2px',
-		p: 2,
-		display: 'flex',
-		alignItems: 'flex-start',
-		gap: 1.5,
-		mb: 3
+	const inputSx = {
+		'& .MuiOutlinedInput-root': {
+			borderRadius: '2px',
+			bgcolor: '#fcfcfc',
+			'& fieldset': { borderColor: '#d5dbdb' },
+			'&:hover fieldset': { borderColor: '#879596' },
+			'&.Mui-focused fieldset': { borderColor: '#ec7211' },
+			'& textarea': { resize: 'vertical' }
+		}
 	};
 
 	return (
-		<Stack spacing={3}>
-			<Paper elevation={0} sx={awsPanelStyle}>
-				<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-					<Typography sx={{ ...sectionTitleStyle, mb: 0 }}>Interview & Questions</Typography>
+		<Stack spacing={4}>
+			{/* Interview Questions Section */}
+			<Paper elevation={0} sx={awsPanel}>
+				<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+					<Stack direction="row" alignItems="center" spacing={1.5}>
+						<Box sx={{ bgcolor: '#ec7211', p: 0.5, borderRadius: '2px', display: 'flex' }}>
+							<InterviewIcon sx={{ color: '#ffffff', fontSize: 20 }} />
+						</Box>
+						<Typography sx={sectionTitle}>Interview Assessment Questions</Typography>
+					</Stack>
 					<Button
 						variant="outlined"
 						size="small"
-						startIcon={<Add />}
+						startIcon={<AddIcon />}
 						onClick={onAddQuestion}
 						sx={{
 							borderRadius: '2px',
 							textTransform: 'none',
+							fontWeight: 700,
 							borderColor: '#d5dbdb',
-							color: '#16191f',
-							'&:hover': { bgcolor: '#f2f3f3', borderColor: '#545b64' }
+							color: '#545b64',
+							'&:hover': { bgcolor: '#f2f3f3', borderColor: '#879596' }
 						}}
 					>
 						Add Custom Question
 					</Button>
 				</Box>
-				<Box sx={infoBoxStyle}>
-					<InfoIcon sx={{ color: '#007eb9', mt: 0.25 }} />
-					<Typography variant="body2" color="#007eb9">
-						Ask Domain based questions/task/activity to understnd the skill level mentioned by the candidate.
+
+				<Box sx={helperBox}>
+					<InfoIcon sx={{ color: '#007eb9', mt: 0.25, fontSize: 20 }} />
+					<Typography variant="body2" sx={{ color: '#007eb9', fontWeight: 500 }}>
+						Guidance: Ask domain-specific questions or assign technical tasks to gauge the skill levels mentioned by the candidate.
 					</Typography>
 				</Box>
-				<Divider sx={{ mb: 3 }} />
-				<Stack spacing={3}>
+
+				<Divider sx={{ mb: 4, borderColor: '#eaeded' }} />
+
+				<Stack spacing={4}>
 					{formData.questions?.map((q, index: number) => (
-						<Box key={index}>
-							<Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1, alignItems: 'center' }}>
-								<TextField
-									variant="standard"
-									fullWidth
-									placeholder="Question"
-									value={q.question}
-									onChange={(e) => onQuestionChange(index, 'question', e.target.value)}
-									InputProps={{
-										disableUnderline: q.question !== '',
-										sx: { fontWeight: 600, fontSize: '0.875rem', color: '#16191f' }
-									}}
-								/>
-								<IconButton size="small" onClick={() => onRemoveQuestion(index)} sx={{ ml: 1 }}>
-									<Delete fontSize="small" />
-								</IconButton>
+						<Box
+							key={index}
+							sx={{
+								p: 3,
+								border: '1px solid #eaeded',
+								borderRadius: '2px',
+								bgcolor: '#fcfcfc',
+								'&:hover': { borderColor: '#d5dbdb', bgcolor: '#ffffff' }
+							}}
+						>
+							<Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, alignItems: 'flex-start' }}>
+								<Box sx={{ width: '100%', mr: 2 }}>
+									<Typography sx={{ ...fieldLabel, color: '#ec7211', mb: 0.5 }}>Question #{index + 1}</Typography>
+									<TextField
+										variant="standard"
+										fullWidth
+										placeholder="Type your question here..."
+										value={q.question}
+										onChange={(e) => onQuestionChange(index, 'question', e.target.value)}
+										InputProps={{
+											disableUnderline: true,
+											sx: {
+												fontSize: '0.9rem',
+												p: 1,
+												bgcolor: '#ffffff',
+												border: '1px solid #d5dbdb',
+												borderRadius: '2px'
+											}
+										}}
+									/>
+								</Box>
+								<Tooltip title="Remove Question">
+									<IconButton
+										size="small"
+										onClick={() => onRemoveQuestion(index)}
+										sx={{
+											color: '#d91d11',
+											'&:hover': { bgcolor: '#fdf3f2' }
+										}}
+									>
+										<DeleteIcon />
+									</IconButton>
+								</Tooltip>
 							</Box>
-							<TextField
-								multiline
-								rows={2}
-								fullWidth
-								size="small"
-								variant="outlined"
-								value={q.answer}
-								onChange={(e) => onQuestionChange(index, 'answer', e.target.value)}
-								placeholder="Enter candidate's response..."
-								sx={{
-									'& .MuiOutlinedInput-root': { borderRadius: '2px', bgcolor: '#fafafa' }
-								}}
-							/>
+							<Box>
+								<Typography sx={fieldLabel}>Candidate Response</Typography>
+								<TextField
+									multiline
+									rows={2}
+									fullWidth
+									size="small"
+									variant="outlined"
+									value={q.answer}
+									onChange={(e) => onQuestionChange(index, 'answer', e.target.value)}
+									placeholder="Document the candidate's answer and your observations..."
+									sx={inputSx}
+								/>
+							</Box>
 						</Box>
 					))}
+					{(!formData.questions || formData.questions.length === 0) && (
+						<Box sx={{ py: 6, textAlign: 'center', border: '1px dashed #d5dbdb', borderRadius: '2px' }}>
+							<Typography variant="body2" sx={{ color: '#545b64', fontStyle: 'italic' }}>
+								No custom interview questions added yet.
+							</Typography>
+						</Box>
+					)}
 				</Stack>
 			</Paper>
 
-			<Paper elevation={0} sx={awsPanelStyle}>
-				<Typography sx={sectionTitleStyle}>Training/Placement Recommendation</Typography>
-				<Box sx={infoBoxStyle}>
-					<InfoIcon sx={{ color: '#007eb9', mt: 0.25 }} />
-					<Typography variant="body2" color="#007eb9">
-						Provide feedback on domain skills, communication, and typing speed, along with ratings and remarks, and inform the candidate accordingly.
+			{/* Performance Feedback Section */}
+			<Paper elevation={0} sx={awsPanel}>
+				<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
+					<Box sx={{ bgcolor: '#ec7211', p: 0.5, borderRadius: '2px', display: 'flex' }}>
+						<FeedbackIcon sx={{ color: '#ffffff', fontSize: 20 }} />
+					</Box>
+					<Typography sx={sectionTitle}>Training & Placement Recommendations</Typography>
+				</Stack>
+
+				<Box sx={helperBox}>
+					<InfoIcon sx={{ color: '#007eb9', mt: 0.25, fontSize: 20 }} />
+					<Typography variant="body2" sx={{ color: '#007eb9', fontWeight: 400 }}>
+						Final Remarks: Synthesize observations on domain expertise, communication skills, and work culture fit to recommend suitable training paths.
 					</Typography>
 				</Box>
-				<Divider sx={{ mb: 3 }} />
 
-				<Stack spacing={3}>
-					<Box>
-						<Typography sx={{ fontWeight: 600, fontSize: '0.875rem', color: '#545b64', mb: 1, display: 'flex', alignItems: 'center' }}>
-							<WorkIcon sx={{ mr: 1, fontSize: '1rem' }} />
-							Suitable Job Roles
-						</Typography>
-						<JobRoleSearch
-							value={formData.suitable_job_roles || []}
-							onChange={onJobRolesChange}
-						/>
-					</Box>
+				<Divider sx={{ mb: 4, borderColor: '#eaeded' }} />
+
+				<Stack spacing={4}>
+					{/* Integrated Job Search Component */}
+					<JobRoleSearch
+						value={formData.suitable_job_roles || []}
+						onChange={onJobRolesChange}
+					/>
 
 					<Box>
-						<Typography sx={{ fontWeight: 600, fontSize: '0.875rem', color: '#545b64', mb: 1 }}>
-							Feedback & Next Steps
-						</Typography>
+						<Typography sx={fieldLabel}>Overall Feedback & Recommended Next Steps</Typography>
 						<TextField
 							multiline
 							rows={4}
@@ -301,10 +188,8 @@ const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 							variant="outlined"
 							value={formData.feedback || ''}
 							onChange={(e) => onFeedbackChange(e.target.value)}
-							placeholder="Summarize your observations and recommended suitable training path..."
-							sx={{
-								'& .MuiOutlinedInput-root': { borderRadius: '2px', bgcolor: '#fafafa' }
-							}}
+							placeholder="Write a summary of clinical observations and the recommended training or placement pipeline for this candidate..."
+							sx={inputSx}
 						/>
 					</Box>
 				</Stack>
@@ -312,5 +197,8 @@ const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 		</Stack>
 	);
 };
+
+// Tooltip import was missing from MUI material in previous edits
+import { Tooltip } from '@mui/material';
 
 export default InterviewFeedbackTab;

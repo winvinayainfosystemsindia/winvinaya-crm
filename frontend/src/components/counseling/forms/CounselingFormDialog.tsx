@@ -275,30 +275,31 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 				</Stack>
 			</DialogTitle>
 
+			<Box sx={{ borderBottom: 1, borderColor: '#d5dbdb', bgcolor: '#ffffff' }}>
+				<Tabs
+					value={tabValue}
+					onChange={handleTabChange}
+					variant="fullWidth"
+					sx={{
+						px: 2,
+						'& .MuiTabs-indicator': { backgroundColor: '#ec7211', height: 3 },
+						'& .MuiTab-root': {
+							textTransform: 'none',
+							fontWeight: 700,
+							fontSize: '0.875rem',
+							color: '#545b64',
+							'&.Mui-selected': { color: '#ec7211' }
+						}
+					}}
+				>
+					<Tab label="1. Skill Assessment" />
+					<Tab label="2. Work Experience" />
+					<Tab label="3. Interview & Feedback" />
+					<Tab label="4. Counseling Info" />
+				</Tabs>
+			</Box>
+
 			<DialogContent sx={{ p: 0, bgcolor: '#f2f3f3' }}>
-				<Box sx={{ borderBottom: 1, borderColor: '#d5dbdb', bgcolor: '#ffffff' }}>
-					<Tabs
-						value={tabValue}
-						onChange={handleTabChange}
-						variant="fullWidth"
-						sx={{
-							px: 2,
-							'& .MuiTabs-indicator': { backgroundColor: '#ec7211', height: 3 },
-							'& .MuiTab-root': {
-								textTransform: 'none',
-								fontWeight: 700,
-								fontSize: '0.875rem',
-								color: '#545b64',
-								'&.Mui-selected': { color: '#ec7211' }
-							}
-						}}
-					>
-						<Tab label="1. Skill Assessment" />
-						<Tab label="2. Work Experience" />
-						<Tab label="3. Interview & Feedback" />
-						<Tab label="4. Counseling Info" />
-					</Tabs>
-				</Box>
 
 				<Box sx={{ px: 4, py: 2 }}>
 					{loadingFields && tabValue === 2 ? (

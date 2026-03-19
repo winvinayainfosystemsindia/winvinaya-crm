@@ -10,14 +10,15 @@ import {
 	Box,
 	Button,
 	IconButton,
-	Tooltip
+	Divider
 } from '@mui/material';
 import {
 	Work as WorkIcon,
-	Info as InfoIcon,
+	InfoOutlined as InfoIcon,
 	Add as AddIcon,
-	Delete as DeleteIcon
+	DeleteOutline as DeleteIcon
 } from '@mui/icons-material';
+import { awsStyles } from '../../../../theme/theme';
 import type { CandidateCounselingCreate, WorkExperience } from '../../../../models/candidate';
 
 interface WorkExperienceTabProps {
@@ -35,62 +36,49 @@ const WorkExperienceTab: React.FC<WorkExperienceTabProps> = ({
 	onWorkExpChange,
 	candidateWorkExperience
 }) => {
-	const sectionTitleStyle = {
-		fontWeight: 700,
-		fontSize: '0.875rem',
-		color: '#545b64',
-		mb: 2,
-		textTransform: 'uppercase' as const,
-		letterSpacing: '0.025em'
-	};
+	const { sectionTitle, awsPanel, fieldLabel, helperBox } = awsStyles;
 
-	const awsPanelStyle = {
-		border: '1px solid #d5dbdb',
-		borderRadius: '2px',
-		p: 3,
-		bgcolor: '#ffffff'
-	};
-
-	const infoBoxStyle = {
-		bgcolor: '#f1faff',
-		border: '1px solid #007eb9',
-		borderRadius: '2px',
-		p: 2,
-		display: 'flex',
-		alignItems: 'flex-start',
-		gap: 1.5,
-		mb: 3
+	const inputSx = {
+		'& .MuiOutlinedInput-root': {
+			borderRadius: '2px',
+			bgcolor: '#fcfcfc',
+			'& fieldset': { borderColor: '#d5dbdb' },
+			'&:hover fieldset': { borderColor: '#879596' },
+			'&.Mui-focused fieldset': { borderColor: '#ec7211' }
+		}
 	};
 
 	const workexperienceList = formData.workexperience || [];
 
 	return (
-		<Stack spacing={3}>
+		<Stack spacing={4}>
 			{/* Candidate's Profile Work Experience (Reference) */}
-			<Paper elevation={0} sx={awsPanelStyle}>
-				<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-					<InfoIcon sx={{ color: '#007eb9', fontSize: 20 }} />
-					<Typography sx={sectionTitleStyle}>Candidate Profile Work Experience</Typography>
+			<Paper elevation={0} sx={awsPanel}>
+				<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
+					<Box sx={{ bgcolor: '#007eb9', p: 0.5, borderRadius: '2px', display: 'flex' }}>
+						<InfoIcon sx={{ color: '#ffffff', fontSize: 20 }} />
+					</Box>
+					<Typography sx={sectionTitle}>Candidate Profile Overview</Typography>
 				</Stack>
 
-				<Box sx={{ bgcolor: '#f8f9fa', p: 2, borderRadius: '2px', border: '1px dashed #d5dbdb' }}>
+				<Box sx={{ bgcolor: '#f1faff', p: 3, borderRadius: '2px', border: '1px solid #007eb9' }}>
 					<Grid container spacing={3}>
 						<Grid size={{ xs: 12, md: 4 }}>
-							<Typography variant="caption" color="text.secondary">Is Experienced</Typography>
-							<Typography variant="body2" sx={{ fontWeight: 600 }}>
+							<Typography sx={{ ...fieldLabel, color: '#007eb9', mb: 0.5 }}>Is Experienced</Typography>
+							<Typography variant="body2" sx={{ fontWeight: 700, color: '#16191f' }}>
 								{candidateWorkExperience?.is_experienced ? 'Yes' : 'No'}
 							</Typography>
 						</Grid>
 						<Grid size={{ xs: 12, md: 4 }}>
-							<Typography variant="caption" color="text.secondary">Currently Employed</Typography>
-							<Typography variant="body2" sx={{ fontWeight: 600 }}>
+							<Typography sx={{ ...fieldLabel, color: '#007eb9', mb: 0.5 }}>Currently Employed</Typography>
+							<Typography variant="body2" sx={{ fontWeight: 700, color: '#16191f' }}>
 								{candidateWorkExperience?.currently_employed ? 'Yes' : 'No'}
 							</Typography>
 						</Grid>
 						<Grid size={{ xs: 12, md: 4 }}>
-							<Typography variant="caption" color="text.secondary">Years of Experience</Typography>
-							<Typography variant="body2" sx={{ fontWeight: 600 }}>
-								{candidateWorkExperience?.year_of_experience || 'N/A'}
+							<Typography sx={{ ...fieldLabel, color: '#007eb9', mb: 0.5 }}>Years of Experience</Typography>
+							<Typography variant="body2" sx={{ fontWeight: 700, color: '#16191f' }}>
+								{candidateWorkExperience?.year_of_experience || 'Not Specified'}
 							</Typography>
 						</Grid>
 					</Grid>
@@ -98,112 +86,131 @@ const WorkExperienceTab: React.FC<WorkExperienceTabProps> = ({
 			</Paper>
 
 			{/* Counseling Work Experience Details */}
-			<Paper elevation={0} sx={awsPanelStyle}>
-				<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-					<Stack direction="row" alignItems="center" spacing={1}>
-						<WorkIcon sx={{ color: '#ec7211', fontSize: 20 }} />
-						<Typography sx={sectionTitleStyle}>Counseling Work Experience Details</Typography>
+			<Paper elevation={0} sx={awsPanel}>
+				<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+					<Stack direction="row" alignItems="center" spacing={1.5}>
+						<Box sx={{ bgcolor: '#ec7211', p: 0.5, borderRadius: '2px', display: 'flex' }}>
+							<WorkIcon sx={{ color: '#ffffff', fontSize: 20 }} />
+						</Box>
+						<Typography sx={sectionTitle}>Professional History Details</Typography>
 					</Stack>
 					<Button
+						variant="outlined"
+						size="small"
 						startIcon={<AddIcon />}
 						onClick={onAddWorkExp}
 						sx={{
+							borderRadius: '2px',
 							textTransform: 'none',
-							color: '#ec7211',
 							fontWeight: 700,
-							'&:hover': { bgcolor: 'rgba(236, 114, 17, 0.04)' }
+							borderColor: '#d5dbdb',
+							color: '#545b64',
+							'&:hover': { bgcolor: '#f2f3f3', borderColor: '#879596' }
 						}}
 					>
-						Add Experience
+						Add Work History
 					</Button>
 				</Stack>
 
-				<Box sx={infoBoxStyle}>
-					<InfoIcon sx={{ color: '#007eb9', mt: 0.25 }} />
-					<Typography variant="body2" color="#007eb9">
-						Collect detailed work experience based on the counseling discussion. You can add multiple entries if the candidate has worked in multiple roles/companies.
+				<Box sx={helperBox}>
+					<InfoIcon sx={{ color: '#007eb9', mt: 0.25, fontSize: 20 }} />
+					<Typography variant="body2" sx={{ color: '#007eb9', fontWeight: 500 }}>
+						Discussion Context: Capture detailed work experience as discussed during counseling. Multiple entries can be added for comprehensive history.
 					</Typography>
 				</Box>
 
+				<Divider sx={{ mb: 4, borderColor: '#eaeded' }} />
+
 				{workexperienceList.length === 0 ? (
-					<Box sx={{ textAlign: 'center', py: 4, bgcolor: '#fbfbfb', border: '1px dashed #cecece' }}>
-						<Typography variant="body2" color="text.secondary">No work experience entries added yet.</Typography>
+					<Box sx={{ textAlign: 'center', py: 6, border: '1px dashed #d5dbdb', borderRadius: '2px' }}>
+						<Typography variant="body2" sx={{ color: '#545b64', fontStyle: 'italic' }}>
+							No work experience entries have been added to this counseling record yet.
+						</Typography>
 					</Box>
 				) : (
-					<Stack spacing={3}>
+					<Stack spacing={4}>
 						{workexperienceList.map((exp, index) => (
 							<Box
 								key={index}
 								sx={{
-									p: 2,
+									p: 3,
 									border: '1px solid #eaeded',
 									borderRadius: '2px',
-									position: 'relative',
-									'&:hover': { borderColor: '#d5dbdb' }
+									bgcolor: '#fcfcfc',
+									'&:hover': { borderColor: '#d5dbdb', bgcolor: '#ffffff' },
+									transition: 'all 0.2s ease'
 								}}
 							>
-								<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-									<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#ec7211' }}>
-										Experience #{index + 1}
+								<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+									<Typography sx={{ fontWeight: 700, color: '#ec7211', fontSize: '0.9rem', textTransform: 'uppercase' }}>
+										Record #{index + 1}
 									</Typography>
-									<Tooltip title="Remove Entry">
-										<IconButton
-											size="small"
-											onClick={() => onRemoveWorkExp(index)}
-											sx={{ color: '#d13212' }}
-										>
-											<DeleteIcon fontSize="small" />
-										</IconButton>
-									</Tooltip>
+									<IconButton
+										size="small"
+										onClick={() => onRemoveWorkExp(index)}
+										sx={{ 
+											color: '#d91d11',
+											'&:hover': { bgcolor: '#fdf3f2' }
+										}}
+									>
+										<DeleteIcon fontSize="small" />
+									</IconButton>
 								</Stack>
 
-								<Grid container spacing={3}>
+								<Grid container spacing={4}>
 									<Grid size={{ xs: 12, md: 6 }}>
-										<TextField
-											label="Job Title"
-											fullWidth
-											size="small"
-											variant="outlined"
-											value={exp.job_title || ''}
-											onChange={(e) => onWorkExpChange(index, 'job_title', e.target.value)}
-											placeholder="Enter job title"
-											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-										/>
+										<Box>
+											<Typography sx={fieldLabel}>Job Title</Typography>
+											<TextField
+												fullWidth
+												size="small"
+												value={exp.job_title || ''}
+												onChange={(e) => onWorkExpChange(index, 'job_title', e.target.value)}
+												placeholder="e.g. Sales Executive"
+												sx={inputSx}
+											/>
+										</Box>
 									</Grid>
 									<Grid size={{ xs: 12, md: 6 }}>
-										<TextField
-											label="Company Name"
-											fullWidth
-											size="small"
-											variant="outlined"
-											value={exp.company || ''}
-											onChange={(e) => onWorkExpChange(index, 'company', e.target.value)}
-											placeholder="Enter company name"
-											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-										/>
+										<Box>
+											<Typography sx={fieldLabel}>Company Name</Typography>
+											<TextField
+												fullWidth
+												size="small"
+												value={exp.company || ''}
+												onChange={(e) => onWorkExpChange(index, 'company', e.target.value)}
+												placeholder="e.g. Acme Corp"
+												sx={inputSx}
+											/>
+										</Box>
 									</Grid>
 									<Grid size={{ xs: 12, md: 6 }}>
-										<TextField
-											label="Years of Experience"
-											fullWidth
-											size="small"
-											variant="outlined"
-											value={exp.years_of_experience || ''}
-											onChange={(e) => onWorkExpChange(index, 'years_of_experience', e.target.value)}
-											placeholder="e.g. 2 years, 6 months"
-											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-										/>
+										<Box>
+											<Typography sx={fieldLabel}>Duration / Years of Experience</Typography>
+											<TextField
+												fullWidth
+												size="small"
+												value={exp.years_of_experience || ''}
+												onChange={(e) => onWorkExpChange(index, 'years_of_experience', e.target.value)}
+												placeholder="e.g. 2.5 years"
+												sx={inputSx}
+											/>
+										</Box>
 									</Grid>
-									<Grid size={{ xs: 12, md: 6 }}>
+									<Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', alignItems: 'flex-end', pb: 1 }}>
 										<FormControlLabel
 											control={
 												<Checkbox
 													checked={exp.currently_working || false}
 													onChange={(e) => onWorkExpChange(index, 'currently_working', e.target.checked)}
-													sx={{ color: '#ec7211', '&.Mui-checked': { color: '#ec7211' } }}
+													sx={{ 
+														color: '#d5dbdb', 
+														'&.Mui-checked': { color: '#ec7211' } 
+													}}
 												/>
 											}
-											label={<Typography variant="body2">Is Currently Working?</Typography>}
+											label={<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e' }}>Is Currently Working Here?</Typography>}
+											sx={{ ml: 0 }}
 										/>
 									</Grid>
 								</Grid>

@@ -15,7 +15,6 @@ import {
 import {
 	DeleteOutline as DeleteIcon,
 	Add as AddIcon,
-	Person as PersonIcon,
 	Work as WorkIcon,
 	AccountBalanceWallet as WalletIcon
 } from '@mui/icons-material';
@@ -112,9 +111,6 @@ const FamilyDetailsTab: React.FC<FamilyDetailsTabProps> = ({ formData, onUpdateF
 			<Box>
 				<Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={2} sx={{ mb: 3 }}>
 					<Stack direction="row" alignItems="center" spacing={1.5}>
-						<Box sx={{ bgcolor: '#ec7211', p: 0.5, borderRadius: '2px', display: 'flex' }}>
-							<PersonIcon sx={{ color: '#ffffff', fontSize: 20 }} />
-						</Box>
 						<Typography sx={sectionTitle}>Family & Dependent Details</Typography>
 					</Stack>
 					<Button
