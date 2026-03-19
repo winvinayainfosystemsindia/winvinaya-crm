@@ -3,11 +3,16 @@ import {
 	Box,
 	Typography,
 	Stack,
-	FormLabel,
 	Autocomplete,
 	TextField,
-	Chip
+	Chip,
+	Paper
 } from '@mui/material';
+import {
+	Build as BuildIcon,
+	EmojiEvents as SoftSkillIcon
+} from '@mui/icons-material';
+import { awsStyles } from '../../../../theme/theme';
 
 interface SkillsTabProps {
 	formData: any;
@@ -20,30 +25,31 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 	onUpdateField,
 	commonSkills
 }) => {
-	const sectionTitleStyle = {
-		fontWeight: 700,
-		fontSize: '0.875rem',
-		color: '#545b64',
-		mb: 2,
-		textTransform: 'uppercase' as const,
-		letterSpacing: '0.025em'
-	};
+	const { sectionTitle, awsPanel, fieldLabel } = awsStyles;
 
-	const awsPanelStyle = {
-		border: '1px solid #d5dbdb',
-		borderRadius: '2px',
-		p: 3,
-		bgcolor: '#ffffff'
+	const inputSx = {
+		'& .MuiOutlinedInput-root': {
+			borderRadius: '2px',
+			bgcolor: '#fcfcfc',
+			'& fieldset': { borderColor: '#d5dbdb' },
+			'&:hover fieldset': { borderColor: '#879596' },
+			'&.Mui-focused fieldset': { borderColor: '#ec7211' }
+		}
 	};
 
 	return (
-		<Box sx={awsPanelStyle}>
-			<Typography sx={sectionTitleStyle}>Skill Assessment</Typography>
-			<Stack spacing={4}>
-				<Box>
-					<FormLabel sx={{ fontSize: '0.875rem', color: '#545b64', fontWeight: 500, mb: 1, display: 'block' }}>
-						Technical Skills
-					</FormLabel>
+		<Stack spacing={4}>
+			{/* Technical Skills Section */}
+			<Paper elevation={0} sx={awsPanel}>
+				<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
+					<Box sx={{ bgcolor: '#ec7211', p: 0.5, borderRadius: '2px', display: 'flex' }}>
+						<BuildIcon sx={{ color: '#ffffff', fontSize: 20 }} />
+					</Box>
+					<Typography sx={sectionTitle}>Technical Skills</Typography>
+				</Stack>
+
+				<Box sx={{ mb: 1 }}>
+					<Typography sx={fieldLabel}>Core Proficiencies</Typography>
 					<Autocomplete
 						multiple
 						freeSolo
@@ -53,66 +59,76 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 						renderTags={(value, getTagProps) =>
 							value.map((option, index) => (
 								<Chip
-									variant="outlined"
 									label={option}
 									{...getTagProps({ index })}
 									size="small"
-									sx={{ borderRadius: '2px' }}
+									sx={{ 
+										borderRadius: '2px',
+										bgcolor: '#f1faff',
+										border: '1px solid #007eb9',
+										color: '#007eb9',
+										fontWeight: 600
+									}}
 								/>
 							))
 						}
 						renderInput={(params) => (
 							<TextField
 								{...params}
-								placeholder="Type a technical skill and press Enter"
+								placeholder="Type a skill (e.g. Python, SQL) and press Enter"
 								size="small"
-								sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-								inputProps={{
-									...params.inputProps,
-									'aria-label': 'Type a technical skill and press Enter to add'
-								}}
+								sx={inputSx}
 							/>
 						)}
 					/>
 				</Box>
+			</Paper>
 
-				<Box>
-					<FormLabel sx={{ fontSize: '0.875rem', color: '#545b64', fontWeight: 500, mb: 1, display: 'block' }}>
-						Additional Skills/Soft Skills
-					</FormLabel>
+			{/* Soft Skills Section */}
+			<Paper elevation={0} sx={awsPanel}>
+				<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
+					<Box sx={{ bgcolor: '#ec7211', p: 0.5, borderRadius: '2px', display: 'flex' }}>
+						<SoftSkillIcon sx={{ color: '#ffffff', fontSize: 20 }} />
+					</Box>
+					<Typography sx={sectionTitle}>Additional & Soft Skills</Typography>
+				</Stack>
+
+				<Box sx={{ mb: 1 }}>
+					<Typography sx={fieldLabel}>Professional Attributes</Typography>
 					<Autocomplete
 						multiple
 						freeSolo
-						options={['Communication', 'Teamwork', 'Punctuality', 'Problem Solving']}
+						options={['Communication', 'Teamwork', 'Punctuality', 'Problem Solving', 'Leadership']}
 						value={formData.skills?.soft_skills || []}
 						onChange={(_e, newValue) => onUpdateField('skills', 'soft_skills', newValue)}
 						renderTags={(value, getTagProps) =>
 							value.map((option, index) => (
 								<Chip
-									variant="outlined"
 									label={option}
 									{...getTagProps({ index })}
 									size="small"
-									sx={{ borderRadius: '2px' }}
+									sx={{ 
+										borderRadius: '2px',
+										bgcolor: '#fafffe',
+										border: '1px solid #1d8102',
+										color: '#1d8102',
+										fontWeight: 600
+									}}
 								/>
 							))
 						}
 						renderInput={(params) => (
 							<TextField
 								{...params}
-								placeholder="Type a soft skill and press Enter"
+								placeholder="Type a soft skill (e.g. Communication) and press Enter"
 								size="small"
-								sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
-								inputProps={{
-									...params.inputProps,
-									'aria-label': 'Type a soft skill and press Enter to add'
-								}}
+								sx={inputSx}
 							/>
 						)}
 					/>
 				</Box>
-			</Stack>
-		</Box>
+			</Paper>
+		</Stack>
 	);
 };
 

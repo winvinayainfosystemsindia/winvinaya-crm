@@ -128,21 +128,37 @@ const theme = createTheme({
 
 // Extend the theme with custom AWS console styles
 export const awsStyles = {
-	sectionTitle: (theme: any) => ({
+	sectionTitle: {
 		fontWeight: 700,
-		fontSize: '0.875rem',
-		color: theme.palette.text.secondary,
-		mb: 1.5,
+		fontSize: '0.9rem',
+		color: '#232f3e',
 		textTransform: 'uppercase' as const,
 		letterSpacing: '0.05em'
-	}),
-	awsPanel: (theme: any) => ({
-		border: `1px solid ${theme.palette.divider}`,
+	},
+	awsPanel: {
+		border: '1px solid #d5dbdb',
 		borderRadius: '2px',
 		p: 3,
-		bgcolor: theme.palette.background.paper,
-		boxShadow: 'none'
-	})
+		bgcolor: '#ffffff',
+		boxShadow: '0 1px 1px 0 rgba(0,28,36,0.1)'
+	},
+	fieldLabel: {
+		fontSize: '0.875rem',
+		mb: 1,
+		color: '#232f3e',
+		fontWeight: 600,
+		display: 'block'
+	},
+	helperBox: {
+		bgcolor: '#f1faff',
+		border: '1px solid #007eb9',
+		borderRadius: '2px',
+		p: 1.5,
+		display: 'flex',
+		alignItems: 'flex-start',
+		gap: 1.5,
+		mb: 3
+	}
 };
 
 export default theme;

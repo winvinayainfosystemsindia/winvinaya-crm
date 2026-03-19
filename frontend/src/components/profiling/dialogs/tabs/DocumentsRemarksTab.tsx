@@ -7,16 +7,11 @@ import {
 	CircularProgress,
 	TextField,
 	FormControl,
-	FormLabel,
-	RadioGroup,
-	FormControlLabel,
-	Radio,
 	Paper,
 	Divider,
 	Chip,
 	Select,
 	MenuItem,
-	Autocomplete
 } from '@mui/material';
 import {
 	CloudUpload as CloudUploadIcon,
@@ -25,9 +20,9 @@ import {
 	DeleteOutline as DeleteIcon,
 	ErrorOutline as ErrorIcon
 } from '@mui/icons-material';
+import { awsStyles } from '../../../../theme/theme';
 import DynamicFieldRenderer from '../../../common/DynamicFieldRenderer';
 import type { DynamicField } from '../../../../services/settingsService';
-
 
 interface DocumentsRemarksTabProps {
 	formData: any;
@@ -54,6 +49,7 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 	dynamicFields,
 	candidateIsDisabled
 }) => {
+	const { sectionTitle, awsPanel, fieldLabel } = awsStyles;
 
 	const renderDocumentItem = (label: string, key: string) => {
 		const isUploaded = formData.documents_upload?.[key];
@@ -65,11 +61,9 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 			<Paper
 				elevation={0}
 				sx={{
-					p: 2,
-					border: '1px solid',
+					...awsPanel,
 					borderColor: isUploaded ? '#879596' : '#d5dbdb',
 					bgcolor: isUploaded ? '#fafffa' : '#ffffff',
-					borderRadius: 0,
 					display: 'flex',
 					flexDirection: 'column',
 					gap: 2
@@ -107,7 +101,7 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 								sx={{
 									bgcolor: '#dff3d8',
 									color: '#1d8102',
-									borderRadius: 0,
+									borderRadius: '2px',
 									fontWeight: 700,
 									fontSize: '0.75rem',
 									border: '1px solid #cce8c5'
@@ -120,7 +114,7 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 								sx={{
 									bgcolor: '#f2f3f3',
 									color: '#545b64',
-									borderRadius: 0,
+									borderRadius: '2px',
 									fontWeight: 700,
 									fontSize: '0.75rem',
 									border: '1px solid #d5dbdb'
@@ -144,7 +138,7 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 							fontWeight: 700,
 							color: '#545b64',
 							border: '1px solid #d5dbdb',
-							borderRadius: 0,
+							borderRadius: '2px',
 							'&:hover': { bgcolor: '#f2f3f3', borderColor: '#879596' }
 						}}
 					>
@@ -171,7 +165,7 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 									fontWeight: 700,
 									color: '#545b64',
 									border: '1px solid #d5dbdb',
-									borderRadius: 0,
+									borderRadius: '2px',
 									'&:hover': { bgcolor: '#f2f3f3', borderColor: '#879596' }
 								}}
 							>
@@ -187,7 +181,7 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 									fontWeight: 700,
 									color: '#d91d11',
 									border: '1px solid #d5dbdb',
-									borderRadius: 0,
+									borderRadius: '2px',
 									'&:hover': { bgcolor: '#fdf3f2', borderColor: '#d91d11' }
 								}}
 							>
@@ -204,7 +198,7 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 		<Stack spacing={4}>
 			{/* Document Verification Section */}
 			<Box>
-				<Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#232f3e' }}>
+				<Typography sx={sectionTitle}>
 					Document Verification
 				</Typography>
 				<Typography variant="body2" sx={{ color: '#545b64', mb: 2 }}>
@@ -221,10 +215,10 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 			{/* Additional Fields Section */}
 			{dynamicFields.length > 0 && (
 				<Box>
-					<Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#232f3e', mb: 2 }}>
+					<Typography sx={sectionTitle}>
 						Additional Information
 					</Typography>
-					<Paper elevation={0} sx={{ p: 3, border: '1px solid #d5dbdb', borderRadius: 0 }}>
+					<Paper elevation={0} sx={awsPanel}>
 						<DynamicFieldRenderer
 							fields={dynamicFields}
 							formData={formData.others}
@@ -236,111 +230,13 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 
 			{/* Final Verdict Section */}
 			<Box>
-				<Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#232f3e', mb: 2 }}>
+				<Typography sx={sectionTitle}>
 					Final Verdict & Comments
 				</Typography>
-				<Paper elevation={0} sx={{ p: 3, border: '1px solid #d5dbdb', borderRadius: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+				<Paper elevation={0} sx={{ ...awsPanel, display: 'flex', flexDirection: 'column', gap: 3 }}>
 
-					<Stack direction={{ xs: 'column', sm: 'row' }} spacing={4}>
-						<FormControl component="fieldset">
-							<FormLabel sx={{ fontSize: '0.875rem', mb: 0.5, color: '#232f3e', fontWeight: 600 }}>
-								Willing for Training?
-							</FormLabel>
-							<RadioGroup
-								row
-								value={formData.others?.willing_for_training ? 'yes' : 'no'}
-								onChange={(e) => onUpdateOtherField('willing_for_training', e.target.value === 'yes')}
-							>
-								<FormControlLabel
-									value="yes"
-									control={<Radio size="small" sx={{ '&.Mui-checked': { color: '#ec7211' } }} />}
-									label={<Typography variant="body2">Yes</Typography>}
-								/>
-								<FormControlLabel
-									value="no"
-									control={<Radio size="small" sx={{ '&.Mui-checked': { color: '#ec7211' } }} />}
-									label={<Typography variant="body2">No</Typography>}
-								/>
-							</RadioGroup>
-						</FormControl>
-
-						<FormControl component="fieldset">
-							<FormLabel sx={{ fontSize: '0.875rem', mb: 0.5, color: '#232f3e', fontWeight: 600 }}>
-								Ready to Relocate?
-							</FormLabel>
-							<RadioGroup
-								row
-								value={formData.others?.ready_to_relocate ? 'yes' : 'no'}
-								onChange={(e) => onUpdateOtherField('ready_to_relocate', e.target.value === 'yes')}
-							>
-								<FormControlLabel
-									value="yes"
-									control={<Radio size="small" sx={{ '&.Mui-checked': { color: '#ec7211' } }} />}
-									label={<Typography variant="body2">Yes</Typography>}
-								/>
-								<FormControlLabel
-									value="no"
-									control={<Radio size="small" sx={{ '&.Mui-checked': { color: '#ec7211' } }} />}
-									label={<Typography variant="body2">No</Typography>}
-								/>
-							</RadioGroup>
-						</FormControl>
-					</Stack>
-
-					<Stack direction={{ xs: 'column', sm: 'row' }} spacing={3}>
-						<Box sx={{ flex: 1 }}>
-							<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 1 }}>
-								How did you know about us?
-							</Typography>
-							<Autocomplete
-								freeSolo
-								options={['Google', 'LinkedIn', 'V-Shesh', 'Saira', 'Facebook', 'WhatsApp', 'Friends / Referral']}
-								value={formData.others?.source_of_info || ''}
-								onInputChange={(_event, newValue) => onUpdateOtherField('source_of_info', newValue)}
-								onChange={(_event, newValue) => onUpdateOtherField('source_of_info', newValue)}
-								renderInput={(params) => (
-									<TextField
-										{...params}
-										size="small"
-										placeholder="Select or type source"
-										sx={{
-											'& .MuiOutlinedInput-root': {
-												borderRadius: 0,
-												'& fieldset': { borderColor: '#d5dbdb' },
-												'&:hover fieldset': { borderColor: '#879596' },
-												'&.Mui-focused fieldset': { borderColor: '#ec7211' }
-											}
-										}}
-									/>
-								)}
-							/>
-						</Box>
-
-						<Box sx={{ flex: 1 }}>
-							<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 1 }}>
-								Family Annual Income (in INR)
-							</Typography>
-							<TextField
-								fullWidth
-								size="small"
-								type="number"
-								placeholder="Enter annual income"
-								value={formData.others?.family_annual_income || ''}
-								onChange={(e) => onUpdateOtherField('family_annual_income', e.target.value)}
-								sx={{
-									'& .MuiOutlinedInput-root': {
-										borderRadius: 0,
-										'& fieldset': { borderColor: '#d5dbdb' },
-										'&:hover fieldset': { borderColor: '#879596' },
-										'&.Mui-focused fieldset': { borderColor: '#ec7211' }
-									}
-								}}
-							/>
-						</Box>
-					</Stack>
-
-					<Box sx={{ flex: 1 }}>
-						<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 1 }}>
+					<Box>
+						<Typography sx={fieldLabel}>
 							Screening Status
 						</Typography>
 						<FormControl fullWidth size="small">
@@ -349,7 +245,8 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 								value={formData.status || 'In Progress'}
 								onChange={(e) => onUpdateStatus(e.target.value)}
 								sx={{
-									borderRadius: 0,
+									borderRadius: '2px',
+									bgcolor: '#fcfcfc',
 									'& .MuiOutlinedInput-notchedOutline': {
 										borderColor: '#d5dbdb'
 									},
@@ -368,10 +265,11 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 						</FormControl>
 					</Box>
 
+
 					{/* Conditional Reason Field */}
 					{(formData.status === 'In Progress' || formData.status === 'Rejected') && (
 						<Box>
-							<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 1 }}>
+							<Typography sx={fieldLabel}>
 								Reason / Details
 							</Typography>
 							<FormControl fullWidth size="small">
@@ -412,7 +310,7 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 					)}
 
 					<Box>
-						<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 1 }}>
+						<Typography sx={fieldLabel}>
 							Screening Comments
 						</Typography>
 						<TextField

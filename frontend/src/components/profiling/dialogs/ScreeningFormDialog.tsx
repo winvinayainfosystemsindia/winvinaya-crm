@@ -369,30 +369,30 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 				</IconButton>
 			</DialogTitle>
 
-			<DialogContent sx={{ p: 0 }}>
-				<Box sx={{ borderBottom: 1, borderColor: '#d5dbdb', bgcolor: '#ffffff' }}>
-					<Tabs
-						value={tabValue}
-						onChange={handleTabChange}
-						variant="fullWidth"
-						sx={{
-							'& .MuiTabs-indicator': { backgroundColor: '#ec7211', height: 3 },
-							'& .MuiTab-root': {
-								textTransform: 'none',
-								fontWeight: 700,
-								fontSize: '0.875rem',
-								color: '#545b64',
-								'&.Mui-selected': { color: '#ec7211' }
-							}
-						}}
-					>
-						<Tab label="1. Background & Training" />
-						<Tab label="2. Family Details" />
-						<Tab label="3. Skills" />
-						<Tab label="4. Documents & Remarks" />
-					</Tabs>
-				</Box>
+			<Box sx={{ borderBottom: 1, borderColor: '#d5dbdb', bgcolor: '#ffffff' }}>
+				<Tabs
+					value={tabValue}
+					onChange={handleTabChange}
+					variant="fullWidth"
+					sx={{
+						'& .MuiTabs-indicator': { backgroundColor: '#ec7211', height: 3 },
+						'& .MuiTab-root': {
+							textTransform: 'none',
+							fontWeight: 700,
+							fontSize: '0.875rem',
+							color: '#545b64',
+							'&.Mui-selected': { color: '#ec7211' }
+						}
+					}}
+				>
+					<Tab label="1. Background & Training" />
+					<Tab label="2. Family Details" />
+					<Tab label="3. Skills" />
+					<Tab label="4. Documents & Remarks" />
+				</Tabs>
+			</Box>
 
+			<DialogContent sx={{ p: 0 }}>
 				<Box sx={{ p: 3 }}>
 					{loadingFields && tabValue === 2 ? (
 						<Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>

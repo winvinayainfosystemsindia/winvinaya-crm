@@ -9,13 +9,17 @@ import {
 	Stack,
 	MenuItem,
 	Select,
-	FormControl,
 	Grid,
-	Divider,
-	InputLabel,
-	Tooltip
+	FormControl
 } from '@mui/material';
-import { DeleteOutline as DeleteIcon, Add as AddIcon, Person as PersonIcon, Work as WorkIcon } from '@mui/icons-material';
+import {
+	DeleteOutline as DeleteIcon,
+	Add as AddIcon,
+	Person as PersonIcon,
+	Work as WorkIcon,
+	AccountBalanceWallet as WalletIcon
+} from '@mui/icons-material';
+import { awsStyles } from '../../../../theme/theme';
 
 interface FamilyMember {
 	name: string;
@@ -27,15 +31,7 @@ interface FamilyMember {
 }
 
 const RELATION_OPTIONS = [
-	'Father',
-	'Mother',
-	'Brother',
-	'Sister',
-	'Spouse',
-	'Guardian',
-	'Son',
-	'Daughter',
-	'Other'
+	'Father', 'Mother', 'Brother', 'Sister', 'Spouse', 'Guardian', 'Son', 'Daughter', 'Other'
 ];
 
 interface FamilyDetailsTabProps {
@@ -44,6 +40,7 @@ interface FamilyDetailsTabProps {
 }
 
 const FamilyDetailsTab: React.FC<FamilyDetailsTabProps> = ({ formData, onUpdateField }) => {
+	const { sectionTitle, awsPanel, fieldLabel } = awsStyles;
 	const familyDetails: FamilyMember[] = formData.family_details || [];
 
 	const handleAddRow = () => {
@@ -64,127 +61,131 @@ const FamilyDetailsTab: React.FC<FamilyDetailsTabProps> = ({ formData, onUpdateF
 	};
 
 	const handleChange = (index: number, field: keyof FamilyMember, value: string) => {
-		// Phone validation: only 10 digits
 		if (field === 'phone') {
-			const sanitized = value.replace(/\D/g, ''); // Remove non-digits
-			if (sanitized.length > 10) return; // Cap at 10
+			const sanitized = value.replace(/\D/g, '').slice(0, 10);
 			value = sanitized;
 		}
 
-		const updatedDetails = familyDetails.map((member, i) => {
-			if (i === index) {
-				return { ...member, [field]: value };
-			}
-			return member;
-		});
+		const updatedDetails = familyDetails.map((member, i) =>
+			i === index ? { ...member, [field]: value } : member
+		);
 		onUpdateField('root', 'family_details', updatedDetails);
 	};
 
 	const inputSx = {
 		'& .MuiOutlinedInput-root': {
 			borderRadius: '2px',
-			fontSize: '0.875rem',
-			bgcolor: '#ffffff',
+			bgcolor: '#fcfcfc',
 			'& fieldset': { borderColor: '#d5dbdb' },
 			'&:hover fieldset': { borderColor: '#879596' },
 			'&.Mui-focused fieldset': { borderColor: '#ec7211' }
-		},
-		'& .MuiInputLabel-root': {
-			fontSize: '0.875rem',
-			color: '#545b64',
-			'&.Mui-focused': { color: '#ec7211' }
 		}
 	};
 
 	return (
 		<Stack spacing={4}>
-			<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-				<Box>
-					<Typography variant="h6" sx={{ fontWeight: 700, color: '#232f3e', mb: 0.5 }}>
-						Family & Dependent Details
-					</Typography>
-					<Typography variant="body2" sx={{ color: '#545b64' }}>
-						Provide information about family members for socio-economic background assessment.
-					</Typography>
-				</Box>
-				<Button
-					variant="contained"
-					size="small"
-					startIcon={<AddIcon />}
-					onClick={handleAddRow}
-					sx={{
-						bgcolor: '#ec7211',
-						color: '#ffffff',
-						borderRadius: '2px',
-						textTransform: 'none',
-						fontWeight: 700,
-						px: 2,
-						boxShadow: 'none',
-						'&:hover': { bgcolor: '#eb5f07', boxShadow: 'none' }
-					}}
-				>
-					Add Family Member
-				</Button>
-			</Box>
+			{/* Economic Background Section */}
+			<Paper elevation={0} sx={awsPanel}>
+				<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
+					<Box sx={{ bgcolor: '#ec7211', p: 0.5, borderRadius: '2px', display: 'flex' }}>
+						<WalletIcon sx={{ color: '#ffffff', fontSize: 20 }} />
+					</Box>
+					<Typography sx={sectionTitle}>Economic Background</Typography>
+				</Stack>
+				<Grid container spacing={3}>
+					<Grid size={{ xs: 12, md: 6 }}>
+						<Typography sx={fieldLabel}>Family Annual Income (in INR)</Typography>
+						<TextField
+							fullWidth
+							size="small"
+							type="number"
+							placeholder="Enter total annual income"
+							value={formData.others?.family_annual_income || ''}
+							onChange={(e) => onUpdateField('others', 'family_annual_income', e.target.value)}
+							sx={inputSx}
+						/>
+					</Grid>
+				</Grid>
+			</Paper>
 
-			<Stack spacing={3}>
-				{familyDetails.length === 0 ? (
-					<Paper
-						elevation={0}
+			{/* Family Members Section */}
+			<Box>
+				<Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={2} sx={{ mb: 3 }}>
+					<Stack direction="row" alignItems="center" spacing={1.5}>
+						<Box sx={{ bgcolor: '#ec7211', p: 0.5, borderRadius: '2px', display: 'flex' }}>
+							<PersonIcon sx={{ color: '#ffffff', fontSize: 20 }} />
+						</Box>
+						<Typography sx={sectionTitle}>Family & Dependent Details</Typography>
+					</Stack>
+					<Button
+						variant="contained"
+						size="small"
+						startIcon={<AddIcon />}
+						onClick={handleAddRow}
 						sx={{
-							p: 6,
-							textAlign: 'center',
-							border: '1px dashed #d5dbdb',
-							bgcolor: '#fafafa',
-							borderRadius: '2px'
+							bgcolor: '#ec7211',
+							color: '#ffffff',
+							borderRadius: '2px',
+							textTransform: 'none',
+							fontWeight: 700,
+							px: 3,
+							py: 0.8,
+							boxShadow: 'none',
+							'&:hover': { bgcolor: '#eb5f07', boxShadow: 'none' }
 						}}
 					>
-						<Typography variant="body2" sx={{ color: '#879596', fontStyle: 'italic' }}>
-							No family records added. Use the button above to add a member.
-						</Typography>
-					</Paper>
-				) : (
-					familyDetails.map((member, index) => (
+						Add Family Member
+					</Button>
+				</Stack>
+
+				<Stack spacing={3}>
+					{familyDetails.length === 0 ? (
 						<Paper
-							key={index}
 							elevation={0}
 							sx={{
-								border: '1px solid #d5dbdb',
-								borderRadius: '2px',
-								overflow: 'hidden',
-								bgcolor: '#ffffff'
+								p: 6,
+								textAlign: 'center',
+								border: '1px dashed #d5dbdb',
+								bgcolor: '#fafffe',
+								borderRadius: '2px'
 							}}
 						>
-							{/* Card Header */}
-							<Box sx={{
-								display: 'flex',
-								justifyContent: 'space-between',
-								alignItems: 'center',
-								px: 2,
-								py: 1.5,
-								bgcolor: '#f8f9f9',
-								borderBottom: '1px solid #eaeded'
-							}}>
-								<Stack direction="row" spacing={1} alignItems="center">
-									<Box sx={{
-										width: 24,
-										height: 24,
-										borderRadius: '50%',
-										bgcolor: '#ec7211',
-										color: 'white',
-										display: 'flex',
-										alignItems: 'center',
-										justifyContent: 'center',
-										fontSize: '0.75rem',
-										fontWeight: 700
-									}}>
-										{index + 1}
-									</Box>
-									<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e' }}>
-										{member.relation ? `${member.relation}` : 'Family Member'} {member.name ? `— ${member.name}` : ''}
-									</Typography>
-								</Stack>
-								<Tooltip title="Remove Record">
+							<Typography variant="body2" sx={{ color: '#879596', fontStyle: 'italic' }}>
+								No family members registered yet. Click "Add Family Member" to begin.
+							</Typography>
+						</Paper>
+					) : (
+						familyDetails.map((member, index) => (
+							<Paper key={index} elevation={0} sx={{ ...awsPanel, p: 0, overflow: 'hidden' }}>
+								{/* Card Header */}
+								<Box sx={{
+									display: 'flex',
+									justifyContent: 'space-between',
+									alignItems: 'center',
+									px: 3,
+									py: 1.5,
+									bgcolor: '#f8f9f9',
+									borderBottom: '1px solid #eaeded'
+								}}>
+									<Stack direction="row" spacing={1.5} alignItems="center">
+										<Box sx={{
+											width: 28,
+											height: 28,
+											borderRadius: '50%',
+											bgcolor: '#ec7211',
+											color: 'white',
+											display: 'flex',
+											alignItems: 'center',
+											justifyContent: 'center',
+											fontSize: '0.85rem',
+											fontWeight: 700
+										}}>
+											{index + 1}
+										</Box>
+										<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e' }}>
+											{member.relation || 'New Member'} {member.name ? `— ${member.name}` : ''}
+										</Typography>
+									</Stack>
 									<IconButton
 										size="small"
 										onClick={() => handleRemoveRow(index)}
@@ -192,125 +193,102 @@ const FamilyDetailsTab: React.FC<FamilyDetailsTabProps> = ({ formData, onUpdateF
 									>
 										<DeleteIcon fontSize="small" />
 									</IconButton>
-								</Tooltip>
-							</Box>
+								</Box>
 
-							{/* Card Content */}
-							<Box sx={{ p: 3 }}>
-								<Grid container spacing={4}>
-									{/* Personal Column */}
-									<Grid size={{ xs: 12, md: 6 }}>
-										<Stack spacing={2.5}>
-											<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
-												<PersonIcon sx={{ color: '#545b64', fontSize: 18 }} />
-												<Typography variant="caption" sx={{ fontWeight: 700, color: '#545b64', textTransform: 'uppercase' }}>
+								{/* Card Content */}
+								<Box sx={{ p: 3 }}>
+									<Grid container spacing={4}>
+										{/* Personal Column */}
+										<Grid size={{ xs: 12, md: 6 }}>
+											<Stack spacing={2.5}>
+												<Typography variant="caption" sx={{ fontWeight: 600, color: '#545b64', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
 													Identity & Contact
 												</Typography>
+
+												<TextField
+													fullWidth
+													label="Full Name"
+													size="small"
+													placeholder="Enter member's name"
+													value={member.name}
+													onChange={(e) => handleChange(index, 'name', e.target.value)}
+													sx={inputSx}
+												/>
+												<Grid container spacing={2}>
+													<Grid size={{ xs: 12, sm: 6 }}>
+														<FormControl fullWidth size="small" sx={inputSx}>
+															<Select
+																value={member.relation}
+																onChange={(e) => handleChange(index, 'relation', e.target.value)}
+																displayEmpty
+																renderValue={(selected) => selected || <Typography variant="body2" color="text.secondary">Relationship</Typography>}
+															>
+																{RELATION_OPTIONS.map(opt => (
+																	<MenuItem key={opt} value={opt}>{opt}</MenuItem>
+																))}
+															</Select>
+														</FormControl>
+													</Grid>
+													<Grid size={{ xs: 12, sm: 6 }}>
+														<TextField
+															fullWidth
+															placeholder="10-digit mobile"
+															size="small"
+															value={member.phone}
+															onChange={(e) => handleChange(index, 'phone', e.target.value)}
+															error={member.phone !== '' && member.phone.length !== 10}
+															sx={inputSx}
+														/>
+													</Grid>
+												</Grid>
 											</Stack>
+										</Grid>
 
-											<Grid container spacing={2}>
-												<Grid size={{ xs: 12 }}>
-													<TextField
-														fullWidth
-														label="Full Name"
-														size="small"
-														placeholder="Enter full name"
-														value={member.name}
-														onChange={(e) => handleChange(index, 'name', e.target.value)}
-														sx={inputSx}
-													/>
-												</Grid>
-												<Grid size={{ xs: 12, sm: 6 }}>
-													<FormControl fullWidth size="small" sx={inputSx}>
-														<InputLabel id={`relation-label-${index}`}>Relationship</InputLabel>
-														<Select
-															labelId={`relation-label-${index}`}
-															value={member.relation}
-															label="Relationship"
-															onChange={(e) => handleChange(index, 'relation', e.target.value)}
-														>
-															<MenuItem value="" disabled>Select</MenuItem>
-															{RELATION_OPTIONS.map(opt => (
-																<MenuItem key={opt} value={opt}>{opt}</MenuItem>
-															))}
-														</Select>
-													</FormControl>
-												</Grid>
-												<Grid size={{ xs: 12, sm: 6 }}>
-													<TextField
-														fullWidth
-														label="Phone Number"
-														size="small"
-														placeholder="10-digit mobile"
-														value={member.phone}
-														onChange={(e) => handleChange(index, 'phone', e.target.value)}
-														error={member.phone !== '' && member.phone.length !== 10}
-														sx={inputSx}
-														helperText={member.phone !== '' && member.phone.length !== 10 ? 'Requires 10 digits' : ''}
-													/>
-												</Grid>
-											</Grid>
-										</Stack>
-									</Grid>
+										{/* Professional Column */}
+										<Grid size={{ xs: 12, md: 6 }}>
+											<Stack spacing={2.5}>
+												<Stack direction="row" spacing={1} alignItems="center">
+													<WorkIcon sx={{ color: '#545b64', fontSize: 18 }} />
+													<Typography variant="caption" sx={{ fontWeight: 600, color: '#545b64', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+														Professional Background
+													</Typography>
+												</Stack>
 
-									{/* Divider for larger screens - visible only on md+ */}
-									<Grid size={{ md: 'auto' }} sx={{ display: { xs: 'none', md: 'block' } }}>
-										<Divider orientation="vertical" flexItem sx={{ height: '100%', borderColor: '#eaeded' }} />
-									</Grid>
-
-									{/* Professional Column */}
-									<Grid size={{ xs: 12, md: 5.5 }}>
-										<Stack spacing={2.5}>
-											<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
-												<WorkIcon sx={{ color: '#545b64', fontSize: 18 }} />
-												<Typography variant="caption" sx={{ fontWeight: 700, color: '#545b64', textTransform: 'uppercase' }}>
-													Professional Background
-												</Typography>
+												<TextField
+													fullWidth
+													label="Occupation"
+													size="small"
+													placeholder="e.g. Farmer, Salaried"
+													value={member.occupation}
+													onChange={(e) => handleChange(index, 'occupation', e.target.value)}
+													sx={inputSx}
+												/>
+												<TextField
+													fullWidth
+													label="Organization / Company"
+													size="small"
+													value={member.company_name}
+													onChange={(e) => handleChange(index, 'company_name', e.target.value)}
+													sx={inputSx}
+												/>
+												<TextField
+													fullWidth
+													label="Current Position"
+													size="small"
+													placeholder="e.g. Lead, Clerk, Manager"
+													value={member.position}
+													onChange={(e) => handleChange(index, 'position', e.target.value)}
+													sx={inputSx}
+												/>
 											</Stack>
-
-											<Grid container spacing={2}>
-												<Grid size={{ xs: 12 }}>
-													<TextField
-														fullWidth
-														label="Occupation"
-														size="small"
-														placeholder="e.g. Farmer, Employee, Business"
-														value={member.occupation}
-														onChange={(e) => handleChange(index, 'occupation', e.target.value)}
-														sx={inputSx}
-													/>
-												</Grid>
-												<Grid size={{ xs: 12 }}>
-													<TextField
-														fullWidth
-														label="Company / Institution"
-														size="small"
-														placeholder="Enter organization name"
-														value={member.company_name}
-														onChange={(e) => handleChange(index, 'company_name', e.target.value)}
-														sx={inputSx}
-													/>
-												</Grid>
-												<Grid size={{ xs: 12 }}>
-													<TextField
-														fullWidth
-														label="Current Position"
-														size="small"
-														placeholder="Enter role or designation"
-														value={member.position}
-														onChange={(e) => handleChange(index, 'position', e.target.value)}
-														sx={inputSx}
-													/>
-												</Grid>
-											</Grid>
-										</Stack>
+										</Grid>
 									</Grid>
-								</Grid>
-							</Box>
-						</Paper>
-					))
-				)}
-			</Stack>
+								</Box>
+							</Paper>
+						))
+					)}
+				</Stack>
+			</Box>
 		</Stack>
 	);
 };
