@@ -45,6 +45,7 @@ const ReportingHeader: React.FC<ReportingHeaderProps> = ({
 					<DatePicker
 						value={dayjs(reportDate)}
 						onChange={(newValue) => onDateChange(newValue ? newValue.format('YYYY-MM-DD') : '')}
+						format="DD-MMM-YYYY"
 						disabled={!!entryId || readOnly}
 						maxDate={dayjs()}
 						slots={{ day: (props) => <StatusDay {...props} dateStatuses={dateStatuses} /> }}

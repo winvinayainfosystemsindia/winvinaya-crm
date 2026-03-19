@@ -171,7 +171,7 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 										{leaveType || 'Select Leave Type'}
 									</Typography>
 									<Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 400 }}>
-										You have marked this day as on leave. No work activities will be processed for {dayjs(reportDate).format('MMMM D, YYYY')}.
+										You have marked this day as on leave. No work activities will be processed for {dayjs(reportDate).format('DD-MMM-YYYY')}.
 									</Typography>
 								</Box>
 							</Fade>
