@@ -13,6 +13,8 @@ import useToast from '../../../../hooks/useToast';
 export const useDSRAdmin = () => {
 	const dispatch = useAppDispatch();
 	const toast = useToast();
+	const { user } = useAppSelector((state) => state.auth);
+	const isPrivileged = user?.role === 'admin' || user?.role === 'manager';
 	const {
 		missingReports,
 		adminEntries,
@@ -52,6 +54,8 @@ export const useDSRAdmin = () => {
 	}, [permissionsSearchTerm]);
 
 	const fetchData = useCallback(() => {
+		// Only fetch admin data if user has admin/manager role
+		if (!isPrivileged) return;
 		dispatch(fetchMissingReports(reportDate));
 		dispatch(fetchPermissionRequests({ 
 			skip: permissionPage * permissionRowsPerPage, 
@@ -67,7 +71,7 @@ export const useDSRAdmin = () => {
 			search: debouncedSubmissionsSearch || undefined,
 			status: (statusFilter as any) || undefined
 		}));
-	}, [dispatch, reportDate, entryPage, entryRowsPerPage, historyDateFrom, historyDateTo, debouncedSubmissionsSearch, statusFilter, permissionPage, permissionRowsPerPage, debouncedPermissionsSearch, permissionStatusFilter]);
+	}, [dispatch, isPrivileged, reportDate, entryPage, entryRowsPerPage, historyDateFrom, historyDateTo, debouncedSubmissionsSearch, statusFilter, permissionPage, permissionRowsPerPage, debouncedPermissionsSearch, permissionStatusFilter]);
 
 	useEffect(() => {
 		fetchData();
