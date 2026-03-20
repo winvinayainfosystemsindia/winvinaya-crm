@@ -2,8 +2,8 @@ from typing import List, Any
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
-from app.api.deps import require_roles
-from app.models.user import UserRole
+from app.api.deps import require_roles, get_current_user
+from app.models.user import User, UserRole
 from app.utils.activity_tracker import log_update
 from app.repositories.system_setting_repository import SystemSettingRepository
 from app.schemas.system_setting import SystemSettingResponse, SystemSettingUpdate, SystemSettingCreate
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/settings/system", tags=["Settings"])
 @router.get("", response_model=List[SystemSettingResponse])
 async def get_system_settings(
     db: AsyncSession = Depends(get_db),
-    current_user: Any = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """
     Get all system settings. (Admin/Manager only)
