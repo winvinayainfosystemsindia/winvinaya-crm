@@ -11,7 +11,7 @@ X_API_KEY = "wvf_xe_hiGQb442bdSuGVB4XdzkFWsnYt5gucto"
 @router.get("/jobs")
 async def proxy_x0pa_jobs(
     searchKey: Optional[str] = Query(None),
-    limit: int = Query(10),
+    limit: int = Query(10, le=50),
     offset: int = Query(0),
     minExp: Optional[int] = Query(None),
     maxExp: Optional[int] = Query(None),

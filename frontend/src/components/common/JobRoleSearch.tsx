@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
 	Box,
 	Typography,
@@ -7,10 +7,11 @@ import {
 	CircularProgress,
 	Chip
 } from '@mui/material';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { fetchX0PAJobs } from '../../store/slices/x0paSlice';
+import { x0paService } from '../../services/x0paService';
 import type { X0PAJob } from '../../services/x0paService';
 import { awsStyles } from '../../theme/theme';
+
+const PAGE_SIZE = 50;
 
 interface JobRoleSearchProps {
 	value: string[];
@@ -20,25 +21,66 @@ interface JobRoleSearchProps {
 
 /**
  * JobRoleSearch - Standalone component for professional job role selection.
- * Handles high-performance searching using X0PA API and displays selections with enterprise-grade chips.
+ * Supports server-side search through the entire X0PA database with lazy loading.
+ * - Typing searches X0PA's full dataset via the `searchKey` param.
+ * - Scrolling to the bottom of the dropdown loads the next page of results.
  */
-const JobRoleSearch: React.FC<JobRoleSearchProps> = ({ 
-	value, 
-	onChange, 
-	placeholder = "Search by job name or company ID..." 
+const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
+	value,
+	onChange,
+	placeholder = "Search by job name or company ID..."
 }) => {
-	const dispatch = useAppDispatch();
-	const { jobs: jobOptions, loading: loadingJobs } = useAppSelector((state) => state.x0pa);
-	const [inputValue, setInputValue] = React.useState('');
 	const { fieldLabel } = awsStyles;
 
-	// Initial load and debounced search
-	React.useEffect(() => {
-		const timer = setTimeout(() => {
-			dispatch(fetchX0PAJobs({ searchKey: inputValue, limit: 100 }));
-		}, 500);
-		return () => clearTimeout(timer);
-	}, [dispatch, inputValue]);
+	const [inputValue, setInputValue] = useState('');
+	const [jobs, setJobs] = useState<X0PAJob[]>([]);
+	const [loading, setLoading] = useState(false);
+	const [hasMore, setHasMore] = useState(true);
+	const [offset, setOffset] = useState(0);
+	const currentSearch = useRef('');
+	const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	const fetchJobs = useCallback(async (searchKey: string, newOffset: number, append: boolean) => {
+		setLoading(true);
+		try {
+			const result = await x0paService.getJobs({
+				searchKey: searchKey || undefined,
+				limit: PAGE_SIZE,
+				offset: newOffset,
+			});
+			const fetched = result.jobs || [];
+			setJobs(prev => append ? [...prev, ...fetched] : fetched);
+			setHasMore(fetched.length === PAGE_SIZE);
+			setOffset(newOffset + fetched.length);
+		} catch (e) {
+			// silently fail
+		} finally {
+			setLoading(false);
+		}
+	}, []);
+
+	// Debounced search when input changes
+	useEffect(() => {
+		if (debounceTimer.current) clearTimeout(debounceTimer.current);
+		debounceTimer.current = setTimeout(() => {
+			currentSearch.current = inputValue;
+			setOffset(0);
+			setHasMore(true);
+			fetchJobs(inputValue, 0, false);
+		}, 400);
+		return () => {
+			if (debounceTimer.current) clearTimeout(debounceTimer.current);
+		};
+	}, [inputValue, fetchJobs]);
+
+	// Load more when user scrolls to bottom of dropdown
+	const handleListboxScroll = useCallback((event: React.UIEvent<HTMLUListElement>) => {
+		const el = event.currentTarget;
+		const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 60;
+		if (nearBottom && !loading && hasMore) {
+			fetchJobs(currentSearch.current, offset, true);
+		}
+	}, [loading, hasMore, offset, fetchJobs]);
 
 	const formatJobRole = (job: X0PAJob | any) => {
 		if (typeof job === 'string') return job;
@@ -53,8 +95,7 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 		const subparts = main.split(' - ');
 		const name = subparts[0] || '';
 		const company = subparts[1] || '';
-		const id = role; // Use full string as ID for consistency
-		return { jobId: id, jobName: name, companyId: company, statusName: status } as X0PAJob;
+		return { jobId: role, jobName: name, companyId: company, statusName: status } as X0PAJob;
 	};
 
 	return (
@@ -63,8 +104,8 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 			<Autocomplete
 				multiple
 				freeSolo
-				options={jobOptions || []}
-				loading={loadingJobs}
+				options={jobs}
+				loading={loading}
 				filterOptions={(x) => x}
 				getOptionLabel={formatJobRole}
 				inputValue={inputValue}
@@ -81,6 +122,10 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 					const roles = newValue.map(v => typeof v === 'string' ? v : formatJobRole(v));
 					onChange(roles);
 					setInputValue('');
+				}}
+				ListboxProps={{
+					onScroll: handleListboxScroll as any,
+					style: { maxHeight: 320 }
 				}}
 				renderOption={(props, option) => (
 					<li {...props} key={option.jobId}>
@@ -101,10 +146,10 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 									fontWeight: 700,
 									height: 20,
 									borderRadius: '2px',
-									bgcolor: option.statusName.toLowerCase() === 'active' ? '#e7f4e4' : '#f2f3f3',
-									color: option.statusName.toLowerCase() === 'active' ? '#1d8102' : '#545b64',
+									bgcolor: option.statusName?.toLowerCase() === 'active' ? '#e7f4e4' : '#f2f3f3',
+									color: option.statusName?.toLowerCase() === 'active' ? '#1d8102' : '#545b64',
 									border: '1px solid',
-									borderColor: option.statusName.toLowerCase() === 'active' ? '#1d8102' : '#d5dbdb'
+									borderColor: option.statusName?.toLowerCase() === 'active' ? '#1d8102' : '#d5dbdb'
 								}}
 							/>
 						</Box>
@@ -129,7 +174,7 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 							...params.InputProps,
 							endAdornment: (
 								<React.Fragment>
-									{loadingJobs ? <CircularProgress color="inherit" size={16} /> : null}
+									{loading ? <CircularProgress color="inherit" size={16} /> : null}
 									{params.InputProps.endAdornment}
 								</React.Fragment>
 							),
@@ -139,7 +184,7 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 				renderTags={(tagValue, getTagProps) =>
 					tagValue.map((option: X0PAJob | string, index: number) => {
 						const roleObj = typeof option === 'string' ? parseJobRole(option) : option;
-						const isActive = roleObj.statusName.toLowerCase() === 'active';
+						const isActive = roleObj.statusName?.toLowerCase() === 'active';
 
 						return (
 							<Chip
@@ -181,17 +226,22 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 						);
 					})
 				}
-				sx={{ 
-					'& .MuiAutocomplete-listbox': { 
+				sx={{
+					'& .MuiAutocomplete-listbox': {
 						p: 1,
 						'& .MuiAutocomplete-option': {
 							borderRadius: '2px',
 							'&[aria-selected="true"]': { bgcolor: '#f1faff' },
 							'&:hover': { bgcolor: '#f2f3f3' }
 						}
-					} 
+					}
 				}}
 			/>
+			{!loading && hasMore && jobs.length > 0 && (
+				<Typography sx={{ fontSize: '0.72rem', color: '#879596', mt: 0.5, textAlign: 'right' }}>
+					Scroll down in the dropdown to load more results
+				</Typography>
+			)}
 		</Box>
 	);
 };
