@@ -460,6 +460,10 @@ class CandidateStats(BaseModel):
     screening_distribution: dict = {}
     counseling_distribution: dict = {}
 
+class ScreeningStats(BaseModel):
+    not_screened: int
+    screening_distribution: dict = {}
+
 
 class CandidatePaginatedResponse(BaseModel):
     """Paginated response for candidate listing"""

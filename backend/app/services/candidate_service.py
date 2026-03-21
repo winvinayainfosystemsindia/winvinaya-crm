@@ -177,6 +177,14 @@ class CandidateService:
         """Get candidate statistics"""
         return await self.repository.get_stats()
 
+    async def get_screening_stats(self, current_user: Optional[User] = None) -> dict:
+        """Get screening statistics with optional assignment filter"""
+        assigned_to_id = None
+        if current_user and current_user.role == UserRole.SOURCING:
+            assigned_to_id = current_user.id
+            
+        return await self.repository.get_screening_stats(assigned_to_id=assigned_to_id)
+
     async def get_unscreened_candidates(
         self, 
         skip: int = 0, 

@@ -260,6 +260,11 @@ export interface CandidateStats {
 	counseling_distribution?: Record<string, number>;
 }
 
+export interface ScreeningStats {
+	not_screened: number;
+	screening_distribution: Record<string, number>;
+}
+
 export interface CandidatePaginatedResponse {
 	items: CandidateListItem[];
 	total: number;

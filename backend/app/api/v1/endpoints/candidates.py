@@ -6,9 +6,18 @@ from fastapi import APIRouter, Depends, status, Request, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.rate_limiter import rate_limit_medium
-from app.api.deps import require_roles
+from app.api.deps import require_roles, get_current_active_user
 from app.models.user import User, UserRole
-from app.schemas.candidate import CandidateCreate, CandidateResponse, CandidateUpdate, CandidateListResponse, CandidateStats, CandidatePaginatedResponse, CandidateCheck
+from app.schemas.candidate import (
+    CandidateCreate,
+    CandidateUpdate,
+    CandidateResponse,
+    CandidateListResponse,
+    CandidatePaginatedResponse,
+    CandidateStats,
+    ScreeningStats,
+    CandidateCheck
+)
 from app.schemas.candidate_assignment import CandidateAssignmentResponse, CandidateAssignmentCreate
 from app.services.candidate_service import CandidateService
 from app.utils.activity_tracker import log_create, log_update, log_delete
@@ -167,6 +176,20 @@ async def get_candidate_stats(
     """
     service = CandidateService(db)
     return await service.get_stats()
+
+
+@router.get("/screening-stats", response_model=ScreeningStats)
+@rate_limit_medium()
+async def get_candidate_screening_stats(
+    request: Request,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get candidate screening statistics for tabs (Role-filtered)
+    """
+    service = CandidateService(db)
+    return await service.get_screening_stats(current_user=current_user)
 
 
 @router.get("/unscreened", response_model=CandidatePaginatedResponse)

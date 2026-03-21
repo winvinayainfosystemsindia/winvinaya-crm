@@ -77,6 +77,11 @@ export const candidateService = {
 		return response.data;
 	},
 
+	getScreeningStats: async (): Promise<any> => {
+		const response = await api.get('/candidates/screening-stats');
+		return response.data;
+	},
+
 	/**
 	 * Get candidate by public_id (UUID)
 	 * @param publicId - UUID of the candidate

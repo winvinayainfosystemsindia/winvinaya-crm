@@ -11,7 +11,7 @@ import {
 	useMediaQuery
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { fetchCandidateStats, createScreening, updateScreening, fetchCandidateById } from '../../store/slices/candidateSlice';
+import { fetchScreeningStats, createScreening, updateScreening, fetchCandidateById } from '../../store/slices/candidateSlice';
 import ScreeningStatCard from '../../components/profiling/stats/ScreeningStatCard';
 import ScreeningTable from '../../components/profiling/table/ScreeningTable';
 import ScreeningFormDialog from '../../components/profiling/dialogs/ScreeningFormDialog';
@@ -40,7 +40,7 @@ function TabPanel(props: TabPanelProps) {
 
 const ScreeningList: React.FC = () => {
 	const dispatch = useAppDispatch();
-	const { stats } = useAppSelector((state) => state.candidates);
+	const { screeningStats: stats } = useAppSelector((state) => state.candidates);
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const [tabValue, setTabValue] = useState(0);
@@ -55,7 +55,7 @@ const ScreeningList: React.FC = () => {
 	const [refreshKey, setRefreshKey] = useState(0);
 
 	useEffect(() => {
-		dispatch(fetchCandidateStats());
+		dispatch(fetchScreeningStats());
 	}, [dispatch, refreshKey]);
 
 	const showSnackbar = (message: string, severity: 'success' | 'error') => {

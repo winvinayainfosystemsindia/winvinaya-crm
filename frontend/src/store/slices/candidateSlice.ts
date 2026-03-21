@@ -8,7 +8,8 @@ import type {
 	CandidateScreeningCreate,
 	CandidateCounselingCreate,
 	CandidateStats,
-	CandidatePaginatedResponse
+	CandidatePaginatedResponse,
+	ScreeningStats
 } from '../../models/candidate';
 
 interface CandidateState {
@@ -16,6 +17,7 @@ interface CandidateState {
 	total: number;
 	selectedCandidate: Candidate | null;
 	stats: CandidateStats | null;
+	screeningStats: ScreeningStats | null;
 	loading: boolean;
 	statsLoading: boolean;
 	error: string | null;
@@ -36,6 +38,7 @@ const initialState: CandidateState = {
 	total: 0,
 	selectedCandidate: null,
 	stats: null,
+	screeningStats: null,
 	loading: false,
 	statsLoading: false,
 	error: null,
@@ -63,6 +66,18 @@ export const fetchCandidateStats = createAsyncThunk(
 			return response;
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to fetch candidate stats');
+		}
+	}
+);
+
+export const fetchScreeningStats = createAsyncThunk(
+	'candidates/fetchScreeningStats',
+	async (_, { rejectWithValue }) => {
+		try {
+			const response = await candidateService.getScreeningStats();
+			return response;
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to fetch screening stats');
 		}
 	}
 );
@@ -461,6 +476,17 @@ const candidateSlice = createSlice({
 				state.stats = action.payload;
 			})
 			.addCase(fetchCandidateStats.rejected, (state, action: PayloadAction<any>) => {
+				state.statsLoading = false;
+				state.error = action.payload;
+			})
+			.addCase(fetchScreeningStats.pending, (state) => {
+				state.statsLoading = true;
+			})
+			.addCase(fetchScreeningStats.fulfilled, (state, action: PayloadAction<ScreeningStats>) => {
+				state.statsLoading = false;
+				state.screeningStats = action.payload;
+			})
+			.addCase(fetchScreeningStats.rejected, (state, action: PayloadAction<any>) => {
 				state.statsLoading = false;
 				state.error = action.payload;
 			})

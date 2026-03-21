@@ -1020,3 +1020,65 @@ class CandidateRepository(BaseRepository[Candidate]):
 
 
 
+    async def get_screening_stats(self, assigned_to_id: Optional[int] = None) -> dict:
+        """Get candidate screening statistics for tabs, with optional assignment filter"""
+        from sqlalchemy import func
+        from app.models.candidate_screening import CandidateScreening
+        from app.models.candidate_assignment import CandidateAssignment
+        
+        try:
+            # Helper to execute count query
+            async def get_count(filter_expr=None):
+                stmt = select(func.count(Candidate.id)).select_from(Candidate)
+                if assigned_to_id is not None:
+                    stmt = stmt.join(Candidate.assignment).where(CandidateAssignment.user_id == assigned_to_id)
+                
+                start_filter = (Candidate.is_deleted == False)
+                if filter_expr is not None:
+                    stmt = stmt.where(start_filter, filter_expr)
+                else:
+                    stmt = stmt.where(start_filter)
+                result = await self.db.execute(stmt)
+                return result.scalar() or 0
+
+            total = await get_count()
+            
+            # Screening stats
+            stmt_screened = select(func.count(CandidateScreening.id)).join(Candidate).where(
+                Candidate.is_deleted == False
+            )
+            if assigned_to_id is not None:
+                stmt_screened = stmt_screened.join(Candidate.assignment).where(CandidateAssignment.user_id == assigned_to_id)
+                
+            result_screened = await self.db.execute(stmt_screened)
+            screened = result_screened.scalar() or 0
+            
+            # Screening distribution
+            stmt_dist = select(CandidateScreening.status, func.count(CandidateScreening.id)).join(Candidate).where(Candidate.is_deleted == False)
+            if assigned_to_id is not None:
+                stmt_dist = stmt_dist.join(Candidate.assignment).where(CandidateAssignment.user_id == assigned_to_id)
+            stmt_dist = stmt_dist.group_by(CandidateScreening.status)
+            res_dist = await self.db.execute(stmt_dist)
+            raw_dist = dict(res_dist.all())
+            
+            screening_distribution = {}
+            for status_key, count in raw_dist.items():
+                target_key = status_key
+                if status_key is None or status_key == '':
+                    target_key = 'In Progress'
+                screening_distribution[target_key] = screening_distribution.get(target_key, 0) + count
+            
+            not_screened = total - screened
+
+            return {
+                "not_screened": not_screened,
+                "screening_distribution": screening_distribution
+            }
+        except Exception as e:
+            # Log error
+            import logging
+            logging.error(f"Error in get_screening_stats: {e}")
+            return {
+                "not_screened": 0,
+                "screening_distribution": {}
+            }
