@@ -8,7 +8,6 @@ import {
 	TableContainer,
 	TableHead,
 	TableRow,
-	TablePagination,
 	TextField,
 	Button,
 	InputAdornment,
@@ -16,16 +15,14 @@ import {
 	useTheme,
 	Tooltip,
 	Chip,
-	TableSortLabel,
-	FormControl,
-	Select,
-	MenuItem
+	TableSortLabel
 } from '@mui/material';
 import { Search, CloudUpload as UploadIcon, Accessible, VerifiedUser } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchScreenedCandidates } from '../../store/slices/candidateSlice';
 import type { CandidateListItem } from '../../models/candidate';
+import CustomTablePagination from '../common/CustomTablePagination';
 
 interface DocumentCollectionTableProps {
 	type: 'not_collected' | 'pending' | 'collected';
@@ -256,61 +253,14 @@ const DocumentCollectionTable: React.FC<DocumentCollectionTableProps> = ({ type 
 				</Table>
 			</TableContainer>
 
-			{/* Pagination */}
-			<Box sx={{
-				display: 'flex',
-				flexDirection: { xs: 'column', sm: 'row' },
-				justifyContent: 'space-between',
-				alignItems: 'center',
-				p: 2,
-				gap: 2,
-				borderTop: '1px solid #d5dbdb',
-				bgcolor: '#fafafa'
-			}}>
-				<Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 2 }}>
-					<Typography variant="body2" color="text.secondary">
-						Rows per page:
-					</Typography>
-					<FormControl size="small">
-						<Select
-							value={rowsPerPage}
-							onChange={(e) => handleChangeRowsPerPage(e as any)}
-							sx={{
-								height: '32px',
-								'& .MuiOutlinedInput-notchedOutline': {
-									borderColor: '#d5dbdb',
-								},
-								'&:hover .MuiOutlinedInput-notchedOutline': {
-									borderColor: theme.palette.primary.main,
-								}
-							}}
-						>
-							<MenuItem value={5}>5</MenuItem>
-							<MenuItem value={10}>10</MenuItem>
-							<MenuItem value={25}>25</MenuItem>
-							<MenuItem value={50}>50</MenuItem>
-						</Select>
-					</FormControl>
-				</Box>
-
-				<TablePagination
-					component="div"
-					count={totalCount}
-					page={page}
-					onPageChange={handleChangePage}
-					rowsPerPage={rowsPerPage}
-					onRowsPerPageChange={handleChangeRowsPerPage}
-					rowsPerPageOptions={[]}
-					sx={{
-						border: 'none',
-						'.MuiTablePagination-toolbar': {
-							paddingLeft: 0,
-							paddingRight: 0,
-							minHeight: '40px'
-						}
-					}}
-				/>
-			</Box>
+			<CustomTablePagination
+				count={totalCount}
+				page={page}
+				rowsPerPage={rowsPerPage}
+				onPageChange={handleChangePage}
+				onRowsPerPageChange={handleChangeRowsPerPage}
+				onRowsPerPageSelectChange={setRowsPerPage}
+			/>
 		</Paper>
 	);
 };

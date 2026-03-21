@@ -9,7 +9,6 @@ import {
 	TableHead,
 	TableRow,
 	CircularProgress,
-	TablePagination,
 	Typography,
 	Chip,
 	useTheme,
@@ -17,6 +16,7 @@ import {
 	Stack
 } from '@mui/material';
 import { format } from 'date-fns';
+import CustomTablePagination from '../common/CustomTablePagination';
 
 interface Column {
 	id: string;
@@ -405,23 +405,13 @@ const ReportTable: React.FC<ReportTableProps> = ({
 					</Table>
 				)}
 			</Box>
-			<TablePagination
-				component="div"
+			<CustomTablePagination
 				count={total}
 				page={page}
-				onPageChange={(_, p) => onPageChange(p)}
 				rowsPerPage={rowsPerPage}
+				onPageChange={(_, p) => onPageChange(p)}
 				onRowsPerPageChange={(e) => onRowsPerPageChange(parseInt(e.target.value, 10))}
-				rowsPerPageOptions={[25, 50, 100]}
-				labelRowsPerPage={isMobile ? "" : "Rows per page:"}
-				sx={{
-					borderTop: '1px solid #eaeded',
-					backgroundColor: '#fafafa',
-					'.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
-						fontSize: '0.8125rem',
-						color: '#545b64'
-					}
-				}}
+				onRowsPerPageSelectChange={(rows) => onRowsPerPageChange(rows)}
 			/>
 		</TableContainer>
 	);

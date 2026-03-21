@@ -8,7 +8,6 @@ import {
 	TableContainer,
 	TableHead,
 	TableRow,
-	TablePagination,
 	Typography,
 	LinearProgress,
 	Divider,
@@ -21,6 +20,7 @@ import { useMockInterviewList } from './useMockInterviewList';
 import MockInterviewTableHeader from './MockInterviewTableHeader';
 import MockInterviewTableRow from './MockInterviewTableRow';
 import MockInterviewForm from './MockInterviewForm';
+import CustomTablePagination from '../../common/CustomTablePagination';
 
 interface MockInterviewListProps {
 	batchId: number;
@@ -48,7 +48,8 @@ const MockInterviewList: React.FC<MockInterviewListProps> = ({ batchId, allocati
 		handleCreate,
 		handleEdit,
 		handleView,
-		handleDelete
+		handleDelete,
+		setRowsPerPage
 	} = useMockInterviewList(batchId);
 
 	const filteredCandidateName = allocations.find(a => a.candidate_id === filterCandidateId)?.candidate?.name;
@@ -199,15 +200,13 @@ const MockInterviewList: React.FC<MockInterviewListProps> = ({ batchId, allocati
 						</TableBody>
 					</Table>
 				</TableContainer>
-				<TablePagination
-					rowsPerPageOptions={[5, 10, 25]}
-					component="div"
+				<CustomTablePagination
 					count={mockInterviews.length}
-					rowsPerPage={rowsPerPage}
 					page={page}
+					rowsPerPage={rowsPerPage}
 					onPageChange={handleChangePage}
 					onRowsPerPageChange={handleChangeRowsPerPage}
-					sx={{ borderTop: `1px solid ${theme.palette.divider}` }}
+					onRowsPerPageSelectChange={setRowsPerPage}
 				/>
 			</Card>
 

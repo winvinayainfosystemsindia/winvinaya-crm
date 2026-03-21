@@ -105,6 +105,7 @@ export const useMockInterviewList = (batchId: number) => {
 		handleCreate,
 		handleEdit,
 		handleView,
-		handleDelete
+		handleDelete,
+		setRowsPerPage
 	};
 };

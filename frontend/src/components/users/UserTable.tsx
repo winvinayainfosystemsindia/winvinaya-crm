@@ -8,15 +8,11 @@ import {
 	TableContainer,
 	TableHead,
 	TableRow,
-	TablePagination,
 	TextField,
 	Button,
 	Chip,
 	IconButton,
 	InputAdornment,
-	Select,
-	MenuItem,
-	FormControl,
 	Typography,
 	useMediaQuery,
 	useTheme,
@@ -28,6 +24,7 @@ import { format } from 'date-fns';
 import { useAppSelector } from '../../store/hooks';
 import userService from '../../services/userService';
 import type { User } from '../../models/user';
+import CustomTablePagination from '../common/CustomTablePagination';
 
 interface UserTableProps {
 	onAddUser?: () => void;
@@ -347,65 +344,14 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 				</Table>
 			</TableContainer>
 
-			{/* Pagination with Row Limiter */}
-			<Box sx={{
-				display: 'flex',
-				flexDirection: isMobile ? 'column' : 'row',
-				justifyContent: 'space-between',
-				alignItems: 'center',
-				p: 2,
-				borderTop: '1px solid #d5dbdb',
-				bgcolor: '#fafafa',
-				gap: isMobile ? 1 : 0
-			}}>
-				<Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-					<Typography variant="body2" color="text.secondary">
-						Rows per page:
-					</Typography>
-					<FormControl size="small">
-						<Select
-							value={rowsPerPage}
-							onChange={(e) => handleChangeRowsPerPage(e as any)}
-							sx={{
-								height: '32px',
-								'& .MuiOutlinedInput-notchedOutline': {
-									borderColor: '#d5dbdb',
-								},
-								'&:hover .MuiOutlinedInput-notchedOutline': {
-									borderColor: theme.palette.primary.main,
-								}
-							}}
-						>
-							<MenuItem value={5}>5</MenuItem>
-							<MenuItem value={10}>10</MenuItem>
-							<MenuItem value={25}>25</MenuItem>
-							<MenuItem value={50}>50</MenuItem>
-							<MenuItem value={100}>100</MenuItem>
-						</Select>
-					</FormControl>
-				</Box>
-
-				<TablePagination
-					component="div"
-					count={totalCount}
-					page={page}
-					onPageChange={handleChangePage}
-					rowsPerPage={rowsPerPage}
-					onRowsPerPageChange={handleChangeRowsPerPage}
-					rowsPerPageOptions={[]}
-					sx={{
-						border: 'none',
-						'.MuiTablePagination-toolbar': {
-							paddingLeft: 0,
-							paddingRight: 0,
-							minHeight: isMobile ? '40px' : '52px'
-						},
-						'.MuiTablePagination-selectLabel, .MuiTablePagination-input': {
-							display: 'none'
-						}
-					}}
-				/>
-			</Box>
+			<CustomTablePagination
+				count={totalCount}
+				page={page}
+				rowsPerPage={rowsPerPage}
+				onPageChange={handleChangePage}
+				onRowsPerPageChange={handleChangeRowsPerPage}
+				onRowsPerPageSelectChange={setRowsPerPage}
+			/>
 		</Paper>
 	);
 };
