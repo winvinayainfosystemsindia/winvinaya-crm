@@ -283,24 +283,37 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 										</Typography>
 									</TableCell>
 									<TableCell>
-										{user.mobile ? (
-											<Chip
-												icon={<WhatsAppIcon sx={{ fontSize: '1rem !important', color: '#25D366 !important' }} />}
-												label={user.mobile}
-												size="small"
-												variant="outlined"
-												onClick={() => window.open(`https://wa.me/${user.mobile!.replace(/\D/g, '')}`, '_blank')}
-												sx={{
-													borderColor: alpha('#25D366', 0.2),
-													color: '#25D366',
-													fontWeight: 500,
-													'&:hover': {
-														bgcolor: alpha('#25D366', 0.04),
-														borderColor: '#25D366'
-													}
-												}}
-											/>
-										) : '-'}
+										{user.mobile ? (() => {
+											const cleanPhone = user.mobile.replace(/\D/g, '');
+											const displayPhone = cleanPhone.length === 12 && cleanPhone.startsWith('91') 
+												? `+91 - ${cleanPhone.slice(2)}`
+												: cleanPhone.length === 10 
+													? `+91 - ${cleanPhone}` 
+													: user.mobile;
+											
+											return (
+												<Chip
+													icon={<WhatsAppIcon sx={{ fontSize: '1.1rem !important', color: '#075E54 !important' }} />}
+													label={displayPhone}
+													size="small"
+													variant="outlined"
+													onClick={() => window.open(`https://wa.me/${cleanPhone.startsWith('91') ? cleanPhone : `91${cleanPhone}`}`, '_blank')}
+													sx={{ 
+														borderColor: '#075E54',
+														color: '#075E54',
+														fontWeight: 600,
+														borderRadius: '4px',
+														'&:hover': {
+															bgcolor: alpha('#25D366', 0.1),
+															borderColor: '#128C7E'
+														},
+														'& .MuiChip-label': {
+															px: 1
+														}
+													}}
+												/>
+											);
+										})() : '-'}
 									</TableCell>
 									<TableCell sx={{ display: isMedium ? 'none' : 'table-cell' }}>
 										<Typography variant="body2" color="text.secondary">
