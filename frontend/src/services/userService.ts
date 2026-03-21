@@ -3,10 +3,10 @@ import api from './api';
 import type { User, UserCreate, UserUpdate } from '../models/user';
 
 const userService = {
-    // Get all users with pagination and optional role filter
-    getAll: async (skip = 0, limit = 100, role?: string): Promise<{ items: User[], total: number }> => {
+    // Get all users with pagination, optional role and search filter
+    getAll: async (skip = 0, limit = 100, role?: string, search?: string): Promise<{ items: User[], total: number }> => {
         const response = await api.get<{ items: User[], total: number }>('/users/', {
-            params: { skip, limit, role }
+            params: { skip, limit, role, search }
         });
         return response.data;
     },

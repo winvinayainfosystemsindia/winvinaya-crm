@@ -36,15 +36,25 @@ class UserRepository(BaseRepository[User]):
         skip: int = 0,
         limit: int = 100,
         include_deleted: bool = False,
-        role: Optional[str] = None
+        role: Optional[str] = None,
+        search: Optional[str] = None
     ) -> list[User]:
-        """Get multiple users with optional role filter"""
+        """Get multiple users with optional role and search filter"""
         stmt = select(User)
         if not include_deleted:
             stmt = stmt.where(User.is_deleted == False)
         
         if role:
             stmt = stmt.where(User.role == role)
+            
+        if search:
+            search_filter = (
+                User.full_name.ilike(f"%{search}%") |
+                User.email.ilike(f"%{search}%") |
+                User.username.ilike(f"%{search}%") |
+                User.mobile.ilike(f"%{search}%")
+            )
+            stmt = stmt.where(search_filter)
             
         stmt = stmt.offset(skip).limit(limit)
         result = await self.db.execute(stmt)

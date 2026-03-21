@@ -38,10 +38,11 @@ class UserService:
         self,
         skip: int = 0,
         limit: int = 100,
-        role: Optional[str] = None
+        role: Optional[str] = None,
+        search: Optional[str] = None
     ) -> List[User]:
         """Get list of users"""
-        return await self.repository.get_multi(skip=skip, limit=limit, role=role)
+        return await self.repository.get_multi(skip=skip, limit=limit, role=role, search=search)
     
     async def create_user(self, user_in: UserCreate) -> User:
         """Create a new user"""

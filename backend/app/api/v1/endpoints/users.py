@@ -165,26 +165,37 @@ async def get_users(
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(20, ge=1, le=2000, description="Maximum number of records to return"),
     role: Optional[UserRole] = Query(None, description="Filter by user role"),
+    search: Optional[str] = Query(None, description="Search users by name, email, username, or phone"),
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Get list of users (Admin or Manager only)
-    
-    - **skip**: Number of records to skip (pagination)
-    - **limit**: Maximum number of records to return
-    - **role**: Filter by role
+    Get list of users with pagination and search
     """
-    logger.info(f"Fetching users list (skip={skip}, limit={limit}, role={role}) by {current_user.role.value} {current_user.email}")
+    logger.info(f"Fetching users list (skip={skip}, limit={limit}, role={role}, search={search}) by {current_user.role.value} {current_user.email}")
     
     user_service = UserService(db)
-    users = await user_service.get_users(skip=skip, limit=limit, role=role)
+    users = await user_service.get_users(skip=skip, limit=limit, role=role.value if role else None, search=search)
     
-    # Get total count for pagination (filtered by role if provided)
+    # Construct filter for total count
+    filters = []
     if role:
-        total = await user_service.repository.count(filter_expr=(User.role == role))
-    else:
-        total = await user_service.repository.count()
+        filters.append(User.role == role)
+    if search:
+        search_filter = (
+            User.full_name.ilike(f"%{search}%") |
+            User.email.ilike(f"%{search}%") |
+            User.username.ilike(f"%{search}%") |
+            User.mobile.ilike(f"%{search}%")
+        )
+        filters.append(search_filter)
+    
+    filter_expr = None
+    if filters:
+        from sqlalchemy import and_
+        filter_expr = and_(*filters)
+    
+    total = await user_service.repository.count(filter_expr=filter_expr)
     
     return PaginatedResponse(
         items=users,

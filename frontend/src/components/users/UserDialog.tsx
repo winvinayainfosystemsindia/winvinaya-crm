@@ -20,9 +20,10 @@ import {
 	Chip,
 	CircularProgress,
 	useTheme,
-	useMediaQuery
+	useMediaQuery,
+	InputAdornment
 } from '@mui/material';
-import { Close as CloseIcon } from '@mui/icons-material';
+import { Close as CloseIcon, Visibility, VisibilityOff } from '@mui/icons-material';
 import { format } from 'date-fns';
 import userService from '../../services/userService';
 import type { User, UserCreate } from '../../models/user';
@@ -46,6 +47,8 @@ const UserDialog: React.FC<UserDialogProps> = ({
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [showPassword, setShowPassword] = useState(false);
+	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
 	// Form State
 	const [formData, setFormData] = useState<UserCreate & { confirmPassword?: string }>({
@@ -90,6 +93,8 @@ const UserDialog: React.FC<UserDialogProps> = ({
 					confirmPassword: ''
 				});
 			}
+			setShowPassword(false);
+			setShowConfirmPassword(false);
 		}
 	}, [open, mode, user]);
 
@@ -402,12 +407,27 @@ const UserDialog: React.FC<UserDialogProps> = ({
 										<TextField
 											fullWidth
 											size="small"
-											type="password"
+											type={showPassword ? 'text' : 'password'}
 											value={formData.password}
 											onChange={(e) => handleChange('password', e.target.value)}
 											disabled={loading}
 											placeholder={mode === 'edit' ? "Leave blank to keep current" : "Enter password"}
 											sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+											InputProps={{
+												endAdornment: (
+													<InputAdornment position="end">
+														<IconButton
+															aria-label="toggle password visibility"
+															onClick={() => setShowPassword(!showPassword)}
+															onMouseDown={(e) => e.preventDefault()}
+															edge="end"
+															size="small"
+														>
+															{showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+														</IconButton>
+													</InputAdornment>
+												),
+											}}
 										/>
 									</Box>
 									<Box>
@@ -417,12 +437,27 @@ const UserDialog: React.FC<UserDialogProps> = ({
 												<TextField
 													fullWidth
 													size="small"
-													type="password"
+													type={showConfirmPassword ? 'text' : 'password'}
 													value={formData.confirmPassword}
 													onChange={(e) => handleChange('confirmPassword', e.target.value)}
 													disabled={loading}
 													placeholder="Re-enter password"
 													sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+													InputProps={{
+														endAdornment: (
+															<InputAdornment position="end">
+																<IconButton
+																	aria-label="toggle confirm password visibility"
+																	onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+																	onMouseDown={(e) => e.preventDefault()}
+																	edge="end"
+																	size="small"
+																>
+																	{showConfirmPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+																</IconButton>
+															</InputAdornment>
+														),
+													}}
 												/>
 											</>
 										)}

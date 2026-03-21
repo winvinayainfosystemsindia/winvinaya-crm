@@ -16,15 +16,28 @@ import {
 	Typography,
 	useMediaQuery,
 	useTheme,
-	CircularProgress
+	CircularProgress,
+	Menu,
+	MenuItem,
+	ListItemIcon as MuiListItemIcon,
+	ListItemText
 } from '@mui/material';
 
-import { Search, Add, Edit, Visibility, Delete } from '@mui/icons-material';
+import {
+	Search,
+	Add,
+	Edit,
+	Visibility,
+	Delete,
+	WhatsApp as WhatsAppIcon,
+	MoreVert as MoreVertIcon
+} from '@mui/icons-material';
 import { format } from 'date-fns';
 import { useAppSelector } from '../../store/hooks';
 import userService from '../../services/userService';
 import type { User } from '../../models/user';
 import CustomTablePagination from '../common/CustomTablePagination';
+import { alpha } from '@mui/material/styles';
 
 interface UserTableProps {
 	onAddUser?: () => void;
@@ -45,14 +58,19 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 	const [rowsPerPage, setRowsPerPage] = useState(5);
 	const [totalCount, setTotalCount] = useState(0);
 
+	// Add effect for debounced search
 	useEffect(() => {
-		fetchUsers();
-	}, [page, rowsPerPage]);
+		const timer = setTimeout(() => {
+			fetchUsers();
+		}, 500);
+		return () => clearTimeout(timer);
+	}, [page, rowsPerPage, searchTerm]);
 
 	const fetchUsers = async () => {
 		setLoading(true);
 		try {
-			const response = await userService.getAll(page * rowsPerPage, rowsPerPage);
+			// Using backend search by passing searchTerm to getAll
+			const response = await userService.getAll(page * rowsPerPage, rowsPerPage, undefined, searchTerm);
 			setUsers(response.items);
 			setTotalCount(response.total);
 		} catch (error) {
@@ -76,13 +94,6 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 		setPage(0);
 	};
 
-	const filteredUsers = users.filter(user =>
-		user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-		user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-		user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-		user.mobile?.toLowerCase().includes(searchTerm.toLowerCase())
-	);
-
 	const getRoleColor = (role: string): 'error' | 'warning' | 'info' | 'success' | 'secondary' | 'primary' => {
 		switch (role.toLowerCase()) {
 			case 'admin': return 'error';
@@ -95,7 +106,21 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 		}
 	};
 
+	const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+	const [activeUser, setActiveUser] = useState<User | null>(null);
+
+	const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, user: User) => {
+		setMenuAnchorEl(event.currentTarget);
+		setActiveUser(user);
+	};
+
+	const handleMenuClose = () => {
+		setMenuAnchorEl(null);
+		setActiveUser(null);
+	};
+
 	const formatDate = (dateString: string) => {
+		if (!dateString) return '-';
 		try {
 			return format(new Date(dateString), 'd MMM yyyy');
 		} catch {
@@ -221,21 +246,21 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 					<TableBody aria-busy={loading}>
 						{loading ? (
 							<TableRow>
-								<TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+								<TableCell colSpan={8} align="center" sx={{ py: 4 }}>
 									<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
 										<CircularProgress size={24} />
 										<Typography color="text.secondary">Loading users...</Typography>
 									</Box>
 								</TableCell>
 							</TableRow>
-						) : filteredUsers.length === 0 ? (
+						) : users.length === 0 ? (
 							<TableRow>
-								<TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+								<TableCell colSpan={8} align="center" sx={{ py: 4 }}>
 									<Typography color="text.secondary">No users found</Typography>
 								</TableCell>
 							</TableRow>
 						) : (
-							filteredUsers.map((user) => (
+							users.map((user) => (
 								<TableRow
 									key={user.id}
 									sx={{
@@ -258,9 +283,24 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 										</Typography>
 									</TableCell>
 									<TableCell>
-										<Typography variant="body2" color="#25D366" sx={{ fontWeight: 500 }}>
-											{user.mobile || '-'}
-										</Typography>
+										{user.mobile ? (
+											<Chip
+												icon={<WhatsAppIcon sx={{ fontSize: '1rem !important', color: '#25D366 !important' }} />}
+												label={user.mobile}
+												size="small"
+												variant="outlined"
+												onClick={() => window.open(`https://wa.me/${user.mobile!.replace(/\D/g, '')}`, '_blank')}
+												sx={{
+													borderColor: alpha('#25D366', 0.2),
+													color: '#25D366',
+													fontWeight: 500,
+													'&:hover': {
+														bgcolor: alpha('#25D366', 0.04),
+														borderColor: '#25D366'
+													}
+												}}
+											/>
+										) : '-'}
 									</TableCell>
 									<TableCell sx={{ display: isMedium ? 'none' : 'table-cell' }}>
 										<Typography variant="body2" color="text.secondary">
@@ -293,48 +333,14 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 										</Typography>
 									</TableCell>
 									<TableCell align="right">
-										<Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
-											<IconButton
-												size="small"
-												onClick={() => onViewUser?.(user)}
-												aria-label={`View details for ${user.full_name || user.username}`}
-												title="View User"
-												sx={{
-													color: 'text.secondary',
-													'&:hover': { color: 'primary.main' }
-												}}
-											>
-												<Visibility fontSize="small" />
-											</IconButton>
-											{currentUser?.role === 'admin' && (
-												<>
-													<IconButton
-														size="small"
-														onClick={() => onEditUser?.(user)}
-														aria-label={`Edit ${user.full_name || user.username}`}
-														title="Edit User"
-														sx={{
-															color: 'text.secondary',
-															'&:hover': { color: 'warning.main' }
-														}}
-													>
-														<Edit fontSize="small" />
-													</IconButton>
-													<IconButton
-														size="small"
-														onClick={() => onDeleteUser?.(user)}
-														aria-label={`Delete ${user.full_name || user.username}`}
-														title="Delete User"
-														sx={{
-															color: 'text.secondary',
-															'&:hover': { color: 'error.main' }
-														}}
-													>
-														<Delete fontSize="small" />
-													</IconButton>
-												</>
-											)}
-										</Box>
+										<IconButton
+											size="small"
+											onClick={(e) => handleMenuOpen(e, user)}
+											aria-label="Actions"
+											sx={{ color: '#545b64' }}
+										>
+											<MoreVertIcon fontSize="small" />
+										</IconButton>
 									</TableCell>
 								</TableRow>
 							))
@@ -352,6 +358,31 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 				onRowsPerPageChange={handleChangeRowsPerPage}
 				onRowsPerPageSelectChange={setRowsPerPage}
 			/>
+
+			{/* Actions Menu */}
+			<Menu anchorEl={menuAnchorEl} open={Boolean(menuAnchorEl)} onClose={handleMenuClose} PaperProps={{
+				sx: {
+					borderRadius: 0,
+					boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+					border: '1px solid #d5dbdb',
+					minWidth: 150
+				}
+			}}>
+				<MenuItem onClick={() => { onViewUser?.(activeUser!); handleMenuClose(); }}>
+					<MuiListItemIcon><Visibility fontSize="small" /></MuiListItemIcon>
+					<ListItemText primary="View Details" primaryTypographyProps={{ fontSize: '0.875rem' }} />
+				</MenuItem>
+				{currentUser?.role === 'admin' && [
+					<MenuItem key="edit" onClick={() => { onEditUser?.(activeUser!); handleMenuClose(); }}>
+						<MuiListItemIcon><Edit fontSize="small" sx={{ color: 'warning.main' }} /></MuiListItemIcon>
+						<ListItemText primary="Edit User" primaryTypographyProps={{ fontSize: '0.875rem' }} />
+					</MenuItem>,
+					<MenuItem key="delete" onClick={() => { onDeleteUser?.(activeUser!); handleMenuClose(); }}>
+						<MuiListItemIcon><Delete fontSize="small" sx={{ color: 'error.main' }} /></MuiListItemIcon>
+						<ListItemText primary="Delete User" primaryTypographyProps={{ fontSize: '0.875rem' }} />
+					</MenuItem>
+				]}
+			</Menu>
 		</Paper>
 	);
 };
