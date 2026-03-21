@@ -11,14 +11,19 @@ import {
 	Typography,
 	alpha,
 	useTheme,
-	styled
+	styled,
+	CircularProgress
 } from '@mui/material';
 import {
 	Search as SearchIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useSearchActions } from '../../hooks/useSearchActions';
+import { useSearchActions, CandidatesIcon, UserIcon, CounselingIcon, ProjectIcon } from '../../hooks/useSearchActions';
 import type { SearchAction } from '../../hooks/useSearchActions';
+import { candidateService } from '../../services/candidateService';
+import userService from '../../services/userService';
+import { x0paService } from '../../services/x0paService';
+import dsrProjectService from '../../services/dsrProjectService';
 
 const SearchContainer = styled('div')(({ theme }) => ({
 	position: 'relative',
@@ -98,12 +103,17 @@ const GlobalSearch: React.FC = () => {
 	const inputRef = useRef<HTMLInputElement>(null);
 	const resultsRef = useRef<HTMLDivElement>(null);
 
-	const filteredResults = query.trim() === ''
+	const [dynamicResults, setDynamicResults] = useState<SearchAction[]>([]);
+	const [loading, setLoading] = useState(false);
+
+	const navigationResults = query.trim() === ''
 		? []
 		: actions.filter(action =>
 			action.title.toLowerCase().includes(query.toLowerCase()) ||
 			action.category.toLowerCase().includes(query.toLowerCase())
 		);
+
+	const filteredResults = [...navigationResults, ...dynamicResults];
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {
 		if (e.key === 'ArrowDown') {
@@ -131,6 +141,75 @@ const GlobalSearch: React.FC = () => {
 		setSelectedIndex(-1);
 		inputRef.current?.blur();
 	};
+
+	// Async search effect
+	useEffect(() => {
+		const fetchDynamicResults = async () => {
+			if (query.trim().length < 2) {
+				setDynamicResults([]);
+				return;
+			}
+
+			setLoading(true);
+			try {
+				const [candidateData, userData, jobData, projectData] = await Promise.all([
+					candidateService.getAll(0, 5, query),
+					userService.search(query, 0, 5),
+					x0paService.getJobs({ searchKey: query, limit: 5 })
+						.catch(() => ({ jobs: [] })),
+					dsrProjectService.getProjects(0, 5, false, query)
+						.catch(() => ({ items: [] }))
+				]);
+
+				const candidateActions: SearchAction[] = candidateData.items.map(c => ({
+					id: `candidate-${c.public_id}`,
+					title: c.name,
+					path: `/candidates/${c.public_id}`,
+					category: 'Candidate',
+					icon: CandidatesIcon
+				}));
+
+				const userActions: SearchAction[] = userData.map(u => ({
+					id: `user-${u.id}`,
+					title: u.full_name || u.username,
+					path: `/users`,
+					category: 'User',
+					icon: UserIcon
+				}));
+
+				const jobActions: SearchAction[] = (jobData.jobs || []).map((j: any) => ({
+					id: `job-${j.jobId}`,
+					title: j.jobName,
+					path: `/candidates/counseling`,
+					category: 'Job Role',
+					icon: CounselingIcon
+				}));
+
+				const projectActions: SearchAction[] = (projectData.items || []).map((p: any) => ({
+					id: `project-${p.public_id}`,
+					title: p.name,
+					path: `/projects`, // Linking to projects list as detail might be complex
+					category: 'Project',
+					icon: ProjectIcon
+				}));
+
+				setDynamicResults([...candidateActions, ...userActions, ...jobActions, ...projectActions]);
+			} catch (error) {
+				console.error('Global search error:', error);
+				setDynamicResults([]);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		const timer = setTimeout(() => {
+			if (isOpen) {
+				fetchDynamicResults();
+			}
+		}, 300);
+
+		return () => clearTimeout(timer);
+	}, [query, isOpen]);
 
 	// Focus shortcut Alt+S
 	useEffect(() => {
@@ -181,7 +260,7 @@ const GlobalSearch: React.FC = () => {
 					<SearchIcon fontSize="small" />
 				</SearchIconWrapper>
 				<StyledInputBase
-					placeholder="Search services, features [Alt+S]"
+					placeholder="Search services, features, candidates [Alt+S]"
 					inputRef={inputRef}
 					value={query}
 					onChange={(e) => {
@@ -193,8 +272,11 @@ const GlobalSearch: React.FC = () => {
 						if (query.trim() !== '') setIsOpen(true);
 					}}
 					onKeyDown={handleKeyDown}
+					endAdornment={loading ? (
+						<CircularProgress size={16} sx={{ color: alpha('#ffffff', 0.7), mr: 2 }} />
+					) : null}
 					inputProps={{
-						'aria-label': 'Search for services or features',
+						'aria-label': 'Search for services, features, candidates or users',
 						'aria-autocomplete': 'list',
 						'aria-controls': resultsId,
 						'aria-activedescendant': selectedIndex >= 0 ? `search-option-${selectedIndex}` : undefined
@@ -231,34 +313,49 @@ const GlobalSearch: React.FC = () => {
 							</Typography>
 						</Box>
 						<List sx={{ py: 0 }}>
-							{filteredResults.map((action, index) => {
-								const Icon = action.icon;
+							{['General', 'Admin', 'Candidates', 'Projects', 'Training', 'Candidate', 'User', 'Job Role', 'Project'].map((cat) => {
+								const catResults = filteredResults.filter(r => r.category === cat);
+								if (catResults.length === 0) return null;
+
 								return (
-									<ListItem key={action.id} disablePadding role="option" aria-selected={selectedIndex === index} id={`search-option-${index}`}>
-										<ListItemButton
-											selected={selectedIndex === index}
-											onClick={() => handleSelect(action)}
-											sx={{
-												py: 1,
-												'&.Mui-selected': {
-													backgroundColor: alpha(theme.palette.primary.main, 0.08),
-													'&:hover': {
-														backgroundColor: alpha(theme.palette.primary.main, 0.12),
-													},
-												},
-											}}
-										>
-											<ListItemIcon sx={{ minWidth: 40, color: theme.palette.text.secondary }}>
-												<Icon fontSize="small" />
-											</ListItemIcon>
-											<ListItemText
-												primary={action.title}
-												secondary={action.category}
-												primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: 500 }}
-												secondaryTypographyProps={{ fontSize: '0.75rem' }}
-											/>
-										</ListItemButton>
-									</ListItem>
+									<React.Fragment key={cat}>
+										<Box sx={{ px: 2, py: 0.5, backgroundColor: '#f9f9f9', borderBottom: `1px solid ${theme.palette.divider}`, borderTop: cat !== 'General' ? `1px solid ${theme.palette.divider}` : 'none' }}>
+											<Typography variant="caption" sx={{ fontWeight: 700, color: '#879596', textTransform: 'uppercase', fontSize: '0.65rem' }}>
+												{cat === 'Candidate' || cat === 'User' || cat === 'Job Role' || cat === 'Project' ? `${cat}s` : cat}
+											</Typography>
+										</Box>
+										{catResults.map((action) => {
+											const resultIndex = filteredResults.indexOf(action);
+											const Icon = action.icon;
+											return (
+												<ListItem key={action.id} disablePadding role="option" aria-selected={selectedIndex === resultIndex} id={`search-option-${resultIndex}`}>
+													<ListItemButton
+														selected={selectedIndex === resultIndex}
+														onClick={() => handleSelect(action)}
+														sx={{
+															py: 0.75,
+															'&.Mui-selected': {
+																backgroundColor: alpha(theme.palette.primary.main, 0.08),
+																'&:hover': {
+																	backgroundColor: alpha(theme.palette.primary.main, 0.12),
+																},
+															},
+														}}
+													>
+														<ListItemIcon sx={{ minWidth: 36, color: theme.palette.text.secondary }}>
+															<Icon sx={{ fontSize: '1.2rem' }} />
+														</ListItemIcon>
+														<ListItemText
+															primary={action.title}
+															secondary={cat === 'Candidate' || cat === 'User' ? action.id.split('-')[1] : action.category}
+															primaryTypographyProps={{ fontSize: '0.8125rem', fontWeight: 500, color: '#232f3e' }}
+															secondaryTypographyProps={{ fontSize: '0.7rem', color: '#545b64' }}
+														/>
+													</ListItemButton>
+												</ListItem>
+											);
+										})}
+									</React.Fragment>
 								);
 							})}
 						</List>
