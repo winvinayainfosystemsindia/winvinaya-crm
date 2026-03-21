@@ -18,6 +18,7 @@ interface CandidateTableRowProps {
 	onView: (id: string) => void;
 	onEdit: (id: string) => void;
 	onDelete: (candidate: CandidateListItem) => void;
+	onAssign: (candidate: CandidateListItem) => void;
 }
 
 const CandidateTableRow: React.FC<CandidateTableRowProps> = ({
@@ -25,7 +26,8 @@ const CandidateTableRow: React.FC<CandidateTableRowProps> = ({
 	userRole,
 	onView,
 	onEdit,
-	onDelete
+	onDelete,
+	onAssign
 }) => {
 	const formatDate = (dateString: string) => {
 		try {
@@ -97,6 +99,11 @@ const CandidateTableRow: React.FC<CandidateTableRowProps> = ({
 					{candidate.city}, {candidate.state}
 				</Typography>
 			</TableCell>
+			<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+				<Typography variant="body2" color="primary.main" sx={{ fontWeight: 500 }}>
+					{candidate.assigned_to_name || '-'}
+				</Typography>
+			</TableCell>
 			<TableCell>
 				<Typography variant="body2" color="text.secondary" noWrap sx={{ maxWidth: '120px' }}>
 					{candidate.is_disabled || candidate.disability_type
@@ -117,6 +124,7 @@ const CandidateTableRow: React.FC<CandidateTableRowProps> = ({
 					onView={onView}
 					onEdit={onEdit}
 					onDelete={onDelete}
+					onAssign={onAssign}
 				/>
 			</TableCell>
 		</TableRow>

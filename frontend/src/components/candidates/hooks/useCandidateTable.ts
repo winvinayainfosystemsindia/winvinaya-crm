@@ -32,6 +32,10 @@ export const useCandidateTable = () => {
 		counseling_statuses: string[];
 	}>({ disability_types: [], education_levels: [], cities: [], counseling_statuses: [] });
 
+	// Assignment state
+	const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+	const [candidateForAssignment, setCandidateForAssignment] = useState<CandidateListItem | null>(null);
+
 	// Delete state
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [candidateToDelete, setCandidateToDelete] = useState<{ id: string; name: string } | null>(null);
@@ -166,6 +170,16 @@ export const useCandidateTable = () => {
 		setCandidateToDelete(null);
 	};
 
+	const handleAssignClick = (candidate: CandidateListItem) => {
+		setCandidateForAssignment(candidate);
+		setAssignDialogOpen(true);
+	};
+
+	const handleAssignCancel = () => {
+		setAssignDialogOpen(false);
+		setCandidateForAssignment(null);
+	};
+
 	const handleCloseNotification = () => {
 		setNotification(prev => ({ ...prev, open: false }));
 	};
@@ -186,6 +200,8 @@ export const useCandidateTable = () => {
 		deleteDialogOpen,
 		candidateToDelete,
 		deleteLoading,
+		assignDialogOpen,
+		candidateForAssignment,
 		notification,
 		fetchCandidatesData,
 		handleChangePage,
@@ -200,6 +216,8 @@ export const useCandidateTable = () => {
 		handleDeleteClick,
 		handleDeleteConfirm,
 		handleDeleteCancel,
+		handleAssignClick,
+		handleAssignCancel,
 		handleCloseNotification,
 		setRowsPerPage // Exposed for CustomTablePagination
 	};

@@ -9,6 +9,7 @@ from app.core.rate_limiter import rate_limit_medium
 from app.api.deps import require_roles
 from app.models.user import User, UserRole
 from app.schemas.candidate import CandidateCreate, CandidateResponse, CandidateUpdate, CandidateListResponse, CandidateStats, CandidatePaginatedResponse, CandidateCheck
+from app.schemas.candidate_assignment import CandidateAssignmentResponse, CandidateAssignmentCreate
 from app.services.candidate_service import CandidateService
 from app.utils.activity_tracker import log_create, log_update, log_delete
 from app.utils.email import send_registration_emails
@@ -130,7 +131,8 @@ async def get_candidates(
         year_of_passing=year_of_passing_list,
         year_of_experience=year_of_experience,
         currently_employed=currently_employed,
-        extra_filters=extra_filters
+        extra_filters=extra_filters,
+        current_user=current_user
     )
 
 
@@ -205,9 +207,9 @@ async def get_unscreened_candidates(
         cities=cities_list,
         screening_status=screening_status,
         is_experienced=is_experienced,
-        counseling_status=counseling_status
+        counseling_status=counseling_status,
+        current_user=current_user
     )
-
 
 
 @router.get("/screened", response_model=CandidatePaginatedResponse)
@@ -250,8 +252,44 @@ async def get_screened_candidates(
         education_levels=education_levels_list,
         cities=cities_list,
         screening_status=screening_status,
-        is_experienced=is_experienced
+        is_experienced=is_experienced,
+        current_user=current_user
     )
+
+
+@router.post("/{public_id}/assign", response_model=CandidateAssignmentResponse)
+@rate_limit_medium()
+async def assign_candidate(
+    request: Request,
+    public_id: UUID,
+    assignment_in: CandidateAssignmentCreate,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Assign a candidate to a sourcing user (Admin/Manager only)
+    """
+    service = CandidateService(db)
+    
+    # Snapshot before state for logging
+    candidate = await service.get_candidate(public_id, with_details=True)
+    from app.utils.activity_tracker import extract_safe_metadata
+    before_snapshot = extract_safe_metadata(candidate)
+    
+    assignment = await service.assign_candidate(public_id, assignment_in, current_user)
+    
+    # Log the assignment as an update to the candidate
+    await log_update(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="candidate",
+        resource_id=candidate.id,
+        before=before_snapshot,
+        after=await service.get_candidate(public_id, with_details=True)
+    )
+    
+    return assignment
 
 
 

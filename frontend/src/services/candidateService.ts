@@ -206,6 +206,14 @@ export const candidateService = {
 	checkAvailability: async (email: string, phone: string, pincode: string): Promise<{ status: string; address: any }> => {
 		const response = await api.post('/candidates/check-availability', { email, phone, pincode });
 		return response.data;
+	},
+
+	/**
+	 * Assign candidate to sourcing user
+	 */
+	assignCandidate: async (publicId: string, userId: number): Promise<any> => {
+		const response = await api.post(`/candidates/${publicId}/assign`, { user_id: userId });
+		return response.data;
 	}
 };
 

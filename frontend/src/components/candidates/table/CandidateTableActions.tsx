@@ -12,7 +12,8 @@ import {
 	MoreVert,
 	Visibility,
 	Edit,
-	Delete
+	Delete,
+	AssignmentInd
 } from '@mui/icons-material';
 import type { CandidateListItem } from '../../../models/candidate';
 
@@ -22,6 +23,7 @@ interface CandidateTableActionsProps {
 	onView: (id: string) => void;
 	onEdit: (id: string) => void;
 	onDelete: (candidate: CandidateListItem) => void;
+	onAssign: (candidate: CandidateListItem) => void;
 }
 
 const CandidateTableActions: React.FC<CandidateTableActionsProps> = ({
@@ -29,7 +31,8 @@ const CandidateTableActions: React.FC<CandidateTableActionsProps> = ({
 	userRole,
 	onView,
 	onEdit,
-	onDelete
+	onDelete,
+	onAssign
 }) => {
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const open = Boolean(anchorEl);
@@ -99,6 +102,17 @@ const CandidateTableActions: React.FC<CandidateTableActionsProps> = ({
 						</ListItemIcon>
 						<ListItemText>
 							<Typography variant="body2">Edit Candidate</Typography>
+						</ListItemText>
+					</MenuItem>
+				)}
+
+				{isManager && (
+					<MenuItem onClick={() => handleAction(() => onAssign(candidate))}>
+						<ListItemIcon>
+							<AssignmentInd fontSize="small" sx={{ color: 'info.main' }} />
+						</ListItemIcon>
+						<ListItemText>
+							<Typography variant="body2">Assign Candidate</Typography>
 						</ListItemText>
 					</MenuItem>
 				)}

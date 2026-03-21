@@ -156,6 +156,10 @@ class CandidateListResponse(BaseModel):
     documents_uploaded: List[str] = []
     family_details: Optional[List[dict]] = None
     
+    # Assignment fields
+    assigned_to_id: Optional[int] = None
+    assigned_to_name: Optional[str] = None
+    
     # Counseling fields
     feedback: Optional[str] = None
     skills: Optional[List[dict]] = None
@@ -202,6 +206,8 @@ class CandidateListResponse(BaseModel):
         screening_date = None
         screening_updated_at = None
         screening_comments = None
+        assigned_to_id = None
+        assigned_to_name = None
         
         screening_data = None
         counseling_data = None
@@ -322,7 +328,30 @@ class CandidateListResponse(BaseModel):
         if docs_list:
             documents_uploaded = [get_val(d, 'document_type') for d in docs_list]
 
-        # 6. Build response dict
+        # 6. Assignment Data
+        assignment = None
+        if isinstance(data, dict):
+            assignment = data.get('assignment')
+        elif hasattr(data, '__dict__') and 'assignment' in data.__dict__:
+            assignment = data.assignment
+        
+        if assignment:
+            assigned_to_id = get_val(assignment, 'user_id')
+            user = None
+            if isinstance(assignment, dict):
+                user = assignment.get('user')
+            elif hasattr(assignment, '__dict__'):
+                try:
+                    user = assignment.user
+                except:
+                    user = None
+            
+            if user:
+                fname = get_val(user, 'full_name')
+                uname = get_val(user, 'username')
+                assigned_to_name = fname if fname else uname
+
+        # 7. Build response dict
         if isinstance(data, dict):
             data.update({
                 'is_disabled': is_disabled,
@@ -350,7 +379,9 @@ class CandidateListResponse(BaseModel):
                 'is_experienced': is_experienced,
                 'year_of_experience': year_of_experience,
                 'currently_employed': currently_employed,
-                'year_of_passing': year_of_passing
+                'year_of_passing': year_of_passing,
+                'assigned_to_id': assigned_to_id,
+                'assigned_to_name': assigned_to_name
             })
             return data
             
@@ -394,7 +425,9 @@ class CandidateListResponse(BaseModel):
             'is_experienced': is_experienced,
             'year_of_experience': year_of_experience,
             'currently_employed': currently_employed,
-            'year_of_passing': year_of_passing
+            'year_of_passing': year_of_passing,
+            'assigned_to_id': assigned_to_id,
+            'assigned_to_name': assigned_to_name
         }
 
 

@@ -214,6 +214,8 @@ export interface CandidateListItem {
 	year_of_experience?: string;
 	currently_employed?: boolean;
 	year_of_passing?: number;
+	assigned_to_id?: number;
+	assigned_to_name?: string;
 }
 
 

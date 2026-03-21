@@ -31,6 +31,25 @@ class UserRepository(BaseRepository[User]):
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
     
+    async def get_multi(
+        self,
+        skip: int = 0,
+        limit: int = 100,
+        include_deleted: bool = False,
+        role: Optional[str] = None
+    ) -> list[User]:
+        """Get multiple users with optional role filter"""
+        stmt = select(User)
+        if not include_deleted:
+            stmt = stmt.where(User.is_deleted == False)
+        
+        if role:
+            stmt = stmt.where(User.role == role)
+            
+        stmt = stmt.offset(skip).limit(limit)
+        result = await self.db.execute(stmt)
+        return list(result.scalars().all())
+
     async def search_users(self, query: str = None, role: str = None, limit: int = 10) -> list[User]:
         """Search users by name, email or username with optional role filter"""
         stmt = select(User).where(User.is_deleted == False)

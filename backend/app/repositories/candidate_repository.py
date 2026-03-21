@@ -10,6 +10,7 @@ from app.models.candidate import Candidate
 from app.models.candidate_screening import CandidateScreening
 from app.models.candidate_document import CandidateDocument
 from app.models.candidate_counseling import CandidateCounseling
+from app.models.candidate_assignment import CandidateAssignment
 from app.repositories.base import BaseRepository
 
 
@@ -72,6 +73,7 @@ class CandidateRepository(BaseRepository[Candidate]):
         year_of_passing: Optional[list] = None,
         year_of_experience: Optional[str] = None,
         currently_employed: Optional[bool] = None,
+        assigned_to_id: Optional[int] = None,
         extra_filters: Optional[dict] = None
     ):
         """Get multiples candidates with counseling loaded for list view, with optional search filtering, category filters, and sorting"""
@@ -80,21 +82,36 @@ class CandidateRepository(BaseRepository[Candidate]):
             select(Candidate)
             .outerjoin(Candidate.screening)
             .outerjoin(Candidate.counseling)
+            .outerjoin(Candidate.assignment)
             .options(
                 joinedload(Candidate.screening).joinedload(CandidateScreening.screened_by),
                 selectinload(Candidate.documents),
-                joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor)
+                joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor),
+                joinedload(Candidate.assignment).joinedload(CandidateAssignment.user)
             )
         )
+
+        if assigned_to_id is not None:
+            # If assigned_to_id is 0 or -1 (depending on convention), we might want to filter for unassigned
+            if assigned_to_id == 0:
+                stmt = stmt.where(CandidateAssignment.id.is_(None))
+            else:
+                stmt = stmt.where(CandidateAssignment.user_id == assigned_to_id)
 
         
         if not include_deleted:
             stmt = stmt.where(Candidate.is_deleted == False) 
         
         # Base count query
-        count_stmt = select(func.count(Candidate.id)).select_from(Candidate).outerjoin(Candidate.screening).outerjoin(Candidate.counseling)
+        count_stmt = select(func.count(Candidate.id)).select_from(Candidate).outerjoin(Candidate.screening).outerjoin(Candidate.counseling).outerjoin(Candidate.assignment)
         if not include_deleted:
             count_stmt = count_stmt.where(Candidate.is_deleted == False)
+        
+        if assigned_to_id is not None:
+            if assigned_to_id == 0:
+                count_stmt = count_stmt.where(CandidateAssignment.id.is_(None))
+            else:
+                count_stmt = count_stmt.where(CandidateAssignment.user_id == assigned_to_id)
         
         # Apply search filters if provided
         if search:
@@ -351,6 +368,7 @@ class CandidateRepository(BaseRepository[Candidate]):
         is_experienced: Optional[bool] = None,
         counseling_status: Optional[str] = None,
         gender: Optional[str] = None,
+        assigned_to_id: Optional[int] = None,
         extra_filters: Optional[dict] = None
     ):
         """Get candidates without screening records or with non-completed screening, with optional search filtering, category filters, and sorting"""
@@ -361,15 +379,29 @@ class CandidateRepository(BaseRepository[Candidate]):
             select(Candidate)
             .outerjoin(Candidate.screening)
             .outerjoin(Candidate.counseling)
+            .outerjoin(Candidate.assignment)
             .where(unscreened_filter)
             .options(
                 joinedload(Candidate.screening).joinedload(CandidateScreening.screened_by),
-                joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor)
+                joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor),
+                joinedload(Candidate.assignment).joinedload(CandidateAssignment.user)
             )
         )
         
+        if assigned_to_id is not None:
+            if assigned_to_id == 0:
+                stmt = stmt.where(CandidateAssignment.id.is_(None))
+            else:
+                stmt = stmt.where(CandidateAssignment.user_id == assigned_to_id)
+
         # Base count query
-        count_stmt = select(func.count(Candidate.id)).outerjoin(Candidate.screening).where(unscreened_filter)
+        count_stmt = select(func.count(Candidate.id)).outerjoin(Candidate.screening).outerjoin(Candidate.assignment).where(unscreened_filter)
+
+        if assigned_to_id is not None:
+            if assigned_to_id == 0:
+                count_stmt = count_stmt.where(CandidateAssignment.id.is_(None))
+            else:
+                count_stmt = count_stmt.where(CandidateAssignment.user_id == assigned_to_id)
         
         # Apply screening status filter if provided
         if screening_status:
@@ -485,6 +517,7 @@ class CandidateRepository(BaseRepository[Candidate]):
         screening_status: Optional[str] = None,
         is_experienced: Optional[bool] = None,
         gender: Optional[str] = None,
+        assigned_to_id: Optional[int] = None,
         extra_filters: Optional[dict] = None
     ):
         """Get candidates with 'Completed' screening records loaded, with optional counseling status filter, document status filter, search filtering, category filters, and sorting"""
@@ -494,16 +527,30 @@ class CandidateRepository(BaseRepository[Candidate]):
             select(Candidate)
             .join(Candidate.screening)
             .outerjoin(Candidate.counseling)
+            .outerjoin(Candidate.assignment)
             .where(CandidateScreening.id.isnot(None))
             .options(
                 joinedload(Candidate.screening).joinedload(CandidateScreening.screened_by),
                 selectinload(Candidate.documents),
-                joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor)
+                joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor),
+                joinedload(Candidate.assignment).joinedload(CandidateAssignment.user)
             )
         )
         
+        if assigned_to_id is not None:
+            if assigned_to_id == 0:
+                stmt = stmt.where(CandidateAssignment.id.is_(None))
+            else:
+                stmt = stmt.where(CandidateAssignment.user_id == assigned_to_id)
+        
         # Base count statement for screened candidates
-        count_stmt = select(func.count(Candidate.id)).join(Candidate.screening).outerjoin(Candidate.counseling).where(CandidateScreening.id.isnot(None))
+        count_stmt = select(func.count(Candidate.id)).join(Candidate.screening).outerjoin(Candidate.counseling).outerjoin(Candidate.assignment).where(CandidateScreening.id.isnot(None))
+
+        if assigned_to_id is not None:
+            if assigned_to_id == 0:
+                count_stmt = count_stmt.where(CandidateAssignment.id.is_(None))
+            else:
+                count_stmt = count_stmt.where(CandidateAssignment.user_id == assigned_to_id)
         
         # Apply screening status filter if provided (though mostly would be 'Completed' based on logic above)
         if screening_status:

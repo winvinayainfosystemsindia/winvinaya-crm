@@ -1,11 +1,15 @@
 """Candidate Service"""
 
+from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.candidate import Candidate
+from app.models.user import User, UserRole
+from app.models.candidate_assignment import CandidateAssignment
 from app.schemas.candidate import CandidateCreate, CandidateUpdate
+from app.schemas.candidate_assignment import CandidateAssignmentCreate
 from app.repositories.candidate_repository import CandidateRepository
 from app.services.pincode_service import get_pincode_details
 
@@ -106,9 +110,16 @@ class CandidateService:
         year_of_passing: Optional[list] = None,
         year_of_experience: Optional[str] = None,
         currently_employed: Optional[bool] = None,
-        extra_filters: Optional[dict] = None
+        extra_filters: Optional[dict] = None,
+        current_user: Optional[User] = None
     ) -> dict:
         """Get list of candidates with total count, supporting optional search, filters, and sorting"""
+        
+        # Determine assigned_to_id based on user role
+        assigned_to_id = None
+        if current_user and current_user.role == UserRole.SOURCING:
+            assigned_to_id = current_user.id
+            
         items, total = await self.repository.get_multi(
             skip=skip, 
             limit=limit, 
@@ -127,6 +138,7 @@ class CandidateService:
             year_of_passing=year_of_passing,
             year_of_experience=year_of_experience,
             currently_employed=currently_employed,
+            assigned_to_id=assigned_to_id,
             extra_filters=extra_filters
         )
         return {"items": items, "total": total}
@@ -177,9 +189,15 @@ class CandidateService:
         cities: Optional[list] = None,
         screening_status: Optional[str] = None,
         is_experienced: Optional[bool] = None,
-        counseling_status: Optional[str] = None
+        counseling_status: Optional[str] = None,
+        current_user: Optional[User] = None
     ) -> dict:
         """Get list of candidates without screening records with total count, supporting optional search, filters and sorting"""
+        
+        assigned_to_id = None
+        if current_user and current_user.role == UserRole.SOURCING:
+            assigned_to_id = current_user.id
+            
         items, total = await self.repository.get_unscreened(
             skip=skip, 
             limit=limit, 
@@ -191,7 +209,8 @@ class CandidateService:
             cities=cities,
             screening_status=screening_status,
             is_experienced=is_experienced,
-            counseling_status=counseling_status
+            counseling_status=counseling_status,
+            assigned_to_id=assigned_to_id
         )
         return {"items": items, "total": total}
 
@@ -209,9 +228,15 @@ class CandidateService:
         education_levels: Optional[list] = None,
         cities: Optional[list] = None,
         screening_status: Optional[str] = None,
-        is_experienced: Optional[bool] = None
+        is_experienced: Optional[bool] = None,
+        current_user: Optional[User] = None
     ) -> dict:
         """Get list of candidates with screening records with total count, supporting optional search, filters, document status filter, and sorting"""
+        
+        assigned_to_id = None
+        if current_user and current_user.role == UserRole.SOURCING:
+            assigned_to_id = current_user.id
+            
         items, total = await self.repository.get_screened(
             skip=skip, 
             limit=limit, 
@@ -224,12 +249,64 @@ class CandidateService:
             education_levels=education_levels,
             cities=cities,
             screening_status=screening_status,
-            is_experienced=is_experienced
+            is_experienced=is_experienced,
+            assigned_to_id=assigned_to_id
         )
         return {"items": items, "total": total}
 
     async def get_filter_options(self) -> dict:
         """Get all unique values for filterable fields"""
         return await self.repository.get_filter_options()
+
+    async def assign_candidate(
+        self, 
+        public_id: UUID, 
+        assignment_in: CandidateAssignmentCreate, 
+        current_user: User
+    ) -> CandidateAssignment:
+        """Assign a candidate to a sourcing user"""
+        # 1. Get candidate
+        candidate = await self.get_candidate(public_id)
+        
+        # 2. Verify target user exists and has SOURCING role
+        from app.repositories.user_repository import UserRepository
+        user_repo = UserRepository(self.db)
+        target_user = await user_repo.get(assignment_in.user_id)
+        if not target_user:
+            raise HTTPException(status_code=404, detail="Target user not found")
+        
+        if target_user.role != UserRole.SOURCING:
+            raise HTTPException(
+                status_code=400, 
+                detail="Candidates can only be assigned to users with SOURCING role"
+            )
+
+        # 3. Check for existing assignment
+        from sqlalchemy import select
+        stmt = select(CandidateAssignment).where(CandidateAssignment.candidate_id == candidate.id)
+        result = await self.db.execute(stmt)
+        existing_assignment = result.scalars().first()
+
+        if existing_assignment:
+            # Update existing
+            existing_assignment.user_id = assignment_in.user_id
+            existing_assignment.assigned_by_id = current_user.id
+            existing_assignment.assigned_at = datetime.now()
+            self.db.add(existing_assignment)
+            await self.db.commit()
+            await self.db.refresh(existing_assignment)
+            return existing_assignment
+        else:
+            # Create new
+            new_assignment = CandidateAssignment(
+                candidate_id=candidate.id,
+                user_id=assignment_in.user_id,
+                assigned_by_id=current_user.id,
+                assigned_at=datetime.now()
+            )
+            self.db.add(new_assignment)
+            await self.db.commit()
+            await self.db.refresh(new_assignment)
+            return new_assignment
 
 

@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from app.models.deal import Deal
     from app.models.crm_task import CRMTask
     from app.models.crm_activity_log import CRMActivityLog
+    from app.models.candidate_assignment import CandidateAssignment
 
 
 class UserRole(str, enum.Enum):
@@ -145,6 +146,13 @@ class User(BaseModel):
         "CRMActivityLog",
         foreign_keys="CRMActivityLog.performed_by",
         back_populates="performer",
+    )
+    
+    assigned_candidates: Mapped[list[CandidateAssignment]] = relationship(
+        "CandidateAssignment",
+        foreign_keys="CandidateAssignment.user_id",
+        back_populates="user",
+        cascade="all, delete-orphan"
     )
     
     def __repr__(self) -> str:

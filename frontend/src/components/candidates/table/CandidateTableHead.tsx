@@ -24,6 +24,7 @@ const headCells: HeadCell[] = [
 	{ id: 'email', label: 'Email', hideOnMobile: true },
 	{ id: 'phone', label: 'Phone', hideOnMobile: true },
 	{ id: 'city', label: 'Location', hideOnMobile: true },
+	{ id: 'assigned_to_name', label: 'Assigned To', hideOnMobile: true },
 	{ id: 'disability_type', label: 'Disability', hideOnMobile: false },
 	{ id: 'created_at', label: 'Date', hideOnMobile: true },
 ];

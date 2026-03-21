@@ -289,6 +289,18 @@ export const createCandidate = createAsyncThunk(
 	}
 );
 
+export const assignCandidate = createAsyncThunk(
+	'candidates/assign',
+	async ({ publicId, userId }: { publicId: string; userId: number }, { rejectWithValue }) => {
+		try {
+			await candidateService.assignCandidate(publicId, userId);
+			return { publicId, userId };
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to assign candidate');
+		}
+	}
+);
+
 export const updateCandidate = createAsyncThunk(
 	'candidates/update',
 	async ({ publicId, data }: { publicId: string; data: CandidateUpdate }, { rejectWithValue }) => {

@@ -1,6 +1,6 @@
 """User endpoints"""
 
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
@@ -164,6 +164,7 @@ async def get_users(
     request: Request,
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(20, ge=1, le=2000, description="Maximum number of records to return"),
+    role: Optional[UserRole] = Query(None, description="Filter by user role"),
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
     db: AsyncSession = Depends(get_db)
 ):
@@ -172,14 +173,18 @@ async def get_users(
     
     - **skip**: Number of records to skip (pagination)
     - **limit**: Maximum number of records to return
+    - **role**: Filter by role
     """
-    logger.info(f"Fetching users list (skip={skip}, limit={limit}) by {current_user.role.value} {current_user.email}")
+    logger.info(f"Fetching users list (skip={skip}, limit={limit}, role={role}) by {current_user.role.value} {current_user.email}")
     
     user_service = UserService(db)
-    users = await user_service.get_users(skip=skip, limit=limit)
+    users = await user_service.get_users(skip=skip, limit=limit, role=role)
     
-    # Get total count for pagination
-    total = await user_service.repository.count()
+    # Get total count for pagination (filtered by role if provided)
+    if role:
+        total = await user_service.repository.count(filter_expr=(User.role == role))
+    else:
+        total = await user_service.repository.count()
     
     return PaginatedResponse(
         items=users,

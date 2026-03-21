@@ -18,6 +18,7 @@ import CandidateTableRow from './CandidateTableRow';
 import CustomTablePagination from '../../common/CustomTablePagination';
 import CandidateTableLoader from './CandidateTableLoader';
 import CandidateTableEmpty from './CandidateTableEmpty';
+import AssignCandidateDialog from '../AssignCandidateDialog';
 
 interface CandidateTableProps {
 	onEditCandidate?: (candidateId: string) => void;
@@ -41,6 +42,8 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onEditCandidate, onView
 		deleteDialogOpen,
 		candidateToDelete,
 		deleteLoading,
+		assignDialogOpen,
+		candidateForAssignment,
 		notification,
 		fetchCandidatesData,
 		handleChangePage,
@@ -55,6 +58,8 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onEditCandidate, onView
 		handleDeleteClick,
 		handleDeleteConfirm,
 		handleDeleteCancel,
+		handleAssignClick,
+		handleAssignCancel,
 		handleCloseNotification,
 		setRowsPerPage
 	} = useCandidateTable();
@@ -106,6 +111,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onEditCandidate, onView
 									onView={(id) => onViewCandidate?.(id)}
 									onEdit={(id) => onEditCandidate?.(id)}
 									onDelete={handleDeleteClick}
+									onAssign={handleAssignClick}
 								/>
 							))
 						)}
@@ -132,6 +138,13 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onEditCandidate, onView
 				confirmText="Delete permanently"
 				loading={deleteLoading}
 				severity="error"
+			/>
+
+			<AssignCandidateDialog
+				open={assignDialogOpen}
+				onClose={handleAssignCancel}
+				onSuccess={fetchCandidatesData}
+				candidate={candidateForAssignment}
 			/>
 
 			<Snackbar

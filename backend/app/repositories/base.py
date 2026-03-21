@@ -129,12 +129,15 @@ class BaseRepository(Generic[ModelType]):
             await self.db.flush()
             return result.rowcount > 0
     
-    async def count(self, include_deleted: bool = False) -> int:
+    async def count(self, include_deleted: bool = False, filter_expr: Any = None) -> int:
         """Count total records"""
         query = select(func.count()).select_from(self.model)
         
         if not include_deleted:
             query = query.where(self.model.is_deleted == False)
+        
+        if filter_expr is not None:
+            query = query.where(filter_expr)
         
         result = await self.db.execute(query)
         return result.scalar_one()

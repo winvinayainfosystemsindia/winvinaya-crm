@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from app.models.training_assignment import TrainingAssignment
     from app.models.training_candidate_allocation import TrainingCandidateAllocation
     from app.models.training_mock_interview import TrainingMockInterview
+    from app.models.candidate_assignment import CandidateAssignment
 
 
 class Candidate(BaseModel):
@@ -95,6 +96,13 @@ class Candidate(BaseModel):
     mock_interviews: Mapped[list[TrainingMockInterview]] = relationship(
         "TrainingMockInterview",
         back_populates="candidate",
+        cascade="all, delete-orphan"
+    )
+    
+    assignment: Mapped[CandidateAssignment] = relationship(
+        "CandidateAssignment",
+        back_populates="candidate",
+        uselist=False,
         cascade="all, delete-orphan"
     )
     
