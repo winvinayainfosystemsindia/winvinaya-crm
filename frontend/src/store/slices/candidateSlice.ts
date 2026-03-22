@@ -308,8 +308,8 @@ export const assignCandidate = createAsyncThunk(
 	'candidates/assign',
 	async ({ publicId, userId }: { publicId: string; userId: number }, { rejectWithValue }) => {
 		try {
-			await candidateService.assignCandidate(publicId, userId);
-			return { publicId, userId };
+			const response = await candidateService.assignCandidate(publicId, userId);
+			return { publicId, assignment: response };
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to assign candidate');
 		}
@@ -617,6 +617,31 @@ const candidateSlice = createSlice({
 				if (state.selectedCandidate?.public_id === action.payload.publicId) {
 					state.selectedCandidate.counseling = action.payload.counseling;
 				}
+			})
+			// Assign candidate
+			.addCase(assignCandidate.pending, (state) => {
+				state.loading = true;
+				state.error = null;
+			})
+			.addCase(assignCandidate.fulfilled, (state, action) => {
+				state.loading = false;
+				const { publicId, assignment } = action.payload;
+				
+				// Update in list
+				const index = state.list.findIndex(c => c.public_id === publicId);
+				if (index !== -1) {
+					state.list[index].assigned_to_id = assignment.user_id;
+					state.list[index].assigned_to_name = assignment.assigned_to_name;
+				}
+				
+				// Update selected candidate if it's the one we just assigned
+				if (state.selectedCandidate?.public_id === publicId) {
+					// Update local state if needed
+				}
+			})
+			.addCase(assignCandidate.rejected, (state, action: PayloadAction<any>) => {
+				state.loading = false;
+				state.error = action.payload;
 			});
 	},
 });
