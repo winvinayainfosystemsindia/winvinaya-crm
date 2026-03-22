@@ -25,12 +25,6 @@ class CandidateCounselingService:
             return None
         
         counseling = candidate.counseling
-        # Populate suitable_job_roles from others
-        if counseling.others and "suitable_job_roles" in counseling.others:
-            counseling.suitable_job_roles = counseling.others["suitable_job_roles"]
-        else:
-            counseling.suitable_job_roles = []
-            
         return counseling
     
     
@@ -115,10 +109,6 @@ class CandidateCounselingService:
         
         counseling = await self.repository.update(candidate.counseling.id, update_data)
         
-        # Populate for response
-        if counseling.others and "suitable_job_roles" in counseling.others:
-            counseling.suitable_job_roles = counseling.others["suitable_job_roles"]
-            
         return counseling
     
     async def delete_counseling(self, candidate_public_id: UUID) -> bool:

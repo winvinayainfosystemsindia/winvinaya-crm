@@ -53,5 +53,12 @@ class CandidateCounseling(BaseModel):
     candidate: Mapped[Candidate] = relationship("Candidate", back_populates="counseling")
     counselor: Mapped[User] = relationship("User")
     
+    @property
+    def suitable_job_roles(self) -> list[str]:
+        """Virtual property to access suitable_job_roles from others JSON field"""
+        if self.others and isinstance(self.others, dict):
+            return self.others.get("suitable_job_roles", [])
+        return []
+
     def __repr__(self) -> str:
         return f"<CandidateCounseling(id={self.id}, candidate_id={self.candidate_id}, status={self.status})>"

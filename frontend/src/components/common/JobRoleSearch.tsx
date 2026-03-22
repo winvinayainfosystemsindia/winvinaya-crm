@@ -85,17 +85,27 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 	const formatJobRole = (job: X0PAJob | any) => {
 		if (typeof job === 'string') return job;
 		if (!job) return '';
+		// If it's a custom role (no company or status), just return the name
+		if (!job.companyId && !job.statusName) return job.jobName || job.jobId || '';
 		return `${job.jobName} - ${job.companyId} (${job.statusName})`;
 	};
 
 	const parseJobRole = (role: string) => {
-		const parts = role.split(' (');
-		const main = parts[0] || '';
-		const status = parts[1]?.replace(')', '') || '';
-		const subparts = main.split(' - ');
-		const name = subparts[0] || '';
-		const company = subparts[1] || '';
-		return { jobId: role, jobName: name, companyId: company, statusName: status } as X0PAJob;
+		if (!role) return { jobId: '', jobName: '', companyId: '', statusName: '' } as X0PAJob;
+		
+		// Try to parse back from format: Name - Company (Status)
+		if (role.includes(' - ') && role.includes(' (')) {
+			const parts = role.split(' (');
+			const main = parts[0] || '';
+			const status = parts[1]?.replace(')', '') || '';
+			const subparts = main.split(' - ');
+			const name = subparts[0] || '';
+			const company = subparts[1] || '';
+			return { jobId: role, jobName: name, companyId: company, statusName: status } as X0PAJob;
+		}
+		
+		// Else it's a custom role
+		return { jobId: role, jobName: role, companyId: '', statusName: '' } as X0PAJob;
 	};
 
 	return (
@@ -195,20 +205,22 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 										<Typography sx={{ fontSize: '0.75rem', fontWeight: 600 }}>
 											{roleObj.jobName}
 										</Typography>
-										<Box
-											sx={{
-												px: 0.75,
-												py: 0.1,
-												bgcolor: isActive ? '#1d8102' : '#545b64',
-												color: '#ffffff',
-												borderRadius: '2px',
-												fontSize: '0.65rem',
-												fontWeight: 700,
-												textTransform: 'uppercase'
-											}}
-										>
-											{roleObj.statusName}
-										</Box>
+										{roleObj.statusName && (
+											<Box
+												sx={{
+													px: 0.75,
+													py: 0.1,
+													bgcolor: isActive ? '#1d8102' : '#545b64',
+													color: '#ffffff',
+													borderRadius: '2px',
+													fontSize: '0.65rem',
+													fontWeight: 700,
+													textTransform: 'uppercase'
+												}}
+											>
+												{roleObj.statusName}
+											</Box>
+										)}
 									</Box>
 								}
 								sx={{

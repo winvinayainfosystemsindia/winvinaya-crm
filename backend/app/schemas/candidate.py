@@ -165,6 +165,7 @@ class CandidateListResponse(BaseModel):
     skills: Optional[List[dict]] = None
     questions: Optional[List[dict]] = None
     workexperience: Optional[List[dict]] = None
+    suitable_job_roles: Optional[List[str]] = None
     
     # New Screening fields
     source_of_info: Optional[str] = None
@@ -198,6 +199,7 @@ class CandidateListResponse(BaseModel):
         skills = []
         questions = []
         workexperience = []
+        suitable_job_roles = []
         documents_uploaded = []
         family_details = None
         source_of_info = None
@@ -302,6 +304,13 @@ class CandidateListResponse(BaseModel):
             questions = get_val(counseling, 'questions', [])
             workexperience = get_val(counseling, 'workexperience', [])
             
+            # Extract suitable job roles (from property or others)
+            suitable_job_roles = get_val(counseling, 'suitable_job_roles', [])
+            if not suitable_job_roles:
+                c_others = get_val(counseling, 'others')
+                if c_others and isinstance(c_others, dict):
+                    suitable_job_roles = c_others.get('suitable_job_roles', [])
+            
             # Extract others for dynamic fields
             counseling_others = get_val(counseling, 'others')
             if counseling_others:
@@ -366,6 +375,7 @@ class CandidateListResponse(BaseModel):
                 'skills': skills,
                 'questions': questions,
                 'workexperience': workexperience,
+                'suitable_job_roles': suitable_job_roles,
                 'documents_uploaded': documents_uploaded,
                 'family_details': family_details,
                 'source_of_info': source_of_info,
@@ -412,6 +422,7 @@ class CandidateListResponse(BaseModel):
             'skills': skills,
             'questions': questions,
             'workexperience': workexperience,
+            'suitable_job_roles': suitable_job_roles,
             'documents_uploaded': documents_uploaded,
             'family_details': family_details,
             'source_of_info': source_of_info,
