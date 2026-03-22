@@ -255,6 +255,22 @@ const ReportTable: React.FC<ReportTableProps> = ({
 			);
 		}
 
+		if (colId === 'suitable_job_roles' && Array.isArray(val)) {
+			return (
+				<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+					{val.length > 0 ? val.map((role: string, i: number) => (
+						<Chip
+							key={i}
+							label={role}
+							size="small"
+							variant="outlined"
+							sx={{ fontSize: '0.65rem', height: 18, backgroundColor: '#fdf3e7', color: '#ec7211', borderColor: '#fbd49d' }}
+						/>
+					)) : '-'}
+				</Box>
+			);
+		}
+
 		if ((colId === 'disability_type' || colId === 'screening_status' || colId === 'counseling_status' || colId === 'status' || colId === 'batch_status') && val) {
 			const getStatusColor = (v: string) => {
 				const lowerV = v.toLowerCase();
