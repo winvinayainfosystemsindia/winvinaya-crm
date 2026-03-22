@@ -8,6 +8,7 @@ Create Date: 2026-03-03 22:16:12.844826
 from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 
 # revision identifiers, used by Alembic.
@@ -36,7 +37,7 @@ def upgrade() -> None:
     sa.Column('public_id', sa.Uuid(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('report_date', sa.Date(), nullable=False),
-    sa.Column('status', sa.Enum('draft', 'submitted', 'approved', 'rejected', name='dsrstatus'), nullable=False),
+    sa.Column('status', postgresql.ENUM('draft', 'submitted', 'approved', 'rejected', name='dsrstatus', create_type=False), nullable=False),
     sa.Column('submitted_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('is_previous_day_submission', sa.Boolean(), nullable=False, comment='True when report_date is before today'),
     sa.Column('previous_day_permission_granted_by', sa.Integer(), nullable=True, comment='Admin user who granted past-day submission permission'),
@@ -87,7 +88,7 @@ def upgrade() -> None:
     sa.Column('description', sa.Text(), nullable=True),
     sa.Column('start_date', sa.Date(), nullable=False),
     sa.Column('end_date', sa.Date(), nullable=False),
-    sa.Column('status', sa.Enum('planned', 'in_progress', 'completed', 'on_hold', 'cancelled', name='dsractivitystatus'), nullable=False),
+    sa.Column('status', postgresql.ENUM('planned', 'in_progress', 'completed', 'on_hold', 'cancelled', name='dsractivitystatus', create_type=False), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('others', sa.JSON(), nullable=True, comment='Extensible metadata (e.g. priority, estimated_hours, labels)'),
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
