@@ -618,7 +618,7 @@ const candidateSlice = createSlice({
 					state.selectedCandidate.counseling = action.payload.counseling;
 				}
 			})
-			// Assign candidate
+			// Assign candidates
 			.addCase(assignCandidate.pending, (state) => {
 				state.loading = true;
 				state.error = null;
@@ -626,14 +626,14 @@ const candidateSlice = createSlice({
 			.addCase(assignCandidate.fulfilled, (state, action) => {
 				state.loading = false;
 				const { publicId, assignment } = action.payload;
-				
+
 				// Update in list
 				const index = state.list.findIndex(c => c.public_id === publicId);
 				if (index !== -1) {
 					state.list[index].assigned_to_id = assignment.user_id;
 					state.list[index].assigned_to_name = assignment.assigned_to_name;
 				}
-				
+
 				// Update selected candidate if it's the one we just assigned
 				if (state.selectedCandidate?.public_id === publicId) {
 					// Update local state if needed
