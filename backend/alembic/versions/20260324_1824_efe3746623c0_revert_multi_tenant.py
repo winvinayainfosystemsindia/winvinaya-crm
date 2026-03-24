@@ -66,31 +66,21 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    connection = op.get_bind()
+    
     # 1. Drop the org_id column from all tables
     for table in TABLES_WITH_ORG_ID:
-        try:
-            op.drop_constraint(f"fk_{table}_org_id", table, type_="foreignkey")
-        except Exception:
-            pass
-        try:
-            op.drop_index(f"ix_{table}_org_id", table_name=table)
-        except Exception:
-            pass
-        try:
-            op.drop_column(table, "org_id")
-        except Exception:
-            pass
+        # Drop constraint
+        connection.execute(sa.text(f"ALTER TABLE {table} DROP CONSTRAINT IF EXISTS fk_{table}_org_id"))
+        # Drop index
+        connection.execute(sa.text(f"DROP INDEX IF EXISTS ix_{table}_org_id"))
+        # Drop column
+        connection.execute(sa.text(f"ALTER TABLE {table} DROP COLUMN IF EXISTS org_id"))
 
-    # 2. Revert notification table specific changes if any
-    try:
-        op.drop_column('notifications', 'deleted_at')
-        op.drop_column('notifications', 'is_deleted')
-    except Exception:
-        pass
+    # 2. Revert notification table specific changes
+    connection.execute(sa.text("ALTER TABLE notifications DROP COLUMN IF EXISTS deleted_at"))
+    connection.execute(sa.text("ALTER TABLE notifications DROP COLUMN IF EXISTS is_deleted"))
 
     # 3. Drop organization related tables
-    try:
-        op.drop_table('organization_memberships')
-        op.drop_table('organizations')
-    except Exception:
-        pass
+    connection.execute(sa.text("DROP TABLE IF EXISTS organization_memberships"))
+    connection.execute(sa.text("DROP TABLE IF EXISTS organizations"))
