@@ -68,30 +68,35 @@ def upgrade() -> None:
 def downgrade() -> None:
     connection = op.get_bind()
     
-    # 1. Drop the org_id column from all tables safely
-    for table in TABLES_WITH_ORG_ID:
-        connection.execute(sa.text(f"""
-            DO $$ 
-            BEGIN 
-                IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename  = '{table}') THEN 
-                    EXECUTE 'ALTER TABLE {table} DROP CONSTRAINT IF EXISTS fk_{table}_org_id';
-                    EXECUTE 'DROP INDEX IF EXISTS ix_{table}_org_id';
-                    EXECUTE 'ALTER TABLE {table} DROP COLUMN IF EXISTS org_id';
-                END IF;
-            END $$;
-        """))
+    # 1. Use dynamic SQL to drop the org_id column from ALL tables in the public schema
+    connection.execute(sa.text("""
+        DO $$ 
+        DECLARE 
+            r RECORD;
+        BEGIN 
+            FOR r IN (
+                SELECT table_name 
+                FROM information_schema.columns 
+                WHERE column_name = 'org_id' 
+                  AND table_schema = 'public'
+            ) LOOP 
+                -- Drop the column with CASCADE to automatically handle associated constraints/indexes
+                EXECUTE 'ALTER TABLE ' || quote_ident(r.table_name) || ' DROP COLUMN IF EXISTS org_id CASCADE';
+            END LOOP;
+        END $$;
+    """))
 
-    # 2. Revert notification table specific changes
+    # 2. Revert notification table specific changes (soft delete columns)
     connection.execute(sa.text("""
         DO $$ 
         BEGIN 
             IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename  = 'notifications') THEN 
-                EXECUTE 'ALTER TABLE notifications DROP COLUMN IF EXISTS deleted_at';
-                EXECUTE 'ALTER TABLE notifications DROP COLUMN IF EXISTS is_deleted';
+                EXECUTE 'ALTER TABLE notifications DROP COLUMN IF EXISTS deleted_at CASCADE';
+                EXECUTE 'ALTER TABLE notifications DROP COLUMN IF EXISTS is_deleted CASCADE';
             END IF;
         END $$;
     """))
 
-    # 3. Drop organization related tables
-    connection.execute(sa.text("DROP TABLE IF EXISTS organization_memberships"))
-    connection.execute(sa.text("DROP TABLE IF EXISTS organizations"))
+    # 3. Drop organization related tables with CASCADE for safety
+    connection.execute(sa.text("DROP TABLE IF EXISTS organization_memberships CASCADE"))
+    connection.execute(sa.text("DROP TABLE IF EXISTS organizations CASCADE"))
