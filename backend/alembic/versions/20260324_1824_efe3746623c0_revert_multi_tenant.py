@@ -68,18 +68,29 @@ def upgrade() -> None:
 def downgrade() -> None:
     connection = op.get_bind()
     
-    # 1. Drop the org_id column from all tables
+    # 1. Drop the org_id column from all tables safely
     for table in TABLES_WITH_ORG_ID:
-        # Drop constraint
-        connection.execute(sa.text(f"ALTER TABLE {table} DROP CONSTRAINT IF EXISTS fk_{table}_org_id"))
-        # Drop index
-        connection.execute(sa.text(f"DROP INDEX IF EXISTS ix_{table}_org_id"))
-        # Drop column
-        connection.execute(sa.text(f"ALTER TABLE {table} DROP COLUMN IF EXISTS org_id"))
+        connection.execute(sa.text(f"""
+            DO $$ 
+            BEGIN 
+                IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename  = '{table}') THEN 
+                    EXECUTE 'ALTER TABLE {table} DROP CONSTRAINT IF EXISTS fk_{table}_org_id';
+                    EXECUTE 'DROP INDEX IF EXISTS ix_{table}_org_id';
+                    EXECUTE 'ALTER TABLE {table} DROP COLUMN IF EXISTS org_id';
+                END IF;
+            END $$;
+        """))
 
     # 2. Revert notification table specific changes
-    connection.execute(sa.text("ALTER TABLE notifications DROP COLUMN IF EXISTS deleted_at"))
-    connection.execute(sa.text("ALTER TABLE notifications DROP COLUMN IF EXISTS is_deleted"))
+    connection.execute(sa.text("""
+        DO $$ 
+        BEGIN 
+            IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename  = 'notifications') THEN 
+                EXECUTE 'ALTER TABLE notifications DROP COLUMN IF EXISTS deleted_at';
+                EXECUTE 'ALTER TABLE notifications DROP COLUMN IF EXISTS is_deleted';
+            END IF;
+        END $$;
+    """))
 
     # 3. Drop organization related tables
     connection.execute(sa.text("DROP TABLE IF EXISTS organization_memberships"))
