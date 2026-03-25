@@ -12,7 +12,32 @@ import {
     Divider,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { MuiTelInput } from 'mui-tel-input';
+import { Metadata } from 'libphonenumber-js/core';
+import metadata from 'libphonenumber-js/metadata.min.json';
 import type { CandidateCreate } from '../../../../models/candidate';
+
+const preferredLengths: Record<string, number> = {
+    'IN': 10, 'AF': 9, 'AL': 9, 'DZ': 9, 'AT': 13, 'AZ': 9, 'BS': 10, 'BE': 10, 
+    'BR': 12, 'CA': 10, 'CN': 12, 'DK': 8, 'FR': 9, 'DE': 15, 'IT': 12, 'MX': 10, 
+    'NL': 9, 'RU': 10, 'ZA': 10, 'GB': 10, 'US': 10, 'LK': 9
+};
+
+const getMaxLength = (countryCode: any) => {
+    if (!countryCode) return 15;
+    if (preferredLengths[countryCode]) return preferredLengths[countryCode];
+    try {
+        const meta = new Metadata(metadata as any);
+        meta.selectNumberingPlan(countryCode);
+        if (meta.numberingPlan) {
+            const lengths = meta.numberingPlan.possibleLengths();
+            return Math.max(...lengths);
+        }
+        return 15;
+    } catch (e) {
+        return 15;
+    }
+}
 
 interface PersonalInfoStepProps {
     formData: CandidateCreate;
@@ -38,8 +63,8 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
             value = value.replace(/[^a-zA-Z\s.]/g, '');
         }
 
-        // Allow only digits for phone and pincode fields
-        if (['phone', 'whatsapp_number', 'pincode'].includes(field)) {
+        // Allow only digits for pincode fields
+        if (field === 'pincode') {
             if (value !== '' && !/^\d+$/.test(value)) {
                 return;
             }
@@ -190,39 +215,42 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                 </Grid>
 
                 <Grid size={{ xs: 12, md: 6 }}>
-                    <TextField
+                    <MuiTelInput
                         required
                         fullWidth
                         label="Phone Number"
                         value={formData.phone}
-                        onChange={handleChange('phone')}
+                        onChange={(value, info) => {
+                            const maxNationalLength = getMaxLength(info.countryCode);
+                            const nationalNumber = info.nationalNumber || '';
+                            if (nationalNumber.length <= maxNationalLength) {
+                                onChange({ phone: value });
+                            }
+                        }}
+                        defaultCountry="IN"
+                        preferredCountries={['IN', 'LK', 'US', 'GB', 'AE', 'AF']}
                         variant="outlined"
-                        placeholder="10-digit mobile number"
                         error={!!errors.phone}
                         helperText={errors.phone || ""}
-                        inputProps={{
-                            maxLength: 10,
-                            'aria-label': '10-digit mobile number',
-                            'aria-invalid': !!errors.phone,
-                            'aria-required': 'true',
-                        }}
-                        autoComplete="tel"
                     />
                 </Grid>
 
                 <Grid size={{ xs: 12, md: 6 }}>
-                    <TextField
+                    <MuiTelInput
                         fullWidth
                         label="WhatsApp Number"
                         value={formData.whatsapp_number}
-                        onChange={handleChange('whatsapp_number')}
-                        variant="outlined"
-                        placeholder="10-digit mobile number"
-                        helperText="For quick communication"
-                        inputProps={{
-                            maxLength: 10,
-                            'aria-label': '10-digit whatsapp number'
+                        onChange={(value, info) => {
+                            const maxNationalLength = getMaxLength(info.countryCode);
+                            const nationalNumber = info.nationalNumber || '';
+                            if (nationalNumber.length <= maxNationalLength) {
+                                onChange({ whatsapp_number: value });
+                            }
                         }}
+                        defaultCountry="IN"
+                        preferredCountries={['IN', 'LK', 'US', 'GB', 'AE', 'AF']}
+                        variant="outlined"
+                        helperText="For quick communication"
                     />
                 </Grid>
 
@@ -305,22 +333,23 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                 </Grid>
 
                 <Grid size={{ xs: 12, md: 4 }}>
-                    <TextField
+                    <MuiTelInput
                         required
                         fullWidth
                         label="Parent/Guardian Phone"
                         value={formData.guardian_details?.parent_phone || ''}
-                        onChange={handleGuardianChange('parent_phone')}
-                        variant="outlined"
-                        placeholder="10-digit mobile number"
-                        error={!!errors.parent_phone}
-                        helperText={errors.parent_phone || "Contact number of parent/guardian"}
-                        inputProps={{
-                            maxLength: 10,
-                            'aria-label': '10-digit guardian mobile number',
-                            'aria-invalid': !!errors.parent_phone,
-                            'aria-required': 'true',
+                        onChange={(value, info) => {
+                            const maxNationalLength = getMaxLength(info.countryCode);
+                            const nationalNumber = info.nationalNumber || '';
+                            if (nationalNumber.length <= maxNationalLength) {
+                                handleGuardianChange('parent_phone')(value as any);
+                            }
                         }}
+                        defaultCountry="IN"
+                        preferredCountries={['IN', 'LK', 'US', 'GB', 'AE', 'AF']}
+                        variant="outlined"
+                        error={!!errors.parent_phone}
+                        helperText={errors.parent_phone || ""}
                     />
                 </Grid>
             </Grid>

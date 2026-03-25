@@ -31,6 +31,7 @@ import ExperienceStep from './steps/ExperienceStep';
 import candidateService from '../../../services/candidateService';
 import DisabilityStep from './steps/DisabilityStep';
 import ReviewStep from './steps/ReviewStep';
+import { matchIsValidTel } from 'mui-tel-input';
 
 // Import types
 import type { CandidateCreate } from '../../../models/candidate';
@@ -143,8 +144,8 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
                 }
                 if (!formData.phone) {
                     errors.phone = 'Phone number is required';
-                } else if (!/^\d{10}$/.test(formData.phone.replace(/\D/g, ''))) {
-                    errors.phone = 'Please enter a valid 10-digit phone number';
+                } else if (!matchIsValidTel(formData.phone)) {
+                    errors.phone = 'Please enter a valid international phone number';
                 }
                 if (!formData.pincode) {
                     errors.pincode = 'Pincode is required';
@@ -161,8 +162,8 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
                 }
                 if (!formData.guardian_details?.parent_phone) {
                     errors.parent_phone = 'Parent/Guardian phone is required';
-                } else if (!/^\d{10}$/.test(formData.guardian_details.parent_phone.replace(/\D/g, ''))) {
-                    errors.parent_phone = 'Please enter a valid 10-digit phone number';
+                } else if (!matchIsValidTel(formData.guardian_details.parent_phone)) {
+                    errors.parent_phone = 'Please enter a valid international phone number';
                 }
                 break;
             case 1: // Education
