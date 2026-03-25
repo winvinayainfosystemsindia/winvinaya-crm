@@ -92,7 +92,7 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 
 	const parseJobRole = (role: string) => {
 		if (!role) return { jobId: '', jobName: '', companyId: '', statusName: '' } as X0PAJob;
-		
+
 		// Try to parse back from format: Name - Company (Status)
 		if (role.includes(' - ') && role.includes(' (')) {
 			const parts = role.split(' (');
@@ -103,14 +103,14 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 			const company = subparts[1] || '';
 			return { jobId: role, jobName: name, companyId: company, statusName: status } as X0PAJob;
 		}
-		
+
 		// Else it's a custom role
 		return { jobId: role, jobName: role, companyId: '', statusName: '' } as X0PAJob;
 	};
 
 	return (
 		<Box>
-			<Typography sx={fieldLabel}>Suitable Job Roles / Placement Recommendations</Typography>
+			<Typography sx={fieldLabel}>Suitable X0PA Job Roles / Suggested Job Roles</Typography>
 			<Autocomplete
 				multiple
 				freeSolo

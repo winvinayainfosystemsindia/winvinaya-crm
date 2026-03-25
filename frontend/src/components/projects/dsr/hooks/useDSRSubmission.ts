@@ -146,11 +146,22 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 			const entry = await dispatch(fetchEntry(id)).unwrap();
 			setReportDate(entry.report_date);
 			
-			// Map null project_public_id to GENERAL_PROJECT_ID for UI consistency
-			const mappedItems = entry.items.map(item => ({
-				...item,
-				project_public_id: item.project_public_id || GENERAL_PROJECT_ID
-			}));
+			// Map null project_public_id to GENERAL_PROJECT_ID or Category for UI consistency
+			const mappedItems = entry.items.map(item => {
+				let projectId = item.project_public_id;
+				if (!projectId) {
+					const type = activityTypes.find(at => at.name === item.activity_type_name);
+					if (type?.category) {
+						projectId = `category:${type.category}`;
+					} else {
+						projectId = GENERAL_PROJECT_ID;
+					}
+				}
+				return {
+					...item,
+					project_public_id: projectId
+				};
+			});
 			setItems(mappedItems);
 			setIsLeave(entry.is_leave);
 			setLeaveType(entry.leave_type || '');
@@ -158,7 +169,7 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 			if (!entry.is_leave) {
 				const uniqueProjects = Array.from(new Set(mappedItems.map(i => i.project_public_id)));
 				uniqueProjects.forEach(pid => {
-					if (pid && pid !== GENERAL_PROJECT_ID) {
+					if (pid && pid !== GENERAL_PROJECT_ID && !pid.startsWith('category:')) {
 						dispatch(fetchActivitiesForProject({ projectId: pid, assigned_to: entry.user?.public_id }));
 					}
 				});
@@ -259,7 +270,7 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		});
 
 		// Handle side effects (Redux dispatches) outside the state update
-		if (field === 'project_public_id' && value && value !== GENERAL_PROJECT_ID) {
+		if (field === 'project_public_id' && value && value !== GENERAL_PROJECT_ID && !value.startsWith('category:')) {
 			dispatch(fetchActivitiesForProject({ projectId: value, assigned_to: user?.public_id }));
 		}
 	};
