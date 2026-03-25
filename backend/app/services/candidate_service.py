@@ -296,10 +296,10 @@ class CandidateService:
         if not target_user:
             raise HTTPException(status_code=404, detail="Target user not found")
         
-        if target_user.role != UserRole.SOURCING:
+        if target_user.role not in [UserRole.SOURCING, UserRole.MANAGER]:
             raise HTTPException(
                 status_code=400, 
-                detail="Candidates can only be assigned to users with SOURCING role"
+                detail="Candidates can only be assigned to users with SOURCING or MANAGER role"
             )
 
         # 3. Check for existing assignment

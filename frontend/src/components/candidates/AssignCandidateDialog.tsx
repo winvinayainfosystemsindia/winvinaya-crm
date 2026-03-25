@@ -37,7 +37,7 @@ const AssignCandidateDialog: React.FC<AssignCandidateDialogProps> = ({ open, onC
 
 	useEffect(() => {
 		if (open) {
-			fetchSourcingUsers();
+			fetchEligibleUsers();
 			if (candidate?.assigned_to_id) {
 				setSelectedUserId(candidate.assigned_to_id);
 			} else {
@@ -47,14 +47,23 @@ const AssignCandidateDialog: React.FC<AssignCandidateDialogProps> = ({ open, onC
 		}
 	}, [open, candidate]);
 
-	const fetchSourcingUsers = async () => {
+	const fetchEligibleUsers = async () => {
 		setLoading(true);
 		try {
-			// Fetch users with 'sourcing' role
-			const response = await userService.getAll(0, 100, 'sourcing');
-			setUsers(response.items);
+			// Fetch users with 'sourcing' and 'manager' roles in parallel
+			const [sourcingResp, managerResp] = await Promise.all([
+				userService.getAll(0, 50, 'sourcing'),
+				userService.getAll(0, 50, 'manager')
+			]);
+			
+			// Merge and sort by name
+			const mergedUsers = [...sourcingResp.items, ...managerResp.items].sort((a, b) => 
+				a.full_name.localeCompare(b.full_name)
+			);
+			
+			setUsers(mergedUsers);
 		} catch (err: any) {
-			setError('Failed to fetch sourcing users');
+			setError('Failed to fetch eligible users for assignment');
 			console.error(err);
 		} finally {
 			setLoading(false);
@@ -87,7 +96,7 @@ const AssignCandidateDialog: React.FC<AssignCandidateDialogProps> = ({ open, onC
 				<Box sx={{ mt: 1 }}>
 					{candidate && (
 						<Typography variant="body1" gutterBottom>
-							Assign <strong>{candidate.name}</strong> to a sourcing user.
+							Assign <strong>{candidate.name}</strong> to a team member for screening.
 						</Typography>
 					)}
 
@@ -103,11 +112,11 @@ const AssignCandidateDialog: React.FC<AssignCandidateDialogProps> = ({ open, onC
 						</Box>
 					) : (
 						<FormControl fullWidth sx={{ mt: 2 }}>
-							<InputLabel id="assign-user-label">Sourcing User</InputLabel>
+							<InputLabel id="assign-user-label">Select Team Member</InputLabel>
 							<Select
 								labelId="assign-user-label"
 								value={selectedUserId}
-								label="Sourcing User"
+								label="Select Team Member"
 								onChange={(e) => setSelectedUserId(e.target.value as number)}
 								disabled={submitting}
 							>
