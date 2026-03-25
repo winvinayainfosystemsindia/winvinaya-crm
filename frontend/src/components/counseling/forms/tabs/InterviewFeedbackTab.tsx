@@ -163,13 +163,6 @@ const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 					<Typography sx={sectionTitle}>Training & Placement Recommendations</Typography>
 				</Stack>
 
-				<Box sx={helperBox}>
-					<InfoIcon sx={{ color: '#007eb9', mt: 0.25, fontSize: 20 }} />
-					<Typography variant="body2" sx={{ color: '#007eb9', fontWeight: 400 }}>
-						Final Remarks: Synthesize observations on domain expertise, communication skills, and work culture fit to recommend suitable training paths.
-					</Typography>
-				</Box>
-
 				<Divider sx={{ mb: 4, borderColor: '#eaeded' }} />
 
 				<Stack spacing={4}>
@@ -179,8 +172,16 @@ const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 						onChange={onJobRolesChange}
 					/>
 
+					<Divider sx={{ mb: 4, borderColor: '#eaeded' }} />
+
 					<Box>
 						<Typography sx={fieldLabel}>Overall Feedback & Recommended Next Steps</Typography>
+						<Box sx={helperBox}>
+							<InfoIcon sx={{ color: '#007eb9', mt: 0.25, fontSize: 20 }} />
+							<Typography variant="body2" sx={{ color: '#007eb9', fontWeight: 400, fontSize: '0.8125rem' }}>
+								<strong>Evaluation Guidance:</strong> Provide a consolidated summary of the candidate's domain expertise, communication abilities, and cultural fit. Use these insights to justify the recommended training path or highlight specific placement opportunities.
+							</Typography>
+						</Box>
 						<TextField
 							multiline
 							rows={4}
