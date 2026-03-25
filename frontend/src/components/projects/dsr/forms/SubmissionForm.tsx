@@ -88,13 +88,14 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
 						{!readOnly && (() => {
 							const lastItem = items[items.length - 1];
 							const isGeneral = lastItem?.project_public_id === GENERAL_PROJECT_ID;
+							const isCategory = lastItem?.project_public_id?.startsWith('category:');
 							
 							const hasProject = !!lastItem?.project_public_id;
 							const hasDescription = !!lastItem?.description && lastItem.description.trim().length > 0;
 							const hasTime = !!lastItem?.start_time && !!lastItem?.end_time && (lastItem.hours || 0) > 0;
 							
 							let isCategorized = false;
-							if (isGeneral) {
+							if (isGeneral || isCategory) {
 								isCategorized = !!lastItem?.activity_type_name;
 							} else {
 								isCategorized = !!lastItem?.activity_public_id || (!!lastItem?.activity_name_other && lastItem.activity_name_other.trim() !== '');

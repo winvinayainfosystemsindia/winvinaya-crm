@@ -13,6 +13,8 @@ import {
 	Delete as DeleteIcon,
 	EditNote as EditIcon
 } from '@mui/icons-material';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import dayjs from 'dayjs';
 import type { DSRItem, DSRProject, DSRActivity, DSRActivityType } from '../../../../models/dsr';
 import { GENERAL_PROJECT_ID } from '../hooks/useDSRSubmission';
 
@@ -284,16 +286,24 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 						{item.start_time || '-'}
 					</Typography>
 				) : (
-					<TextField
-						type="time"
-						size="small"
-						fullWidth
-						value={item.start_time}
-						onChange={(e) => onRowChange(index, 'start_time', e.target.value)}
-						sx={{
-							'& .MuiOutlinedInput-root': { borderRadius: '6px' },
-							'& .MuiOutlinedInput-input': { fontSize: '0.8125rem', p: '8.5px 12px' }
+					<TimePicker
+						slotProps={{ 
+							textField: { 
+								size: 'small', 
+								fullWidth: true,
+								sx: {
+									'& .MuiOutlinedInput-root': { borderRadius: '6px' },
+									'& .MuiOutlinedInput-input': { fontSize: '0.8125rem', p: '8.5px 12px' }
+								}
+							} 
 						}}
+						value={item.start_time ? dayjs(`2024-01-01T${item.start_time}`) : null}
+						onChange={(newValue) => {
+							if (newValue) {
+								onRowChange(index, 'start_time', dayjs(newValue).format('HH:mm'));
+							}
+						}}
+						ampm={true}
 					/>
 				)}
 			</TableCell>
@@ -303,16 +313,24 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 						{item.end_time || '-'}
 					</Typography>
 				) : (
-					<TextField
-						type="time"
-						size="small"
-						fullWidth
-						value={item.end_time}
-						onChange={(e) => onRowChange(index, 'end_time', e.target.value)}
-						sx={{
-							'& .MuiOutlinedInput-root': { borderRadius: '6px' },
-							'& .MuiOutlinedInput-input': { fontSize: '0.8125rem', p: '8.5px 12px' }
+					<TimePicker
+						slotProps={{ 
+							textField: { 
+								size: 'small', 
+								fullWidth: true,
+								sx: {
+									'& .MuiOutlinedInput-root': { borderRadius: '6px' },
+									'& .MuiOutlinedInput-input': { fontSize: '0.8125rem', p: '8.5px 12px' }
+								}
+							} 
 						}}
+						value={item.end_time ? dayjs(`2024-01-01T${item.end_time}`) : null}
+						onChange={(newValue) => {
+							if (newValue) {
+								onRowChange(index, 'end_time', dayjs(newValue).format('HH:mm'));
+							}
+						}}
+						ampm={true}
 					/>
 				)}
 			</TableCell>

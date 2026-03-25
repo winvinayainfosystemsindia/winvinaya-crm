@@ -296,15 +296,16 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		for (let i = 0; i < items.length; i++) {
 			const it = items[i];
 			const isGeneral = it.project_public_id === GENERAL_PROJECT_ID;
+			const isCategory = it.project_public_id?.startsWith('category:');
 
 			if (!it.project_public_id || !it.description || !it.start_time || !it.end_time) {
 				toast.warning(`Please fill all fields in row ${i + 1}`);
 				return false;
 			}
 			
-			if (isGeneral) {
+			if (isGeneral || isCategory) {
 				if (!it.activity_type_name) {
-					toast.warning(`Please select an Activity Type for General work in row ${i + 1}`);
+					toast.warning(`Please select an Activity Type for row ${i + 1}`);
 					return false;
 				}
 			} else {
@@ -327,7 +328,9 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		setSubmitting(true);
 		const sanitizedItems = items.map(item => ({
 			...item,
-			project_public_id: item.project_public_id === GENERAL_PROJECT_ID ? null : item.project_public_id
+			project_public_id: (item.project_public_id === GENERAL_PROJECT_ID || (typeof item.project_public_id === 'string' && item.project_public_id.startsWith('category:'))) 
+				? null 
+				: item.project_public_id
 		}));
 
 		try {
@@ -356,7 +359,9 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		setSubmitting(true);
 		const sanitizedItems = items.map(item => ({
 			...item,
-			project_public_id: item.project_public_id === GENERAL_PROJECT_ID ? null : item.project_public_id
+			project_public_id: (item.project_public_id === GENERAL_PROJECT_ID || (typeof item.project_public_id === 'string' && item.project_public_id.startsWith('category:'))) 
+				? null 
+				: item.project_public_id
 		}));
 
 		try {
