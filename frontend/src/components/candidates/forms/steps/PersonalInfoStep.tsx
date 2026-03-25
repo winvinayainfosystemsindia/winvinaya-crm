@@ -10,12 +10,16 @@ import {
     Typography,
     Box,
     Divider,
+    Alert,
+    CircularProgress,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { MuiTelInput } from 'mui-tel-input';
 import { Metadata } from 'libphonenumber-js/core';
 import metadata from 'libphonenumber-js/metadata.min.json';
 import type { CandidateCreate } from '../../../../models/candidate';
+import { candidateService } from '../../../../services/candidateService';
+import { useEffect, useState } from 'react';
 
 const preferredLengths: Record<string, number> = {
     'IN': 10, 'AF': 9, 'AL': 9, 'DZ': 9, 'AT': 13, 'AZ': 9, 'BS': 10, 'BE': 10, 
@@ -51,6 +55,51 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     errors = {},
 }) => {
     const theme = useTheme();
+    const [isPincodeValid, setIsPincodeValid] = useState<boolean | null>(null);
+    const [isValidatingPin, setIsValidatingPin] = useState(false);
+    const [countryCode, setCountryCode] = useState<string>('IN');
+
+    // Auto-lookup for Indian Pincodes
+    useEffect(() => {
+        const lookupPincode = async () => {
+            if (countryCode === 'IN' && formData.pincode.length === 6) {
+                setIsValidatingPin(true);
+                try {
+                    // We call availability check with what we have
+                    const response = await candidateService.checkAvailability({
+                        email: formData.email || 'temp@val.com', // Dummy if not filled yet
+                        phone: formData.phone || '+910000000000',
+                        pincode: formData.pincode
+                    });
+
+                    if (response.address && Object.keys(response.address).length > 0) {
+                        onChange({
+                            city: response.address.city,
+                            district: response.address.district,
+                            state: response.address.state
+                        });
+                        setIsPincodeValid(true);
+                    } else {
+                        setIsPincodeValid(false);
+                    }
+                } catch (error) {
+                    setIsPincodeValid(false);
+                } finally {
+                    setIsValidatingPin(false);
+                }
+            } else if (countryCode !== 'IN') {
+                setIsPincodeValid(false); // Always show manual for international
+            } else {
+                setIsPincodeValid(null);
+            }
+        };
+
+        const timer = setTimeout(lookupPincode, 500);
+        return () => clearTimeout(timer);
+    }, [formData.pincode, countryCode, formData.email, formData.phone]);
+
+    // Show manual fields if PIN is invalid, or if it's international
+    const showManualFields = isPincodeValid === false || (countryCode !== 'IN' && formData.pincode.length > 0);
 
     const handleChange = (field: keyof CandidateCreate) => (
         event: React.ChangeEvent<HTMLInputElement>
@@ -63,12 +112,7 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
             value = value.replace(/[^a-zA-Z\s.]/g, '');
         }
 
-        // Allow only digits for pincode fields
-        if (field === 'pincode') {
-            if (value !== '' && !/^\d+$/.test(value)) {
-                return;
-            }
-        }
+        // Pincode allowed to be alphanumeric for global support
         onChange({
             [field]: value,
         });
@@ -224,7 +268,10 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                             const maxNationalLength = getMaxLength(info.countryCode);
                             const nationalNumber = info.nationalNumber || '';
                             if (nationalNumber.length <= maxNationalLength) {
-                                onChange({ phone: value });
+                                onChange({ 
+                                    phone: value
+                                });
+                                setCountryCode(info.countryCode || 'IN');
                             }
                         }}
                         defaultCountry="IN"
@@ -258,22 +305,80 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                     <TextField
                         required
                         fullWidth
-                        label="Pincode"
+                        label="Pincode / ZIP Code"
                         value={formData.pincode}
                         onChange={handleChange('pincode')}
                         variant="outlined"
-                        placeholder="6-digit pincode"
-                        error={!!errors.pincode}
-                        helperText={errors.pincode || ""}
-                        inputProps={{
-                            maxLength: 6,
-                            'aria-label': '6-digit pincode',
-                            'aria-invalid': !!errors.pincode,
-                            'aria-required': 'true',
+                        placeholder="Enter pincode or ZIP code"
+                        error={isPincodeValid === false || !!errors.pincode}
+                        helperText={errors.pincode || (isPincodeValid === false ? "PIN not found. Please enter details manually." : "")}
+                        slotProps={{
+                            input: {
+                                endAdornment: isValidatingPin ? <CircularProgress size={20} /> : null
+                            }
                         }}
                         autoComplete="postal-code"
                     />
                 </Grid>
+
+                {isPincodeValid === true && countryCode === 'IN' && (
+                    <Grid size={{ xs: 12 }}>
+                        <Alert severity="success" sx={{ mb: 1 }}>
+                            Valid Pincode
+                        </Alert>
+                    </Grid>
+                )}
+
+                {isPincodeValid === false && countryCode === 'IN' && (
+                    <Grid size={{ xs: 12 }}>
+                        <Alert severity="info" sx={{ mb: 1 }}>
+                            Invalid Pincode. Please enter the other details manually.
+                        </Alert>
+                    </Grid>
+                )}
+
+                {showManualFields && (
+                    <>
+                        <Grid size={{ xs: 12, md: 4 }}>
+                            <TextField
+                                required
+                                fullWidth
+                                label="City"
+                                value={formData.city || ''}
+                                onChange={handleChange('city')}
+                                variant="outlined"
+                                error={!!errors.city}
+                                helperText={errors.city || ""}
+                            />
+                        </Grid>
+
+                        <Grid size={{ xs: 12, md: 4 }}>
+                            <TextField
+                                required
+                                fullWidth
+                                label="District"
+                                value={formData.district || ''}
+                                onChange={handleChange('district')}
+                                variant="outlined"
+                                error={!!errors.district}
+                                helperText={errors.district || ""}
+                            />
+                        </Grid>
+
+                        <Grid size={{ xs: 12, md: 4 }}>
+                            <TextField
+                                required
+                                fullWidth
+                                label="State"
+                                value={formData.state || ''}
+                                onChange={handleChange('state')}
+                                variant="outlined"
+                                error={!!errors.state}
+                                helperText={errors.state || ""}
+                            />
+                        </Grid>
+                    </>
+                )}
 
                 <Grid size={{ xs: 12 }}>
                     <Divider sx={{ my: 2 }} />

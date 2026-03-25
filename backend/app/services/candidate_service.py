@@ -37,17 +37,24 @@ class CandidateService:
                 detail="Phone number already registered"
             )
 
-        # Fetch address details from pincode
-        return await get_pincode_details(pincode)
+        # Fetch address details from pincode - gracefully handle invalid ones
+        try:
+            return await get_pincode_details(pincode)
+        except HTTPException:
+            # If invalid pincode, return empty details to allow manual entry
+            return {}
 
     async def create_candidate(self, candidate_in: CandidateCreate) -> Candidate:
         """Create a new candidate with automated address fetch"""
         
         # Validate personal info and get address details
+        # Extract country_code if available in candidate_in (will be added to schema)
+        country_code = getattr(candidate_in, "country_code", "IN")
         address_details = await self.validate_personal_info(
             candidate_in.email, 
             candidate_in.phone, 
-            candidate_in.pincode
+            candidate_in.pincode,
+            country_code=country_code
         )
         
         # Prepare data
@@ -57,10 +64,10 @@ class CandidateService:
         # (Pydantic model_dump already does this recursively by default if we use mode='json', 
         # but sqlalchemy expects dicts for JSON columns. candidate_in.education_details is a model)
         
-        # Override address fields
-        candidate_data["city"] = address_details["city"]
-        candidate_data["district"] = address_details["district"]
-        candidate_data["state"] = address_details["state"]
+        # Override address fields only if they are not manually provided
+        candidate_data["city"] = candidate_in.city or address_details.get("city")
+        candidate_data["district"] = candidate_in.district or address_details.get("district")
+        candidate_data["state"] = candidate_in.state or address_details.get("state")
         
         # JSON fields handling
         if candidate_in.education_details:
@@ -152,8 +159,14 @@ class CandidateService:
         
         # If pincode changed, update address
         if "pincode" in update_data and update_data["pincode"] != candidate.pincode:
-            address_details = await get_pincode_details(update_data["pincode"])
-            update_data.update(address_details)
+            # We don't have country_code easily here, but we can try to infer 
+            # or just use the existing city/state if provided in update_data
+            if not all([update_data.get("city"), update_data.get("district"), update_data.get("state")]):
+                # Only fetch if some fields are missing
+                address_details = await get_pincode_details(update_data["pincode"])
+                update_data["city"] = update_data.get("city") or address_details.get("city")
+                update_data["district"] = update_data.get("district") or address_details.get("district")
+                update_data["state"] = update_data.get("state") or address_details.get("state")
             
         # JSON fields handling for updates
         if "education_details" in update_data and update_data["education_details"]:

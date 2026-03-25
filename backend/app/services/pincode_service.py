@@ -45,6 +45,13 @@ async def get_pincode_details(pincode: str) -> dict:
             logger.error(f"Pincode API request failed: {e}")
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Pincode service temporarily unavailable"
+            )
+            
+        except httpx.RequestError as e:
+            logger.error(f"Pincode API request failed: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="Could not verify pincode service"
             )
         except Exception as e:

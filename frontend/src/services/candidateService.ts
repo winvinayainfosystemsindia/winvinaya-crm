@@ -208,8 +208,16 @@ export const candidateService = {
 	/**
 	 * Check if email/phone are available and validate pincode
 	 */
-	checkAvailability: async (email: string, phone: string, pincode: string): Promise<{ status: string; address: any }> => {
-		const response = await api.post('/candidates/check-availability', { email, phone, pincode });
+	checkAvailability: async (params: { 
+		email: string; 
+		phone: string; 
+		pincode: string; 
+		country_code?: string;
+		city?: string;
+		district?: string;
+		state?: string;
+	}): Promise<{ status: string; address: any }> => {
+		const response = await api.post('/candidates/check-availability', params);
 		return response.data;
 	},
 

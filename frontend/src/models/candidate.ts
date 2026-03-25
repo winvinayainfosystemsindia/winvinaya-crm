@@ -219,7 +219,20 @@ export interface CandidateListItem {
 }
 
 
-export interface CandidateCreate extends Omit<Candidate, 'id' | 'public_id' | 'city' | 'district' | 'state' | 'created_at' | 'updated_at' | 'screening' | 'documents' | 'counseling'> { }
+export interface CandidateCreate extends Omit<Candidate, 'id' | 'public_id' | 'city' | 'district' | 'state' | 'created_at' | 'updated_at' | 'screening' | 'documents' | 'counseling'> {
+	city?: string;
+	district?: string;
+	state?: string;
+}
+
+export interface CandidateCheck {
+	email: string;
+	phone: string;
+	pincode: string;
+	city?: string;
+	district?: string;
+	state?: string;
+}
 
 export interface CandidateUpdate {
 	name?: string;
@@ -233,6 +246,9 @@ export interface CandidateUpdate {
 	education_details?: EducationDetails;
 	disability_details?: DisabilityDetails;
 	dob?: string;
+	city?: string;
+	district?: string;
+	state?: string;
 }
 
 export interface CandidateStats {

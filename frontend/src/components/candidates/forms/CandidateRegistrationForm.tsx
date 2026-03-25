@@ -50,6 +50,9 @@ const initialFormData: CandidateCreate = {
         parent_phone: '',
     },
     pincode: '',
+    city: '',
+    district: '',
+    state: '',
     work_experience: {
         is_experienced: false,
         currently_employed: false,
@@ -148,9 +151,7 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
                     errors.phone = 'Please enter a valid international phone number';
                 }
                 if (!formData.pincode) {
-                    errors.pincode = 'Pincode is required';
-                } else if (!/^\d{6}$/.test(formData.pincode)) {
-                    errors.pincode = 'Please enter a valid 6-digit pincode';
+                    errors.pincode = 'Pincode/ZIP code is required';
                 }
 
                 // Mandatory Guardian Details Validation
@@ -214,11 +215,32 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
                 setIsSubmitting(true);
                 setSubmitError(null);
                 try {
-                    await candidateService.checkAvailability(
-                        formData.email,
-                        formData.phone,
-                        formData.pincode
-                    );
+                    const response = await candidateService.checkAvailability({
+                        email: formData.email,
+                        phone: formData.phone,
+                        pincode: formData.pincode,
+                        city: formData.city,
+                        district: formData.district,
+                        state: formData.state
+                    });
+
+                    // Auto-fill address if returned, or handle fallback
+                    if (response.address && Object.keys(response.address).length > 0) {
+                        setFormData(prev => ({
+                            ...prev,
+                            city: prev.city || response.address.city || '',
+                            district: prev.district || response.address.district || '',
+                            state: prev.state || response.address.state || '',
+                        }));
+                    } else if (!formData.city || !formData.district || !formData.state) {
+                        setFieldErrors({
+                            pincode: "PIN details not found. Please enter address manually.",
+                            city: !formData.city ? "City is required" : undefined,
+                            district: !formData.district ? "District is required" : undefined,
+                            state: !formData.state ? "State is required" : undefined,
+                        } as any);
+                        return;
+                    }
                 } catch (error: unknown) {
                     const detail = (error as { response?: { data?: { detail?: string } }, message?: string })?.response?.data?.detail
                         || (error instanceof Error ? error.message : 'Validation failed');

@@ -48,6 +48,9 @@ class CandidateBase(BaseModel):
     whatsapp_number: Optional[str] = None
     dob: Optional[date] = None
     pincode: str
+    city: Optional[str] = None
+    district: Optional[str] = None
+    state: Optional[str] = None
     
     guardian_details: Optional[dict] = None
     work_experience: Optional[WorkExperience] = None
@@ -63,6 +66,9 @@ class CandidateCheck(BaseModel):
     email: EmailStr
     phone: str
     pincode: str
+    city: Optional[str] = None
+    district: Optional[str] = None
+    state: Optional[str] = None
 
 
 class CandidateUpdate(BaseModel):
@@ -73,6 +79,9 @@ class CandidateUpdate(BaseModel):
     whatsapp_number: Optional[str] = None
     dob: Optional[date] = None
     pincode: Optional[str] = None
+    city: Optional[str] = None
+    district: Optional[str] = None
+    state: Optional[str] = None
     guardian_details: Optional[dict] = None
     work_experience: Optional[dict] = None
     education_details: Optional[EducationDetails] = None
