@@ -95,7 +95,7 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
 							
 							let isCategorized = false;
 							if (isGeneral) {
-								isCategorized = !!lastItem?.activity_type_code;
+								isCategorized = !!lastItem?.activity_type_name;
 							} else {
 								isCategorized = !!lastItem?.activity_public_id || (!!lastItem?.activity_name_other && lastItem.activity_name_other.trim() !== '');
 							}

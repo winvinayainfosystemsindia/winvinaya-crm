@@ -65,7 +65,7 @@ class DSRService:
         Validate each line item:
         - Project must exist and be active
         - Activity must exist, be active, and belong to the referenced project
-        - activity_type_code is stored as-is (validated by schema normaliser)
+        - activity_type_name is stored as-is (validated by schema normaliser)
         Returns the resolved items list (with internal IDs stripped out for JSON storage).
         """
         project_cache: dict = {}
@@ -78,14 +78,14 @@ class DSRService:
             a_uid = item.get("activity_public_id") if is_dict else item.activity_public_id
             p_name_other = item.get("project_name_other") if is_dict else getattr(item, 'project_name_other', None)
             a_name_other = item.get("activity_name_other") if is_dict else getattr(item, 'activity_name_other', None)
-            activity_type_code = item.get("activity_type_code") if is_dict else getattr(item, 'activity_type_code', None)
+            activity_type_name = item.get("activity_type_name") if is_dict else getattr(item, 'activity_type_name', None)
 
             resolved_item = {
                 "description": item.get("description") if is_dict else item.description,
                 "start_time": item.get("start_time") if is_dict else item.start_time,
                 "end_time": item.get("end_time") if is_dict else item.end_time,
                 "hours": item.get("hours") if is_dict else item.hours,
-                "activity_type_code": activity_type_code,
+                "activity_type_name": activity_type_name,
             }
 
             # Resolve project
@@ -105,7 +105,7 @@ class DSRService:
             else:
                 resolved_item["project_public_id"] = None
                 # If it has an activity type and no project, it's "General"
-                default_name = "General / Internal Work" if activity_type_code else p_name_other
+                default_name = "General / Internal Work" if activity_type_name else p_name_other
                 resolved_item["project_name"] = default_name
                 resolved_item["project_name_other"] = p_name_other
 

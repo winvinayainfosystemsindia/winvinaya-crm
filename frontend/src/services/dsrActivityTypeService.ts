@@ -1,5 +1,5 @@
 import api from './api';
-import type { DSRActivityType, PaginationResult } from '../models/dsr';
+import type { DSRActivityType, PaginationResult, ImportResult } from '../models/dsr';
 
 const dsrActivityTypeService = {
 	getActivityTypes: async (
@@ -30,6 +30,36 @@ const dsrActivityTypeService = {
 
 	deleteActivityType: async (publicId: string): Promise<void> => {
 		await api.delete(`/dsr/activity-types/${publicId}`);
+	},
+	
+	importActivityTypes: async (file: File): Promise<ImportResult> => {
+		const formData = new FormData();
+		formData.append('file', file);
+		const response = await api.post<ImportResult>(`/dsr/activity-types/import`, formData, {
+			headers: {
+				'Content-Type': 'multipart/form-data',
+			},
+		});
+		return response.data;
+	},
+	
+	downloadTemplate: async (): Promise<void> => {
+		const response = await api.get('/dsr/activity-types/import/template', {
+			responseType: 'blob'
+		});
+
+		const url = window.URL.createObjectURL(new Blob([response.data]));
+		const link = document.createElement('a');
+		link.href = url;
+		link.setAttribute('download', 'dsr_activity_types_template.csv');
+		document.body.appendChild(link);
+		link.click();
+		link.remove();
+		window.URL.revokeObjectURL(url);
+	},
+	
+	bulkDeleteActivityTypes: async (publicIds: string[]): Promise<void> => {
+		await api.post('/dsr/activity-types/bulk-delete', { public_ids: publicIds });
 	}
 };
 

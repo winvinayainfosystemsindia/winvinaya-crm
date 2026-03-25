@@ -32,7 +32,7 @@ class DSRActivityType(BaseModel):
     )
 
     code: Mapped[str] = mapped_column(
-        String(20),
+        String(100),
         nullable=False,
         unique=True,
         index=True,
@@ -43,6 +43,13 @@ class DSRActivityType(BaseModel):
         Text,
         nullable=True,
         comment="Optional description of this activity type",
+    )
+
+    category: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+        index=True,
+        comment="Grouping category e.g. 'Sourcing', 'Training'",
     )
 
     is_active: Mapped[bool] = mapped_column(

@@ -3,6 +3,7 @@
 from typing import Optional, List, Tuple
 from uuid import UUID
 from sqlalchemy import select, func
+import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.dsr_activity_type import DSRActivityType
 from app.repositories.base import BaseRepository
@@ -75,3 +76,12 @@ class DSRActivityTypeRepository(BaseRepository[DSRActivityType]):
         )
         result = await self.db.execute(query)
         return list(result.scalars().all()), total
+
+    async def bulk_delete(self, public_ids: List[UUID]) -> int:
+        """Mark multiple activity types as deleted."""
+        result = await self.db.execute(
+            sa.update(DSRActivityType)
+            .where(DSRActivityType.public_id.in_(public_ids))
+            .values(is_deleted=True, deleted_at=sa.func.now())
+        )
+        return result.rowcount

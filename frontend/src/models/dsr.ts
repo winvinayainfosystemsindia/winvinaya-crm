@@ -69,6 +69,7 @@ export interface DSRActivityType {
 	name: string;
 	code: string;
 	description: string | null;
+	category?: string | null;
 	is_active: boolean;
 	sort_order: number;
 	created_at: string;
@@ -82,7 +83,7 @@ export interface DSRItem {
 	activity_public_id: string | null;
 	activity_name?: string;
 	activity_name_other?: string;
-	activity_type_code?: string | null;
+	activity_type_name?: string | null;
 	description: string;
 	start_time: string;
 	end_time: string;
@@ -134,10 +135,10 @@ export interface DSRActivityCreate {
 
 export interface DSREntryCreate {
 	report_date: string;
-	items?: (Omit<DSRItem, 'project_name' | 'activity_name' | 'hours' | 'project_public_id' | 'activity_public_id' | 'activity_type_code'> & { 
+	items?: (Omit<DSRItem, 'project_name' | 'activity_name' | 'hours' | 'project_public_id' | 'activity_public_id' | 'activity_type_name'> & { 
 		project_public_id?: string | null;
 		activity_public_id?: string | null;
-		activity_type_code?: string | null;
+		activity_type_name?: string | null;
 		project_name_other?: string;
 		activity_name_other?: string;
 		hours?: number;

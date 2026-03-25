@@ -18,26 +18,30 @@ import {
 	Box,
 	Chip,
 	CircularProgress,
-	Alert
+	Alert,
+	Checkbox
 } from '@mui/material';
 import {
 	Edit as EditIcon,
 	Delete as DeleteIcon,
 	Add as AddIcon,
 	Save as SaveIcon,
-	Cancel as CancelIcon
+	Cancel as CancelIcon,
+	FileUpload as ImportIcon
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import {
 	fetchActivityTypes,
 	createActivityType,
 	updateActivityType,
-	deleteActivityType,
 	clearActivityTypeError
 } from '../../../../store/slices/dsrActivityTypeSlice';
+import dsrActivityTypeService from '../../../../services/dsrActivityTypeService';
 import useToast from '../../../../hooks/useToast';
-import type { DSRActivityType } from '../../../../models/dsr';
+import type { DSRActivityType, ImportResult } from '../../../../models/dsr';
 import DSRAdminTableHeader from './DSRAdminTableHeader';
+import ExcelImportModal from '../../../common/ExcelImportModal';
+import ConfirmDialog from '../../../common/ConfirmDialog';
 
 const DSRActivityTypeManagement: React.FC = () => {
 	const dispatch = useAppDispatch();
@@ -50,9 +54,16 @@ const DSRActivityTypeManagement: React.FC = () => {
 		name: '',
 		code: '',
 		description: '',
+		category: '',
 		sort_order: 0
 	});
 	const [searchTerm, setSearchTerm] = useState('');
+	const [importDialogOpen, setImportDialogOpen] = useState(false);
+	const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+	const [typeToDelete, setTypeToDelete] = useState<string | null>(null);
+	const [selectedIds, setSelectedIds] = useState<string[]>([]);
+	const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
+	const [deleting, setDeleting] = useState(false);
 
 	const filteredActivityTypes = React.useMemo(() => {
 		if (!searchTerm) return activityTypes;
@@ -60,6 +71,7 @@ const DSRActivityTypeManagement: React.FC = () => {
 		return activityTypes.filter(t =>
 			t.name.toLowerCase().includes(s) ||
 			t.code.toLowerCase().includes(s) ||
+			(t.category || '').toLowerCase().includes(s) ||
 			(t.description || '').toLowerCase().includes(s)
 		);
 	}, [activityTypes, searchTerm]);
@@ -75,6 +87,7 @@ const DSRActivityTypeManagement: React.FC = () => {
 				name: type.name,
 				code: type.code,
 				description: type.description || '',
+				category: type.category || '',
 				sort_order: type.sort_order
 			});
 		} else {
@@ -83,6 +96,7 @@ const DSRActivityTypeManagement: React.FC = () => {
 				name: '',
 				code: '',
 				description: '',
+				category: '',
 				sort_order: activityTypes.length + 1
 			});
 		}
@@ -112,14 +126,75 @@ const DSRActivityTypeManagement: React.FC = () => {
 		}
 	};
 
-	const handleDelete = async (publicId: string) => {
-		if (window.confirm('Are you sure you want to delete this activity type? It will be soft-deleted.')) {
-			try {
-				await dispatch(deleteActivityType(publicId)).unwrap();
-				toast.success('Activity type deleted');
-			} catch (err: any) {
-				toast.error(err || 'Failed to delete activity type');
-			}
+	const handleDeleteClick = (publicId: string) => {
+		setTypeToDelete(publicId);
+		setDeleteConfirmOpen(true);
+	};
+
+	const handleConfirmDelete = async () => {
+		if (!typeToDelete) return;
+		
+		setDeleting(true);
+		try {
+			await dsrActivityTypeService.deleteActivityType(typeToDelete);
+			toast.success('Activity type deleted');
+			setDeleteConfirmOpen(false);
+			setTypeToDelete(null);
+			dispatch(fetchActivityTypes({ onlyActive: false }));
+		} catch (err: any) {
+			toast.error(err.response?.data?.detail || 'Failed to delete activity type');
+		} finally {
+			setDeleting(false);
+		}
+	};
+
+	const handleConfirmBulkDelete = async () => {
+		if (selectedIds.length === 0) return;
+		
+		setDeleting(true);
+		try {
+			await dsrActivityTypeService.bulkDeleteActivityTypes(selectedIds);
+			toast.success(`Successfully deleted ${selectedIds.length} activity types`);
+			setBulkDeleteConfirmOpen(false);
+			setSelectedIds([]);
+			dispatch(fetchActivityTypes({ onlyActive: false }));
+		} catch (err: any) {
+			toast.error(err.response?.data?.detail || 'Failed to bulk delete activity types');
+		} finally {
+			setDeleting(false);
+		}
+	};
+
+	const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+		if (event.target.checked) {
+			setSelectedIds(filteredActivityTypes.map(at => at.public_id));
+		} else {
+			setSelectedIds([]);
+		}
+	};
+
+	const handleSelectOne = (publicId: string) => {
+		setSelectedIds(prev => 
+			prev.includes(publicId) 
+				? prev.filter(id => id !== publicId) 
+				: [...prev, publicId]
+		);
+	};
+
+	const handleDownloadTemplate = async () => {
+		try {
+			await dsrActivityTypeService.downloadTemplate();
+		} catch (err: any) {
+			toast.error(err.message || 'Failed to download template');
+		}
+	};
+
+	const handleImportFile = async (file: File): Promise<ImportResult> => {
+		try {
+			return await dsrActivityTypeService.importActivityTypes(file);
+		} catch (err: any) {
+			const errorMsg = err.response?.data?.detail || err.message || 'Import failed';
+			throw new Error(errorMsg);
 		}
 	};
 
@@ -133,68 +208,121 @@ const DSRActivityTypeManagement: React.FC = () => {
 					onRefresh={() => dispatch(fetchActivityTypes({ onlyActive: false }))}
 					placeholder="Search activity types..."
 					actions={
-						<Button
-							startIcon={<AddIcon />}
-							variant="contained"
-							size="small"
-							onClick={() => handleOpenDialog()}
-							sx={{
-								bgcolor: '#ec7211',
-								'&:hover': { bgcolor: '#eb5f07' },
-								textTransform: 'none',
-								fontWeight: 700,
-								boxShadow: 'none',
-								height: '36px'
-							}}
-						>
-							Add Activity Type
-						</Button>
+						<Box sx={{ display: 'flex', gap: 1 }}>
+							{selectedIds.length > 0 && (
+								<Button
+									startIcon={<DeleteIcon />}
+									variant="outlined"
+									color="error"
+									size="small"
+									onClick={() => setBulkDeleteConfirmOpen(true)}
+									sx={{
+										textTransform: 'none',
+										fontWeight: 600,
+										height: '36px'
+									}}
+								>
+									Delete ({selectedIds.length})
+								</Button>
+							)}
+							<Button
+								startIcon={<ImportIcon />}
+								variant="outlined"
+								size="small"
+								onClick={() => setImportDialogOpen(true)}
+								sx={{
+									textTransform: 'none',
+									fontWeight: 600,
+									height: '36px',
+									color: '#1a365d',
+									borderColor: '#d5dbdb',
+									'&:hover': { borderColor: '#1a365d', bgcolor: '#f0f4f8' }
+								}}
+							>
+								Import
+							</Button>
+							<Button
+								startIcon={<AddIcon />}
+								variant="contained"
+								size="small"
+								onClick={() => handleOpenDialog()}
+								sx={{
+									bgcolor: '#ec7211',
+									'&:hover': { bgcolor: '#eb5f07' },
+									textTransform: 'none',
+									fontWeight: 700,
+									boxShadow: 'none',
+									height: '36px'
+								}}
+							>
+								Add Activity Type
+							</Button>
+						</Box>
 					}
 				/>
 
 				<TableContainer>
 					<Table size="small">
-						<TableHead sx={{ bgcolor: '#fafafa' }}>
-							<TableRow>
-								<TableCell sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem', borderBottom: '2px solid #d5dbdb' }}>Code</TableCell>
-								<TableCell sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem', borderBottom: '2px solid #d5dbdb' }}>Name</TableCell>
-								<TableCell sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem', borderBottom: '2px solid #d5dbdb' }}>Description</TableCell>
-								<TableCell sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem', borderBottom: '2px solid #d5dbdb' }}>Order</TableCell>
-								<TableCell sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem', borderBottom: '2px solid #d5dbdb' }}>Status</TableCell>
-								<TableCell align="right" sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem', borderBottom: '2px solid #d5dbdb' }}>Actions</TableCell>
-							</TableRow>
-						</TableHead>
+							<TableHead sx={{ bgcolor: '#f8fafa' }}>
+								<TableRow>
+									<TableCell padding="checkbox">
+										<Checkbox
+											indeterminate={selectedIds.length > 0 && selectedIds.length < filteredActivityTypes.length}
+											checked={filteredActivityTypes.length > 0 && selectedIds.length === filteredActivityTypes.length}
+											onChange={handleSelectAll}
+										/>
+									</TableCell>
+									<TableCell sx={{ fontWeight: 700, color: '#1a365d' }}>Code</TableCell>
+									<TableCell sx={{ fontWeight: 700, color: '#1a365d' }}>Name</TableCell>
+									<TableCell sx={{ fontWeight: 700, color: '#1a365d' }}>Category</TableCell>
+									<TableCell sx={{ fontWeight: 700, color: '#1a365d' }}>Description</TableCell>
+									<TableCell sx={{ fontWeight: 700, color: '#1a365d' }}>Sort</TableCell>
+									<TableCell sx={{ fontWeight: 700, color: '#1a365d' }}>Status</TableCell>
+									<TableCell align="right" sx={{ fontWeight: 700, color: '#1a365d' }}>Actions</TableCell>
+								</TableRow>
+							</TableHead>
 						<TableBody>
 							{loading && activityTypes.length === 0 ? (
 								<TableRow>
-									<TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+									<TableCell colSpan={8} align="center" sx={{ py: 4 }}>
 										<CircularProgress size={24} />
 									</TableCell>
 								</TableRow>
 							) : filteredActivityTypes.length === 0 ? (
 								<TableRow>
-									<TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+									<TableCell colSpan={8} align="center" sx={{ py: 4 }}>
 										<Typography variant="body2" color="text.secondary">
 											{searchTerm ? 'No results found.' : 'No activity types found.'}
 										</Typography>
 									</TableCell>
 								</TableRow>
 							) : (
-								filteredActivityTypes.map((type) => (
-									<TableRow
-										key={type.public_id}
-										sx={{
-											'&:hover': { bgcolor: '#f5f8fa' },
-											'&:last-child td': { borderBottom: 0 }
-										}}
-									>
-										<TableCell>
-											<Typography variant="body2" sx={{ fontWeight: 700, color: '#232f3e' }}>
+									filteredActivityTypes.map((type) => (
+										<TableRow 
+											key={type.public_id} 
+											hover
+											selected={selectedIds.includes(type.public_id)}
+										>
+											<TableCell padding="checkbox">
+												<Checkbox
+													checked={selectedIds.includes(type.public_id)}
+													onChange={() => handleSelectOne(type.public_id)}
+												/>
+											</TableCell>
+											<TableCell sx={{ fontWeight: 600, color: '#1a365d' }}>
 												{type.code}
-											</Typography>
 										</TableCell>
 										<TableCell sx={{ fontWeight: 500 }}>{type.name}</TableCell>
-										<TableCell sx={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'text.secondary' }}>
+										<TableCell>
+											{type.category ? (
+												<Chip 
+													label={type.category} 
+													size="small" 
+													sx={{ bgcolor: '#f0f4f8', color: '#1a365d', fontWeight: 600, borderRadius: '4px' }} 
+												/>
+											) : '-'}
+										</TableCell>
+										<TableCell sx={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'text.secondary' }}>
 											{type.description || '-'}
 										</TableCell>
 										<TableCell>{type.sort_order}</TableCell>
@@ -211,7 +339,7 @@ const DSRActivityTypeManagement: React.FC = () => {
 											<IconButton size="small" onClick={() => handleOpenDialog(type)}>
 												<EditIcon fontSize="small" />
 											</IconButton>
-											<IconButton size="small" onClick={() => handleDelete(type.public_id)} color="error">
+											<IconButton size="small" onClick={() => handleDeleteClick(type.public_id)} color="error">
 												<DeleteIcon fontSize="small" />
 											</IconButton>
 										</TableCell>
@@ -249,6 +377,14 @@ const DSRActivityTypeManagement: React.FC = () => {
 							disabled={!!editingType}
 						/>
 						<TextField
+							label="Category"
+							fullWidth
+							value={formData.category}
+							onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+							placeholder="e.g. Sourcing, Training, Placement, General"
+							helperText="Categorization group name"
+						/>
+						<TextField
 							label="Description"
 							fullWidth
 							multiline
@@ -278,6 +414,39 @@ const DSRActivityTypeManagement: React.FC = () => {
 					</Button>
 				</DialogActions>
 			</Dialog>
+
+			<ExcelImportModal
+				open={importDialogOpen}
+				onClose={() => setImportDialogOpen(false)}
+				onImport={handleImportFile}
+				title="Import Activity Types"
+				onDownloadTemplate={handleDownloadTemplate}
+				description="Upload a CSV file to bulk-import or update activity types. Ensure the columns match the template."
+				onSuccess={() => dispatch(fetchActivityTypes({ onlyActive: false }))}
+				accept=".csv"
+			/>
+
+			<ConfirmDialog
+				open={deleteConfirmOpen}
+				onClose={() => setDeleteConfirmOpen(false)}
+				onConfirm={handleConfirmDelete}
+				title="Confirm Delete"
+				message="Are you sure you want to delete this activity type? This will move it to the inactive list."
+				confirmText="Delete"
+				severity="error"
+				loading={deleting}
+			/>
+
+			<ConfirmDialog
+				open={bulkDeleteConfirmOpen}
+				onClose={() => setBulkDeleteConfirmOpen(false)}
+				onConfirm={handleConfirmBulkDelete}
+				title="Confirm Bulk Delete"
+				message={`Are you sure you want to delete ${selectedIds.length} activity types? This will move them to the inactive list.`}
+				confirmText={`Delete ${selectedIds.length} items`}
+				severity="error"
+				loading={deleting}
+			/>
 		</Box>
 	);
 };

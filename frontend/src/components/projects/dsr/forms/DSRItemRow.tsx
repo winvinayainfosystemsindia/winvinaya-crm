@@ -85,8 +85,8 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 	}, [item.project_public_id, projects]);
 
 	const selectedType = React.useMemo(() => {
-		return activityTypes.find(at => at.code === item.activity_type_code) || null;
-	}, [item.activity_type_code, activityTypes]);
+		return activityTypes.find(at => at.name === item.activity_type_name) || null;
+	}, [item.activity_type_name, activityTypes]);
 
 	const selectedActivity = React.useMemo(() => {
 		if (item.activity_name_other !== undefined && item.activity_name_other !== null) return OTHER_ACTIVITY;
@@ -94,7 +94,19 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 	}, [item.activity_public_id, item.activity_name_other, activities]);
 
 	const isOtherActivity = selectedActivity?.public_id === OTHER_ID;
-	const isGeneral = item.project_public_id === GENERAL_PROJECT_ID;
+	const isGeneralProject = item.project_public_id === GENERAL_PROJECT_ID;
+	const isCategoryProject = item.project_public_id?.startsWith('category:');
+	const selectedCategoryName = isCategoryProject ? item.project_public_id?.split(':')[1] : null;
+
+	const filteredActivityTypesChoice = React.useMemo(() => {
+		if (isCategoryProject) {
+			return activityTypes.filter(at => at.category === selectedCategoryName);
+		}
+		if (isGeneralProject) {
+			return activityTypes;
+		}
+		return [];
+	}, [activityTypes, isCategoryProject, selectedCategoryName, isGeneralProject]);
 
 	return (
 		<TableRow sx={{ '&:hover': { bgcolor: readOnly ? 'transparent' : '#f9fafb' } }}>
@@ -107,6 +119,7 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 					<Autocomplete
 						options={projects}
 						getOptionLabel={(option) => option.name || ''}
+						groupBy={(option: any) => option.group}
 						value={selectedProject}
 						onChange={(_, val) => {
 							onRowChange(index, 'project_public_id', val?.public_id || null);
@@ -122,7 +135,7 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 				)}
 			</TableCell>
 			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top', minWidth: 140 }}>
-				{isGeneral ? (
+				{isGeneralProject ? (
 					readOnly ? (
 						<Typography variant="body2" sx={{ color: '#4b5563', py: 1 }}>
 							{selectedType?.name || '-'}
@@ -133,9 +146,30 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 							getOptionLabel={(option) => option.name || ''}
 							value={selectedType}
 							onChange={(_, val) => {
-								onRowChange(index, 'activity_type_code', val?.code || null);
+								onRowChange(index, 'activity_type_name', val?.name || null);
 							}}
-							isOptionEqualToValue={(option, value) => option.code === value.code}
+							isOptionEqualToValue={(option, value) => option.name === value.name}
+							sx={{
+								'& .MuiOutlinedInput-root': { borderRadius: '6px' },
+								'& .MuiOutlinedInput-input': { fontSize: '0.85rem' }
+							}}
+							renderInput={(params) => <TextField {...params} size="small" placeholder="Type" required />}
+						/>
+					)
+				) : isCategoryProject ? (
+					readOnly ? (
+						<Typography variant="body2" sx={{ color: '#4b5563', py: 1 }}>
+							{selectedType?.name || '-'}
+						</Typography>
+					) : (
+						<Autocomplete
+							options={filteredActivityTypesChoice}
+							getOptionLabel={(option) => option.name || ''}
+							value={selectedType}
+							onChange={(_, val) => {
+								onRowChange(index, 'activity_type_name', val?.name || null);
+							}}
+							isOptionEqualToValue={(option, value) => option.name === value.name}
 							sx={{
 								'& .MuiOutlinedInput-root': { borderRadius: '6px' },
 								'& .MuiOutlinedInput-input': { fontSize: '0.85rem' }
@@ -152,7 +186,7 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 				)}
 			</TableCell>
 			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top', minWidth: 180 }}>
-				{!isGeneral ? (
+				{!isGeneralProject && !isCategoryProject ? (
 					<Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
 						{readOnly ? (
 							<Typography variant="body2" sx={{ color: '#4b5563', py: 1 }}>
@@ -209,6 +243,12 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 							</>
 						)}
 					</Box>
+				) : isCategoryProject ? (
+					!readOnly && (
+						<Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic', fontSize: '0.75rem' }}>
+							Selected in 'Type'
+						</Typography>
+					)
 				) : (
 					!readOnly && (
 						<Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic', fontSize: '0.75rem' }}>

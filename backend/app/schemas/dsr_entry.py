@@ -10,11 +10,11 @@ class DSRItemCreate(BaseModel):
     """A single project/activity work-log line item within a DSR entry"""
     project_public_id: Optional[uuid.UUID] = Field(default=None, description="Project being worked on")
     activity_public_id: Optional[uuid.UUID] = Field(default=None, description="Activity / task being worked on")
-    # activity_type_code: standardized taxonomy code (e.g. 'DEV', 'TEST', 'MEET')
-    activity_type_code: Optional[str] = Field(
+    # activity_type_name: name of the activity type (e.g. 'Project Management', 'Development')
+    activity_type_name: Optional[str] = Field(
         default=None,
-        max_length=20,
-        description="Activity type code from dsr_activity_types (e.g. 'DEV')",
+        max_length=100,
+        description="Activity type name from dsr_activity_types (e.g. 'Development')",
     )
     # Legacy free-text fallbacks — kept for backwards compatibility, no longer encouraged
     project_name_other: Optional[str] = Field(default=None, description="Custom project name (legacy)")
@@ -31,20 +31,12 @@ class DSRItemCreate(BaseModel):
             return None
         return v
 
-    @field_validator("activity_type_code", mode="before")
-    @classmethod
-    def normalise_activity_type_code(cls, v: Any) -> Any:
-        """Uppercase + strip the code so 'dev' and 'DEV' both work."""
-        if isinstance(v, str) and v.strip():
-            return v.strip().upper()
-        return v
-
     @model_validator(mode="after")
     def validate_project_identifier(self) -> "DSRItemCreate":
         """Project must come from either the controlled list or a legacy custom name.
-        IF activity_type_code is provided, we allow project_public_id to be None (General Work).
+        IF activity_type_name is provided, we allow project_public_id to be None (General Work).
         """
-        if self.activity_type_code:
+        if self.activity_type_name:
             # General work category — project is optional
             return self
             
@@ -127,7 +119,7 @@ class DSRItemResponse(BaseModel):
     activity_public_id: Optional[uuid.UUID] = None
     activity_name: Optional[str] = None
     activity_name_other: Optional[str] = None
-    activity_type_code: Optional[str] = None
+    activity_type_name: Optional[str] = None
     description: str
     start_time: str
     end_time: str

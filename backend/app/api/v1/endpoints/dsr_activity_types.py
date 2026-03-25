@@ -2,7 +2,7 @@
 
 from typing import Optional
 from uuid import UUID
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, status, UploadFile, File, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -13,6 +13,7 @@ from app.schemas.dsr_activity_type import (
     DSRActivityTypeUpdate,
     DSRActivityTypeResponse,
     DSRActivityTypeListResponse,
+    DSRActivityTypeBulkDelete,
 )
 from app.services.dsr_activity_type_service import DSRActivityTypeService
 
@@ -96,3 +97,44 @@ async def delete_activity_type(
     service = DSRActivityTypeService(db)
     await service.delete_type(public_id, current_user)
     await db.commit()
+
+
+@router.get("/import/template")
+async def get_import_template(
+    current_user: User = Depends(require_roles([UserRole.ADMIN])),
+):
+    """Get CSV template for importing activity types."""
+    csv_content = "name,code,category,description,sort_order\n"
+    csv_content += "Sample Activity,SAMPLE01,Sourcing,This is a sample description,10\n"
+    
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=dsr_activity_types_template.csv"}
+    )
+
+
+@router.post("/import")
+async def import_activity_types(
+    file: UploadFile = File(...),
+    current_user: User = Depends(require_roles([UserRole.ADMIN])),
+    db: AsyncSession = Depends(get_db),
+):
+    """Import activity types from CSV (Admin only)."""
+    service = DSRActivityTypeService(db)
+    result = await service.import_activity_types(file, current_user)
+    await db.commit()
+    return result
+
+
+@router.post("/bulk-delete", status_code=status.HTTP_200_OK)
+async def bulk_delete_activity_types(
+    data: DSRActivityTypeBulkDelete,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles([UserRole.ADMIN])),
+):
+    """Bulk delete activity types (Admin only)."""
+    service = DSRActivityTypeService(db)
+    count = await service.bulk_delete_types(data.public_ids, current_user)
+    await db.commit()
+    return {"message": f"Successfully deleted {count} activity types", "count": count}

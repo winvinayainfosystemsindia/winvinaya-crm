@@ -32,16 +32,39 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 	const { user } = useAppSelector((state) => state.auth);
 	const { projects: rawProjects, activitiesByProject, calendarEntries: entries, permissionRequests, loading: dsrLoading } = useAppSelector((state) => state.dsr);
 	const { holidays } = useAppSelector((state) => state.holidays);
+	const { activityTypes, loading: typesLoading } = useAppSelector((state) => state.dsrActivityType);
 
 	const projects = useMemo(() => {
+		// 1. Get unique categories from activity types
+		const categories = Array.from(new Set(activityTypes.map(at => at.category).filter(Boolean))) as string[];
+		
+		// 2. Map categories to virtual projects
+		const categoryProjects = categories.map(cat => ({
+			public_id: `category:${cat}`,
+			name: cat,
+			is_category: true,
+			description: `Grouped activities for ${cat}`,
+			group: 'Common Categories'
+		}));
+
+		// 3. Keep the legacy "General" if no categories yet, or as a catch-all if needed
 		const generalProject: any = {
 			public_id: GENERAL_PROJECT_ID,
 			name: 'General / Internal Work',
-			description: 'General activities like meetings, training, etc.'
+			description: 'General activities like meetings, etc.',
+			group: 'Common Categories'
 		};
-		return [generalProject, ...rawProjects];
-	}, [rawProjects]);
-	const { activityTypes, loading: typesLoading } = useAppSelector((state) => state.dsrActivityType);
+
+		const hasGeneralCategory = categories.some(c => c.toLowerCase() === 'general');
+		const baseList = hasGeneralCategory ? [] : [generalProject];
+		
+		const baseProjects = rawProjects.map(p => ({
+			...p,
+			group: 'Active Projects'
+		}));
+
+		return [...baseList, ...categoryProjects, ...baseProjects];
+	}, [rawProjects, activityTypes]);
 
 	const loading = dsrLoading || typesLoading;
 
@@ -50,7 +73,7 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		{ 
 			project_public_id: null as any, 
 			activity_public_id: null as any, 
-			activity_type_code: null,
+			activity_type_name: null,
 			description: '', 
 			start_time: '09:00', 
 			end_time: '10:00', 
@@ -223,7 +246,7 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 				if (currentItem.project_public_id !== value) {
 					updatedItem.activity_public_id = null as any;
 					updatedItem.activity_name_other = undefined;
-					updatedItem.activity_type_code = null;
+					updatedItem.activity_type_name = null;
 				}
 			}
 
@@ -246,7 +269,7 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		setItems([...items, {
 			project_public_id: null as any,
 			activity_public_id: null as any,
-			activity_type_code: null,
+			activity_type_name: null,
 			description: '',
 			start_time: lastItem?.end_time || '09:00',
 			end_time: '',
@@ -280,7 +303,7 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 			}
 			
 			if (isGeneral) {
-				if (!it.activity_type_code) {
+				if (!it.activity_type_name) {
 					toast.warning(`Please select an Activity Type for General work in row ${i + 1}`);
 					return false;
 				}
