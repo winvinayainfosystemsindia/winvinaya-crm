@@ -7,6 +7,7 @@ import {
 	CircularProgress,
 	Chip
 } from '@mui/material';
+import { Info as InfoIcon } from '@mui/icons-material';
 import { x0paService } from '../../services/x0paService';
 import type { X0PAJob } from '../../services/x0paService';
 import { awsStyles } from '../../theme/theme';
@@ -111,6 +112,25 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 	return (
 		<Box>
 			<Typography sx={fieldLabel}>Suitable X0PA Job Roles / Suggested Job Roles</Typography>
+			<Box sx={{
+				display: 'flex',
+				gap: 1.5,
+				p: 1.5,
+				bgcolor: '#f1faff',
+				border: '1px solid #007eb9',
+				borderRadius: '2px',
+				mt: 1.5,
+				mb: 1.5,
+				alignItems: 'flex-start'
+			}}>
+				<InfoIcon sx={{ color: '#007eb9', mt: 0.25, fontSize: 20 }} />
+				<Typography variant="body2" sx={{ color: '#007eb9', fontWeight: 400, fontSize: '0.8125rem', lineHeight: 1.5 }}>
+					<strong>Instructions:</strong><br />
+					• If the job role is not found, type your recommendation and press <strong>Enter</strong>.<br />
+					• Please enter only one role at a time and avoid using commas.<br />
+					• Avoid mentioning specific skills in the role name (e.g., use "Full Stack Developer" instead of "Full Stack (React, Node.js)").
+				</Typography>
+			</Box>
 			<Autocomplete
 				multiple
 				freeSolo
@@ -254,6 +274,8 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 					Scroll down in the dropdown to load more results
 				</Typography>
 			)}
+
+
 		</Box>
 	);
 };
