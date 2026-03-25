@@ -38,6 +38,7 @@ const ALL_COLUMNS = [
 	{ id: 'source_of_info', label: 'Where you know about us', default: false, group: 'screening' },
 	{ id: 'family_annual_income', label: 'Family Annual Income', default: false, group: 'screening' },
 	{ id: 'screened_by_name', label: 'Screened By', default: false, group: 'screening' },
+	{ id: 'assigned_to_name', label: 'Screening Assigned To', default: false, group: 'screening' },
 	{ id: 'screening_date', label: 'Screened Date', default: false, group: 'screening' },
 	{ id: 'screening_updated_at', label: 'Screening Update Date', default: false, group: 'screening' },
 	{ id: 'family_details', label: 'Family Details', default: false, group: 'screening' },
