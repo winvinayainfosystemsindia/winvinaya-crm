@@ -1,13 +1,16 @@
+import React from 'react';
 import {
 	TableRow,
 	TableCell,
 	IconButton,
 	Chip,
-	Tooltip,
-	Stack,
 	Typography,
 	Box,
-	useTheme
+	useTheme,
+	Menu,
+	MenuItem,
+	ListItemIcon,
+	ListItemText
 } from '@mui/material';
 import {
 	Edit as EditIcon,
@@ -16,7 +19,9 @@ import {
 	CheckCircle as ApprovedIcon,
 	HourglassEmpty as PendingIcon,
 	Visibility as ViewIcon,
+	MoreVert as MoreIcon
 } from '@mui/icons-material';
+import ConfirmDialog from '../../../common/ConfirmDialog';
 import type { DSREntry } from '../../../../models/dsr';
 import { DSRStatusValues } from '../../../../models/dsr';
 
@@ -162,38 +167,120 @@ const HistoryRow: React.FC<HistoryRowProps> = ({
 			</TableCell>
 
 			<TableCell align="right">
-				<Stack direction="row" spacing={0.5} justifyContent="flex-end">
-					<Tooltip title="View Details">
-						<IconButton
-							size="small"
-							onClick={() => onView ? onView(entry.public_id) : undefined}
-							sx={{ color: '#545b64' }}
-						>
-							<ViewIcon fontSize="small" />
-						</IconButton>
-					</Tooltip>
-
-					{isDraft && (
-						<>
-							<Tooltip title={isRejected ? 'Fix & Resubmit' : 'Edit Draft'}>
-								<IconButton
-									size="small"
-									sx={isRejected ? { color: '#d13212' } : {}}
-									onClick={() => onEdit ? onEdit(entry.public_id) : undefined}
-								>
-									<EditIcon fontSize="small" />
-								</IconButton>
-							</Tooltip>
-							<Tooltip title="Delete Draft">
-								<IconButton size="small" color="error" onClick={() => onDelete(entry.public_id)}>
-									<DeleteIcon fontSize="small" />
-								</IconButton>
-							</Tooltip>
-						</>
-					)}
-				</Stack>
+				<ActionMenu 
+					entry={entry} 
+					onView={onView} 
+					onEdit={onEdit} 
+					onDelete={onDelete} 
+					isDraft={isDraft} 
+					isRejected={!!isRejected} 
+				/>
 			</TableCell>
 		</TableRow>
+	);
+};
+
+interface ActionMenuProps {
+	entry: DSREntry;
+	onView?: (id: string) => void;
+	onEdit?: (id: string) => void;
+	onDelete: (id: string) => void;
+	isDraft: boolean;
+	isRejected: boolean;
+}
+
+const ActionMenu: React.FC<ActionMenuProps> = ({ entry, onView, onEdit, onDelete, isDraft, isRejected }) => {
+	const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+	const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+	const open = Boolean(anchorEl);
+
+	const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+		setAnchorEl(event.currentTarget);
+	};
+
+	const handleClose = () => {
+		setAnchorEl(null);
+	};
+
+	const handleAction = (cb?: (id: string) => void) => {
+		handleClose();
+		if (cb) cb(entry.public_id);
+	};
+
+	const handleDeleteClick = () => {
+		handleClose();
+		setDeleteDialogOpen(true);
+	};
+
+	const handleDeleteConfirm = () => {
+		setDeleteDialogOpen(false);
+		onDelete(entry.public_id);
+	};
+
+	return (
+		<>
+			<IconButton
+				size="small"
+				onClick={handleClick}
+				sx={{ color: '#545b64' }}
+			>
+				<MoreIcon fontSize="small" />
+			</IconButton>
+
+			<Menu
+				anchorEl={anchorEl}
+				open={open}
+				onClose={handleClose}
+				PaperProps={{
+					sx: {
+						minWidth: 160,
+						boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+						border: '1px solid #e5e7eb',
+						borderRadius: '4px'
+					}
+				}}
+				transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+				anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+			>
+				<MenuItem onClick={() => handleAction(onView)} sx={{ py: 1 }}>
+					<ListItemIcon>
+						<ViewIcon fontSize="small" sx={{ color: '#545b64' }} />
+					</ListItemIcon>
+					<ListItemText primary="View Details" primaryTypographyProps={{ fontSize: '0.8125rem' }} />
+				</MenuItem>
+
+				{isDraft && (
+					<MenuItem onClick={() => handleAction(onEdit)} sx={{ py: 1 }}>
+						<ListItemIcon>
+							<EditIcon fontSize="small" sx={isRejected ? { color: '#d13212' } : { color: '#545b64' }} />
+						</ListItemIcon>
+						<ListItemText 
+							primary={isRejected ? 'Fix & Resubmit' : 'Edit Draft'} 
+							primaryTypographyProps={{ fontSize: '0.8125rem', color: isRejected ? '#d13212' : 'inherit' }} 
+						/>
+					</MenuItem>
+				)}
+
+				{isDraft && (
+					<MenuItem onClick={handleDeleteClick} sx={{ py: 1, color: '#d32f2f' }}>
+						<ListItemIcon>
+							<DeleteIcon fontSize="small" color="error" />
+						</ListItemIcon>
+						<ListItemText primary="Delete Draft" primaryTypographyProps={{ fontSize: '0.8125rem' }} />
+					</MenuItem>
+				)}
+			</Menu>
+
+			<ConfirmDialog
+				open={deleteDialogOpen}
+				title="Delete DSR Entry"
+				message={`Are you sure you want to delete the DSR entry for ${new Date(entry.report_date).toLocaleDateString()}? This action cannot be undone.`}
+				onClose={() => setDeleteDialogOpen(false)}
+				onConfirm={handleDeleteConfirm}
+				confirmText="Delete"
+				severity="error"
+			/>
+		</>
 	);
 };
 
