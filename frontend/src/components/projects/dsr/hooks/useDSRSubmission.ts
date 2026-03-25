@@ -214,6 +214,24 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		}
 	}, [dispatch, entryId, loadEntry, user?.public_id, user?.id, holidays]);
 
+	// Auto-repair project IDs when activity types are loaded (handles race condition during loadEntry)
+	useEffect(() => {
+		if (activityTypes.length > 0 && items.length > 0) {
+			const needsRepair = items.some(it => it.project_public_id === GENERAL_PROJECT_ID && !!it.activity_type_name);
+			if (needsRepair) {
+				setItems(prev => prev.map(item => {
+					if (item.project_public_id === GENERAL_PROJECT_ID && item.activity_type_name) {
+						const type = activityTypes.find(at => at.name === item.activity_type_name);
+						if (type?.category) {
+							return { ...item, project_public_id: `category:${type.category}` };
+						}
+					}
+					return item;
+				}));
+			}
+		}
+	}, [activityTypes, items]);
+
 	// Update permissionError if it's a holiday
 	useEffect(() => {
 		const today = new Date().toISOString().split('T')[0];
