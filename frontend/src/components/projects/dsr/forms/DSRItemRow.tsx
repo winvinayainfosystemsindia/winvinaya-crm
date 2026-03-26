@@ -61,13 +61,13 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 			if (!a.is_active || a.status === 'cancelled') return false;
 
 			// Exclude future activities
-			if (a.start_date > reportDate) return false;
+			if (a.start_date && a.start_date > reportDate) return false;
 
 			// Handle completed activities
 			if (a.status === 'completed') {
 				const endDate = a.actual_end_date || a.end_date;
 				// If report date is after completion date, hide it
-				if (reportDate > endDate) return false;
+				if (endDate && reportDate > endDate) return false;
 			}
 
 			return true;
