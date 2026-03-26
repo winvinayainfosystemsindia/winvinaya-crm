@@ -6,6 +6,7 @@ import {
 	Typography,
 	IconButton,
 	Stack,
+	Chip,
 	useTheme
 } from '@mui/material';
 import { 
@@ -40,6 +41,9 @@ const ActivityTableRow: React.FC<ActivityTableRowProps> = ({
 	};
 
 	const getTimelineInfo = () => {
+		if (!activity.end_date) {
+			return { label: 'No timeline set', color: '#545b64', bgcolor: 'transparent' };
+		}
 		const today = new Date();
 		today.setHours(0, 0, 0, 0);
 		const end = new Date(activity.end_date);
@@ -98,14 +102,24 @@ const ActivityTableRow: React.FC<ActivityTableRowProps> = ({
 				)}
 			</TableCell>
 
-			{/* Assigned To Column */}
 			<TableCell sx={{ py: 2.5 }}>
-				<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+				<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, maxWidth: 200 }}>
 					{activity.assigned_users && activity.assigned_users.length > 0 ? (
 						activity.assigned_users.map((u) => (
-							<Typography key={u.id} variant="body2" sx={{ color: 'text.primary', fontSize: '0.8125rem' }}>
-								{u.full_name || u.username}
-							</Typography>
+							<Chip
+								key={u.id}
+								label={u.full_name || u.username}
+								size="small"
+								sx={{ 
+									height: 20, 
+									fontSize: '0.75rem',
+									bgcolor: 'rgba(0, 115, 187, 0.08)',
+									color: '#0073bb',
+									border: '1px solid rgba(0, 115, 187, 0.2)',
+									fontWeight: 500,
+									'& .MuiChip-label': { px: 1 }
+								}}
+							/>
 						))
 					) : (
 						<Typography variant="body2" color="text.disabled" sx={{ fontStyle: 'italic', fontSize: '0.8125rem' }}>
@@ -121,7 +135,7 @@ const ActivityTableRow: React.FC<ActivityTableRowProps> = ({
 					<Box sx={{ fontSize: '0.8125rem', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}>
 						<Box component="span" sx={{ color: 'text.secondary', fontWeight: 600, minWidth: 40 }}>Est:</Box>
 						<Typography variant="body2" sx={{ fontSize: '0.8125rem' }}>
-							{dayjs(activity.start_date).format('DD MMM YYYY')}
+							{activity.start_date ? dayjs(activity.start_date).format('DD MMM YYYY') : 'N/A'}
 						</Typography>
 					</Box>
 					{activity.actual_start_date && (
@@ -141,7 +155,7 @@ const ActivityTableRow: React.FC<ActivityTableRowProps> = ({
 					<Box sx={{ fontSize: '0.8125rem', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center' }}>
 						<Box component="span" sx={{ color: 'text.secondary', fontWeight: 600, minWidth: 40 }}>Est:</Box>
 						<Typography variant="body2" sx={{ fontSize: '0.8125rem' }}>
-							{dayjs(activity.end_date).format('DD MMM YYYY')}
+							{activity.end_date ? dayjs(activity.end_date).format('DD MMM YYYY') : 'N/A'}
 						</Typography>
 					</Box>
 					{activity.actual_end_date && (

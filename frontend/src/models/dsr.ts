@@ -49,8 +49,8 @@ export interface DSRActivity {
 	};
 	name: string;
 	description: string | null;
-	start_date: string;
-	end_date: string;
+	start_date: string | null;
+	end_date: string | null;
 	actual_end_date: string | null;
 	status: DSRActivityStatus;
 	assigned_users: DSRUserSnapshot[];
@@ -123,8 +123,8 @@ export interface DSRActivityCreate {
 	project_public_id: string;
 	name: string;
 	description?: string;
-	start_date: string;
-	end_date: string;
+	start_date?: string | null;
+	end_date?: string | null;
 	actual_end_date?: string | null;
 	status?: DSRActivityStatus;
 	assigned_user_public_ids?: string[];

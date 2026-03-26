@@ -68,14 +68,14 @@ class DSRActivity(BaseModel):
         nullable=True,
     )
 
-    start_date: Mapped[date] = mapped_column(
+    start_date: Mapped[date | None] = mapped_column(
         Date,
-        nullable=False,
+        nullable=True,
     )
 
-    end_date: Mapped[date] = mapped_column(
+    end_date: Mapped[date | None] = mapped_column(
         Date,
-        nullable=False,
+        nullable=True,
     )
 
     actual_end_date: Mapped[date | None] = mapped_column(

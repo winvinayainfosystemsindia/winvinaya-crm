@@ -11,8 +11,8 @@ class DSRActivityCreate(BaseModel):
     project_public_id: uuid.UUID = Field(..., description="Public ID of the parent project")
     name: str = Field(..., min_length=1, max_length=255, description="Activity / work-item name")
     description: Optional[str] = Field(default=None, description="Detailed description of the activity")
-    start_date: date = Field(..., description="Planned start date")
-    end_date: date = Field(..., description="Planned end date")
+    start_date: Optional[date] = Field(default=None, description="Planned start date")
+    end_date: Optional[date] = Field(default=None, description="Planned end date")
     actual_end_date: Optional[date] = Field(default=None, description="Actual completion date")
     status: DSRActivityStatus = Field(default=DSRActivityStatus.PLANNED)
     assigned_user_public_ids: list[uuid.UUID] = Field(default_factory=list, description="Public IDs of the assigned users")
@@ -22,8 +22,9 @@ class DSRActivityCreate(BaseModel):
 
     @model_validator(mode="after")
     def validate_dates(self) -> "DSRActivityCreate":
-        if self.end_date < self.start_date:
-            raise ValueError("end_date must be on or after start_date")
+        if self.start_date is not None and self.end_date is not None:
+            if self.end_date < self.start_date:
+                raise ValueError("end_date must be on or after start_date")
         return self
 
 
@@ -41,8 +42,9 @@ class DSRActivityUpdate(BaseModel):
 
     @model_validator(mode="after")
     def validate_dates(self) -> "DSRActivityUpdate":
-        if self.start_date and self.end_date and self.end_date < self.start_date:
-            raise ValueError("end_date must be on or after start_date")
+        if self.start_date is not None and self.end_date is not None:
+            if self.end_date < self.start_date:
+                raise ValueError("end_date must be on or after start_date")
         return self
 
 
@@ -73,8 +75,8 @@ class DSRActivityResponse(BaseModel):
     project: Optional[DSRProjectSnapshot] = None
     name: str
     description: Optional[str] = None
-    start_date: date
-    end_date: date
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
     actual_end_date: Optional[date] = None
     status: DSRActivityStatus
     assigned_users: list[DSRUserSnapshot] = []
@@ -102,8 +104,8 @@ class DSRActivityImportRow(BaseModel):
     project_name: str          # resolved to project during import
     name: str
     description: Optional[str] = None
-    start_date: date
-    end_date: date
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
     status: Optional[DSRActivityStatus] = DSRActivityStatus.PLANNED
     others: Optional[dict] = None
 

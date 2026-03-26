@@ -73,8 +73,8 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 			if (activity) {
 				setName(activity.name);
 				setDescription(activity.description || '');
-				setStartDate(activity.start_date.split('T')[0]);
-				setEndDate(activity.end_date.split('T')[0]);
+				setStartDate(activity.start_date ? activity.start_date.split('T')[0] : '');
+				setEndDate(activity.end_date ? activity.end_date.split('T')[0] : '');
 				setActualEndDate(activity.actual_end_date ? activity.actual_end_date.split('T')[0] : '');
 				setStatus(activity.status);
 				setEstimatedHours(activity.estimated_hours?.toString() || '');
@@ -83,8 +83,8 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 			} else {
 				setName('');
 				setDescription('');
-				setStartDate(new Date().toISOString().split('T')[0]);
-				setEndDate(new Date().toISOString().split('T')[0]);
+				setStartDate('');
+				setEndDate('');
 				setActualEndDate('');
 				setStatus(DSRActivityStatusValues.PLANNED);
 				setEstimatedHours('');
@@ -95,7 +95,7 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 	}, [activity, open]);
 
 	const handleSubmit = async () => {
-		if (new Date(endDate) < new Date(startDate)) {
+		if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
 			setDateError('End date cannot be before start date');
 			return;
 		}
@@ -106,8 +106,8 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 				project_public_id: projectId as any,
 				name,
 				description,
-				start_date: startDate,
-				end_date: endDate,
+				start_date: startDate || null,
+				end_date: endDate || null,
 				actual_end_date: actualEndDate || null,
 				status,
 				estimated_hours: estimatedHours ? parseFloat(estimatedHours) : null,
@@ -192,7 +192,6 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 							label="Start Date"
 							type="date"
 							fullWidth
-							required
 							value={startDate}
 							onChange={(e) => setStartDate(e.target.value)}
 							InputLabelProps={{ shrink: true }}
@@ -202,7 +201,6 @@ const ActivityDialog: React.FC<ActivityDialogProps> = ({
 							label="End Date"
 							type="date"
 							fullWidth
-							required
 							value={endDate}
 							onChange={(e) => {
 								setEndDate(e.target.value);

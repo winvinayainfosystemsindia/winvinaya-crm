@@ -51,7 +51,7 @@ class DSRActivityService:
 
         await self._check_project_ownership(project.id, current_user)
 
-        if data.end_date < data.start_date:
+        if data.start_date and data.end_date and data.end_date < data.start_date:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="end_date must be on or after start_date",
@@ -106,7 +106,7 @@ class DSRActivityService:
         # Validate date consistency after merge
         merged_start = update_data.get("start_date", activity.start_date)
         merged_end = update_data.get("end_date", activity.end_date)
-        if merged_end < merged_start:
+        if merged_start and merged_end and merged_end < merged_start:
             raise HTTPException(status_code=422, detail="end_date must be on or after start_date")
 
         # Set other fields
@@ -230,7 +230,7 @@ class DSRActivityService:
         ws = wb.active
 
         headers = [str(c.value).strip().lower() if c.value else "" for c in next(ws.iter_rows(min_row=1, max_row=1))]
-        required = {"name", "start_date", "end_date"}
+        required = {"name"}
         if not forced_project:
             required.add("project_name")
             
@@ -251,7 +251,7 @@ class DSRActivityService:
             raw_start = row_data.get("start_date")
             raw_end = row_data.get("end_date")
 
-            if not all([name, raw_start, raw_end]) or (not forced_project and not project_name):
+            if not name or (not forced_project and not project_name):
                 result.skipped += 1
                 result.errors.append({"row": row_idx, "error": "Missing required fields"})
                 continue
@@ -275,14 +275,19 @@ class DSRActivityService:
                     continue
 
             try:
-                start_date = raw_start if isinstance(raw_start, date) else date.fromisoformat(str(raw_start))
-                end_date = raw_end if isinstance(raw_end, date) else date.fromisoformat(str(raw_end))
+                start_date = None
+                if raw_start:
+                    start_date = raw_start if isinstance(raw_start, date) else date.fromisoformat(str(raw_start))
+                
+                end_date = None
+                if raw_end:
+                    end_date = raw_end if isinstance(raw_end, date) else date.fromisoformat(str(raw_end))
             except ValueError:
                 result.skipped += 1
                 result.errors.append({"row": row_idx, "error": "Invalid date format (use YYYY-MM-DD)"})
                 continue
 
-            if end_date < start_date:
+            if start_date and end_date and end_date < start_date:
                 result.skipped += 1
                 result.errors.append({"row": row_idx, "error": "end_date must be >= start_date"})
                 continue
@@ -365,8 +370,8 @@ class DSRActivityService:
                 project.name,
                 act.name,
                 act.description or "",
-                act.start_date.isoformat(),
-                act.end_date.isoformat(),
+                act.start_date.isoformat() if act.start_date else "",
+                act.end_date.isoformat() if act.end_date else "",
                 act.estimated_hours,
                 act.actual_start_date.isoformat() if act.actual_start_date else "",
                 act.actual_end_date.isoformat() if act.actual_end_date else "",
