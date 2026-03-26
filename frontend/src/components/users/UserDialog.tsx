@@ -129,6 +129,9 @@ const UserDialog: React.FC<UserDialogProps> = ({
 				if (onSuccess) onSuccess('User created successfully');
 			} else if (mode === 'edit' && user) {
 				const updateData: any = {
+					full_name: formData.full_name,
+					username: formData.username,
+					email: formData.email,
 					is_active: formData.is_active,
 					role: formData.role,
 					mobile: formData.mobile
@@ -300,7 +303,7 @@ const UserDialog: React.FC<UserDialogProps> = ({
 											size="small"
 											value={formData.full_name}
 											onChange={(e) => handleChange('full_name', e.target.value)}
-											disabled={loading || mode === 'edit'} // Usually name isn't editable or optional
+											disabled={loading}
 											placeholder="e.g. John Doe"
 											sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
 										/>
@@ -312,7 +315,7 @@ const UserDialog: React.FC<UserDialogProps> = ({
 											size="small"
 											value={formData.username}
 											onChange={(e) => handleChange('username', e.target.value)}
-											disabled={loading || mode === 'edit'} // Username usually immutable
+											disabled={loading}
 											placeholder="unique_username"
 											sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
 										/>
@@ -324,7 +327,7 @@ const UserDialog: React.FC<UserDialogProps> = ({
 											size="small"
 											value={formData.email}
 											onChange={(e) => handleChange('email', e.target.value)}
-											disabled={loading || mode === 'edit'} // Email usually immutable
+											disabled={loading}
 											placeholder="user@example.com"
 											sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
 										/>
