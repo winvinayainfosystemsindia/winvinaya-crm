@@ -30,6 +30,13 @@ from app.models.dsr_activity_type import DSRActivityType
 from app.models.dsr_permission_request import DSRPermissionRequest
 from app.models.dsr_leave_application import DSRLeaveApplication
 from app.models.dsr_project_request import DSRProjectRequest
+from app.models.lead import Lead
+from app.models.deal import Deal
+from app.models.company import Company
+from app.models.contact import Contact
+from app.models.crm_task import CRMTask
+from app.models.crm_activity_log import CRMActivityLog
+from app.models.candidate_assignment import CandidateAssignment
 from app.utils.activity_tracker import log_read
 from app.schemas.analytics import ManagementReportResponse, UserReportMetric
 from app.services import analytics_service
@@ -50,7 +57,8 @@ async def export_table_for_power_bi(
     assessment_results, assessment_responses, mock_interviews, batch_events,
     batch_plans, batch_extensions, fields, tickets, dsr_entries, dsr_projects,
     dsr_activities, dsr_activity_types, dsr_permission_requests,
-    dsr_leave_applications, dsr_project_requests
+    dsr_leave_applications, dsr_project_requests, leads, deals, companies,
+    contacts, crm_tasks, crm_activity_logs, candidate_assignments
     """
     from fastapi import HTTPException
     
@@ -81,6 +89,13 @@ async def export_table_for_power_bi(
         "dsr_permission_requests": DSRPermissionRequest,
         "dsr_leave_applications": DSRLeaveApplication,
         "dsr_project_requests": DSRProjectRequest,
+        "leads": Lead,
+        "deals": Deal,
+        "companies": Company,
+        "contacts": Contact,
+        "crm_tasks": CRMTask,
+        "crm_activity_logs": CRMActivityLog,
+        "candidate_assignments": CandidateAssignment,
     }
     
     if table_name not in model_map:
