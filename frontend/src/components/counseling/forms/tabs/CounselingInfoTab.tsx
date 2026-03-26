@@ -44,7 +44,7 @@ const CounselingInfoTab: React.FC<CounselingInfoTabProps> = ({
 	showErrors = false
 }) => {
 	const { sectionTitle, awsPanel, fieldLabel, helperBox } = awsStyles;
-	const isManagerOrAdmin = userRole === 'admin' || userRole === 'manager';
+	const isManagerOrAdmin = userRole === 'admin' || userRole === 'manager' || userRole === 'sourcing';
 
 	return (
 		<Stack spacing={4}>

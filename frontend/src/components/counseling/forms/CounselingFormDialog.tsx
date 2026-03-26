@@ -84,7 +84,7 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 	const dynamicFields = useAppSelector(state => state.settings.fields.counseling || []);
 	const loadingFields = useAppSelector(state => state.settings.loading);
 	const userRole = user?.role || '';
-	const isManagerOrAdmin = userRole === 'admin' || userRole === 'manager';
+	const isManagerOrAdmin = userRole === 'admin' || userRole === 'manager' || userRole === 'sourcing';
 	const [tabValue, setTabValue] = useState(0);
 	const [batchTags, setBatchTags] = useState<string[]>([]);
 	const [showErrors, setShowErrors] = useState(false);
