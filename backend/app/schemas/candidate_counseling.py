@@ -22,7 +22,7 @@ class CandidateCounselingBase(BaseModel):
     workexperience: Optional[List[CounselingWorkExperience]] = None
     counselor_name: Optional[str] = None
     suitable_job_roles: Optional[List[str]] = None
-    assigned_to: Optional[str] = None
+    assigned_to: Optional[List[str]] = None
     remarks: Optional[str] = None
     status: str = "pending"  # 'pending', 'selected', 'rejected'
     counseling_date: Optional[datetime] = None

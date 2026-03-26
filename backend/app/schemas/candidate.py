@@ -221,6 +221,8 @@ class CandidateListResponse(BaseModel):
         screening_comments = None
         assigned_to_id = None
         assigned_to_name = None
+        assigned_to = []
+        remarks = None
         
         screening_data = None
         counseling_data = None
