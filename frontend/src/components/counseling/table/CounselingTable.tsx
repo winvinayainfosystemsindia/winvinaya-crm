@@ -73,6 +73,7 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 		if (type !== 'not_counseled') {
 			cols.push({ id: 'counseling_status', label: 'Status', hideOnMobile: false });
 			cols.push(
+				{ id: 'assigned_to', label: 'Assigned to', hideOnMobile: true },
 				{ id: 'counselor_name', label: 'Counselor', hideOnMobile: true },
 				{ id: 'counseling_date', label: 'Date', hideOnMobile: true }
 			);

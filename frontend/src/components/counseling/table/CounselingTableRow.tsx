@@ -118,6 +118,13 @@ const CounselingTableRow: React.FC<CounselingTableRowProps> = ({
 			{/* Counselor Name & Date (Only if not 'Not Counseled') */}
 			{type !== 'not_counseled' && (
 				<>
+					<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+						<Typography variant="body2" color="text.secondary">
+							{Array.isArray(candidate.assigned_to) 
+								? (candidate.assigned_to.length > 0 ? candidate.assigned_to.join(', ') : '-') 
+								: (candidate.assigned_to || '-')}
+						</Typography>
+					</TableCell>
 					<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{candidate.counselor_name || '-'}</TableCell>
 					<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{candidate.counseling_date ? format(new Date(candidate.counseling_date), 'dd MMM yyyy') : '-'}</TableCell>
 				</>

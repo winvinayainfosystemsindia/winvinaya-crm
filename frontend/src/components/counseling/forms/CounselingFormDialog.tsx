@@ -30,6 +30,8 @@ import WorkExperienceTab from './tabs/WorkExperienceTab';
 import InterviewFeedbackTab from './tabs/InterviewFeedbackTab';
 import CounselingInfoTab from './tabs/CounselingInfoTab';
 
+import { settingsService } from '../../../services/settingsService';
+
 const COMMON_SKILLS = [
 	'Communication', 'Computer Basics', 'Typing', 'English', 'MS Excel',
 	'MS Word', 'MS PowerPoint', 'Data Entry', 'Accounting', 'Tally'
@@ -81,8 +83,11 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 	const user = useAppSelector((state) => state.auth.user);
 	const dynamicFields = useAppSelector(state => state.settings.fields.counseling || []);
 	const loadingFields = useAppSelector(state => state.settings.loading);
-
+	const userRole = user?.role || '';
+	const isManagerOrAdmin = userRole === 'admin' || userRole === 'manager';
 	const [tabValue, setTabValue] = useState(0);
+	const [batchTags, setBatchTags] = useState<string[]>([]);
+	const [showErrors, setShowErrors] = useState(false);
 
 	const [formData, setFormData] = useState<CandidateCounselingCreate>({
 		skills: [],
@@ -93,17 +98,34 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 		counseling_date: new Date().toISOString().split('T')[0],
 		others: {},
 		workexperience: [],
-		suitable_job_roles: []
+		suitable_job_roles: [],
+		assigned_to: [],
+		remarks: ''
 	});
 
 	useEffect(() => {
 		if (open) {
+			const fetchBatchTags = async () => {
+				try {
+					const settings = await settingsService.getSystemSettings();
+					const tagSetting = settings.find(s => s.key === 'TRAINING_BATCH_TAGS');
+					if (tagSetting) {
+						setBatchTags(tagSetting.value.split(',').map(tag => tag.trim()).filter(Boolean));
+					}
+				} catch (error) {
+					console.error('Failed to fetch batch tags', error);
+				}
+			};
+			fetchBatchTags();
+
 			// Defer state updates to avoid synchronous setState inside effect warning
 			const initForm = () => {
 				setTabValue(0);
 				dispatch(fetchFields('counseling'));
 
 				if (initialData) {
+					// Get assigned_to and remarks from others if not at root
+					const othersValues = initialData.others || {};
 					setFormData({
 						...initialData,
 						skills: initialData.skills || [],
@@ -112,7 +134,12 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 						workexperience: initialData.workexperience || [],
 						counseling_date: initialData.counseling_date ? initialData.counseling_date.split('T')[0] : new Date().toISOString().split('T')[0],
 						status: initialData.status || 'pending',
-						suitable_job_roles: initialData.suitable_job_roles || []
+						suitable_job_roles: initialData.suitable_job_roles || [],
+						assigned_to: Array.isArray(initialData.assigned_to) ? initialData.assigned_to : 
+									(initialData.assigned_to ? [initialData.assigned_to] : 
+									(Array.isArray(othersValues.assigned_to) ? othersValues.assigned_to : 
+									(othersValues.assigned_to ? [othersValues.assigned_to] : []))),
+						remarks: initialData.remarks || othersValues.remarks || ''
 					});
 				} else {
 					const defaultQuestions = PREDEFINED_QUESTIONS.map(q => ({
@@ -128,7 +155,9 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 						counseling_date: new Date().toISOString().split('T')[0],
 						others: {},
 						workexperience: [],
-						suitable_job_roles: []
+						suitable_job_roles: [],
+						assigned_to: [],
+						remarks: ''
 					});
 				}
 			};
@@ -211,6 +240,13 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 	};
 
 	const handleSubmit = () => {
+		// Validation for Assignment/Remarks (Manager/Admin Only)
+		if (isManagerOrAdmin && (!formData.assigned_to || formData.assigned_to.length === 0) && !formData.remarks) {
+			setShowErrors(true);
+			setTabValue(3); // Switch to Counseling Info tab
+			return;
+		}
+
 		const cleanedData = { ...formData };
 		if (cleanedData.counseling_date && !cleanedData.counseling_date.includes('T')) {
 			cleanedData.counseling_date = `${cleanedData.counseling_date}T00:00:00`;
@@ -349,6 +385,9 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 									onFieldChange={handleChange}
 									onUpdateOtherField={handleUpdateOtherField}
 									dynamicFields={dynamicFields}
+									batchTags={batchTags}
+									userRole={user?.role}
+									showErrors={showErrors}
 								/>
 							</TabPanel>
 						</>

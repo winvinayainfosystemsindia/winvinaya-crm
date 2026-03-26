@@ -50,12 +50,16 @@ class CandidateCounselingService:
         # Create counseling
         counseling_data = counseling_in.model_dump()
         
-        # Move suitable_job_roles to others
+        # Move suitable_job_roles, assigned_to, and remarks to others
+        others = counseling_data.get("others") or {}
         if "suitable_job_roles" in counseling_data:
-            roles = counseling_data.pop("suitable_job_roles")
-            others = counseling_data.get("others") or {}
-            others["suitable_job_roles"] = roles
-            counseling_data["others"] = others
+            others["suitable_job_roles"] = counseling_data.pop("suitable_job_roles")
+        if "assigned_to" in counseling_data:
+            others["assigned_to"] = counseling_data.pop("assigned_to")
+        if "remarks" in counseling_data:
+            others["remarks"] = counseling_data.pop("remarks")
+            
+        counseling_data["others"] = others
             
         counseling_data["candidate_id"] = candidate.id
         
@@ -86,13 +90,16 @@ class CandidateCounselingService:
         # Update counseling
         update_data = counseling_in.model_dump(exclude_unset=True)
         
-        # Move suitable_job_roles to others
+        # Move suitable_job_roles, assigned_to, and remarks to others
+        others = update_data.get("others", candidate.counseling.others or {})
         if "suitable_job_roles" in update_data:
-            roles = update_data.pop("suitable_job_roles")
-            # Get existing others to merge
-            others = update_data.get("others", candidate.counseling.others or {})
-            others["suitable_job_roles"] = roles
-            update_data["others"] = others
+            others["suitable_job_roles"] = update_data.pop("suitable_job_roles")
+        if "assigned_to" in update_data:
+            others["assigned_to"] = update_data.pop("assigned_to")
+        if "remarks" in update_data:
+            others["remarks"] = update_data.pop("remarks")
+            
+        update_data["others"] = others
         
         # Protect original counselor info: 
         # Only set counselor_id and counseling_date if they don't already exist

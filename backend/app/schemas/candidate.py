@@ -175,6 +175,8 @@ class CandidateListResponse(BaseModel):
     questions: Optional[List[dict]] = None
     workexperience: Optional[List[dict]] = None
     suitable_job_roles: Optional[List[str]] = None
+    assigned_to: Optional[List[str]] = None
+    remarks: Optional[str] = None
     
     # New Screening fields
     source_of_info: Optional[str] = None
@@ -313,12 +315,28 @@ class CandidateListResponse(BaseModel):
             questions = get_val(counseling, 'questions', [])
             workexperience = get_val(counseling, 'workexperience', [])
             
-            # Extract suitable job roles (from property or others)
+            # Extract suitable job roles, assigned_to, and remarks (from property or others)
             suitable_job_roles = get_val(counseling, 'suitable_job_roles', [])
-            if not suitable_job_roles:
-                c_others = get_val(counseling, 'others')
-                if c_others and isinstance(c_others, dict):
+            assigned_to = get_val(counseling, 'assigned_to')
+            remarks = get_val(counseling, 'remarks')
+            
+            if assigned_to and isinstance(assigned_to, str):
+                assigned_to = [assigned_to]
+            elif not assigned_to:
+                assigned_to = []
+
+            c_others = get_val(counseling, 'others')
+            if c_others and isinstance(c_others, dict):
+                if not suitable_job_roles:
                     suitable_job_roles = c_others.get('suitable_job_roles', [])
+                if not assigned_to or len(assigned_to) == 0:
+                    val = c_others.get('assigned_to')
+                    if isinstance(val, str):
+                        assigned_to = [val]
+                    else:
+                        assigned_to = val or []
+                if not remarks:
+                    remarks = c_others.get('remarks')
             
             # Extract others for dynamic fields
             counseling_others = get_val(counseling, 'others')
@@ -395,6 +413,8 @@ class CandidateListResponse(BaseModel):
                 'screening_updated_at': screening_updated_at,
                 'screening': screening_data,
                 'counseling': counseling_data,
+                'assigned_to': assigned_to,
+                'remarks': remarks,
                 'is_experienced': is_experienced,
                 'year_of_experience': year_of_experience,
                 'currently_employed': currently_employed,
@@ -432,6 +452,8 @@ class CandidateListResponse(BaseModel):
             'questions': questions,
             'workexperience': workexperience,
             'suitable_job_roles': suitable_job_roles,
+            'assigned_to': assigned_to,
+            'remarks': remarks,
             'documents_uploaded': documents_uploaded,
             'family_details': family_details,
             'source_of_info': source_of_info,

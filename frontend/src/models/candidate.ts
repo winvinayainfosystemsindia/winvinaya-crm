@@ -93,6 +93,8 @@ export interface CandidateCounseling {
 	workexperience?: CounselingWorkExperience[];
 	counselor_name?: string;
 	suitable_job_roles?: string[];
+	assigned_to?: string[];
+	remarks?: string;
 	status: 'pending' | 'selected' | 'rejected';
 	counselor_id?: number;
 	counseling_date?: string;
@@ -108,6 +110,8 @@ export interface CandidateCounselingCreate {
 	workexperience?: CounselingWorkExperience[];
 	counselor_name?: string;
 	suitable_job_roles?: string[];
+	assigned_to?: string[];
+	remarks?: string;
 	status?: 'pending' | 'selected' | 'rejected';
 	counseling_date?: string;
 }
@@ -208,6 +212,8 @@ export interface CandidateListItem {
 	disability_percentage?: number;
 	screening_comments?: string;
 	screening?: CandidateScreening;
+	assigned_to?: string[];
+	remarks?: string;
 	counseling?: CandidateCounseling;
 
 	is_experienced?: boolean;
