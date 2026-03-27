@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
-import { fetchActivities } from '../../../../store/slices/dsrSlice';
+import { fetchActivities, deleteActivities } from '../../../../store/slices/dsrSlice';
 import type { DSRActivity } from '../../../../models/dsr';
 
 export const useActivityTable = (projectId: string, refreshKey: number) => {
@@ -12,6 +12,7 @@ export const useActivityTable = (projectId: string, refreshKey: number) => {
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [statusFilter, setStatusFilter] = useState<string>('all');
 	const [manualRefresh, setManualRefresh] = useState(0);
+	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
 	const [filterAnchorEl, setFilterAnchorEl] = useState<null | HTMLElement>(null);
 	const [actionAnchorEl, setActionAnchorEl] = useState<null | HTMLElement>(null);
@@ -31,6 +32,7 @@ export const useActivityTable = (projectId: string, refreshKey: number) => {
 
 	useEffect(() => {
 		fetchActivitiesData();
+		setSelectedIds(new Set()); // Clear selection on data reload
 	}, [fetchActivitiesData, refreshKey, manualRefresh]);
 
 	const handlePageChange = (_event: unknown, newPage: number) => {
@@ -75,6 +77,38 @@ export const useActivityTable = (projectId: string, refreshKey: number) => {
 		setManualRefresh(prev => prev + 1);
 	};
 
+	const handleSelectAll = (checked: boolean) => {
+		if (checked) {
+			const allIds = activities.map(a => a.public_id);
+			setSelectedIds(new Set(allIds));
+		} else {
+			setSelectedIds(new Set());
+		}
+	};
+
+	const handleToggleSelect = (id: string) => {
+		setSelectedIds(prev => {
+			const next = new Set(prev);
+			if (next.has(id)) {
+				next.delete(id);
+			} else {
+				next.add(id);
+			}
+			return next;
+		});
+	};
+
+	const handleBulkDelete = async () => {
+		if (selectedIds.size === 0) return;
+		try {
+			await dispatch(deleteActivities(Array.from(selectedIds))).unwrap();
+			setSelectedIds(new Set());
+			handleRefresh();
+		} catch (error) {
+			// Error handled by slice/toast
+		}
+	};
+
 	return {
 		activities,
 		loading,
@@ -97,6 +131,10 @@ export const useActivityTable = (projectId: string, refreshKey: number) => {
 		handleActionClick,
 		handleActionClose,
 		handleRefresh,
+		handleSelectAll,
+		handleToggleSelect,
+		handleBulkDelete,
+		selectedIds,
 		setRowsPerPage
 	};
 };

@@ -136,6 +136,34 @@ class DSRActivityService:
             
         return await self.repo.delete(activity.id)
 
+    async def bulk_delete_activities(self, public_ids: List[UUID], current_user: User) -> int:
+        """Bulk soft-delete activities."""
+        if not public_ids:
+            return 0
+            
+        activities = await self.repo.get_by_public_ids(public_ids)
+        if not activities:
+            return 0
+            
+        # Permission and Reference checks
+        to_delete_ids = []
+        for activity in activities:
+            # Ownership check
+            await self._check_project_ownership(activity.project_id, current_user)
+            
+            # Reference check
+            usage_count = await self.dsr_repo.count_references(activity_public_id=activity.public_id)
+            if usage_count > 0:
+                # We skip activities that have references instead of failing the whole bulk operation
+                # or we could raise an error. Let's raise an error for safety as it's an explicit action.
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Activity '{activity.name}' is referenced in {usage_count} DSR entries and cannot be deleted.",
+                )
+            to_delete_ids.append(activity.id)
+            
+        return await self.repo.bulk_soft_delete(to_delete_ids)
+
     async def get_activity(self, public_id: UUID, current_user: User) -> DSRActivity:
         activity = await self._get_or_404(public_id)
         

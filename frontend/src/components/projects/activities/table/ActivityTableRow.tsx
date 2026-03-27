@@ -7,6 +7,7 @@ import {
 	IconButton,
 	Stack,
 	Chip,
+	Checkbox,
 	useTheme
 } from '@mui/material';
 import { 
@@ -21,12 +22,16 @@ interface ActivityTableRowProps {
 	activity: DSRActivity;
 	onActionClick: (event: React.MouseEvent<HTMLButtonElement>, activity: DSRActivity) => void;
 	canEdit?: boolean;
+	isSelected: boolean;
+	onToggleSelect: () => void;
 }
 
 const ActivityTableRow: React.FC<ActivityTableRowProps> = ({
 	activity,
 	onActionClick,
-	canEdit = false
+	canEdit = false,
+	isSelected,
+	onToggleSelect
 }) => {
 	const theme = useTheme();
 
@@ -81,6 +86,13 @@ const ActivityTableRow: React.FC<ActivityTableRowProps> = ({
 
 	return (
 		<TableRow hover sx={{ '&:last-child td, &:last-child th': { border: 0 }, '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.02)' } }}>
+			<TableCell padding="checkbox">
+				<Checkbox
+					checked={isSelected}
+					onChange={onToggleSelect}
+					size="small"
+				/>
+			</TableCell>
 			<TableCell sx={{ py: 2.5, minWidth: 200 }}>
 				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
 					<ActivityIcon sx={{ color: '#0073bb', fontSize: 18, opacity: 0.8 }} />

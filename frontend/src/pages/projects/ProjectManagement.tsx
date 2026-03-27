@@ -12,7 +12,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import type { DSRProject } from '../../models/dsr';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { updateProject } from '../../store/slices/dsrSlice';
+import { updateProject, deleteProject } from '../../store/slices/dsrSlice';
 import useToast from '../../hooks/useToast';
 import dsrProjectService from '../../services/dsrProjectService';
 import ProjectTable from '../../components/projects/management/table/ProjectTable';
@@ -32,7 +32,7 @@ const ProjectManagement: React.FC = () => {
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [selectedProject, setSelectedProject] = useState<DSRProject | null>(null);
 	const [confirmOpen, setConfirmOpen] = useState(false);
-	const [deleteProject, setDeleteProject] = useState<DSRProject | null>(null);
+	const [projectToDelete, setProjectToDelete] = useState<DSRProject | null>(null);
 	const [refreshKey, setRefreshKey] = useState(0);
 	const [importModalOpen, setImportModalOpen] = useState(false);
 
@@ -47,21 +47,26 @@ const ProjectManagement: React.FC = () => {
 	};
 
 	const handleDeleteRequest = (project: DSRProject) => {
-		setDeleteProject(project);
+		setProjectToDelete(project);
 		setConfirmOpen(true);
 	};
 
 	const handleDeleteConfirm = async () => {
-		if (!deleteProject) return;
+		if (!projectToDelete) return;
 		try {
-			await dispatch(updateProject({
-				publicId: deleteProject.public_id,
-				data: { is_active: false }
-			})).unwrap();
-			toast.success('Project deactivated successfully');
+			if (user?.role === 'admin') {
+				await dispatch(deleteProject(projectToDelete.public_id)).unwrap();
+				toast.success('Project deleted successfully');
+			} else {
+				await dispatch(updateProject({
+					publicId: projectToDelete.public_id,
+					data: { is_active: false }
+				})).unwrap();
+				toast.success('Project deactivated successfully');
+			}
 			setRefreshKey(prev => prev + 1);
 		} catch (error: any) {
-			toast.error(error || 'Failed to deactivate project');
+			toast.error(error || 'Failed to process project deletion');
 		} finally {
 			setConfirmOpen(false);
 		}
@@ -143,12 +148,16 @@ const ProjectManagement: React.FC = () => {
 						setRefreshKey(prev => prev + 1);
 						setDialogOpen(false);
 					}}
+					onDelete={handleDeleteRequest}
 				/>
 
 				<ConfirmDialog
 					open={confirmOpen}
-					title="Deactivate Project"
-					message={`Are you sure you want to deactivate project "${deleteProject?.name}"? You can re-activate it later by editing.`}
+					title={user?.role === 'admin' ? "Delete Project" : "Deactivate Project"}
+					message={user?.role === 'admin' 
+						? `Are you sure you want to PERMANENTLY delete project "${projectToDelete?.name}"? This action cannot be undone if there are no references.`
+						: `Are you sure you want to deactivate project "${projectToDelete?.name}"? You can re-activate it later by editing.`
+					}
 					loading={loading}
 					onClose={() => setConfirmOpen(false)}
 					onConfirm={handleDeleteConfirm}

@@ -18,7 +18,8 @@ import {
 } from '@mui/material';
 import {
 	Close as CloseIcon,
-	Assignment as ProjectIcon
+	Assignment as ProjectIcon,
+	Delete as DeleteIcon
 } from '@mui/icons-material';
 import type { DSRProject } from '../../../../models/dsr';
 import type { User } from '../../../../models/user';
@@ -31,14 +32,18 @@ interface ProjectDialogProps {
 	project: DSRProject | null;
 	onClose: () => void;
 	onSuccess: (message: string) => void;
+	onDelete?: (project: DSRProject) => void;
 }
 
 const ProjectDialog: React.FC<ProjectDialogProps> = ({
 	open,
 	project,
 	onClose,
-	onSuccess
+	onSuccess,
+	onDelete
 }) => {
+	const { user: currentUser } = useAppSelector((state) => state.auth);
+	const isAdmin = currentUser?.role === 'admin';
 	const theme = useTheme();
 	const dispatch = useAppDispatch();
 	const { users, loading: loadingUsers } = useAppSelector((state) => state.users);
@@ -185,6 +190,22 @@ const ProjectDialog: React.FC<ProjectDialogProps> = ({
 				</Box>
 			</DialogContent>
 			<DialogActions sx={{ p: 3, bgcolor: theme.palette.background.paper, borderTop: `1px solid ${theme.palette.divider}` }}>
+				{project && isAdmin && onDelete && (
+					<Button
+						onClick={() => {
+							if (window.confirm('Are you sure you want to permanently delete this project?')) {
+								onDelete(project);
+								onClose();
+							}
+						}}
+						color="error"
+						variant="outlined"
+						startIcon={<DeleteIcon />}
+						sx={{ mr: 'auto', textTransform: 'none', fontWeight: 700 }}
+					>
+						Delete Project
+					</Button>
+				)}
 				<Button
 					onClick={onClose}
 					disabled={submitting}

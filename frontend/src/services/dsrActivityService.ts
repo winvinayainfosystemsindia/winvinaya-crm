@@ -36,6 +36,13 @@ const dsrActivityService = {
 		await api.delete(`/dsr/activities/${publicId}`);
 	},
 
+	bulkDeleteActivities: async (publicIds: string[]) => {
+		const response = await api.post(`/dsr/activities/bulk-delete`, {
+			public_ids: publicIds
+		});
+		return response.data;
+	},
+
 	importFromExcel: async (file: File, projectPublicId?: string): Promise<ImportResult> => {
 		const formData = new FormData();
 		formData.append('file', file);

@@ -124,10 +124,24 @@ class BaseRepository(Generic[ModelType]):
             return False
         else:
             # Hard delete
-            query = delete(self.model).where(self.model.id == id)
             result = await self.db.execute(query)
             await self.db.flush()
             return result.rowcount > 0
+
+    async def bulk_soft_delete(self, ids: List[int]) -> int:
+        """Soft-delete multiple records by ID"""
+        if not ids:
+            return 0
+        from datetime import datetime
+        query = (
+            update(self.model)
+            .where(self.model.id.in_(ids))
+            .where(self.model.is_deleted == False)
+            .values(is_deleted=True, deleted_at=datetime.utcnow())
+        )
+        result = await self.db.execute(query)
+        await self.db.flush()
+        return result.rowcount
     
     async def count(self, include_deleted: bool = False, filter_expr: Any = None) -> int:
         """Count total records"""

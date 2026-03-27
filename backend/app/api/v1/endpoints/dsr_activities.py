@@ -17,6 +17,7 @@ from app.schemas.dsr_activity import (
     DSRActivityResponse,
     DSRActivityListResponse,
     DSRActivityImportResult,
+    DSRActivityBulkDelete,
 )
 from app.services.dsr_activity_service import DSRActivityService
 
@@ -151,3 +152,16 @@ async def delete_activity(
     service = DSRActivityService(db)
     await service.delete_activity(public_id, current_user)
     await db.commit()
+
+
+@router.post("/bulk-delete", status_code=status.HTTP_200_OK)
+async def bulk_delete_activities(
+    data: DSRActivityBulkDelete,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER])),
+    db: AsyncSession = Depends(get_db),
+):
+    """Bulk soft-delete planned activities (Project Owner / Admin)."""
+    service = DSRActivityService(db)
+    deleted_count = await service.bulk_delete_activities(data.public_ids, current_user)
+    await db.commit()
+    return {"deleted_count": deleted_count}

@@ -101,6 +101,18 @@ export const updateProject = createAsyncThunk(
 	}
 );
 
+export const deleteProject = createAsyncThunk(
+	'dsr/deleteProject',
+	async (publicId: string, { rejectWithValue }) => {
+		try {
+			await dsrProjectService.deleteProject(publicId);
+			return publicId;
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.detail || 'Failed to delete project');
+		}
+	}
+);
+
 // --- Activity Thunks ---
 
 export const fetchActivities = createAsyncThunk(
@@ -157,6 +169,18 @@ export const deleteActivity = createAsyncThunk(
 			return publicId;
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.detail || 'Failed to delete activity');
+		}
+	}
+);
+
+export const deleteActivities = createAsyncThunk(
+	'dsr/deleteActivities',
+	async (publicIds: string[], { rejectWithValue }) => {
+		try {
+			await dsrActivityService.bulkDeleteActivities(publicIds);
+			return publicIds;
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.detail || 'Failed to delete activities');
 		}
 	}
 );
@@ -408,6 +432,11 @@ const dsrSlice = createSlice({
 					state.projects[index] = action.payload;
 				}
 			})
+			.addCase(deleteProject.fulfilled, (state, action: PayloadAction<string>) => {
+				state.loading = false;
+				state.projects = state.projects.filter(p => p.public_id !== action.payload);
+				state.totalProjects -= 1;
+			})
 			// Activities
 			.addCase(fetchActivities.fulfilled, (state, action: PayloadAction<PaginationResult<DSRActivity>>) => {
 				state.loading = false;
@@ -434,6 +463,11 @@ const dsrSlice = createSlice({
 				state.loading = false;
 				state.activities = state.activities.filter(a => a.public_id !== action.payload);
 				state.totalActivities -= 1;
+			})
+			.addCase(deleteActivities.fulfilled, (state, action: PayloadAction<string[]>) => {
+				state.loading = false;
+				state.activities = state.activities.filter(a => !action.payload.includes(a.public_id));
+				state.totalActivities -= action.payload.length;
 			})
 			// Entries
 			.addCase(fetchEntries.fulfilled, (state, action: PayloadAction<PaginationResult<DSREntry>>) => {

@@ -11,7 +11,8 @@ import {
 import {
 	Search as SearchIcon,
 	Refresh as RefreshIcon,
-	FilterList as FilterIcon
+	FilterList as FilterIcon,
+	Delete as DeleteIcon
 } from '@mui/icons-material';
 import { DSRActivityStatusValues } from '../../../../models/dsr';
 
@@ -25,6 +26,8 @@ interface ActivityTableHeaderProps {
 	onFilterClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
 	onFilterClose: () => void;
 	onStatusSelect: (status: string) => void;
+	selectedCount: number;
+	onBulkDelete: () => void;
 }
 
 const ActivityTableHeader: React.FC<ActivityTableHeaderProps> = ({
@@ -36,7 +39,9 @@ const ActivityTableHeader: React.FC<ActivityTableHeaderProps> = ({
 	filterOpen,
 	onFilterClick,
 	onFilterClose,
-	onStatusSelect
+	onStatusSelect,
+	selectedCount,
+	onBulkDelete
 }) => {
 	const theme = useTheme();
 
@@ -70,7 +75,30 @@ const ActivityTableHeader: React.FC<ActivityTableHeaderProps> = ({
 					),
 				}}
 			/>
-			<Box sx={{ display: 'flex', gap: 1.5 }}>
+			<Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+				{selectedCount > 0 && (
+					<Button
+						variant="contained"
+						color="error"
+						size="small"
+						startIcon={<DeleteIcon />}
+						onClick={() => {
+							if (window.confirm(`Are you sure you want to delete ${selectedCount} activities?`)) {
+								onBulkDelete();
+							}
+						}}
+						sx={{
+							height: 36,
+							textTransform: 'none',
+							fontWeight: 600,
+							fontSize: '0.8125rem',
+							boxShadow: 'none',
+							'&:hover': { boxShadow: 'none', bgcolor: '#b91c1c' }
+						}}
+					>
+						Delete ({selectedCount})
+					</Button>
+				)}
 				<Button
 					variant="outlined"
 					startIcon={<RefreshIcon sx={{ fontSize: 18 }} />}

@@ -115,3 +115,7 @@ class DSRActivityImportResult(BaseModel):
     created: int
     skipped: int
     errors: list[dict]
+
+
+class DSRActivityBulkDelete(BaseModel):
+    public_ids: list[uuid.UUID]

@@ -56,6 +56,10 @@ const ActivityTable: React.FC<ActivityTableProps> = ({
 		handleActionClick,
 		handleActionClose,
 		handleRefresh,
+		handleSelectAll,
+		handleToggleSelect,
+		handleBulkDelete,
+		selectedIds,
 		setRowsPerPage
 	} = useActivityTable(projectId, refreshKey);
 
@@ -71,11 +75,18 @@ const ActivityTable: React.FC<ActivityTableProps> = ({
 				onFilterClick={handleFilterClick}
 				onFilterClose={handleFilterClose}
 				onStatusSelect={handleStatusSelect}
+				selectedCount={selectedIds.size}
+				onBulkDelete={handleBulkDelete}
 			/>
 
 			<TableContainer>
 				<Table size="small">
-					<ActivityTableHead canEdit={canEdit} />
+					<ActivityTableHead 
+						canEdit={canEdit} 
+						rowCount={activities.length}
+						numSelected={selectedIds.size}
+						onSelectAllClick={(e) => handleSelectAll(e.target.checked)}
+					/>
 					<TableBody>
 						{loading ? (
 							<ActivityTableLoader />
@@ -88,6 +99,8 @@ const ActivityTable: React.FC<ActivityTableProps> = ({
 									activity={activity}
 									onActionClick={handleActionClick}
 									canEdit={canEdit}
+									isSelected={selectedIds.has(activity.public_id)}
+									onToggleSelect={() => handleToggleSelect(activity.public_id)}
 								/>
 							))
 						)}
