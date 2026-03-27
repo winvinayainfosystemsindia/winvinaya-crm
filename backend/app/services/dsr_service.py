@@ -29,6 +29,7 @@ from app.repositories.dsr_activity_repository import DSRActivityRepository
 from app.repositories.user_repository import UserRepository
 from app.repositories.dsr_permission_request_repository import DSRPermissionRequestRepository
 from app.repositories.dsr_leave_application_repository import DSRLeaveApplicationRepository
+from app.repositories.dsr_activity_type_repository import DSRActivityTypeRepository
 from app.services.dsr_notification_service import DSRNotificationService
 from app.services.company_holiday_service import CompanyHolidayService
 
@@ -52,6 +53,7 @@ class DSRService:
         self.user_repo = UserRepository(db)
         self.permission_repo = DSRPermissionRequestRepository(db)
         self.leave_repo = DSRLeaveApplicationRepository(db)
+        self.type_repo = DSRActivityTypeRepository(db)
         self.notifier = DSRNotificationService(db)
         self.notif_service = NotificationService(db)
         self.holiday_service = CompanyHolidayService(db)
@@ -104,9 +106,14 @@ class DSRService:
                 resolved_item["project_name"] = project.name
             else:
                 resolved_item["project_public_id"] = None
-                # If it has an activity type and no project, it's "General"
-                default_name = "General / Internal Work" if activity_type_name else p_name_other
-                resolved_item["project_name"] = default_name
+                # Resolve category title from activity type if possible
+                category_title = None
+                if activity_type_name:
+                    type_rec = await self.type_repo.get_by_name(activity_type_name)
+                    if type_rec and type_rec.category:
+                        category_title = type_rec.category
+                
+                resolved_item["project_name"] = category_title or p_name_other or "General / Internal Work"
                 resolved_item["project_name_other"] = p_name_other
 
             # Resolve activity
@@ -137,7 +144,8 @@ class DSRService:
                 resolved_item["activity_name"] = activity.name
             else:
                 resolved_item["activity_public_id"] = None
-                resolved_item["activity_name"] = a_name_other
+                # Use activity type name if no custom name provided for category items
+                resolved_item["activity_name"] = a_name_other or activity_type_name
                 resolved_item["activity_name_other"] = a_name_other
 
             resolved.append(resolved_item)

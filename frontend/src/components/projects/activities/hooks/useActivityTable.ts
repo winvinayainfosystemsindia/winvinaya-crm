@@ -2,9 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { fetchActivities, deleteActivities } from '../../../../store/slices/dsrSlice';
 import type { DSRActivity } from '../../../../models/dsr';
+import useToast from '../../../../hooks/useToast';
 
 export const useActivityTable = (projectId: string, refreshKey: number) => {
 	const dispatch = useAppDispatch();
+	const toast = useToast();
 	const { activities, loading, totalActivities: totalCount } = useAppSelector((state) => state.dsr);
 
 	const [searchTerm, setSearchTerm] = useState('');
@@ -102,10 +104,11 @@ export const useActivityTable = (projectId: string, refreshKey: number) => {
 		if (selectedIds.size === 0) return;
 		try {
 			await dispatch(deleteActivities(Array.from(selectedIds))).unwrap();
+			toast.success(`Successfully deleted ${selectedIds.size} activit${selectedIds.size === 1 ? 'y' : 'ies'}`);
 			setSelectedIds(new Set());
 			handleRefresh();
-		} catch (error) {
-			// Error handled by slice/toast
+		} catch (error: any) {
+			toast.error(error || 'Failed to delete activities');
 		}
 	};
 
