@@ -124,17 +124,14 @@ class DSRActivityService:
 
     async def delete_activity(self, public_id: UUID, current_user: User) -> bool:
         activity = await self._get_or_404(public_id)
-        
-        is_admin = current_user.role == UserRole.ADMIN
-        if not is_admin:
-            await self._check_project_ownership(activity.project_id, current_user)
+        await self._check_project_ownership(activity.project_id, current_user)
         
         # Check if activity is used in any DSR entries
         usage_count = await self.dsr_repo.count_references(activity_public_id=activity.public_id)
-        if usage_count > 0 and not is_admin:
+        if usage_count > 0:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Activity '{activity.name}' cannot be deleted because it is referenced in {usage_count} DSR entry/entries. Only Admins can delete referenced activities.",
+                detail=f"Activity '{activity.name}' cannot be deleted because it is referenced in {usage_count} DSR entry/entries. Please deactivate it instead.",
             )
             
         return await self.repo.delete(activity.id)
@@ -152,16 +149,14 @@ class DSRActivityService:
         deleted_public_ids = []
         skipped_names = []
         to_delete_internal_ids = []
-        is_admin = current_user.role == UserRole.ADMIN
         
         for activity in activities:
-            # Ownership check (if not admin, must be project owner)
-            if not is_admin:
-                await self._check_project_ownership(activity.project_id, current_user)
+            # Ownership check
+            await self._check_project_ownership(activity.project_id, current_user)
             
             # Reference check
             usage_count = await self.dsr_repo.count_references(activity_public_id=activity.public_id)
-            if usage_count > 0 and not is_admin:
+            if usage_count > 0:
                 skipped_names.append(activity.name)
                 continue
                 
@@ -171,7 +166,7 @@ class DSRActivityService:
         if not to_delete_internal_ids and skipped_names:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Operation failed. Selected activities are referenced in DSR entries. Only Admins can delete referenced activities.",
+                detail=f"Operation failed. Selected activities are referenced in DSR entries: {', '.join(skipped_names)}",
             )
             
         await self.repo.bulk_soft_delete(to_delete_internal_ids)
