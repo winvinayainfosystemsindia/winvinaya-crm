@@ -332,12 +332,6 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 				return false;
 			}
 
-			// if (isGeneral || isCategory) {
-			// 	if (!it.activity_type_name) {
-			// 		toast.warning(`Please select an Activity Type for row ${i + 1}`);
-			// 		return false;
-			// 	}
-			// } else {
 			if (isGeneral || isCategory) {
 				if (!it.activity_type_name) {
 					toast.warning(`Please select an Activity Type for row ${i + 1}`);

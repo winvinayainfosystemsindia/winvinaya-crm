@@ -129,57 +129,6 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 					/>
 				)}
 			</TableCell>
-			{/* <TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top', minWidth: 140 }}>
-				{isGeneralProject ? (
-					readOnly ? (
-						<Typography variant="body2" sx={{ color: '#4b5563', py: 1 }}>
-							{selectedType?.name || '-'}
-						</Typography>
-					) : (
-						<Autocomplete
-							options={activityTypes}
-							getOptionLabel={(option) => option.name || ''}
-							value={selectedType}
-							onChange={(_, val) => {
-								onRowChange(index, 'activity_type_name', val?.name || null);
-							}}
-							isOptionEqualToValue={(option, value) => option.name === value.name}
-							sx={{
-								'& .MuiOutlinedInput-root': { borderRadius: '6px' },
-								'& .MuiOutlinedInput-input': { fontSize: '0.85rem' }
-							}}
-							renderInput={(params) => <TextField {...params} size="small" placeholder="Type" required />}
-						/>
-					)
-				) : isCategoryProject ? (
-					readOnly ? (
-						<Typography variant="body2" sx={{ color: '#4b5563', py: 1 }}>
-							{selectedType?.name || '-'}
-						</Typography>
-					) : (
-						<Autocomplete
-							options={filteredActivityTypesChoice}
-							getOptionLabel={(option) => option.name || ''}
-							value={selectedType}
-							onChange={(_, val) => {
-								onRowChange(index, 'activity_type_name', val?.name || null);
-							}}
-							isOptionEqualToValue={(option, value) => option.name === value.name}
-							sx={{
-								'& .MuiOutlinedInput-root': { borderRadius: '6px' },
-								'& .MuiOutlinedInput-input': { fontSize: '0.85rem' }
-							}}
-							renderInput={(params) => <TextField {...params} size="small" placeholder="Type" required />}
-						/>
-					)
-				) : (
-					!readOnly && (
-						<Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic', fontSize: '0.75rem' }}>
-							N/A for Projects
-						</Typography>
-					)
-				)}
-			</TableCell> */}
 			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top', minWidth: 180 }}>
 				{isGeneralProject ? (
 					!readOnly && (
@@ -236,7 +185,7 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 										value={item.activity_name_other || ''}
 										onChange={(e) => onRowChange(index, 'activity_name_other', e.target.value)}
 										sx={{
-											'& .MuiOutlinedInput-root': { 
+											'& .MuiOutlinedInput-root': {
 												borderRadius: '6px',
 												bgcolor: '#fffbeb',
 												borderColor: '#fbbf24'
@@ -245,9 +194,9 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 										}}
 										InputProps={{
 											startAdornment: (
-											<InputAdornment position="start">
-												<EditIcon sx={{ fontSize: '1rem', color: '#d97706' }} />
-											</InputAdornment>
+												<InputAdornment position="start">
+													<EditIcon sx={{ fontSize: '1rem', color: '#d97706' }} />
+												</InputAdornment>
 											),
 										}}
 									/>
