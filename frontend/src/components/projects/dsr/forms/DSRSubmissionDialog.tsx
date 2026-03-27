@@ -28,11 +28,11 @@ interface DSRSubmissionDialogProps {
 
 const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose, entryId, readOnly = false }) => {
 	const [permissionDialogOpen, setPermissionDialogOpen] = React.useState(false);
-	
+
 	const {
 		projects,
 		activitiesByProject,
-		activityTypes,
+		// activityTypes,
 		loading,
 		reportDate,
 		setReportDate,
@@ -89,9 +89,9 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 									severity={permissionError ? "error" : "warning"}
 									action={
 										!isDateAllowed && (
-											<Button 
-												color="inherit" 
-												size="small" 
+											<Button
+												color="inherit"
+												size="small"
 												variant="outlined"
 												onClick={() => setPermissionDialogOpen(true)}
 												sx={{ fontWeight: 700, textTransform: 'none' }}
@@ -143,7 +143,7 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 										items={items}
 										projects={projects}
 										activitiesByProject={activitiesByProject}
-										activityTypes={activityTypes}
+										// activityTypes={activityTypes}
 										loading={loading}
 										onRowChange={handleRowChange}
 										onAddRow={addRow}
@@ -221,9 +221,9 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 					)}
 				</DialogActions>
 
-				<PermissionRequestDialog 
-					open={permissionDialogOpen} 
-					onClose={() => setPermissionDialogOpen(false)} 
+				<PermissionRequestDialog
+					open={permissionDialogOpen}
+					onClose={() => setPermissionDialogOpen(false)}
 					initialDate={reportDate}
 				/>
 			</Dialog>

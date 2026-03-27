@@ -9,20 +9,20 @@ import {
 	Box,
 	InputAdornment
 } from '@mui/material';
-import { 
+import {
 	Delete as DeleteIcon,
 	EditNote as EditIcon
 } from '@mui/icons-material';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import dayjs from 'dayjs';
-import type { DSRItem, DSRProject, DSRActivity, DSRActivityType } from '../../../../models/dsr';
+import type { DSRItem, DSRProject, DSRActivity } from '../../../../models/dsr';
 import { GENERAL_PROJECT_ID } from '../hooks/useDSRSubmission';
 
 interface DSRItemRowProps {
 	index: number;
 	item: Partial<DSRItem>;
 	projects: DSRProject[];
-	activityTypes: DSRActivityType[];
+	// activityTypes: DSRActivityType[];
 	activities: DSRActivity[];
 	loading: boolean;
 	onRowChange: (index: number, field: keyof DSRItem, value: any) => void;
@@ -43,7 +43,7 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 	index,
 	item,
 	projects,
-	activityTypes,
+	// activityTypes,
 	activities,
 	loading,
 	onRowChange,
@@ -86,9 +86,9 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 		return projects.find(p => p.public_id === item.project_public_id) || null;
 	}, [item.project_public_id, projects]);
 
-	const selectedType = React.useMemo(() => {
-		return activityTypes.find(at => at.name === item.activity_type_name) || null;
-	}, [item.activity_type_name, activityTypes]);
+	// const selectedType = React.useMemo(() => {
+	// 	return activityTypes.find(at => at.name === item.activity_type_name) || null;
+	// }, [item.activity_type_name, activityTypes]);
 
 	const selectedActivity = React.useMemo(() => {
 		if (item.activity_name_other !== undefined && item.activity_name_other !== null) return OTHER_ACTIVITY;
@@ -98,17 +98,17 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 	const isOtherActivity = selectedActivity?.public_id === OTHER_ID;
 	const isGeneralProject = item.project_public_id === GENERAL_PROJECT_ID;
 	const isCategoryProject = item.project_public_id?.startsWith('category:');
-	const selectedCategoryName = isCategoryProject ? item.project_public_id?.split(':')[1] : null;
+	// const selectedCategoryName = isCategoryProject ? item.project_public_id?.split(':')[1] : null;
 
-	const filteredActivityTypesChoice = React.useMemo(() => {
-		if (isCategoryProject) {
-			return activityTypes.filter(at => at.category === selectedCategoryName);
-		}
-		if (isGeneralProject) {
-			return activityTypes;
-		}
-		return [];
-	}, [activityTypes, isCategoryProject, selectedCategoryName, isGeneralProject]);
+	// const filteredActivityTypesChoice = React.useMemo(() => {
+	// 	if (isCategoryProject) {
+	// 		return activityTypes.filter(at => at.category === selectedCategoryName);
+	// 	}
+	// 	if (isGeneralProject) {
+	// 		return activityTypes;
+	// 	}
+	// 	return [];
+	// }, [activityTypes, isCategoryProject, selectedCategoryName, isGeneralProject]);
 
 	return (
 		<TableRow sx={{ '&:hover': { bgcolor: readOnly ? 'transparent' : '#f9fafb' } }}>
@@ -136,7 +136,7 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 					/>
 				)}
 			</TableCell>
-			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top', minWidth: 140 }}>
+			{/* <TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top', minWidth: 140 }}>
 				{isGeneralProject ? (
 					readOnly ? (
 						<Typography variant="body2" sx={{ color: '#4b5563', py: 1 }}>
@@ -186,7 +186,7 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 						</Typography>
 					)
 				)}
-			</TableCell>
+			</TableCell> */}
 			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top', minWidth: 180 }}>
 				{!isGeneralProject && !isCategoryProject ? (
 					<Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -226,7 +226,7 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 										value={item.activity_name_other || ''}
 										onChange={(e) => onRowChange(index, 'activity_name_other', e.target.value)}
 										sx={{
-											'& .MuiOutlinedInput-root': { 
+											'& .MuiOutlinedInput-root': {
 												borderRadius: '6px',
 												bgcolor: '#fffbeb',
 												borderColor: '#fbbf24'
@@ -245,12 +245,12 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 							</>
 						)}
 					</Box>
-				) : isCategoryProject ? (
-					!readOnly && (
-						<Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic', fontSize: '0.75rem' }}>
-							Selected in 'Type'
-						</Typography>
-					)
+					// 				) : isCategoryProject ? (
+					// !readOnly && (
+					// 	<Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic', fontSize: '0.75rem' }}>
+					// 		Selected in 'Type'
+					// 	</Typography>
+					// )
 				) : (
 					!readOnly && (
 						<Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic', fontSize: '0.75rem' }}>
@@ -287,15 +287,15 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 					</Typography>
 				) : (
 					<TimePicker
-						slotProps={{ 
-							textField: { 
-								size: 'small', 
+						slotProps={{
+							textField: {
+								size: 'small',
 								fullWidth: true,
 								sx: {
 									'& .MuiOutlinedInput-root': { borderRadius: '6px' },
 									'& .MuiOutlinedInput-input': { fontSize: '0.8125rem', p: '8.5px 12px' }
 								}
-							} 
+							}
 						}}
 						value={item.start_time ? dayjs(`2024-01-01T${item.start_time}`) : null}
 						onChange={(newValue) => {
@@ -314,15 +314,15 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 					</Typography>
 				) : (
 					<TimePicker
-						slotProps={{ 
-							textField: { 
-								size: 'small', 
+						slotProps={{
+							textField: {
+								size: 'small',
 								fullWidth: true,
 								sx: {
 									'& .MuiOutlinedInput-root': { borderRadius: '6px' },
 									'& .MuiOutlinedInput-input': { fontSize: '0.8125rem', p: '8.5px 12px' }
 								}
-							} 
+							}
 						}}
 						value={item.end_time ? dayjs(`2024-01-01T${item.end_time}`) : null}
 						onChange={(newValue) => {

@@ -15,14 +15,14 @@ import {
 	Add as AddIcon
 } from '@mui/icons-material';
 import DSRItemRow from './DSRItemRow';
-import type { DSRItem, DSRProject, DSRActivity, DSRActivityType } from '../../../../models/dsr';
+import type { DSRItem, DSRProject, DSRActivity } from '../../../../models/dsr';
 import { GENERAL_PROJECT_ID } from '../hooks/useDSRSubmission';
 
 interface SubmissionFormProps {
 	items: Partial<DSRItem>[];
 	projects: DSRProject[];
 	activitiesByProject: Record<string, DSRActivity[]>;
-	activityTypes: DSRActivityType[];
+	// activityTypes: DSRActivityType[];
 	loading: boolean;
 	onRowChange: (index: number, field: keyof DSRItem, value: any) => void;
 	onAddRow: () => void;
@@ -36,7 +36,7 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
 	items,
 	projects,
 	activitiesByProject,
-	activityTypes,
+	// activityTypes,
 	loading,
 	onRowChange,
 	onAddRow,
@@ -59,8 +59,8 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
 					<TableHead sx={{ bgcolor: '#f9fafb' }}>
 						<TableRow>
 							<TableCell sx={{ fontWeight: 700, width: '18%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Project</TableCell>
-							<TableCell sx={{ fontWeight: 700, width: '15%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Type</TableCell>
-							<TableCell sx={{ fontWeight: 700, width: '18%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Activity / Task</TableCell>
+							{/* <TableCell sx={{ fontWeight: 700, width: '15%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Type</TableCell> */}
+							<TableCell sx={{ fontWeight: 700, width: '18%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Activity</TableCell>
 							<TableCell sx={{ fontWeight: 700, width: '25%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Description</TableCell>
 							<TableCell sx={{ fontWeight: 700, width: '10%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Start</TableCell>
 							<TableCell sx={{ fontWeight: 700, width: '10%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>End</TableCell>
@@ -75,7 +75,7 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
 								index={index}
 								item={item}
 								projects={projects}
-								activityTypes={activityTypes}
+								// activityTypes={activityTypes}
 								activities={item.project_public_id && item.project_public_id !== GENERAL_PROJECT_ID ? (activitiesByProject[item.project_public_id] || []) : []}
 								loading={loading}
 								onRowChange={onRowChange}
@@ -89,14 +89,15 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
 							const lastItem = items[items.length - 1];
 							const isGeneral = lastItem?.project_public_id === GENERAL_PROJECT_ID;
 							const isCategory = lastItem?.project_public_id?.startsWith('category:');
-							
+
 							const hasProject = !!lastItem?.project_public_id;
 							const hasDescription = !!lastItem?.description && lastItem.description.trim().length > 0;
 							const hasTime = !!lastItem?.start_time && !!lastItem?.end_time && (lastItem.hours || 0) > 0;
-							
+
 							let isCategorized = false;
 							if (isGeneral || isCategory) {
-								isCategorized = !!lastItem?.activity_type_name;
+								// isCategorized = !!lastItem?.activity_type_name;
+								isCategorized = true; // Type is hidden, so we assume categorized if project is selected
 							} else {
 								isCategorized = !!lastItem?.activity_public_id || (!!lastItem?.activity_name_other && lastItem.activity_name_other.trim() !== '');
 							}
@@ -105,7 +106,7 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
 
 							return (
 								<TableRow>
-									<TableCell colSpan={8}>
+									<TableCell colSpan={7}>
 										<Button
 											startIcon={<AddIcon />}
 											onClick={onAddRow}

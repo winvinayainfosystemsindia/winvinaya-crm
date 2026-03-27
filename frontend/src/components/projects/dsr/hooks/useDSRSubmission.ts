@@ -37,7 +37,7 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 	const projects = useMemo(() => {
 		// 1. Get unique categories from activity types
 		const categories = Array.from(new Set(activityTypes.map(at => at.category).filter(Boolean))) as string[];
-		
+
 		// 2. Map categories to virtual projects
 		const categoryProjects = categories.map(cat => ({
 			public_id: `category:${cat}`,
@@ -57,7 +57,7 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 
 		const hasGeneralCategory = categories.some(c => c.toLowerCase() === 'general');
 		const baseList = hasGeneralCategory ? [] : [generalProject];
-		
+
 		const baseProjects = rawProjects.map(p => ({
 			...p,
 			group: 'Active Projects'
@@ -70,14 +70,14 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 
 	const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
 	const [items, setItems] = useState<Partial<DSRItem>[]>([
-		{ 
-			project_public_id: null as any, 
-			activity_public_id: null as any, 
+		{
+			project_public_id: null as any,
+			activity_public_id: null as any,
 			activity_type_name: null,
-			description: '', 
-			start_time: '09:00', 
-			end_time: '10:00', 
-			hours: 1 
+			description: '',
+			start_time: '09:00',
+			end_time: '10:00',
+			hours: 1
 		}
 	]);
 	const [isLeave, setIsLeave] = useState(false);
@@ -87,7 +87,7 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 
 	const isDateAllowed = useMemo(() => {
 		const today = new Date().toISOString().split('T')[0];
-		
+
 		// Check if there's a granted permission for this date (handles both past and holiday)
 		const hasPermission = permissionRequests.some(req =>
 			req.report_date === reportDate && req.status === 'granted'
@@ -145,7 +145,7 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		try {
 			const entry = await dispatch(fetchEntry(id)).unwrap();
 			setReportDate(entry.report_date);
-			
+
 			// Map null project_public_id to GENERAL_PROJECT_ID or Category for UI consistency
 			const mappedItems = entry.items.map(item => {
 				let projectId = item.project_public_id;
@@ -178,8 +178,8 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 			// Update calendar for this specific user
 			const dateFrom = format(subDays(new Date(), 30), 'yyyy-MM-dd');
 			const today = format(new Date(), 'yyyy-MM-dd');
-			dispatch(fetchCalendarEntries({ 
-				date_from: dateFrom, 
+			dispatch(fetchCalendarEntries({
+				date_from: dateFrom,
 				date_to: today,
 				user_id: entry.user_id
 			}));
@@ -196,10 +196,10 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		// Fetch calendar status with month range (scoped to viewed user if present)
 		const start = format(subDays(startOfDay(new Date()), 7), 'yyyy-MM-dd'); // start with some buffer
 		const end = format(subDays(startOfDay(new Date()), -30), 'yyyy-MM-dd'); // end in 30 days
-		dispatch(fetchCalendarEntries({ 
-			date_from: start, 
+		dispatch(fetchCalendarEntries({
+			date_from: start,
 			date_to: end,
-			user_id: user?.id as any 
+			user_id: user?.id as any
 		}));
 
 		if (entryId) {
@@ -238,9 +238,9 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		const hasPermission = permissionRequests.some(req =>
 			req.report_date === reportDate && req.status === 'granted'
 		);
-		
+
 		const holiday = holidays.find(h => h.holiday_date === reportDate);
-		
+
 		if (holiday && !hasPermission && user?.role !== 'ADMIN' && user?.role !== 'MANAGER') {
 			setPermissionError(`Cannot submit DSR for ${holiday.holiday_date} as it is a company holiday (${holiday.holiday_name}). Please request permission if you worked on this day.`);
 		} else if (!isDateAllowed && reportDate < today) {
@@ -268,7 +268,7 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 
 			// Create a new object for the item being changed
 			const updatedItem = { ...currentItem, [field]: value };
-			
+
 			// Handle logical dependencies
 			if (field === 'project_public_id') {
 				// If project actually changed, clear its children
@@ -331,13 +331,14 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 				toast.warning(`Please fill all fields in row ${i + 1}`);
 				return false;
 			}
-			
-			if (isGeneral || isCategory) {
-				if (!it.activity_type_name) {
-					toast.warning(`Please select an Activity Type for row ${i + 1}`);
-					return false;
-				}
-			} else {
+
+			// if (isGeneral || isCategory) {
+			// 	if (!it.activity_type_name) {
+			// 		toast.warning(`Please select an Activity Type for row ${i + 1}`);
+			// 		return false;
+			// 	}
+			// } else {
+			if (!isGeneral && !isCategory) {
 				if (!it.activity_public_id && !it.activity_name_other) {
 					toast.warning(`Please select an Activity for row ${i + 1}`);
 					return false;
@@ -357,8 +358,8 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		setSubmitting(true);
 		const sanitizedItems = items.map(item => ({
 			...item,
-			project_public_id: (item.project_public_id === GENERAL_PROJECT_ID || (typeof item.project_public_id === 'string' && item.project_public_id.startsWith('category:'))) 
-				? null 
+			project_public_id: (item.project_public_id === GENERAL_PROJECT_ID || (typeof item.project_public_id === 'string' && item.project_public_id.startsWith('category:')))
+				? null
 				: item.project_public_id
 		}));
 
@@ -388,8 +389,8 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		setSubmitting(true);
 		const sanitizedItems = items.map(item => ({
 			...item,
-			project_public_id: (item.project_public_id === GENERAL_PROJECT_ID || (typeof item.project_public_id === 'string' && item.project_public_id.startsWith('category:'))) 
-				? null 
+			project_public_id: (item.project_public_id === GENERAL_PROJECT_ID || (typeof item.project_public_id === 'string' && item.project_public_id.startsWith('category:')))
+				? null
 				: item.project_public_id
 		}));
 
