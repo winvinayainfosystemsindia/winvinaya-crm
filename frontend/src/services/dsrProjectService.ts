@@ -52,6 +52,11 @@ const dsrProjectService = {
 		link.click();
 		link.remove();
 	},
+
+	clearAllDsrData: async () => {
+		const response = await api.post('/maintenance/dsr/clear-data');
+		return response.data;
+	},
 };
 
 export default dsrProjectService;

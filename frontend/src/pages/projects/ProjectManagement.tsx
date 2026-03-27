@@ -35,6 +35,8 @@ const ProjectManagement: React.FC = () => {
 	const [projectToDelete, setProjectToDelete] = useState<DSRProject | null>(null);
 	const [refreshKey, setRefreshKey] = useState(0);
 	const [importModalOpen, setImportModalOpen] = useState(false);
+	const [maintenanceConfirmOpen, setMaintenanceConfirmOpen] = useState(false);
+	const [maintenanceLoading, setMaintenanceLoading] = useState(false);
 
 	const handleAdd = () => {
 		setSelectedProject(null);
@@ -69,6 +71,20 @@ const ProjectManagement: React.FC = () => {
 			toast.error(error || 'Failed to process project deletion');
 		} finally {
 			setConfirmOpen(false);
+		}
+	};
+
+	const handleClearDataConfirm = async () => {
+		setMaintenanceLoading(true);
+		try {
+			await dsrProjectService.clearAllDsrData();
+			toast.success('All DSR data cleared successfully');
+			setRefreshKey(prev => prev + 1);
+		} catch (error: any) {
+			toast.error(error?.response?.data?.detail || 'Failed to clear DSR data');
+		} finally {
+			setMaintenanceLoading(false);
+			setMaintenanceConfirmOpen(false);
 		}
 	};
 
@@ -110,6 +126,21 @@ const ProjectManagement: React.FC = () => {
 							>
 								Import from Excel
 							</Button>
+							{user?.role === 'admin' && (
+								<Button
+									variant="text"
+									color="error"
+									onClick={() => setMaintenanceConfirmOpen(true)}
+									sx={{
+										textTransform: 'none',
+										fontSize: '0.8125rem',
+										fontWeight: 700,
+										'&:hover': { bgcolor: 'rgba(211, 47, 47, 0.04)' }
+									}}
+								>
+									Clear All DSR Data
+								</Button>
+							)}
 							<Button
 								variant="contained"
 								startIcon={<AddIcon />}
@@ -171,6 +202,17 @@ const ProjectManagement: React.FC = () => {
 					title="Import Projects from Excel"
 					description="Upload an Excel file with 'name' and 'owner_email' columns to bulk-create projects."
 					onDownloadTemplate={dsrProjectService.downloadTemplate}
+				/>
+
+				<ConfirmDialog
+					open={maintenanceConfirmOpen}
+					title="DANGER: Clear All DSR Data"
+					message="This will PERMANENTLY delete all Projects, Activities, DSR Entries, and Requests across the entire system. This action is destructive and cannot be undone. Are you absolutely sure?"
+					loading={maintenanceLoading}
+					confirmText="Yes, Wipe All Data"
+					onClose={() => setMaintenanceConfirmOpen(false)}
+					onConfirm={handleClearDataConfirm}
+					severity="error"
 				/>
 			</Container>
 		</Box>

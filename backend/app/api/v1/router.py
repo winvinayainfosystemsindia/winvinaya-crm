@@ -38,6 +38,7 @@ from app.api.v1.endpoints import (
     notifications,
     whatsapp_webhook,
     x0pa,
+    maintenance,
 )
 
 
@@ -83,6 +84,7 @@ router.include_router(dsr_leaves.router, prefix="/dsr/leaves", tags=["DSR Leaves
 router.include_router(dsr_activity_types.router, prefix="/dsr/activity-types", tags=["DSR Activity Types"])
 router.include_router(dsr_project_requests.router, prefix="/dsr/project-requests", tags=["DSR Project Requests"])
 router.include_router(company_holidays.router, prefix="/dsr/holidays", tags=["Company Holidays"])
+router.include_router(maintenance.router, prefix="/maintenance", tags=["Maintenance"])
 
 # WhatsApp Integration
 router.include_router(whatsapp_webhook.router)
