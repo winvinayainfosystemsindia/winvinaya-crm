@@ -193,10 +193,8 @@ const ProjectDialog: React.FC<ProjectDialogProps> = ({
 				{project && isAdmin && onDelete && (
 					<Button
 						onClick={() => {
-							if (window.confirm('Are you sure you want to permanently delete this project?')) {
-								onDelete(project);
-								onClose();
-							}
+							onDelete(project);
+							onClose();
 						}}
 						color="error"
 						variant="outlined"

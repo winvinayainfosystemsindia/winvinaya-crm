@@ -22,20 +22,13 @@ const ProjectTableRow: React.FC<ProjectTableRowProps> = ({
 	formatDate
 }) => {
 	const theme = useTheme();
-	const toTitleCase = (str: string) => {
-		if (!str) return '';
-		return str.replace(
-			/\w\S*/g,
-			(txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
-		);
-	};
 
 	return (
 		<TableRow hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
 			<TableCell sx={{ py: 2, fontSize: '0.8125rem', color: theme.palette.text.primary }}>
 				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
 					<Typography variant="body2" sx={{ fontWeight: 500 }}>
-						{toTitleCase(project.name)}
+						{project.name}
 					</Typography>
 				</Box>
 			</TableCell>
