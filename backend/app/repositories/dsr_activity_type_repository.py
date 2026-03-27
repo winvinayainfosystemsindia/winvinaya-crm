@@ -30,6 +30,14 @@ class DSRActivityTypeRepository(BaseRepository[DSRActivityType]):
         )
         return result.scalar_one_or_none()
 
+    async def get_by_code_all(self, code: str) -> Optional[DSRActivityType]:
+        """Fetch by code including soft-deleted ones."""
+        result = await self.db.execute(
+            select(DSRActivityType)
+            .where(DSRActivityType.code == sa.func.upper(code))
+        )
+        return result.scalar_one_or_none()
+
     async def get_active_types(self) -> List[DSRActivityType]:
         result = await self.db.execute(
             select(DSRActivityType)

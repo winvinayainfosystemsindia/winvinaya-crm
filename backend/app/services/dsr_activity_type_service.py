@@ -185,19 +185,25 @@ class DSRActivityTypeService:
                 except ValueError:
                     sort_order = 0
 
-                existing = await self.repo.get_by_code(code)
+                existing = await self.repo.get_by_code_all(code)
                 if existing:
-                    # Update existing
+                    # Update existing (including restoring if deleted)
                     existing.name = name
                     existing.category = category
                     existing.description = description
                     existing.sort_order = sort_order
+                    
+                    if hasattr(existing, 'is_deleted') and existing.is_deleted:
+                        existing.is_deleted = False
+                        if hasattr(existing, 'deleted_at'):
+                            existing.deleted_at = None
+                    
                     skipped_count += 1
                 else:
                     # Create new
                     await self.repo.create({
                         "name": name,
-                        "code": code,
+                        "code": code.upper(),
                         "category": category,
                         "description": description,
                         "sort_order": sort_order,
