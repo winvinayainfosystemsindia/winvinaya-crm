@@ -82,11 +82,7 @@ const ActivityTableHeader: React.FC<ActivityTableHeaderProps> = ({
 						color="error"
 						size="small"
 						startIcon={<DeleteIcon />}
-						onClick={() => {
-							if (window.confirm(`Are you sure you want to delete ${selectedCount} activities?`)) {
-								onBulkDelete();
-							}
-						}}
+						onClick={onBulkDelete}
 						sx={{
 							height: 36,
 							textTransform: 'none',

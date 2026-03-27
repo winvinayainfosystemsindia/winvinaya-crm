@@ -162,6 +162,12 @@ async def bulk_delete_activities(
 ):
     """Bulk soft-delete planned activities (Project Owner / Admin)."""
     service = DSRActivityService(db)
-    deleted_count = await service.bulk_delete_activities(data.public_ids, current_user)
+    deleted_public_ids, skipped_names = await service.bulk_delete_activities(data.public_ids, current_user)
     await db.commit()
-    return {"deleted_count": deleted_count}
+    return {
+        "deleted_count": len(deleted_public_ids),
+        "deleted_public_ids": deleted_public_ids,
+        "skipped_count": len(skipped_names),
+        "skipped_names": skipped_names,
+        "message": f"Deleted {len(deleted_public_ids)} activities." + (f" Skipped {len(skipped_names)} activities due to existing DSR entries." if skipped_names else "")
+    }

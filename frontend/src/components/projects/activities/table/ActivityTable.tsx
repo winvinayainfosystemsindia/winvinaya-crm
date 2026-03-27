@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
 	Paper,
 	Table,
@@ -17,6 +17,7 @@ import ActivityTableRow from './ActivityTableRow';
 import ActivityTableActions from './ActivityTableActions';
 import ActivityTableLoader from './ActivityTableLoader';
 import ActivityTableEmpty from './ActivityTableEmpty';
+import ConfirmDialog from '../../../common/ConfirmDialog';
 
 interface ActivityTableProps {
 	projectId: string;
@@ -34,6 +35,7 @@ const ActivityTable: React.FC<ActivityTableProps> = ({
 	canEdit = false
 }) => {
 	const theme = useTheme();
+	const [confirmOpen, setConfirmOpen] = useState(false);
 	const {
 		activities,
 		loading,
@@ -76,7 +78,7 @@ const ActivityTable: React.FC<ActivityTableProps> = ({
 				onFilterClose={handleFilterClose}
 				onStatusSelect={handleStatusSelect}
 				selectedCount={selectedIds.size}
-				onBulkDelete={handleBulkDelete}
+				onBulkDelete={() => setConfirmOpen(true)}
 			/>
 
 			<TableContainer>
@@ -124,6 +126,19 @@ const ActivityTable: React.FC<ActivityTableProps> = ({
 				activeActivity={activeActivity}
 				onEdit={onEdit}
 				onDelete={onDelete}
+			/>
+
+			<ConfirmDialog
+				open={confirmOpen}
+				title="Delete Activities"
+				message={`Are you sure you want to delete ${selectedIds.size} selected activit${selectedIds.size === 1 ? 'y' : 'ies'}? This will permanently remove them if they are not referenced in any DSR entries.`}
+				loading={loading}
+				onClose={() => setConfirmOpen(false)}
+				onConfirm={async () => {
+					await handleBulkDelete();
+					setConfirmOpen(false);
+				}}
+				severity="error"
 			/>
 		</Paper>
 	);

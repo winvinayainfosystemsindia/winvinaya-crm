@@ -177,8 +177,8 @@ export const deleteActivities = createAsyncThunk(
 	'dsr/deleteActivities',
 	async (publicIds: string[], { rejectWithValue }) => {
 		try {
-			await dsrActivityService.bulkDeleteActivities(publicIds);
-			return publicIds;
+			const response = await dsrActivityService.bulkDeleteActivities(publicIds);
+			return response.deleted_public_ids;
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.detail || 'Failed to delete activities');
 		}
