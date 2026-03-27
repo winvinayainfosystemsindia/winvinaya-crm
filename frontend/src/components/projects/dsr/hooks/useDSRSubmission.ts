@@ -338,7 +338,12 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 			// 		return false;
 			// 	}
 			// } else {
-			if (!isGeneral && !isCategory) {
+			if (isGeneral || isCategory) {
+				if (!it.activity_type_name) {
+					toast.warning(`Please select an Activity Type for row ${i + 1}`);
+					return false;
+				}
+			} else {
 				if (!it.activity_public_id && !it.activity_name_other) {
 					toast.warning(`Please select an Activity for row ${i + 1}`);
 					return false;

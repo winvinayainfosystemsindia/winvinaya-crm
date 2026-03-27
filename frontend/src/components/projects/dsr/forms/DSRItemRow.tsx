@@ -15,14 +15,14 @@ import {
 } from '@mui/icons-material';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import dayjs from 'dayjs';
-import type { DSRItem, DSRProject, DSRActivity } from '../../../../models/dsr';
+import type { DSRItem, DSRProject, DSRActivity, DSRActivityType } from '../../../../models/dsr';
 import { GENERAL_PROJECT_ID } from '../hooks/useDSRSubmission';
 
 interface DSRItemRowProps {
 	index: number;
 	item: Partial<DSRItem>;
 	projects: DSRProject[];
-	// activityTypes: DSRActivityType[];
+	activityTypes: DSRActivityType[];
 	activities: DSRActivity[];
 	loading: boolean;
 	onRowChange: (index: number, field: keyof DSRItem, value: any) => void;
@@ -43,7 +43,7 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 	index,
 	item,
 	projects,
-	// activityTypes,
+	activityTypes,
 	activities,
 	loading,
 	onRowChange,
@@ -52,7 +52,13 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 	readOnly = false,
 	reportDate
 }) => {
+	const isCategoryProject = item.project_public_id?.startsWith('category:');
+	const categoryName = isCategoryProject ? item.project_public_id?.split(':')[1] : null;
+
 	const activityOptions = React.useMemo(() => {
+		if (isCategoryProject) {
+			return activityTypes.filter(at => at.category === categoryName);
+		}
 		const filtered = activities.filter(a => {
 			// Always keep the currently selected activity to avoid UI break
 			if (a.public_id === item.activity_public_id) return true;
@@ -73,7 +79,7 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 			return true;
 		});
 		return [...filtered, OTHER_ACTIVITY as DSRActivity];
-	}, [activities, reportDate, item.activity_public_id]);
+	}, [activities, reportDate, item.activity_public_id, isCategoryProject, categoryName, activityTypes]);
 
 	const selectedProject = React.useMemo(() => {
 		if (!item.project_public_id) return null;
@@ -86,29 +92,16 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 		return projects.find(p => p.public_id === item.project_public_id) || null;
 	}, [item.project_public_id, projects]);
 
-	// const selectedType = React.useMemo(() => {
-	// 	return activityTypes.find(at => at.name === item.activity_type_name) || null;
-	// }, [item.activity_type_name, activityTypes]);
-
-	const selectedActivity = React.useMemo(() => {
-		if (item.activity_name_other !== undefined && item.activity_name_other !== null) return OTHER_ACTIVITY;
-		return activities.find(a => a.public_id === item.activity_public_id) || null;
-	}, [item.activity_public_id, item.activity_name_other, activities]);
-
-	const isOtherActivity = selectedActivity?.public_id === OTHER_ID;
+	const isOtherActivity = (item.activity_name_other !== undefined && item.activity_name_other !== null);
 	const isGeneralProject = item.project_public_id === GENERAL_PROJECT_ID;
-	const isCategoryProject = item.project_public_id?.startsWith('category:');
-	// const selectedCategoryName = isCategoryProject ? item.project_public_id?.split(':')[1] : null;
 
-	// const filteredActivityTypesChoice = React.useMemo(() => {
-	// 	if (isCategoryProject) {
-	// 		return activityTypes.filter(at => at.category === selectedCategoryName);
-	// 	}
-	// 	if (isGeneralProject) {
-	// 		return activityTypes;
-	// 	}
-	// 	return [];
-	// }, [activityTypes, isCategoryProject, selectedCategoryName, isGeneralProject]);
+	const selectedActivityOption = React.useMemo(() => {
+		if (isCategoryProject) {
+			return activityOptions.find(at => at.name === item.activity_type_name) || null;
+		}
+		if (isOtherActivity) return OTHER_ACTIVITY;
+		return activities.find(a => a.public_id === item.activity_public_id) || null;
+	}, [isCategoryProject, isOtherActivity, item.activity_type_name, item.activity_public_id, activityOptions, activities]);
 
 	return (
 		<TableRow sx={{ '&:hover': { bgcolor: readOnly ? 'transparent' : '#f9fafb' } }}>
@@ -188,34 +181,51 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 				)}
 			</TableCell> */}
 			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top', minWidth: 180 }}>
-				{!isGeneralProject && !isCategoryProject ? (
+				{isGeneralProject ? (
+					!readOnly && (
+						<Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic', fontSize: '0.75rem' }}>
+							N/A for General
+						</Typography>
+					)
+				) : (
 					<Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
 						{readOnly ? (
 							<Typography variant="body2" sx={{ color: '#4b5563', py: 1 }}>
-								{isOtherActivity ? item.activity_name_other : (selectedActivity?.name || '-')}
+								{isOtherActivity ? item.activity_name_other : (selectedActivityOption?.name || '-')}
 							</Typography>
 						) : (
 							<>
 								<Autocomplete
-									options={activityOptions}
+									options={activityOptions as any[]}
 									getOptionLabel={(option) => option.name || ''}
-									value={selectedActivity}
-									onChange={(_, val) => {
-										if (val?.public_id === OTHER_ID) {
+									value={selectedActivityOption as any}
+									onChange={(_, val: any) => {
+										if (isCategoryProject) {
+											onRowChange(index, 'activity_type_name', val?.name || null);
 											onRowChange(index, 'activity_public_id', null);
-											onRowChange(index, 'activity_name_other', '');
-										} else {
-											onRowChange(index, 'activity_public_id', val?.public_id || null);
 											onRowChange(index, 'activity_name_other', undefined);
+										} else {
+											if (val?.public_id === OTHER_ID) {
+												onRowChange(index, 'activity_public_id', null);
+												onRowChange(index, 'activity_name_other', '');
+												onRowChange(index, 'activity_type_name', null);
+											} else {
+												onRowChange(index, 'activity_public_id', val?.public_id || null);
+												onRowChange(index, 'activity_name_other', undefined);
+												onRowChange(index, 'activity_type_name', null);
+											}
 										}
 									}}
 									disabled={!item.project_public_id}
-									isOptionEqualToValue={(option, value) => option.public_id === value.public_id}
+									isOptionEqualToValue={(option, value) => {
+										if (isCategoryProject) return option.name === value.name;
+										return option.public_id === value.public_id;
+									}}
 									sx={{
 										'& .MuiOutlinedInput-root': { borderRadius: '6px' },
 										'& .MuiOutlinedInput-input': { fontSize: '0.85rem' }
 									}}
-									renderInput={(params) => <TextField {...params} size="small" placeholder="Activity / Task" />}
+									renderInput={(params) => <TextField {...params} size="small" placeholder={isCategoryProject ? "Select Type" : "Activity / Task"} />}
 								/>
 								{isOtherActivity && (
 									<TextField
@@ -226,7 +236,7 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 										value={item.activity_name_other || ''}
 										onChange={(e) => onRowChange(index, 'activity_name_other', e.target.value)}
 										sx={{
-											'& .MuiOutlinedInput-root': {
+											'& .MuiOutlinedInput-root': { 
 												borderRadius: '6px',
 												bgcolor: '#fffbeb',
 												borderColor: '#fbbf24'
@@ -235,9 +245,9 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 										}}
 										InputProps={{
 											startAdornment: (
-												<InputAdornment position="start">
-													<EditIcon sx={{ fontSize: '1rem', color: '#d97706' }} />
-												</InputAdornment>
+											<InputAdornment position="start">
+												<EditIcon sx={{ fontSize: '1rem', color: '#d97706' }} />
+											</InputAdornment>
 											),
 										}}
 									/>
@@ -245,18 +255,6 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 							</>
 						)}
 					</Box>
-					// 				) : isCategoryProject ? (
-					// !readOnly && (
-					// 	<Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic', fontSize: '0.75rem' }}>
-					// 		Selected in 'Type'
-					// 	</Typography>
-					// )
-				) : (
-					!readOnly && (
-						<Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic', fontSize: '0.75rem' }}>
-							N/A for General
-						</Typography>
-					)
 				)}
 			</TableCell>
 			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top' }}>

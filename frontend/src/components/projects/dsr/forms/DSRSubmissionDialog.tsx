@@ -32,7 +32,7 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 	const {
 		projects,
 		activitiesByProject,
-		// activityTypes,
+		activityTypes,
 		loading,
 		reportDate,
 		setReportDate,
@@ -143,7 +143,7 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 										items={items}
 										projects={projects}
 										activitiesByProject={activitiesByProject}
-										// activityTypes={activityTypes}
+										activityTypes={activityTypes}
 										loading={loading}
 										onRowChange={handleRowChange}
 										onAddRow={addRow}
