@@ -20,7 +20,7 @@ export interface JobRole {
 	created_by_id?: number;
 	location?: {
 		cities: string[];
-		state?: string;
+		states?: string[];
 		country?: string;
 	};
 	salary_range?: {

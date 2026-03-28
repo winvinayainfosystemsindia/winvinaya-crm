@@ -84,7 +84,7 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 		description: '',
 		status: JOB_ROLE_STATUS.ACTIVE,
 		is_visible: true,
-		location: { cities: [], state: '', country: 'India' },
+		location: { cities: [], states: [], country: 'India' },
 		salary_range: { min: undefined, max: undefined, currency: 'INR' },
 		experience: { min: undefined, max: undefined },
 		requirements: { skills: [], qualifications: [], disability_preferred: [] },
@@ -96,9 +96,15 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 			dispatch(fetchCompanies({ limit: 1000 }));
 			setTabValue(0);
 			if (jobRole) {
+				const legacyState = (jobRole.location as any)?.state;
 				setFormData({ 
 					...jobRole, 
 					close_date: jobRole.close_date?.split('T')[0],
+					location: {
+						...jobRole.location,
+						states: jobRole.location?.states || (legacyState ? [legacyState] : []),
+						cities: jobRole.location?.cities || []
+					},
 					requirements: {
 						...jobRole.requirements,
 						disability_preferred: jobRole.requirements?.disability_preferred || []
@@ -109,7 +115,7 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 					title: '', 
 					status: JOB_ROLE_STATUS.ACTIVE, 
 					is_visible: true, 
-					location: { cities: [], state: '', country: 'India' }, 
+					location: { cities: [], states: [], country: 'India' }, 
 					requirements: { skills: [], qualifications: [], disability_preferred: [] }, 
 					job_details: { designation: '', workplace_type: 'Onsite', job_type: 'Full Time' } 
 				});
@@ -131,7 +137,7 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 	const validation = useMemo(() => {
 		const basicInfoValid = !!(formData.title && formData.job_details?.designation && formData.company_id && formData.contact_id);
 		const descriptionValid = (formData.description || '').trim().length >= 10;
-		const locationValid = !!(formData.location?.state && formData.location?.country);
+		const locationValid = !!(formData.location?.states?.length && formData.location?.country);
 		const requirementsValid = !!(formData.requirements?.qualifications?.length && formData.requirements?.disability_preferred?.length);
 		
 		return {
