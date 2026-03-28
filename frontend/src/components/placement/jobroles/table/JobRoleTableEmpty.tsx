@@ -5,7 +5,7 @@ import { SearchOff as NoSearchIcon } from '@mui/icons-material';
 const JobRoleTableEmpty: React.FC = () => {
 	return (
 		<TableRow>
-			<TableCell colSpan={8} align="center" sx={{ py: 12 }}>
+			<TableCell colSpan={9} align="center" sx={{ py: 12, borderBottom: 'none' }}>
 				<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: 0.6 }}>
 					<NoSearchIcon sx={{ fontSize: 64, color: '#545b64', mb: 2 }} />
 					<Typography variant="h6" sx={{ fontWeight: 600, color: '#16191f' }}>
