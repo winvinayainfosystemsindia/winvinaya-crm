@@ -63,6 +63,12 @@ const placementMappingService = {
     getCandidateMappings: async (candidateId: number): Promise<PlacementMapping[]> => {
         const response = await api.get(`/placement/mappings/candidate/${candidateId}`);
         return response.data;
+    },
+
+    unmapCandidate: async (candidateId: number, jobRoleId: number): Promise<void> => {
+        await api.delete('/placement/mappings/unmap', {
+            params: { candidate_id: candidateId, job_role_id: jobRoleId }
+        });
     }
 };
 

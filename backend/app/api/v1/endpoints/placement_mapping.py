@@ -13,7 +13,7 @@ from app.schemas.placement_mapping import (
     PlacementMappingInDBBase
 )
 from app.services.placement_mapping_service import PlacementMappingService
-from app.utils.activity_tracker import log_create
+from app.utils.activity_tracker import log_create, log_delete
 
 
 router = APIRouter(prefix="/placement/mappings", tags=["Placement Mapping"])
@@ -89,3 +89,38 @@ async def get_candidate_mappings(
     """
     service = PlacementMappingService(db)
     return await service.repository.get_by_candidate(candidate_id)
+
+
+@router.delete("/unmap", status_code=status.HTTP_204_NO_CONTENT)
+@rate_limit_medium()
+async def unmap_candidate(
+    request: Request,
+    candidate_id: int,
+    job_role_id: int,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Remove a mapping between a candidate and a job role.
+    Only accessible by Admin or Manager.
+    """
+    service = PlacementMappingService(db)
+    
+    # Check if mapping exists first for logging
+    mapping = await service.repository.get_by_candidate_and_job_role(candidate_id, job_role_id)
+    if not mapping:
+        raise HTTPException(status_code=404, detail="Mapping not found")
+        
+    mapping_id = mapping.id
+    await service.unmap_candidate(candidate_id, job_role_id)
+    
+    # Log the activity
+    await log_delete(
+        db=db,
+        request=request,
+        user_id=current_user.id,
+        resource_type="placement_mapping",
+        resource_id=mapping_id
+    )
+    
+    return None

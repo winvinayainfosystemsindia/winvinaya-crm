@@ -18,9 +18,10 @@ interface Props {
 	matches: CandidateMatchResult[];
 	loading: boolean;
 	onMapClick: (candidate: CandidateMatchResult) => void;
+	onUnmapClick: (candidate: CandidateMatchResult) => void;
 }
 
-const CandidateMatchResults = ({ matches, loading, onMapClick }: Props) => {
+const CandidateMatchResults = ({ matches, loading, onMapClick, onUnmapClick }: Props) => {
 	const [tabIndex, setTabIndex] = useState(0);
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -123,6 +124,7 @@ const CandidateMatchResults = ({ matches, loading, onMapClick }: Props) => {
 						<CandidateMatchTable
 							candidates={paginatedCandidates}
 							onMapClick={onMapClick}
+							onUnmapClick={onUnmapClick}
 							emptyMsg={
 								tabIndex === 0 ? "No candidates found with >40% affinity for this specification." :
 									tabIndex === 1 ? "No candidates have been mapped to this resource." :

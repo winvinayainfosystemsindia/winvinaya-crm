@@ -46,7 +46,9 @@ const CandidateMapping = () => {
 
 	// Mapping Dialog State
 	const [mapDialogOpen, setMapDialogOpen] = useState(false);
+	const [unmapDialogOpen, setUnmapDialogOpen] = useState(false);
 	const [candidateToMap, setCandidateToMap] = useState<CandidateMatchResult | null>(null);
+	const [candidateToUnmap, setCandidateToUnmap] = useState<CandidateMatchResult | null>(null);
 	const [submitting, setSubmitting] = useState(false);
 
 	useEffect(() => {
@@ -90,6 +92,22 @@ const CandidateMapping = () => {
 			fetchMatches(selectedRole.public_id);
 		} catch (error: any) {
 			const detail = error?.response?.data?.detail || 'Failed to map candidate';
+			enqueueSnackbar(detail, { variant: 'error' });
+		} finally {
+			setSubmitting(false);
+		}
+	};
+
+	const handleUnmapCandidate = async () => {
+		if (!candidateToUnmap || !selectedRole) return;
+		setSubmitting(true);
+		try {
+			await placementMappingService.unmapCandidate(candidateToUnmap.candidate_id, selectedRole.id!);
+			enqueueSnackbar(`${candidateToUnmap.name} mapping removed`, { variant: 'success' });
+			setUnmapDialogOpen(false);
+			fetchMatches(selectedRole.public_id);
+		} catch (error: any) {
+			const detail = error?.response?.data?.detail || 'Failed to remove mapping';
 			enqueueSnackbar(detail, { variant: 'error' });
 		} finally {
 			setSubmitting(false);
@@ -215,6 +233,10 @@ const CandidateMapping = () => {
 									setCandidateToMap(candidate);
 									setMapDialogOpen(true);
 								}}
+								onUnmapClick={(candidate) => {
+									setCandidateToUnmap(candidate);
+									setUnmapDialogOpen(true);
+								}}
 							/>
 						</Grid>
 					</Grid>
@@ -230,6 +252,17 @@ const CandidateMapping = () => {
 				onConfirm={handleMapCandidate}
 				loading={submitting}
 				severity="info"
+			/>
+
+			<ConfirmDialog
+				open={unmapDialogOpen}
+				title="Remove Candidate Mapping"
+				message={`Are you sure you want to remove ${candidateToUnmap?.name} from this resource? This will permanently delete the mapping record.`}
+				confirmText="Remove Mapping"
+				onClose={() => setUnmapDialogOpen(false)}
+				onConfirm={handleUnmapCandidate}
+				loading={submitting}
+				severity="warning"
 			/>
 		</Box>
 	);

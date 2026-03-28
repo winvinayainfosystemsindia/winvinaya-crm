@@ -11,6 +11,9 @@ import {
 	Button
 } from '@mui/material';
 import { type CandidateMatchResult } from '../../../../../services/placementMappingService';
+import { Delete as DeleteIcon } from '@mui/icons-material';
+import { IconButton } from '@mui/material';
+import { useAppSelector } from '../../../../../store/hooks';
 
 interface Props {
 	candidate: CandidateMatchResult;
@@ -19,14 +22,18 @@ interface Props {
 		score: string;
 		disability: string;
 		qualification: string;
+		mappings: string;
 		skills: string;
 		actions: string;
 	};
 	onMap: (candidate: CandidateMatchResult) => void;
+	onUnmap: (candidate: CandidateMatchResult) => void;
 }
 
-const CandidateMatchTableRow = ({ candidate, widths, onMap }: Props) => {
+const CandidateMatchTableRow = ({ candidate, widths, onMap, onUnmap }: Props) => {
 	const navigate = useNavigate();
+	const { user } = useAppSelector((state) => state.auth);
+	const canUnmap = user?.role === 'admin' || user?.role === 'manager';
 
 	const getScoreColor = (score: number) => {
 		if (score >= 80) return '#1d8102'; // AWS Success Green
@@ -104,6 +111,31 @@ const CandidateMatchTableRow = ({ candidate, widths, onMap }: Props) => {
 					{candidate.qualification}
 				</Typography>
 			</TableCell>
+			<TableCell sx={{ width: widths.mappings }}>
+				{candidate.other_mappings_count > 0 ? (
+					<Box
+						sx={{
+							display: 'inline-flex',
+							alignItems: 'center',
+							px: 1.5,
+							py: 0.5,
+							borderRadius: '12px',
+							bgcolor: '#eaf3ff', // Subtle blue background
+							color: '#0066cc', // Professional blue text
+							border: '1px solid #cce3ff',
+							fontSize: '0.75rem',
+							fontWeight: 700,
+							letterSpacing: '0.01em'
+						}}
+					>
+						{candidate.other_mappings_count} {candidate.other_mappings_count === 1 ? 'Mapping' : 'Mappings'}
+					</Box>
+				) : (
+					<Typography variant="body2" sx={{ color: 'text.disabled', px: 2 }}>
+						—
+					</Typography>
+				)}
+			</TableCell>
 			<TableCell sx={{ width: widths.skills }}>
 				<Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
 					{candidate.skills.slice(0, 2).map((skill: string, i: number) => (
@@ -133,7 +165,7 @@ const CandidateMatchTableRow = ({ candidate, widths, onMap }: Props) => {
 					)}
 				</Stack>
 			</TableCell>
-			<TableCell align="right" sx={{ width: widths.actions }}>
+			<TableCell align="right" sx={{ width: widths.actions, pr: 2 }}>
 				{!candidate.is_already_mapped ? (
 					<Button
 						variant="outlined"
@@ -145,6 +177,7 @@ const CandidateMatchTableRow = ({ candidate, widths, onMap }: Props) => {
 							borderColor: 'divider',
 							color: 'text.primary',
 							px: 2,
+							height: 28,
 							'&:hover': {
 								bgcolor: 'primary.main',
 								color: 'white',
@@ -155,11 +188,37 @@ const CandidateMatchTableRow = ({ candidate, widths, onMap }: Props) => {
 						Map
 					</Button>
 				) : (
-					<Chip
-						label="Already Mapped"
-						size="small"
-						sx={{ height: 24, fontSize: '0.7rem', fontWeight: 700, bgcolor: 'success.light', color: 'success.contrastText' }}
-					/>
+					<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="flex-end">
+						<Chip
+							label="Mapped"
+							size="small"
+							sx={{ 
+								height: 24, 
+								fontSize: '0.7rem', 
+								fontWeight: 700, 
+								bgcolor: '#e7f4e4', 
+								color: '#1d8102',
+								borderRadius: '4px'
+							}}
+						/>
+						{canUnmap && (
+							<Tooltip title="Remove Mapping">
+								<IconButton 
+									size="small" 
+									onClick={() => onUnmap(candidate)}
+									sx={{ 
+										color: 'rgba(0,0,0,0.3)',
+										'&:hover': { 
+											color: 'error.main', 
+											bgcolor: 'rgba(217, 48, 37, 0.08)' 
+										} 
+									}}
+								>
+									<DeleteIcon sx={{ fontSize: 18 }} />
+								</IconButton>
+							</Tooltip>
+						)}
+					</Stack>
 				)}
 			</TableCell>
 		</TableRow>

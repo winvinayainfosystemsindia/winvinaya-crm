@@ -113,17 +113,20 @@ class BaseRepository(Generic[ModelType]):
         return list(result.scalars().all())
     
     async def delete(self, id: int, soft: bool = True) -> bool:
-        """Delete a record (soft delete by default)"""
-        if soft:
-            # Soft delete
-            db_obj = await self.get(id)
-            if db_obj:
-                db_obj.soft_delete()
-                await self.db.flush()
-                return True
+        """Delete a record (soft delete by default if model supports it)"""
+        # Check if record exists
+        db_obj = await self.get(id, include_deleted=True)
+        if not db_obj:
             return False
+
+        if soft and hasattr(self.model, "is_deleted"):
+            # Soft delete
+            db_obj.soft_delete()
+            await self.db.flush()
+            return True
         else:
             # Hard delete
+            query = delete(self.model).where(self.model.id == id)
             result = await self.db.execute(query)
             await self.db.flush()
             return result.rowcount > 0

@@ -14,18 +14,20 @@ import CandidateMatchTableEmpty from './modular/CandidateMatchTableEmpty';
 interface Props {
 	candidates: CandidateMatchResult[];
 	onMapClick: (candidate: CandidateMatchResult) => void;
+	onUnmapClick: (candidate: CandidateMatchResult) => void;
 	emptyMsg: string;
 }
 
-const CandidateMatchTable = ({ candidates, onMapClick, emptyMsg }: Props) => {
+const CandidateMatchTable = ({ candidates, onMapClick, onUnmapClick, emptyMsg }: Props) => {
 	// Standardized fixed widths for perfect alignment between head and body
 	const COL_WIDTHS = {
-		candidate: '280px',
+		candidate: '220px',
 		score: '110px',
-		disability: '180px',
-		qualification: '130px',
+		disability: '150px',
+		qualification: '120px',
+		mappings: '120px',
 		skills: 'auto', // Grows to fill
-		actions: '110px'
+		actions: '160px'
 	};
 
 	return (
@@ -66,6 +68,7 @@ const CandidateMatchTable = ({ candidates, onMapClick, emptyMsg }: Props) => {
 									candidate={candidate}
 									widths={COL_WIDTHS}
 									onMap={onMapClick}
+									onUnmap={onUnmapClick}
 								/>
 							))
 						) : (

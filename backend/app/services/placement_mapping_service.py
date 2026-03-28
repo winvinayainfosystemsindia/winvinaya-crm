@@ -50,7 +50,8 @@ class PlacementMappingService:
         mapping = await self.repository.get_by_candidate_and_job_role(candidate_id, job_role_id)
         if not mapping:
             raise HTTPException(status_code=404, detail="Mapping not found")
-        return await self.repository.delete(mapping.id)
+        # Use hard delete since PlacementMapping doesn't support soft delete
+        return await self.repository.delete(mapping.id, soft=False)
 
     async def get_matches_for_job_role(self, job_role_public_id: UUID) -> List[CandidateMatchResult]:
         job_role = await self.job_role_repo.get_by_public_id(job_role_public_id)
@@ -143,9 +144,12 @@ class PlacementMappingService:
 
             total_score = skill_score + qual_score + dis_score
             
-            # Count and fetch other mappings for this candidate
+            # Count and fetch other mappings for this candidate (Only Active roles)
             other_mappings = await self.repository.get_by_candidate(candidate.id)
-            other_role_names = [m.job_role.title for m in other_mappings if m.job_role_id != job_role.id]
+            other_role_names = [
+                m.job_role.title for m in other_mappings 
+                if m.job_role_id != job_role.id and m.job_role.status == "active"
+            ]
             other_count = len(other_role_names)
 
             # Extract top-level qualification and disability
