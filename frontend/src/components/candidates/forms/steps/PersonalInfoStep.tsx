@@ -127,15 +127,10 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     };
 
     const handleGuardianChange = (field: keyof NonNullable<CandidateCreate['guardian_details']>) => (
-        event: { target: { value: string } }
+        event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | { target: { value: string } } | string
     ) => {
-        const value = event.target.value;
-        // Allow only digits for phone field
-        if (field === 'parent_phone') {
-            if (value !== '' && !/^\d+$/.test(value)) {
-                return;
-            }
-        }
+        const value = typeof event === 'string' ? event : event.target.value;
+        
         onChange({
             guardian_details: {
                 ...formData.guardian_details,

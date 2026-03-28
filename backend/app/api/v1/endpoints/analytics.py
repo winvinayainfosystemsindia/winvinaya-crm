@@ -16,6 +16,7 @@ from app.models.training_candidate_allocation import TrainingCandidateAllocation
 from app.models.training_batch import TrainingBatch
 from app.models.training_attendance import TrainingAttendance
 from app.models.training_assignment import TrainingAssignment
+from app.models.training_mock_interview import TrainingMockInterview
 from app.models.training_batch_event import TrainingBatchEvent
 from app.models.training_batch_plan import TrainingBatchPlan
 from app.models.training_batch_extension import TrainingBatchExtension
@@ -51,12 +52,12 @@ async def export_table_for_power_bi(
     Get a specific table dump for Power BI.
     Returns a plain list of records.
     Supported tables: users, candidates, screenings, counselings, documents,
-    activity_logs, allocations, batches, attendance, assignments, assessments,
-    assessment_results, assessment_responses, mock_interviews, batch_events,
-    batch_plans, batch_extensions, fields, tickets, dsr_entries, dsr_projects,
-    dsr_activities, dsr_activity_types, dsr_permission_requests,
-    dsr_leave_applications, dsr_project_requests, leads, deals, companies,
-    contacts, crm_tasks, crm_activity_logs, candidate_assignments
+    activity_logs, allocations, batches, attendance, assignments, 
+    mock_interviews, batch_events, batch_plans, batch_extensions, 
+    fields, tickets, dsr_entries, dsr_projects, dsr_activities, 
+    dsr_activity_types, dsr_permission_requests, dsr_leave_applications, 
+    dsr_project_requests, leads, deals, companies, contacts, 
+    crm_tasks, crm_activity_logs, candidate_assignments
     """
     from fastapi import HTTPException
     
