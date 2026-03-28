@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
 	Dialog,
 	DialogTitle,
@@ -21,6 +21,7 @@ import {
 	Autocomplete
 } from '@mui/material';
 import { Close as CloseIcon, Info as InfoIcon, Email as EmailIcon, LocationOn as LocationIcon } from '@mui/icons-material';
+import { Country, State, City } from 'country-state-city';
 import type { Company, CompanyCreate, CompanyUpdate } from '../../../models/company';
 import { COMPANY_SIZES, COMPANY_STATUSES, COMPANY_INDUSTRIES } from '../../../data/companyData';
 import { awsStyles } from '../../../theme/theme';
@@ -101,6 +102,31 @@ const CompanyFormDialog: React.FC<CompanyFormDialogProps> = ({
 		if (!formData.name) return;
 		onSubmit(formData as CompanyCreate);
 	};
+
+	// Dynamic Location Data Fetching
+	const countries = useMemo(() => Country.getAllCountries(), []);
+
+	const selectedCountryObj = useMemo(() => 
+		countries.find(c => c.name === formData.address?.country),
+		[countries, formData.address?.country]
+	);
+
+	const states = useMemo(() => 
+		selectedCountryObj ? State.getStatesOfCountry(selectedCountryObj.isoCode) : [],
+		[selectedCountryObj]
+	);
+
+	const selectedStateObj = useMemo(() => 
+		states.find(s => s.name === formData.address?.state),
+		[states, formData.address?.state]
+	);
+
+	const cities = useMemo(() => 
+		(selectedCountryObj && selectedStateObj) 
+			? City.getCitiesOfState(selectedCountryObj.isoCode, selectedStateObj.isoCode) 
+			: [],
+		[selectedCountryObj, selectedStateObj]
+	);
 
 	const sectionTitleStyle = awsStyles.sectionTitle;
 	const awsPanelStyle = awsStyles.awsPanel;
@@ -277,33 +303,71 @@ const CompanyFormDialog: React.FC<CompanyFormDialogProps> = ({
 										/>
 									</Grid>
 									<Grid size={{ xs: 12, md: 6 }}>
-										<TextField
-											fullWidth
-											label="City"
-											value={formData.address?.city}
-											onChange={(e) => handleChange('address.city', e.target.value)}
-											size="small"
-											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										<Autocomplete
+											options={countries}
+											getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
+											value={selectedCountryObj || null}
+											isOptionEqualToValue={(option, value) => option.name === (typeof value === 'string' ? value : value?.name)}
+											onChange={(_, v) => {
+												const countryName = v && typeof v !== 'string' ? v.name : '';
+												handleChange('address.country', countryName);
+												handleChange('address.state', '');
+												handleChange('address.city', '');
+											}}
+											renderInput={(params) => (
+												<TextField
+													{...params}
+													label="Country"
+													variant="outlined"
+													size="small"
+													sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+												/>
+											)}
 										/>
 									</Grid>
 									<Grid size={{ xs: 12, md: 6 }}>
-										<TextField
-											fullWidth
-											label="State / Province"
-											value={formData.address?.state}
-											onChange={(e) => handleChange('address.state', e.target.value)}
-											size="small"
-											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										<Autocomplete
+											options={states}
+											getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
+											value={selectedStateObj || null}
+											isOptionEqualToValue={(option, value) => option.name === (typeof value === 'string' ? value : value?.name)}
+											disabled={!selectedCountryObj}
+											onChange={(_, v) => {
+												const stateName = v && typeof v !== 'string' ? v.name : '';
+												handleChange('address.state', stateName);
+												handleChange('address.city', '');
+											}}
+											renderInput={(params) => (
+												<TextField
+													{...params}
+													label="State / Province"
+													variant="outlined"
+													size="small"
+													sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+												/>
+											)}
 										/>
 									</Grid>
 									<Grid size={{ xs: 12, md: 6 }}>
-										<TextField
-											fullWidth
-											label="Country"
-											value={formData.address?.country}
-											onChange={(e) => handleChange('address.country', e.target.value)}
-											size="small"
-											sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+										<Autocomplete
+											options={cities}
+											getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
+											value={cities.find(c => c.name === formData.address?.city) || null}
+											isOptionEqualToValue={(option, value) => option.name === (typeof value === 'string' ? value : value?.name)}
+											disabled={!selectedStateObj}
+											onChange={(_, v) => {
+												const cityName = v && typeof v !== 'string' ? v.name : '';
+												handleChange('address.city', cityName);
+											}}
+											renderInput={(params) => (
+												<TextField
+													{...params}
+													label="City"
+													variant="outlined"
+													size="small"
+													sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' } }}
+												/>
+											)}
 										/>
 									</Grid>
 									<Grid size={{ xs: 12, md: 6 }}>
