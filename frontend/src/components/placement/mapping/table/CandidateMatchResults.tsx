@@ -8,8 +8,7 @@ import {
 	Tab, 
 	Stack 
 } from '@mui/material';
-import { type CandidateMatchResult } from '../../../services/placementMappingService';
-import { AWS_COLORS } from './mappingTypes';
+import { type CandidateMatchResult } from '../../../../services/placementMappingService';
 import CandidateMatchTable from './CandidateMatchTable';
 
 interface Props {
@@ -21,17 +20,17 @@ interface Props {
 const CandidateMatchResults = ({ matches, loading, onMapClick }: Props) => {
 	const [tabIndex, setTabIndex] = useState(0);
 
-	const suggestedCandidates = matches.filter(c => !c.is_already_mapped && c.match_score >= 40);
-	const mappedCandidates = matches.filter(c => c.is_already_mapped);
-	const notSuggestedCandidates = matches.filter(c => !c.is_already_mapped && c.match_score < 40);
+	const suggestedCandidates = matches.filter((c: CandidateMatchResult) => !c.is_already_mapped && c.match_score >= 40);
+	const mappedCandidates = matches.filter((c: CandidateMatchResult) => c.is_already_mapped);
+	const notSuggestedCandidates = matches.filter((c: CandidateMatchResult) => !c.is_already_mapped && c.match_score < 40);
 
 	return (
 		<Paper
 			variant="outlined"
 			sx={{
 				borderRadius: '0px',
-				borderColor: AWS_COLORS.border,
-				bgcolor: 'white',
+				borderColor: 'divider',
+				bgcolor: 'background.paper',
 				minHeight: 550,
 				display: 'flex',
 				flexDirection: 'column'
@@ -39,26 +38,26 @@ const CandidateMatchResults = ({ matches, loading, onMapClick }: Props) => {
 		>
 			{loading ? (
 				<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexGrow: 1 }}>
-					<CircularProgress size={40} sx={{ color: AWS_COLORS.primary, mb: 2 }} />
-					<Typography variant="body2" sx={{ color: AWS_COLORS.secondaryText, fontWeight: 500 }}>Analyzing candidate pool and calculating affinity scores...</Typography>
+					<CircularProgress size={40} sx={{ color: 'primary.main', mb: 2 }} />
+					<Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>Analyzing candidate pool and calculating affinity scores...</Typography>
 				</Box>
 			) : (
 				<>
-					<Box sx={{ px: 2, pt: 0.5, borderBottom: `1px solid ${AWS_COLORS.border}`, bgcolor: AWS_COLORS.surface }}>
+					<Box sx={{ px: 2, pt: 0.5, borderBottom: (t) => `1px solid ${t.palette.divider}`, bgcolor: 'action.hover' }}>
 						<Tabs
 							value={tabIndex}
 							onChange={(_, v) => setTabIndex(v)}
 							sx={{
 								minHeight: 48,
-								'& .MuiTabs-indicator': { bgcolor: AWS_COLORS.primary, height: 3 },
+								'& .MuiTabs-indicator': { bgcolor: 'primary.main', height: 3 },
 								'& .MuiTab-root': {
 									textTransform: 'none',
 									fontWeight: 700,
 									fontSize: '0.875rem',
-									color: AWS_COLORS.secondaryText,
+									color: 'text.secondary',
 									minHeight: 48,
 									px: 3,
-									'&.Mui-selected': { color: AWS_COLORS.primary }
+									'&.Mui-selected': { color: 'primary.main' }
 								}
 							}}
 						>
@@ -92,12 +91,12 @@ const CandidateMatchResults = ({ matches, loading, onMapClick }: Props) => {
 						)}
 					</Box>
 
-					<Box sx={{ p: 2, bgcolor: AWS_COLORS.surface, borderTop: `1px solid ${AWS_COLORS.border}` }}>
+					<Box sx={{ p: 2, bgcolor: 'action.hover', borderTop: (t) => `1px solid ${t.palette.divider}` }}>
 						<Stack direction="row" justifyContent="space-between" alignItems="center">
-							<Typography variant="caption" sx={{ color: AWS_COLORS.secondaryText, fontWeight: 500 }}>
+							<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
 								Algorithm output: Based on screening and counseling data aggregation.
 							</Typography>
-							<Typography variant="caption" sx={{ color: AWS_COLORS.label, fontWeight: 700 }}>
+							<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700 }}>
 								Total Resultset: {matches.length}
 							</Typography>
 						</Stack>

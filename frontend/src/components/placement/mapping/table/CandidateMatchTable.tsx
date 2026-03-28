@@ -20,8 +20,7 @@ import {
 	Info as InfoIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { type CandidateMatchResult } from '../../../services/placementMappingService';
-import { AWS_COLORS } from './mappingTypes';
+import { type CandidateMatchResult } from '../../../../services/placementMappingService';
 
 interface Props {
 	candidates: CandidateMatchResult[];
@@ -33,9 +32,9 @@ const CandidateMatchTable = ({ candidates, onMapClick, emptyMsg }: Props) => {
 	const navigate = useNavigate();
 
 	const getScoreColor = (score: number) => {
-		if (score >= 70) return AWS_COLORS.success;
+		if (score >= 70) return 'success.main';
 		if (score >= 40) return '#ff9900'; // Amber
-		return AWS_COLORS.error;
+		return 'error.main';
 	};
 
 	return (
@@ -43,29 +42,29 @@ const CandidateMatchTable = ({ candidates, onMapClick, emptyMsg }: Props) => {
 			<Table sx={{ minWidth: 650 }} size="medium" stickyHeader>
 				<TableHead>
 					<TableRow>
-						<TableCell sx={{ fontWeight: 700, color: AWS_COLORS.label, fontSize: '0.75rem', textTransform: 'uppercase', py: 1.5, borderBottom: `2px solid ${AWS_COLORS.border}` }}>Candidate</TableCell>
-						<TableCell sx={{ fontWeight: 700, color: AWS_COLORS.label, fontSize: '0.75rem', textTransform: 'uppercase', py: 1.5, borderBottom: `2px solid ${AWS_COLORS.border}` }}>Match Score</TableCell>
-						<TableCell sx={{ fontWeight: 700, color: AWS_COLORS.label, fontSize: '0.75rem', textTransform: 'uppercase', py: 1.5, borderBottom: `2px solid ${AWS_COLORS.border}` }}>Disability</TableCell>
-						<TableCell sx={{ fontWeight: 700, color: AWS_COLORS.label, fontSize: '0.75rem', textTransform: 'uppercase', py: 1.5, borderBottom: `2px solid ${AWS_COLORS.border}` }}>Qualification</TableCell>
-						<TableCell sx={{ fontWeight: 700, color: AWS_COLORS.label, fontSize: '0.75rem', textTransform: 'uppercase', py: 1.5, borderBottom: `2px solid ${AWS_COLORS.border}` }}>Relevant Skills</TableCell>
-						<TableCell align="right" sx={{ fontWeight: 700, color: AWS_COLORS.label, fontSize: '0.75rem', textTransform: 'uppercase', py: 1.5, borderBottom: `2px solid ${AWS_COLORS.border}` }}>Actions</TableCell>
+						<TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase', py: 1.5, borderBottom: (t) => `2px solid ${t.palette.divider}`, bgcolor: 'background.paper' }}>Candidate</TableCell>
+						<TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase', py: 1.5, borderBottom: (t) => `2px solid ${t.palette.divider}`, bgcolor: 'background.paper' }}>Match Score</TableCell>
+						<TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase', py: 1.5, borderBottom: (t) => `2px solid ${t.palette.divider}`, bgcolor: 'background.paper' }}>Disability</TableCell>
+						<TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase', py: 1.5, borderBottom: (t) => `2px solid ${t.palette.divider}`, bgcolor: 'background.paper' }}>Qualification</TableCell>
+						<TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase', py: 1.5, borderBottom: (t) => `2px solid ${t.palette.divider}`, bgcolor: 'background.paper' }}>Relevant Skills</TableCell>
+						<TableCell align="right" sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase', py: 1.5, borderBottom: (t) => `2px solid ${t.palette.divider}`, bgcolor: 'background.paper' }}>Actions</TableCell>
 					</TableRow>
 				</TableHead>
 				<TableBody>
-					{candidates.map((candidate) => (
+					{candidates.map((candidate: CandidateMatchResult) => (
 						<TableRow
 							key={candidate.public_id}
-							sx={{ '&:hover': { bgcolor: '#fbfbfb' }, transition: 'background-color 0.1s', borderBottom: `1px solid ${AWS_COLORS.border}` }}
+							sx={{ '&:hover': { bgcolor: 'action.hover' }, transition: 'background-color 0.1s', borderBottom: (t) => `1px solid ${t.palette.divider}` }}
 						>
 							<TableCell sx={{ py: 2 }}>
 								<Stack direction="row" spacing={2} alignItems="center">
-									<Avatar sx={{ bgcolor: AWS_COLORS.background, color: AWS_COLORS.secondaryText, width: 36, height: 36, fontSize: '0.875rem', fontWeight: 700 }}>
+									<Avatar sx={{ bgcolor: 'background.default', color: 'text.secondary', width: 36, height: 36, fontSize: '0.875rem', fontWeight: 700 }}>
 										{candidate.name[0]}
 									</Avatar>
 									<Box>
 										<Typography
 											variant="body2"
-											sx={{ fontWeight: 700, color: AWS_COLORS.link, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+											sx={{ fontWeight: 700, color: 'primary.main', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
 											onClick={() => navigate(`/candidates/${candidate.public_id}`)}
 										>
 											{candidate.name}
@@ -73,7 +72,7 @@ const CandidateMatchTable = ({ candidates, onMapClick, emptyMsg }: Props) => {
 										{candidate.other_mappings_count > 0 && (
 											<Tooltip title={`Current Utilization: ${candidate.other_mappings.join(', ')}`}>
 												<Box sx={{ display: 'inline-flex', alignItems: 'center', mt: 0.5, bgcolor: '#fff4e5', px: 1, py: 0.2, borderRadius: '4px', border: '1px solid #ffb74d' }}>
-													<WarningIcon sx={{ fontSize: 12, color: AWS_COLORS.warning, mr: 0.5 }} />
+													<WarningIcon sx={{ fontSize: 12, color: '#ff9900', mr: 0.5 }} />
 													<Typography variant="caption" sx={{ color: '#663c00', fontSize: '0.65rem', fontWeight: 700 }}>
 														{candidate.other_mappings_count} External Project(s)
 													</Typography>
@@ -96,7 +95,7 @@ const CandidateMatchTable = ({ candidates, onMapClick, emptyMsg }: Props) => {
 												sx={{
 													height: 6,
 													borderRadius: 3,
-													bgcolor: AWS_COLORS.background,
+													bgcolor: 'background.default',
 													'& .MuiLinearProgress-bar': { bgcolor: getScoreColor(candidate.match_score), borderRadius: 3 }
 												}}
 											/>
@@ -105,14 +104,14 @@ const CandidateMatchTable = ({ candidates, onMapClick, emptyMsg }: Props) => {
 								</Box>
 							</TableCell>
 							<TableCell>
-								<Typography variant="body2" sx={{ color: AWS_COLORS.headerText, fontSize: '0.875rem' }}>{candidate.disability || 'N/A'}</Typography>
+								<Typography variant="body2" sx={{ color: 'text.primary', fontSize: '0.875rem' }}>{candidate.disability || 'N/A'}</Typography>
 							</TableCell>
 							<TableCell>
-								<Typography variant="body2" sx={{ color: AWS_COLORS.headerText, fontSize: '0.875rem' }}>{candidate.qualification || 'N/A'}</Typography>
+								<Typography variant="body2" sx={{ color: 'text.primary', fontSize: '0.875rem' }}>{candidate.qualification || 'N/A'}</Typography>
 							</TableCell>
 							<TableCell>
 								<Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
-									{candidate.skills.slice(0, 3).map((skill, i) => (
+									{candidate.skills.slice(0, 3).map((skill: string, i: number) => (
 										<Chip
 											key={i}
 											label={skill}
@@ -121,15 +120,15 @@ const CandidateMatchTable = ({ candidates, onMapClick, emptyMsg }: Props) => {
 												height: 22,
 												fontSize: '0.7rem',
 												borderRadius: '4px',
-												bgcolor: '#f2f3f3',
-												border: '1px solid #d5dbdb',
-												color: AWS_COLORS.secondaryText,
+												bgcolor: 'background.default',
+												border: (t) => `1px solid ${t.palette.divider}`,
+												color: 'text.secondary',
 												fontWeight: 500
 											}}
 										/>
 									))}
 									{candidate.skills.length > 3 && (
-										<Typography variant="caption" sx={{ color: AWS_COLORS.link, fontWeight: 700, ml: 0.5 }}>
+										<Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 700, ml: 0.5 }}>
 											+{candidate.skills.length - 3} more
 										</Typography>
 									)}
@@ -145,9 +144,9 @@ const CandidateMatchTable = ({ candidates, onMapClick, emptyMsg }: Props) => {
 											textTransform: 'none',
 											fontWeight: 700,
 											fontSize: '0.75rem',
-											borderColor: AWS_COLORS.secondaryText,
-											color: AWS_COLORS.secondaryText,
-											'&:hover': { borderColor: AWS_COLORS.headerText, bgcolor: 'transparent' },
+											borderColor: 'text.secondary',
+											color: 'text.secondary',
+											'&:hover': { borderColor: 'text.primary', bgcolor: 'transparent' },
 											px: 2
 										}}
 									>
@@ -158,7 +157,7 @@ const CandidateMatchTable = ({ candidates, onMapClick, emptyMsg }: Props) => {
 										label="Currently Mapped"
 										size="small"
 										icon={<CheckCircleIcon sx={{ fontSize: '14px !important' }} />}
-										sx={{ fontWeight: 700, height: 26, bgcolor: '#ebf5e9', color: AWS_COLORS.success, border: '1px solid #c8e6c9' }}
+										sx={{ fontWeight: 700, height: 26, bgcolor: '#ebf5e9', color: 'success.main', border: '1px solid #c8e6c9' }}
 									/>
 								)}
 							</TableCell>
@@ -167,8 +166,8 @@ const CandidateMatchTable = ({ candidates, onMapClick, emptyMsg }: Props) => {
 					{candidates.length === 0 && (
 						<TableRow>
 							<TableCell colSpan={6} align="center" sx={{ py: 12 }}>
-								<InfoIcon sx={{ color: AWS_COLORS.border, fontSize: 48, mb: 1.5 }} />
-								<Typography variant="body1" sx={{ color: AWS_COLORS.secondaryText, fontWeight: 500 }}>{emptyMsg}</Typography>
+								<InfoIcon sx={{ color: 'divider', fontSize: 48, mb: 1.5 }} />
+								<Typography variant="body1" sx={{ color: 'text.secondary', fontWeight: 500 }}>{emptyMsg}</Typography>
 							</TableCell>
 						</TableRow>
 					)}
