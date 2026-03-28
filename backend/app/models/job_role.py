@@ -115,7 +115,7 @@ class JobRole(BaseModel):
     requirements: Mapped[dict | None] = mapped_column(
         JSON,
         nullable=True,
-        comment='{"skills": [], "qualifications": []}'
+        comment='{"skills": [], "qualifications": [], "disability_preferred": []}'
     )
     
     job_details: Mapped[dict | None] = mapped_column(

@@ -5,24 +5,30 @@ import {
 	Autocomplete,
 	Chip,
 } from '@mui/material';
+import { disabilityTypes } from '../../../../../data/Disabilities';
 
 interface RequirementsCompensationTabProps {
 	formData: any;
 	handleNestedChange: (parent: string, field: string, value: any) => void;
-	qualifications: string[];
 }
+
+const COMMON_SKILLS = [
+	'Java', 'Python', 'JavaScript', 'React', 'Angular', 'Node.js', 'SQL', 'NoSQL',
+	'C++', 'C#', '.NET', 'HTML/CSS', 'AWS', 'Azure', 'Data Analytics',
+	'Soft Skills', 'Communication', 'Customer Support', 'BPO', 'Accounting', 
+	'Tally', 'Excel', 'Data Entry', 'Project Management', 'Agile'
+];
 
 const RequirementsCompensationTab: React.FC<RequirementsCompensationTabProps> = ({
 	formData,
-	handleNestedChange,
-	qualifications
+	handleNestedChange
 }) => {
 	return (
 		<Grid container spacing={3}>
 			<Grid size={{ xs: 12 }}>
 				<Autocomplete
 					multiple
-					options={qualifications}
+					options={QUALIFICATIONS_LIST}
 					value={formData.requirements?.qualifications || []}
 					onChange={(_, newValue) => handleNestedChange('requirements', 'qualifications', newValue)}
 					renderTags={(value, getTagProps) =>
@@ -30,14 +36,14 @@ const RequirementsCompensationTab: React.FC<RequirementsCompensationTabProps> = 
 							<Chip variant="outlined" label={option} {...getTagProps({ index })} size="small" key={index} />
 						))
 					}
-					renderInput={(params) => <TextField {...params} label="Minimum Qualifications" size="small" />}
+					renderInput={(params) => <TextField {...params} label="Minimum Qualifications" size="small" required />}
 				/>
 			</Grid>
 			<Grid size={{ xs: 12 }}>
 				<Autocomplete
 					multiple
 					freeSolo
-					options={[]}
+					options={COMMON_SKILLS}
 					value={formData.requirements?.skills || []}
 					onChange={(_, newValue) => handleNestedChange('requirements', 'skills', newValue)}
 					renderTags={(value, getTagProps) =>
@@ -45,7 +51,21 @@ const RequirementsCompensationTab: React.FC<RequirementsCompensationTabProps> = 
 							<Chip variant="outlined" label={option} {...getTagProps({ index })} size="small" key={index} />
 						))
 					}
-					renderInput={(params) => <TextField {...params} label="Required Skills" size="small" placeholder="Type and press Enter" />}
+					renderInput={(params) => <TextField {...params} label="Required Skills (Select or Type and press Enter)" size="small" placeholder="Select multiple skills" />}
+				/>
+			</Grid>
+			<Grid size={{ xs: 12 }}>
+				<Autocomplete
+					multiple
+					options={disabilityTypes}
+					value={formData.requirements?.disability_preferred || []}
+					onChange={(_, newValue) => handleNestedChange('requirements', 'disability_preferred', newValue)}
+					renderTags={(value, getTagProps) =>
+						value.map((option, index) => (
+							<Chip variant="outlined" label={option} {...getTagProps({ index })} size="small" key={index} />
+						))
+					}
+					renderInput={(params) => <TextField {...params} label="Disability Preferred" size="small" required />}
 				/>
 			</Grid>
 			<Grid size={{ xs: 6, md: 3 }}>
@@ -91,5 +111,7 @@ const RequirementsCompensationTab: React.FC<RequirementsCompensationTabProps> = 
 		</Grid>
 	);
 };
+
+const QUALIFICATIONS_LIST = ['Any Graduation', 'B.E/B.Tech', 'B.Sc', 'B.A', 'B.Com', 'M.Tech', 'MCA', 'MBA', 'M.Sc', 'Diploma'];
 
 export default RequirementsCompensationTab;

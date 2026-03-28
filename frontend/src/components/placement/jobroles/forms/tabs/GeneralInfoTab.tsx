@@ -16,6 +16,7 @@ import { JOB_ROLE_STATUS } from '../../../../../models/jobRole';
 interface GeneralInfoTabProps {
 	formData: any;
 	handleChange: (field: string, value: any) => void;
+	handleNestedChange: (parent: string, field: string, value: any) => void;
 	companies: any[];
 	contacts: any[];
 }
@@ -23,18 +24,32 @@ interface GeneralInfoTabProps {
 const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({
 	formData,
 	handleChange,
+	handleNestedChange,
 	companies,
 	contacts
 }) => {
 	return (
 		<Grid container spacing={3}>
-			<Grid size={{ xs: 12 }}>
+			<Grid size={{ xs: 12, md: 6 }}>
 				<TextField
 					required
 					fullWidth
 					label="Job Title"
 					value={formData.title || ''}
 					onChange={(e) => handleChange('title', e.target.value)}
+					inputProps={{ maxLength: 100 }}
+					helperText={`${(formData.title || '').length}/100`}
+					size="small"
+				/>
+			</Grid>
+			<Grid size={{ xs: 12, md: 6 }}>
+				<TextField
+					fullWidth
+					label="Designation"
+					value={formData.job_details?.designation || ''}
+					onChange={(e) => handleNestedChange('job_details', 'designation', e.target.value)}
+					inputProps={{ maxLength: 100 }}
+					helperText={`${(formData.job_details?.designation || '').length}/100`}
 					size="small"
 				/>
 			</Grid>
@@ -46,6 +61,8 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({
 					label="Job Description"
 					value={formData.description || ''}
 					onChange={(e) => handleChange('description', e.target.value)}
+					inputProps={{ maxLength: 2000 }}
+					helperText={`${(formData.description || '').length}/2000`}
 					size="small"
 				/>
 			</Grid>
@@ -106,7 +123,7 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({
 					InputLabelProps={{ shrink: true }}
 				/>
 			</Grid>
-			<Grid size={{ xs: 12 }}>
+			<Grid size={{ xs: 12, md: 6 }}>
 				<FormControlLabel
 					control={
 						<Switch

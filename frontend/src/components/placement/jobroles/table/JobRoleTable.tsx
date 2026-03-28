@@ -1,141 +1,151 @@
 import React from 'react';
-import { Box, Stack, Typography, Tooltip } from '@mui/material';
 import {
-	Visibility as VisibilityIcon,
-	VisibilityOff as VisibilityOffIcon,
-} from '@mui/icons-material';
-import type { JobRole } from '../../../../models/jobRole';
+	Paper,
+	Table,
+	TableBody,
+	TableContainer,
+	Snackbar,
+	Alert
+} from '@mui/material';
+import ConfirmDialog from '../../../common/ConfirmDialog';
+import { useJobRoleTable } from '../hooks/useJobRoleTable';
+import { getJobRoleFilterFields } from './JobRoleFilters';
 
-// Local Components
-import PlacementTable, { type PlacementColumn } from './PlacementTable';
-import PlacementStatusBadge from '../common/PlacementStatusBadge';
-import PlacementRowActions from '../common/PlacementRowActions';
-import PlacementAvatar from '../common/PlacementAvatar';
+// Sub-components
+import JobRoleTableHeader from './JobRoleTableHeader';
+import JobRoleTableHead from './JobRoleTableHead';
+import JobRoleTableRow from './JobRoleTableRow';
+import CustomTablePagination from '../../../common/CustomTablePagination';
+import JobRoleTableLoader from './JobRoleTableLoader';
+import JobRoleTableEmpty from './JobRoleTableEmpty';
 
 interface JobRoleTableProps {
-	loading: boolean;
-	list: JobRole[];
-	total: number;
-	page: number;
-	rowsPerPage: number;
-	onPageChange: (event: unknown, newPage: number) => void;
-	onRowsPerPageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-	onRowsPerPageSelectChange: (rows: number) => void;
-	onEdit: (jobRole: JobRole) => void;
-	onDelete?: (jobRole: JobRole) => void;
-	isAdmin: boolean;
+	onEditJobRole: (jobRole: any) => void;
 }
 
-const JobRoleTable: React.FC<JobRoleTableProps> = ({
-	loading,
-	list,
-	total,
-	page,
-	rowsPerPage,
-	onPageChange,
-	onRowsPerPageChange,
-	onRowsPerPageSelectChange,
-	onEdit,
-	onDelete,
-	isAdmin
-}) => {
-	const columns: PlacementColumn<JobRole>[] = [
-		{
-			id: 'title',
-			label: 'Job Title',
-			minWidth: 200,
-			format: (value: string, row: JobRole) => (
-				<Stack direction="row" spacing={1.5} alignItems="center">
-					<PlacementAvatar name={value} size={32} />
-					<Box>
-						<Typography sx={{ fontWeight: 700, color: '#007eb9', fontSize: '0.875rem' }}>{value}</Typography>
-						<Typography variant="caption" sx={{ color: '#545b64' }}>
-							{row.job_details?.designation || 'No Designation'}
-						</Typography>
-					</Box>
-				</Stack>
-			)
-		},
-		{
-			id: 'company',
-			label: 'Company & Contact',
-			minWidth: 200,
-			format: (_: any, row: JobRole) => (
-				<Box>
-					<Typography sx={{ fontSize: '0.8125rem', fontWeight: 500 }}>{row.company?.name || '-'}</Typography>
-					<Typography variant="caption" sx={{ color: '#545b64' }}>
-						{row.contact ? `${row.contact.first_name} ${row.contact.last_name}` : '-'}
-					</Typography>
-				</Box>
-			)
-		},
-		{
-			id: 'status',
-			label: 'Status',
-			minWidth: 120,
-			format: (value: string) => <PlacementStatusBadge label={value} status={value} />
-		},
-		{
-			id: 'location',
-			label: 'Location',
-			minWidth: 150,
-			format: (value: any) => (
-				<Typography sx={{ fontSize: '0.8125rem' }}>
-					{value?.cities?.join(', ') || value?.state || '-'}
-				</Typography>
-			)
-		},
-		{
-			id: 'no_of_vacancies',
-			label: 'Vacancies',
-			minWidth: 100,
-			align: 'center',
-			format: (value: number) => value || 0
-		},
-		{
-			id: 'close_date',
-			label: 'Close Date',
-			minWidth: 130,
-			format: (value: string) => value ? new Date(value).toLocaleDateString() : '-'
-		},
-		{
-			id: 'visibility',
-			label: 'Sys. Vis.',
-			minWidth: 80,
-			align: 'center',
-			format: (_: any, row: JobRole) => (
-				row.is_visible ?
-					<Tooltip title="Available for Mapping"><VisibilityIcon sx={{ color: '#1d8102', fontSize: 18 }} /></Tooltip> :
-					<Tooltip title="Hidden from Mapping"><VisibilityOffIcon sx={{ color: '#d13212', fontSize: 18 }} /></Tooltip>
-			)
-		},
-		{
-			id: 'actions',
-			label: 'Actions',
-			minWidth: 80,
-			align: 'right',
-			format: (_: any, row: JobRole) => (
-				<PlacementRowActions
-					onEdit={() => onEdit(row)}
-					onDelete={isAdmin && onDelete ? () => onDelete(row) : undefined}
-				/>
-			)
-		}
-	];
+const JobRoleTable: React.FC<JobRoleTableProps> = ({ onEditJobRole }) => {
+	const {
+		jobRoles,
+		loading,
+		totalCount,
+		user,
+		searchTerm,
+		page,
+		rowsPerPage,
+		order,
+		orderBy,
+		filterDrawerOpen,
+		filters,
+		deleteDialogOpen,
+		jobRoleToDelete,
+		deleteLoading,
+		notification,
+		fetchJobRolesData,
+		handleChangePage,
+		handleChangeRowsPerPage,
+		handleSearch,
+		handleRequestSort,
+		handleFilterOpen,
+		handleFilterClose,
+		handleFilterChange,
+		applyFilters,
+		clearFilters,
+		handleDeleteClick,
+		handleDeleteConfirm,
+		handleDeleteCancel,
+		handleCloseNotification,
+		setRowsPerPage
+	} = useJobRoleTable();
+
+	const activeFilterCount = (
+		(filters.status ? 1 : 0) +
+		filters.workplace_type.length +
+		filters.job_type.length
+	);
+
+	const filterFields = getJobRoleFilterFields();
 
 	return (
-		<PlacementTable
-			columns={columns}
-			rows={list}
-			total={total}
-			page={page}
-			rowsPerPage={rowsPerPage}
-			onPageChange={onPageChange}
-			onRowsPerPageChange={onRowsPerPageChange}
-			onRowsPerPageSelectChange={onRowsPerPageSelectChange}
-			loading={loading}
-			emptyMessage="No job roles found. Create a job role to start mapping candidates."
-		/>
+		<Paper sx={{ border: '1px solid #d5dbdb', boxShadow: 'none', borderRadius: 0 }}>
+			<JobRoleTableHeader
+				searchTerm={searchTerm}
+				onSearchChange={handleSearch}
+				onRefresh={fetchJobRolesData}
+				loading={loading}
+				activeFilterCount={activeFilterCount}
+				filterDrawerOpen={filterDrawerOpen}
+				onFilterOpen={handleFilterOpen}
+				onFilterClose={handleFilterClose}
+				filterFields={filterFields}
+				filters={filters}
+				onFilterChange={handleFilterChange}
+				onClearFilters={clearFilters}
+				onApplyFilters={applyFilters}
+			/>
+
+			<TableContainer sx={{ minHeight: 400 }}>
+				<Table stickyHeader size="small">
+					<JobRoleTableHead
+						order={order}
+						orderBy={orderBy}
+						onRequestSort={handleRequestSort}
+					/>
+					<TableBody>
+						{loading ? (
+							<JobRoleTableLoader rowsPerPage={rowsPerPage} />
+						) : jobRoles.length === 0 ? (
+							<JobRoleTableEmpty />
+						) : (
+							jobRoles.map((role) => (
+								<JobRoleTableRow
+									key={role.public_id}
+									jobRole={role}
+									onEdit={onEditJobRole}
+									onDelete={handleDeleteClick}
+									isAdmin={user?.role === 'admin' || user?.role === 'manager'}
+								/>
+							))
+						)}
+					</TableBody>
+				</Table>
+			</TableContainer>
+
+			<CustomTablePagination
+				count={totalCount}
+				page={page}
+				rowsPerPage={rowsPerPage}
+				onPageChange={handleChangePage}
+				onRowsPerPageChange={handleChangeRowsPerPage}
+				onRowsPerPageSelectChange={setRowsPerPage}
+			/>
+
+			<ConfirmDialog
+				open={deleteDialogOpen}
+				title="Delete Job Role"
+				message={`Are you sure you want to PERMANENTLY delete job role "${jobRoleToDelete?.title}"? This action cannot be undone.`}
+				onClose={handleDeleteCancel}
+				onConfirm={handleDeleteConfirm}
+				confirmText="Delete permanently"
+				loading={deleteLoading}
+				severity="error"
+			/>
+
+			<Snackbar
+				open={notification.open}
+				autoHideDuration={6000}
+				onClose={handleCloseNotification}
+				anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+			>
+				<Alert
+					onClose={handleCloseNotification}
+					severity={notification.severity}
+					variant="filled"
+					sx={{ width: '100%', borderRadius: '2px' }}
+				>
+					{notification.message}
+				</Alert>
+			</Snackbar>
+		</Paper>
 	);
 };
 

@@ -19,7 +19,10 @@ class JobRoleBase(BaseModel):
     location: Optional[Dict[str, Any]] = None
     salary_range: Optional[Dict[str, Any]] = None
     experience: Optional[Dict[str, Any]] = None
-    requirements: Optional[Dict[str, Any]] = None
+    requirements: Optional[Dict[str, Any]] = Field(
+        None, 
+        description='{"skills": [], "qualifications": [], "disability_preferred": []}'
+    )
     job_details: Optional[Dict[str, Any]] = None
     other: Optional[Dict[str, Any]] = None
 

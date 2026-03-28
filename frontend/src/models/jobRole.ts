@@ -33,8 +33,9 @@ export interface JobRole {
 		max?: number;
 	};
 	requirements?: {
-		skills: string[];
-		qualifications: string[];
+		skills?: string[];
+		qualifications?: string[];
+		disability_preferred?: string[];
 	};
 	job_details?: {
 		designation?: string;
