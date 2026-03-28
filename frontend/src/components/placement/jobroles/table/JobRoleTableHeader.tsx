@@ -72,8 +72,13 @@ const JobRoleTableHeader: React.FC<JobRoleTableHeaderProps> = ({
 				/>
 			</Box>
 
-			<Box sx={{ display: 'flex', gap: 1, justifyContent: { xs: 'space-between', sm: 'flex-end' } }}>
-				<Stack direction="row" spacing={1}>
+			<Box sx={{ 
+				display: 'flex', 
+				gap: 1.5, 
+				justifyContent: { xs: 'flex-start', sm: 'flex-end' },
+				flexWrap: 'wrap'
+			}}>
+				<Stack direction="row" spacing={1} sx={{ width: { xs: '100%', sm: 'auto' }, justifyContent: { xs: 'space-between', sm: 'flex-end' } }}>
 					<Tooltip title="Refresh Data">
 						<Button
 							variant="outlined"
@@ -85,6 +90,7 @@ const JobRoleTableHeader: React.FC<JobRoleTableHeaderProps> = ({
 								color: 'secondary.main',
 								borderColor: 'divider',
 								fontWeight: 600,
+								flex: { xs: 1, sm: 'none' },
 								'&:hover': {
 									borderColor: 'secondary.main',
 									bgcolor: 'action.hover'

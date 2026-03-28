@@ -83,8 +83,8 @@ const JobRoleTable: React.FC<JobRoleTableProps> = ({ onEditJobRole }) => {
 				onApplyFilters={applyFilters}
 			/>
 
-			<TableContainer sx={{ minHeight: 400 }}>
-				<Table stickyHeader size="small">
+			<TableContainer sx={{ minHeight: 400, overflowX: 'auto' }}>
+				<Table stickyHeader size="small" sx={{ minWidth: 900 }}>
 					<JobRoleTableHead
 						order={order}
 						orderBy={orderBy}

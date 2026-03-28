@@ -10,9 +10,9 @@ const CRMPageHeader: React.FC<CRMPageHeaderProps> = ({ title, actions }) => {
 	return (
 		<Box sx={{ mb: 4 }}>
 			<Stack
-				direction="row"
+				direction={{ xs: 'column', sm: 'row' }}
 				justifyContent="space-between"
-				alignItems="flex-start"
+				alignItems={{ xs: 'flex-start', sm: 'center' }}
 				spacing={2}
 			>
 				<Typography

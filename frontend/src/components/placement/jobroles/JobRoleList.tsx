@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Button, Stack, Container } from '@mui/material';
+import { Box, Button, Container } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import { useSnackbar } from 'notistack';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
@@ -63,9 +63,9 @@ const JobRoleList: React.FC = () => {
 				} 
 			/>
 			
-			<Container maxWidth="xl" sx={{ mt: 3 }}>
+			<Container maxWidth="xl" sx={{ mt: { xs: 2, md: 3 }, px: { xs: 2, sm: 3 } }}>
 				<JobRoleStats list={list} total={total} />
-				<Box sx={{ mt: 3 }}>
+				<Box sx={{ mt: { xs: 2, md: 3 } }}>
 					<JobRoleTable onEditJobRole={handleEdit} />
 				</Box>
 			</Container>

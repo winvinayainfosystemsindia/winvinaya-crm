@@ -13,6 +13,8 @@ import {
 	Divider,
 	Stack,
 	Tooltip,
+	useMediaQuery,
+	useTheme
 } from '@mui/material';
 import { 
 	Close as CloseIcon, 
@@ -73,6 +75,8 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 	const dispatch = useAppDispatch();
 	const { list: companies } = useAppSelector((state: RootState) => state.companies);
 	const { list: contacts } = useAppSelector((state: RootState) => state.contacts);
+	const theme = useTheme();
+	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const [tabValue, setTabValue] = useState(0);
 
 	const [formData, setFormData] = useState<Partial<JobRole>>({
@@ -166,7 +170,8 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 			onClose={onClose} 
 			maxWidth="md" 
 			fullWidth 
-			PaperProps={{ sx: { borderRadius: 0, border: '1px solid #d5dbdb', boxShadow: 'none' } }}
+			fullScreen={isMobile}
+			PaperProps={{ sx: { borderRadius: isMobile ? 0 : 0, border: isMobile ? 'none' : '1px solid #d5dbdb', boxShadow: 'none' } }}
 		>
 			<DialogTitle sx={{ bgcolor: '#232f3e', color: '#ffffff', py: 2 }}>
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -210,9 +215,11 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 				<Tabs 
 					value={tabValue} 
 					onChange={(_, v) => setTabValue(v)} 
-					variant="fullWidth" 
+					variant={isMobile ? "scrollable" : "fullWidth"}
+					scrollButtons={isMobile ? "auto" : false}
+					allowScrollButtonsMobile
 					sx={{ 
-						px: 2,
+						px: isMobile ? 0 : 2,
 						'& .MuiTabs-indicator': { bgcolor: 'primary.main', height: 3 },
 						'& .MuiTab-root': { 
 							fontWeight: 700, 
@@ -231,8 +238,8 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 				</Tabs>
 			</Box>
 
-			<DialogContent sx={{ p: 0, bgcolor: 'background.default', minHeight: 450 }}>
-				<Box sx={{ px: 4, py: 2 }}>
+			<DialogContent sx={{ p: 0, bgcolor: 'background.default', minHeight: isMobile ? 'auto' : 450 }}>
+				<Box sx={{ px: { xs: 2, sm: 4 }, py: 2 }}>
 					<TabPanel value={tabValue} index={0}>
 						<GeneralInfoTab 
 							formData={formData} 

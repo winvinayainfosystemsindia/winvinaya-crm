@@ -76,17 +76,17 @@ const JobRoleTableRow: React.FC<JobRoleTableRowProps> = ({ jobRole, onEdit, onDe
 				<PlacementStatusBadge label={jobRole.status} status={jobRole.status} />
 			</TableCell>
 
-			<TableCell>
+			<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
 				<Typography variant="body2" sx={{ color: 'text.secondary' }}>
 					{jobRole.location?.cities?.join(', ') || jobRole.location?.state || '-'}
 				</Typography>
 			</TableCell>
 
-			<TableCell align="center" sx={{ fontWeight: 500, color: 'text.secondary' }}>
+			<TableCell align="center" sx={{ fontWeight: 500, color: 'text.secondary', display: { xs: 'none', md: 'table-cell' } }}>
 				{jobRole.no_of_vacancies || 0}
 			</TableCell>
 
-			<TableCell>
+			<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
 				<Typography variant="body2" sx={{ color: 'text.secondary' }}>
 					{formatDate(jobRole.close_date)}
 				</Typography>
@@ -98,7 +98,7 @@ const JobRoleTableRow: React.FC<JobRoleTableRowProps> = ({ jobRole, onEdit, onDe
 				</Typography>
 			</TableCell>
 
-			<TableCell align="center">
+			<TableCell align="center" sx={{ display: { xs: 'none', md: 'table-cell' } }}>
 				<Tooltip title={jobRole.is_visible ? "Available for Mapping" : "Hidden from Mapping"}>
 					{jobRole.is_visible ? (
 						<VisibilityIcon sx={{ color: 'success.main', fontSize: 18 }} />
