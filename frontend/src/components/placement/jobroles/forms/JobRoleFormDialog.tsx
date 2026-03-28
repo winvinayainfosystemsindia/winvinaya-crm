@@ -14,14 +14,21 @@ import {
 	Stack,
 	Tooltip,
 } from '@mui/material';
-import { Close as CloseIcon, InfoOutlined as InfoIcon } from '@mui/icons-material';
+import { 
+	Close as CloseIcon, 
+	Business as BusinessIcon,
+	Person as ContactIcon,
+	Event as DateIcon
+} from '@mui/icons-material';
 import { useAppSelector, useAppDispatch } from '../../../../store/hooks';
+import type { RootState } from '../../../../store/store';
 import type { JobRole, JobRoleCreate, JobRoleUpdate } from '../../../../models/jobRole';
 import { JOB_ROLE_STATUS } from '../../../../models/jobRole';
 import { fetchCompanies } from '../../../../store/slices/companySlice';
 import { fetchContacts } from '../../../../store/slices/contactSlice';
 
 import GeneralInfoTab from './tabs/GeneralInfoTab';
+import JobDescriptionTab from './tabs/JobDescriptionTab';
 import LocationWorkplaceTab from './tabs/LocationWorkplaceTab';
 import RequirementsCompensationTab from './tabs/RequirementsCompensationTab';
 
@@ -33,8 +40,28 @@ interface JobRoleFormDialogProps {
 	loading?: boolean;
 }
 
-const WORKPLACE_TYPES = ['Hybrid', 'Onsite', 'Remote'];
-const JOB_TYPES = ['Permanent', 'Contract', 'Full Time', 'Internship'];
+interface TabPanelProps {
+	children?: React.ReactNode;
+	index: number;
+	value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+	const { children, value, index, ...other } = props;
+	return (
+		<div
+			role="tabpanel"
+			hidden={value !== index}
+			id={`jobrole-form-tabpanel-${index}`}
+			aria-labelledby={`jobrole-form-tab-${index}`}
+			{...other}
+		>
+			{value === index && <Box sx={{ pt: 3, pb: 2 }}>{children}</Box>}
+		</div>
+	);
+}
+
+import { WORKPLACE_TYPES, JOB_TYPES } from '../../../../data/jobRoleData';
 
 const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 	open,
@@ -44,8 +71,8 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 	loading = false
 }) => {
 	const dispatch = useAppDispatch();
-	const { list: companies } = useAppSelector((state: any) => state.companies);
-	const { list: contacts } = useAppSelector((state: any) => state.contacts);
+	const { list: companies } = useAppSelector((state: RootState) => state.companies);
+	const { list: contacts } = useAppSelector((state: RootState) => state.contacts);
 	const [tabValue, setTabValue] = useState(0);
 
 	const [formData, setFormData] = useState<Partial<JobRole>>({
@@ -99,23 +126,39 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 	// Comprehensive cross-tab validation
 	const validation = useMemo(() => {
 		const basicInfoValid = !!(formData.title && formData.job_details?.designation && formData.company_id && formData.contact_id);
+		const descriptionValid = (formData.description || '').trim().length >= 10;
 		const locationValid = !!(formData.location?.state && formData.location?.country);
 		const requirementsValid = !!(formData.requirements?.qualifications?.length && formData.requirements?.disability_preferred?.length);
 		
 		return {
 			basicInfo: basicInfoValid,
+			description: descriptionValid,
 			location: locationValid,
 			requirements: requirementsValid,
-			isValid: basicInfoValid && locationValid && requirementsValid
+			isValid: basicInfoValid && descriptionValid && locationValid && requirementsValid
 		};
 	}, [formData]);
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!validation.isValid) return;
-		const { id, public_id, created_at, updated_at, company, contact, creator, ...submitData } = formData as any;
+		
+		const {
+			id: _id,
+			public_id: _pid,
+			created_at: _cat,
+			updated_at: _uat,
+			company: _comp,
+			contact: _cont,
+			creator: _creat,
+			...submitData
+		} = formData as any;
+		
 		onSubmit(submitData as JobRoleCreate);
 	};
+
+	const selectedCompany = companies.find((c) => c.id === formData.company_id)?.name;
+	const selectedContact = contacts.find((c) => c.id === formData.contact_id);
 
 	return (
 		<Dialog 
@@ -123,17 +166,39 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 			onClose={onClose} 
 			maxWidth="md" 
 			fullWidth 
-			PaperProps={{ sx: { borderRadius: 0, border: '1px solid #d5dbdb', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' } }}
+			PaperProps={{ sx: { borderRadius: 0, border: '1px solid #d5dbdb', boxShadow: 'none' } }}
 		>
 			<DialogTitle sx={{ bgcolor: '#232f3e', color: '#ffffff', py: 2 }}>
 				<Stack direction="row" justifyContent="space-between" alignItems="center">
-					<Box>
-						<Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.25rem' }}>
+					<Box sx={{ flex: 1 }}>
+						<Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
 							{jobRole ? 'Edit Job Role' : 'Create New Job Opening'}
 						</Typography>
-						<Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', letterSpacing: '0.02em' }}>
-							{jobRole ? `REQUISITION ID: ${jobRole.public_id}` : 'ENTER REQUISITION DETAILS TO MANAGE CANDIDATE MAPPING'}
-						</Typography>
+						<Stack direction="row" spacing={3} alignItems="center" sx={{ opacity: 0.85 }}>
+							{selectedCompany && (
+								<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+									<BusinessIcon sx={{ fontSize: 16 }} />
+									<Typography variant="caption" sx={{ fontSize: '0.875rem' }}>
+										{selectedCompany}
+									</Typography>
+								</Box>
+							)}
+							{selectedContact && (
+								<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+									<ContactIcon sx={{ fontSize: 16 }} />
+									<Typography variant="caption" sx={{ fontSize: '0.875rem' }}>
+										{selectedContact.first_name} {selectedContact.last_name}
+									</Typography>
+								</Box>
+							)}
+							<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+								<DateIcon sx={{ fontSize: 16 }} />
+								<Typography variant="caption" sx={{ fontSize: '0.875rem' }}>
+									<Typography component="span" variant="caption" sx={{ fontWeight: 600, mr: 0.5 }}>DATE:</Typography>
+									{jobRole ? new Date(jobRole.created_at).toLocaleDateString() : new Date().toLocaleDateString()}
+								</Typography>
+							</Box>
+						</Stack>
 					</Box>
 					<IconButton onClick={onClose} sx={{ color: '#ffffff', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
 						<CloseIcon />
@@ -147,19 +212,28 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 					onChange={(_, v) => setTabValue(v)} 
 					variant="fullWidth" 
 					sx={{ 
-						'& .MuiTabs-indicator': { bgcolor: '#ec7211', height: 3 },
-						'& .MuiTab-root': { fontWeight: 700, textTransform: 'none', py: 2, color: '#545b64', '&.Mui-selected': { color: '#ec7211' } }
+						px: 2,
+						'& .MuiTabs-indicator': { bgcolor: 'primary.main', height: 3 },
+						'& .MuiTab-root': { 
+							fontWeight: 700, 
+							textTransform: 'none', 
+							py: 2, 
+							color: 'text.secondary', 
+							fontSize: '0.875rem',
+							'&.Mui-selected': { color: 'primary.main' } 
+						}
 					}}
 				>
-					<Tab label="GENERAL INFORMATION" />
-					<Tab label="LOCATION & WORKPLACE" />
-					<Tab label="REQUIREMENTS & ELIGIBILITY" />
+					<Tab label="1. General info" />
+					<Tab label="2. Job description" />
+					<Tab label="3. Location & workplace" />
+					<Tab label="4. Requirements" />
 				</Tabs>
 			</Box>
 
-			<DialogContent sx={{ p: 4, bgcolor: '#f2f3f3', minHeight: 450 }}>
-				<Box sx={{ bgcolor: '#fff', p: 4, border: '1px solid #d5dbdb', borderRadius: '2px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-					{tabValue === 0 && (
+			<DialogContent sx={{ p: 0, bgcolor: 'background.default', minHeight: 450 }}>
+				<Box sx={{ px: 4, py: 2 }}>
+					<TabPanel value={tabValue} index={0}>
 						<GeneralInfoTab 
 							formData={formData} 
 							handleChange={handleChange} 
@@ -167,21 +241,27 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 							companies={companies} 
 							contacts={contacts} 
 						/>
-					)}
-					{tabValue === 1 && (
+					</TabPanel>
+					<TabPanel value={tabValue} index={1}>
+						<JobDescriptionTab 
+							formData={formData} 
+							handleChange={handleChange} 
+						/>
+					</TabPanel>
+					<TabPanel value={tabValue} index={2}>
 						<LocationWorkplaceTab 
 							formData={formData} 
 							handleNestedChange={handleNestedChange} 
 							workplaceTypes={WORKPLACE_TYPES} 
 							jobTypes={JOB_TYPES} 
 						/>
-					)}
-					{tabValue === 2 && (
+					</TabPanel>
+					<TabPanel value={tabValue} index={3}>
 						<RequirementsCompensationTab 
 							formData={formData} 
 							handleNestedChange={handleNestedChange} 
 						/>
-					)}
+					</TabPanel>
 				</Box>
 			</DialogContent>
 
@@ -190,9 +270,8 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 1 }}>
 					{!validation.isValid && (
 						<>
-							<InfoIcon sx={{ color: '#d13212', fontSize: 18 }} />
-							<Typography variant="caption" sx={{ color: '#d13212', fontWeight: 600 }}>
-								Please complete all mandatory fields across all tabs before saving.
+							<Typography variant="caption" sx={{ color: 'error.main', fontWeight: 600 }}>
+								Please complete all mandatory fields before saving.
 							</Typography>
 						</>
 					)}
@@ -200,7 +279,7 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 				<Stack direction="row" spacing={2}>
 					<Button 
 						onClick={onClose} 
-						sx={{ color: '#545b64', fontWeight: 700, textTransform: 'none', minWidth: 100 }}
+						sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'none', px: 3 }}
 					>
 						Cancel
 					</Button>
@@ -211,17 +290,19 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 								variant="contained" 
 								disabled={loading || !validation.isValid} 
 								sx={{ 
-									bgcolor: '#ec7211', 
+									bgcolor: 'primary.main', 
 									px: 4, 
+									py: 1,
 									fontWeight: 700, 
 									borderRadius: '2px', 
 									textTransform: 'none', 
 									boxShadow: 'none',
-									'&:hover': { bgcolor: '#eb5f07', boxShadow: '0 1px 2px rgba(0,0,0,0.2)' },
-									'&.Mui-disabled': { bgcolor: '#f2f3f3', color: '#aab7b8' }
+									border: '1px solid primary.main',
+									'&:hover': { bgcolor: '#eb5f07', borderColor: '#eb5f07' },
+									'&.Mui-disabled': { bgcolor: 'background.default', color: '#aab7b8', borderColor: 'divider' }
 								}}
 							>
-								{loading ? 'Processing...' : (jobRole ? 'Save Changes' : 'Create Job Opening')}
+								{loading ? 'Processing...' : (jobRole ? 'Update Changes' : 'Save Opening')}
 							</Button>
 						</span>
 					</Tooltip>

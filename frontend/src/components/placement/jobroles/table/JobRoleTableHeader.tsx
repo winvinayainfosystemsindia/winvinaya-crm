@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Button, TextField, InputAdornment, Stack, Tooltip, Badge, useTheme } from '@mui/material';
+import { Box, Button, TextField, InputAdornment, Stack, Tooltip, Badge } from '@mui/material';
 import { Search as SearchIcon, FilterList as FilterIcon, Refresh as RefreshIcon } from '@mui/icons-material';
 import FilterDrawer, { type FilterField } from '../../../common/FilterDrawer';
 
@@ -34,7 +34,6 @@ const JobRoleTableHeader: React.FC<JobRoleTableHeaderProps> = ({
 	onClearFilters,
 	onApplyFilters
 }) => {
-	const theme = useTheme();
 
 	return (
 		<Box sx={{
@@ -44,8 +43,9 @@ const JobRoleTableHeader: React.FC<JobRoleTableHeaderProps> = ({
 			justifyContent: 'space-between',
 			alignItems: { xs: 'stretch', sm: 'center' },
 			gap: 2,
-			borderBottom: '1px solid #d5dbdb',
-			bgcolor: '#fafafa'
+			borderBottom: '1px solid',
+			borderColor: 'divider',
+			bgcolor: 'background.default'
 		}}>
 			<Box sx={{ display: 'flex', flex: 1 }}>
 				<TextField
@@ -57,9 +57,9 @@ const JobRoleTableHeader: React.FC<JobRoleTableHeaderProps> = ({
 					sx={{
 						maxWidth: { xs: '100%', sm: '300px' },
 						'& .MuiOutlinedInput-root': {
-							bgcolor: 'white',
-							'& fieldset': { borderColor: '#d5dbdb' },
-							'&:hover fieldset': { borderColor: theme.palette.primary.main }
+							bgcolor: 'background.paper',
+							'& fieldset': { borderColor: 'divider' },
+							'&:hover fieldset': { borderColor: 'primary.main' }
 						}
 					}}
 					InputProps={{
@@ -82,12 +82,12 @@ const JobRoleTableHeader: React.FC<JobRoleTableHeaderProps> = ({
 							disabled={loading}
 							sx={{
 								textTransform: 'none',
-								color: '#232f3e',
-								borderColor: '#d5dbdb',
+								color: 'secondary.main',
+								borderColor: 'divider',
 								fontWeight: 600,
 								'&:hover': {
-									borderColor: '#232f3e',
-									bgcolor: '#f5f8fa'
+									borderColor: 'secondary.main',
+									bgcolor: 'action.hover'
 								}
 							}}
 						>
@@ -101,15 +101,15 @@ const JobRoleTableHeader: React.FC<JobRoleTableHeaderProps> = ({
 							startIcon={<FilterIcon />}
 							onClick={onFilterOpen}
 							sx={{
-								borderColor: '#d5dbdb',
+								borderColor: 'divider',
 								color: 'text.secondary',
 								textTransform: 'none',
 								fontWeight: 600,
 								px: { xs: 1, sm: 2 },
 								'&:hover': {
-									borderColor: theme.palette.primary.main,
-									color: theme.palette.primary.main,
-									bgcolor: 'white'
+									borderColor: 'primary.main',
+									color: 'primary.main',
+									bgcolor: 'background.paper'
 								}
 							}}
 						>

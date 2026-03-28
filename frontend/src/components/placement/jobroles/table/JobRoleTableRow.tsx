@@ -42,7 +42,7 @@ const JobRoleTableRow: React.FC<JobRoleTableRowProps> = ({ jobRole, onEdit, onDe
 			sx={{
 				height: '60px',
 				'&:last-child td, &:last-child th': { border: 0 },
-				'&:hover': { bgcolor: '#f5f8fa' },
+				'&:hover': { bgcolor: 'action.hover' },
 				transition: 'background-color 0.2s',
 				cursor: 'default'
 			}}
@@ -92,12 +92,18 @@ const JobRoleTableRow: React.FC<JobRoleTableRowProps> = ({ jobRole, onEdit, onDe
 				</Typography>
 			</TableCell>
 
+			<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+				<Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+					{jobRole.creator?.full_name || jobRole.creator?.username || '-'}
+				</Typography>
+			</TableCell>
+
 			<TableCell align="center">
 				<Tooltip title={jobRole.is_visible ? "Available for Mapping" : "Hidden from Mapping"}>
 					{jobRole.is_visible ? (
-						<VisibilityIcon sx={{ color: '#1d8102', fontSize: 18 }} />
+						<VisibilityIcon sx={{ color: 'success.main', fontSize: 18 }} />
 					) : (
-						<VisibilityOffIcon sx={{ color: '#d13212', fontSize: 18 }} />
+						<VisibilityOffIcon sx={{ color: 'error.main', fontSize: 18 }} />
 					)}
 				</Tooltip>
 			</TableCell>

@@ -22,11 +22,12 @@ const JobRoleTableHead: React.FC<JobRoleTableHeadProps> = ({ order, orderBy, onR
 		{ id: 'location', label: 'Location', minWidth: 150, hideOnMobile: true },
 		{ id: 'no_of_vacancies', label: 'Vacancies', minWidth: 100, sortable: true, align: 'center', hideOnMobile: true },
 		{ id: 'close_date', label: 'Close Date', minWidth: 130, sortable: true, hideOnMobile: true },
+		{ id: 'created_by_id', label: 'Created By', minWidth: 150, hideOnMobile: true },
 		{ id: 'is_visible', label: 'Mapping', minWidth: 100, sortable: true, align: 'center', hideOnMobile: true },
 	];
 
 	return (
-		<TableHead sx={{ bgcolor: '#fafafa' }}>
+		<TableHead sx={{ bgcolor: 'background.default' }}>
 			<TableRow>
 				{columns.map((column) => (
 					<TableCell
@@ -37,7 +38,8 @@ const JobRoleTableHead: React.FC<JobRoleTableHeadProps> = ({ order, orderBy, onR
 							fontWeight: 'bold',
 							color: 'text.secondary',
 							fontSize: '0.875rem',
-							borderBottom: '2px solid #d5dbdb',
+							borderBottom: '2px solid',
+							borderColor: 'divider',
 							display: column.hideOnMobile ? { xs: 'none', md: 'table-cell' } : 'table-cell'
 						}}
 					>
@@ -60,7 +62,8 @@ const JobRoleTableHead: React.FC<JobRoleTableHeadProps> = ({ order, orderBy, onR
 						fontWeight: 'bold',
 						color: 'text.secondary',
 						fontSize: '0.875rem',
-						borderBottom: '2px solid #d5dbdb'
+						borderBottom: '2px solid',
+						borderColor: 'divider'
 					}}
 				>
 					Actions

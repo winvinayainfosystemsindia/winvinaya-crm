@@ -66,7 +66,7 @@ const JobRoleTable: React.FC<JobRoleTableProps> = ({ onEditJobRole }) => {
 	const filterFields = getJobRoleFilterFields();
 
 	return (
-		<Paper sx={{ border: '1px solid #d5dbdb', boxShadow: 'none', borderRadius: 0 }}>
+		<Paper sx={{ border: '1px solid', borderColor: 'divider', boxShadow: 'none', borderRadius: 0 }}>
 			<JobRoleTableHeader
 				searchTerm={searchTerm}
 				onSearchChange={handleSearch}

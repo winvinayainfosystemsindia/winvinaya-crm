@@ -1,6 +1,24 @@
 import { createTheme } from '@mui/material/styles';
 import './smoothScroll';
 
+declare module '@mui/material/styles' {
+	interface TypographyVariants {
+		awsSectionTitle: React.CSSProperties;
+		awsFieldLabel: React.CSSProperties;
+	}
+	interface TypographyVariantsOptions {
+		awsSectionTitle?: React.CSSProperties;
+		awsFieldLabel?: React.CSSProperties;
+	}
+}
+
+declare module '@mui/material/Typography' {
+	interface TypographyPropsVariantOverrides {
+		awsSectionTitle: true;
+		awsFieldLabel: true;
+	}
+}
+
 const theme = createTheme({
 	palette: {
 		primary: {
@@ -57,6 +75,21 @@ const theme = createTheme({
 				fontSize: '0.875rem',
 			},
 		},
+		awsSectionTitle: {
+			fontWeight: 700,
+			fontSize: '0.9rem',
+			color: '#232f3e',
+			textTransform: 'uppercase',
+			letterSpacing: '0.05em',
+			display: 'block'
+		},
+		awsFieldLabel: {
+			fontSize: '0.875rem',
+			marginBottom: '8px',
+			color: '#232f3e',
+			fontWeight: 600,
+			display: 'block'
+		}
 	},
 	spacing: 8, // Basline 8px spacing
 	breakpoints: {
@@ -87,6 +120,28 @@ const theme = createTheme({
 		MuiAppBar: {
 			defaultProps: {
 				elevation: 0,
+			}
+		},
+		MuiChip: {
+			styleOverrides: {
+				root: {
+					borderRadius: '2px',
+					fontWeight: 500,
+					fontSize: '0.8125rem',
+					height: '24px',
+					backgroundColor: '#f1faff',
+					border: '1px solid #007eb9',
+					color: '#007eb9',
+					'& .MuiChip-deleteIcon': {
+						color: '#007eb9',
+						'&:hover': { color: '#005276' }
+					}
+				},
+				outlined: {
+					backgroundColor: 'transparent',
+					borderColor: '#d5dbdb',
+					color: '#545b64'
+				}
 			}
 		},
 		MuiDrawer: {

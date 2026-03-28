@@ -3,115 +3,166 @@ import {
 	Grid,
 	TextField,
 	Autocomplete,
-	Chip,
+	Box,
+	Paper,
+	Stack,
+	Typography,
+	Divider,
+	Chip
 } from '@mui/material';
+import {
+	SchoolOutlined as EducationIcon,
+	AccessibleOutlined as DisabilityIcon,
+	InfoOutlined as InfoIcon
+} from '@mui/icons-material';
+import { awsStyles } from '../../../../../theme/theme';
 import { disabilityTypes } from '../../../../../data/Disabilities';
+import { COMMON_SKILLS, QUALIFICATIONS } from '../../../../../data/jobRoleData';
+import type { JobRole } from '../../../../../models/jobRole';
 
 interface RequirementsCompensationTabProps {
-	formData: any;
+	formData: Partial<JobRole>;
 	handleNestedChange: (parent: string, field: string, value: any) => void;
 }
 
-const COMMON_SKILLS = [
-	'Java', 'Python', 'JavaScript', 'React', 'Angular', 'Node.js', 'SQL', 'NoSQL',
-	'C++', 'C#', '.NET', 'HTML/CSS', 'AWS', 'Azure', 'Data Analytics',
-	'Soft Skills', 'Communication', 'Customer Support', 'BPO', 'Accounting', 
-	'Tally', 'Excel', 'Data Entry', 'Project Management', 'Agile'
-];
+
 
 const RequirementsCompensationTab: React.FC<RequirementsCompensationTabProps> = ({
 	formData,
 	handleNestedChange
 }) => {
+	const { awsPanel, helperBox } = awsStyles;
+
+	const commonTextFieldProps = {
+		size: 'small' as const,
+		sx: {
+			'& .MuiInputBase-root': {
+				borderRadius: '2px',
+				bgcolor: '#fcfcfc',
+			},
+			'& .MuiOutlinedInput-notchedOutline': { borderColor: '#d5dbdb' },
+			'&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#879596' },
+			'&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#ec7211' }
+		}
+	};
+
 	return (
-		<Grid container spacing={3}>
-			<Grid size={{ xs: 12 }}>
-				<Autocomplete
-					multiple
-					options={QUALIFICATIONS_LIST}
-					value={formData.requirements?.qualifications || []}
-					onChange={(_, newValue) => handleNestedChange('requirements', 'qualifications', newValue)}
-					renderTags={(value, getTagProps) =>
-						value.map((option, index) => (
-							<Chip variant="outlined" label={option} {...getTagProps({ index })} size="small" key={index} />
-						))
-					}
-					renderInput={(params) => <TextField {...params} label="Minimum Qualifications" size="small" required />}
-				/>
-			</Grid>
-			<Grid size={{ xs: 12 }}>
-				<Autocomplete
-					multiple
-					freeSolo
-					options={COMMON_SKILLS}
-					value={formData.requirements?.skills || []}
-					onChange={(_, newValue) => handleNestedChange('requirements', 'skills', newValue)}
-					renderTags={(value, getTagProps) =>
-						value.map((option, index) => (
-							<Chip variant="outlined" label={option} {...getTagProps({ index })} size="small" key={index} />
-						))
-					}
-					renderInput={(params) => <TextField {...params} label="Required Skills (Select or Type and press Enter)" size="small" placeholder="Select multiple skills" />}
-				/>
-			</Grid>
-			<Grid size={{ xs: 12 }}>
-				<Autocomplete
-					multiple
-					options={disabilityTypes}
-					value={formData.requirements?.disability_preferred || []}
-					onChange={(_, newValue) => handleNestedChange('requirements', 'disability_preferred', newValue)}
-					renderTags={(value, getTagProps) =>
-						value.map((option, index) => (
-							<Chip variant="outlined" label={option} {...getTagProps({ index })} size="small" key={index} />
-						))
-					}
-					renderInput={(params) => <TextField {...params} label="Disability Preferred" size="small" required />}
-				/>
-			</Grid>
-			<Grid size={{ xs: 6, md: 3 }}>
-				<TextField
-					fullWidth
-					type="number"
-					label="Exp Min (Years)"
-					value={formData.experience?.min ?? ''}
-					onChange={(e) => handleNestedChange('experience', 'min', parseFloat(e.target.value) || 0)}
-					size="small"
-				/>
-			</Grid>
-			<Grid size={{ xs: 6, md: 3 }}>
-				<TextField
-					fullWidth
-					type="number"
-					label="Exp Max (Years)"
-					value={formData.experience?.max ?? ''}
-					onChange={(e) => handleNestedChange('experience', 'max', parseFloat(e.target.value) || 0)}
-					size="small"
-				/>
-			</Grid>
-			<Grid size={{ xs: 6, md: 3 }}>
-				<TextField
-					fullWidth
-					type="number"
-					label="Sal Min (LPA)"
-					value={formData.salary_range?.min ?? ''}
-					onChange={(e) => handleNestedChange('salary_range', 'min', parseFloat(e.target.value) || 0)}
-					size="small"
-				/>
-			</Grid>
-			<Grid size={{ xs: 6, md: 3 }}>
-				<TextField
-					fullWidth
-					type="number"
-					label="Sal Max (LPA)"
-					value={formData.salary_range?.max ?? ''}
-					onChange={(e) => handleNestedChange('salary_range', 'max', parseFloat(e.target.value) || 0)}
-					size="small"
-				/>
-			</Grid>
-		</Grid>
+		<Stack spacing={4}>
+			{/* Core Requirements Section */}
+			<Paper elevation={0} sx={awsPanel}>
+				<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
+					<Box sx={{ bgcolor: 'secondary.main', p: 0.5, borderRadius: '2px', display: 'flex' }}>
+						<EducationIcon sx={{ color: '#ffffff', fontSize: 20 }} />
+					</Box>
+					<Typography variant="awsSectionTitle">Candidate Mandatory Qualifications</Typography>
+				</Stack>
+
+				<Box sx={helperBox}>
+					<InfoIcon sx={{ color: '#007eb9', mt: 0.25, fontSize: 20 }} />
+					<Typography variant="body2" sx={{ color: '#007eb9', fontWeight: 500 }}>
+						Specify the educational background and core technical skills required for this role.
+					</Typography>
+				</Box>
+
+				<Divider sx={{ mb: 4, borderColor: '#eaeded' }} />
+
+				<Grid container spacing={3}>
+					<Grid size={{ xs: 12, md: 6 }}>
+						<Box>
+							<Typography variant="awsFieldLabel">Required Qualifications</Typography>
+							<Autocomplete
+								multiple
+								options={QUALIFICATIONS}
+								value={formData.requirements?.qualifications || []}
+								onChange={(_, v) => handleNestedChange('requirements', 'qualifications', v)}
+								renderTags={(value, getTagProps) =>
+									value.map((option, index) => {
+										const { key: _key, ...rest } = getTagProps({ index });
+										return (
+											<Chip
+												key={option}
+												label={option}
+												size="small"
+												{...rest}
+												sx={{ borderRadius: '2px' }}
+											/>
+										);
+									})
+								}
+								renderInput={(params) => <TextField {...params} placeholder="Select Education" {...commonTextFieldProps} />}
+							/>
+						</Box>
+					</Grid>
+					<Grid size={{ xs: 12, md: 6 }}>
+						<Box>
+							<Typography variant="awsFieldLabel">Key Technical Skills</Typography>
+							<Autocomplete
+								multiple
+								freeSolo
+								options={COMMON_SKILLS}
+								value={formData.requirements?.skills || []}
+								onChange={(_, v) => handleNestedChange('requirements', 'skills', v)}
+								renderTags={(value, getTagProps) =>
+									value.map((option, index) => {
+										const { key: _key, ...rest } = getTagProps({ index });
+										return (
+											<Chip
+												key={option}
+												label={option}
+												size="small"
+												{...rest}
+												sx={{ borderRadius: '2px' }}
+											/>
+										);
+									})
+								}
+								renderInput={(params) => <TextField {...params} placeholder="Type or select skills" {...commonTextFieldProps} />}
+							/>
+						</Box>
+					</Grid>
+				</Grid>
+			</Paper>
+
+			{/* Disability Preference Section */}
+			<Paper elevation={0} sx={awsPanel}>
+				<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
+					<Box sx={{ bgcolor: 'secondary.main', p: 0.5, borderRadius: '2px', display: 'flex' }}>
+						<DisabilityIcon sx={{ color: '#ffffff', fontSize: 20 }} />
+					</Box>
+					<Typography variant="awsSectionTitle">Disability Inclusion Preferences</Typography>
+				</Stack>
+
+				<Grid container spacing={3}>
+					<Grid size={{ xs: 12 }}>
+						<Box>
+							<Typography variant="awsFieldLabel">Disability Types Preferred</Typography>
+							<Autocomplete
+								multiple
+								options={disabilityTypes}
+								value={formData.requirements?.disability_preferred || []}
+								onChange={(_, v) => handleNestedChange('requirements', 'disability_preferred', v)}
+								renderTags={(value, getTagProps) =>
+									value.map((option, index) => {
+										const { key: _key, ...rest } = getTagProps({ index });
+										return (
+											<Chip
+												key={option}
+												label={option}
+												size="small"
+												{...rest}
+												sx={{ borderRadius: '2px' }}
+											/>
+										);
+									})
+								}
+								renderInput={(params) => <TextField {...params} placeholder="Select Disability Preferences" {...commonTextFieldProps} />}
+							/>
+						</Box>
+					</Grid>
+				</Grid>
+			</Paper>
+		</Stack>
 	);
 };
-
-const QUALIFICATIONS_LIST = ['Any Graduation', 'B.E/B.Tech', 'B.Sc', 'B.A', 'B.Com', 'M.Tech', 'MCA', 'MBA', 'M.Sc', 'Diploma'];
 
 export default RequirementsCompensationTab;
