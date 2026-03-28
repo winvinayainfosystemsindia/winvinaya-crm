@@ -36,6 +36,7 @@ from app.models.dsr_project_request import DSRProjectRequest, DSRProjectRequestS
 from app.models.company_holiday import CompanyHoliday
 from app.models.notification import Notification
 from app.models.whatsapp_message import WhatsAppMessage, WAProcessingStatus
+from app.models.skill import Skill
 
 __all__ = [
     "User",
@@ -103,5 +104,6 @@ __all__ = [
     # WhatsApp Integration
     "WhatsAppMessage",
     "WAProcessingStatus",
+    "Skill",
 ]
 

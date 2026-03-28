@@ -39,6 +39,7 @@ from app.api.v1.endpoints import (
     whatsapp_webhook,
     x0pa,
     maintenance,
+    skills,
 )
 
 
@@ -87,6 +88,7 @@ router.include_router(dsr_activity_types.router, prefix="/dsr/activity-types", t
 router.include_router(dsr_project_requests.router, prefix="/dsr/project-requests", tags=["DSR Project Requests"])
 router.include_router(company_holidays.router, prefix="/dsr/holidays", tags=["Company Holidays"])
 router.include_router(maintenance.router, prefix="/maintenance", tags=["Maintenance"])
+router.include_router(skills.router, prefix="/skills", tags=["Skills"])
 
 # WhatsApp Integration
 router.include_router(whatsapp_webhook.router)

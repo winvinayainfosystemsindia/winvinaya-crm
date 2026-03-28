@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
 	Grid,
 	TextField,
@@ -8,17 +8,22 @@ import {
 	Stack,
 	Typography,
 	Divider,
-	Chip
+	Chip,
+	createFilterOptions
 } from '@mui/material';
 import {
 	SchoolOutlined as EducationIcon,
 	AccessibleOutlined as DisabilityIcon,
-	InfoOutlined as InfoIcon
+	InfoOutlined as InfoIcon,
+	Add as AddIcon
 } from '@mui/icons-material';
 import { awsStyles } from '../../../../../theme/theme';
 import { disabilityTypes } from '../../../../../data/Disabilities';
-import { COMMON_SKILLS, QUALIFICATIONS } from '../../../../../data/jobRoleData';
+import { QUALIFICATIONS } from '../../../../../data/jobRoleData';
 import type { JobRole } from '../../../../../models/jobRole';
+import { skillService, type Skill } from '../../../../../services/skillService';
+
+const filter = createFilterOptions<Skill | { inputValue: string; name: string }>();
 
 interface RequirementsCompensationTabProps {
 	formData: Partial<JobRole>;
@@ -32,6 +37,23 @@ const RequirementsCompensationTab: React.FC<RequirementsCompensationTabProps> = 
 	handleNestedChange
 }) => {
 	const { awsPanel, helperBox } = awsStyles;
+	const [skillOptions, setSkillOptions] = useState<Skill[]>([]);
+	const [loadingSkills, setLoadingSkills] = useState(false);
+
+	useEffect(() => {
+		const loadSkills = async () => {
+			setLoadingSkills(true);
+			try {
+				const skills = await skillService.getSkills();
+				setSkillOptions(skills);
+			} catch (error) {
+				console.error("Error loading skills:", error);
+			} finally {
+				setLoadingSkills(false);
+			}
+		};
+		loadSkills();
+	}, []);
 
 	const commonTextFieldProps = {
 		size: 'small' as const,
@@ -96,19 +118,57 @@ const RequirementsCompensationTab: React.FC<RequirementsCompensationTabProps> = 
 					<Grid size={{ xs: 12, md: 6 }}>
 						<Box>
 							<Typography variant="awsFieldLabel">Key Technical Skills</Typography>
-							<Autocomplete
+							<Autocomplete<any, true, false, true>
 								multiple
 								freeSolo
-								options={COMMON_SKILLS}
+								loading={loadingSkills}
+								options={skillOptions}
+								getOptionLabel={(option) => {
+									if (typeof option === 'string') return option;
+									if (option.inputValue) return option.inputValue;
+									return option.name;
+								}}
 								value={formData.requirements?.skills || []}
-								onChange={(_, v) => handleNestedChange('requirements', 'skills', v)}
+								filterOptions={(options, params) => {
+									const filtered = filter(options, params);
+									const { inputValue } = params;
+									const isExisting = options.some((option) => inputValue.toLowerCase() === option.name.toLowerCase());
+									if (inputValue !== '' && !isExisting) {
+										filtered.push({
+											inputValue,
+											name: `Add "${inputValue}"`,
+										});
+									}
+									return filtered;
+								}}
+								onChange={async (_, newValue) => {
+									const processedValues = await Promise.all(newValue.map(async (val) => {
+										if (typeof val === 'string') return val;
+										if (val.inputValue) {
+											try {
+												const newSkill = await skillService.createSkill({ name: val.inputValue });
+												setSkillOptions(prev => {
+													if (!prev.find(s => s.id === newSkill.id)) {
+														return [...prev, newSkill].sort((a, b) => a.name.localeCompare(b.name));
+													}
+													return prev;
+												});
+												return newSkill.name;
+											} catch (e) {
+												return val.inputValue;
+											}
+										}
+										return val.name;
+									}));
+									handleNestedChange('requirements', 'skills', processedValues);
+								}}
 								renderTags={(value, getTagProps) =>
 									value.map((option, index) => {
 										const { key: _key, ...rest } = getTagProps({ index });
 										return (
 											<Chip
-												key={option}
-												label={option}
+												key={index}
+												label={typeof option === 'string' ? option : (option as any).name}
 												size="small"
 												{...rest}
 												sx={{ borderRadius: '2px' }}
@@ -116,6 +176,18 @@ const RequirementsCompensationTab: React.FC<RequirementsCompensationTabProps> = 
 										);
 									})
 								}
+								renderOption={(props, option) => {
+									const { key: _key, ...rest } = props;
+									const isAdd = (option as any).inputValue;
+									return (
+										<li key={isAdd ? `add-${(option as any).inputValue}` : (option as Skill).id} {...rest}>
+											<Stack direction="row" spacing={1} alignItems="center">
+												{isAdd && <AddIcon color="primary" fontSize="small" />}
+												<Typography>{isAdd ? `Add "${(option as any).inputValue}"` : (option as Skill).name}</Typography>
+											</Stack>
+										</li>
+									);
+								}}
 								renderInput={(params) => <TextField {...params} placeholder="Type or select skills" {...commonTextFieldProps} />}
 							/>
 						</Box>
