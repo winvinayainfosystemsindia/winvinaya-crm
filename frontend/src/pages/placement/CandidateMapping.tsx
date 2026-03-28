@@ -29,7 +29,7 @@ import { type JobRole } from '../../models/jobRole';
 import JobRoleSelectionHeader from '../../components/placement/mapping/common/JobRoleSelectionHeader';
 import JobRoleSpecifications from '../../components/placement/mapping/details/JobRoleSpecifications';
 import CandidateMatchResults from '../../components/placement/mapping/table/CandidateMatchResults';
-import ConfirmationMappingDialog from '../../components/placement/mapping/forms/ConfirmationMappingDialog';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
 
 const CandidateMapping = () => {
 	const theme = useTheme();
@@ -74,7 +74,7 @@ const CandidateMapping = () => {
 		}
 	}, [selectedRole, fetchMatches]);
 
-	const handleMapCandidate = async (notes: string) => {
+	const handleMapCandidate = async () => {
 		if (!candidateToMap || !selectedRole) return;
 		setSubmitting(true);
 		try {
@@ -82,7 +82,7 @@ const CandidateMapping = () => {
 				candidate_id: candidateToMap.candidate_id,
 				job_role_id: selectedRole.id!,
 				match_score: candidateToMap.match_score,
-				notes: notes
+				notes: ''
 			});
 
 			enqueueSnackbar(`${candidateToMap.name} successfully mapped`, { variant: 'success' });
@@ -221,13 +221,15 @@ const CandidateMapping = () => {
 				)}
 			</Container>
 
-			<ConfirmationMappingDialog
+			<ConfirmDialog
 				open={mapDialogOpen}
-				candidate={candidateToMap}
-				jobRole={selectedRole}
-				submitting={submitting}
+				title="Confirm Candidate Mapping"
+				message={`Are you sure you want to map ${candidateToMap?.name} to the resource "${selectedRole?.title}"? This will record the affinity score and notify the placement team.`}
+				confirmText="Proceed with Mapping"
 				onClose={() => setMapDialogOpen(false)}
 				onConfirm={handleMapCandidate}
+				loading={submitting}
+				severity="info"
 			/>
 		</Box>
 	);

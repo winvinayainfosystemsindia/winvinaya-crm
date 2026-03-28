@@ -1,15 +1,18 @@
-import { useState } from 'react';
-import { 
-	Paper, 
-	Box, 
-	CircularProgress, 
-	Typography, 
-	Tabs, 
-	Tab, 
-	Stack 
+import React, { useState } from 'react';
+import {
+	Paper,
+	Box,
+	CircularProgress,
+	Typography,
+	Tabs,
+	Tab,
+	Divider,
+	Stack,
+	Chip
 } from '@mui/material';
 import { type CandidateMatchResult } from '../../../../services/placementMappingService';
 import CandidateMatchTable from './CandidateMatchTable';
+import CustomTablePagination from '../../../common/CustomTablePagination';
 
 interface Props {
 	matches: CandidateMatchResult[];
@@ -19,21 +22,67 @@ interface Props {
 
 const CandidateMatchResults = ({ matches, loading, onMapClick }: Props) => {
 	const [tabIndex, setTabIndex] = useState(0);
+	const [page, setPage] = useState(0);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 
-	const suggestedCandidates = matches.filter((c: CandidateMatchResult) => !c.is_already_mapped && c.match_score >= 40);
-	const mappedCandidates = matches.filter((c: CandidateMatchResult) => c.is_already_mapped);
-	const notSuggestedCandidates = matches.filter((c: CandidateMatchResult) => !c.is_already_mapped && c.match_score < 40);
+	const allSuggested = matches.filter((c: CandidateMatchResult) => !c.is_already_mapped && c.match_score >= 40);
+	const allMapped = matches.filter((c: CandidateMatchResult) => c.is_already_mapped);
+	const allNotSuggested = matches.filter((c: CandidateMatchResult) => !c.is_already_mapped && c.match_score < 40);
+
+	const getCurrentList = () => {
+		switch (tabIndex) {
+			case 1: return allMapped;
+			case 2: return allNotSuggested;
+			default: return allSuggested;
+		}
+	};
+
+	const currentList = getCurrentList();
+	const paginatedCandidates = currentList.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
+	const handlePageChange = (_: unknown, newPage: number) => setPage(newPage);
+	const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		setRowsPerPage(parseInt(event.target.value, 10));
+		setPage(0);
+	};
+	const handleRowsPerPageSelect = (count: number) => {
+		setRowsPerPage(count);
+		setPage(0);
+	};
+
+	const renderTabLabel = (label: string, count: number, active: boolean) => (
+		<Stack direction="row" spacing={1} alignItems="center">
+			<Typography variant="inherit" sx={{ fontWeight: active ? 700 : 500 }}>{label}</Typography>
+			<Chip
+				label={count}
+				size="small"
+				sx={{
+					height: 18,
+					minWidth: 18,
+					fontSize: '0.65rem',
+					fontWeight: 600,
+					borderRadius: '10px',
+					bgcolor: active ? 'primary.main' : '#eaeded',
+					color: active ? 'white' : 'text.secondary',
+					border: 'none',
+					'& .MuiChip-label': { px: 0.8 },
+					transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+				}}
+			/>
+		</Stack>
+	);
 
 	return (
 		<Paper
 			variant="outlined"
 			sx={{
-				borderRadius: '0px',
+				borderRadius: '2px',
 				borderColor: 'divider',
 				bgcolor: 'background.paper',
 				minHeight: 550,
 				display: 'flex',
-				flexDirection: 'column'
+				flexDirection: 'column',
+				boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
 			}}
 		>
 			{loading ? (
@@ -43,61 +92,62 @@ const CandidateMatchResults = ({ matches, loading, onMapClick }: Props) => {
 				</Box>
 			) : (
 				<>
-					<Box sx={{ px: 2, pt: 0.5, borderBottom: (t) => `1px solid ${t.palette.divider}`, bgcolor: 'action.hover' }}>
+					<Box sx={{ px: 2, borderBottom: (t: any) => `1px solid ${t.palette.divider}`, bgcolor: '#fcfcfc' }}>
 						<Tabs
 							value={tabIndex}
-							onChange={(_, v) => setTabIndex(v)}
+							onChange={(_, v) => {
+								setTabIndex(v);
+								setPage(0);
+							}}
 							sx={{
-								minHeight: 48,
-								'& .MuiTabs-indicator': { bgcolor: 'primary.main', height: 3 },
+								minHeight: 52,
+								'& .MuiTabs-indicator': { bgcolor: 'primary.main', height: 3, borderRadius: '3px 3px 0 0' },
 								'& .MuiTab-root': {
 									textTransform: 'none',
-									fontWeight: 700,
+									fontWeight: 600,
 									fontSize: '0.875rem',
 									color: 'text.secondary',
-									minHeight: 48,
-									px: 3,
+									minHeight: 52,
+									px: 2,
 									'&.Mui-selected': { color: 'primary.main' }
 								}
 							}}
 						>
-							<Tab label={`High Affinity (${suggestedCandidates.length})`} />
-							<Tab label={`Already Mapped (${mappedCandidates.length})`} />
-							<Tab label={`Lower Affinity (${notSuggestedCandidates.length})`} />
+							<Tab label={renderTabLabel('High Affinity', allSuggested.length, tabIndex === 0)} />
+							<Tab label={renderTabLabel('Already Mapped', allMapped.length, tabIndex === 1)} />
+							<Tab label={renderTabLabel('Lower Affinity', allNotSuggested.length, tabIndex === 2)} />
 						</Tabs>
 					</Box>
 
-					<Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
-						{tabIndex === 0 && (
-							<CandidateMatchTable
-								candidates={suggestedCandidates}
-								onMapClick={onMapClick}
-								emptyMsg="No candidates found with >40% affinity for this specification."
-							/>
-						)}
-						{tabIndex === 1 && (
-							<CandidateMatchTable
-								candidates={mappedCandidates}
-								onMapClick={onMapClick}
-								emptyMsg="No candidates have been mapped to this resource."
-							/>
-						)}
-						{tabIndex === 2 && (
-							<CandidateMatchTable
-								candidates={notSuggestedCandidates}
-								onMapClick={onMapClick}
-								emptyMsg="No candidates found in the low affinity threshold."
-							/>
-						)}
+					<Box sx={{ flexGrow: 1, overflowY: 'auto', bgcolor: 'white' }}>
+						<CandidateMatchTable
+							candidates={paginatedCandidates}
+							onMapClick={onMapClick}
+							emptyMsg={
+								tabIndex === 0 ? "No candidates found with >40% affinity for this specification." :
+									tabIndex === 1 ? "No candidates have been mapped to this resource." :
+										"No candidates found in the low affinity threshold."
+							}
+						/>
 					</Box>
 
-					<Box sx={{ p: 2, bgcolor: 'action.hover', borderTop: (t) => `1px solid ${t.palette.divider}` }}>
-						<Stack direction="row" justifyContent="space-between" alignItems="center">
-							<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-								Algorithm output: Based on screening and counseling data aggregation.
+					<Box sx={{ bgcolor: 'background.paper', borderTop: (t: any) => `1px solid ${t.palette.divider}` }}>
+						<CustomTablePagination
+							count={currentList.length}
+							page={page}
+							rowsPerPage={rowsPerPage}
+							onPageChange={handlePageChange}
+							onRowsPerPageChange={handleRowsPerPageChange}
+							onRowsPerPageSelectChange={handleRowsPerPageSelect}
+						/>
+						<Divider sx={{ mx: 2, opacity: 0.5 }} />
+						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ p: 2, pt: 1.5, bgcolor: '#fcfcfc' }}>
+							<Typography variant="caption" sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+								<Box component="span" sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'success.main', display: 'inline-block' }} />
+								Algorithm output: affinity based ranking for current specifications.
 							</Typography>
-							<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700 }}>
-								Total Resultset: {matches.length}
+							<Typography variant="caption" sx={{ color: 'text.primary', fontWeight: 600 }}>
+								Category: {currentList.length} results | Total Pool: {matches.length}
 							</Typography>
 						</Stack>
 					</Box>
