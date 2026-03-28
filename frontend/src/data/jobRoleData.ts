@@ -18,14 +18,7 @@ export const COMMON_SKILLS = [
 	'Tally', 'Excel', 'Data Entry', 'Project Management', 'Agile', 'Salesforce'
 ];
 
-export const COUNTRY_OPTIONS = [
-	'India', 'United States', 'United Kingdom', 'Singapore', 'UAE', 'Other'
-];
 
-export const STATE_OPTIONS = [
-	'Tamil Nadu', 'Karnataka', 'Maharashtra', 'Delhi', 'Telangana', 
-	'Andhra Pradesh', 'Kerala', 'Other'
-];
 
 export const JOB_ROLE_STATUS_OPTIONS = [
 	{ label: 'Active', value: 'active' },
@@ -33,7 +26,4 @@ export const JOB_ROLE_STATUS_OPTIONS = [
 	{ label: 'Closed', value: 'closed' }
 ];
 
-export const CITY_OPTIONS = [
-	'Chennai', 'Bangalore', 'Mumbai', 'Pune', 'Hyderabad', 
-	'Coimbatore', 'Delhi', 'Other'
-];
+

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
 	Grid,
 	TextField,
@@ -18,8 +18,8 @@ import {
 	WorkOutline as WorkplaceIcon,
 	InfoOutlined as InfoIcon
 } from '@mui/icons-material';
+import { Country, State, City } from 'country-state-city';
 import { awsStyles } from '../../../../../theme/theme';
-import { COUNTRY_OPTIONS, STATE_OPTIONS, CITY_OPTIONS } from '../../../../../data/jobRoleData';
 import type { JobRole } from '../../../../../models/jobRole';
 
 interface LocationWorkplaceTabProps {
@@ -50,6 +50,31 @@ const LocationWorkplaceTab: React.FC<LocationWorkplaceTabProps> = ({
 		}
 	};
 
+	// Dynamic Location Data Fetching
+	const countries = useMemo(() => Country.getAllCountries(), []);
+	
+	const selectedCountryObj = useMemo(() => 
+		countries.find(c => c.name === formData.location?.country),
+		[countries, formData.location?.country]
+	);
+
+	const states = useMemo(() => 
+		selectedCountryObj ? State.getStatesOfCountry(selectedCountryObj.isoCode) : [],
+		[selectedCountryObj]
+	);
+
+	const selectedStateObj = useMemo(() => 
+		states.find(s => s.name === formData.location?.state),
+		[states, formData.location?.state]
+	);
+
+	const cities = useMemo(() => 
+		(selectedCountryObj && selectedStateObj) 
+			? City.getCitiesOfState(selectedCountryObj.isoCode, selectedStateObj.isoCode) 
+			: [],
+		[selectedCountryObj, selectedStateObj]
+	);
+
 	return (
 		<Stack spacing={4}>
 			{/* Location Section */}
@@ -75,9 +100,17 @@ const LocationWorkplaceTab: React.FC<LocationWorkplaceTabProps> = ({
 						<Box>
 							<Typography variant="awsFieldLabel">Primary Country</Typography>
 							<Autocomplete
-								options={COUNTRY_OPTIONS}
-								value={formData.location?.country || 'India'}
-								onChange={(_, v) => handleNestedChange('location', 'country', v)}
+								options={countries}
+								getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
+								value={selectedCountryObj || null}
+								isOptionEqualToValue={(option, value) => option.name === (typeof value === 'string' ? value : value?.name)}
+								onChange={(_, v) => {
+									const countryName = v && typeof v !== 'string' ? v.name : '';
+									handleNestedChange('location', 'country', countryName);
+									// Cascading reset
+									handleNestedChange('location', 'state', '');
+									handleNestedChange('location', 'cities', []);
+								}}
 								renderInput={(params) => <TextField {...params} placeholder="Select Country" {...commonTextFieldProps} />}
 							/>
 						</Box>
@@ -86,10 +119,18 @@ const LocationWorkplaceTab: React.FC<LocationWorkplaceTabProps> = ({
 						<Box>
 							<Typography variant="awsFieldLabel">State/Province</Typography>
 							<Autocomplete
-								options={STATE_OPTIONS}
-								value={formData.location?.state || ''}
-								onChange={(_, v) => handleNestedChange('location', 'state', v)}
-								renderInput={(params) => <TextField {...params} placeholder="Select State" {...commonTextFieldProps} />}
+								options={states}
+								getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
+								value={selectedStateObj || null}
+								isOptionEqualToValue={(option, value) => option.name === (typeof value === 'string' ? value : value?.name)}
+								disabled={!selectedCountryObj}
+								onChange={(_, v) => {
+									const stateName = v && typeof v !== 'string' ? v.name : '';
+									handleNestedChange('location', 'state', stateName);
+									// Cascading reset
+									handleNestedChange('location', 'cities', []);
+								}}
+								renderInput={(params) => <TextField {...params} placeholder={selectedCountryObj ? "Select State" : "Select Country first"} {...commonTextFieldProps} />}
 							/>
 						</Box>
 					</Grid>
@@ -98,25 +139,27 @@ const LocationWorkplaceTab: React.FC<LocationWorkplaceTabProps> = ({
 							<Typography variant="awsFieldLabel">City (Multiple Selection)</Typography>
 							<Autocomplete
 								multiple
-								freeSolo
-								options={CITY_OPTIONS}
+								options={cities.map(c => c.name)}
+								getOptionLabel={(option) => option}
 								value={formData.location?.cities || []}
+								disabled={!selectedStateObj}
 								onChange={(_, v) => handleNestedChange('location', 'cities', v)}
 								renderTags={(value, getTagProps) =>
 									value.map((option, index) => {
 										const { key: _key, ...rest } = getTagProps({ index });
 										return (
 											<Chip
-												key={option}
+												key={`${option}-${index}`}
 												label={option}
 												size="small"
 												{...rest}
+												variant="outlined"
 												sx={{ borderRadius: '2px' }}
 											/>
 										);
 									})
 								}
-								renderInput={(params) => <TextField {...params} placeholder="Type or select cities" {...commonTextFieldProps} />}
+								renderInput={(params) => <TextField {...params} placeholder={selectedStateObj ? "Select cities" : "Select State first"} {...commonTextFieldProps} />}
 							/>
 						</Box>
 					</Grid>
