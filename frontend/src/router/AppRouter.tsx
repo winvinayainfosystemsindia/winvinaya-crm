@@ -39,6 +39,8 @@ import ActivityPlanning from '../pages/projects/ActivityPlanning';
 import DSRDashboard from '../pages/projects/DSRDashboard';
 import HolidayManagement from '../pages/projects/HolidayManagement';
 import JobRoleManagement from '../pages/placement/JobRoleManagement';
+import JobRoleDetail from '../pages/placement/JobRoleDetail';
+import CandidateMapping from '../pages/placement/CandidateMapping';
 
 const AppRouter: React.FC = () => {
 	return (
@@ -102,8 +104,10 @@ const AppRouter: React.FC = () => {
 						<Route path="holidays" element={<HolidayManagement />} />
 					</Route>
 
-					<Route path="placement">
+					<Route path="/placement">
 						<Route path="job-roles" element={<JobRoleManagement />} />
+						<Route path="job-roles/:publicId" element={<JobRoleDetail />} />
+						<Route path="candidate-mapping" element={<CandidateMapping />} />
 					</Route>
 
 				</Route>

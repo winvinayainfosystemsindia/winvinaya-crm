@@ -157,8 +157,10 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 					onScroll: handleListboxScroll as any,
 					style: { maxHeight: 320 }
 				}}
-				renderOption={(props, option) => (
-					<li {...props} key={option.jobId}>
+				renderOption={(props, option) => {
+					const { key, ...optionProps } = props;
+					return (
+						<li {...optionProps} key={key}>
 						<Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center', py: 0.5 }}>
 							<Box sx={{ display: 'flex', flexDirection: 'column' }}>
 								<Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#232f3e' }}>
@@ -184,7 +186,8 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 							/>
 						</Box>
 					</li>
-				)}
+				);
+			}}
 				renderInput={(params) => (
 					<TextField
 						{...params}
