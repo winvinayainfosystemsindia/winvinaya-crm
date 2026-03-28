@@ -1,7 +1,7 @@
 import {
 	Home as HomeIcon,
 	ManageAccounts as UserIcon,
-	// Business as BusinessIcon,
+	Business as BusinessIcon,
 	Group as CandidatesIcon,
 	School as SchoolIcon,
 	Assessment as AssessmentIcon,
@@ -36,26 +36,26 @@ export const topNavigation: NavigationItem[] = [
 	{
 		label: 'Project Management',
 		icon: ProjectIcon,
-		roles: ['admin', 'manager', 'trainer', 'sourcing', 'project_coordinator', 'developer'],
+		roles: ['admin', 'manager', 'trainer', 'sourcing', 'project_coordinator', 'developer', 'placement'],
 		children: [
 			{ label: 'Projects', path: '/projects' },
 			{ label: 'Activities', path: '/projects/activities' },
 			{ label: 'Timesheet', path: '/projects/timesheet' },
 		],
 	},
-	// {
-	// 	label: 'CRM Management',
-	// 	icon: BusinessIcon,
-	// 	roles: ['admin', 'manager', 'sourcing', 'project_coordinator', 'developer'],
-	// 	children: [
-	// 		{ label: 'Dashboard', path: '/crm/dashboard' },
-	// 		{ label: 'Companies', path: '/crm/companies' },
-	// 		{ label: 'Contacts', path: '/crm/contacts' },
-	// 		{ label: 'Leads', path: '/crm/leads' },
-	// 		{ label: 'Deals', path: '/crm/deals' },
-	// 		{ label: 'Tasks', path: '/crm/tasks' },
-	// 	],
-	// },
+	{
+		label: 'CRM Management',
+		icon: BusinessIcon,
+		roles: ['admin', 'manager', 'sourcing', 'project_coordinator', 'developer', 'placement'],
+		children: [
+			// { label: 'Dashboard', path: '/crm/dashboard' },
+			{ label: 'Companies', path: '/crm/companies' },
+			{ label: 'Contacts', path: '/crm/contacts' },
+			// { label: 'Leads', path: '/crm/leads' },
+			// { label: 'Deals', path: '/crm/deals' },
+			// { label: 'Tasks', path: '/crm/tasks' },
+		],
+	},
 	{
 		label: 'Candidate Management',
 		icon: CandidatesIcon,
