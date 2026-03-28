@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Button, Container } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import { useSnackbar } from 'notistack';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
@@ -12,7 +12,12 @@ import JobRoleStats from './stats/JobRoleStats';
 import JobRoleTable from './table/JobRoleTable';
 import JobRoleFormDialog from './forms/JobRoleFormDialog';
 
-const JobRoleList: React.FC = () => {
+interface JobRoleListProps {
+	title?: string;
+	subtitle?: string;
+}
+
+const JobRoleList: React.FC<JobRoleListProps> = ({ title = "Job Role Management", subtitle }) => {
 	const dispatch = useAppDispatch();
 	const { enqueueSnackbar } = useSnackbar();
 	const { list, total } = useAppSelector((state: any) => state.jobRoles);
@@ -31,7 +36,7 @@ const JobRoleList: React.FC = () => {
 			}
 			setDialogOpen(false);
 			// Trigger a refresh of the table data
-			dispatch(fetchJobRoles({ skip: 0, limit: 10 })); 
+			dispatch(fetchJobRoles({ skip: 0, limit: 10 }));
 		} catch (error: any) {
 			enqueueSnackbar(error || 'Failed to save job role', { variant: 'error' });
 		}
@@ -48,35 +53,36 @@ const JobRoleList: React.FC = () => {
 	};
 
 	return (
-		<Box sx={{ bgcolor: '#f2f3f3', minHeight: '100vh', pb: 6 }}>
-			<CRMPageHeader 
-				title="Job Roles Management" 
+		<>
+			<CRMPageHeader
+				title={title}
+				subtitle={subtitle}
 				actions={
-					<Button 
-						variant="contained" 
-						startIcon={<AddIcon />} 
-						onClick={handleAdd} 
+					<Button
+						variant="contained"
+						startIcon={<AddIcon />}
+						onClick={handleAdd}
 						sx={{ bgcolor: '#ec7211', px: 3, fontWeight: 700, borderRadius: '2px', '&:hover': { bgcolor: '#eb5f07' } }}
 					>
 						Add Job Role
 					</Button>
-				} 
+				}
 			/>
-			
-			<Container maxWidth="xl" sx={{ mt: { xs: 2, md: 3 }, px: { xs: 2, sm: 3 } }}>
+
+			<Box sx={{ mt: { xs: 2, md: 3 } }}>
 				<JobRoleStats list={list} total={total} />
 				<Box sx={{ mt: { xs: 2, md: 3 } }}>
 					<JobRoleTable onEditJobRole={handleEdit} />
 				</Box>
-			</Container>
+			</Box>
 
-			<JobRoleFormDialog 
-				open={dialogOpen} 
-				onClose={() => setDialogOpen(false)} 
-				onSubmit={handleFormSubmit} 
-				jobRole={selectedJobRole} 
+			<JobRoleFormDialog
+				open={dialogOpen}
+				onClose={() => setDialogOpen(false)}
+				onSubmit={handleFormSubmit}
+				jobRole={selectedJobRole}
 			/>
-		</Box>
+		</>
 	);
 };
 

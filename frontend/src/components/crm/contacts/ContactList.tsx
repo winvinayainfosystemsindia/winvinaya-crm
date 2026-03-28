@@ -9,7 +9,6 @@ import {
 	Tooltip,
 	Typography,
 	Chip,
-	Container,
 	Grid
 } from '@mui/material';
 import {
@@ -41,7 +40,12 @@ import CRMAvatar from '../common/CRMAvatar';
 import type { Contact, ContactCreate, ContactUpdate } from '../../../models/contact';
 import { useSnackbar } from 'notistack';
 
-const ContactList: React.FC = () => {
+interface ContactListProps {
+	title?: string;
+	subtitle?: string;
+}
+
+const ContactList: React.FC<ContactListProps> = ({ title = "Contacts", subtitle }) => {
 	const navigate = useNavigate();
 	const dispatch = useAppDispatch();
 	const { enqueueSnackbar } = useSnackbar();
@@ -339,13 +343,14 @@ const ContactList: React.FC = () => {
 	}).length;
 
 	return (
-		<Box sx={{ bgcolor: '#f2f3f3', minHeight: '100vh', pb: 6 }}>
+		<>
 			<CRMPageHeader
-				title="Contacts"
+				title={title}
+				subtitle={subtitle}
 				actions={actions}
 			/>
 
-			<Container maxWidth="xl" sx={{ mt: 3 }}>
+			<Box sx={{ mt: 3 }}>
 				<Grid container spacing={3} sx={{ mb: 4 }}>
 					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
 						<StatCard
@@ -462,8 +467,8 @@ const ContactList: React.FC = () => {
 					loading={deleting}
 					severity="error"
 				/>
-			</Container>
-		</Box>
+			</Box>
+		</>
 	);
 };
 

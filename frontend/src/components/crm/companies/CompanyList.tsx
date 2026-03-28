@@ -7,7 +7,6 @@ import {
 	Stack,
 	IconButton,
 	Tooltip,
-	Container,
 	Grid
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -35,7 +34,12 @@ import CRMAvatar from '../common/CRMAvatar';
 import type { CompanyCreate, CompanyUpdate, Company } from '../../../models/company';
 import { useSnackbar } from 'notistack';
 
-const CompanyList: React.FC = () => {
+interface CompanyListProps {
+	title?: string;
+	subtitle?: string;
+}
+
+const CompanyList: React.FC<CompanyListProps> = ({ title = "Companies", subtitle }) => {
 	const navigate = useNavigate();
 	const dispatch = useAppDispatch();
 	const { enqueueSnackbar } = useSnackbar();
@@ -251,13 +255,14 @@ const CompanyList: React.FC = () => {
 	);
 
 	return (
-		<Box sx={{ bgcolor: '#f2f3f3', minHeight: '100vh', pb: 6 }}>
+		<>
 			<CRMPageHeader
-				title="Companies"
+				title={title}
+				subtitle={subtitle}
 				actions={actions}
 			/>
 
-			<Container maxWidth="xl" sx={{ mt: 3 }}>
+			<Box sx={{ mt: 3 }}>
 				<Grid container spacing={3} sx={{ mb: 4 }}>
 					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
 						<StatCard
@@ -374,8 +379,8 @@ const CompanyList: React.FC = () => {
 					loading={deleting}
 					severity="error"
 				/>
-			</Container>
-		</Box>
+			</Box>
+		</>
 	);
 };
 

@@ -3,10 +3,11 @@ import { Box, Typography, Stack } from '@mui/material';
 
 interface CRMPageHeaderProps {
 	title: string;
+	subtitle?: string;
 	actions?: React.ReactNode;
 }
 
-const CRMPageHeader: React.FC<CRMPageHeaderProps> = ({ title, actions }) => {
+const CRMPageHeader: React.FC<CRMPageHeaderProps> = ({ title, subtitle, actions }) => {
 	return (
 		<Box sx={{ mb: 4 }}>
 			<Stack
@@ -15,16 +16,23 @@ const CRMPageHeader: React.FC<CRMPageHeaderProps> = ({ title, actions }) => {
 				alignItems={{ xs: 'flex-start', sm: 'center' }}
 				spacing={2}
 			>
-				<Typography
-					variant="h4"
-					sx={{
-						fontWeight: 300,
-						color: '#232f3e',
-						mb: 0.5
-					}}
-				>
-					{title}
-				</Typography>
+				<Box>
+					<Typography
+						variant="h4"
+						sx={{
+							fontWeight: 300,
+							color: '#232f3e',
+							mb: 0.5
+						}}
+					>
+						{title}
+					</Typography>
+					{subtitle && (
+						<Typography variant="body2" color="text.secondary">
+							{subtitle}
+						</Typography>
+					)}
+				</Box>
 
 				{actions && (
 					<Stack direction="row" spacing={1.5}>

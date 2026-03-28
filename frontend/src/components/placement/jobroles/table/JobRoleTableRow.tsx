@@ -78,7 +78,7 @@ const JobRoleTableRow: React.FC<JobRoleTableRowProps> = ({ jobRole, onEdit, onDe
 
 			<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
 				<Typography variant="body2" sx={{ color: 'text.secondary' }}>
-					{jobRole.location?.cities?.join(', ') || jobRole.location?.state || '-'}
+					{jobRole.location?.cities?.join(', ') || jobRole.location?.states?.join(', ') || '-'}
 				</Typography>
 			</TableCell>
 
