@@ -16,8 +16,6 @@ from app.models.training_candidate_allocation import TrainingCandidateAllocation
 from app.models.training_batch import TrainingBatch
 from app.models.training_attendance import TrainingAttendance
 from app.models.training_assignment import TrainingAssignment
-from app.models.assessment import Assessment, AssessmentResult, AssessmentResponse
-from app.models.training_mock_interview import TrainingMockInterview
 from app.models.training_batch_event import TrainingBatchEvent
 from app.models.training_batch_plan import TrainingBatchPlan
 from app.models.training_batch_extension import TrainingBatchExtension
@@ -73,9 +71,6 @@ async def export_table_for_power_bi(
         "batches": TrainingBatch,
         "attendance": TrainingAttendance,
         "assignments": TrainingAssignment,
-        "assessments": Assessment,
-        "assessment_results": AssessmentResult,
-        "assessment_responses": AssessmentResponse,
         "mock_interviews": TrainingMockInterview,
         "batch_events": TrainingBatchEvent,
         "batch_plans": TrainingBatchPlan,

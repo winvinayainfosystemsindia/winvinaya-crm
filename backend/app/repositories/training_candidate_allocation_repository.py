@@ -99,7 +99,7 @@ class TrainingCandidateAllocationRepository(BaseRepository[TrainingCandidateAllo
         from sqlalchemy.orm import selectinload, joinedload
         from app.models.candidate import Candidate
         from app.models.training_attendance import TrainingAttendance
-        from app.models.assessment import Assessment, AssessmentResult
+
         
         # 1. Metrics Subqueries (Correlated)
         # Attendance Percentage: (present / total) * 100
@@ -127,21 +127,12 @@ class TrainingCandidateAllocationRepository(BaseRepository[TrainingCandidateAllo
             2
         )
 
-        # Assessment Score: average total_score for this candidate in this batch
-        assessment_score = select(func.avg(AssessmentResult.total_score)).join(Assessment).where(
-            and_(
-                AssessmentResult.candidate_id == self.model.candidate_id,
-                Assessment.batch_id == self.model.batch_id
-            )
-        ).correlate(self.model).scalar_subquery()
 
-        assessment_avg = func.round(cast(assessment_score, Numeric), 2)
 
         # 2. Build main query
         query = select(
             self.model, 
-            attendance_percentage.label("attendance_percentage"),
-            assessment_avg.label("assessment_score")
+            attendance_percentage.label("attendance_percentage")
         ).join(Candidate).where(self.model.is_deleted == False)
 
         count_query = select(func.count(self.model.id)).where(self.model.is_deleted == False)
@@ -216,7 +207,6 @@ class TrainingCandidateAllocationRepository(BaseRepository[TrainingCandidateAllo
             item = row[0]
             # Attach metrics to the model instance for pydantic serialization
             item.attendance_percentage = row[1]
-            item.assessment_score = row[2]
             items.append(item)
         
         return items, total

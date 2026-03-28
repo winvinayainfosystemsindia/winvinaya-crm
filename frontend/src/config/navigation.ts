@@ -87,7 +87,6 @@ export const topNavigation: NavigationItem[] = [
 			{ label: 'Candidate Allocation', path: '/training/allocation', roles: ['admin', 'manager', 'trainer', 'sourcing', 'project_coordinator', 'developer'] },
 			{ label: 'Attendance', path: '/training/attendance', roles: ['admin', 'manager', 'trainer', 'project_coordinator', 'developer'] },
 			// { label: 'Assignment', path: '/training/assignment', roles: ['admin', 'manager', 'trainer'] },
-			// { label: 'Online Assessment', path: '/training/assessment', roles: ['admin', 'manager', 'trainer'] },
 			// { label: 'Mock Interview', path: '/training/mock-interview', roles: ['admin', 'manager', 'trainer'] },
 
 		],

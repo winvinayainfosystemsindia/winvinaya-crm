@@ -63,7 +63,6 @@ class TrainingCandidateAllocationResponse(TrainingCandidateAllocationBase):
 
     # Computed Metrics
     attendance_percentage: Optional[float] = None
-    assessment_score: Optional[float] = None
 
     class Config:
         from_attributes = True
