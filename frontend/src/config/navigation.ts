@@ -8,6 +8,7 @@ import {
 	Settings as SettingsIcon,
 	HelpOutline as HelpIcon,
 	Folder as ProjectIcon,
+	Work as PlacementIcon,
 } from '@mui/icons-material';
 import type { SvgIconComponent } from '@mui/icons-material';
 
@@ -32,7 +33,6 @@ export const topNavigation: NavigationItem[] = [
 		icon: UserIcon,
 		roles: ['admin'],
 	},
-	// },
 	{
 		label: 'Project Management',
 		icon: ProjectIcon,
@@ -89,6 +89,14 @@ export const topNavigation: NavigationItem[] = [
 			// { label: 'Assignment', path: '/training/assignment', roles: ['admin', 'manager', 'trainer'] },
 			// { label: 'Mock Interview', path: '/training/mock-interview', roles: ['admin', 'manager', 'trainer'] },
 
+		],
+	},
+	{
+		label: 'Placement Management',
+		icon: PlacementIcon,
+		roles: ['admin', 'manager', 'placement'],
+		children: [
+			{ label: 'Job Roles', path: '/placement/job-roles' },
 		],
 	},
 ];

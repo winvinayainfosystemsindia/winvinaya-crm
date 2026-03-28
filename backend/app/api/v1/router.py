@@ -24,6 +24,7 @@ from app.api.v1.endpoints import (
     deals,
     crm_tasks,
     crm_activities,
+    job_roles,
     system_settings,
     chat,
     training_batch_plans,
@@ -74,6 +75,8 @@ router.include_router(leads.router, prefix="/crm/leads", tags=["CRM Leads"])
 router.include_router(deals.router, prefix="/crm/deals", tags=["CRM Deals"])
 router.include_router(crm_tasks.router, prefix="/crm/tasks", tags=["CRM Tasks"])
 router.include_router(crm_activities.router, prefix="/crm/activities", tags=["CRM Activities"])
+# Placement Routers
+router.include_router(job_roles.router, prefix="/placement/job-roles", tags=["Placement Job Roles"])
 
 # DSR Routers
 router.include_router(dsr_projects.router, prefix="/dsr/projects", tags=["DSR Projects"])

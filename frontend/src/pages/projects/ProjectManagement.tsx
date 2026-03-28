@@ -93,8 +93,8 @@ const ProjectManagement: React.FC = () => {
 	};
 
 	return (
-		<Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: 3 }}>
-			<Container maxWidth="xl">
+		<Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
+			<Container maxWidth="xl" sx={{ py: { xs: 2, sm: 3 }, px: { xs: 1, sm: 2, md: 3 } }}>
 				<Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 					<Box>
 						<Typography variant="h4" sx={{ fontWeight: 300, color: 'text.primary', mb: 0.5 }}>
@@ -185,7 +185,7 @@ const ProjectManagement: React.FC = () => {
 				<ConfirmDialog
 					open={confirmOpen}
 					title={user?.role === 'admin' ? "Delete Project" : "Deactivate Project"}
-					message={user?.role === 'admin' 
+					message={user?.role === 'admin'
 						? `Are you sure you want to PERMANENTLY delete project "${projectToDelete?.name}"? This action cannot be undone if there are no references.`
 						: `Are you sure you want to deactivate project "${projectToDelete?.name}"? You can re-activate it later by editing.`
 					}
