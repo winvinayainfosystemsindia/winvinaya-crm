@@ -36,7 +36,11 @@ from app.models.dsr_project_request import DSRProjectRequest, DSRProjectRequestS
 from app.models.company_holiday import CompanyHoliday
 from app.models.notification import Notification
 from app.models.whatsapp_message import WhatsAppMessage, WAProcessingStatus
-from app.models.placement_mapping import PlacementMapping
+from app.models.placement_mapping import PlacementMapping, PlacementStatus
+from app.models.placement_pipeline_history import PlacementPipelineHistory
+from app.models.placement_interview import PlacementInterview, InterviewRoundType, InterviewMode, InterviewResult
+from app.models.placement_offer import PlacementOffer, OfferResponse, JoiningStatus
+from app.models.placement_note import PlacementNote, NoteType
 from app.models.skill import Skill
 
 __all__ = [
@@ -107,5 +111,16 @@ __all__ = [
     "WAProcessingStatus",
     "Skill",
     "PlacementMapping",
+    "PlacementStatus",
+    "PlacementPipelineHistory",
+    "PlacementInterview",
+    "InterviewRoundType",
+    "InterviewMode",
+    "InterviewResult",
+    "PlacementOffer",
+    "OfferResponse",
+    "JoiningStatus",
+    "PlacementNote",
+    "NoteType",
 ]
 

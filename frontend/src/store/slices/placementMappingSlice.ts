@@ -63,6 +63,17 @@ export const fetchJobRoleMappings = createAsyncThunk(
     }
 );
 
+export const updatePlacementStatus = createAsyncThunk(
+    'placementMapping/updateStatus',
+    async ({ mappingId, status, remarks }: { mappingId: number; status: string; remarks?: string }, { rejectWithValue }) => {
+        try {
+            return await placementMappingService.updateStatus(mappingId, status, remarks);
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.detail || 'Failed to update placement status');
+        }
+    }
+);
+
 const placementMappingSlice = createSlice({
     name: 'placementMapping',
     initialState,
@@ -137,6 +148,28 @@ const placementMappingSlice = createSlice({
                 state.mappings = action.payload;
             })
             .addCase(fetchJobRoleMappings.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
+            // Update Placement Status
+            .addCase(updatePlacementStatus.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(updatePlacementStatus.fulfilled, (state, action: PayloadAction<PlacementMapping>) => {
+                state.loading = false;
+                // Update the mapping in the list
+                const mappingIndex = state.mappings.findIndex(m => m.id === action.payload.id);
+                if (mappingIndex !== -1) {
+                    state.mappings[mappingIndex] = action.payload;
+                }
+                // Also update the match status in the matches list
+                const matchIndex = state.matches.findIndex(m => m.candidate_id === action.payload.candidate_id);
+                if (matchIndex !== -1) {
+                    state.matches[matchIndex].status = action.payload.status;
+                }
+            })
+            .addCase(updatePlacementStatus.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             });

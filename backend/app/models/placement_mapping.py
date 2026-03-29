@@ -1,9 +1,7 @@
-from __future__ import annotations
-"""Placement Mapping model for linking candidates to job roles"""
-
+import enum
 from datetime import datetime
 from typing import TYPE_CHECKING
-from sqlalchemy import Integer, ForeignKey, Float, Text, DateTime, UniqueConstraint
+from sqlalchemy import Integer, ForeignKey, Float, Text, DateTime, UniqueConstraint, String, Boolean, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
 
@@ -11,6 +9,28 @@ if TYPE_CHECKING:
     from app.models.candidate import Candidate
     from app.models.job_role import JobRole
     from app.models.user import User
+    from app.models.placement_pipeline_history import PlacementPipelineHistory
+    from app.models.placement_interview import PlacementInterview
+    from app.models.placement_offer import PlacementOffer
+    from app.models.placement_note import PlacementNote
+
+
+class PlacementStatus(str, enum.Enum):
+    """Pipeline stages for placement mapping"""
+    APPLIED = "applied"
+    SHORTLISTED = "shortlisted"
+    INTERVIEW_L1 = "interview_l1"
+    INTERVIEW_L2 = "interview_l2"
+    TECHNICAL_ROUND = "technical_round"
+    HR_ROUND = "hr_round"
+    OFFER_MADE = "offer_made"
+    OFFER_ACCEPTED = "offer_accepted"
+    OFFER_REJECTED = "offer_rejected"
+    JOINED = "joined"
+    NOT_JOINED = "not_joined"
+    DROPPED = "dropped"
+    REJECTED = "rejected"
+    ON_HOLD = "on_hold"
 
 
 class PlacementMapping(BaseModel):
@@ -59,11 +79,80 @@ class PlacementMapping(BaseModel):
         default=datetime.utcnow,
         nullable=False
     )
+
+    # Pipeline Data
+    status: Mapped[PlacementStatus] = mapped_column(
+        String(50),
+        default=PlacementStatus.APPLIED,
+        nullable=False,
+        index=True
+    )
+    
+    priority: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+        default="medium",
+        comment="high, medium, low"
+    )
+    
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        nullable=False
+    )
+    
+    unmapped_by_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True
+    )
+    
+    unmapped_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True
+    )
+    
+    unmapped_reason: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True
+    )
+    
+    source: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+        default="manual"
+    )
     
     # Relationships
-    candidate: Mapped[Candidate] = relationship("Candidate")
-    job_role: Mapped[JobRole] = relationship("JobRole")
-    mapped_by: Mapped[User] = relationship("User")
+    candidate: Mapped["Candidate"] = relationship("Candidate")
+    job_role: Mapped["JobRole"] = relationship("JobRole")
+    mapped_by: Mapped["User"] = relationship("User", foreign_keys=[mapped_by_id])
+    unmapped_by: Mapped["User"] = relationship("User", foreign_keys=[unmapped_by_id])
+    
+    history: Mapped[list["PlacementPipelineHistory"]] = relationship(
+        "PlacementPipelineHistory",
+        back_populates="mapping",
+        cascade="all, delete-orphan"
+    )
+    
+    interviews: Mapped[list["PlacementInterview"]] = relationship(
+        "PlacementInterview",
+        back_populates="mapping",
+        cascade="all, delete-orphan"
+    )
+    
+    offer: Mapped["PlacementOffer"] = relationship(
+        "PlacementOffer",
+        back_populates="mapping",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
+    
+    placement_notes: Mapped[list["PlacementNote"]] = relationship(
+        "PlacementNote",
+        back_populates="mapping",
+        cascade="all, delete-orphan"
+    )
 
     # Constraints
     __table_args__ = (
@@ -71,4 +160,4 @@ class PlacementMapping(BaseModel):
     )
     
     def __repr__(self) -> str:
-        return f"<PlacementMapping(id={self.id}, candidate_id={self.candidate_id}, job_role_id={self.job_role_id})>"
+        return f"<PlacementMapping(id={self.id}, candidate_id={self.candidate_id}, job_role_id={self.job_role_id}, status={self.status})>"

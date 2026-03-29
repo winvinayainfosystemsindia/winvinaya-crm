@@ -24,19 +24,29 @@ class PlacementMappingRepository(BaseRepository[PlacementMapping]):
         result = await self.db.execute(stmt)
         return result.scalars().first()
 
-    async def get_by_job_role(self, job_role_id: int) -> List[PlacementMapping]:
+    async def get_by_job_role_active(self, job_role_id: int) -> List[PlacementMapping]:
         stmt = (
             select(self.model)
-            .where(self.model.job_role_id == job_role_id)
+            .where(
+                and_(
+                    self.model.job_role_id == job_role_id,
+                    self.model.is_active == True
+                )
+            )
             .options(selectinload(self.model.candidate))
         )
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
 
-    async def get_by_candidate(self, candidate_id: int) -> List[PlacementMapping]:
+    async def get_by_candidate_active(self, candidate_id: int) -> List[PlacementMapping]:
         stmt = (
             select(self.model)
-            .where(self.model.candidate_id == candidate_id)
+            .where(
+                and_(
+                    self.model.candidate_id == candidate_id,
+                    self.model.is_active == True
+                )
+            )
             .options(
                 selectinload(self.model.job_role).selectinload(self.JobRole.company),
                 selectinload(self.model.mapped_by)
@@ -45,7 +55,10 @@ class PlacementMappingRepository(BaseRepository[PlacementMapping]):
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
     
-    async def count_by_candidate(self, candidate_id: int) -> int:
-        stmt = select(self.model).where(self.model.candidate_id == candidate_id)
-        result = await self.db.execute(stmt)
-        return len(result.scalars().all())
+    async def update_status(self, id: int, status: str) -> Optional[PlacementMapping]:
+        mapping = await self.get(id)
+        if mapping:
+            mapping.status = status
+            await self.db.commit()
+            await self.db.refresh(mapping)
+        return mapping

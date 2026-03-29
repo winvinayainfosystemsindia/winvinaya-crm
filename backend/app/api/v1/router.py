@@ -26,6 +26,10 @@ from app.api.v1.endpoints import (
     crm_activities,
     job_roles,
     placement_mapping,
+    placement_pipeline,
+    placement_interviews,
+    placement_offers,
+    placement_notes,
     system_settings,
     chat,
     training_batch_plans,
@@ -80,6 +84,10 @@ router.include_router(crm_activities.router, prefix="/crm/activities", tags=["CR
 # Placement Routers
 router.include_router(job_roles.router, prefix="/placement/job-roles", tags=["Placement Job Roles"])
 router.include_router(placement_mapping.router)
+router.include_router(placement_pipeline.router, prefix="/placement/pipeline", tags=["Placement Pipeline"])
+router.include_router(placement_interviews.router, prefix="/placement/interviews", tags=["Placement Interviews"])
+router.include_router(placement_offers.router, prefix="/placement/offers", tags=["Placement Offers"])
+router.include_router(placement_notes.router, prefix="/placement/notes", tags=["Placement Notes"])
 
 # DSR Routers
 router.include_router(dsr_projects.router, prefix="/dsr/projects", tags=["DSR Projects"])

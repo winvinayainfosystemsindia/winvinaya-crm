@@ -24,7 +24,7 @@ class PlacementMappingService:
         job_role = await self.job_role_repo.get_by_public_id(job_role_public_id)
         if not job_role:
             raise HTTPException(status_code=404, detail="Job role not found")
-        return await self.repository.get_by_job_role(job_role.id)
+        return await self.repository.get_by_job_role_active(job_role.id)
 
     async def map_candidate(self, mapping_in: PlacementMappingCreate, user_id: int) -> PlacementMapping:
         # Check if already mapped
@@ -70,8 +70,9 @@ class PlacementMappingService:
         candidates, _ = await self.candidate_repo.get_screened(limit=1000)
         
         # Get existing mappings for this job role to mark them
-        existing_mappings = await self.repository.get_by_job_role(job_role.id)
-        mapped_candidate_ids = {m.candidate_id for m in existing_mappings}
+        existing_mappings = await self.repository.get_by_job_role_active(job_role.id)
+        # Map of candidate_id -> (mapping_id, status)
+        mapping_info = {m.candidate_id: (m.id, m.status) for m in existing_mappings}
 
         results = []
         for candidate in candidates:
@@ -145,7 +146,7 @@ class PlacementMappingService:
             total_score = skill_score + qual_score + dis_score
             
             # Count and fetch other mappings for this candidate (Only Active roles)
-            other_mappings = await self.repository.get_by_candidate(candidate.id)
+            other_mappings = await self.repository.get_by_candidate_active(candidate.id)
             other_role_names = [
                 m.job_role.title for m in other_mappings 
                 if m.job_role_id != job_role.id and m.job_role.status == "active"
@@ -181,7 +182,9 @@ class PlacementMappingService:
                     disability_match=MatchMatchInfo(is_match=dis_match or not job_disability, details=dis_detail),
                     other_mappings_count=other_count,
                     other_mappings=other_role_names,
-                    is_already_mapped=candidate.id in mapped_candidate_ids,
+                    is_already_mapped=candidate.id in mapping_info,
+                    status=mapping_info.get(candidate.id)[1] if candidate.id in mapping_info else None,
+                    mapping_id=mapping_info.get(candidate.id)[0] if candidate.id in mapping_info else None,
                     year_of_experience=year_of_exp
                 )
             )

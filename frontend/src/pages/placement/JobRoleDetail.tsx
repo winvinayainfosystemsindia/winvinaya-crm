@@ -18,6 +18,7 @@ import JobRoleHeader from '../../components/placement/jobroles/details/JobRoleHe
 import JobRoleDetailsTab from '../../components/placement/jobroles/details/JobRoleDetailsTab';
 import CandidateMappingTab from '../../components/placement/jobroles/details/CandidateMappingTab';
 import JobRoleFormDialog from '../../components/placement/jobroles/forms/JobRoleFormDialog';
+import PipelineKanbanTab from '../../components/placement/jobroles/details/PipelineKanbanTab';
 
 const JobRoleDetail: React.FC = () => {
 	const { publicId } = useParams<{ publicId: string }>();
@@ -112,6 +113,7 @@ const JobRoleDetail: React.FC = () => {
 					>
 						<Tab label="Details" id="tab-0" />
 						<Tab label="Candidate Mapping" id="tab-1" />
+						<Tab label="Pipeline" id="tab-2" />
 					</Tabs>
 				</Box>
 
@@ -119,6 +121,7 @@ const JobRoleDetail: React.FC = () => {
 				<Box>
 					{tabIndex === 0 && <JobRoleDetailsTab jobRole={jobRole} />}
 					{tabIndex === 1 && <CandidateMappingTab jobRole={jobRole} />}
+					{tabIndex === 2 && <PipelineKanbanTab />}
 				</Box>
 
 			</Container>

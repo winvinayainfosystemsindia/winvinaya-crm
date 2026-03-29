@@ -22,6 +22,8 @@ export interface CandidateMatchResult {
     other_mappings: string[];
     is_already_mapped: boolean;
     year_of_experience?: string;
+    status: string; // New field
+    mapping_id?: number; // New field
 }
 
 export interface PlacementMapping {
@@ -36,6 +38,9 @@ export interface PlacementMapping {
     candidate?: Candidate;
     job_role?: JobRole;
     mapped_by?: any;
+    status: string;
+    priority?: string;
+    is_active: boolean;
 }
 
 export interface PlacementMappingCreate {
@@ -70,6 +75,33 @@ const placementMappingService = {
         await api.delete('/placement/mappings/unmap', {
             params: { candidate_id: candidateId, job_role_id: jobRoleId }
         });
+    },
+
+    updateStatus: async (mappingId: number, status: string, remarks?: string): Promise<PlacementMapping> => {
+        const response = await api.post(`/placement/pipeline/${mappingId}/status`, null, {
+            params: { to_status: status, remarks: remarks }
+        });
+        return response.data;
+    },
+
+    getPipelineHistory: async (mapping_id: number): Promise<any[]> => {
+        const response = await api.get(`/placement/pipeline/${mapping_id}/history`);
+        return response.data;
+    },
+
+    getInterviews: async (mapping_id: number): Promise<any[]> => {
+        const response = await api.get(`/placement/interviews/mapping/${mapping_id}`);
+        return response.data;
+    },
+
+    getOffer: async (mapping_id: number): Promise<any> => {
+        const response = await api.get(`/placement/offers/mapping/${mapping_id}`);
+        return response.data;
+    },
+
+    getNotes: async (mapping_id: number): Promise<any[]> => {
+        const response = await api.get(`/placement/notes/mapping/${mapping_id}`);
+        return response.data;
     }
 };
 
