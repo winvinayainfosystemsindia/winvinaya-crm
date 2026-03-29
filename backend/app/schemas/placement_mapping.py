@@ -56,5 +56,6 @@ class CandidateMatchResult(BaseModel):
     other_mappings_count: int = 0
     other_mappings: List[str] = []
     is_already_mapped: bool = False
+    year_of_experience: Optional[str] = None
     
     model_config = ConfigDict(from_attributes=True)

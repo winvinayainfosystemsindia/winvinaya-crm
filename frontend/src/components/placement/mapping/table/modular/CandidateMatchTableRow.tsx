@@ -22,6 +22,7 @@ interface Props {
 		score: string;
 		disability: string;
 		qualification: string;
+		experience: string;
 		mappings: string;
 		skills: string;
 		actions: string;
@@ -111,27 +112,31 @@ const CandidateMatchTableRow = ({ candidate, widths, onMap, onUnmap }: Props) =>
 					{candidate.qualification}
 				</Typography>
 			</TableCell>
+			<TableCell sx={{ width: widths.experience }}>
+				<Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.8125rem' }}>
+					{candidate.year_of_experience || 'Fresher'}
+				</Typography>
+			</TableCell>
 			<TableCell sx={{ width: widths.mappings }}>
 				{candidate.other_mappings_count > 0 ? (
 					<Box
 						sx={{
 							display: 'inline-flex',
 							alignItems: 'center',
-							px: 1.5,
-							py: 0.5,
-							borderRadius: '12px',
-							bgcolor: '#eaf3ff', // Subtle blue background
-							color: '#0066cc', // Professional blue text
+							px: 1.2,
+							py: 0.4,
+							borderRadius: '4px',
+							bgcolor: '#eaf3ff',
+							color: '#0066cc',
 							border: '1px solid #cce3ff',
 							fontSize: '0.75rem',
 							fontWeight: 700,
-							letterSpacing: '0.01em'
 						}}
 					>
 						{candidate.other_mappings_count} {candidate.other_mappings_count === 1 ? 'Mapping' : 'Mappings'}
 					</Box>
 				) : (
-					<Typography variant="body2" sx={{ color: 'text.disabled', px: 2 }}>
+					<Typography variant="body2" sx={{ color: 'text.disabled', px: 1 }}>
 						—
 					</Typography>
 				)}
@@ -145,12 +150,13 @@ const CandidateMatchTableRow = ({ candidate, widths, onMap, onUnmap }: Props) =>
 							size="small"
 							variant="outlined"
 							sx={{
-								height: 20,
-								fontSize: '0.65rem',
-								fontWeight: 600,
+								height: 22,
+								fontSize: '0.75rem',
+								fontWeight: 500,
 								borderColor: 'divider',
 								color: 'text.secondary',
-								bgcolor: 'white'
+								bgcolor: 'white',
+								maxWidth: '120px' // Prevent excessive growth but Allow more than "P..."
 							}}
 						/>
 					))}
@@ -159,7 +165,7 @@ const CandidateMatchTableRow = ({ candidate, widths, onMap, onUnmap }: Props) =>
 							<Chip
 								label={`+${candidate.skills.length - 2}`}
 								size="small"
-								sx={{ height: 20, fontSize: '0.65rem', fontWeight: 600, bgcolor: 'action.hover' }}
+								sx={{ height: 22, fontSize: '0.75rem', fontWeight: 600, bgcolor: 'action.hover' }}
 							/>
 						</Tooltip>
 					)}

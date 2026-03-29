@@ -162,6 +162,11 @@ class PlacementMappingService:
             if candidate.disability_details:
                 main_disability = candidate.disability_details.get("disability_type")
 
+            # Extract year of experience
+            year_of_exp = None
+            if candidate.work_experience and isinstance(candidate.work_experience, dict):
+                year_of_exp = candidate.work_experience.get("year_of_experience")
+
             results.append(
                 CandidateMatchResult(
                     public_id=candidate.public_id,
@@ -176,7 +181,8 @@ class PlacementMappingService:
                     disability_match=MatchMatchInfo(is_match=dis_match or not job_disability, details=dis_detail),
                     other_mappings_count=other_count,
                     other_mappings=other_role_names,
-                    is_already_mapped=candidate.id in mapped_candidate_ids
+                    is_already_mapped=candidate.id in mapped_candidate_ids,
+                    year_of_experience=year_of_exp
                 )
             )
 

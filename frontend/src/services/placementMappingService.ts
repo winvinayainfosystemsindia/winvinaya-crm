@@ -21,6 +21,7 @@ export interface CandidateMatchResult {
     other_mappings_count: number;
     other_mappings: string[];
     is_already_mapped: boolean;
+    year_of_experience?: string;
 }
 
 export interface PlacementMapping {

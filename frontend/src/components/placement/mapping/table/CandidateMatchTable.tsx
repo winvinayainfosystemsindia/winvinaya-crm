@@ -21,13 +21,14 @@ interface Props {
 const CandidateMatchTable = ({ candidates, onMapClick, onUnmapClick, emptyMsg }: Props) => {
 	// Standardized fixed widths for perfect alignment between head and body
 	const COL_WIDTHS = {
-		candidate: '220px',
-		score: '110px',
-		disability: '150px',
-		qualification: '120px',
-		mappings: '120px',
+		candidate: '190px',
+		score: '80px',
+		disability: '130px',
+		qualification: '130px',
+		experience: '100px',
+		mappings: '140px',
 		skills: 'auto', // Grows to fill
-		actions: '160px'
+		actions: '145px'
 	};
 
 	return (

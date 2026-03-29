@@ -10,6 +10,7 @@ interface Props {
 		score: string;
 		disability: string;
 		qualification: string;
+		experience: string;
 		mappings: string;
 		skills: string;
 		actions: string;
@@ -36,7 +37,8 @@ const CandidateMatchTableHead = ({ widths }: Props) => {
 				<TableCell sx={{ ...headCellStyle, width: widths.score }}>Score</TableCell>
 				<TableCell sx={{ ...headCellStyle, width: widths.disability }}>Disability</TableCell>
 				<TableCell sx={{ ...headCellStyle, width: widths.qualification }}>Qualification</TableCell>
-				<TableCell sx={{ ...headCellStyle, width: widths.mappings }}>Other Active Mappings</TableCell>
+				<TableCell sx={{ ...headCellStyle, width: widths.experience }}>Experience</TableCell>
+				<TableCell sx={{ ...headCellStyle, width: widths.mappings }}>Active Mappings</TableCell>
 				<TableCell sx={{ ...headCellStyle, width: widths.skills }}>Skills</TableCell>
 				<TableCell align="right" sx={{ ...headCellStyle, width: widths.actions }}>Actions</TableCell>
 			</TableRow>
