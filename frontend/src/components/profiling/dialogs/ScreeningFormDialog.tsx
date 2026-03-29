@@ -64,12 +64,6 @@ function TabPanel(props: TabPanelProps) {
 	);
 }
 
-const COMMON_SKILLS = [
-	'Communication', 'MS Office', 'Data Entry', 'Basic Software Testing',
-	'Python', 'Java', 'SQL', 'Customer Service', 'Problem Solving',
-	'Teamwork', 'Time Management', 'Web Development', 'Hardware Networking'
-];
-
 const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 	open,
 	onClose,
@@ -422,7 +416,6 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 								<SkillsTab
 									formData={formData}
 									onUpdateField={handleUpdateField}
-									commonSkills={COMMON_SKILLS}
 								/>
 							</TabPanel>
 

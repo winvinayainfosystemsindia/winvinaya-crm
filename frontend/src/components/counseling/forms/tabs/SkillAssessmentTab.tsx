@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
 	Box,
 	Typography,
@@ -17,23 +17,89 @@ import {
 import { Add as AddIcon, DeleteOutline as DeleteIcon, InfoOutlined as InfoIcon } from '@mui/icons-material';
 import { awsStyles } from '../../../../theme/theme';
 import type { CandidateCounselingCreate } from '../../../../models/candidate';
+import { skillService } from '../../../../services/skillService';
+import ConfirmDialog from '../../../common/ConfirmDialog';
+import useToast from '../../../../hooks/useToast';
 
 interface SkillAssessmentTabProps {
 	formData: CandidateCounselingCreate;
 	onAddSkill: () => void;
 	onRemoveSkill: (index: number) => void;
 	onSkillChange: (index: number, field: string, value: string) => void;
-	commonSkills: string[];
 }
 
 const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 	formData,
 	onAddSkill,
 	onRemoveSkill,
-	onSkillChange,
-	commonSkills
+	onSkillChange
 }) => {
 	const { sectionTitle, awsPanel, fieldLabel, helperBox } = awsStyles;
+	const toast = useToast();
+	const [availableSkills, setAvailableSkills] = useState<string[]>([]);
+	const [loading, setLoading] = useState(false);
+
+	// New skill addition state
+	const [confirmAddSkillDialogOpen, setConfirmAddSkillDialogOpen] = useState(false);
+	const [newSkillName, setNewSkillName] = useState('');
+	const [pendingIndex, setPendingIndex] = useState<number | null>(null);
+
+	useEffect(() => {
+		const loadSkills = async () => {
+			setLoading(true);
+			try {
+				const skills = await skillService.getSkills();
+				setAvailableSkills(skills.map(s => s.name));
+			} catch (error) {
+				console.error('Failed to load skills:', error);
+			} finally {
+				setLoading(false);
+			}
+		};
+		loadSkills();
+	}, []);
+
+	const handleNameChange = (index: number, val: string | null) => {
+		const skillName = (val || '').trim();
+		
+		if (skillName !== '') {
+			const skillExists = availableSkills.some(s => s.toLowerCase() === skillName.toLowerCase());
+			
+			if (!skillExists) {
+				setNewSkillName(skillName);
+				setPendingIndex(index);
+				setConfirmAddSkillDialogOpen(true);
+				return;
+			}
+		}
+		
+		onSkillChange(index, 'name', skillName);
+	};
+
+	const handleConfirmAddSkill = async () => {
+		if (!newSkillName || pendingIndex === null) return;
+		
+		setLoading(true);
+		try {
+			await skillService.createSkill({ name: newSkillName, is_verified: false });
+			
+			// Update local available skills
+			setAvailableSkills(prev => [...prev, newSkillName]);
+			
+			// Update form with the new skill name
+			onSkillChange(pendingIndex, 'name', newSkillName);
+			
+			toast.success(`Skill "${newSkillName}" added to master database`);
+			setConfirmAddSkillDialogOpen(false);
+		} catch (error) {
+			console.error('Failed to create skill:', error);
+			toast.error('Failed to add skill to database');
+		} finally {
+			setLoading(false);
+			setNewSkillName('');
+			setPendingIndex(null);
+		}
+	};
 
 	const inputSx = {
 		'& .MuiOutlinedInput-root': {
@@ -85,10 +151,9 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 									<Typography sx={fieldLabel}>Skill Name</Typography>
 									<Autocomplete
 										freeSolo
-										options={commonSkills}
+										options={availableSkills}
 										value={skill.name}
-										onChange={(_e, val) => onSkillChange(index, 'name', val || '')}
-										onInputChange={(_e, val) => onSkillChange(index, 'name', val)}
+										onChange={(_e, val) => handleNameChange(index, val)}
 										renderInput={(params) => (
 											<TextField
 												{...params}
@@ -97,6 +162,12 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 												fullWidth
 												required
 												sx={inputSx}
+												onKeyDown={(e) => {
+													if (e.key === 'Enter') {
+														// Enter triggers onChange/onInputChange but we want to ensure
+														// the value is captured correctly
+													}
+												}}
 											/>
 										)}
 									/>
@@ -145,6 +216,21 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 					</Typography>
 				</Box>
 			)}
+
+			<ConfirmDialog
+				open={confirmAddSkillDialogOpen}
+				title="Add to Master Data?"
+				message={`The skill "${newSkillName}" is not currently in the standardized database. Adding it will make it available as a suggestion for all users across the system.`}
+				confirmText="Yes, Add to Database"
+				cancelText="Ignore for Now"
+				onClose={() => {
+					setConfirmAddSkillDialogOpen(false);
+					if (pendingIndex !== null) onSkillChange(pendingIndex, 'name', newSkillName);
+				}}
+				onConfirm={handleConfirmAddSkill}
+				loading={loading}
+				severity="info"
+			/>
 		</Paper>
 	);
 };

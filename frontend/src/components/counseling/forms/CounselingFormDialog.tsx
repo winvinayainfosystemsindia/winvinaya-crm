@@ -32,11 +32,6 @@ import CounselingInfoTab from './tabs/CounselingInfoTab';
 
 import { settingsService } from '../../../services/settingsService';
 
-const COMMON_SKILLS = [
-	'Communication', 'Computer Basics', 'Typing', 'English', 'MS Excel',
-	'MS Word', 'MS PowerPoint', 'Data Entry', 'Accounting', 'Tally'
-];
-
 const PREDEFINED_QUESTIONS = [
 	'Tell us about yourself and your background?'
 ];
@@ -354,7 +349,6 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 									onAddSkill={handleAddSkill}
 									onRemoveSkill={handleRemoveSkill}
 									onSkillChange={handleSkillChange}
-									commonSkills={COMMON_SKILLS}
 								/>
 							</TabPanel>
 
