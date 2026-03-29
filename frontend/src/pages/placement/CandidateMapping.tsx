@@ -17,12 +17,18 @@ import {
 	Group as GroupIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useSnackbar } from 'notistack';
 
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchJobRoles } from '../../store/slices/jobRoleSlice';
-import placementMappingService from '../../services/placementMappingService';
-import { type CandidateMatchResult } from '../../services/placementMappingService';
+import { 
+	fetchMatchesForJobRole, 
+	mapCandidate, 
+	unmapCandidate, 
+	clearMatches, 
+	clearPlacementError,
+	type CandidateMatchResult 
+} from '../../store/slices/placementMappingSlice';
+import useToast from '../../hooks/useToast';
 import { type JobRole } from '../../models/jobRole';
 
 // Modular Components
@@ -36,13 +42,12 @@ const CandidateMapping = () => {
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const navigate = useNavigate();
 	const dispatch = useAppDispatch();
-	const { enqueueSnackbar } = useSnackbar();
+	const toast = useToast();
 
 	const { list: jobRoles, loading: rolesLoading } = useAppSelector((state) => state.jobRoles);
+	const { matches, loading, error: placementError } = useAppSelector((state) => state.placementMapping);
 
 	const [selectedRole, setSelectedRole] = useState<JobRole | null>(null);
-	const [matches, setMatches] = useState<CandidateMatchResult[]>([]);
-	const [loading, setLoading] = useState(false);
 
 	// Mapping Dialog State
 	const [mapDialogOpen, setMapDialogOpen] = useState(false);
@@ -53,46 +58,46 @@ const CandidateMapping = () => {
 
 	useEffect(() => {
 		dispatch(fetchJobRoles({ skip: 0, limit: 100 }));
+		return () => {
+			dispatch(clearMatches());
+		};
 	}, [dispatch]);
 
-	const fetchMatches = useCallback(async (rolePId: string) => {
-		setLoading(true);
-		try {
-			const data = await placementMappingService.getMatchesForJobRole(rolePId);
-			setMatches(data);
-		} catch (error: unknown) {
-			const errMsg = error instanceof Error ? error.message : 'Failed to fetch matches';
-			enqueueSnackbar(errMsg, { variant: 'error' });
-		} finally {
-			setLoading(false);
+	// Auto-display errors from slice
+	useEffect(() => {
+		if (placementError) {
+			toast.error(placementError);
+			dispatch(clearPlacementError());
 		}
-	}, [enqueueSnackbar]);
+	}, [placementError, toast, dispatch]);
+
+	const fetchMatches = useCallback(async (rolePId: string) => {
+		dispatch(fetchMatchesForJobRole(rolePId));
+	}, [dispatch]);
 
 	useEffect(() => {
 		if (selectedRole) {
 			fetchMatches(selectedRole.public_id);
 		} else {
-			setMatches([]);
+			dispatch(clearMatches());
 		}
-	}, [selectedRole, fetchMatches]);
+	}, [selectedRole, fetchMatches, dispatch]);
 
 	const handleMapCandidate = async () => {
 		if (!candidateToMap || !selectedRole) return;
 		setSubmitting(true);
 		try {
-			await placementMappingService.mapCandidate({
+			await dispatch(mapCandidate({
 				candidate_id: candidateToMap.candidate_id,
 				job_role_id: selectedRole.id!,
 				match_score: candidateToMap.match_score,
 				notes: ''
-			});
+			})).unwrap();
 
-			enqueueSnackbar(`${candidateToMap.name} successfully mapped`, { variant: 'success' });
+			toast.success(`${candidateToMap.name} successfully mapped`);
 			setMapDialogOpen(false);
-			fetchMatches(selectedRole.public_id);
 		} catch (error: any) {
-			const detail = error?.response?.data?.detail || 'Failed to map candidate';
-			enqueueSnackbar(detail, { variant: 'error' });
+			toast.error(error || 'Failed to map candidate');
 		} finally {
 			setSubmitting(false);
 		}
@@ -102,13 +107,15 @@ const CandidateMapping = () => {
 		if (!candidateToUnmap || !selectedRole) return;
 		setSubmitting(true);
 		try {
-			await placementMappingService.unmapCandidate(candidateToUnmap.candidate_id, selectedRole.id!);
-			enqueueSnackbar(`${candidateToUnmap.name} mapping removed`, { variant: 'success' });
+			await dispatch(unmapCandidate({ 
+				candidateId: candidateToUnmap.candidate_id, 
+				jobRoleId: selectedRole.id! 
+			})).unwrap();
+			
+			toast.success(`${candidateToUnmap.name} mapping removed`);
 			setUnmapDialogOpen(false);
-			fetchMatches(selectedRole.public_id);
 		} catch (error: any) {
-			const detail = error?.response?.data?.detail || 'Failed to remove mapping';
-			enqueueSnackbar(detail, { variant: 'error' });
+			toast.error(error || 'Failed to remove mapping');
 		} finally {
 			setSubmitting(false);
 		}

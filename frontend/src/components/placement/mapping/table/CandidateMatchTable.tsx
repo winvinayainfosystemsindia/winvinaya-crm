@@ -4,7 +4,7 @@ import {
 	TableContainer,
 	Box
 } from '@mui/material';
-import { type CandidateMatchResult } from '../../../../services/placementMappingService';
+import { type CandidateMatchResult } from '../../../../store/slices/placementMappingSlice';
 
 // Modular Components
 import CandidateMatchTableHead from './modular/CandidateMatchTableHead';

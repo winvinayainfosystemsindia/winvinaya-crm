@@ -10,7 +10,7 @@ import {
 	Stack,
 	Chip
 } from '@mui/material';
-import { type CandidateMatchResult } from '../../../../services/placementMappingService';
+import { type CandidateMatchResult } from '../../../../store/slices/placementMappingSlice';
 import CandidateMatchTable from './CandidateMatchTable';
 import CustomTablePagination from '../../../common/CustomTablePagination';
 

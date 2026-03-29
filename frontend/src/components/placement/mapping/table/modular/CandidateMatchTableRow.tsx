@@ -10,7 +10,7 @@ import {
 	Chip,
 	Button
 } from '@mui/material';
-import { type CandidateMatchResult } from '../../../../../services/placementMappingService';
+import { type CandidateMatchResult } from '../../../../../store/slices/placementMappingSlice';
 import { Delete as DeleteIcon } from '@mui/icons-material';
 import { IconButton } from '@mui/material';
 import { useAppSelector } from '../../../../../store/hooks';
