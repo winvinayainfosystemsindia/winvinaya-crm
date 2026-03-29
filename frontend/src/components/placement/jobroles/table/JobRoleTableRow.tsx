@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TableRow, TableCell, Stack, Typography, Box, Tooltip, useTheme } from '@mui/material';
-import { Visibility as VisibilityIcon, VisibilityOff as VisibilityOffIcon } from '@mui/icons-material';
+import { TableRow, TableCell, Stack, Typography, Box, Tooltip, Chip, useTheme } from '@mui/material';
+import { Group as GroupIcon } from '@mui/icons-material';
 import { format } from 'date-fns';
 import type { JobRole } from '../../../../models/jobRole';
 
@@ -108,12 +108,19 @@ const JobRoleTableRow: React.FC<JobRoleTableRowProps> = ({ jobRole, onEdit, onDe
 			</TableCell>
 
 			<TableCell align="center" sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-				<Tooltip title={jobRole.is_visible ? "Available for Mapping" : "Hidden from Mapping"}>
-					{jobRole.is_visible ? (
-						<VisibilityIcon sx={{ color: 'success.main', fontSize: 18 }} />
-					) : (
-						<VisibilityOffIcon sx={{ color: 'error.main', fontSize: 18 }} />
-					)}
+				<Tooltip title={`${jobRole.mappings_count || 0} candidates mapped`}>
+					<Chip 
+						icon={<GroupIcon sx={{ fontSize: '1rem !important' }} />}
+						label={jobRole.mappings_count || 0}
+						size="small"
+						variant="outlined"
+						sx={{ 
+							fontWeight: 600, 
+							borderRadius: '4px',
+							color: jobRole.mappings_count && jobRole.mappings_count > 0 ? 'primary.main' : 'text.disabled',
+							borderColor: jobRole.mappings_count && jobRole.mappings_count > 0 ? 'primary.main' : 'divider'
+						}}
+					/>
 				</Tooltip>
 			</TableCell>
 

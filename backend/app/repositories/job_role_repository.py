@@ -57,7 +57,24 @@ class JobRoleRepository(BaseRepository[JobRole]):
         query = query.offset(skip).limit(limit)
         
         result = await self.db.execute(query)
-        return list(result.scalars().all())
+        job_roles = list(result.scalars().all())
+        
+        # Populate mapping counts
+        if job_roles:
+            from app.models.placement_mapping import PlacementMapping
+            role_ids = [jr.id for jr in job_roles]
+            count_query = (
+                select(PlacementMapping.job_role_id, func.count(PlacementMapping.id).label("count"))
+                .where(PlacementMapping.job_role_id.in_(role_ids))
+                .group_by(PlacementMapping.job_role_id)
+            )
+            count_result = await self.db.execute(count_query)
+            counts = {row.job_role_id: row.count for row in count_result}
+            
+            for jr in job_roles:
+                jr.mappings_count = counts.get(jr.id, 0)
+                
+        return job_roles
 
     async def count_with_filters(
         self,
@@ -107,4 +124,15 @@ class JobRoleRepository(BaseRepository[JobRole]):
             query = query.where(self.model.is_deleted == False)
             
         result = await self.db.execute(query)
-        return result.scalar_one_or_none()
+        job_role = result.scalar_one_or_none()
+        
+        if job_role:
+            from app.models.placement_mapping import PlacementMapping
+            count_query = (
+                select(func.count(PlacementMapping.id))
+                .where(PlacementMapping.job_role_id == job_role.id)
+            )
+            count_result = await self.db.execute(count_query)
+            job_role.mappings_count = count_result.scalar_one()
+            
+        return job_role

@@ -23,7 +23,7 @@ const JobRoleTableHead: React.FC<JobRoleTableHeadProps> = ({ order, orderBy, onR
 			{ id: 'no_of_vacancies', label: 'Vacancies', minWidth: 100, sortable: true, align: 'center', hideOnMobile: true },
 			{ id: 'close_date', label: 'Close Date', minWidth: 130, sortable: true, hideOnMobile: true },
 			{ id: 'created_by_id', label: 'Created By', minWidth: 150, hideOnMobile: true },
-			{ id: 'is_visible', label: 'Mapping', minWidth: 100, sortable: true, align: 'center', hideOnMobile: true },
+			{ id: 'mappings_count', label: 'Mappings', minWidth: 100, sortable: false, align: 'center', hideOnMobile: true },
 		];
 
 	return (

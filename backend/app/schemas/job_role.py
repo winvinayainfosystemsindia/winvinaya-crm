@@ -88,6 +88,7 @@ class JobRoleRead(JobRoleBase):
     company: Optional[CompanyMinimal] = None
     contact: Optional[ContactMinimal] = None
     creator: Optional[UserMinimal] = None
+    mappings_count: int = 0
 
     model_config = ConfigDict(from_attributes=True)
 
