@@ -8,26 +8,26 @@ interface JobRoleTableHeadProps {
 }
 
 const JobRoleTableHead: React.FC<JobRoleTableHeadProps> = ({ order, orderBy, onRequestSort }) => {
-	const columns: { 
-		id: keyof JobRole; 
-		label: string; 
-		minWidth: number; 
-		sortable?: boolean; 
+	const columns: {
+		id: keyof JobRole;
+		label: string;
+		minWidth: number;
+		sortable?: boolean;
 		align?: 'left' | 'center' | 'right';
-		hideOnMobile?: boolean 
+		hideOnMobile?: boolean
 	}[] = [
-		{ id: 'title', label: 'Job Title', minWidth: 200, sortable: true },
-		{ id: 'company_id', label: 'Company & Contact', minWidth: 200 },
-		{ id: 'status', label: 'Status', minWidth: 120, sortable: true },
-		{ id: 'location', label: 'Location', minWidth: 150, hideOnMobile: true },
-		{ id: 'no_of_vacancies', label: 'Vacancies', minWidth: 100, sortable: true, align: 'center', hideOnMobile: true },
-		{ id: 'close_date', label: 'Close Date', minWidth: 130, sortable: true, hideOnMobile: true },
-		{ id: 'created_by_id', label: 'Created By', minWidth: 150, hideOnMobile: true },
-		{ id: 'is_visible', label: 'Mapping', minWidth: 100, sortable: true, align: 'center', hideOnMobile: true },
-	];
+			{ id: 'title', label: 'Job Title', minWidth: 200, sortable: true },
+			{ id: 'company_id', label: 'Company & Contact', minWidth: 200 },
+			{ id: 'status', label: 'Status', minWidth: 120, sortable: true },
+			{ id: 'location', label: 'Location', minWidth: 150, hideOnMobile: true },
+			{ id: 'no_of_vacancies', label: 'Vacancies', minWidth: 100, sortable: true, align: 'center', hideOnMobile: true },
+			{ id: 'close_date', label: 'Close Date', minWidth: 130, sortable: true, hideOnMobile: true },
+			{ id: 'created_by_id', label: 'Created By', minWidth: 150, hideOnMobile: true },
+			{ id: 'is_visible', label: 'Mapping', minWidth: 100, sortable: true, align: 'center', hideOnMobile: true },
+		];
 
 	return (
-		<TableHead sx={{ bgcolor: 'background.default' }}>
+		<TableHead sx={{ bgcolor: '#fafafa' }}>
 			<TableRow>
 				{columns.map((column) => (
 					<TableCell

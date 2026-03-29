@@ -45,7 +45,7 @@ const JobRoleTableHeader: React.FC<JobRoleTableHeaderProps> = ({
 			gap: 2,
 			borderBottom: '1px solid',
 			borderColor: 'divider',
-			bgcolor: 'background.default'
+			bgcolor: '#fafafa'
 		}}>
 			<Box sx={{ display: 'flex', flex: 1 }}>
 				<TextField
@@ -72,9 +72,9 @@ const JobRoleTableHeader: React.FC<JobRoleTableHeaderProps> = ({
 				/>
 			</Box>
 
-			<Box sx={{ 
-				display: 'flex', 
-				gap: 1.5, 
+			<Box sx={{
+				display: 'flex',
+				gap: 1.5,
 				justifyContent: { xs: 'flex-start', sm: 'flex-end' },
 				flexWrap: 'wrap'
 			}}>

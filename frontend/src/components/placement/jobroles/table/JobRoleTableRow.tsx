@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { TableRow, TableCell, Stack, Typography, Box, Tooltip, useTheme } from '@mui/material';
 import { Visibility as VisibilityIcon, VisibilityOff as VisibilityOffIcon } from '@mui/icons-material';
 import { format } from 'date-fns';
@@ -18,6 +19,11 @@ interface JobRoleTableRowProps {
 
 const JobRoleTableRow: React.FC<JobRoleTableRowProps> = ({ jobRole, onEdit, onDelete, isAdmin }) => {
 	const theme = useTheme();
+	const navigate = useNavigate();
+
+	const handleRowClick = () => {
+		navigate(`/placement/job-roles/${jobRole.public_id}`);
+	};
 
 	const formatDate = (dateString: string | undefined) => {
 		if (!dateString) return '-';
@@ -39,12 +45,15 @@ const JobRoleTableRow: React.FC<JobRoleTableRowProps> = ({ jobRole, onEdit, onDe
 	return (
 		<TableRow
 			hover
+			onClick={handleRowClick}
 			sx={{
 				height: '60px',
 				'&:last-child td, &:last-child th': { border: 0 },
-				'&:hover': { bgcolor: 'action.hover' },
+				'&:hover': { 
+					bgcolor: 'rgba(236, 114, 17, 0.04)',
+					cursor: 'pointer'
+				},
 				transition: 'background-color 0.2s',
-				cursor: 'default'
 			}}
 		>
 			<TableCell>
