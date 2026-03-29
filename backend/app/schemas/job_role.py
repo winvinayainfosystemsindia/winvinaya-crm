@@ -61,6 +61,11 @@ class ContactMinimal(BaseModel):
     public_id: UUID
     first_name: str
     last_name: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    mobile: Optional[str] = None
+    designation: Optional[str] = None
+    department: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

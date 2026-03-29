@@ -1,4 +1,5 @@
 export type JobRoleStatus = 'active' | 'inactive' | 'closed';
+import type { Contact } from './contact';
 
 export const JOB_ROLE_STATUS: Record<string, JobRoleStatus> = {
 	ACTIVE: 'active',
@@ -50,12 +51,7 @@ export interface JobRole {
 		public_id: string;
 		name: string;
 	};
-	contact?: {
-		id: number;
-		public_id: string;
-		first_name: string;
-		last_name: string;
-	};
+	contact?: Contact;
 	creator?: {
 		id: number;
 		public_id: string;
