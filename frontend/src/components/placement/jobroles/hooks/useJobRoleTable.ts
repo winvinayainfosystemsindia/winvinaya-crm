@@ -2,12 +2,15 @@ import { useState, useEffect, useCallback } from 'react';
 import type { SelectChangeEvent } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { fetchJobRoles, deleteJobRole } from '../../../../store/slices/jobRoleSlice';
+import useToast from '../../../../hooks/useToast';
 import type { JobRole } from '../../../../models/jobRole';
 
 export const useJobRoleTable = () => {
 	const dispatch = useAppDispatch();
 	const { list: jobRoles, loading, total: totalCount } = useAppSelector((state) => state.jobRoles);
 	const { user } = useAppSelector((state) => state.auth);
+
+	const toast = useToast();
 
 	const [searchTerm, setSearchTerm] = useState('');
 	const [page, setPage] = useState(0);
@@ -27,12 +30,6 @@ export const useJobRoleTable = () => {
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [jobRoleToDelete, setJobRoleToDelete] = useState<JobRole | null>(null);
 	const [deleteLoading, setDeleteLoading] = useState(false);
-
-	const [notification, setNotification] = useState<{
-		open: boolean;
-		message: string;
-		severity: 'success' | 'error';
-	}>({ open: false, message: '', severity: 'success' });
 
 	const fetchJobRolesData = useCallback(async () => {
 		const filterParams: Record<string, unknown> = {
@@ -109,10 +106,10 @@ export const useJobRoleTable = () => {
 		setDeleteLoading(true);
 		try {
 			await dispatch(deleteJobRole(jobRoleToDelete.public_id)).unwrap();
-			setNotification({ open: true, message: `Job Role "${jobRoleToDelete.title}" deleted successfully`, severity: 'success' });
+			toast.success(`Job Role "${jobRoleToDelete.title}" deleted successfully`);
 			fetchJobRolesData();
 		} catch (error: any) {
-			setNotification({ open: true, message: error || 'Failed to delete job role', severity: 'error' });
+			toast.error(error || 'Failed to delete job role');
 		} finally {
 			setDeleteLoading(false);
 			setDeleteDialogOpen(false);
@@ -124,8 +121,6 @@ export const useJobRoleTable = () => {
 		setDeleteDialogOpen(false);
 		setJobRoleToDelete(null);
 	};
-
-	const handleCloseNotification = () => setNotification(prev => ({ ...prev, open: false }));
 
 	return {
 		jobRoles,
@@ -142,7 +137,6 @@ export const useJobRoleTable = () => {
 		deleteDialogOpen,
 		jobRoleToDelete,
 		deleteLoading,
-		notification,
 		fetchJobRolesData,
 		handleChangePage,
 		handleChangeRowsPerPage,
@@ -156,7 +150,6 @@ export const useJobRoleTable = () => {
 		handleDeleteClick,
 		handleDeleteConfirm,
 		handleDeleteCancel,
-		handleCloseNotification,
 		setRowsPerPage
 	};
 };

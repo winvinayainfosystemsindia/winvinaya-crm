@@ -3,9 +3,7 @@ import {
 	Paper,
 	Table,
 	TableBody,
-	TableContainer,
-	Snackbar,
-	Alert
+	TableContainer
 } from '@mui/material';
 import ConfirmDialog from '../../../common/ConfirmDialog';
 import { useJobRoleTable } from '../hooks/useJobRoleTable';
@@ -39,7 +37,6 @@ const JobRoleTable: React.FC<JobRoleTableProps> = ({ onEditJobRole }) => {
 		deleteDialogOpen,
 		jobRoleToDelete,
 		deleteLoading,
-		notification,
 		fetchJobRolesData,
 		handleChangePage,
 		handleChangeRowsPerPage,
@@ -53,7 +50,6 @@ const JobRoleTable: React.FC<JobRoleTableProps> = ({ onEditJobRole }) => {
 		handleDeleteClick,
 		handleDeleteConfirm,
 		handleDeleteCancel,
-		handleCloseNotification,
 		setRowsPerPage
 	} = useJobRoleTable();
 
@@ -129,22 +125,6 @@ const JobRoleTable: React.FC<JobRoleTableProps> = ({ onEditJobRole }) => {
 				loading={deleteLoading}
 				severity="error"
 			/>
-
-			<Snackbar
-				open={notification.open}
-				autoHideDuration={6000}
-				onClose={handleCloseNotification}
-				anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-			>
-				<Alert
-					onClose={handleCloseNotification}
-					severity={notification.severity}
-					variant="filled"
-					sx={{ width: '100%', borderRadius: '2px' }}
-				>
-					{notification.message}
-				</Alert>
-			</Snackbar>
 		</Paper>
 	);
 };

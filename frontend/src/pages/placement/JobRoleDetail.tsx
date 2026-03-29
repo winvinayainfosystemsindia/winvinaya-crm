@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchJobRoleById, updateJobRole, clearCurrentJobRole } from '../../store/slices/jobRoleSlice';
-import { useSnackbar } from 'notistack';
+import useToast from '../../hooks/useToast';
 import type { JobRoleUpdate } from '../../models/jobRole';
 
 // Modular Components
@@ -22,7 +22,7 @@ import JobRoleFormDialog from '../../components/placement/jobroles/forms/JobRole
 const JobRoleDetail: React.FC = () => {
 	const { publicId } = useParams<{ publicId: string }>();
 	const dispatch = useAppDispatch();
-	const { enqueueSnackbar } = useSnackbar();
+	const toast = useToast();
 	const { currentJobRole: jobRole, loading, error } = useAppSelector((state) => state.jobRoles);
 
 	const [tabIndex, setTabIndex] = useState(0);
@@ -47,11 +47,11 @@ const JobRoleDetail: React.FC = () => {
 		setFormLoading(true);
 		try {
 			await dispatch(updateJobRole({ publicId, jobRole: data as JobRoleUpdate })).unwrap();
-			enqueueSnackbar('Job Role updated successfully', { variant: 'success' });
+			toast.success('Job Role updated successfully');
 			setEditDialogOpen(false);
 			dispatch(fetchJobRoleById(publicId));
 		} catch (error: any) {
-			enqueueSnackbar(error || 'Failed to update job role', { variant: 'error' });
+			toast.error(error || 'Failed to update job role');
 		} finally {
 			setFormLoading(false);
 		}

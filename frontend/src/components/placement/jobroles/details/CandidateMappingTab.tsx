@@ -44,21 +44,35 @@ import {
     TrendingUp as TrendingUpIcon,
     GroupAdd as GroupAddIcon
 } from '@mui/icons-material';
-import { useSnackbar } from 'notistack';
+import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
+import { 
+    fetchMatchesForJobRole, 
+    mapCandidate, 
+    clearMatches, 
+    clearPlacementError,
+    type CandidateMatchResult 
+} from '../../../../store/slices/placementMappingSlice';
+import useToast from '../../../../hooks/useToast';
 import type { JobRole } from '../../../../models/jobRole';
-import placementMappingService from '../../../../services/placementMappingService';
-import type { CandidateMatchResult } from '../../../../services/placementMappingService';
 
 interface CandidateMappingTabProps {
     jobRole: JobRole;
 }
 
 const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) => {
-    const { enqueueSnackbar } = useSnackbar();
+    const toast = useToast();
+    const dispatch = useAppDispatch();
     
-    // Data State
-    const [matchingCandidates, setMatchingCandidates] = useState<CandidateMatchResult[]>([]);
-    const [loading, setLoading] = useState(true);
+    // Redux State
+    const { matches: matchingCandidates, loading, error: placementError } = useAppSelector((state) => state.placementMapping);
+    
+    // Auto-display errors from slice
+    useEffect(() => {
+        if (placementError) {
+            toast.error(placementError);
+            dispatch(clearPlacementError());
+        }
+    }, [placementError, toast, dispatch]);
     
     // Pagination State (Frontend)
     const [page, setPage] = useState(0);
@@ -71,20 +85,15 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
     const [submitting, setSubmitting] = useState(false);
 
     const fetchData = useCallback(async () => {
-        setLoading(true);
-        try {
-            const matches = await placementMappingService.getMatchesForJobRole(jobRole.public_id);
-            setMatchingCandidates(matches);
-        } catch (error: any) {
-            enqueueSnackbar('Failed to fetch mapping data', { variant: 'error' });
-        } finally {
-            setLoading(false);
-        }
-    }, [jobRole.public_id, enqueueSnackbar]);
+        dispatch(fetchMatchesForJobRole(jobRole.public_id));
+    }, [jobRole.public_id, dispatch]);
 
     useEffect(() => {
         fetchData();
-    }, [fetchData]);
+        return () => {
+            dispatch(clearMatches());
+        };
+    }, [fetchData, dispatch]);
 
     // Compute split lists
     const suggestions = useMemo(() => 
@@ -119,19 +128,19 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
         if (!selectedCandidate) return;
         setSubmitting(true);
         try {
-            await placementMappingService.mapCandidate({
+            await dispatch(mapCandidate({
                 candidate_id: selectedCandidate.candidate_id,
                 job_role_id: jobRole.id!,
                 match_score: selectedCandidate.match_score,
                 notes: mappingNotes
-            });
+            })).unwrap();
             
-            enqueueSnackbar(`${selectedCandidate.name} has been successfully mapped`, { variant: 'success' });
+            toast.success(`${selectedCandidate.name} has been successfully mapped`);
             setMapDialogOpen(false);
             setMappingNotes('');
-            fetchData();
+            // fetchData(); // Optional, slice already updates the list
         } catch (error: any) {
-            enqueueSnackbar(error?.response?.data?.detail || 'Failed to map candidate', { variant: 'error' });
+            toast.error(error || 'Failed to map candidate');
         } finally {
             setSubmitting(false);
         }
@@ -143,7 +152,7 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
         return '#d13212';
     };
 
-    if (loading) {
+    if (loading && matchingCandidates.length === 0) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
                 <CircularProgress sx={{ color: '#ec7211' }} />
