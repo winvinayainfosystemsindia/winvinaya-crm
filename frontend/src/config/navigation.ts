@@ -46,7 +46,7 @@ export const topNavigation: NavigationItem[] = [
 	{
 		label: 'CRM Management',
 		icon: BusinessIcon,
-		roles: ['admin', 'manager', 'sourcing', 'project_coordinator', 'developer', 'placement'],
+		roles: ['admin', 'manager', 'placement'],
 		children: [
 			// { label: 'Dashboard', path: '/crm/dashboard' },
 			{ label: 'Companies', path: '/crm/companies' },
@@ -94,7 +94,7 @@ export const topNavigation: NavigationItem[] = [
 	{
 		label: 'Placement Management',
 		icon: PlacementIcon,
-		roles: ['admin', 'manager', 'placement', 'sourcing', 'project_coordinator'],
+		roles: ['admin', 'manager', 'placement'],
 		children: [
 			{ label: 'Job Roles', path: '/placement/job-roles' },
 			{ label: 'Candidate Mapping', path: '/placement/candidate-mapping' },
