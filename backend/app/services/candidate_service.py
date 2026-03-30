@@ -118,13 +118,14 @@ class CandidateService:
         year_of_experience: Optional[str] = None,
         currently_employed: Optional[bool] = None,
         extra_filters: Optional[dict] = None,
-        current_user: Optional[User] = None
+        current_user: Optional[User] = None,
+        is_global: bool = False
     ) -> dict:
         """Get list of candidates with total count, supporting optional search, filters, and sorting"""
         
         # Determine assigned_to_id based on user role
         assigned_to_id = None
-        if current_user and current_user.role == UserRole.SOURCING:
+        if current_user and current_user.role == UserRole.SOURCING and not is_global:
             assigned_to_id = current_user.id
             
         items, total = await self.repository.get_multi(
@@ -190,10 +191,10 @@ class CandidateService:
         """Get candidate statistics"""
         return await self.repository.get_stats()
 
-    async def get_screening_stats(self, current_user: Optional[User] = None) -> dict:
+    async def get_screening_stats(self, current_user: Optional[User] = None, is_global: bool = False) -> dict:
         """Get screening statistics with optional assignment filter"""
         assigned_to_id = None
-        if current_user and current_user.role == UserRole.SOURCING:
+        if current_user and current_user.role == UserRole.SOURCING and not is_global:
             assigned_to_id = current_user.id
             
         return await self.repository.get_screening_stats(assigned_to_id=assigned_to_id)
@@ -211,12 +212,13 @@ class CandidateService:
         screening_status: Optional[str] = None,
         is_experienced: Optional[bool] = None,
         counseling_status: Optional[str] = None,
-        current_user: Optional[User] = None
+        current_user: Optional[User] = None,
+        is_global: bool = False
     ) -> dict:
         """Get list of candidates without screening records with total count, supporting optional search, filters and sorting"""
         
         assigned_to_id = None
-        if current_user and current_user.role == UserRole.SOURCING:
+        if current_user and current_user.role == UserRole.SOURCING and not is_global:
             assigned_to_id = current_user.id
             
         items, total = await self.repository.get_unscreened(
@@ -250,12 +252,13 @@ class CandidateService:
         cities: Optional[list] = None,
         screening_status: Optional[str] = None,
         is_experienced: Optional[bool] = None,
-        current_user: Optional[User] = None
+        current_user: Optional[User] = None,
+        is_global: bool = False
     ) -> dict:
         """Get list of candidates with screening records with total count, supporting optional search, filters, document status filter, and sorting"""
         
         assigned_to_id = None
-        if current_user and current_user.role == UserRole.SOURCING:
+        if current_user and current_user.role == UserRole.SOURCING and not is_global:
             assigned_to_id = current_user.id
             
         items, total = await self.repository.get_screened(

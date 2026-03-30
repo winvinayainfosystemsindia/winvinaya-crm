@@ -72,9 +72,10 @@ export const fetchCandidateStats = createAsyncThunk(
 
 export const fetchScreeningStats = createAsyncThunk(
 	'candidates/fetchScreeningStats',
-	async (_, { rejectWithValue }) => {
+	async (params: { isGlobal?: boolean } | void = {}, { rejectWithValue }) => {
 		try {
-			const response = await candidateService.getScreeningStats();
+			const { isGlobal = false } = params || {};
+			const response = await candidateService.getScreeningStats(isGlobal);
 			return response;
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to fetch screening stats');
@@ -104,6 +105,7 @@ export const fetchCandidates = createAsyncThunk(
 			year_of_experience?: string;
 			currently_employed?: boolean;
 			extraFilters?: Record<string, string>;
+			is_global?: boolean;
 		} | void = {},
 		{ rejectWithValue }
 	) => {
@@ -126,7 +128,8 @@ export const fetchCandidates = createAsyncThunk(
 				year_of_passing,
 				year_of_experience,
 				currently_employed,
-				extraFilters
+				extraFilters,
+				is_global
 			} = (params || {}) as any;
 			const response = await candidateService.getAll(
 				skip,
@@ -146,7 +149,8 @@ export const fetchCandidates = createAsyncThunk(
 				year_of_passing,
 				year_of_experience,
 				currently_employed,
-				extraFilters
+				extraFilters,
+				is_global
 			);
 			return response;
 		} catch (error: any) {
@@ -170,6 +174,7 @@ export const fetchUnscreenedCandidates = createAsyncThunk(
 			screening_status?: string;
 			is_experienced?: boolean;
 			counseling_status?: string;
+			is_global?: boolean;
 		} | void = {},
 		{ rejectWithValue }
 	) => {
@@ -185,7 +190,8 @@ export const fetchUnscreenedCandidates = createAsyncThunk(
 				cities,
 				screening_status,
 				is_experienced,
-				counseling_status
+				counseling_status,
+				is_global
 			} = params || {};
 			const response = await candidateService.getUnscreened(
 				skip,
@@ -198,7 +204,8 @@ export const fetchUnscreenedCandidates = createAsyncThunk(
 				cities,
 				screening_status,
 				is_experienced,
-				counseling_status
+				counseling_status,
+				is_global
 			);
 			return response;
 		} catch (error: any) {
@@ -223,6 +230,7 @@ export const fetchScreenedCandidates = createAsyncThunk(
 			cities?: string;
 			screening_status?: string;
 			is_experienced?: boolean;
+			is_global?: boolean;
 		} | void = {},
 		{ rejectWithValue }
 	) => {
@@ -242,7 +250,8 @@ export const fetchScreenedCandidates = createAsyncThunk(
 				is_experienced,
 				year_of_passing,
 				year_of_experience,
-				currently_employed
+				currently_employed,
+				is_global
 			} = (params || {}) as any;
 			const response = await candidateService.getScreened(
 				skip,
@@ -259,7 +268,8 @@ export const fetchScreenedCandidates = createAsyncThunk(
 				is_experienced,
 				year_of_passing,
 				year_of_experience,
-				currently_employed
+				currently_employed,
+				is_global
 			);
 			return response;
 		} catch (error: any) {

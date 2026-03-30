@@ -38,9 +38,11 @@ export const candidateService = {
 		yearOfPassing?: string,
 		yearOfExperience?: string,
 		currentlyEmployed?: boolean,
-		extraFilters?: Record<string, string>
+		extraFilters?: Record<string, string>,
+		isGlobal: boolean = false
 	): Promise<CandidatePaginatedResponse> => {
 		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
+		const globalParam = isGlobal ? `&is_global=true` : '';
 		const sortParam = sortBy ? `&sort_by=${sortBy}&sort_order=${sortOrder}` : '';
 		const filterParams = [
 			disabilityTypes ? `&disability_types=${encodeURIComponent(disabilityTypes)}` : '',
@@ -65,7 +67,7 @@ export const candidateService = {
 				.join('')
 			: '';
 
-		const response = await api.get<CandidatePaginatedResponse>(`/candidates/?skip=${skip}&limit=${limit}${searchParam}${sortParam}${filterParams}${extraParams}`);
+		const response = await api.get<CandidatePaginatedResponse>(`/candidates/?skip=${skip}&limit=${limit}${searchParam}${sortParam}${filterParams}${extraParams}${globalParam}`);
 		return response.data;
 	},
 
@@ -77,8 +79,8 @@ export const candidateService = {
 		return response.data;
 	},
 
-	getScreeningStats: async (): Promise<any> => {
-		const response = await api.get('/candidates/screening-stats');
+	getScreeningStats: async (isGlobal: boolean = false): Promise<any> => {
+		const response = await api.get(`/candidates/screening-stats${isGlobal ? '?is_global=true' : ''}`);
 		return response.data;
 	},
 
@@ -129,9 +131,11 @@ export const candidateService = {
 		cities?: string,
 		screeningStatus?: string,
 		isExperienced?: boolean,
-		counselingStatus?: string
+		counselingStatus?: string,
+		isGlobal: boolean = false
 	): Promise<CandidatePaginatedResponse> => {
 		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
+		const globalParam = isGlobal ? `&is_global=true` : '';
 		const sortParam = sortBy ? `&sort_by=${sortBy}&sort_order=${sortOrder}` : '';
 		const filterParams = [
 			disabilityTypes ? `&disability_types=${encodeURIComponent(disabilityTypes)}` : '',
@@ -142,7 +146,7 @@ export const candidateService = {
 			counselingStatus ? `&counseling_status=${encodeURIComponent(counselingStatus)}` : ''
 		].join('');
 
-		const response = await api.get<CandidatePaginatedResponse>(`/candidates/unscreened?skip=${skip}&limit=${limit}${searchParam}${sortParam}${filterParams}`);
+		const response = await api.get<CandidatePaginatedResponse>(`/candidates/unscreened?skip=${skip}&limit=${limit}${searchParam}${sortParam}${filterParams}${globalParam}`);
 		return response.data;
 	},
 
@@ -164,9 +168,11 @@ export const candidateService = {
 		isExperienced?: boolean,
 		yearOfPassing?: string,
 		yearOfExperience?: string,
-		currentlyEmployed?: boolean
+		currentlyEmployed?: boolean,
+		isGlobal: boolean = false
 	): Promise<CandidatePaginatedResponse> => {
 		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
+		const globalParam = isGlobal ? `&is_global=true` : '';
 		const docStatusParam = documentStatus ? `&document_status=${documentStatus}` : '';
 		const sortParam = sortBy ? `&sort_by=${sortBy}&sort_order=${sortOrder}` : '';
 		const filterParams = [
@@ -180,7 +186,7 @@ export const candidateService = {
 			currentlyEmployed !== undefined ? `&currently_employed=${currentlyEmployed}` : ''
 		].join('');
 
-		const response = await api.get<CandidatePaginatedResponse>(`/candidates/screened?skip=${skip}&limit=${limit}${counselingStatus ? `&counseling_status=${counselingStatus}` : ''}${docStatusParam}${searchParam}${sortParam}${filterParams}`);
+		const response = await api.get<CandidatePaginatedResponse>(`/candidates/screened?skip=${skip}&limit=${limit}${counselingStatus ? `&counseling_status=${counselingStatus}` : ''}${docStatusParam}${searchParam}${sortParam}${filterParams}${globalParam}`);
 		return response.data;
 	},
 

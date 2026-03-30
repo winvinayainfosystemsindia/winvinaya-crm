@@ -99,6 +99,7 @@ async def get_candidates(
     year_of_passing: str = None, # Comma-separated list
     year_of_experience: str = None,
     currently_employed: bool = None,
+    is_global: bool = False,
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
     db: AsyncSession = Depends(get_db)
 ):
@@ -141,7 +142,8 @@ async def get_candidates(
         year_of_experience=year_of_experience,
         currently_employed=currently_employed,
         extra_filters=extra_filters,
-        current_user=current_user
+        current_user=current_user,
+        is_global=is_global
     )
 
 
@@ -182,6 +184,7 @@ async def get_candidate_stats(
 @rate_limit_medium()
 async def get_candidate_screening_stats(
     request: Request,
+    is_global: bool = False,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -189,7 +192,7 @@ async def get_candidate_screening_stats(
     Get candidate screening statistics for tabs (Role-filtered)
     """
     service = CandidateService(db)
-    return await service.get_screening_stats(current_user=current_user)
+    return await service.get_screening_stats(current_user=current_user, is_global=is_global)
 
 
 @router.get("/unscreened", response_model=CandidatePaginatedResponse)
@@ -207,8 +210,8 @@ async def get_unscreened_candidates(
     screening_status: str = None,
     is_experienced: bool = None,
     counseling_status: str = None,
+    is_global: bool = False,
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
-
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -231,7 +234,8 @@ async def get_unscreened_candidates(
         screening_status=screening_status,
         is_experienced=is_experienced,
         counseling_status=counseling_status,
-        current_user=current_user
+        current_user=current_user,
+        is_global=is_global
     )
 
 
@@ -251,6 +255,7 @@ async def get_screened_candidates(
     cities: str = None,
     screening_status: str = None,
     is_experienced: bool = None,
+    is_global: bool = False,
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
     db: AsyncSession = Depends(get_db)
 ):
@@ -276,7 +281,8 @@ async def get_screened_candidates(
         cities=cities_list,
         screening_status=screening_status,
         is_experienced=is_experienced,
-        current_user=current_user
+        current_user=current_user,
+        is_global=is_global
     )
 
 

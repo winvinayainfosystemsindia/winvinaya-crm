@@ -177,6 +177,7 @@ const Reports: React.FC = () => {
 			year_of_experience: filters.year_of_experience ? `${filters.year_of_experience.min || 0}-${filters.year_of_experience.max || 50}` : undefined,
 			is_experienced: filters.is_experienced === 'true' ? true : filters.is_experienced === 'false' ? false : undefined,
 			currently_employed: filters.currently_employed === 'true' ? true : filters.currently_employed === 'false' ? false : undefined,
+			is_global: true,
 			extraFilters: Object.keys(filters)
 				.filter(key => key.startsWith('screening_others.') || key.startsWith('counseling_others.'))
 				.reduce((acc, key) => {
