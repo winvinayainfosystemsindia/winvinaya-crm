@@ -10,20 +10,17 @@ import {
 	Tab,
 	Tabs,
 	CircularProgress,
-    List,
-    Paper,
-    Button,
-    Grid,
-    Avatar
+	Paper,
+	Button,
+	Grid,
+	Avatar,
+	TextField
 } from '@mui/material';
 import {
 	Timeline,
 	TimelineItem,
-	TimelineSeparator,
 	TimelineConnector,
-	TimelineContent,
 	TimelineDot,
-	TimelineOppositeContent
 } from '@mui/lab';
 import {
 	Close as CloseIcon,
@@ -31,10 +28,11 @@ import {
 	Schedule as ScheduleIcon,
 	LocalOffer as OfferIcon,
 	Notes as NotesIcon,
-    Event as EventIcon,
-    LocationOn as LocationIcon,
-    Link as LinkIcon,
-    Work as WorkIcon
+	Event as EventIcon,
+	LocationOn as LocationIcon,
+	Link as LinkIcon,
+	Work as WorkIcon,
+	Send as SendIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import placementMappingService from '../../../../services/placementMappingService';
@@ -56,6 +54,7 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 	const [interviews, setInterviews] = useState<any[]>([]);
 	const [offer, setOffer] = useState<any>(null);
 	const [notes, setNotes] = useState<any[]>([]);
+	const [newNote, setNewNote] = useState('');
 
 	const fetchData = useCallback(async () => {
 		setLoading(true);
@@ -111,20 +110,31 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 			anchor="right"
 			open={open}
 			onClose={onClose}
-			PaperProps={{
-				sx: { width: { xs: '100%', sm: 500, md: 600 }, bgcolor: '#f8f9fa' }
+			sx={{
+				zIndex: 1400, // Ensure it's above system headers
+				'& .MuiDrawer-paper': {
+					width: { xs: '100%', sm: 500, md: 600 },
+					bgcolor: '#f8f9fa',
+					boxShadow: '-4px 0 20px rgba(0,0,0,0.1)'
+				}
 			}}
 		>
-			<Box sx={{ p: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: '#232f3e', color: 'white' }}>
-				<Box>
-					<Typography variant="h6" sx={{ fontWeight: 300, display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <WorkIcon sx={{ color: '#ff9900' }} />
-                        Placement Lifecycle
-                    </Typography>
-					<Typography variant="caption" sx={{ color: '#aab7bd' }}>Tracking {candidateName} for {jobTitle}</Typography>
+			<Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: '#232f3e', color: 'white' }}>
+				<Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+					<Box sx={{ bgcolor: '#ff9900', p: 1, borderRadius: '4px', display: 'flex' }}>
+						<WorkIcon sx={{ color: '#232f3e', fontSize: 20 }} />
+					</Box>
+					<Box>
+						<Typography variant="subtitle1" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+							Placement Lifecycle
+						</Typography>
+						<Typography variant="caption" sx={{ color: '#aab7bd', fontSize: '0.7rem' }}>
+							{candidateName} • {jobTitle}
+						</Typography>
+					</Box>
 				</Box>
-				<IconButton onClick={onClose} sx={{ color: 'white' }}>
-					<CloseIcon />
+				<IconButton onClick={onClose} sx={{ color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+					<CloseIcon fontSize="small" />
 				</IconButton>
 			</Box>
 
@@ -132,10 +142,23 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 				<Tabs
 					value={tabValue}
 					onChange={(_, v) => setTabValue(v)}
+					variant="fullWidth"
 					sx={{ 
-                        px: 2,
-                        '& .MuiTab-root': { minHeight: 48, textTransform: 'none', fontWeight: 600, fontSize: '0.8125rem' }
-                    }}
+						'& .MuiTab-root': { 
+							minHeight: 56, 
+							textTransform: 'none', 
+							fontWeight: 600, 
+							fontSize: '0.85rem',
+							color: '#545b64'
+						},
+						'& .MuiTabs-indicator': {
+							height: 3,
+							bgcolor: '#ec7211'
+						},
+						'& .Mui-selected': {
+							color: '#ec7211 !important'
+						}
+					}}
 				>
 					<Tab icon={<HistoryIcon sx={{ fontSize: 18 }} />} label="Timeline" iconPosition="start" />
 					<Tab icon={<ScheduleIcon sx={{ fontSize: 18 }} />} label="Interviews" iconPosition="start" />
@@ -147,199 +170,273 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 			<Box sx={{ flexGrow: 1, overflowY: 'auto', p: 3 }}>
 				{loading ? (
 					<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 10, gap: 2 }}>
-						<CircularProgress size={32} />
-                        <Typography variant="body2" color="textSecondary">Fetching placement data...</Typography>
+						<CircularProgress size={32} thickness={5} sx={{ color: '#ec7211' }} />
+						<Typography variant="body2" color="textSecondary">Fetching placement data...</Typography>
 					</Box>
 				) : (
 					<>
 						{tabValue === 0 && (
-							<Timeline position="right" sx={{ px: 0 }}>
+							<Timeline sx={{ p: 0, m: 0 }}>
 								{history.map((item, index) => (
-									<TimelineItem key={index}>
-										<TimelineOppositeContent sx={{ flex: 0.25, py: '12px', px: 2 }}>
-											<Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-												{format(new Date(item.changed_at), 'MMM dd')}
-											</Typography>
-                                            <Typography variant="caption" display="block" color="textDisabled">
-                                                {format(new Date(item.changed_at), 'p')}
-                                            </Typography>
-										</TimelineOppositeContent>
-										<TimelineSeparator>
-											<TimelineDot sx={{ bgcolor: getStatusColor(item.to_status), boxShadow: 'none' }} />
-											{index < history.length - 1 && <TimelineConnector sx={{ bgcolor: '#e0e0e0' }} />}
-										</TimelineSeparator>
-										<TimelineContent sx={{ py: '12px', px: 2 }}>
-											<Typography variant="subtitle2" sx={{ fontWeight: 800, color: getStatusColor(item.to_status) }}>
-												{item.to_status.replace('_', ' ').toUpperCase()}
-											</Typography>
-											{item.remarks && (
-												<Paper variant="outlined" sx={{ p: 1.5, mt: 1, bgcolor: '#fcfcfc', borderStyle: 'dashed' }}>
-                                                    <Typography variant="body2" color="textSecondary" sx={{ fontSize: '0.8125rem' }}>
-                                                        {item.remarks}
-                                                    </Typography>
-                                                </Paper>
-											)}
-										</TimelineContent>
+									<TimelineItem key={index} sx={{ '&:before': { display: 'none' } }}>
+										<Box sx={{ display: 'flex', gap: 2, width: '100%' }}>
+											<Box sx={{ minWidth: 70, textAlign: 'right', pt: 0.5 }}>
+												<Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', display: 'block' }}>
+													{format(new Date(item.changed_at), 'MMM dd')}
+												</Typography>
+												<Typography variant="caption" sx={{ color: 'textDisabled', fontSize: '0.65rem' }}>
+													{format(new Date(item.changed_at), 'p')}
+												</Typography>
+											</Box>
+											
+											<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+												<TimelineDot 
+													sx={{ 
+														bgcolor: getStatusColor(item.to_status), 
+														boxShadow: 'none',
+														width: 12,
+														height: 12,
+														m: 0,
+														border: '2px solid white'
+													}} 
+												/>
+												{index < history.length - 1 && <TimelineConnector sx={{ bgcolor: '#eaeded', width: 2 }} />}
+											</Box>
+											
+											<Box sx={{ pb: 4, flex: 1 }}>
+												<Stack direction="row" spacing={1} alignItems="center">
+													<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+														{item.to_status.replace('_', ' ')}
+													</Typography>
+													{item.changed_by_name && (
+														<Typography variant="caption" sx={{ color: 'textSecondary', fontSize: '0.7rem', fontStyle: 'italic' }}>
+															• {item.changed_by_name}
+														</Typography>
+													)}
+												</Stack>
+												
+												{item.remarks && (
+													<Box sx={{ 
+														mt: 1, 
+														p: 1.5, 
+														bgcolor: 'white', 
+														borderRadius: '4px',
+														border: '1px solid #eaeded',
+														boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+														position: 'relative',
+														'&:before': {
+															content: '""',
+															position: 'absolute',
+															left: 0,
+															top: 0,
+															bottom: 0,
+															width: '3px',
+															bgcolor: getStatusColor(item.to_status),
+															borderTopLeftRadius: '4px',
+															borderBottomLeftRadius: '4px'
+														}
+													}}>
+														<Typography variant="body2" sx={{ fontSize: '0.825rem', color: '#545b64', lineHeight: 1.5 }}>
+															{item.remarks}
+														</Typography>
+													</Box>
+												)}
+											</Box>
+										</Box>
 									</TimelineItem>
 								))}
 								{history.length === 0 && (
 									<Box sx={{ textAlign: 'center', py: 10 }}>
-										<HistoryIcon sx={{ fontSize: 48, color: 'divider', mb: 2 }} />
-										<Typography variant="body2" color="textSecondary">No timeline history recorded yet.</Typography>
+										<HistoryIcon sx={{ fontSize: 48, color: '#eaeded', mb: 2 }} />
+										<Typography variant="body2" color="textSecondary">No activity recorded for this candidate.</Typography>
 									</Box>
 								)}
 							</Timeline>
 						)}
-                        
-                        {tabValue === 1 && (
-                            <Box>
-                                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-                                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Interview Rounds</Typography>
-                                    <Button size="small" variant="contained" startIcon={<ScheduleIcon />} sx={{ textTransform: 'none', borderRadius: '4px' }}>
-                                        Schedule Next
-                                    </Button>
-                                </Stack>
-                                <List sx={{ width: '100%', p: 0 }}>
-                                    {interviews.map((iv, index) => (
-                                        <Paper key={index} variant="outlined" sx={{ mb: 2, overflow: 'hidden', borderRadius: '4px' }}>
-                                            <Box sx={{ p: 2, display: 'flex', gap: 2 }}>
-                                                <Box sx={{ textAlign: 'center', minWidth: 60 }}>
-                                                    <Typography variant="h5" sx={{ fontWeight: 200 }}>R{iv.round_number}</Typography>
-                                                    <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>{iv.round_type?.toUpperCase()}</Typography>
-                                                </Box>
-                                                <Divider orientation="vertical" flexItem />
-                                                <Box sx={{ flexGrow: 1 }}>
-                                                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                                                        <Box>
-                                                            <Typography variant="body2" sx={{ fontWeight: 700 }}>{iv.interviewer_name || 'TBD'}</Typography>
-                                                            <Stack direction="row" spacing={2} sx={{ mt: 0.5 }}>
-                                                                <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary' }}>
-                                                                    <EventIcon sx={{ fontSize: 14 }} /> {iv.scheduled_at ? format(new Date(iv.scheduled_at), 'MMM dd, p') : 'Unscheduled'}
-                                                                </Typography>
-                                                                <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary' }}>
-                                                                    <LocationIcon sx={{ fontSize: 14 }} /> {iv.mode}
-                                                                </Typography>
-                                                            </Stack>
-                                                        </Box>
-                                                        <Chip 
-                                                            label={iv.result?.toUpperCase() || 'PENDING'} 
-                                                            size="small"
-                                                            sx={{ 
-                                                                fontSize: '0.65rem', 
-                                                                fontWeight: 800,
-                                                                bgcolor: iv.result === 'passed' ? 'success.lighter' : iv.result === 'failed' ? 'error.lighter' : 'warning.lighter',
-                                                                color: iv.result === 'passed' ? 'success.main' : iv.result === 'failed' ? 'error.main' : 'warning.main',
-                                                                borderRadius: '2px'
-                                                            }}
-                                                        />
-                                                    </Stack>
-                                                    {iv.interview_link && (
-                                                        <Button 
-                                                            size="small" 
-                                                            startIcon={<LinkIcon />} 
-                                                            href={iv.interview_link} 
-                                                            target="_blank"
-                                                            sx={{ mt: 1, textTransform: 'none', fontSize: '0.75rem' }}
-                                                        >
-                                                            Join Meeting
-                                                        </Button>
-                                                    )}
-                                                </Box>
-                                            </Box>
-                                        </Paper>
-                                    ))}
-                                    {interviews.length === 0 && (
-                                        <Box sx={{ textAlign: 'center', py: 10, bgcolor: 'white', borderRadius: '4px', border: '1px dashed #e0e0e0' }}>
-                                            <ScheduleIcon sx={{ fontSize: 48, color: 'divider', mb: 2 }} />
-                                            <Typography variant="body2" color="textSecondary">No interviews scheduled yet.</Typography>
-                                        </Box>
-                                    )}
-                                </List>
-                            </Box>
-                        )}
-                        
-                        {tabValue === 2 && (
-                            <Box>
-                                {offer ? (
-                                    <Paper variant="outlined" sx={{ p: 3, borderRadius: '4px', bgcolor: 'white' }}>
-                                        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-                                            <Typography variant="h6" sx={{ fontSize: '1.1rem', fontWeight: 300 }}>Offer Details</Typography>
-                                            <Chip 
-                                                label={offer.joining_status || offer.candidate_response?.toUpperCase()} 
-                                                color={offer.candidate_response === 'accepted' ? 'success' : 'warning'}
-                                                sx={{ borderRadius: '4px', fontWeight: 700 }}
-                                            />
-                                        </Stack>
-                                        <Grid container spacing={3}>
-                                            <Grid size={{ xs: 6 }}>
-                                                <Typography variant="caption" color="textSecondary">OFFERED CTC</Typography>
-                                                <Typography variant="body1" sx={{ fontWeight: 700 }}>₹{offer.offered_ctc?.toLocaleString() || 'N/A'}</Typography>
-                                            </Grid>
-                                            <Grid size={{ xs: 6 }}>
-                                                <Typography variant="caption" color="textSecondary">DESIGNATION</Typography>
-                                                <Typography variant="body1" sx={{ fontWeight: 700 }}>{offer.offered_designation || 'N/A'}</Typography>
-                                            </Grid>
-                                            <Grid size={{ xs: 12 }}>
-                                                <Divider sx={{ my: 1 }} />
-                                            </Grid>
-                                            <Grid size={{ xs: 6 }}>
-                                                <Typography variant="caption" color="textSecondary">JOINING DATE</Typography>
-                                                <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                                                    <EventIcon sx={{ fontSize: 16, color: 'primary.main' }} />
-                                                    {offer.joining_date ? format(new Date(offer.joining_date), 'PPP') : 'N/A'}
-                                                </Typography>
-                                            </Grid>
-                                            <Grid size={{ xs: 6 }}>
-                                                <Typography variant="caption" color="textSecondary">LOCATION</Typography>
-                                                <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                                                    <LocationIcon sx={{ fontSize: 16, color: 'error.main' }} />
-                                                    {offer.work_location || 'N/A'}
-                                                </Typography>
-                                            </Grid>
-                                        </Grid>
-                                    </Paper>
-                                ) : (
-                                    <Box sx={{ textAlign: 'center', py: 10, bgcolor: 'white', borderRadius: '4px', border: '1px dashed #e0e0e0' }}>
-                                        <OfferIcon sx={{ fontSize: 48, color: 'divider', mb: 2 }} />
-                                        <Typography variant="body2" color="textSecondary">No job offer recorded for this mapping.</Typography>
-                                        <Button variant="outlined" sx={{ mt: 3, textTransform: 'none' }}>Generate Offer</Button>
-                                    </Box>
-                                )}
-                            </Box>
-                        )}
-                        
-                        {tabValue === 3 && (
-                            <Box>
-                                <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
-                                    <Paper sx={{ flexGrow: 1, p: 1, display: 'flex', gap: 1 }}>
-                                        <Box component="input" placeholder="Add internal note..." sx={{ flexGrow: 1, border: 'none', px: 1, '&:focus': { outline: 'none' } }} />
-                                        <Button variant="contained" size="small" sx={{ textTransform: 'none' }}>Add</Button>
-                                    </Paper>
-                                </Stack>
-                                <List sx={{ width: '100%', p: 0 }}>
-                                    {notes.map((note, index) => (
-                                        <Paper key={index} variant="outlined" sx={{ mb: 2, p: 2, borderLeft: note.is_pinned ? '4px solid #ff9900' : '1px solid #e0e0e0' }}>
-                                            <Stack direction="row" spacing={2}>
-                                                <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>{note.created_by_name?.[0] || 'U'}</Avatar>
-                                                <Box sx={{ flexGrow: 1 }}>
-                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                        <Typography variant="caption" sx={{ fontWeight: 700 }}>{note.created_by_name || 'System User'}</Typography>
-                                                        <Typography variant="caption" color="textSecondary">{format(new Date(note.created_at), 'MMM dd')}</Typography>
-                                                    </Box>
-                                                    <Typography variant="body2" sx={{ mt: 1, color: 'text.primary' }}>{note.content}</Typography>
-                                                </Box>
-                                            </Stack>
-                                        </Paper>
-                                    ))}
-                                    {notes.length === 0 && (
-                                        <Box sx={{ textAlign: 'center', py: 10, bgcolor: 'white', borderRadius: '4px', border: '1px dashed #e0e0e0' }}>
-                                            <NotesIcon sx={{ fontSize: 48, color: 'divider', mb: 2 }} />
-                                            <Typography variant="body2" color="textSecondary">No internal notes for this mapping.</Typography>
-                                        </Box>
-                                    )}
-                                </List>
-                            </Box>
-                        )}
+						
+						{tabValue === 1 && (
+							<Box>
+								<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+									<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e' }}>Interview Rounds</Typography>
+									<Button 
+										variant="contained" 
+										size="small"
+										startIcon={<ScheduleIcon sx={{ fontSize: 16 }} />}
+										sx={{ 
+											textTransform: 'none', 
+											bgcolor: '#ec7211',
+											'&:hover': { bgcolor: '#eb5f07' }
+										}}
+									>
+										Schedule Round
+									</Button>
+								</Stack>
+								<Stack spacing={2}>
+									{interviews.map((iv, index) => (
+										<Paper key={index} elevation={0} sx={{ border: '1px solid #eaeded', borderRadius: '8px', overflow: 'hidden' }}>
+											<Box sx={{ display: 'flex' }}>
+												<Box sx={{ width: 80, bgcolor: '#f3faff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', p: 2 }}>
+													<Typography variant="h4" sx={{ fontWeight: 300, color: '#0066cc' }}>{iv.round_number}</Typography>
+													<Typography variant="caption" sx={{ fontWeight: 800, color: '#0066cc', fontSize: '0.6rem' }}>ROUND</Typography>
+												</Box>
+												<Box sx={{ p: 2, flexGrow: 1 }}>
+													<Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+														<Typography variant="body2" sx={{ fontWeight: 700, color: '#232f3e' }}>{iv.round_type?.toUpperCase()}</Typography>
+														<Chip 
+															label={iv.result?.toUpperCase() || 'PENDING'} 
+															size="small"
+															sx={{ 
+																height: 20,
+																fontSize: '0.65rem', 
+																fontWeight: 700,
+																bgcolor: iv.result === 'passed' ? '#e7f4e4' : iv.result === 'failed' ? '#fdeaea' : '#fff4e5',
+																color: iv.result === 'passed' ? '#1d8102' : iv.result === 'failed' ? '#d13212' : '#ff9900'
+															}}
+														/>
+													</Box>
+													<Grid container spacing={1}>
+														<Grid size={{ xs: 12 }}>
+															<Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary' }}>
+																<WorkIcon sx={{ fontSize: 14 }} /> {iv.interviewer_name || 'Assigned Interviewer'}
+															</Typography>
+														</Grid>
+														<Grid size={{ xs: 12 }}>
+															<Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary' }}>
+																<EventIcon sx={{ fontSize: 14 }} /> {iv.scheduled_at ? format(new Date(iv.scheduled_at), 'PPP • p') : 'Date TBD'}
+															</Typography>
+														</Grid>
+													</Grid>
+													{iv.interview_link && (
+														<Button 
+															size="small" 
+															startIcon={<LinkIcon />} 
+															href={iv.interview_link} 
+															target="_blank"
+															sx={{ mt: 1.5, textTransform: 'none', fontSize: '0.75rem', color: '#0066cc' }}
+														>
+															Meeting Link
+														</Button>
+													)}
+												</Box>
+											</Box>
+										</Paper>
+									))}
+								</Stack>
+								{interviews.length === 0 && (
+									<Box sx={{ textAlign: 'center', py: 10, bgcolor: 'white', borderRadius: '8px', border: '1px dashed #eaeded' }}>
+										<ScheduleIcon sx={{ fontSize: 40, color: '#eaeded', mb: 2 }} />
+										<Typography variant="body2" color="textSecondary">No scheduled interviews found.</Typography>
+									</Box>
+								)}
+							</Box>
+						)}
+						
+						{tabValue === 2 && (
+							<Box>
+								{offer ? (
+									<Paper elevation={0} sx={{ border: '1px solid #eaeded', borderRadius: '8px', bgcolor: 'white', overflow: 'hidden' }}>
+										<Box sx={{ p: 2, bgcolor: '#f3faff', borderBottom: '1px solid #eaeded', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+											<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#0066cc' }}>Employment Offer</Typography>
+											<Chip 
+												label={offer.joining_status || offer.candidate_response?.toUpperCase()} 
+												sx={{ fontWeight: 800, bgcolor: '#ec7211', color: 'white', height: 24, fontSize: '0.7rem' }}
+											/>
+										</Box>
+										<Box sx={{ p: 3 }}>
+											<Grid container spacing={3}>
+												<Grid size={{ xs: 6 }}>
+													<Typography variant="caption" color="textSecondary">Annual CTC</Typography>
+													<Typography variant="body1" sx={{ fontWeight: 700, color: '#232f3e' }}>₹{offer.offered_ctc?.toLocaleString() || 'N/A'}</Typography>
+												</Grid>
+												<Grid size={{ xs: 6 }}>
+													<Typography variant="caption" color="textSecondary">Designation</Typography>
+													<Typography variant="body1" sx={{ fontWeight: 700, color: '#232f3e' }}>{offer.offered_designation || 'N/A'}</Typography>
+												</Grid>
+												<Grid size={{ xs: 12 }}><Divider /></Grid>
+												<Grid size={{ xs: 6 }}>
+													<Typography variant="caption" color="textSecondary">Expected Joining</Typography>
+													<Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5, fontWeight: 500 }}>
+														<EventIcon sx={{ fontSize: 16, color: '#ec7211' }} />
+														{offer.joining_date ? format(new Date(offer.joining_date), 'PPP') : 'N/A'}
+													</Typography>
+												</Grid>
+												<Grid size={{ xs: 6 }}>
+													<Typography variant="caption" color="textSecondary">Work Location</Typography>
+													<Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5, fontWeight: 500 }}>
+														<LocationIcon sx={{ fontSize: 16, color: '#d13212' }} />
+														{offer.work_location || 'N/A'}
+													</Typography>
+												</Grid>
+											</Grid>
+										</Box>
+									</Paper>
+								) : (
+									<Box sx={{ textAlign: 'center', py: 10, bgcolor: 'white', borderRadius: '8px', border: '1px dashed #eaeded' }}>
+										<OfferIcon sx={{ fontSize: 40, color: '#eaeded', mb: 2 }} />
+										<Typography variant="body2" color="textSecondary">Offer details not available.</Typography>
+										<Button size="small" variant="outlined" sx={{ mt: 3, textTransform: 'none' }}>Create Offer</Button>
+									</Box>
+								)}
+							</Box>
+						)}
+						
+						{tabValue === 3 && (
+							<Box>
+								<Box sx={{ mb: 3 }}>
+									<TextField
+										multiline
+										rows={2}
+										fullWidth
+										placeholder="Write a professional internal note..."
+										value={newNote}
+										onChange={(e) => setNewNote(e.target.value)}
+										sx={{ bgcolor: 'white' }}
+									/>
+									<Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+										<Button 
+											variant="contained" 
+											size="small" 
+											endIcon={<SendIcon sx={{ fontSize: 14 }} />}
+											sx={{ textTransform: 'none', bgcolor: '#ec7211' }}
+											disabled={!newNote.trim()}
+										>
+											Add Note
+										</Button>
+									</Box>
+								</Box>
+								
+								<Stack spacing={2}>
+									{notes.map((note, index) => (
+										<Paper key={index} elevation={0} sx={{ p: 2, border: '1px solid #eaeded', bgcolor: 'white' }}>
+											<Box sx={{ display: 'flex', gap: 1.5 }}>
+												<Avatar sx={{ width: 28, height: 28, fontSize: '0.75rem', bgcolor: '#545b64' }}>
+													{note.created_by_name?.[0] || 'U'}
+												</Avatar>
+												<Box sx={{ flexGrow: 1 }}>
+													<Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+														<Typography variant="caption" sx={{ fontWeight: 700, color: '#232f3e' }}>
+															{note.created_by_name || 'System Admin'}
+														</Typography>
+														<Typography variant="caption" sx={{ color: 'textDisabled' }}>
+															{format(new Date(note.created_at), 'MMM dd, p')}
+														</Typography>
+													</Box>
+													<Typography variant="body2" sx={{ color: '#545b64', fontSize: '0.85rem', lineHeight: 1.5 }}>
+														{note.content}
+													</Typography>
+												</Box>
+											</Box>
+										</Paper>
+									))}
+								</Stack>
+								{notes.length === 0 && (
+									<Box sx={{ textAlign: 'center', py: 6, opacity: 0.5 }}>
+										<NotesIcon sx={{ fontSize: 40, mb: 1.5, color: '#eaeded' }} />
+										<Typography variant="body2">No internal notes captured yet.</Typography>
+									</Box>
+								)}
+							</Box>
+						)}
 					</>
 				)}
 			</Box>

@@ -121,7 +121,7 @@ const JobRoleDetail: React.FC = () => {
 				<Box>
 					{tabIndex === 0 && <JobRoleDetailsTab jobRole={jobRole} />}
 					{tabIndex === 1 && <CandidateMappingTab jobRole={jobRole} />}
-					{tabIndex === 2 && <PipelineKanbanTab />}
+					{tabIndex === 2 && <PipelineKanbanTab jobRolePublicId={jobRole.public_id} />}
 				</Box>
 
 			</Container>

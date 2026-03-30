@@ -54,6 +54,18 @@ class PlacementMappingRepository(BaseRepository[PlacementMapping]):
         )
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
+
+    async def get_by_candidate(self, candidate_id: int) -> List[PlacementMapping]:
+        stmt = (
+            select(self.model)
+            .where(self.model.candidate_id == candidate_id)
+            .options(
+                selectinload(self.model.job_role).selectinload(self.JobRole.company),
+                selectinload(self.model.mapped_by)
+            )
+        )
+        result = await self.db.execute(stmt)
+        return list(result.scalars().all())
     
     async def update_status(self, id: int, status: str) -> Optional[PlacementMapping]:
         mapping = await self.get(id)

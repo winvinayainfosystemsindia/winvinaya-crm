@@ -5,13 +5,13 @@ from app.api.deps import get_current_user, get_db
 from app.models.user import User
 from app.models.placement_mapping import PlacementStatus
 from app.schemas.placement_pipeline_history import PlacementPipelineHistoryResponse
-from app.schemas.placement_mapping import PlacementMapping
+from app.schemas.placement_mapping import PlacementMapping, PlacementMappingInDBBase
 from app.services.placement_pipeline_service import PlacementPipelineService
 
 router = APIRouter()
 
 
-@router.post("/{mapping_id}/status", response_model=PlacementMapping)
+@router.post("/{mapping_id}/status", response_model=PlacementMappingInDBBase)
 async def update_pipeline_status(
     mapping_id: int,
     to_status: PlacementStatus,

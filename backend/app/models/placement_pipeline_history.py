@@ -70,6 +70,12 @@ class PlacementPipelineHistory(BaseModel):
     candidate: Mapped["Candidate"] = relationship("Candidate")
     job_role: Mapped["JobRole"] = relationship("JobRole")
     changed_by: Mapped["User"] = relationship("User")
+    
+    @property
+    def changed_by_name(self) -> Optional[str]:
+        if self.changed_by:
+            return self.changed_by.full_name
+        return None
 
     def __repr__(self) -> str:
         return f"<PlacementPipelineHistory(id={self.id}, mapping_id={self.mapping_id}, to_status={self.to_status})>"

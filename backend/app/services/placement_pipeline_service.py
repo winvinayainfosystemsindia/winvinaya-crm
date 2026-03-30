@@ -20,13 +20,28 @@ class PlacementPipelineService:
         changed_by_id: int, 
         remarks: Optional[str] = None
     ) -> Optional[PlacementMapping]:
-        mapping = await self.mapping_repo.get(mapping_id)
+        from sqlalchemy import select
+        from sqlalchemy.orm import selectinload
+        
+        # Fetch mapping with necessary relationships for serialization
+        stmt = (
+            select(PlacementMapping)
+            .where(PlacementMapping.id == mapping_id)
+            .options(
+                selectinload(PlacementMapping.candidate),
+                selectinload(PlacementMapping.job_role),
+                selectinload(PlacementMapping.mapped_by)
+            )
+        )
+        result = await self.db.execute(stmt)
+        mapping = result.scalars().first()
+        
         if not mapping:
             return None
 
         from_status = mapping.status
         
-        # Update mapping status
+        # Record update intent
         mapping.status = to_status
         mapping.updated_at = datetime.utcnow()
         
@@ -45,7 +60,6 @@ class PlacementPipelineService:
         self.db.add(history)
         await self.db.commit()
         await self.db.refresh(mapping)
-        
         return mapping
 
     async def get_history(self, mapping_id: int) -> List[PlacementPipelineHistory]:

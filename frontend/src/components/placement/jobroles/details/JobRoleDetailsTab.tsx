@@ -14,6 +14,8 @@ import {
 	PaymentsOutlined as SalaryIcon
 } from '@mui/icons-material';
 import { InfoRow, SectionHeader } from './DetailedViewCommon';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type { JobRole } from '../../../../models/jobRole';
 
 interface JobRoleDetailsTabProps {
@@ -51,9 +53,22 @@ const JobRoleDetailsTab: React.FC<JobRoleDetailsTabProps> = ({ jobRole }) => {
 					{/* Description Section */}
 					<Paper variant="outlined" sx={{ p: 3, borderRadius: 0, borderTop: 'none', bgcolor: 'white' }}>
 						<SectionHeader title="Description" icon={<DescriptionIcon />} />
-						<Typography variant="body1" sx={{ color: '#545b64', whiteSpace: 'pre-wrap', lineHeight: 1.7, fontSize: '0.95rem' }}>
-							{jobRole.description || 'No description provided.'}
-						</Typography>
+						<Box 
+							sx={{ 
+								color: '#545b64', 
+								lineHeight: 1.7, 
+								fontSize: '0.95rem',
+								'& p': { mb: 2 },
+								'& ul, & ol': { mb: 2, pl: 3 },
+								'& li': { mb: 1 },
+								'& strong, & b': { color: '#232f3e', fontWeight: 700 },
+								'& h1, & h2, & h3': { color: '#232f3e', mt: 3, mb: 1, fontWeight: 700 }
+							}}
+						>
+							<ReactMarkdown remarkPlugins={[remarkGfm]}>
+								{jobRole.description || 'No description provided.'}
+							</ReactMarkdown>
+						</Box>
 					</Paper>
 
 					{/* Requirements Section */}

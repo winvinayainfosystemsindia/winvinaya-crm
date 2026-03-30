@@ -112,6 +112,8 @@ const placementMappingSlice = createSlice({
                 const matchIndex = state.matches.findIndex(m => m.candidate_id === action.payload.candidate_id);
                 if (matchIndex !== -1) {
                     state.matches[matchIndex].is_already_mapped = true;
+                    state.matches[matchIndex].status = action.payload.status || 'applied';
+                    state.matches[matchIndex].mapping_id = action.payload.id;
                 }
             })
             .addCase(mapCandidate.rejected, (state, action) => {

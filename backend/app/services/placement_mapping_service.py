@@ -64,10 +64,12 @@ class PlacementMappingService:
         job_quals = set(q.lower() for q in reqs.get("qualifications", []))
         job_disability = set(d.lower() for d in reqs.get("disability_preferred", []))
 
-        # Fetch all screened candidates (simplified for now, ideally filter by screening status 'Completed')
-        # We use a broad fetch and then filter in memory for complex matching
-        # In a real large-scale app, we would use Elasticsearch or complex SQL
-        candidates, _ = await self.candidate_repo.get_screened(limit=1000)
+        # Fetch only placement-ready candidates: Screened (Completed) AND Counseled (Selected)
+        candidates, _ = await self.candidate_repo.get_screened(
+            limit=1000,
+            screening_status='Completed',
+            counseling_status='selected'
+        )
         
         # Get existing mappings for this job role to mark them
         existing_mappings = await self.repository.get_by_job_role_active(job_role.id)

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import {
 	Grid,
 	TextField,
@@ -8,7 +8,9 @@ import {
 	Tooltip,
 	Divider,
 	Typography,
-	Paper
+	Paper,
+	ToggleButtonGroup,
+	ToggleButton
 } from '@mui/material';
 import {
 	FormatBold as BoldIcon,
@@ -18,8 +20,12 @@ import {
 	FormatQuote as QuoteIcon,
 	Code as CodeIcon,
 	DescriptionOutlined as DescriptionIcon,
-	InfoOutlined as InfoIcon
+	InfoOutlined as InfoIcon,
+	Edit as EditIcon,
+	Visibility as PreviewIcon
 } from '@mui/icons-material';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { awsStyles } from '../../../../../theme/theme';
 import type { JobRole } from '../../../../../models/jobRole';
 
@@ -34,6 +40,7 @@ const JobDescriptionTab: React.FC<JobDescriptionTabProps> = ({
 }) => {
 	const { awsPanel, helperBox } = awsStyles;
 	const textFieldRef = useRef<HTMLTextAreaElement>(null);
+	const [activeView, setActiveView] = useState<'edit' | 'preview'>('edit');
 
 	const applyFormatting = (prefix: string, suffix: string = '', isBlock: boolean = false) => {
 		const textField = textFieldRef.current;
@@ -46,10 +53,20 @@ const JobDescriptionTab: React.FC<JobDescriptionTabProps> = ({
 
 		let replacement = '';
 		let needsNewline = false;
+		
 		if (isBlock) {
 			const beforeText = text.substring(0, start);
 			needsNewline = beforeText.length > 0 && !beforeText.endsWith('\n');
-			replacement = `${needsNewline ? '\n' : ''}${prefix}${selectedText}${suffix}`;
+			
+			// Multi-line support for lists
+			if (selectedText.includes('\n')) {
+				replacement = (needsNewline ? '\n' : '') + selectedText
+					.split('\n')
+					.map(line => (line.trim() && !line.startsWith(prefix.trim())) ? `${prefix}${line}` : line)
+					.join('\n');
+			} else {
+				replacement = `${needsNewline ? '\n' : ''}${prefix}${selectedText}${suffix}`;
+			}
 		} else {
 			replacement = `${prefix}${selectedText}${suffix}`;
 		}
@@ -62,8 +79,8 @@ const JobDescriptionTab: React.FC<JobDescriptionTabProps> = ({
 			if (textFieldRef.current) {
 				const textField = textFieldRef.current;
 				textField.focus();
-				const newPos = start + prefix.length + (needsNewline ? 1 : 0);
-				textField.setSelectionRange(newPos, newPos + selectedText.length);
+				const newPos = start + (needsNewline ? 1 : 0);
+				textField.setSelectionRange(newPos, newPos + replacement.length - (needsNewline ? 1 : 0));
 			}
 		}, 0);
 	};
@@ -89,15 +106,34 @@ const JobDescriptionTab: React.FC<JobDescriptionTabProps> = ({
 
 				<Grid container spacing={2} sx={{ width: '100%' }}>
 					<Grid size={{ xs: 12 }}>
-						<Box sx={{ width: '100%' }}>
+						<Box sx={{ width: '100%', mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 							<Typography variant="awsFieldLabel">Job Description Content</Typography>
-							<Box sx={{ 
-								border: '1px solid #d5dbdb', 
-								borderRadius: '2px', 
-								bgcolor: '#fafafa',
-								overflow: 'hidden'
-							}}>
-								{/* Formatting Toolbar */}
+							<ToggleButtonGroup
+								value={activeView}
+								exclusive
+								onChange={(_, v) => v && setActiveView(v)}
+								size="small"
+								aria-label="editor view"
+								sx={{ height: 32 }}
+							>
+								<ToggleButton value="edit" aria-label="edit view" sx={{ textTransform: 'none', px: 1.5, gap: 1, fontWeight: 700 }}>
+									<EditIcon sx={{ fontSize: 16 }} /> Edit
+								</ToggleButton>
+								<ToggleButton value="preview" aria-label="preview view" sx={{ textTransform: 'none', px: 1.5, gap: 1, fontWeight: 700 }}>
+									<PreviewIcon sx={{ fontSize: 16 }} /> Preview
+								</ToggleButton>
+							</ToggleButtonGroup>
+						</Box>
+
+						<Box sx={{ 
+							border: '1px solid #d5dbdb', 
+							borderRadius: '2px', 
+							bgcolor: activeView === 'preview' ? '#fbfbfb' : '#fafafa',
+							overflow: 'hidden',
+							minHeight: 400
+						}}>
+							{/* Formatting Toolbar - Only visible in Edit mode */}
+							{activeView === 'edit' && (
 								<Stack 
 									direction="row" 
 									spacing={0.5} 
@@ -140,12 +176,14 @@ const JobDescriptionTab: React.FC<JobDescriptionTabProps> = ({
 										</IconButton>
 									</Tooltip>
 								</Stack>
+							)}
 
-								{/* Editor Area */}
+							{/* Editor Area */}
+							{activeView === 'edit' ? (
 								<TextField
 									fullWidth
 									multiline
-									rows={20}
+									rows={15}
 									placeholder="Enter detailed job description here..."
 									value={formData.description || ''}
 									onChange={(e) => handleChange('description', e.target.value)}
@@ -162,20 +200,40 @@ const JobDescriptionTab: React.FC<JobDescriptionTabProps> = ({
 										}
 									}}
 								/>
-								
-								{/* Footer info */}
-								<Box sx={{ p: 1, borderTop: '1px solid #f2f3f3', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-									<Typography variant="caption" sx={{ color: 'text.secondary', ml: 1 }}>
-										Supported: Markdown syntax
-									</Typography>
-									<Typography variant="caption" sx={{ 
-										color: (formData.description || '').length > 2000 ? 'error.main' : 'text.secondary', 
-										mr: 1,
-										fontWeight: 600
-									}}>
-										{(formData.description || '').length}/2000 characters
-									</Typography>
+							) : (
+								<Box sx={{ 
+									p: 3, 
+									bgcolor: 'white', 
+									minHeight: 400,
+									overflowY: 'auto',
+									maxHeight: 400,
+									color: '#545b64', 
+									lineHeight: 1.7, 
+									fontSize: '0.95rem',
+									'& p': { mb: 2 },
+									'& ul, & ol': { mb: 2, pl: 3 },
+									'& li': { mb: 1 },
+									'& strong, & b': { color: '#232f3e', fontWeight: 700 },
+									'& h1, & h2, & h3': { color: '#232f3e', mt: 3, mb: 1, fontWeight: 700 }
+								}}>
+									<ReactMarkdown remarkPlugins={[remarkGfm]}>
+										{formData.description || '_No description entered yet._'}
+									</ReactMarkdown>
 								</Box>
+							)}
+							
+							{/* Footer info */}
+							<Box sx={{ p: 1, borderTop: '1px solid #f2f3f3', display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: '#fff' }}>
+								<Typography variant="caption" sx={{ color: 'text.secondary', ml: 1 }}>
+									{activeView === 'edit' ? 'Supported: Markdown syntax' : 'Live Preview'}
+								</Typography>
+								<Typography variant="caption" sx={{ 
+									color: (formData.description || '').length > 2000 ? 'error.main' : 'text.secondary', 
+									mr: 1,
+									fontWeight: 600
+								}}>
+									{(formData.description || '').length}/2000 characters
+								</Typography>
 							</Box>
 						</Box>
 					</Grid>
