@@ -73,7 +73,8 @@ async def check_candidate_availability(
     address_details = await service.validate_personal_info(
         check_in.email, 
         check_in.phone, 
-        check_in.pincode
+        check_in.pincode,
+        country_code=check_in.country_code
     )
     return {"status": "available", "address": address_details}
 

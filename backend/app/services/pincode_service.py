@@ -5,7 +5,7 @@ from loguru import logger
 from fastapi import HTTPException, status
 
 
-async def get_pincode_details(pincode: str) -> dict:
+async def get_pincode_details(pincode: str, country_code: str = "IN") -> dict:
     """
     Fetch city, district, and state from pincode using external API.
     Uses: https://api.postalpincode.in/pincode/{pincode}

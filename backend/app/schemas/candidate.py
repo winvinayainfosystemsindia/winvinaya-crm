@@ -51,6 +51,7 @@ class CandidateBase(BaseModel):
     city: Optional[str] = None
     district: Optional[str] = None
     state: Optional[str] = None
+    country_code: str = Field(default="IN", description="Country code for address validation")
     
     guardian_details: Optional[dict] = None
     work_experience: Optional[WorkExperience] = None
@@ -69,6 +70,7 @@ class CandidateCheck(BaseModel):
     city: Optional[str] = None
     district: Optional[str] = None
     state: Optional[str] = None
+    country_code: str = "IN"
 
 
 class CandidateUpdate(BaseModel):
@@ -82,6 +84,7 @@ class CandidateUpdate(BaseModel):
     city: Optional[str] = None
     district: Optional[str] = None
     state: Optional[str] = None
+    country_code: Optional[str] = "IN"
     guardian_details: Optional[dict] = None
     work_experience: Optional[dict] = None
     education_details: Optional[EducationDetails] = None

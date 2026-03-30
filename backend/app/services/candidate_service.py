@@ -21,7 +21,7 @@ class CandidateService:
         self.db = db
         self.repository = CandidateRepository(db)
 
-    async def validate_personal_info(self, email: str, phone: str, pincode: str) -> dict:
+    async def validate_personal_info(self, email: str, phone: str, pincode: str, country_code: str = "IN") -> dict:
         """Validate email, phone availability and pincode existence"""
         # Check existing email
         if await self.repository.get_by_email(email):
@@ -39,7 +39,7 @@ class CandidateService:
 
         # Fetch address details from pincode - gracefully handle invalid ones
         try:
-            return await get_pincode_details(pincode)
+            return await get_pincode_details(pincode, country_code=country_code)
         except HTTPException:
             # If invalid pincode, return empty details to allow manual entry
             return {}
@@ -59,6 +59,9 @@ class CandidateService:
         
         # Prepare data
         candidate_data = candidate_in.model_dump()
+        
+        # Pop country_code if it is not in the database model to avoid TypeError at repository.create
+        candidate_data.pop("country_code", None)
         
         # Handle nested objects -> convert to dict/list for JSON storage
         # (Pydantic model_dump already does this recursively by default if we use mode='json', 
@@ -157,17 +160,18 @@ class CandidateService:
         candidate = await self.get_candidate(public_id)
         
         update_data = candidate_in.model_dump(exclude_unset=True)
+        country_code = update_data.pop("country_code", "IN")
         
         # If pincode changed, update address
         if "pincode" in update_data and update_data["pincode"] != candidate.pincode:
-            # We don't have country_code easily here, but we can try to infer 
-            # or just use the existing city/state if provided in update_data
-            if not all([update_data.get("city"), update_data.get("district"), update_data.get("state")]):
-                # Only fetch if some fields are missing
-                address_details = await get_pincode_details(update_data["pincode"])
-                update_data["city"] = update_data.get("city") or address_details.get("city")
-                update_data["district"] = update_data.get("district") or address_details.get("district")
-                update_data["state"] = update_data.get("state") or address_details.get("state")
+                # We don't have country_code easily here, but we can try to infer 
+                # or just use the existing city/state if provided in update_data
+                if not all([update_data.get("city"), update_data.get("district"), update_data.get("state")]):
+                    # Only fetch if some fields are missing
+                    address_details = await get_pincode_details(update_data["pincode"], country_code=country_code)
+                    update_data["city"] = update_data.get("city") or address_details.get("city")
+                    update_data["district"] = update_data.get("district") or address_details.get("district")
+                    update_data["state"] = update_data.get("state") or address_details.get("state")
             
         # JSON fields handling for updates
         if "education_details" in update_data and update_data["education_details"]:
