@@ -50,6 +50,40 @@ class PlacementMapping(PlacementMappingInDBBase):
     mapped_by: Optional[UserResponse] = None
     unmapped_by: Optional[UserResponse] = None
 
+    @classmethod
+    def model_validate(cls, obj, *args, **kwargs):
+        """Custom validation to handle unloaded SQLAlchemy relationships"""
+        from sqlalchemy.inspect import inspect
+        
+        # If this is a SQLAlchemy object, check which relationships are loaded
+        if hasattr(obj, '__dict__'):
+            state = inspect(obj)
+            if state:
+                # Only include relationships that are actually loaded
+                data = {}
+                # Get fields from ALL bases
+                all_fields = {}
+                for base in cls.__mro__:
+                    if hasattr(base, 'model_fields'):
+                        all_fields.update(base.model_fields)
+                
+                for key in all_fields.keys():
+                    if key in ['candidate', 'job_role', 'mapped_by', 'unmapped_by']:
+                        # Check if the relationship is loaded
+                        if key in state.unloaded:
+                            # Skip unloaded relationships
+                            continue
+                    # Get the attribute value
+                    try:
+                        data[key] = getattr(obj, key)
+                    except:
+                        # If we can't get it (e.g. detached), skip it
+                        continue
+                        
+                return super().model_validate(data, *args, **kwargs)
+        
+        return super().model_validate(obj, *args, **kwargs)
+
 
 # Matching Engine Schemas
 class MatchMatchInfo(BaseModel):

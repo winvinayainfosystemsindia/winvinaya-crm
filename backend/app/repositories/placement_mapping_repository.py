@@ -9,16 +9,28 @@ from app.repositories.base import BaseRepository
 class PlacementMappingRepository(BaseRepository[PlacementMapping]):
     def __init__(self, db: AsyncSession):
         from app.models.job_role import JobRole
+        from app.models.candidate import Candidate
         super().__init__(PlacementMapping, db)
         self.JobRole = JobRole
+        self.Candidate = Candidate
 
     async def get_by_candidate_and_job_role(
         self, candidate_id: int, job_role_id: int
     ) -> Optional[PlacementMapping]:
-        stmt = select(self.model).where(
-            and_(
-                self.model.candidate_id == candidate_id,
-                self.model.job_role_id == job_role_id,
+        stmt = (
+            select(self.model)
+            .where(
+                and_(
+                    self.model.candidate_id == candidate_id,
+                    self.model.job_role_id == job_role_id,
+                )
+            )
+            .options(
+                selectinload(self.model.candidate).selectinload(self.Candidate.screening),
+                selectinload(self.model.candidate).selectinload(self.Candidate.documents),
+                selectinload(self.model.candidate).selectinload(self.Candidate.counseling),
+                selectinload(self.model.job_role).selectinload(self.JobRole.company),
+                selectinload(self.model.mapped_by)
             )
         )
         result = await self.db.execute(stmt)
@@ -33,7 +45,13 @@ class PlacementMappingRepository(BaseRepository[PlacementMapping]):
                     self.model.is_active == True
                 )
             )
-            .options(selectinload(self.model.candidate))
+            .options(
+                selectinload(self.model.candidate).selectinload(self.Candidate.screening),
+                selectinload(self.model.candidate).selectinload(self.Candidate.documents),
+                selectinload(self.model.candidate).selectinload(self.Candidate.counseling),
+                selectinload(self.model.mapped_by),
+                selectinload(self.model.job_role).selectinload(self.JobRole.company)
+            )
         )
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
@@ -48,6 +66,9 @@ class PlacementMappingRepository(BaseRepository[PlacementMapping]):
                 )
             )
             .options(
+                selectinload(self.model.candidate).selectinload(self.Candidate.screening),
+                selectinload(self.model.candidate).selectinload(self.Candidate.documents),
+                selectinload(self.model.candidate).selectinload(self.Candidate.counseling),
                 selectinload(self.model.job_role).selectinload(self.JobRole.company),
                 selectinload(self.model.mapped_by)
             )
@@ -60,6 +81,9 @@ class PlacementMappingRepository(BaseRepository[PlacementMapping]):
             select(self.model)
             .where(self.model.candidate_id == candidate_id)
             .options(
+                selectinload(self.model.candidate).selectinload(self.Candidate.screening),
+                selectinload(self.model.candidate).selectinload(self.Candidate.documents),
+                selectinload(self.model.candidate).selectinload(self.Candidate.counseling),
                 selectinload(self.model.job_role).selectinload(self.JobRole.company),
                 selectinload(self.model.mapped_by)
             )
