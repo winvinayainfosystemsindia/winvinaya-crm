@@ -26,6 +26,7 @@ class UserRole(str, enum.Enum):
     COUNSELOR = "counselor"
     PROJECT_COORDINATOR = "project_coordinator"
     DEVELOPER = "developer"
+    MARKETING = "marketing"
 
 
 class User(BaseModel):

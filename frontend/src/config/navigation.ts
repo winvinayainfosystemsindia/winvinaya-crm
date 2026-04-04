@@ -36,11 +36,23 @@ export const topNavigation: NavigationItem[] = [
 	{
 		label: 'Project Management',
 		icon: ProjectIcon,
-		roles: ['admin', 'manager', 'trainer', 'sourcing', 'project_coordinator', 'developer', 'placement'],
+		roles: ['admin', 'manager', 'trainer', 'sourcing', 'project_coordinator', 'developer', 'placement', 'marketing'],
 		children: [
-			{ label: 'Projects', path: '/projects' },
-			{ label: 'Activities', path: '/projects/activities' },
-			{ label: 'Timesheet', path: '/projects/timesheet' },
+			{ 
+				label: 'Projects', 
+				path: '/projects', 
+				roles: ['admin', 'manager', 'trainer', 'sourcing', 'project_coordinator', 'developer', 'placement'] 
+			},
+			{ 
+				label: 'Activities', 
+				path: '/projects/activities', 
+				roles: ['admin', 'manager', 'trainer', 'sourcing', 'project_coordinator', 'developer', 'placement'] 
+			},
+			{ 
+				label: 'Timesheet', 
+				path: '/projects/timesheet', 
+				roles: ['admin', 'manager', 'trainer', 'sourcing', 'project_coordinator', 'developer', 'placement', 'marketing'] 
+			},
 		],
 	},
 	{

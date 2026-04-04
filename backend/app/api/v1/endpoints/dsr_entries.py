@@ -40,7 +40,7 @@ router = APIRouter()
 @router.post("/entries", response_model=DSREntryResponse, status_code=status.HTTP_201_CREATED)
 async def create_entry(
     data: DSREntryCreate,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER, UserRole.MARKETING])),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -60,7 +60,7 @@ async def create_entry(
 async def update_entry(
     public_id: UUID,
     data: DSREntryUpdate,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER, UserRole.MARKETING])),
     db: AsyncSession = Depends(get_db),
 ):
     """Update a DRAFT DSR entry (owner only)."""
@@ -73,7 +73,7 @@ async def update_entry(
 @router.post("/entries/{public_id}/submit", response_model=DSREntryResponse)
 async def submit_entry(
     public_id: UUID,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER, UserRole.MARKETING])),
     db: AsyncSession = Depends(get_db),
 ):
     """Submit a DRAFT DSR entry, changing status to SUBMITTED (owner only)."""
@@ -90,7 +90,7 @@ async def get_my_entries(
     date_from: Optional[date] = Query(default=None),
     date_to: Optional[date] = Query(default=None),
     status: Optional[DSRStatus] = Query(default=None),
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER, UserRole.MARKETING])),
     db: AsyncSession = Depends(get_db),
 ):
     """Get my own DSR entry history (all roles)."""
@@ -162,7 +162,7 @@ async def get_calendar_status(
 
 @router.get("/entries/my-stats")
 async def get_my_dsr_stats(
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER, UserRole.MARKETING])),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -176,7 +176,7 @@ async def get_my_dsr_stats(
 @router.get("/entries/{public_id}", response_model=DSREntryResponse)
 async def get_entry(
     public_id: UUID,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER, UserRole.MARKETING])),
     db: AsyncSession = Depends(get_db),
 ):
     """Get a single DSR entry detail (owner or Admin)."""
@@ -187,7 +187,7 @@ async def get_entry(
 @router.delete("/entries/{public_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_entry(
     public_id: UUID,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER, UserRole.MARKETING])),
     db: AsyncSession = Depends(get_db),
 ):
     """Delete a DSR entry (owner can delete DRAFT; Admin can delete any)."""
@@ -293,7 +293,7 @@ async def send_reminders(
 @router.post("/permissions/request", response_model=DSRPermissionRequestResponse)
 async def create_permission_request(
     data: DSRPermissionRequestCreate,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER, UserRole.MARKETING])),
     db: AsyncSession = Depends(get_db),
 ):
     """User requests permission to submit a DSR for a past date."""
@@ -309,7 +309,7 @@ async def get_permission_requests(
     user_id: Optional[int] = Query(default=None),
     status: Optional[str] = Query(default=None),
     search: Optional[str] = Query(default=None),
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER, UserRole.MARKETING])),
     db: AsyncSession = Depends(get_db),
 ):
     """List permission requests (Users see their own; Admins see all)."""
@@ -337,7 +337,7 @@ async def handle_permission_request(
 @router.get("/permissions/stats")
 async def get_permission_stats(
     user_id: Optional[int] = Query(default=None),
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER, UserRole.MARKETING])),
     db: AsyncSession = Depends(get_db),
 ):
     """Get summary stats of permission requests (raised vs approved)."""
