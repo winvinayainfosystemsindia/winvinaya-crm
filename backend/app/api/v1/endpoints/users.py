@@ -28,6 +28,16 @@ async def get_current_user_info(
     return current_user
 
 
+@router.get("/roles", response_model=List[str])
+async def get_roles(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get all available user roles (Any authenticated user)
+    """
+    return [role.value for role in UserRole]
+
+
 @router.put("/me", response_model=UserResponse)
 @rate_limit_medium()
 async def update_current_user(

@@ -25,8 +25,9 @@ import {
 } from '@mui/material';
 import { Close as CloseIcon, Visibility, VisibilityOff } from '@mui/icons-material';
 import { format } from 'date-fns';
-import userService from '../../services/userService';
-import type { User, UserCreate } from '../../models/user';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchRoles, createUser, updateUser } from '../../store/slices/userSlice';
+import type { User, UserCreate, UserUpdate } from '../../models/user';
 
 interface UserDialogProps {
 	open: boolean;
@@ -44,11 +45,20 @@ const UserDialog: React.FC<UserDialogProps> = ({
 	onSuccess
 }) => {
 	const theme = useTheme();
+	const dispatch = useAppDispatch();
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+	const { roles } = useAppSelector((state) => state.users);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+	// Fetch roles on mount via Redux
+	useEffect(() => {
+		if (roles.length === 0) {
+			dispatch(fetchRoles());
+		}
+	}, [dispatch, roles.length]);
 
 	// Form State
 	const [formData, setFormData] = useState<UserCreate & { confirmPassword?: string }>({
@@ -125,10 +135,10 @@ const UserDialog: React.FC<UserDialogProps> = ({
 		try {
 			if (mode === 'add') {
 				const { confirmPassword, ...createData } = formData;
-				await userService.create(createData);
+				await dispatch(createUser(createData)).unwrap();
 				if (onSuccess) onSuccess('User created successfully');
 			} else if (mode === 'edit' && user) {
-				const updateData: any = {
+				const updateData: UserUpdate = {
 					full_name: formData.full_name,
 					username: formData.username,
 					email: formData.email,
@@ -139,17 +149,24 @@ const UserDialog: React.FC<UserDialogProps> = ({
 				if (formData.password) {
 					updateData.password = formData.password;
 				}
-				await userService.update(user.id.toString(), updateData);
+				await dispatch(updateUser({ id: user.id.toString(), userData: updateData })).unwrap();
 				if (onSuccess) onSuccess('User updated successfully');
 			}
 
 			onClose();
 		} catch (err: any) {
 			console.error("User save error:", err);
-			setError(err.response?.data?.detail || `Failed to ${mode} user`);
+			setError(err || `Failed to ${mode} user`);
 		} finally {
 			setLoading(false);
 		}
+	};
+
+	const formatRoleName = (role: string) => {
+		return role
+			.split('_')
+			.map(word => word.charAt(0).toUpperCase() + word.slice(1))
+			.join(' ');
 	};
 
 	const formatDate = (dateString?: string) => {
@@ -246,7 +263,7 @@ const UserDialog: React.FC<UserDialogProps> = ({
 								label="System Role"
 								value={
 									<Chip
-										label={user.role.toUpperCase()}
+										label={formatRoleName(user.role)}
 										size="small"
 										sx={{
 											fontWeight: 700,
@@ -256,7 +273,8 @@ const UserDialog: React.FC<UserDialogProps> = ({
 													user.role === 'manager' ? '#ec7211' :
 														user.role === 'trainer' ? '#116cc3' :
 															user.role === 'project_coordinator' ? '#8c31b4' :
-																user.role === 'developer' ? '#31b48c' : '#68b266',
+																user.role === 'developer' ? '#31b48c' : 
+																	user.role === 'marketing' ? '#007eb9' : '#68b266',
 											color: 'white',
 											fontSize: '0.65rem'
 										}}
@@ -365,14 +383,11 @@ const UserDialog: React.FC<UserDialogProps> = ({
 												disabled={loading}
 												sx={{ borderRadius: 0 }}
 											>
-												<MenuItem value="admin">Admin</MenuItem>
-												<MenuItem value="manager">Manager</MenuItem>
-												<MenuItem value="trainer">Trainer</MenuItem>
-												<MenuItem value="counselor">Counselor</MenuItem>
-												<MenuItem value="placement">Placement</MenuItem>
-												<MenuItem value="sourcing">Sourcing</MenuItem>
-												<MenuItem value="project_coordinator">Project Coordinator</MenuItem>
-												<MenuItem value="developer">Developer</MenuItem>
+												{roles.map((role) => (
+													<MenuItem key={role} value={role}>
+														{formatRoleName(role)}
+													</MenuItem>
+												))}
 											</Select>
 										</FormControl>
 									</Box>

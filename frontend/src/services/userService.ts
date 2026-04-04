@@ -46,6 +46,12 @@ const userService = {
             params: { q: query, skip, limit }
         });
         return response.data;
+    },
+
+    // Get available roles
+    getRoles: async (): Promise<string[]> => {
+        const response = await api.get<string[]>('/users/roles');
+        return response.data;
     }
 };
 
