@@ -1,7 +1,7 @@
 import React from 'react';
 import {
 	Box,
-	Grid,
+	Grid as Grid,
 	Paper,
 	Typography,
 	Skeleton
@@ -64,7 +64,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, loading,
 			{loading ? (
 				<Skeleton width="60%" height={40} />
 			) : (
-				<Typography variant="h4" sx={{ fontWeight: 700, color: '#232f3e', lineHeight: 1.2 }}>
+				<Typography variant="h4" sx={{ fontWeight: 500, color: '#232f3e', lineHeight: 1.2 }}>
 					{value}
 				</Typography>
 			)}
