@@ -10,7 +10,9 @@ import {
 	Menu,
 	MenuItem,
 	ListItemIcon,
-	ListItemText
+	ListItemText,
+	Tooltip,
+	Paper
 } from '@mui/material';
 import {
 	Edit as EditIcon,
@@ -19,7 +21,9 @@ import {
 	CheckCircle as ApprovedIcon,
 	HourglassEmpty as PendingIcon,
 	Visibility as ViewIcon,
-	MoreVert as MoreIcon
+	MoreVert as MoreIcon,
+	CalendarMonth as DateIcon,
+	AccessTime as TimeIcon
 } from '@mui/icons-material';
 import ConfirmDialog from '../../../common/ConfirmDialog';
 import type { DSREntry } from '../../../../models/dsr';
@@ -32,47 +36,49 @@ interface HistoryRowProps {
 	onView?: (id: string) => void;
 }
 
-const StatusChip: React.FC<{ entry: DSREntry }> = ({ entry }) => {
+export const StatusChip: React.FC<{ entry: DSREntry }> = ({ entry }) => {
 	// DRAFT with admin_notes = rejected and returned, needs re-submission
 	const isRejected = entry.status === DSRStatusValues.DRAFT && entry.admin_notes;
 
 	if (isRejected) {
 		return (
-			<Chip
-				icon={<WarningIcon />}
-				label="Re-submission Required"
-				size="small"
-				sx={{
-					bgcolor: '#fdf3f1',
-					color: '#d13212',
-					border: '1px solid #f5bdaf',
-					fontWeight: 700,
-					fontSize: '0.65rem',
-					borderRadius: '2px',
-					'& .MuiChip-icon': { color: '#d13212', fontSize: 14 }
-				}}
-			/>
+			<Tooltip title={entry.admin_notes || 'Re-submission Required'}>
+				<Chip
+					icon={<WarningIcon />}
+					label="Re-submission Required"
+					size="small"
+					sx={{
+						bgcolor: '#fdf3f1',
+						color: '#d13212',
+						border: '1px solid #f5bdaf',
+						fontWeight: 700,
+						fontSize: '0.65rem',
+						borderRadius: '4px',
+						'& .MuiChip-icon': { color: '#d13212', fontSize: 13 }
+					}}
+				/>
+			</Tooltip>
 		);
 	}
 
 	const config: Record<string, { label: string; color: string; bg: string; border: string; icon?: React.ReactNode }> = {
 		[DSRStatusValues.DRAFT]: {
 			label: 'In Draft',
-			color: '#545b64', bg: '#f3f3f3', border: '#d5dbdb'
+			color: '#4b5563', bg: '#f9fafb', border: '#e5e7eb'
 		},
 		[DSRStatusValues.SUBMITTED]: {
 			label: 'Pending Review',
-			color: '#0058d0', bg: '#f1f4ff', border: '#bdccf4',
+			color: '#0369a1', bg: '#f0f9ff', border: '#bae6fd',
 			icon: <PendingIcon />
 		},
 		[DSRStatusValues.APPROVED]: {
 			label: 'Approved',
-			color: '#1d8102', bg: '#e6f4ea', border: '#a3d7a3',
+			color: '#15803d', bg: '#f0fdf4', border: '#bbf7d0',
 			icon: <ApprovedIcon />
 		},
 		[DSRStatusValues.REJECTED]: {
 			label: 'Rejected',
-			color: '#d13212', bg: '#fdf3f1', border: '#f5bdaf'
+			color: '#b91c1c', bg: '#fef2f2', border: '#fecaca'
 		},
 	};
 
@@ -82,12 +88,12 @@ const StatusChip: React.FC<{ entry: DSREntry }> = ({ entry }) => {
 				label={`Leave: ${entry.leave_type || 'Unspecified'}`}
 				size="small"
 				sx={{
-					bgcolor: '#fff4e5',
-					color: '#ed6c02',
-					border: '1px solid #ffe0b2',
-					fontWeight: 700,
+					bgcolor: '#fff7ed',
+					color: '#c2410c',
+					border: '1px solid #ffedd5',
+					fontWeight: 600,
 					fontSize: '0.65rem',
-					borderRadius: '2px',
+					borderRadius: '4px',
 				}}
 			/>
 		);
@@ -102,11 +108,63 @@ const StatusChip: React.FC<{ entry: DSREntry }> = ({ entry }) => {
 				bgcolor: c.bg,
 				color: c.color,
 				border: `1px solid ${c.border}`,
-				fontWeight: 700,
+				fontWeight: 600,
 				fontSize: '0.65rem',
-				borderRadius: '2px',
+				borderRadius: '4px',
 			}}
 		/>
+	);
+};
+
+export const HistoryMobileCard: React.FC<HistoryRowProps> = ({ entry, onDelete, onEdit, onView }) => {
+	const totalHours = entry.items.reduce((sum, item) => sum + item.hours, 0);
+	const isRejected = entry.status === DSRStatusValues.DRAFT && entry.admin_notes;
+	const isDraft = entry.status === DSRStatusValues.DRAFT;
+
+	return (
+		<Paper
+			variant="outlined"
+			sx={{
+				p: 2,
+				mb: 2,
+				borderRadius: '6px',
+				bgcolor: isRejected ? '#fffafb' : 'white',
+				borderColor: isRejected ? '#fecaca' : '#e5e7eb',
+				transition: 'all 0.2s ease',
+				'&:hover': { boxShadow: '0 2px 4px rgba(0,0,0,0.05)', borderColor: '#cbd5e1' }
+			}}
+		>
+			<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
+				<Box>
+					<Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+						<DateIcon sx={{ fontSize: 16, color: '#64748b' }} />
+						<Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#1e293b' }}>
+							{new Date(entry.report_date).toLocaleDateString('en-GB', {
+								day: '2-digit', month: 'short', year: 'numeric'
+							})}
+						</Typography>
+					</Box>
+					<StatusChip entry={entry} />
+				</Box>
+				<ActionMenu
+					entry={entry}
+					onView={onView}
+					onEdit={onEdit}
+					onDelete={onDelete}
+					isDraft={isDraft}
+					isRejected={!!isRejected}
+				/>
+			</Box>
+
+			<Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1, pt: 1, borderTop: '1px dashed #f1f5f9' }}>
+				<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+					<TimeIcon sx={{ fontSize: 14, color: '#94a3b8' }} />
+					<Typography variant="caption" sx={{ fontWeight: 700, color: '#475569' }}>
+						{entry.is_leave ? 'Leave Day' : `${totalHours.toFixed(1)} hours logged`}
+					</Typography>
+				</Box>
+			</Box>
+		</Paper>
 	);
 };
 
@@ -125,14 +183,14 @@ const HistoryRow: React.FC<HistoryRowProps> = ({
 		<TableRow
 			hover
 			sx={{
-				// Highlight rejected rows that need action
-				bgcolor: isRejected ? '#fffaf9' : 'inherit',
-				borderLeft: isRejected ? '3px solid #d13212' : 'none',
+				bgcolor: isRejected ? '#fffafb' : 'inherit',
+				borderLeft: isRejected ? '4px solid #dc2626' : 'none',
+				'&:hover': { bgcolor: isRejected ? '#fff1f2' : '#f9fafb !important' }
 			}}
 		>
 			<TableCell sx={{ py: 2, fontSize: '0.8125rem', color: theme.palette.text.primary }}>
 				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-					<Typography variant="body2" sx={{ fontWeight: 500 }}>
+					<Typography variant="body2" sx={{ fontWeight: 600 }}>
 						{new Date(entry.report_date).toLocaleDateString('en-GB', {
 							day: '2-digit', month: 'short', year: 'numeric'
 						})}
@@ -148,15 +206,15 @@ const HistoryRow: React.FC<HistoryRowProps> = ({
 
 			<TableCell>
 				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-					<Typography variant="body2" sx={{ fontWeight: 500, color: entry.is_leave ? '#ed6c02' : 'inherit' }}>
+					<Typography variant="body2" sx={{ fontWeight: 700, color: entry.is_leave ? '#c2410c' : '#1e293b' }}>
 						{entry.is_leave ? '—' : `${totalHours.toFixed(1)} hrs`}
 					</Typography>
 				</Box>
 			</TableCell>
 
-			<TableCell>
+			<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
 				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-					<Typography variant="body2" sx={{ fontWeight: 500 }}>
+					<Typography variant="body2" sx={{ fontSize: '0.75rem', color: '#64748b' }}>
 						{entry.submitted_at
 							? new Date(entry.submitted_at).toLocaleString('en-GB', {
 								day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
@@ -166,14 +224,14 @@ const HistoryRow: React.FC<HistoryRowProps> = ({
 				</Box>
 			</TableCell>
 
-			<TableCell align="right">
-				<ActionMenu 
-					entry={entry} 
-					onView={onView} 
-					onEdit={onEdit} 
-					onDelete={onDelete} 
-					isDraft={isDraft} 
-					isRejected={!!isRejected} 
+			<TableCell align="right" sx={{ pr: 2 }}>
+				<ActionMenu
+					entry={entry}
+					onView={onView}
+					onEdit={onEdit}
+					onDelete={onDelete}
+					isDraft={isDraft}
+					isRejected={!!isRejected}
 				/>
 			</TableCell>
 		</TableRow>
@@ -222,7 +280,11 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ entry, onView, onEdit, onDelete
 			<IconButton
 				size="small"
 				onClick={handleClick}
-				sx={{ color: '#545b64' }}
+				sx={{
+					color: '#94a3b8',
+					transition: 'all 0.2s',
+					'&:hover': { color: '#475569', bgcolor: '#f1f5f9' }
+				}}
 			>
 				<MoreIcon fontSize="small" />
 			</IconButton>
@@ -234,39 +296,40 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ entry, onView, onEdit, onDelete
 				PaperProps={{
 					sx: {
 						minWidth: 160,
-						boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-						border: '1px solid #e5e7eb',
-						borderRadius: '4px'
+						boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+						border: '1px solid #f1f5f9',
+						borderRadius: '6px',
+						mt: 0.5
 					}
 				}}
 				transformOrigin={{ horizontal: 'right', vertical: 'top' }}
 				anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
 			>
-				<MenuItem onClick={() => handleAction(onView)} sx={{ py: 1 }}>
-					<ListItemIcon>
-						<ViewIcon fontSize="small" sx={{ color: '#545b64' }} />
+				<MenuItem onClick={() => handleAction(onView)} sx={{ py: 1.2, px: 2 }}>
+					<ListItemIcon sx={{ minWidth: '32px !important' }}>
+						<ViewIcon fontSize="small" sx={{ color: '#64748b' }} />
 					</ListItemIcon>
-					<ListItemText primary="View Details" primaryTypographyProps={{ fontSize: '0.8125rem' }} />
+					<ListItemText primary="View Details" primaryTypographyProps={{ fontSize: '0.6rem', fontWeight: 500 }} />
 				</MenuItem>
 
 				{isDraft && (
-					<MenuItem onClick={() => handleAction(onEdit)} sx={{ py: 1 }}>
-						<ListItemIcon>
-							<EditIcon fontSize="small" sx={isRejected ? { color: '#d13212' } : { color: '#545b64' }} />
+					<MenuItem onClick={() => handleAction(onEdit)} sx={{ py: 1.2, px: 2 }}>
+						<ListItemIcon sx={{ minWidth: '32px !important' }}>
+							<EditIcon fontSize="small" sx={isRejected ? { color: '#dc2626' } : { color: '#64748b' }} />
 						</ListItemIcon>
-						<ListItemText 
-							primary={isRejected ? 'Fix & Resubmit' : 'Edit Draft'} 
-							primaryTypographyProps={{ fontSize: '0.8125rem', color: isRejected ? '#d13212' : 'inherit' }} 
+						<ListItemText
+							primary={isRejected ? 'Fix & Resubmit' : 'Edit Draft'}
+							primaryTypographyProps={{ fontSize: '0.6rem', fontWeight: 500, color: isRejected ? '#dc2626' : 'inherit' }}
 						/>
 					</MenuItem>
 				)}
 
 				{isDraft && (
-					<MenuItem onClick={handleDeleteClick} sx={{ py: 1, color: '#d32f2f' }}>
-						<ListItemIcon>
-							<DeleteIcon fontSize="small" color="error" />
+					<MenuItem onClick={handleDeleteClick} sx={{ py: 1.2, px: 2, color: '#dc2626' }}>
+						<ListItemIcon sx={{ minWidth: '32px !important' }}>
+							<DeleteIcon fontSize="small" sx={{ color: '#dc2626' }} />
 						</ListItemIcon>
-						<ListItemText primary="Delete Draft" primaryTypographyProps={{ fontSize: '0.8125rem' }} />
+						<ListItemText primary="Delete Draft" primaryTypographyProps={{ fontSize: '0.6rem', fontWeight: 500 }} />
 					</MenuItem>
 				)}
 			</Menu>
@@ -274,7 +337,7 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ entry, onView, onEdit, onDelete
 			<ConfirmDialog
 				open={deleteDialogOpen}
 				title="Delete DSR Entry"
-				message={`Are you sure you want to delete the DSR entry for ${new Date(entry.report_date).toLocaleDateString()}? This action cannot be undone.`}
+				message={`Are you sure you want to delete the timesheet for ${new Date(entry.report_date).toLocaleDateString()}?`}
 				onClose={() => setDeleteDialogOpen(false)}
 				onConfirm={handleDeleteConfirm}
 				confirmText="Delete"

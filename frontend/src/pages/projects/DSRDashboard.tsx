@@ -218,9 +218,21 @@ const DSRDashboard: React.FC = () => {
 						<Box sx={{ p: 3, bgcolor: 'white' }}>
 							{activeTab === 0 && (
 								<Box>
-									<Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-										<Typography variant="h6" sx={{ fontWeight: 700 }}>My Submissions</Typography>
-										<Box sx={{ display: 'flex', gap: 2 }}>
+									<Box sx={{ 
+										mb: { xs: 2, md: 4 }, 
+										display: 'flex', 
+										flexDirection: { xs: 'column', sm: 'row' },
+										justifyContent: 'space-between', 
+										alignItems: { xs: 'flex-start', sm: 'center' },
+										gap: 2
+									}}>
+										<Typography variant="h6" sx={{ fontWeight: 700, letterSpacing: '-0.01em' }}>My Submissions</Typography>
+										<Box sx={{ 
+											display: 'flex', 
+											flexWrap: 'wrap',
+											gap: { xs: 1, sm: 2 },
+											width: { xs: '100%', sm: 'auto' }
+										}}>
 											<Button
 												variant="outlined"
 												startIcon={<RequestIcon />}
@@ -230,6 +242,10 @@ const DSRDashboard: React.FC = () => {
 													borderColor: '#d5dbdb',
 													fontWeight: 700,
 													textTransform: 'none',
+													fontSize: { xs: '0.75rem', sm: '0.8125rem' },
+													px: 2,
+													whiteSpace: 'nowrap',
+													flex: { xs: '1 1 auto', sm: 'none' },
 													'&:hover': { bgcolor: '#f3f3f3', borderColor: '#aab7bd' }
 												}}
 											>
@@ -244,6 +260,10 @@ const DSRDashboard: React.FC = () => {
 													borderColor: '#ffcdd2',
 													fontWeight: 700,
 													textTransform: 'none',
+													fontSize: { xs: '0.75rem', sm: '0.8125rem' },
+													px: 2,
+													whiteSpace: 'nowrap',
+													flex: { xs: '1 1 auto', sm: 'none' },
 													'&:hover': { bgcolor: '#fff5f5', borderColor: '#ef9a9a' }
 												}}
 											>
@@ -256,9 +276,12 @@ const DSRDashboard: React.FC = () => {
 												sx={{
 													bgcolor: '#ec7211',
 													'&:hover': { bgcolor: '#eb5f07' },
-													px: 3,
-													py: 0.75,
+													px: { xs: 2, sm: 3 },
+													py: 0.8,
 													fontWeight: 700,
+													fontSize: { xs: '0.75rem', sm: '0.8125rem' },
+													whiteSpace: 'nowrap',
+													flex: { xs: '1 1 100%', sm: 'none' },
 													boxShadow: '0 1px 1px 0 rgba(0,0,0,0.1)'
 												}}
 											>
@@ -269,10 +292,23 @@ const DSRDashboard: React.FC = () => {
 
 									<Box sx={{
 										display: 'grid',
-										gridTemplateColumns: { xs: '1fr', md: '3fr 1fr' },
-										gap: 3
+										gridTemplateColumns: { xs: '1fr', lg: '1fr', xl: '3.5fr 1.2fr' },
+										gap: { xs: 3, md: 4 }
 									}}>
-										<Box>
+										{/* On Laptop/Tablet (md/lg), show Calendar above/first or as a dashboard top-tile */}
+										<Box sx={{ 
+											order: { xs: 1, xl: 2 },
+											display: 'flex',
+											flexDirection: 'column',
+											gap: 3
+										}}>
+											<DSRCalendarView />
+										</Box>
+
+										<Box sx={{ 
+											minWidth: 0, 
+											order: { xs: 2, xl: 1 } 
+										}}>
 											<HistoryTable
 												entries={history.entries}
 												total={history.total}
@@ -286,9 +322,6 @@ const DSRDashboard: React.FC = () => {
 												onEdit={handleEditEntry}
 												onView={handleViewEntry}
 											/>
-										</Box>
-										<Box sx={{ minWidth: 0 }}>
-											<DSRCalendarView />
 										</Box>
 									</Box>
 								</Box>

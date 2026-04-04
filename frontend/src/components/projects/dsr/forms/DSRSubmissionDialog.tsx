@@ -181,25 +181,53 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 					</Box>
 				</DialogContent>
 
-				<DialogActions sx={{ p: 3, borderTop: '1px solid #d5dbdb', bgcolor: 'white' }}>
-					<Button onClick={onClose} sx={{ color: '#545b64', textTransform: 'none', fontWeight: 700 }}>
+				<DialogActions sx={{ 
+					p: { xs: 2, sm: 3 }, 
+					borderTop: '1px solid #e5e7eb', 
+					bgcolor: '#f9fafb',
+					flexDirection: { xs: 'column-reverse', sm: 'row' },
+					gap: { xs: 1.5, sm: 2 }
+				}}>
+					<Button 
+						onClick={onClose} 
+						sx={{ 
+							color: '#64748b', 
+							textTransform: 'none', 
+							fontWeight: 700,
+							px: 3,
+							'&:hover': { bgcolor: 'rgba(100,116,139,0.05)' },
+							width: { xs: '100%', sm: 'auto' }
+						}}
+					>
 						{readOnly ? 'Close' : 'Cancel'}
 					</Button>
-					<Box sx={{ flexGrow: 1 }} />
+					
+					<Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }} />
+
 					{!readOnly && (
-						<>
+						<Box sx={{ 
+							display: 'flex', 
+							flexDirection: { xs: 'column', sm: 'row' }, 
+							gap: { xs: 1.5, sm: 2 },
+							width: { xs: '100%', sm: 'auto' }
+						}}>
 							<Button
 								variant="outlined"
 								onClick={handleSaveDraft}
 								disabled={submitting || !isDateAllowed || !isValid || (!!entryId && !isDirty)}
 								startIcon={submitting ? <CircularProgress size={16} /> : null}
 								sx={{
-									color: '#232f3e',
-									borderColor: '#d5dbdb',
+									color: '#1e293b',
+									borderColor: '#cbd5e1',
+									bgcolor: 'white',
 									px: 4,
+									py: 1,
 									textTransform: 'none',
 									fontWeight: 700,
-									'&:hover': { borderColor: '#aab7bd', bgcolor: '#f3f3f3' }
+									boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+									'&:hover': { borderColor: '#94a3b8', bgcolor: '#f8fafc' },
+									'&:disabled': { bgcolor: '#f1f5f9', borderColor: '#e2e8f0', color: '#94a3b8' },
+									width: { xs: '100%', sm: 'auto' }
 								}}
 							>
 								{submitting ? 'Saving...' : 'Save as Draft'}
@@ -211,15 +239,20 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 								startIcon={submitting ? <CircularProgress size={16} color="inherit" /> : null}
 								sx={{
 									bgcolor: '#ec7211',
-									'&:hover': { bgcolor: '#eb5f07' },
+									color: 'white',
 									px: 4,
+									py: 1,
 									textTransform: 'none',
-									fontWeight: 700
+									fontWeight: 700,
+									boxShadow: '0 1px 3px rgba(236,114,17,0.3)',
+									'&:hover': { bgcolor: '#eb5f07', boxShadow: '0 4px 6px rgba(236,114,17,0.4)' },
+									'&:disabled': { bgcolor: '#fca5a5', color: 'rgba(255,255,255,0.7)' },
+									width: { xs: '100%', sm: 'auto' }
 								}}
 							>
 								{submitting ? 'Submitting...' : 'Submit Timesheet'}
 							</Button>
-						</>
+						</Box>
 					)}
 				</DialogActions>
 

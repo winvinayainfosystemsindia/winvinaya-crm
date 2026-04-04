@@ -148,7 +148,12 @@ async def get_calendar_status(
     
     return {
         "entries": [
-            {"report_date": e.report_date, "status": e.status, "is_leave": e.is_leave}
+            {
+                "report_date": e.report_date,
+                "status": e.status,
+                "is_leave": e.is_leave,
+                "admin_notes": e.admin_notes
+            }
             for e in entries
         ],
         "leaves": leaves

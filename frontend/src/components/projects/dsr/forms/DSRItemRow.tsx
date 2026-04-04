@@ -6,14 +6,16 @@ import {
 	IconButton,
 	Box,
 	useTheme,
-	useMediaQuery
+	useMediaQuery,
+	Tooltip
 } from '@mui/material';
 import {
 	Delete as DeleteIcon,
+	Work as ProjectIcon,
 	EditNote as EditIcon,
 	AccessTime as TimeIcon,
 	Description as DescriptionIcon,
-	Work as ProjectIcon
+	Timer as TimerIcon
 } from '@mui/icons-material';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import dayjs from 'dayjs';
@@ -54,7 +56,7 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 	reportDate
 }) => {
 	const theme = useTheme();
-	const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+	const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
 
 	const isCategoryProject = item.project_public_id?.startsWith('category:');
 	const categoryName = isCategoryProject ? item.project_public_id?.split(':')[1] : null;
@@ -97,47 +99,46 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 		return activities.find(a => a.public_id === item.activity_public_id) || null;
 	}, [isCategoryProject, isOtherActivity, item.activity_type_name, item.activity_public_id, activityOptions, activities]);
 
-	const renderMobileField = (label: string, icon: React.ReactNode, content: React.ReactNode) => (
-		<Box sx={{ mb: 2 }}>
-			<Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-				<Box sx={{ color: '#ec7211', display: 'flex', alignItems: 'center' }}>{icon}</Box>
-				<Typography variant="caption" sx={{ fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' }}>
-					{label}
-				</Typography>
-			</Box>
-			{content}
+	const textFieldStyles = {
+		'& .MuiOutlinedInput-root': {
+			borderRadius: '4px',
+			bgcolor: readOnly ? '#f9fafb' : 'white',
+			transition: 'all 0.2s',
+			'&:hover .MuiOutlinedInput-notchedOutline': {
+				borderColor: readOnly ? '#d1d5db' : '#9ca3af',
+			},
+			'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+				borderColor: '#ec7211',
+				borderWidth: '1.5px'
+			}
+		},
+		'& .MuiOutlinedInput-input': {
+			fontSize: '0.875rem',
+			py: '10px'
+		}
+	};
+
+	const MobileLabel = ({ label, icon }: { label: string, icon: React.ReactNode }) => (
+		<Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75, color: '#4b5563' }}>
+			{icon}
+			<Typography variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.7rem', letterSpacing: '0.025em' }}>{label}</Typography>
 		</Box>
 	);
 
 	if (isMobile) {
 		return (
 			<Box sx={{ 
-				p: 2, 
-				position: 'relative',
-				'&:hover': { bgcolor: '#fafafa' },
-				borderBottom: '1px solid #f3f4f6'
+				p: { xs: 2.5, sm: 3 }, 
+				borderBottom: '1px solid #e5e7eb',
+				bgcolor: 'white',
+				'&:hover': { bgcolor: '#f9fafb' }
 			}}>
-				{!readOnly && (
-					<IconButton
-						onClick={() => onRemoveRow(index)}
-						disabled={isDeleteDisabled}
-						size="small"
-						sx={{
-							position: 'absolute',
-							top: 8,
-							right: 8,
-							color: '#9ca3af',
-							'&:hover': { color: '#ef4444', bgcolor: '#fef2f2' }
-						}}
-					>
-						<DeleteIcon fontSize="small" />
-					</IconButton>
-				)}
-
-				<Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-					{renderMobileField('Project', <ProjectIcon sx={{ fontSize: 16 }} />, 
-						readOnly ? (
-							<Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedProject?.name || item.project_name || '-'}</Typography>
+				{/* Context Selection - Stacked on Mobile */}
+				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, mb: 3 }}>
+					<Box>
+						<MobileLabel label="Project" icon={<ProjectIcon sx={{ fontSize: 16, color: '#6b7280' }} />} />
+						{readOnly ? (
+							<Typography variant="body2" sx={{ fontWeight: 600, py: 1, color: '#111827' }}>{selectedProject?.name || item.project_name || '-'}</Typography>
 						) : (
 							<Autocomplete
 								options={projects}
@@ -145,18 +146,18 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 								groupBy={(option: any) => option.group}
 								value={selectedProject}
 								onChange={(_, val) => onRowChange(index, 'project_public_id', val?.public_id || null)}
-								renderInput={(params) => <TextField {...params} size="small" placeholder="Project" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px' } }} />}
+								renderInput={(params) => <TextField {...params} size="small" placeholder="Select Project" sx={textFieldStyles} />}
 							/>
-						)
-					)}
-
-					{renderMobileField('Activity', <EditIcon sx={{ fontSize: 16 }} />, 
-						isGeneralProject ? (
-							<Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>N/A</Typography>
+						)}
+					</Box>
+					<Box>
+						<MobileLabel label="Activity" icon={<EditIcon sx={{ fontSize: 16, color: '#6b7280' }} />} />
+						{isGeneralProject ? (
+							<Typography variant="body2" color="text.secondary" sx={{ py: 1, fontStyle: 'italic', fontSize: '0.875rem' }}>Not Applicable for General tasks</Typography>
 						) : readOnly ? (
-							<Typography variant="body2">{isOtherActivity ? item.activity_name_other : (selectedActivityOption?.name || '-')}</Typography>
+							<Typography variant="body2" sx={{ py: 1, color: '#111827' }}>{isOtherActivity ? item.activity_name_other : (selectedActivityOption?.name || '-')}</Typography>
 						) : (
-							<Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+							<Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
 								<Autocomplete
 									options={activityOptions as any[]}
 									getOptionLabel={(option) => option.name || ''}
@@ -165,7 +166,6 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 										if (isCategoryProject) {
 											onRowChange(index, 'activity_type_name', val?.name || null);
 											onRowChange(index, 'activity_public_id', null);
-											onRowChange(index, 'activity_name_other', undefined);
 										} else {
 											if (val?.public_id === OTHER_ID) {
 												onRowChange(index, 'activity_public_id', null);
@@ -176,89 +176,145 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 											}
 										}
 									}}
-									renderInput={(params) => <TextField {...params} size="small" placeholder="Activity" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px' } }} />}
+									renderInput={(params) => <TextField {...params} size="small" placeholder="Select Activity" sx={textFieldStyles} />}
 								/>
 								{isOtherActivity && (
 									<TextField
 										size="small"
 										fullWidth
-										placeholder="Specify..."
+										placeholder="Specify other activity details..."
 										value={item.activity_name_other || ''}
 										onChange={(e) => onRowChange(index, 'activity_name_other', e.target.value)}
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px', bgcolor: '#fffbeb' } }}
+										sx={{ ...textFieldStyles, '& .MuiOutlinedInput-root': { bgcolor: '#fffdfa' } }}
 									/>
 								)}
 							</Box>
-						)
-					)}
+						)}
+					</Box>
 				</Box>
 
-				{renderMobileField('Description', <DescriptionIcon sx={{ fontSize: 16 }} />, 
-					readOnly ? (
-						<Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{item.description || '-'}</Typography>
+				{/* Work Done / Description */}
+				<Box sx={{ mb: 3 }}>
+					<MobileLabel label="Work Done" icon={<DescriptionIcon sx={{ fontSize: 16, color: '#6b7280' }} />} />
+					{readOnly ? (
+						<Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', bgcolor: '#f9fafb', p: 2, borderRadius: '6px', border: '1px solid #f3f4f6', lineHeight: 1.6 }}>
+							{item.description || '-'}
+						</Typography>
 					) : (
 						<TextField
 							fullWidth
 							size="small"
 							multiline
-							maxRows={4}
-							placeholder="What did you do?"
+							minRows={2}
+							maxRows={6}
+							placeholder="Briefly describe what you did..."
 							value={item.description}
 							onChange={(e) => onRowChange(index, 'description', e.target.value)}
-							sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px' } }}
+							sx={textFieldStyles}
 						/>
-					)
-				)}
+					)}
+				</Box>
 
-				<Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2, alignItems: 'end' }}>
-					{renderMobileField('Start', <TimeIcon sx={{ fontSize: 16 }} />, 
-						readOnly ? (
-							<Typography variant="body2">{item.start_time || '-'}</Typography>
-						) : (
+				{/* Time & Duration Metrics - REBUILT FOR PRECISION */}
+				<Box sx={{ 
+					display: 'flex', 
+					flexDirection: 'column',
+					gap: 2,
+					p: 2,
+					bgcolor: '#f8fafc',
+					borderRadius: '8px',
+					border: '1px solid #e2e8f0'
+				}}>
+					{/* Time Picker Row */}
+					<Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 2 }}>
+						<Box>
+							<MobileLabel label="Start" icon={<TimeIcon sx={{ fontSize: 15, color: '#64748b' }} />} />
 							<TimePicker
-								slotProps={{ textField: { size: 'small', fullWidth: true, sx: { '& .MuiOutlinedInput-root': { borderRadius: '6px' } } } }}
+								slotProps={{ 
+									textField: { 
+										size: 'small', 
+										fullWidth: true, 
+										sx: { 
+											...textFieldStyles, 
+											'& .MuiOutlinedInput-input': { p: '10px 8px', fontSize: '0.8rem' } 
+										} 
+									} 
+								}}
 								value={item.start_time ? dayjs(`2024-01-01T${item.start_time}`) : null}
 								onChange={(v) => v && onRowChange(index, 'start_time', dayjs(v).format('HH:mm'))}
+								readOnly={readOnly}
 							/>
-						)
-					)}
-					{renderMobileField('End', <TimeIcon sx={{ fontSize: 16 }} />, 
-						readOnly ? (
-							<Typography variant="body2">{item.end_time || '-'}</Typography>
-						) : (
+						</Box>
+						<Box>
+							<MobileLabel label="End" icon={<TimeIcon sx={{ fontSize: 15, color: '#64748b' }} />} />
 							<TimePicker
-								slotProps={{ textField: { size: 'small', fullWidth: true, sx: { '& .MuiOutlinedInput-root': { borderRadius: '6px' } } } }}
+								slotProps={{ 
+									textField: { 
+										size: 'small', 
+										fullWidth: true, 
+										sx: { 
+											...textFieldStyles, 
+											'& .MuiOutlinedInput-input': { p: '10px 8px', fontSize: '0.8rem' } 
+										} 
+									} 
+								}}
 								value={item.end_time ? dayjs(`2024-01-01T${item.end_time}`) : null}
 								onChange={(v) => v && onRowChange(index, 'end_time', dayjs(v).format('HH:mm'))}
+								readOnly={readOnly}
 							/>
-						)
-					)}
-					<Box sx={{ mb: 2, textAlign: 'center' }}>
-						<Typography variant="caption" sx={{ fontWeight: 700, color: '#6b7280', display: 'block', mb: 0.5 }}>HRS</Typography>
-						<Typography variant="body2" sx={{ fontWeight: 800, color: '#111827' }}>{item.hours?.toFixed(1) || '0.0'}</Typography>
+						</Box>
+					</Box>
+
+					{/* Duration & Delete Row */}
+					<Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pt: 1, borderTop: '1px dashed #e2e8f0' }}>
+						<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+							<TimerIcon sx={{ fontSize: 18, color: '#ec7211' }} />
+							<Box>
+								<Typography variant="caption" sx={{ fontWeight: 800, color: '#64748b', textTransform: 'uppercase', fontSize: '0.65rem' }}>Duration</Typography>
+								<Typography variant="body1" sx={{ fontWeight: 800, color: '#1e293b', lineHeight: 1 }}>
+									{item.hours?.toFixed(1) || '0.0'} <Typography component="span" variant="caption" sx={{ fontWeight: 600 }}>hrs</Typography>
+								</Typography>
+							</Box>
+						</Box>
+
+						{!readOnly && (
+							<IconButton
+								onClick={() => onRemoveRow(index)}
+								disabled={isDeleteDisabled}
+								size="medium"
+								sx={{ 
+									color: '#9ca3af', 
+									bgcolor: 'white',
+									border: '1px solid #e5e7eb',
+									'&:hover': { color: '#dc2626', bgcolor: '#fef2f2', borderColor: '#fecaca' },
+									'&.Mui-disabled': { opacity: 0.3 }
+								}}
+							>
+								<DeleteIcon fontSize="small" />
+							</IconButton>
+						)}
 					</Box>
 				</Box>
 			</Box>
 		);
 	}
 
-	// Desktop View
+	// Desktop Layout
 	return (
 		<Box sx={{ 
-			display: 'flex', 
+			display: { xs: 'none', lg: 'grid' },
+			gridTemplateColumns: 'minmax(120px, 1.2fr) minmax(120px, 1.2fr) minmax(150px, 2fr) 300px 40px',
 			px: 2, 
 			py: 1.5, 
 			gap: 2, 
 			alignItems: 'flex-start',
 			transition: 'background-color 0.2s',
-			'&:hover': { bgcolor: '#fafafa' }
+			borderBottom: '1px solid #f1f5f9',
+			'&:hover': { bgcolor: '#f9fafb' }
 		}}>
-			{/* Project */}
-			<Box sx={{ width: '20%' }}>
+			<Box>
 				{readOnly ? (
-					<Typography variant="body2" sx={{ fontWeight: 600, color: '#1f2937', py: 1 }}>
-						{selectedProject?.name || item.project_name || '-'}
-					</Typography>
+					<Typography variant="body2" sx={{ fontWeight: 600, py: 1.5, px: 1, color: '#111827' }}>{selectedProject?.name || item.project_name || '-'}</Typography>
 				) : (
 					<Autocomplete
 						options={projects}
@@ -266,27 +322,19 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 						groupBy={(option: any) => option.group}
 						value={selectedProject}
 						onChange={(_, val) => onRowChange(index, 'project_public_id', val?.public_id || null)}
-						isOptionEqualToValue={(option, value) => option.public_id === value.public_id}
-						sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px' }, '& .MuiOutlinedInput-input': { fontSize: '0.85rem' } }}
+						sx={textFieldStyles}
 						renderInput={(params) => <TextField {...params} size="small" placeholder="Project" />}
 					/>
 				)}
 			</Box>
 
-			{/* Activity */}
-			<Box sx={{ width: '20%' }}>
+			<Box>
 				{isGeneralProject ? (
-					!readOnly && (
-						<Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic', fontSize: '0.75rem' }}>
-							N/A
-						</Typography>
-					)
+					!readOnly && <Typography variant="body2" color="text.secondary" sx={{ py: 1.5, fontStyle: 'italic', fontSize: '0.8125rem' }}>N/A</Typography>
 				) : (
 					<Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
 						{readOnly ? (
-							<Typography variant="body2" sx={{ color: '#4b5563', py: 1 }}>
-								{isOtherActivity ? item.activity_name_other : (selectedActivityOption?.name || '-')}
-							</Typography>
+							<Typography variant="body2" sx={{ py: 1.5, color: '#111827' }}>{isOtherActivity ? item.activity_name_other : (selectedActivityOption?.name || '-')}</Typography>
 						) : (
 							<>
 								<Autocomplete
@@ -297,7 +345,6 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 										if (isCategoryProject) {
 											onRowChange(index, 'activity_type_name', val?.name || null);
 											onRowChange(index, 'activity_public_id', null);
-											onRowChange(index, 'activity_name_other', undefined);
 										} else {
 											if (val?.public_id === OTHER_ID) {
 												onRowChange(index, 'activity_public_id', null);
@@ -309,7 +356,7 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 										}
 									}}
 									disabled={!item.project_public_id}
-									sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px' }, '& .MuiOutlinedInput-input': { fontSize: '0.85rem' } }}
+									sx={textFieldStyles}
 									renderInput={(params) => <TextField {...params} size="small" placeholder="Activity" />}
 								/>
 								{isOtherActivity && (
@@ -317,10 +364,10 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 										size="small"
 										fullWidth
 										autoFocus
-										placeholder="Specify..."
+										placeholder="Activity name..."
 										value={item.activity_name_other || ''}
 										onChange={(e) => onRowChange(index, 'activity_name_other', e.target.value)}
-										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px', bgcolor: '#fffbeb' } }}
+										sx={{ ...textFieldStyles, '& .MuiOutlinedInput-root': { bgcolor: '#fffdfa' } }}
 									/>
 								)}
 							</>
@@ -329,64 +376,75 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 				)}
 			</Box>
 
-			{/* Description */}
-			<Box sx={{ flexGrow: 1 }}>
+			<Box>
 				{readOnly ? (
-					<Typography variant="body2" sx={{ color: '#4b5563', py: 1, whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
-						{item.description || '-'}
-					</Typography>
+					<Typography variant="body2" sx={{ py: 1.5, whiteSpace: 'pre-wrap', lineHeight: 1.6, color: '#374151' }}>{item.description || '-'}</Typography>
 				) : (
 					<TextField
 						fullWidth
 						size="small"
 						multiline
-						maxRows={4}
-						placeholder="What did you do?"
+						maxRows={5}
+						placeholder="Work details..."
 						value={item.description}
 						onChange={(e) => onRowChange(index, 'description', e.target.value)}
-						sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px' }, '& .MuiOutlinedInput-input': { fontSize: '0.8125rem' } }}
+						sx={textFieldStyles}
 					/>
 				)}
 			</Box>
 
-			{/* Times & Hours */}
-			<Box sx={{ display: 'flex', width: '200px', gap: 1, alignItems: 'flex-start' }}>
-				<Box sx={{ width: '70px' }}>
-					{!readOnly && (
-						<TimePicker
-							slotProps={{ textField: { size: 'small', fullWidth: true, sx: { '& .MuiOutlinedInput-root': { borderRadius: '6px' }, '& .MuiOutlinedInput-input': { p: '8.5px 8px', fontSize: '0.75rem' } } } }}
-							value={item.start_time ? dayjs(`2024-01-01T${item.start_time}`) : null}
-							onChange={(v) => v && onRowChange(index, 'start_time', dayjs(v).format('HH:mm'))}
-						/>
-					) || <Typography sx={{ py: 1, fontSize: '0.85rem', textAlign: 'center' }}>{item.start_time}</Typography>}
+			<Box sx={{ display: 'flex', width: '300px', gap: 1, alignItems: 'flex-start', justifyContent: 'flex-end' }}>
+				<Box sx={{ width: '120px' }}>
+					<TimePicker
+						slotProps={{ 
+							textField: { 
+								size: 'small', 
+								fullWidth: true, 
+								sx: { ...textFieldStyles, '& .MuiOutlinedInput-input': { textAlign: 'center', p: '10px 12px', fontSize: '0.8rem' } } 
+							} 
+						}}
+						value={item.start_time ? dayjs(`2024-01-01T${item.start_time}`) : null}
+						onChange={(v) => v && onRowChange(index, 'start_time', dayjs(v).format('HH:mm'))}
+						readOnly={readOnly}
+					/>
 				</Box>
-				<Box sx={{ width: '70px' }}>
-					{!readOnly && (
-						<TimePicker
-							slotProps={{ textField: { size: 'small', fullWidth: true, sx: { '& .MuiOutlinedInput-root': { borderRadius: '6px' }, '& .MuiOutlinedInput-input': { p: '8.5px 8px', fontSize: '0.75rem' } } } }}
-							value={item.end_time ? dayjs(`2024-01-01T${item.end_time}`) : null}
-							onChange={(v) => v && onRowChange(index, 'end_time', dayjs(v).format('HH:mm'))}
-						/>
-					) || <Typography sx={{ py: 1, fontSize: '0.85rem', textAlign: 'center' }}>{item.end_time}</Typography>}
+				<Box sx={{ width: '120px' }}>
+					<TimePicker
+						slotProps={{ 
+							textField: { 
+								size: 'small', 
+								fullWidth: true, 
+								sx: { ...textFieldStyles, '& .MuiOutlinedInput-input': { textAlign: 'center', p: '10px 12px', fontSize: '0.8rem' } } 
+							} 
+						}}
+						value={item.end_time ? dayjs(`2024-01-01T${item.end_time}`) : null}
+						onChange={(v) => v && onRowChange(index, 'end_time', dayjs(v).format('HH:mm'))}
+						readOnly={readOnly}
+					/>
 				</Box>
-				<Box sx={{ width: '40px', textAlign: 'center', py: 1 }}>
-					<Typography variant="body2" sx={{ fontWeight: 800, color: (item.hours || 0) > 0 ? '#111827' : '#9ca3af' }}>
+				<Box sx={{ width: '50px', textAlign: 'center', py: 1.5 }}>
+					<Typography variant="body2" sx={{ fontWeight: 800, color: (item.hours || 0) > 0 ? '#1e293b' : '#9ca3af' }}>
 						{item.hours?.toFixed(1) || '0.0'}
 					</Typography>
 				</Box>
 			</Box>
 
-			{/* Delete Action */}
-			<Box sx={{ width: '40px', py: 0.5 }}>
+			<Box sx={{ width: '40px', pt: 0.75, display: 'flex', justifyContent: 'center' }}>
 				{!readOnly && (
-					<IconButton
-						onClick={() => onRemoveRow(index)}
-						disabled={isDeleteDisabled}
-						size="small"
-						sx={{ color: '#9ca3af', '&:hover': { color: '#ef4444', bgcolor: '#fef2f2' } }}
-					>
-						<DeleteIcon fontSize="small" />
-					</IconButton>
+					<Tooltip title="Remove activity">
+						<IconButton
+							onClick={() => onRemoveRow(index)}
+							disabled={isDeleteDisabled}
+							size="small"
+							sx={{ 
+								color: '#9ca3af', 
+								'&:hover': { color: '#dc2626', bgcolor: '#fef2f2' },
+								'&.Mui-disabled': { opacity: 0.3 }
+							}}
+						>
+							<DeleteIcon fontSize="small" />
+						</IconButton>
+					</Tooltip>
 				)}
 			</Box>
 		</Box>

@@ -1,12 +1,13 @@
 import React from 'react';
 import {
 	Box,
+	TablePagination,
 	Typography,
 	FormControl,
 	Select,
 	MenuItem,
-	TablePagination,
-	useTheme
+	useTheme,
+	useMediaQuery
 } from '@mui/material';
 
 interface CustomTablePaginationProps {
@@ -27,20 +28,21 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
 	onRowsPerPageSelectChange
 }) => {
 	const theme = useTheme();
+	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
 	return (
 		<Box sx={{
 			display: 'flex',
-			flexDirection: { xs: 'column', sm: 'row' },
+			flexDirection: { xs: 'column-reverse', sm: 'row' },
 			justifyContent: 'space-between',
 			alignItems: 'center',
-			p: 2,
-			gap: 2,
-			borderTop: '1px solid #d5dbdb',
-			bgcolor: '#fafafa'
+			p: { xs: 1.5, sm: 2 },
+			gap: { xs: 1.5, sm: 2 },
+			bgcolor: '#f8fafc',
+			borderTop: '1px solid #e5e7eb'
 		}}>
-			<Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 2 }}>
-				<Typography variant="body2" color="text.secondary">
+			<Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 2 }}>
+				<Typography variant="caption" sx={{ fontWeight: 600, color: '#64748b' }}>
 					Rows per page:
 				</Typography>
 				<FormControl size="small">
@@ -48,12 +50,14 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
 						value={rowsPerPage}
 						onChange={(e) => onRowsPerPageSelectChange(parseInt(String(e.target.value), 10))}
 						sx={{
-							height: '32px',
+							height: '28px',
+							fontSize: '0.75rem',
+							bgcolor: 'white',
 							'& .MuiOutlinedInput-notchedOutline': {
-								borderColor: '#d5dbdb',
+								borderColor: '#e2e8f0',
 							},
 							'&:hover .MuiOutlinedInput-notchedOutline': {
-								borderColor: theme.palette.primary.main,
+								borderColor: '#cbd5e1',
 							}
 						}}
 					>
@@ -74,15 +78,33 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
 				rowsPerPage={rowsPerPage}
 				onRowsPerPageChange={onRowsPerPageChange}
 				rowsPerPageOptions={[]}
+				labelDisplayedRows={({ from, to, count }) => (
+					<Typography variant="caption" sx={{ fontWeight: 600, color: '#64748b' }}>
+						{isMobile ? `${from}-${to} of ${count}` : `Showing ${from} to ${to} of ${count} records`}
+					</Typography>
+				)}
 				sx={{
 					border: 'none',
+					width: { xs: '100%', sm: 'auto' },
 					'.MuiTablePagination-toolbar': {
 						paddingLeft: 0,
-						paddingRight: 0,
-						minHeight: '40px'
+						paddingRight: { xs: 0, sm: 2 },
+						minHeight: { xs: '32px', sm: '40px' },
+						justifyContent: 'center'
 					},
 					'.MuiTablePagination-actions': {
-						marginLeft: { xs: 0, sm: 2 }
+						marginLeft: { xs: 1, sm: 2 },
+						'& .MuiIconButton-root': {
+							padding: '4px',
+							color: '#ec7211',
+							'&.Mui-disabled': { color: '#e2e8f0' }
+						}
+					},
+					'.MuiTablePagination-selectLabel, .MuiTablePagination-input': {
+						display: 'none'
+					},
+					'.MuiTablePagination-displayedRows': {
+						margin: 0
 					}
 				}}
 			/>
