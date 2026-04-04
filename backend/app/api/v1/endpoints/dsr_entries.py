@@ -20,6 +20,7 @@ from app.schemas.dsr_entry import (
     DSRMissingUserResponse,
     DSRApproveEntry,
     DSRRejectEntry,
+    DSRRevokeEntry,
 )
 from app.schemas.dsr_permission_request import (
     DSRPermissionRequestCreate,
@@ -377,6 +378,24 @@ async def reject_entry(
     """
     service = DSRService(db)
     entry = await service.reject_entry(public_id, data, current_user)
+    await db.commit()
+    return await service.get_entry(entry.public_id, current_user)
+
+
+@router.post("/entries/{public_id}/revoke", response_model=DSREntryResponse)
+async def revoke_entry(
+    public_id: UUID,
+    data: DSRRevokeEntry,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Admin revokes an APPROVED or SUBMITTED DSR entry.
+    - Status transitions back to DRAFT.
+    - Hour actuals are reversed if previously approved.
+    """
+    service = DSRService(db)
+    entry = await service.revoke_entry(public_id, data, current_user)
     await db.commit()
     return await service.get_entry(entry.public_id, current_user)
 

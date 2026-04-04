@@ -164,6 +164,11 @@ const dsrService = {
 		return response.data;
 	},
 
+	revokeEntry: async (publicId: string, reason?: string): Promise<any> => {
+		const response = await api.post(`/dsr/entries/${publicId}/revoke`, { reason });
+		return response.data;
+	},
+
 	getMyStats: async (): Promise<any> => {
 		const response = await api.get('/dsr/entries/my-stats');
 		return response.data;

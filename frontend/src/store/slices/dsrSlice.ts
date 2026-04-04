@@ -313,6 +313,17 @@ export const deleteEntry = createAsyncThunk(
 	}
 );
 
+export const revokeEntryAction = createAsyncThunk(
+	'dsr/revokeEntry',
+	async ({ publicId, reason }: { publicId: string; reason?: string }, { rejectWithValue }) => {
+		try {
+			return await dsrService.revokeEntry(publicId, reason);
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.detail || 'Failed to revoke DSR entry');
+		}
+	}
+);
+
 // --- Admin Thunks ---
 
 export const fetchAdminOverview = createAsyncThunk(
@@ -517,6 +528,15 @@ const dsrSlice = createSlice({
 				[state.myEntries, state.adminEntries, state.calendarEntries].forEach(list => {
 					const index = list.findIndex(e => e.public_id === action.payload.public_id);
 					if (index !== -1) list[index] = action.payload;
+				});
+			})
+			.addCase(revokeEntryAction.fulfilled, (state, action: PayloadAction<DSREntry>) => {
+				state.loading = false;
+				[state.myEntries, state.adminEntries, state.calendarEntries].forEach(list => {
+					const index = list.findIndex(e => e.public_id === action.payload.public_id);
+					if (index !== -1) {
+						list[index] = action.payload;
+					}
 				});
 			})
 			.addCase(applyLeave.fulfilled, (state, action: PayloadAction<DSRLeaveApplication>) => {

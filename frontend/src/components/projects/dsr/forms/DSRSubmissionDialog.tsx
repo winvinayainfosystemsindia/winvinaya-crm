@@ -44,6 +44,8 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 		submitting,
 		permissionError,
 		isDateAllowed,
+		isValid,
+		isDirty,
 		handleRowChange,
 		addRow,
 		removeRow,
@@ -189,7 +191,7 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 							<Button
 								variant="outlined"
 								onClick={handleSaveDraft}
-								disabled={submitting || !isDateAllowed}
+								disabled={submitting || !isDateAllowed || !isValid || (!!entryId && !isDirty)}
 								startIcon={submitting ? <CircularProgress size={16} /> : null}
 								sx={{
 									color: '#232f3e',
@@ -205,7 +207,7 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 							<Button
 								variant="contained"
 								onClick={handleSubmit}
-								disabled={submitting || !isDateAllowed}
+								disabled={submitting || !isDateAllowed || !isValid || (!!entryId && !isDirty)}
 								startIcon={submitting ? <CircularProgress size={16} color="inherit" /> : null}
 								sx={{
 									bgcolor: '#ec7211',

@@ -6,7 +6,8 @@ import {
 	sendDSRReminders,
 	grantDSRPermission,
 	fetchPermissionRequests,
-	handlePermissionRequestAction
+	handlePermissionRequestAction,
+	revokeEntryAction
 } from '../../../../store/slices/dsrSlice';
 import useToast from '../../../../hooks/useToast';
 
@@ -127,6 +128,24 @@ export const useDSRAdmin = () => {
 		}
 	};
 
+	const handleRevokeEntry = async (publicId: string, reason?: string) => {
+		try {
+			await dispatch(revokeEntryAction({ publicId, reason })).unwrap();
+			toast.success('Timesheet revoked successfully');
+			// Refresh list after revoke
+			dispatch(fetchAdminOverview({
+				skip: entryPage * entryRowsPerPage,
+				limit: entryRowsPerPage,
+				date_from: historyDateFrom || undefined,
+				date_to: historyDateTo || undefined,
+				search: debouncedSubmissionsSearch || undefined,
+				status: (statusFilter as any) || undefined
+			}));
+		} catch (error: any) {
+			toast.error(error || 'Failed to revoke timesheet');
+		}
+	};
+
 	const reviewQueueTotal = adminEntries.filter(e => e.status === 'submitted').length;
 
 	return {
@@ -167,6 +186,7 @@ export const useDSRAdmin = () => {
 		handleSendReminders,
 		handleGrantPermission,
 		handlePermissionAction,
+		handleRevokeEntry,
 		handleRefresh
 	};
 };

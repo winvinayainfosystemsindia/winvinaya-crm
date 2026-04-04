@@ -18,6 +18,7 @@ from app.schemas.dsr_entry import (
     DSRSendReminder,
     DSRApproveEntry,
     DSRRejectEntry,
+    DSRRevokeEntry,
 )
 from app.schemas.dsr_permission_request import (
     DSRPermissionRequestCreate,
@@ -547,6 +548,64 @@ class DSRService:
             user_id=updated_entry.user_id,
             report_date=str(updated_entry.report_date),
             reason=data.reason,
+            dsr_public_id=updated_entry.public_id
+        )
+        return updated_entry
+
+    async def revoke_entry(
+        self, public_id: UUID, data: DSRRevokeEntry, current_user: User
+    ) -> DSREntry:
+        """
+        Admin revokes an APPROVED or SUBMITTED DSR entry.
+        - Reverts status back to DRAFT so the user can fix and re-submit.
+        - If the entry was APPROVED, we must subtract the hours from the activity actuals.
+        """
+        _require_privileged_user(current_user)
+        entry = await self._get_or_404(public_id)
+
+        if entry.status not in (DSRStatus.SUBMITTED, DSRStatus.APPROVED):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Only SUBMITTED or APPROVED entries can be revoked. Current status: {entry.status}",
+            )
+
+        # Reverse Activity Actuals updates if it was APPROVED
+        if entry.status == DSRStatus.APPROVED and not entry.is_leave and entry.items:
+            for item in entry.items:
+                a_uid = item.get("activity_public_id")
+                if a_uid:
+                    activity = await self.activity_repo.get_by_public_id(a_uid)
+                    if activity:
+                        # Subtract hours
+                        activity.total_actual_hours = max(0.0, activity.total_actual_hours - (item.get("hours") or 0.0))
+
+        admin_note = f"Revoked by {current_user.username}"
+        if data.reason:
+            admin_note += f": {data.reason}"
+
+        update_data = {
+            "status": DSRStatus.DRAFT,
+            "admin_notes": admin_note,
+            "submitted_at": None,
+            "reviewed_by": None,
+            "reviewed_at": None,
+        }
+
+        # If it's a past date, grant permission implicitly
+        if entry.report_date < date.today():
+            update_data["is_previous_day_submission"] = True
+            update_data["previous_day_permission_granted_by"] = current_user.id
+
+        await self.repo.update(entry.id, update_data)
+        
+        await self.db.flush()
+
+        # Trigger Notification
+        updated_entry = await self._get_or_404(public_id)
+        await self.notif_service.notify_dsr_rejected(
+            user_id=updated_entry.user_id,
+            report_date=str(updated_entry.report_date),
+            reason=f"Timesheet Revoked: {data.reason or 'No reason provided'}",
             dsr_public_id=updated_entry.public_id
         )
         return updated_entry

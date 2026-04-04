@@ -84,6 +84,10 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 	const [leaveType, setLeaveType] = useState('');
 	const [submitting, setSubmitting] = useState(false);
 	const [permissionError, setPermissionError] = useState<string | null>(null);
+	const [hasExplicitPermission, setHasExplicitPermission] = useState(false);
+	const [originalItems, setOriginalItems] = useState<any[]>([]);
+	const [originalIsLeave, setOriginalIsLeave] = useState(false);
+	const [originalLeaveType, setOriginalLeaveType] = useState('');
 
 	const isDateAllowed = useMemo(() => {
 		const today = new Date().toISOString().split('T')[0];
@@ -95,15 +99,68 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 
 		// Holiday Check
 		const isHoliday = holidays.some(h => h.holiday_date === reportDate);
+		const userRole = user?.role?.toUpperCase();
 		if (isHoliday) {
-			return hasPermission || user?.role === 'ADMIN' || user?.role === 'MANAGER';
+			return hasPermission || userRole === 'ADMIN' || userRole === 'MANAGER' || hasExplicitPermission;
 		}
 
 		if (reportDate === today) return true;
 		if (reportDate > today) return false;
 
-		return hasPermission;
-	}, [reportDate, permissionRequests, holidays, user?.role]);
+		return hasPermission || userRole === 'ADMIN' || userRole === 'MANAGER' || hasExplicitPermission;
+	}, [reportDate, permissionRequests, holidays, user?.role, hasExplicitPermission]);
+
+	const isValid = useMemo(() => {
+		if (isLeave) return !!leaveType;
+		if (items.length === 0) return false;
+		
+		return items.every(it => {
+			const isGeneral = it.project_public_id === GENERAL_PROJECT_ID;
+			const isCategory = it.project_public_id?.startsWith('category:');
+			
+			const baseValid = !!it.project_public_id && !!it.description && !!it.start_time && !!it.end_time && (it.hours || 0) > 0;
+			if (!baseValid) return false;
+
+			if (isGeneral || isCategory) {
+				return !!it.activity_type_name;
+			} else {
+				return !!it.activity_public_id || !!it.activity_name_other;
+			}
+		});
+	}, [items, isLeave, leaveType]);
+
+	const isDirty = useMemo(() => {
+		// If creating new entry, it's dirty if items differ from default or are filled
+		if (!entryId) {
+			const isInitialDefault = items.length === 1 && 
+				!items[0].project_public_id && 
+				items[0].description === '' && 
+				items[0].hours === 0 &&
+				!isLeave;
+			return !isInitialDefault || isLeave;
+		}
+
+		// Change in leave status
+		if (isLeave !== originalIsLeave) return true;
+		if (isLeave && leaveType !== originalLeaveType) return true;
+		if (isLeave) return false;
+
+		// Change in row count
+		if (items.length !== originalItems.length) return true;
+
+		// Deep compare items (simplified for relevant fields)
+		return items.some((item, idx) => {
+			const orig = originalItems[idx];
+			if (!orig) return true;
+			return item.project_public_id !== orig.project_public_id ||
+				   item.activity_public_id !== orig.activity_public_id ||
+				   item.activity_type_name !== orig.activity_type_name ||
+				   item.description !== orig.description ||
+				   item.start_time !== orig.start_time ||
+				   item.end_time !== orig.end_time ||
+				   item.activity_name_other !== orig.activity_name_other;
+		});
+	}, [items, isLeave, leaveType, originalItems, originalIsLeave, originalLeaveType, entryId]);
 
 	const dateStatuses = useMemo(() => {
 		const statusMap: Record<string, string> = {};
@@ -165,6 +222,13 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 			setItems(mappedItems);
 			setIsLeave(entry.is_leave);
 			setLeaveType(entry.leave_type || '');
+			// Set explicit permission if it was granted by an admin (directly or via revoke)
+			setHasExplicitPermission(!!entry.previous_day_permission_granted_by || !!entry.is_previous_day_submission);
+			
+			// Store original state for dirty checking
+			setOriginalItems(mappedItems);
+			setOriginalIsLeave(entry.is_leave);
+			setOriginalLeaveType(entry.leave_type || '');
 
 			if (!entry.is_leave) {
 				const uniqueProjects = Array.from(new Set(mappedItems.map(i => i.project_public_id)));
@@ -211,6 +275,10 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 			setIsLeave(false);
 			setLeaveType('');
 			setPermissionError(null);
+			setHasExplicitPermission(false);
+			setOriginalItems([]);
+			setOriginalIsLeave(false);
+			setOriginalLeaveType('');
 		}
 	}, [dispatch, entryId, loadEntry, user?.public_id, user?.id, holidays]);
 
@@ -240,8 +308,9 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		);
 
 		const holiday = holidays.find(h => h.holiday_date === reportDate);
+		const userRole = user?.role?.toUpperCase();
 
-		if (holiday && !hasPermission && user?.role !== 'ADMIN' && user?.role !== 'MANAGER') {
+		if (holiday && !hasPermission && userRole !== 'ADMIN' && userRole !== 'MANAGER') {
 			setPermissionError(`Cannot submit DSR for ${holiday.holiday_date} as it is a company holiday (${holiday.holiday_name}). Please request permission if you worked on this day.`);
 		} else if (!isDateAllowed && reportDate < today) {
 			// Only show the generic permission error if it's NOT a holiday or permission wasn't granted
@@ -431,6 +500,8 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		submitting,
 		permissionError,
 		isDateAllowed,
+		isValid,
+		isDirty,
 		dateStatuses,
 		handleRowChange,
 		addRow,

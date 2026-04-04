@@ -188,3 +188,8 @@ class DSRApproveEntry(BaseModel):
 class DSRRejectEntry(BaseModel):
     """Admin rejects a submitted DSR entry — reason is mandatory"""
     reason: str = Field(..., min_length=10, description="Why this DSR is being rejected (min 10 chars)")
+
+
+class DSRRevokeEntry(BaseModel):
+    """Admin revokes an approved or submitted DSR entry — reason is optional"""
+    reason: Optional[str] = Field(default=None, description="Why this DSR is being revoked")

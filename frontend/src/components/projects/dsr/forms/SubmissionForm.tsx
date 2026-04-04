@@ -1,12 +1,5 @@
 import React from 'react';
 import {
-	Paper,
-	TableContainer,
-	Table,
-	TableHead,
-	TableBody,
-	TableRow,
-	TableCell,
 	Button,
 	Box,
 	Typography
@@ -54,86 +47,106 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
 					</Typography>
 				</Box>
 			)}
-			<TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 1 }}>
-				<Table sx={{ minWidth: 900 }}>
-					<TableHead sx={{ bgcolor: '#f9fafb' }}>
-						<TableRow>
-							<TableCell sx={{ fontWeight: 700, width: '18%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Project</TableCell>
-							<TableCell sx={{ fontWeight: 700, width: '18%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Activity</TableCell>
-							<TableCell sx={{ fontWeight: 700, width: '25%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Description</TableCell>
-							<TableCell sx={{ fontWeight: 700, width: '10%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Start</TableCell>
-							<TableCell sx={{ fontWeight: 700, width: '10%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>End</TableCell>
-							<TableCell sx={{ fontWeight: 700, width: '5%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', borderBottom: '2px solid #e5e7eb' }}>Hrs</TableCell>
-							<TableCell sx={{ width: '3%', borderBottom: '2px solid #e5e7eb' }} />
-						</TableRow>
-					</TableHead>
-					<TableBody>
-						{items.map((item, index) => (
-							<DSRItemRow
-								key={index}
-								index={index}
-								item={item}
-								projects={projects}
-								activityTypes={activityTypes}
-								activities={item.project_public_id && item.project_public_id !== GENERAL_PROJECT_ID ? (activitiesByProject[item.project_public_id] || []) : []}
-								loading={loading}
-								onRowChange={onRowChange}
-								onRemoveRow={onRemoveRow}
-								isDeleteDisabled={items.length === 1}
-								readOnly={readOnly}
-								reportDate={reportDate}
-							/>
-						))}
-						{!readOnly && (() => {
-							const lastItem = items[items.length - 1];
-							const isGeneral = lastItem?.project_public_id === GENERAL_PROJECT_ID;
-							const isCategory = lastItem?.project_public_id?.startsWith('category:');
+			
+			<Box sx={{ 
+				borderRadius: '8px', 
+				border: '1px solid #e5e7eb', 
+				bgcolor: 'white',
+				overflow: 'hidden'
+			}}>
+				{/* Desktop Header - Hidden on mobile/tablet */}
+				<Box sx={{ 
+					display: { xs: 'none', md: 'flex' }, 
+					bgcolor: '#f9fafb', 
+					borderBottom: '2px solid #e5e7eb',
+					px: 2,
+					py: 1.5,
+					gap: 2,
+					alignItems: 'center'
+				}}>
+					<Typography sx={{ fontWeight: 700, width: '20%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280' }}>Project</Typography>
+					<Typography sx={{ fontWeight: 700, width: '20%', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280' }}>Activity</Typography>
+					<Typography sx={{ fontWeight: 700, flexGrow: 1, fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280' }}>Description</Typography>
+					<Box sx={{ display: 'flex', width: '200px', gap: 1, justifyContent: 'space-between' }}>
+						<Typography sx={{ fontWeight: 700, width: '70px', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', textAlign: 'center' }}>Start</Typography>
+						<Typography sx={{ fontWeight: 700, width: '70px', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', textAlign: 'center' }}>End</Typography>
+						<Typography sx={{ fontWeight: 700, width: '40px', fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', textAlign: 'center' }}>Hrs</Typography>
+					</Box>
+					<Box sx={{ width: '40px' }} />
+				</Box>
 
-							const hasProject = !!lastItem?.project_public_id;
-							const hasDescription = !!lastItem?.description && lastItem.description.trim().length > 0;
-							const hasTime = !!lastItem?.start_time && !!lastItem?.end_time && (lastItem.hours || 0) > 0;
+				{/* Rows Container */}
+				<Box sx={{ 
+					display: 'flex', 
+					flexDirection: 'column',
+					'& > :not(:last-child)': {
+						borderBottom: '1px solid #f3f4f6'
+					}
+				}}>
+					{items.map((item, index) => (
+						<DSRItemRow
+							key={index}
+							index={index}
+							item={item}
+							projects={projects}
+							activityTypes={activityTypes}
+							activities={item.project_public_id && item.project_public_id !== GENERAL_PROJECT_ID ? (activitiesByProject[item.project_public_id] || []) : []}
+							loading={loading}
+							onRowChange={onRowChange}
+							onRemoveRow={onRemoveRow}
+							isDeleteDisabled={items.length === 1}
+							readOnly={readOnly}
+							reportDate={reportDate}
+						/>
+					))}
+				</Box>
 
-							let isCategorized = false;
-							if (isGeneral || isCategory) {
-								isCategorized = !!lastItem?.activity_type_name;
-							} else {
-								isCategorized = !!lastItem?.activity_public_id || (!!lastItem?.activity_name_other && lastItem.activity_name_other.trim() !== '');
-							}
+				{/* Footer/Add Row Action */}
+				<Box sx={{ p: 2, borderTop: '1px solid #f3f4f6' }}>
+					{!readOnly && (() => {
+						const lastItem = items[items.length - 1];
+						const isGeneral = lastItem?.project_public_id === GENERAL_PROJECT_ID;
+						const isCategory = lastItem?.project_public_id?.startsWith('category:');
 
-							const isLastRowComplete = hasProject && isCategorized && hasDescription && hasTime;
+						const hasProject = !!lastItem?.project_public_id;
+						const hasDescription = !!lastItem?.description && lastItem.description.trim().length > 0;
+						const hasTime = !!lastItem?.start_time && !!lastItem?.end_time && (lastItem.hours || 0) > 0;
 
-							return (
-								<TableRow>
-									<TableCell colSpan={7}>
-										<Button
-											startIcon={<AddIcon />}
-											onClick={onAddRow}
-											disabled={!isLastRowComplete}
-											variant="text"
-											sx={{
-												color: isLastRowComplete ? '#ec7211' : '#aab7bd',
-												fontWeight: 700,
-												fontSize: '0.85rem',
-												textTransform: 'none',
-												py: 1,
-												px: 2,
-												'&:hover': {
-													bgcolor: 'rgba(236,114,17,0.05)',
-													color: '#d4660f'
-												},
-												'&.Mui-disabled': { color: '#e5e7eb' }
-											}}
-										>
-											Add Activity Row
-										</Button>
-									</TableCell>
-								</TableRow>
-							);
-						})()}
-					</TableBody>
-				</Table>
-			</TableContainer>
+						let isCategorized = false;
+						if (isGeneral || isCategory) {
+							isCategorized = !!lastItem?.activity_type_name;
+						} else {
+							isCategorized = !!lastItem?.activity_public_id || (!!lastItem?.activity_name_other && lastItem.activity_name_other.trim() !== '');
+						}
 
+						const isLastRowComplete = hasProject && isCategorized && hasDescription && hasTime;
+
+						return (
+							<Button
+								startIcon={<AddIcon />}
+								onClick={onAddRow}
+								disabled={!isLastRowComplete}
+								variant="text"
+								sx={{
+									color: isLastRowComplete ? '#ec7211' : '#aab7bd',
+									fontWeight: 700,
+									fontSize: '0.85rem',
+									textTransform: 'none',
+									py: 1,
+									px: 2,
+									'&:hover': {
+										bgcolor: 'rgba(236,114,17,0.05)',
+										color: '#d4660f'
+									},
+									'&.Mui-disabled': { color: '#e5e7eb' }
+								}}
+							>
+								Add Activity Row
+							</Button>
+						);
+					})()}
+				</Box>
+			</Box>
 			<Box sx={{ mt: 1 }} />
 		</Box>
 	);

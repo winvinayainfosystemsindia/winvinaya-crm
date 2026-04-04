@@ -14,8 +14,17 @@ import {
 	IconButton,
 	Tooltip
 } from '@mui/material';
-import { Visibility } from '@mui/icons-material';
+import { Visibility, SettingsBackupRestore as RevokeIcon } from '@mui/icons-material';
 import CustomTablePagination from '../../../common/CustomTablePagination';
+import {
+	Dialog,
+	DialogTitle,
+	DialogContent,
+	DialogContentText,
+	TextField,
+	DialogActions,
+	Button
+} from '@mui/material';
 import type { DSREntry } from '../../../../models/dsr';
 import DSRAdminTableHeader from './DSRAdminTableHeader';
 import FilterDrawer from '../../../common/FilterDrawer';
@@ -42,6 +51,7 @@ interface AllSubmissionsTableProps {
 	onDateToChange: (value: string | null) => void;
 	filterDrawerOpen: boolean;
 	onFilterDrawerOpen: (open: boolean) => void;
+	onRevoke?: (publicId: string, reason?: string) => void;
 }
 
 const AllSubmissionsTable: React.FC<AllSubmissionsTableProps> = ({
@@ -63,9 +73,13 @@ const AllSubmissionsTable: React.FC<AllSubmissionsTableProps> = ({
 	dateTo,
 	onDateToChange,
 	filterDrawerOpen,
-	onFilterDrawerOpen
+	onFilterDrawerOpen,
+	onRevoke
 }) => {
 	const [selectedEntryId, setSelectedEntryId] = React.useState<string | null>(null);
+	const [revokeDialogOpen, setRevokeDialogOpen] = React.useState(false);
+	const [revokeTargetId, setRevokeTargetId] = React.useState<string | null>(null);
+	const [revokeReason, setRevokeReason] = React.useState('');
 	const displayEntries = entries;
 
 	const activeFilterCount = [statusFilter, dateFrom, dateTo].filter(Boolean).length;
@@ -162,6 +176,20 @@ const AllSubmissionsTable: React.FC<AllSubmissionsTableProps> = ({
 													<Visibility fontSize="small" />
 												</IconButton>
 											</Tooltip>
+											{(entry.status === 'submitted' || entry.status === 'approved') && onRevoke && (
+												<Tooltip title="Revoke to Draft">
+													<IconButton
+														size="small"
+														onClick={() => {
+															setRevokeTargetId(entry.public_id);
+															setRevokeDialogOpen(true);
+														}}
+														sx={{ color: '#d97706' }}
+													>
+														<RevokeIcon fontSize="small" />
+													</IconButton>
+												</Tooltip>
+											)}
 										</TableCell>
 									</TableRow>
 								))
@@ -237,6 +265,51 @@ const AllSubmissionsTable: React.FC<AllSubmissionsTableProps> = ({
 					readOnly={true}
 				/>
 			)}
+
+			{/* Revoke Confirmation Dialog */}
+			<Dialog open={revokeDialogOpen} onClose={() => setRevokeDialogOpen(false)} maxWidth="sm" fullWidth>
+				<DialogTitle sx={{ fontWeight: 700 }}>Revoke Timesheet</DialogTitle>
+				<DialogContent>
+					<DialogContentText sx={{ mb: 2 }}>
+						This action will move the timesheet back to <strong>DRAFT</strong> state. The user will be able to edit and re-submit it.
+						{entries.find(e => e.public_id === revokeTargetId)?.status === 'approved' && (
+							<Box component="span" sx={{ display: 'block', mt: 1, color: 'error.main', fontWeight: 600 }}>
+								Warning: This will also reverse the logged hours from project totals.
+							</Box>
+						)}
+					</DialogContentText>
+					<TextField
+						autoFocus
+						margin="dense"
+						label="Reason for Revocation (Optional)"
+						type="text"
+						fullWidth
+						variant="outlined"
+						value={revokeReason}
+						onChange={(e) => setRevokeReason(e.target.value)}
+						placeholder="e.g. Accidental submission, missing details..."
+					/>
+				</DialogContent>
+				<DialogActions sx={{ px: 3, pb: 3 }}>
+					<Button onClick={() => setRevokeDialogOpen(false)} sx={{ fontWeight: 700, color: '#545b64' }}>
+						Cancel
+					</Button>
+					<Button
+						onClick={() => {
+							if (revokeTargetId && onRevoke) {
+								onRevoke(revokeTargetId, revokeReason);
+							}
+							setRevokeDialogOpen(false);
+							setRevokeReason('');
+						}}
+						variant="contained"
+						color="warning"
+						sx={{ fontWeight: 700, textTransform: 'none' }}
+					>
+						Confirm Revoke
+					</Button>
+				</DialogActions>
+			</Dialog>
 		</Box>
 	);
 };

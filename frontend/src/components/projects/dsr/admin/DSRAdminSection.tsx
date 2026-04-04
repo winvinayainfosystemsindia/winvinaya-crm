@@ -248,6 +248,7 @@ const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin }) => {
 							onDateToChange={admin.setHistoryDateTo}
 							filterDrawerOpen={admin.historyFilterDrawerOpen}
 							onFilterDrawerOpen={admin.setHistoryFilterDrawerOpen}
+							onRevoke={admin.handleRevokeEntry}
 						/>
 					</TabPanel>
 

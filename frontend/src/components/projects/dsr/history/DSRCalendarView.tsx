@@ -127,42 +127,53 @@ const DSRCalendarView: React.FC = () => {
 				</Typography>
 			</Box>
 			<LocalizationProvider dateAdapter={AdapterDayjs}>
-				<StaticDatePicker
-					displayStaticWrapperAs="desktop"
-					value={viewDate}
-					onMonthChange={(newMonth) => setViewDate(newMonth)}
-					readOnly
-					slots={{
-						day: (props) => {
-							const isSunday = props.day.day() === 0;
-							const dateStr = props.day.format('YYYY-MM-DD');
-							const hasStatus = !!dateStatuses[dateStr];
+				<Box sx={{ 
+					width: '100%', 
+					overflowX: 'auto', 
+					display: 'flex', 
+					justifyContent: 'center',
+					'&::-webkit-scrollbar': { height: '6px' },
+					'&::-webkit-scrollbar-thumb': { bgcolor: '#e2e8f0', borderRadius: '3px' }
+				}}>
+					<Box sx={{ minWidth: { xs: '320px', sm: '100%' } }}>
+						<StaticDatePicker
+							displayStaticWrapperAs="desktop"
+							value={viewDate}
+							onMonthChange={(newMonth) => setViewDate(newMonth)}
+							readOnly
+							slots={{
+								day: (props) => {
+									const isSunday = props.day.day() === 0;
+									const dateStr = props.day.format('YYYY-MM-DD');
+									const hasStatus = !!dateStatuses[dateStr];
 
-							const effectiveStatuses = { ...dateStatuses };
-							if (isSunday && !hasStatus) {
-								effectiveStatuses[dateStr] = 'holiday';
-							}
+									const effectiveStatuses = { ...dateStatuses };
+									if (isSunday && !hasStatus) {
+										effectiveStatuses[dateStr] = 'holiday';
+									}
 
-							return <StatusDay {...props} dateStatuses={effectiveStatuses} />;
-						}
-					}}
-					slotProps={{
-						actionBar: {
-							actions: [],
-							sx: { display: 'none' }
-						},
-						toolbar: { hidden: true }
-					}}
-					sx={{
-						'& .MuiPickerStaticWrapper-content': { bgcolor: 'transparent' },
-						'& .MuiDateCalendar-root': { width: '100%', height: 'auto', p: 0 },
-						'& .MuiDayCalendar-header': { justifyContent: 'space-around', gap: 0 },
-						'& .MuiDayCalendar-weekContainer': { justifyContent: 'space-around', gap: 0, my: '2px' },
-						'& .MuiDayCalendar-weekDayLabel': { fontWeight: 700, fontSize: '0.75rem', color: '#718096' },
-						'& .MuiPickersCalendarHeader-root': { mt: 1, mb: 1, px: 2 },
-						'& .MuiPickersCalendarHeader-label': { fontWeight: 700, fontSize: '0.9rem' }
-					}}
-				/>
+									return <StatusDay {...props} dateStatuses={effectiveStatuses} />;
+								}
+							}}
+							slotProps={{
+								actionBar: {
+									actions: [],
+									sx: { display: 'none' }
+								},
+								toolbar: { hidden: true }
+							}}
+							sx={{
+								'& .MuiPickerStaticWrapper-content': { bgcolor: 'transparent', minWidth: 'unset' },
+								'& .MuiDateCalendar-root': { width: '100%', maxWidth: '100%', height: 'auto', p: 0 },
+								'& .MuiDayCalendar-header': { justifyContent: 'space-around', gap: 0 },
+								'& .MuiDayCalendar-weekContainer': { justifyContent: 'space-around', gap: 0, my: '2px' },
+								'& .MuiDayCalendar-weekDayLabel': { fontWeight: 700, fontSize: '0.75rem', color: '#718096', width: 'auto', flex: 1 },
+								'& .MuiPickersCalendarHeader-root': { mt: 1, mb: 1, px: 2 },
+								'& .MuiPickersCalendarHeader-label': { fontWeight: 700, fontSize: '0.9rem' }
+							}}
+						/>
+					</Box>
+				</Box>
 			</LocalizationProvider>
 
 			<Box sx={{ p: 2, borderTop: '1px solid #f0f0f0', bgcolor: '#ffffff' }}>

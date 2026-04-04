@@ -1,17 +1,19 @@
 import React from 'react';
 import {
-	TableRow,
-	TableCell,
 	Autocomplete,
 	TextField,
 	Typography,
 	IconButton,
 	Box,
-	InputAdornment
+	useTheme,
+	useMediaQuery
 } from '@mui/material';
 import {
 	Delete as DeleteIcon,
-	EditNote as EditIcon
+	EditNote as EditIcon,
+	AccessTime as TimeIcon,
+	Description as DescriptionIcon,
+	Work as ProjectIcon
 } from '@mui/icons-material';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import dayjs from 'dayjs';
@@ -45,13 +47,15 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 	projects,
 	activityTypes,
 	activities,
-	loading,
 	onRowChange,
 	onRemoveRow,
 	isDeleteDisabled,
 	readOnly = false,
 	reportDate
 }) => {
+	const theme = useTheme();
+	const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
 	const isCategoryProject = item.project_public_id?.startsWith('category:');
 	const categoryName = isCategoryProject ? item.project_public_id?.split(':')[1] : null;
 
@@ -60,22 +64,13 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 			return activityTypes.filter(at => at.category === categoryName);
 		}
 		const filtered = activities.filter(a => {
-			// Always keep the currently selected activity to avoid UI break
 			if (a.public_id === item.activity_public_id) return true;
-
-			// Exclude inactive or cancelled
 			if (!a.is_active || a.status === 'cancelled') return false;
-
-			// Exclude future activities
 			if (a.start_date && a.start_date > reportDate) return false;
-
-			// Handle completed activities
 			if (a.status === 'completed') {
 				const endDate = a.actual_end_date || a.end_date;
-				// If report date is after completion date, hide it
 				if (endDate && reportDate > endDate) return false;
 			}
-
 			return true;
 		});
 		return [...filtered, OTHER_ACTIVITY as DSRActivity];
@@ -83,7 +78,6 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 
 	const selectedProject = React.useMemo(() => {
 		if (!item.project_public_id) return null;
-		// Handle the virtual general project
 		if (item.project_public_id === GENERAL_PROJECT_ID) {
 			const project = projects.find(p => p.public_id === GENERAL_PROJECT_ID);
 			if (project) return project;
@@ -103,9 +97,164 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 		return activities.find(a => a.public_id === item.activity_public_id) || null;
 	}, [isCategoryProject, isOtherActivity, item.activity_type_name, item.activity_public_id, activityOptions, activities]);
 
+	const renderMobileField = (label: string, icon: React.ReactNode, content: React.ReactNode) => (
+		<Box sx={{ mb: 2 }}>
+			<Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+				<Box sx={{ color: '#ec7211', display: 'flex', alignItems: 'center' }}>{icon}</Box>
+				<Typography variant="caption" sx={{ fontWeight: 700, color: '#6b7280', textTransform: 'uppercase' }}>
+					{label}
+				</Typography>
+			</Box>
+			{content}
+		</Box>
+	);
+
+	if (isMobile) {
+		return (
+			<Box sx={{ 
+				p: 2, 
+				position: 'relative',
+				'&:hover': { bgcolor: '#fafafa' },
+				borderBottom: '1px solid #f3f4f6'
+			}}>
+				{!readOnly && (
+					<IconButton
+						onClick={() => onRemoveRow(index)}
+						disabled={isDeleteDisabled}
+						size="small"
+						sx={{
+							position: 'absolute',
+							top: 8,
+							right: 8,
+							color: '#9ca3af',
+							'&:hover': { color: '#ef4444', bgcolor: '#fef2f2' }
+						}}
+					>
+						<DeleteIcon fontSize="small" />
+					</IconButton>
+				)}
+
+				<Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+					{renderMobileField('Project', <ProjectIcon sx={{ fontSize: 16 }} />, 
+						readOnly ? (
+							<Typography variant="body2" sx={{ fontWeight: 600 }}>{selectedProject?.name || item.project_name || '-'}</Typography>
+						) : (
+							<Autocomplete
+								options={projects}
+								getOptionLabel={(option) => option.name || ''}
+								groupBy={(option: any) => option.group}
+								value={selectedProject}
+								onChange={(_, val) => onRowChange(index, 'project_public_id', val?.public_id || null)}
+								renderInput={(params) => <TextField {...params} size="small" placeholder="Project" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px' } }} />}
+							/>
+						)
+					)}
+
+					{renderMobileField('Activity', <EditIcon sx={{ fontSize: 16 }} />, 
+						isGeneralProject ? (
+							<Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>N/A</Typography>
+						) : readOnly ? (
+							<Typography variant="body2">{isOtherActivity ? item.activity_name_other : (selectedActivityOption?.name || '-')}</Typography>
+						) : (
+							<Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+								<Autocomplete
+									options={activityOptions as any[]}
+									getOptionLabel={(option) => option.name || ''}
+									value={selectedActivityOption as any}
+									onChange={(_, val: any) => {
+										if (isCategoryProject) {
+											onRowChange(index, 'activity_type_name', val?.name || null);
+											onRowChange(index, 'activity_public_id', null);
+											onRowChange(index, 'activity_name_other', undefined);
+										} else {
+											if (val?.public_id === OTHER_ID) {
+												onRowChange(index, 'activity_public_id', null);
+												onRowChange(index, 'activity_name_other', '');
+											} else {
+												onRowChange(index, 'activity_public_id', val?.public_id || null);
+												onRowChange(index, 'activity_name_other', undefined);
+											}
+										}
+									}}
+									renderInput={(params) => <TextField {...params} size="small" placeholder="Activity" sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px' } }} />}
+								/>
+								{isOtherActivity && (
+									<TextField
+										size="small"
+										fullWidth
+										placeholder="Specify..."
+										value={item.activity_name_other || ''}
+										onChange={(e) => onRowChange(index, 'activity_name_other', e.target.value)}
+										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px', bgcolor: '#fffbeb' } }}
+									/>
+								)}
+							</Box>
+						)
+					)}
+				</Box>
+
+				{renderMobileField('Description', <DescriptionIcon sx={{ fontSize: 16 }} />, 
+					readOnly ? (
+						<Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{item.description || '-'}</Typography>
+					) : (
+						<TextField
+							fullWidth
+							size="small"
+							multiline
+							maxRows={4}
+							placeholder="What did you do?"
+							value={item.description}
+							onChange={(e) => onRowChange(index, 'description', e.target.value)}
+							sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px' } }}
+						/>
+					)
+				)}
+
+				<Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2, alignItems: 'end' }}>
+					{renderMobileField('Start', <TimeIcon sx={{ fontSize: 16 }} />, 
+						readOnly ? (
+							<Typography variant="body2">{item.start_time || '-'}</Typography>
+						) : (
+							<TimePicker
+								slotProps={{ textField: { size: 'small', fullWidth: true, sx: { '& .MuiOutlinedInput-root': { borderRadius: '6px' } } } }}
+								value={item.start_time ? dayjs(`2024-01-01T${item.start_time}`) : null}
+								onChange={(v) => v && onRowChange(index, 'start_time', dayjs(v).format('HH:mm'))}
+							/>
+						)
+					)}
+					{renderMobileField('End', <TimeIcon sx={{ fontSize: 16 }} />, 
+						readOnly ? (
+							<Typography variant="body2">{item.end_time || '-'}</Typography>
+						) : (
+							<TimePicker
+								slotProps={{ textField: { size: 'small', fullWidth: true, sx: { '& .MuiOutlinedInput-root': { borderRadius: '6px' } } } }}
+								value={item.end_time ? dayjs(`2024-01-01T${item.end_time}`) : null}
+								onChange={(v) => v && onRowChange(index, 'end_time', dayjs(v).format('HH:mm'))}
+							/>
+						)
+					)}
+					<Box sx={{ mb: 2, textAlign: 'center' }}>
+						<Typography variant="caption" sx={{ fontWeight: 700, color: '#6b7280', display: 'block', mb: 0.5 }}>HRS</Typography>
+						<Typography variant="body2" sx={{ fontWeight: 800, color: '#111827' }}>{item.hours?.toFixed(1) || '0.0'}</Typography>
+					</Box>
+				</Box>
+			</Box>
+		);
+	}
+
+	// Desktop View
 	return (
-		<TableRow sx={{ '&:hover': { bgcolor: readOnly ? 'transparent' : '#f9fafb' } }}>
-			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top', minWidth: 180 }}>
+		<Box sx={{ 
+			display: 'flex', 
+			px: 2, 
+			py: 1.5, 
+			gap: 2, 
+			alignItems: 'flex-start',
+			transition: 'background-color 0.2s',
+			'&:hover': { bgcolor: '#fafafa' }
+		}}>
+			{/* Project */}
+			<Box sx={{ width: '20%' }}>
 				{readOnly ? (
 					<Typography variant="body2" sx={{ fontWeight: 600, color: '#1f2937', py: 1 }}>
 						{selectedProject?.name || item.project_name || '-'}
@@ -116,24 +265,20 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 						getOptionLabel={(option) => option.name || ''}
 						groupBy={(option: any) => option.group}
 						value={selectedProject}
-						onChange={(_, val) => {
-							onRowChange(index, 'project_public_id', val?.public_id || null);
-						}}
-						loading={loading && projects.length === 0}
+						onChange={(_, val) => onRowChange(index, 'project_public_id', val?.public_id || null)}
 						isOptionEqualToValue={(option, value) => option.public_id === value.public_id}
-						sx={{
-							'& .MuiOutlinedInput-root': { borderRadius: '6px' },
-							'& .MuiOutlinedInput-input': { fontSize: '0.85rem' }
-						}}
+						sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px' }, '& .MuiOutlinedInput-input': { fontSize: '0.85rem' } }}
 						renderInput={(params) => <TextField {...params} size="small" placeholder="Project" />}
 					/>
 				)}
-			</TableCell>
-			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top', minWidth: 180 }}>
+			</Box>
+
+			{/* Activity */}
+			<Box sx={{ width: '20%' }}>
 				{isGeneralProject ? (
 					!readOnly && (
 						<Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic', fontSize: '0.75rem' }}>
-							N/A for General
+							N/A
 						</Typography>
 					)
 				) : (
@@ -157,56 +302,35 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 											if (val?.public_id === OTHER_ID) {
 												onRowChange(index, 'activity_public_id', null);
 												onRowChange(index, 'activity_name_other', '');
-												onRowChange(index, 'activity_type_name', null);
 											} else {
 												onRowChange(index, 'activity_public_id', val?.public_id || null);
 												onRowChange(index, 'activity_name_other', undefined);
-												onRowChange(index, 'activity_type_name', null);
 											}
 										}
 									}}
 									disabled={!item.project_public_id}
-									isOptionEqualToValue={(option, value) => {
-										if (isCategoryProject) return option.name === value.name;
-										return option.public_id === value.public_id;
-									}}
-									sx={{
-										'& .MuiOutlinedInput-root': { borderRadius: '6px' },
-										'& .MuiOutlinedInput-input': { fontSize: '0.85rem' }
-									}}
-									renderInput={(params) => <TextField {...params} size="small" placeholder={isCategoryProject ? "Select Type" : "Activity / Task"} />}
+									sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px' }, '& .MuiOutlinedInput-input': { fontSize: '0.85rem' } }}
+									renderInput={(params) => <TextField {...params} size="small" placeholder="Activity" />}
 								/>
 								{isOtherActivity && (
 									<TextField
 										size="small"
 										fullWidth
 										autoFocus
-										placeholder="Specify activity..."
+										placeholder="Specify..."
 										value={item.activity_name_other || ''}
 										onChange={(e) => onRowChange(index, 'activity_name_other', e.target.value)}
-										sx={{
-											'& .MuiOutlinedInput-root': {
-												borderRadius: '6px',
-												bgcolor: '#fffbeb',
-												borderColor: '#fbbf24'
-											},
-											'& .MuiOutlinedInput-input': { fontSize: '0.8125rem' }
-										}}
-										InputProps={{
-											startAdornment: (
-												<InputAdornment position="start">
-													<EditIcon sx={{ fontSize: '1rem', color: '#d97706' }} />
-												</InputAdornment>
-											),
-										}}
+										sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px', bgcolor: '#fffbeb' } }}
 									/>
 								)}
 							</>
 						)}
 					</Box>
 				)}
-			</TableCell>
-			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top' }}>
+			</Box>
+
+			{/* Description */}
+			<Box sx={{ flexGrow: 1 }}>
 				{readOnly ? (
 					<Typography variant="body2" sx={{ color: '#4b5563', py: 1, whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
 						{item.description || '-'}
@@ -220,91 +344,52 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 						placeholder="What did you do?"
 						value={item.description}
 						onChange={(e) => onRowChange(index, 'description', e.target.value)}
-						sx={{
-							'& .MuiOutlinedInput-root': { borderRadius: '6px' },
-							'& .MuiOutlinedInput-input': { fontSize: '0.8125rem' }
-						}}
+						sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px' }, '& .MuiOutlinedInput-input': { fontSize: '0.8125rem' } }}
 					/>
 				)}
-			</TableCell>
-			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top' }}>
-				{readOnly ? (
-					<Typography variant="body2" sx={{ color: '#6b7280', py: 1, textAlign: 'center' }}>
-						{item.start_time || '-'}
+			</Box>
+
+			{/* Times & Hours */}
+			<Box sx={{ display: 'flex', width: '200px', gap: 1, alignItems: 'flex-start' }}>
+				<Box sx={{ width: '70px' }}>
+					{!readOnly && (
+						<TimePicker
+							slotProps={{ textField: { size: 'small', fullWidth: true, sx: { '& .MuiOutlinedInput-root': { borderRadius: '6px' }, '& .MuiOutlinedInput-input': { p: '8.5px 8px', fontSize: '0.75rem' } } } }}
+							value={item.start_time ? dayjs(`2024-01-01T${item.start_time}`) : null}
+							onChange={(v) => v && onRowChange(index, 'start_time', dayjs(v).format('HH:mm'))}
+						/>
+					) || <Typography sx={{ py: 1, fontSize: '0.85rem', textAlign: 'center' }}>{item.start_time}</Typography>}
+				</Box>
+				<Box sx={{ width: '70px' }}>
+					{!readOnly && (
+						<TimePicker
+							slotProps={{ textField: { size: 'small', fullWidth: true, sx: { '& .MuiOutlinedInput-root': { borderRadius: '6px' }, '& .MuiOutlinedInput-input': { p: '8.5px 8px', fontSize: '0.75rem' } } } }}
+							value={item.end_time ? dayjs(`2024-01-01T${item.end_time}`) : null}
+							onChange={(v) => v && onRowChange(index, 'end_time', dayjs(v).format('HH:mm'))}
+						/>
+					) || <Typography sx={{ py: 1, fontSize: '0.85rem', textAlign: 'center' }}>{item.end_time}</Typography>}
+				</Box>
+				<Box sx={{ width: '40px', textAlign: 'center', py: 1 }}>
+					<Typography variant="body2" sx={{ fontWeight: 800, color: (item.hours || 0) > 0 ? '#111827' : '#9ca3af' }}>
+						{item.hours?.toFixed(1) || '0.0'}
 					</Typography>
-				) : (
-					<TimePicker
-						slotProps={{
-							textField: {
-								size: 'small',
-								fullWidth: true,
-								sx: {
-									'& .MuiOutlinedInput-root': { borderRadius: '6px' },
-									'& .MuiOutlinedInput-input': { fontSize: '0.8125rem', p: '8.5px 12px' }
-								}
-							}
-						}}
-						value={item.start_time ? dayjs(`2024-01-01T${item.start_time}`) : null}
-						onChange={(newValue) => {
-							if (newValue) {
-								onRowChange(index, 'start_time', dayjs(newValue).format('HH:mm'));
-							}
-						}}
-						ampm={true}
-					/>
-				)}
-			</TableCell>
-			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top' }}>
-				{readOnly ? (
-					<Typography variant="body2" sx={{ color: '#6b7280', py: 1, textAlign: 'center' }}>
-						{item.end_time || '-'}
-					</Typography>
-				) : (
-					<TimePicker
-						slotProps={{
-							textField: {
-								size: 'small',
-								fullWidth: true,
-								sx: {
-									'& .MuiOutlinedInput-root': { borderRadius: '6px' },
-									'& .MuiOutlinedInput-input': { fontSize: '0.8125rem', p: '8.5px 12px' }
-								}
-							}
-						}}
-						value={item.end_time ? dayjs(`2024-01-01T${item.end_time}`) : null}
-						onChange={(newValue) => {
-							if (newValue) {
-								onRowChange(index, 'end_time', dayjs(newValue).format('HH:mm'));
-							}
-						}}
-						ampm={true}
-					/>
-				)}
-			</TableCell>
-			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, textAlign: 'center', verticalAlign: 'top' }}>
-				<Typography variant="body2" sx={{ fontWeight: 700, color: (item.hours || 0) > 0 ? '#111827' : '#9ca3af', py: 1 }}>
-					{item.hours?.toFixed(1) || '0.0'}
-				</Typography>
-			</TableCell>
-			<TableCell sx={{ borderBottom: '1px solid #f3f4f6', py: 1.5, verticalAlign: 'top' }}>
+				</Box>
+			</Box>
+
+			{/* Delete Action */}
+			<Box sx={{ width: '40px', py: 0.5 }}>
 				{!readOnly && (
 					<IconButton
 						onClick={() => onRemoveRow(index)}
 						disabled={isDeleteDisabled}
 						size="small"
-						sx={{
-							mt: 0.5,
-							color: '#9ca3af',
-							transition: 'all 0.2s',
-							'&:hover': { color: '#ef4444', bgcolor: '#fef2f2' },
-							'&.Mui-disabled': { color: '#f3f4f6' }
-						}}
+						sx={{ color: '#9ca3af', '&:hover': { color: '#ef4444', bgcolor: '#fef2f2' } }}
 					>
-						<DeleteIcon fontSize="inherit" sx={{ fontSize: '1.1rem' }} />
+						<DeleteIcon fontSize="small" />
 					</IconButton>
 				)}
-			</TableCell>
-		</TableRow>
+			</Box>
+		</Box>
 	);
 };
 
