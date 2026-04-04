@@ -86,7 +86,7 @@ export const topNavigation: NavigationItem[] = [
 			{
 				label: 'Document Collection',
 				path: '/candidates/documents',
-				roles: ['admin', 'sourcing', 'manager', 'project_coordinator', 'developer']
+				roles: ['admin', 'sourcing', 'trainer', 'manager', 'project_coordinator', 'developer']
 			},
 		],
 	},
