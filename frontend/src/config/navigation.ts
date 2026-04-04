@@ -1,14 +1,14 @@
 import {
 	Home as HomeIcon,
 	ManageAccounts as UserIcon,
-	Business as BusinessIcon,
+	// Business as BusinessIcon,
 	Group as CandidatesIcon,
 	School as SchoolIcon,
 	Assessment as AssessmentIcon,
 	Settings as SettingsIcon,
 	HelpOutline as HelpIcon,
 	Folder as ProjectIcon,
-	Work as PlacementIcon,
+	// Work as PlacementIcon,
 } from '@mui/icons-material';
 import type { SvgIconComponent } from '@mui/icons-material';
 
@@ -38,36 +38,36 @@ export const topNavigation: NavigationItem[] = [
 		icon: ProjectIcon,
 		roles: ['admin', 'manager', 'trainer', 'sourcing', 'project_coordinator', 'developer', 'placement', 'marketing'],
 		children: [
-			{ 
-				label: 'Projects', 
-				path: '/projects', 
-				roles: ['admin', 'manager', 'trainer', 'sourcing', 'project_coordinator', 'developer', 'placement'] 
+			{
+				label: 'Projects',
+				path: '/projects',
+				roles: ['admin', 'manager', 'trainer', 'sourcing', 'project_coordinator', 'developer', 'placement']
 			},
-			{ 
-				label: 'Activities', 
-				path: '/projects/activities', 
-				roles: ['admin', 'manager', 'trainer', 'sourcing', 'project_coordinator', 'developer', 'placement'] 
+			{
+				label: 'Activities',
+				path: '/projects/activities',
+				roles: ['admin', 'manager', 'trainer', 'sourcing', 'project_coordinator', 'developer', 'placement']
 			},
-			{ 
-				label: 'Timesheet', 
-				path: '/projects/timesheet', 
-				roles: ['admin', 'manager', 'trainer', 'sourcing', 'project_coordinator', 'developer', 'placement', 'marketing'] 
+			{
+				label: 'Timesheet',
+				path: '/projects/timesheet',
+				roles: ['admin', 'manager', 'trainer', 'sourcing', 'project_coordinator', 'developer', 'placement', 'marketing']
 			},
 		],
 	},
-	{
-		label: 'CRM Management',
-		icon: BusinessIcon,
-		roles: ['admin', 'manager', 'placement'],
-		children: [
-			// { label: 'Dashboard', path: '/crm/dashboard' },
-			{ label: 'Companies', path: '/crm/companies' },
-			{ label: 'Contacts', path: '/crm/contacts' },
-			// { label: 'Leads', path: '/crm/leads' },
-			// { label: 'Deals', path: '/crm/deals' },
-			// { label: 'Tasks', path: '/crm/tasks' },
-		],
-	},
+	// {
+	// 	label: 'CRM Management',
+	// 	icon: BusinessIcon,
+	// 	roles: ['admin', 'manager', 'placement'],
+	// 	children: [
+	// 		// { label: 'Dashboard', path: '/crm/dashboard' },
+	// 		{ label: 'Companies', path: '/crm/companies' },
+	// 		{ label: 'Contacts', path: '/crm/contacts' },
+	// 		// { label: 'Leads', path: '/crm/leads' },
+	// 		// { label: 'Deals', path: '/crm/deals' },
+	// 		// { label: 'Tasks', path: '/crm/tasks' },
+	// 	],
+	// },
 	{
 		label: 'Candidate Management',
 		icon: CandidatesIcon,
@@ -103,15 +103,15 @@ export const topNavigation: NavigationItem[] = [
 
 		],
 	},
-	{
-		label: 'Placement Management',
-		icon: PlacementIcon,
-		roles: ['admin', 'manager', 'placement'],
-		children: [
-			{ label: 'Job Roles', path: '/placement/job-roles' },
-			{ label: 'Candidate Mapping', path: '/placement/candidate-mapping' },
-		],
-	},
+	// {
+	// 	label: 'Placement Management',
+	// 	icon: PlacementIcon,
+	// 	roles: ['admin', 'manager', 'placement'],
+	// 	children: [
+	// 		{ label: 'Job Roles', path: '/placement/job-roles' },
+	// 		{ label: 'Candidate Mapping', path: '/placement/candidate-mapping' },
+	// 	],
+	// },
 ];
 
 export const bottomNavigation: NavigationItem[] = [
