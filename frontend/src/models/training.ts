@@ -138,6 +138,14 @@ export interface TrainingBatchPlan {
 	activity_type: 'course' | 'break' | 'event' | 'interview' | 'other' | string;
 	activity_name: string;
 	trainer?: string | null;
+	trainer_user_id?: number | null;
+	trainer_user_public_id?: string | null;
+	trainer_user?: {
+		id: number;
+		public_id: string;
+		full_name?: string;
+		email: string;
+	} | null;
 	notes?: string | null;
 	others?: any;
 	created_at: string;

@@ -15,6 +15,7 @@ from app.schemas.dsr_project import (
     DSRProjectResponse,
     DSRProjectListResponse,
     DSRProjectImportResult,
+    TrainingProjectSummary,
 )
 from app.services.dsr_project_service import DSRProjectService
 
@@ -116,3 +117,28 @@ async def delete_project(
     service = DSRProjectService(db)
     await service.delete_project(public_id, current_user)
     await db.commit()
+
+
+@router.get("/{public_id}/training-summary", response_model=TrainingProjectSummary)
+async def get_training_summary(
+    public_id: UUID,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.PROJECT_COORDINATOR])),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get a detailed planned vs actual summary for a training project (Manager / Admin / Trainer)."""
+    service = DSRProjectService(db)
+    return await service.get_training_summary(public_id, current_user)
+
+
+@router.post("/{public_id}/sync", status_code=status.HTTP_200_OK)
+async def sync_training_project(
+    public_id: UUID,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
+    db: AsyncSession = Depends(get_db),
+):
+    """Manually trigger sync for a training project (Manager / Admin)."""
+    service = DSRProjectService(db)
+    success = await service.sync_training_project(public_id, current_user)
+    if success:
+        await db.commit()
+    return {"success": success}

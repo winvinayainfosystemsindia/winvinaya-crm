@@ -29,6 +29,17 @@ export interface DSRProject {
 	id: number;
 	public_id: string;
 	name: string;
+	project_type: 'standard' | 'training';
+	linked_batch_id?: number | null;
+	linked_batch_name?: string | null;
+	linked_batch?: {
+		public_id: string;
+		batch_name: string;
+	};
+	linked_batches?: {
+		public_id: string;
+		batch_name: string;
+	}[];
 	owner_id: number;
 	owner?: DSRUserSnapshot;
 	creator?: DSRUserSnapshot;
@@ -115,6 +126,9 @@ export interface DSREntry {
 export interface DSRProjectCreate {
 	name: string;
 	owner_user_public_id: string;
+	project_type?: 'standard' | 'training';
+	linked_batch_public_id?: string | null;
+	linked_batch_public_ids?: string[];
 	is_active?: boolean;
 	others?: Record<string, any>;
 }

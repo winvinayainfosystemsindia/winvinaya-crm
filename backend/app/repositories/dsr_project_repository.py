@@ -14,9 +14,21 @@ class DSRProjectRepository(BaseRepository[DSRProject]):
         super().__init__(DSRProject, db)
 
     async def get_by_public_id(self, public_id: UUID) -> Optional[DSRProject]:
+        from sqlalchemy.orm import selectinload
         result = await self.db.execute(
             select(DSRProject)
+            .options(selectinload(DSRProject.linked_batches))
             .where(DSRProject.public_id == public_id)
+            .where(DSRProject.is_deleted == False)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_with_batches(self, id: int) -> Optional[DSRProject]:
+        from sqlalchemy.orm import selectinload
+        result = await self.db.execute(
+            select(DSRProject)
+            .options(selectinload(DSRProject.linked_batches))
+            .where(DSRProject.id == id)
             .where(DSRProject.is_deleted == False)
         )
         return result.scalar_one_or_none()
@@ -100,7 +112,8 @@ class DSRProjectRepository(BaseRepository[DSRProject]):
         total_result = await self.db.execute(count_query)
         total = total_result.scalar_one()
 
-        query = query.order_by(DSRProject.name).offset(skip).limit(limit)
+        from sqlalchemy.orm import selectinload
+        query = query.options(selectinload(DSRProject.linked_batches)).order_by(DSRProject.name).offset(skip).limit(limit)
         result = await self.db.execute(query)
         return list(result.scalars().all()), total
 

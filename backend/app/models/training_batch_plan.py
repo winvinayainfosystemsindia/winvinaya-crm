@@ -10,6 +10,7 @@ from app.models.base import BaseModel
 
 if TYPE_CHECKING:
     from app.models.training_batch import TrainingBatch
+    from app.models.user import User
 
 
 class TrainingBatchPlan(BaseModel):
@@ -32,12 +33,22 @@ class TrainingBatchPlan(BaseModel):
     end_time: Mapped[time] = mapped_column(Time, nullable=False)
     activity_type: Mapped[str] = mapped_column(String(100), nullable=False) # course, break, etc.
     activity_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    trainer: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    trainer: Mapped[str | None] = mapped_column(String(255), nullable=True) # Free text trainer name
+    
+    # Linked system user (trainer)
+    trainer_user_id: Mapped[int | None] = mapped_column(
+        Integer, 
+        ForeignKey("users.id", ondelete="SET NULL"), 
+        nullable=True, 
+        index=True
+    )
+    
     notes: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     others: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     
     # Relationships
     batch: Mapped[TrainingBatch] = relationship("TrainingBatch")
+    trainer_user: Mapped[User | None] = relationship("User", foreign_keys=[trainer_user_id])
     
     def __repr__(self) -> str:
         return f"<TrainingBatchPlan(id={self.id}, public_id={self.public_id}, batch_id={self.batch_id}, date={self.date})>"

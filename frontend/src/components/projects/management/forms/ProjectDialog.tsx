@@ -26,6 +26,8 @@ import type { User } from '../../../../models/user';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { createProject, updateProject } from '../../../../store/slices/dsrSlice';
 import { fetchUsers } from '../../../../store/slices/userSlice';
+import { fetchTrainingBatches } from '../../../../store/slices/trainingSlice';
+import type { TrainingBatch } from '../../../../models/training';
 
 interface ProjectDialogProps {
 	open: boolean;
@@ -47,22 +49,30 @@ const ProjectDialog: React.FC<ProjectDialogProps> = ({
 	const theme = useTheme();
 	const dispatch = useAppDispatch();
 	const { users, loading: loadingUsers } = useAppSelector((state) => state.users);
+	const { batches, loading: loadingBatches } = useAppSelector((state) => state.training);
 
 	const [name, setName] = useState('');
 	const [owner, setOwner] = useState<User | null>(null);
 	const [isActive, setIsActive] = useState(true);
+	const [projectType, setProjectType] = useState<'standard' | 'training'>('standard');
+	const [selectedBatches, setSelectedBatches] = useState<TrainingBatch[]>([]);
 	const [submitting, setSubmitting] = useState(false);
 
 	useEffect(() => {
 		if (open) {
 			dispatch(fetchUsers({ skip: 0, limit: 500 }));
+			dispatch(fetchTrainingBatches({ skip: 0, limit: 1000 }));
+			
 			if (project) {
 				setName(project.name);
 				setIsActive(project.is_active);
+				setProjectType(project.project_type || 'standard');
 			} else {
 				setName('');
 				setOwner(null);
 				setIsActive(true);
+				setProjectType('standard');
+				setSelectedBatches([]);
 			}
 		}
 	}, [open, project, dispatch]);
@@ -74,26 +84,39 @@ const ProjectDialog: React.FC<ProjectDialogProps> = ({
 		}
 	}, [open, project, users]);
 
+	useEffect(() => {
+		if (open && project?.linked_batches && batches.length > 0) {
+			const selected = batches.filter(b => 
+				project.linked_batches?.some(lb => lb.public_id === b.public_id)
+			);
+			setSelectedBatches(selected);
+		} else if (open && project?.linked_batch && batches.length > 0) {
+			// Legacy support
+			const batch = batches.find(b => b.public_id === project.linked_batch?.public_id);
+			if (batch) setSelectedBatches([batch]);
+		}
+	}, [open, project, batches]);
+
 	const handleSubmit = async () => {
 		if (!owner) return;
 		setSubmitting(true);
 		try {
+			const commonData = {
+				name,
+				owner_user_public_id: owner.public_id as any,
+				is_active: isActive,
+				project_type: projectType,
+				linked_batch_public_ids: projectType === 'training' ? selectedBatches.map(b => b.public_id) : []
+			};
+
 			if (project) {
 				await dispatch(updateProject({
 					publicId: project.public_id,
-					data: {
-						name,
-						owner_user_public_id: owner.public_id as any, // backend expects UUID
-						is_active: isActive
-					}
+					data: commonData
 				})).unwrap();
 				onSuccess('Project updated successfully');
 			} else {
-				await dispatch(createProject({
-					name,
-					owner_user_public_id: owner.public_id as any,
-					is_active: isActive
-				})).unwrap();
+				await dispatch(createProject(commonData)).unwrap();
 				onSuccess('Project created successfully');
 			}
 		} catch (error) {
@@ -143,6 +166,67 @@ const ProjectDialog: React.FC<ProjectDialogProps> = ({
 			</DialogTitle>
 			<DialogContent>
 				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 2 }}>
+					<Box>
+						<Typography variant="body2" sx={{ mb: 1, fontWeight: 600, color: theme.palette.text.secondary }}>
+							Project Type
+						</Typography>
+						<Box sx={{ display: 'flex', gap: 1 }}>
+							<Button
+								variant={projectType === 'standard' ? 'contained' : 'outlined'}
+								onClick={() => setProjectType('standard')}
+								size="small"
+								fullWidth
+								sx={{ textTransform: 'none' }}
+							>
+								Standard
+							</Button>
+							<Button
+								variant={projectType === 'training' ? 'contained' : 'outlined'}
+								onClick={() => setProjectType('training')}
+								size="small"
+								fullWidth
+								sx={{ textTransform: 'none' }}
+							>
+								Training
+							</Button>
+						</Box>
+					</Box>
+
+					{projectType === 'training' && (
+						<Autocomplete
+							multiple
+							options={batches}
+							getOptionLabel={(option) => option.batch_name}
+							value={selectedBatches}
+							onChange={(_, newValue) => {
+								setSelectedBatches(newValue);
+								if (newValue.length > 0 && !name) {
+									setName(newValue[0].batch_name);
+								}
+							}}
+							loading={loadingBatches}
+							disabled={submitting}
+							isOptionEqualToValue={(option, value) => option.public_id === value.public_id}
+							renderInput={(params) => (
+								<TextField
+									{...params}
+									label="Associated Training Batches"
+									required
+									helperText="Linking batches will automatically sync activities from their lesson plans"
+									InputProps={{
+										...params.InputProps,
+										endAdornment: (
+											<React.Fragment>
+												{loadingBatches ? <CircularProgress color="inherit" size={20} /> : null}
+												{params.InputProps.endAdornment}
+											</React.Fragment>
+										),
+									}}
+								/>
+							)}
+						/>
+					)}
+
 					<TextField
 						label="Project Name"
 						fullWidth
@@ -150,7 +234,9 @@ const ProjectDialog: React.FC<ProjectDialogProps> = ({
 						value={name}
 						onChange={(e) => setName(e.target.value)}
 						disabled={submitting}
+						placeholder={projectType === 'training' && selectedBatches.length > 0 ? selectedBatches[0].batch_name : 'e.g. Internal Development'}
 					/>
+					
 					<Autocomplete
 						options={users}
 						getOptionLabel={(option) => option.full_name || option.username}
@@ -162,7 +248,7 @@ const ProjectDialog: React.FC<ProjectDialogProps> = ({
 						renderInput={(params) => (
 							<TextField
 								{...params}
-								label="Project Owner"
+								label="Project Owner / Primary Manager"
 								required
 								InputProps={{
 									...params.InputProps,
@@ -176,6 +262,7 @@ const ProjectDialog: React.FC<ProjectDialogProps> = ({
 							/>
 						)}
 					/>
+					
 					<FormControlLabel
 						control={
 							<Switch
@@ -185,7 +272,12 @@ const ProjectDialog: React.FC<ProjectDialogProps> = ({
 								color="primary"
 							/>
 						}
-						label="Project Active"
+						label={
+							<Box>
+								<Typography variant="body2" sx={{ fontWeight: 600 }}>Project Active</Typography>
+								<Typography variant="caption" color="text.secondary">Inactive projects are hidden from DSR entry</Typography>
+							</Box>
+						}
 					/>
 				</Box>
 			</DialogContent>

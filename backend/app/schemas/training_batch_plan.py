@@ -12,15 +12,26 @@ class TrainingBatchPlanBase(BaseModel):
     end_time: time
     activity_type: str
     activity_name: str
-    trainer: Optional[str] = None
+    trainer: Optional[str] = None  # Free text trainer name
     notes: Optional[str] = None
     others: Optional[Any] = None
+
+
+class TrainerUserSnapshot(BaseModel):
+    """Brief user info for plan responses"""
+    id: int
+    public_id: uuid.UUID
+    full_name: Optional[str] = None
+    email: str
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TrainingBatchPlanCreate(TrainingBatchPlanBase):
     """Schema for creating a training batch plan"""
     batch_internal_id: Optional[int] = None # Internal ID if known
     batch_public_id: Optional[uuid.UUID] = None # Public ID for resolution
+    trainer_user_public_id: Optional[uuid.UUID] = None # Link to system user
 
 
 class TrainingBatchPlanUpdate(BaseModel):
@@ -31,6 +42,7 @@ class TrainingBatchPlanUpdate(BaseModel):
     activity_type: Optional[str] = None
     activity_name: Optional[str] = None
     trainer: Optional[str] = None
+    trainer_user_public_id: Optional[uuid.UUID] = None
     notes: Optional[str] = None
     others: Optional[Any] = None
 
@@ -40,6 +52,8 @@ class TrainingBatchPlanResponse(TrainingBatchPlanBase):
     id: int
     public_id: uuid.UUID
     batch_id: int
+    trainer_user_id: Optional[int] = None
+    trainer_user: Optional[TrainerUserSnapshot] = None
     created_at: datetime
     updated_at: datetime
 

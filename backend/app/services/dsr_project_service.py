@@ -6,12 +6,21 @@ import io
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.dsr_project import DSRProject
+from app.models.dsr_project import DSRProject, DSRProjectType
 from app.models.user import User, UserRole
-from app.schemas.dsr_project import DSRProjectCreate, DSRProjectUpdate, DSRProjectImportResult
+from app.schemas.dsr_project import (
+    DSRProjectCreate, 
+    DSRProjectUpdate, 
+    DSRProjectImportResult,
+    TrainingProjectSummary,
+    TrainingProjectSubjectSummary
+)
 from app.repositories.dsr_project_repository import DSRProjectRepository
 from app.repositories.user_repository import UserRepository
 from app.repositories.dsr_entry_repository import DSREntryRepository
+from app.repositories.dsr_activity_repository import DSRActivityRepository
+from app.repositories.training_batch_repository import TrainingBatchRepository
+from app.services.training_project_sync_service import TrainingProjectSyncService
 
 
 def _require_manager_or_admin(current_user: User) -> None:
@@ -37,6 +46,9 @@ class DSRProjectService:
         self.repo = DSRProjectRepository(db)
         self.user_repo = UserRepository(db)
         self.dsr_repo = DSREntryRepository(db)
+        self.activity_repo = DSRActivityRepository(db)
+        self.batch_repo = TrainingBatchRepository(db)
+        self.sync_service = TrainingProjectSyncService(db)
 
     async def create_project(self, data: DSRProjectCreate, current_user: User) -> DSRProject:
         _require_manager_or_admin(current_user)
@@ -48,14 +60,44 @@ class DSRProjectService:
         if not owner_user:
             raise HTTPException(status_code=404, detail="Owner user not found")
 
+        # Resolve multiple batches if training project
+        linked_batches = []
+        linked_batch_id = None # legacy support
+        
+        if data.project_type == "training":
+            if data.linked_batch_public_ids:
+                for bpid in data.linked_batch_public_ids:
+                    batch = await self.batch_repo.get_by_public_id(str(bpid))
+                    if batch:
+                        linked_batches.append(batch)
+            elif data.linked_batch_public_id:
+                # Backwards compatibility
+                batch = await self.batch_repo.get_by_public_id(str(data.linked_batch_public_id))
+                if batch:
+                    linked_batches.append(batch)
+                    linked_batch_id = batch.id
+
         project_data = {
             "name": data.name,
             "owner_id": owner_user.id,
             "created_by": current_user.id,
             "is_active": data.is_active,
+            "project_type": data.project_type,
+            "linked_batch_id": linked_batch_id,
             "others": data.others,
         }
-        return await self.repo.create(project_data)
+        project = await self.repo.create(project_data)
+        
+        # Link batches (many-to-many)
+        if linked_batches:
+            project.linked_batches = linked_batches
+            await self.db.flush()
+        
+        # Trigger sync if training project
+        if project.project_type == DSRProjectType.TRAINING and (project.linked_batches or project.linked_batch_id):
+            await self.sync_service.sync_activities_for_project(project.id)
+            
+        return project
 
     async def update_project(
         self, public_id: UUID, data: DSRProjectUpdate, current_user: User
@@ -72,7 +114,34 @@ class DSRProjectService:
                 raise HTTPException(status_code=404, detail="New owner user not found")
             update_data["owner_id"] = owner[0].id
 
+        if "linked_batch_public_ids" in update_data:
+            batch_pids = update_data.pop("linked_batch_public_ids")
+            if batch_pids is not None:
+                batches = []
+                for bpid in batch_pids:
+                    batch = await self.batch_repo.get_by_public_id(str(bpid))
+                    if batch:
+                        batches.append(batch)
+                project.linked_batches = batches
+            else:
+                project.linked_batches = []
+        elif "linked_batch_public_id" in update_data:
+            batch_pid = update_data.pop("linked_batch_public_id")
+            if batch_pid:
+                batch = await self.batch_repo.get_by_public_id(str(batch_pid))
+                if batch:
+                    project.linked_batches = [batch]
+                    update_data["linked_batch_id"] = batch.id
+            else:
+                project.linked_batches = []
+                update_data["linked_batch_id"] = None
+
         updated = await self.repo.update(project.id, update_data)
+        
+        # Re-sync if it's a training project or if the batches were changed
+        if updated.project_type == DSRProjectType.TRAINING and (updated.linked_batches or updated.linked_batch_id):
+            await self.sync_service.sync_activities_for_project(updated.id)
+            
         return await self._get_or_404(public_id)
 
     async def delete_project(self, public_id: UUID, current_user: User) -> bool:
@@ -246,6 +315,64 @@ class DSRProjectService:
         wb.save(output)
         output.seek(0)
         return output
+
+    async def get_training_summary(self, public_id: UUID, current_user: User) -> TrainingProjectSummary:
+        """Get a detailed planned vs actual summary for a training project"""
+        project = await self._get_or_404(public_id)
+        
+        if project.project_type != DSRProjectType.TRAINING:
+            raise HTTPException(status_code=400, detail="This project is not a training project")
+            
+        activities = await self.activity_repo.get_activities_for_project(project.id)
+        
+        total_planned = 0.0
+        total_actual = 0.0
+        subjects = []
+        
+        for act in activities:
+            planned = act.estimated_hours or 0.0
+            actual = act.total_actual_hours or 0.0
+            total_planned += planned
+            total_actual += actual
+            
+            trainer = act.assigned_users[0] if act.assigned_users else None
+            
+            subjects.append(TrainingProjectSubjectSummary(
+                name=act.name,
+                trainer_name=trainer.full_name or trainer.username if trainer else "Unassigned",
+                trainer_public_id=trainer.public_id if trainer else None,
+                planned_hours=round(planned, 2),
+                actual_hours=round(actual, 2),
+                completion_percentage=round((actual / planned * 100) if planned > 0 else 0, 1),
+                status=act.status.value
+            ))
+            
+        if project.linked_batches:
+            batch_names = [b.batch_name for b in project.linked_batches]
+            batch_display_name = ", ".join(batch_names)
+        else:
+            batch_display_name = project.linked_batch.batch_name if project.linked_batch else None
+
+        return TrainingProjectSummary(
+            project_id=project.id,
+            project_public_id=project.public_id,
+            project_name=project.name,
+            batch_name=batch_display_name,
+            total_planned_hours=round(total_planned, 2),
+            total_actual_hours=round(total_actual, 2),
+            overall_completion_percentage=round((total_actual / total_planned * 100) if total_planned > 0 else 0, 1),
+            subjects=subjects
+        )
+
+    async def sync_training_project(self, public_id: UUID, current_user: User) -> bool:
+        """Manually trigger a sync for a training project"""
+        _require_manager_or_admin(current_user)
+        project = await self._get_or_404(public_id)
+        
+        if project.project_type == DSRProjectType.TRAINING and (project.linked_batches or project.linked_batch_id):
+            await self.sync_service.sync_activities_for_project(project.id)
+            return True
+        return False
 
     async def _get_or_404(self, public_id: UUID) -> DSRProject:
         project = await self.repo.get_by_public_id(public_id)

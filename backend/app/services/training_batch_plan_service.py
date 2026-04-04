@@ -9,6 +9,8 @@ from app.models.training_batch_plan import TrainingBatchPlan
 from app.schemas.training_batch_plan import TrainingBatchPlanCreate, TrainingBatchPlanUpdate
 from app.repositories.training_batch_plan_repository import TrainingBatchPlanRepository
 from app.repositories.training_batch_repository import TrainingBatchRepository
+from app.repositories.user_repository import UserRepository
+from app.services.training_project_sync_service import TrainingProjectSyncService
 
 
 class TrainingBatchPlanService:
@@ -18,6 +20,8 @@ class TrainingBatchPlanService:
         self.db = db
         self.repository = TrainingBatchPlanRepository(db)
         self.batch_repository = TrainingBatchRepository(db)
+        self.user_repository = UserRepository(db)
+        self.sync_service = TrainingProjectSyncService(db)
     
     async def get_plan_by_public_id(self, public_id: UUID) -> Optional[TrainingBatchPlan]:
         """Get a plan entry by public ID"""
@@ -88,10 +92,24 @@ class TrainingBatchPlanService:
                     detail=f"Course '{plan_in.activity_name}' cannot exceed 2 hours per day. Current total: {total_course_hours:.1f} hours."
                 )
 
-        data = plan_in.model_dump(exclude={"batch_internal_id", "batch_public_id"})
+        # 3. Resolve trainer_user_id if provided
+        trainer_user_id = None
+        if plan_in.trainer_user_public_id:
+            users = await self.user_repository.get_by_fields(public_id=plan_in.trainer_user_public_id)
+            if not users:
+                raise HTTPException(status_code=404, detail="Trainer user not found")
+            trainer_user_id = users[0].id
+
+        data = plan_in.model_dump(exclude={"batch_internal_id", "batch_public_id", "trainer_user_public_id"})
         data["batch_id"] = batch_id
+        data["trainer_user_id"] = trainer_user_id
         
-        return await self.repository.create(data)
+        result = await self.repository.create(data)
+        
+        # Trigger sync to DSR projects
+        await self.sync_service.sync_batch_to_projects(batch_id)
+        
+        return result
 
     async def update_plan_entry(self, public_id: UUID, plan_in: TrainingBatchPlanUpdate) -> TrainingBatchPlan:
         """Update a training plan entry"""
@@ -102,10 +120,35 @@ class TrainingBatchPlanService:
         # But in a real app, validation should be shared.
         
         update_data = plan_in.model_dump(exclude_unset=True)
-        return await self.repository.update(plan.id, update_data)
+
+        # Resolve trainer_user_id if provided
+        if "trainer_user_public_id" in update_data:
+            trainer_u_pid = update_data.pop("trainer_user_public_id")
+            if trainer_u_pid:
+                users = await self.user_repository.get_by_fields(public_id=trainer_u_pid)
+                if not users:
+                    raise HTTPException(status_code=404, detail="Trainer user not found")
+                update_data["trainer_user_id"] = users[0].id
+            else:
+                update_data["trainer_user_id"] = None
+
+        updated = await self.repository.update(plan.id, update_data)
+        
+        # Trigger sync to DSR projects
+        await self.sync_service.sync_batch_to_projects(plan.batch_id)
+        
+        return updated
 
     async def delete_plan_entry(self, public_id: UUID) -> bool:
         """Delete a training plan entry"""
         plan = await self.get_plan_by_public_id(public_id)
-        return await self.repository.delete(plan.id)
+        batch_id = plan.batch_id
+        
+        success = await self.repository.delete(plan.id)
+        
+        if success:
+            # Trigger sync to DSR projects
+            await self.sync_service.sync_batch_to_projects(batch_id)
+        
+        return success
 

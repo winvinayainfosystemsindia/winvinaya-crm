@@ -6,7 +6,8 @@ import {
 import {
 	Edit as EditIcon,
 	Delete as DeleteIcon,
-	ListAlt as ActivityIcon
+	ListAlt as ActivityIcon,
+	TrendingUp as ProgressIcon
 } from '@mui/icons-material';
 import type { DSRProject } from '../../../../models/dsr';
 
@@ -20,6 +21,7 @@ interface ProjectTableActionsProps {
 	onEdit: (project: DSRProject) => void;
 	onDelete: (project: DSRProject) => void;
 	onManageActivities: (project: DSRProject) => void;
+	onViewSummary: (project: DSRProject) => void;
 }
 
 const ProjectTableActions: React.FC<ProjectTableActionsProps> = ({
@@ -29,7 +31,8 @@ const ProjectTableActions: React.FC<ProjectTableActionsProps> = ({
 	activeProject,
 	onEdit,
 	onDelete,
-	onManageActivities
+	onManageActivities,
+	onViewSummary
 }) => {
 	const { user } = useAppSelector((state) => state.auth);
 	const isPrivileged = user?.role === 'admin' || user?.role === 'manager';
@@ -44,6 +47,12 @@ const ProjectTableActions: React.FC<ProjectTableActionsProps> = ({
 			anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
 			transformOrigin={{ vertical: 'top', horizontal: 'right' }}
 		>
+			{activeProject.project_type === 'training' && (
+				<MenuItem onClick={() => { onViewSummary(activeProject); onClose(); }}>
+					<ProgressIcon sx={{ fontSize: 18, mr: 1, color: '#1d8102' }} />
+					View Training Summary
+				</MenuItem>
+			)}
 			<MenuItem onClick={() => { onManageActivities(activeProject); onClose(); }}>
 				<ActivityIcon sx={{ fontSize: 18, mr: 1, color: '#0073bb' }} />
 				Manage Activities

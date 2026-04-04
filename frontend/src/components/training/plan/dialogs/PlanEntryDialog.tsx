@@ -271,23 +271,37 @@ const PlanEntryDialog: React.FC<PlanEntryDialogProps> = ({
 						/>
 					</Stack>
 
-					{['course', 'hr_session'].includes(selectedEntry?.activity_type || '') && (
+					{['course', 'hr_session', 'mock_interview'].includes(selectedEntry?.activity_type || '') && (
 						<FormControl fullWidth error={!!formErrors.trainer}>
-							<InputLabel>Trainer</InputLabel>
+							<InputLabel>Trainer / Faculty</InputLabel>
 							<Select
 								required
-								label="Trainer"
-								value={selectedEntry?.trainer || ''}
+								label="Trainer / Faculty"
+								value={selectedEntry?.trainer_user_public_id || ''}
 								onChange={(e) => {
-									setSelectedEntry({ ...selectedEntry, trainer: e.target.value });
+									const user = users.find(u => u.public_id === e.target.value);
+									setSelectedEntry({ 
+										...selectedEntry, 
+										trainer_user_public_id: e.target.value as string,
+										trainer: user?.full_name || user?.username || ''
+									});
 									if (formErrors.trainer) setFormErrors({ ...formErrors, trainer: '' });
 								}}
+								renderValue={(selected) => {
+									const user = users.find(u => u.public_id === selected);
+									return user?.full_name || user?.username || 'Select Trainer';
+								}}
 							>
-								{users.map((u: User) => (
-									<MenuItem key={u.id} value={u.full_name}>
-										{u.full_name}
-									</MenuItem>
-								))}
+								{users
+									.filter(u => u.full_name && u.is_active)
+									.map((u: User) => (
+										<MenuItem key={u.public_id} value={u.public_id}>
+											<Box>
+												<Typography variant="body2" sx={{ fontWeight: 600 }}>{u.full_name}</Typography>
+												<Typography variant="caption" color="text.secondary">{u.email} • {u.role}</Typography>
+											</Box>
+										</MenuItem>
+									))}
 							</Select>
 							{formErrors.trainer && <Typography variant="caption" color="error" sx={{ mx: 2, mt: 0.5 }}>{formErrors.trainer}</Typography>}
 						</FormControl>

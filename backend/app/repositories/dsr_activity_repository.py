@@ -26,8 +26,10 @@ class DSRActivityRepository(BaseRepository[DSRActivity]):
         project_id: int,
         active_only: bool = False,
     ) -> List[DSRActivity]:
+        from sqlalchemy.orm import selectinload
         query = (
             select(DSRActivity)
+            .options(selectinload(DSRActivity.assigned_users))
             .where(DSRActivity.project_id == project_id)
             .where(DSRActivity.is_deleted == False)
         )

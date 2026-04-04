@@ -1,9 +1,8 @@
 from __future__ import annotations
-"""DSR Project model"""
-
 import uuid
+import enum
 from typing import TYPE_CHECKING
-from sqlalchemy import String, Boolean, Integer, ForeignKey, Uuid
+from sqlalchemy import String, Boolean, Integer, ForeignKey, Uuid, Enum, Table, Column
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
@@ -11,6 +10,22 @@ from app.models.base import BaseModel
 if TYPE_CHECKING:
     from app.models.user import User
     from app.models.dsr_activity import DSRActivity
+    from app.models.training_batch import TrainingBatch
+
+
+class DSRProjectType(str, enum.Enum):
+    """Type of DSR project"""
+    STANDARD = "standard"
+    TRAINING = "training"
+
+
+# Association table for many-to-many relationship between Projects and Training Batches
+dsr_project_batches = Table(
+    "dsr_project_batch_association",
+    BaseModel.metadata,
+    Column("project_id", Integer, ForeignKey("dsr_projects.id", ondelete="CASCADE"), primary_key=True),
+    Column("batch_id", Integer, ForeignKey("training_batches.id", ondelete="CASCADE"), primary_key=True),
+)
 
 
 class DSRProject(BaseModel):
@@ -36,6 +51,21 @@ class DSRProject(BaseModel):
         Boolean,
         default=True,
         nullable=False,
+        index=True,
+    )
+
+    project_type: Mapped[DSRProjectType] = mapped_column(
+        Enum(DSRProjectType, values_callable=lambda x: [e.value for e in x]),
+        default=DSRProjectType.STANDARD,
+        nullable=False,
+        index=True,
+    )
+
+    # For training projects, link to a batch
+    linked_batch_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("training_batches.id", ondelete="SET NULL"),
+        nullable=True,
         index=True,
     )
 
@@ -71,6 +101,18 @@ class DSRProject(BaseModel):
     creator: Mapped[User] = relationship(
         "User",
         foreign_keys=[created_by],
+        lazy="selectin",
+    )
+
+    linked_batch: Mapped[TrainingBatch | None] = relationship(
+        "TrainingBatch",
+        foreign_keys=[linked_batch_id],
+        lazy="selectin",
+    )
+
+    linked_batches: Mapped[list[TrainingBatch]] = relationship(
+        "TrainingBatch",
+        secondary=dsr_project_batches,
         lazy="selectin",
     )
 
