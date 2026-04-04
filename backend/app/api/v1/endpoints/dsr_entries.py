@@ -230,7 +230,7 @@ async def get_all_entries(
 @router.post("/admin/grant-permission", response_model=DSREntryResponse)
 async def grant_previous_day_permission(
     data: DSRGrantPreviousDayPermission,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN])),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -326,7 +326,7 @@ async def get_permission_requests(
 async def handle_permission_request(
     public_id: UUID,
     data: DSRPermissionRequestUpdate,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN])),
     db: AsyncSession = Depends(get_db),
 ):
     """Admin grants or rejects a permission request."""

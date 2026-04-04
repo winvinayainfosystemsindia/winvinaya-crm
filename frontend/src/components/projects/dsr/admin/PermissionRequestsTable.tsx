@@ -14,6 +14,7 @@ import {
 	CircularProgress
 } from '@mui/material';
 import dayjs from 'dayjs';
+import { useAppSelector } from '../../../../store/hooks';
 
 import type { DSRPermissionRequest } from '../../../../models/dsr';
 import DSRAdminTableHeader from './DSRAdminTableHeader';
@@ -57,6 +58,8 @@ const PermissionRequestsTable: React.FC<PermissionRequestsTableProps> = ({
 	filterDrawerOpen,
 	onFilterDrawerOpen
 }) => {
+	const { user } = useAppSelector((state) => state.auth);
+	const isAdmin = user?.role === 'admin';
 	const displayRequests = requests;
 
 	const handleApplyFilters = () => {
@@ -170,7 +173,7 @@ const PermissionRequestsTable: React.FC<PermissionRequestsTableProps> = ({
 											/>
 										</TableCell>
 										<TableCell align="right">
-											{req.status === 'pending' && (
+											{req.status === 'pending' && isAdmin && (
 												<Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
 													<Button
 														size="small"
