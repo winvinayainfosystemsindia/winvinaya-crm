@@ -174,8 +174,8 @@ const dsrService = {
 		return response.data;
 	},
 
-	getPendingSubmissions: async (): Promise<any> => {
-		const response = await api.get('/dsr/permissions/pending-submissions');
+	getMyStatsSummary: async (): Promise<any> => {
+		const response = await api.get('/dsr/entries/my-summary');
 		return response.data;
 	}
 };

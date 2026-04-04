@@ -19,6 +19,7 @@ export const GENERAL_PROJECT_ID = 'general_internal';
 
 interface UseDSRSubmissionProps {
 	onSubmitted?: () => void;
+	onSuccess?: () => void;
 	externalEntryId?: string | null;
 }
 
@@ -471,7 +472,11 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 			})).unwrap();
 			await dispatch(submitEntry(entry.public_id)).unwrap();
 			toast.success('DSR submitted successfully!');
-			if (props?.onSubmitted) {
+			
+			// Call success callback or navigate
+			if (props?.onSuccess) {
+				props.onSuccess();
+			} else if (props?.onSubmitted) {
 				props.onSubmitted();
 			} else {
 				setTimeout(() => navigate('/dashboard/dsr'), 1500);

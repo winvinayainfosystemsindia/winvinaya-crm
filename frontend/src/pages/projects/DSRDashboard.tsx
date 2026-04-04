@@ -30,8 +30,10 @@ import dayjs from 'dayjs';
 import {
 	fetchPermissionRequests,
 	fetchLeaveStats,
+	fetchMyStatsSummary,
 	fetchCalendarEntries
 } from '../../store/slices/dsrSlice';
+import DSRStatsHeader from '../../components/projects/dsr/DSRStatsHeader';
 import MyPermissionRequests from '../../components/projects/dsr/user/MyPermissionRequests';
 // PermissionStatsCards removed
 
@@ -106,11 +108,11 @@ const DSRDashboard: React.FC = () => {
 	useEffect(() => {
 		if (activeTab === 1) {
 			dispatch(fetchPermissionRequests({ skip: 0, limit: 100, user_id: user?.id }));
-		} else if (activeTab === 2) {
-			dispatch(fetchLeaveStats());
 		} else if (activeTab === 3 && isAdmin) {
 			admin.handleRefresh();
 		}
+		// Always fetch summary stats
+		dispatch(fetchMyStatsSummary());
 	}, [dispatch, activeTab, user?.id, isPrivileged, isAdmin]);
 
 	const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
@@ -133,6 +135,14 @@ const DSRDashboard: React.FC = () => {
 		setEditEntryId(id);
 		setIsViewOnly(true);
 		setIsSubmissionOpen(true);
+	};
+
+	const handleSubmissionSuccess = () => {
+		setIsSubmissionOpen(false);
+		setIsLeaveOpen(false);
+		setEditEntryId(null);
+		history.fetchHistory();
+		dispatch(fetchMyStatsSummary());
 	};
 
 	const handleCloseSubmission = () => {
@@ -160,8 +170,10 @@ const DSRDashboard: React.FC = () => {
 			subtitle="Track work hours, manage submissions, and review team activity."
 		>
 			{() => (
-				<Box>
-					<Paper variant="outlined" sx={{ borderRadius: '2px', overflow: 'hidden' }}>
+				<Box sx={{ width: '100%', mb: 6 }}>
+					<DSRStatsHeader />
+					
+					<Paper elevation={0} variant="outlined" sx={{ borderRadius: '4px', border: '1px solid #eaeded', overflow: 'hidden' }}>
 						<Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: '#fafafa' }}>
 							<Tabs
 								value={activeTab}
@@ -200,7 +212,7 @@ const DSRDashboard: React.FC = () => {
 									}
 									sx={{ textTransform: 'none', minHeight: 48 }}
 								/>
-								{isPrivileged && (
+								{isAdmin && (
 									<Tab
 										label={
 											<TabLabel
@@ -358,6 +370,7 @@ const DSRDashboard: React.FC = () => {
 					<DSRSubmissionDialog
 						open={isSubmissionOpen}
 						onClose={handleCloseSubmission}
+						onSuccess={handleSubmissionSuccess}
 						entryId={editEntryId}
 						readOnly={isViewOnly}
 					/>

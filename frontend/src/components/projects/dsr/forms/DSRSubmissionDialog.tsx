@@ -22,11 +22,18 @@ import dayjs from 'dayjs';
 interface DSRSubmissionDialogProps {
 	open: boolean;
 	onClose: () => void;
+	onSuccess?: () => void;
 	entryId?: string | null;
 	readOnly?: boolean;
 }
 
-const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose, entryId, readOnly = false }) => {
+const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ 
+	open, 
+	onClose, 
+	onSuccess,
+	entryId, 
+	readOnly = false 
+}) => {
 	const [permissionDialogOpen, setPermissionDialogOpen] = React.useState(false);
 
 	const {
@@ -53,6 +60,7 @@ const DSRSubmissionDialog: React.FC<DSRSubmissionDialogProps> = ({ open, onClose
 		handleSubmit
 	} = useDSRSubmission({
 		onSubmitted: onClose,
+		onSuccess: onSuccess,
 		externalEntryId: entryId
 	});
 

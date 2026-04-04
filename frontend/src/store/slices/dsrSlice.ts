@@ -28,6 +28,12 @@ interface DSRState {
 	totalMyEntries: number;
 	totalAdminEntries: number;
 	totalPermissionRequests: number;
+	userStatsSummary: {
+		total_hours_month: number;
+		total_hours_all_time: number;
+		total_leaves: number;
+		not_worked_days: number;
+	} | null;
 	loading: boolean;
 	error: string | null;
 }
@@ -50,6 +56,7 @@ const initialState: DSRState = {
 	totalMyEntries: 0,
 	totalAdminEntries: 0,
 	totalPermissionRequests: 0,
+	userStatsSummary: null,
 	loading: false,
 	error: null,
 };
@@ -406,6 +413,17 @@ export const fetchPermissionStats = createAsyncThunk(
 	}
 );
 
+export const fetchMyStatsSummary = createAsyncThunk(
+	'dsr/fetchMyStatsSummary',
+	async (_, { rejectWithValue }) => {
+		try {
+			return await dsrService.getMyStatsSummary();
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.detail || 'Failed to fetch summary stats');
+		}
+	}
+);
+
 const dsrSlice = createSlice({
 	name: 'dsr',
 	initialState,
@@ -590,6 +608,10 @@ const dsrSlice = createSlice({
 			.addCase(fetchLeaveStats.fulfilled, (state, action: PayloadAction<DSRLeaveStats>) => {
 				state.loading = false;
 				state.leaveStats = action.payload;
+			})
+			.addCase(fetchMyStatsSummary.fulfilled, (state, action: PayloadAction<any>) => {
+				state.loading = false;
+				state.userStatsSummary = action.payload;
 			})
 			.addMatcher(
 				(action) => action.type.startsWith('dsr/') && action.type.endsWith('/pending'),

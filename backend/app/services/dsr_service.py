@@ -824,3 +824,6 @@ class DSRService:
         ]
 
         return stats
+    async def get_user_stats_summary(self, current_user: User) -> dict:
+        """Get summary metrics for the current user's dashboard header"""
+        return await self.repo.get_user_stats_summary(current_user.id)

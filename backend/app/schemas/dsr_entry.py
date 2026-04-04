@@ -193,3 +193,11 @@ class DSRRejectEntry(BaseModel):
 class DSRRevokeEntry(BaseModel):
     """Admin revokes an approved or submitted DSR entry — reason is optional"""
     reason: Optional[str] = Field(default=None, description="Why this DSR is being revoked")
+
+
+class DSRUserStatsSummary(BaseModel):
+    """Summary of user work stats for the dashboard header"""
+    total_hours_month: float
+    total_hours_all_time: float
+    total_leaves: int
+    not_worked_days: int

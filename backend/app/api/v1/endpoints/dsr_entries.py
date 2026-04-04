@@ -21,6 +21,7 @@ from app.schemas.dsr_entry import (
     DSRApproveEntry,
     DSRRejectEntry,
     DSRRevokeEntry,
+    DSRUserStatsSummary,
 )
 from app.schemas.dsr_permission_request import (
     DSRPermissionRequestCreate,
@@ -171,6 +172,16 @@ async def get_my_dsr_stats(
     """
     service = DSRService(db)
     return await service.repo.count_by_status_for_user(current_user.id)
+
+
+@router.get("/entries/my-summary", response_model=DSRUserStatsSummary)
+async def get_my_stats_summary(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get a summary of hours (month/total), leaves, and missed days for the current user."""
+    service = DSRService(db)
+    return await service.get_user_stats_summary(current_user)
 
 
 @router.get("/entries/{public_id}", response_model=DSREntryResponse)

@@ -179,3 +179,65 @@ class DSREntryRepository(BaseRepository[DSREntry]):
 
         result = await self.db.execute(query)
         return result.scalar_one()
+    async def get_user_stats_summary(self, user_id: int) -> dict:
+        """Calculate summary metrics for the user dashboard header"""
+        from datetime import date, timedelta
+        from sqlalchemy import text
+        
+        today = date.today()
+        first_of_month = today.replace(day=1)
+        
+        # 1. Total hours all-time (approved)
+        # We use a raw SQL fragment for JSONB aggregation efficiency
+        all_time_query = await self.db.execute(text(
+            "SELECT SUM((item->>'hours')::float) "
+            "FROM dsr_entries, jsonb_array_elements(items) AS item "
+            "WHERE user_id = :uid AND status = 'approved' AND is_deleted = false"
+        ), {"uid": user_id})
+        total_hours_all_time = all_time_query.scalar() or 0.0
+        
+        # 2. Total hours current month (approved)
+        month_query = await self.db.execute(text(
+            "SELECT SUM((item->>'hours')::float) "
+            "FROM dsr_entries, jsonb_array_elements(items) AS item "
+            "WHERE user_id = :uid AND status = 'approved' AND is_deleted = false "
+            "AND report_date >= :start_date"
+        ), {"uid": user_id, "start_date": first_of_month})
+        total_hours_month = month_query.scalar() or 0.0
+        
+        # 3. Total leaves entirely (approved)
+        leaves_query = await self.db.execute(
+            select(func.count(DSREntry.id))
+            .where(DSREntry.user_id == user_id)
+            .where(DSREntry.is_leave == True)
+            .where(DSREntry.status == DSRStatus.APPROVED)
+            .where(DSREntry.is_deleted == False)
+        )
+        total_leaves = leaves_query.scalar() or 0
+        
+        # 4. Not worked days (Current Month)
+        # We find weekdays in current month (Mon-Fri) that don't have an entry
+        # First, get all distinct report dates for this user this month
+        dates_query = await self.db.execute(
+            select(DSREntry.report_date)
+            .where(DSREntry.user_id == user_id)
+            .where(DSREntry.report_date >= first_of_month)
+            .where(DSREntry.is_deleted == False)
+            .distinct()
+        )
+        submitted_dates = {r[0] for r in dates_query.all()}
+        
+        not_worked_count = 0
+        curr = first_of_month
+        while curr <= today:
+            # Weekday check (0=Mon, 4=Fri) and not in submitted dates
+            if curr.weekday() < 5 and curr not in submitted_dates:
+                not_worked_count += 1
+            curr += timedelta(days=1)
+            
+        return {
+            "total_hours_month": round(total_hours_month, 2),
+            "total_hours_all_time": round(total_hours_all_time, 2),
+            "total_leaves": total_leaves,
+            "not_worked_days": not_worked_count
+        }
