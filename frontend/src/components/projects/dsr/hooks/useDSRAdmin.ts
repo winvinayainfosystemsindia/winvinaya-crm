@@ -15,7 +15,7 @@ export const useDSRAdmin = () => {
 	const dispatch = useAppDispatch();
 	const toast = useToast();
 	const { user } = useAppSelector((state) => state.auth);
-	const isPrivileged = user?.role === 'admin' || user?.role === 'manager';
+	const isPrivileged = user?.role === 'admin';
 	const {
 		missingReports,
 		adminEntries,

@@ -152,13 +152,16 @@ const PermissionRequestsTable: React.FC<PermissionRequestsTableProps> = ({
 										<TableCell sx={{ fontWeight: 500 }}>{req.user?.full_name || 'User'}</TableCell>
 										<TableCell>{dayjs(req.report_date).format('DD/MMM/YYYY')}</TableCell>
 										<TableCell>
-											<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-												<Typography variant="body2" sx={{
-													maxWidth: 200,
-													whiteSpace: 'nowrap',
-													overflow: 'hidden',
-													textOverflow: 'ellipsis'
-												}}>
+											<Box sx={{ py: 1 }}>
+												<Typography 
+													variant="body2" 
+													sx={{ 
+														maxWidth: 400,
+														wordBreak: 'break-word',
+														lineHeight: 1.5,
+														color: 'text.primary'
+													}}
+												>
 													{req.reason}
 												</Typography>
 											</Box>

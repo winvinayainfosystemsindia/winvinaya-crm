@@ -87,6 +87,7 @@ const TabLabel: React.FC<{
 const DSRDashboard: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const { user } = useAppSelector((state) => state.auth);
+	const isAdmin = user?.role === 'admin';
 	const isPrivileged = user?.role === 'admin' || user?.role === 'manager';
 	const { permissionRequests, leaveStats, loading: dsrLoading } = useAppSelector((state) => state.dsr);
 // permissionStats removed
@@ -107,10 +108,10 @@ const DSRDashboard: React.FC = () => {
 			dispatch(fetchPermissionRequests({ skip: 0, limit: 100, user_id: user?.id }));
 		} else if (activeTab === 2) {
 			dispatch(fetchLeaveStats());
-		} else if (activeTab === 3 && isPrivileged) {
-			// fetchPermissionStats removed
+		} else if (activeTab === 3 && isAdmin) {
+			admin.handleRefresh();
 		}
-	}, [dispatch, activeTab, user?.id, isPrivileged]);
+	}, [dispatch, activeTab, user?.id, isPrivileged, isAdmin]);
 
 	const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
 		setActiveTab(newValue);
@@ -346,7 +347,7 @@ const DSRDashboard: React.FC = () => {
 								</Box>
 							)}
 
-							{activeTab === 3 && isPrivileged && (
+							{activeTab === 3 && isAdmin && (
 								<DSRAdminSection
 									admin={admin}
 								/>
