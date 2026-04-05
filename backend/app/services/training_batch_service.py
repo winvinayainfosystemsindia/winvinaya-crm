@@ -9,6 +9,10 @@ from app.models.training_batch import TrainingBatch
 from app.schemas.training_batch import TrainingBatchCreate, TrainingBatchUpdate, TrainingBatchExtend
 from app.repositories.training_batch_repository import TrainingBatchRepository
 from app.repositories.training_batch_extension_repository import TrainingBatchExtensionRepository
+from app.repositories.training_batch_plan_repository import TrainingBatchPlanRepository
+from app.models.training_candidate_allocation import TrainingCandidateAllocation
+from app.services.training_project_sync_service import TrainingProjectSyncService
+from sqlalchemy import select, func
 
 
 class TrainingBatchService:
@@ -18,6 +22,8 @@ class TrainingBatchService:
         self.db = db
         self.repository = TrainingBatchRepository(db)
         self.extension_repository = TrainingBatchExtensionRepository(db)
+        self.plan_repository = TrainingBatchPlanRepository(db)
+        self.sync_service = TrainingProjectSyncService(db)
     
     async def get_batches(
         self, 
@@ -97,9 +103,38 @@ class TrainingBatchService:
         return await self.repository.update(batch.id, update_data)
     
     async def delete_batch(self, public_id: UUID) -> bool:
-        """Delete a training batch"""
+        """Delete a training batch with safety checks and cascading cleanup"""
         batch = await self.get_batch_by_public_id(public_id)
-        return await self.repository.delete(batch.id)
+        
+        # 1. Safety Guard: Check for active allocations
+        allocation_query = select(func.count(TrainingCandidateAllocation.id)).where(
+            TrainingCandidateAllocation.batch_id == batch.id,
+            TrainingCandidateAllocation.is_deleted == False
+        )
+        count_result = await self.db.execute(allocation_query)
+        count = count_result.scalar() or 0
+        
+        if count > 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Cannot delete batch '{batch.batch_name}' because {count} candidate(s) are still allocated to it. Please unmap all candidates first."
+            )
+            
+        # 2. Cascading Cleanup: Soft-delete related weekly plans
+        plans = await self.plan_repository.get_all_by_batch_id(batch.id)
+        if plans:
+            plan_ids = [p.id for p in plans]
+            await self.plan_repository.bulk_soft_delete(plan_ids)
+            
+        # 3. Soft-delete the batch itself
+        success = await self.repository.delete(batch.id)
+        
+        if success:
+            # 4. Sync DSR: Trigger synchronization for projects linked to this batch
+            # This will remove/deactivate related DSR activities since the plans were deleted
+            await self.sync_service.sync_batch_to_projects(batch.id)
+            
+        return success
     
     async def _complete_batch_allocations(self, batch_id: int):
         """Mark all non-dropout allocations as completed when batch closes"""

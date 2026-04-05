@@ -24,7 +24,7 @@ export const useTrainingActions = () => {
 			}
 			return true;
 		} catch (err: any) {
-			showError(err.message || 'Failed to save batch');
+			showError(err || 'Failed to save batch');
 			return false;
 		}
 	}, [dispatch, success, showError]);
@@ -39,7 +39,7 @@ export const useTrainingActions = () => {
 			success('Batch extended successfully');
 			return true;
 		} catch (err: any) {
-			showError(err.message || 'Failed to extend batch');
+			showError(err || 'Failed to extend batch');
 			return false;
 		}
 	}, [dispatch, success, showError]);
@@ -50,7 +50,7 @@ export const useTrainingActions = () => {
 			success('Batch deleted successfully');
 			return true;
 		} catch (err: any) {
-			showError(err.message || 'Failed to delete batch');
+			showError(err || 'Failed to delete batch');
 			return false;
 		}
 	}, [dispatch, success, showError]);

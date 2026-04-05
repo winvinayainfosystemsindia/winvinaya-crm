@@ -53,7 +53,7 @@ export const createTrainingBatch = createAsyncThunk(
 			const response = await trainingService.createBatch(data);
 			return response;
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to create training batch');
+			return rejectWithValue(error.response?.data?.detail || error.response?.data?.message || 'Failed to create training batch');
 		}
 	}
 );
@@ -65,7 +65,7 @@ export const updateTrainingBatch = createAsyncThunk(
 			const response = await trainingService.updateBatch(publicId, data);
 			return response;
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to update training batch');
+			return rejectWithValue(error.response?.data?.detail || error.response?.data?.message || 'Failed to update training batch');
 		}
 	}
 );
@@ -77,7 +77,7 @@ export const extendTrainingBatch = createAsyncThunk(
 			const response = await trainingService.extendBatch(publicId, { new_close_date, reason });
 			return response;
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to extend training batch');
+			return rejectWithValue(error.response?.data?.detail || error.response?.data?.message || 'Failed to extend training batch');
 		}
 	}
 );
@@ -89,7 +89,7 @@ export const fetchAllocations = createAsyncThunk(
 			const response = await trainingService.getAllocations(batchPublicId, params);
 			return response;
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to fetch allocations');
+			return rejectWithValue(error.response?.data?.detail || error.response?.data?.message || 'Failed to fetch allocations');
 		}
 	}
 );
@@ -117,7 +117,7 @@ export const markAsDropout = createAsyncThunk(
 			});
 			return response;
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to mark as dropout');
+			return rejectWithValue(error.response?.data?.detail || error.response?.data?.message || 'Failed to mark as dropout');
 		}
 	}
 );
@@ -138,7 +138,7 @@ export const allocateCandidate = createAsyncThunk(
 			dispatch(fetchTrainingBatches({}));
 			return response;
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to allocate candidate');
+			return rejectWithValue(error.response?.data?.detail || error.response?.data?.message || 'Failed to allocate candidate');
 		}
 	}
 );
@@ -150,7 +150,7 @@ export const removeAllocation = createAsyncThunk(
 			await trainingService.removeAllocation(publicId);
 			return publicId;
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to remove allocation');
+			return rejectWithValue(error.response?.data?.detail || error.response?.data?.message || 'Failed to remove allocation');
 		}
 	}
 );
@@ -162,7 +162,7 @@ export const reallocateCandidate = createAsyncThunk(
 			const data = await trainingService.reallocateCandidate(publicId, newBatchPublicId, transferData);
 			return { publicId, newAllocation: data };
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.detail || 'Failed to reallocate candidate');
+			return rejectWithValue(error.response?.data?.detail || error.response?.data?.message || 'Failed to reallocate candidate');
 		}
 	}
 );
@@ -174,7 +174,7 @@ export const updateAllocationStatus = createAsyncThunk(
 			const response = await trainingService.updateAllocation(publicId, { status: status });
 			return response;
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to update allocation status');
+			return rejectWithValue(error.response?.data?.detail || error.response?.data?.message || 'Failed to update allocation status');
 		}
 	}
 );
@@ -186,7 +186,7 @@ export const deleteTrainingBatch = createAsyncThunk(
 			await trainingService.deleteBatch(publicId);
 			return publicId;
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to delete training batch');
+			return rejectWithValue(error.response?.data?.detail || error.response?.data?.message || 'Failed to delete training batch');
 		}
 	}
 );
@@ -198,7 +198,7 @@ export const fetchAllAllocations = createAsyncThunk(
 			const response = await trainingService.getAllAllocations(params);
 			return response;
 		} catch (error: any) {
-			return rejectWithValue(error.response?.data?.message || 'Failed to fetch allocations');
+			return rejectWithValue(error.response?.data?.detail || error.response?.data?.message || 'Failed to fetch allocations');
 		}
 	}
 );
