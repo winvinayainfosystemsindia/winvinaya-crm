@@ -14,6 +14,7 @@ import TrainingTableActions from './TrainingTableActions';
 interface TrainingTableRowProps {
 	batch: TrainingBatch;
 	isAdmin: boolean;
+	canEdit: boolean;
 	onEdit: (batch: TrainingBatch) => void;
 	onExtend: (batch: TrainingBatch) => void;
 	onDelete: (batch: TrainingBatch) => void;
@@ -22,6 +23,7 @@ interface TrainingTableRowProps {
 const TrainingTableRow: React.FC<TrainingTableRowProps> = memo(({
 	batch,
 	isAdmin,
+	canEdit,
 	onEdit,
 	onExtend,
 	onDelete
@@ -163,6 +165,7 @@ const TrainingTableRow: React.FC<TrainingTableRowProps> = memo(({
 				<TrainingTableActions
 					batch={batch}
 					isAdmin={isAdmin}
+					canEdit={canEdit}
 					onEdit={onEdit}
 					onExtend={onExtend}
 					onDelete={onDelete}

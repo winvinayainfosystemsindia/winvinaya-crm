@@ -15,6 +15,7 @@ interface TrainingTableHeaderProps {
 	activeFilterCount: number;
 	onFilterOpen: () => void;
 	onCreateClick: () => void;
+	canCreate: boolean;
 	onRefresh: () => void;
 	loading: boolean;
 }
@@ -25,6 +26,7 @@ const TrainingTableHeader: React.FC<TrainingTableHeaderProps> = memo(({
 	activeFilterCount,
 	onFilterOpen,
 	onCreateClick,
+	canCreate,
 	onRefresh,
 }) => {
 	const theme = useTheme();
@@ -102,21 +104,23 @@ const TrainingTableHeader: React.FC<TrainingTableHeaderProps> = memo(({
 					</Badge>
 				</Box>
 
-				<Button
-					variant="contained"
-					onClick={onCreateClick}
-					sx={{
-						bgcolor: '#ec7211',
-						color: 'white',
-						textTransform: 'none',
-						fontWeight: 600,
-						'&:hover': {
-							bgcolor: '#eb5f07',
-						}
-					}}
-				>
-					Create Batch
-				</Button>
+				{canCreate && (
+					<Button
+						variant="contained"
+						onClick={onCreateClick}
+						sx={{
+							bgcolor: '#ec7211',
+							color: 'white',
+							textTransform: 'none',
+							fontWeight: 600,
+							'&:hover': {
+								bgcolor: '#eb5f07',
+							}
+						}}
+					>
+						Create Batch
+					</Button>
+				)}
 			</Box>
 		</Box>
 	);

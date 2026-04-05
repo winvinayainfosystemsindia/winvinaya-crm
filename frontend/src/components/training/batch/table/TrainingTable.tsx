@@ -39,7 +39,9 @@ const TrainingTable: React.FC<TrainingTableProps> = ({ refreshKey }) => {
 	const dispatch = useAppDispatch();
 	const { batches, loading, total: totalCount } = useAppSelector((state) => state.training);
 	const user = useAppSelector((state) => state.auth.user);
-	const isAdmin = user?.role === 'admin';
+	const isAdmin = user?.role === 'admin' || user?.is_superuser;
+	const isManager = user?.role === 'manager';
+	const canManage = isAdmin || isManager;
 
 	// Table State Hook
 	const {
@@ -159,6 +161,7 @@ const TrainingTable: React.FC<TrainingTableProps> = ({ refreshKey }) => {
 				onFilterOpen={() => setFilterDrawerOpen(true)}
 				onRefresh={fetchBatchesData}
 				onCreateClick={handleCreateClick}
+				canCreate={canManage}
 				loading={loading}
 			/>
 
@@ -223,7 +226,8 @@ const TrainingTable: React.FC<TrainingTableProps> = ({ refreshKey }) => {
 								<TrainingTableRow
 									key={batch.public_id}
 									batch={batch}
-									isAdmin={isAdmin}
+									isAdmin={!!isAdmin}
+									canEdit={!!canManage}
 									onEdit={handleEditClick}
 									onExtend={handleExtendClick}
 									onDelete={handleDeleteClick}
