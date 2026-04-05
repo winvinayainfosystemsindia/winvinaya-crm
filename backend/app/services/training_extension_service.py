@@ -17,6 +17,8 @@ from app.schemas.training_attendance import TrainingAttendanceCreate, TrainingAt
 from app.schemas.training_assignment import TrainingAssignmentCreate, TrainingAssignmentUpdate
 from app.schemas.training_mock_interview import TrainingMockInterviewCreate, TrainingMockInterviewUpdate
 from app.schemas.training_batch_event import TrainingBatchEventCreate, TrainingBatchEventUpdate
+from app.services.training_batch_plan_service import TrainingBatchPlanService
+from app.services.training_project_sync_service import TrainingProjectSyncService
 
 
 class TrainingExtensionService:
@@ -91,6 +93,22 @@ class TrainingExtensionService:
         
         return True
 
+    async def check_is_holiday(self, batch_id: int, target_date: date) -> bool:
+        """Helper to check if a date is a holiday for a batch"""
+        query = select(self.event_repo.model).where(
+            self.event_repo.model.batch_id == batch_id,
+            self.event_repo.model.date == target_date,
+            self.event_repo.model.event_type == 'holiday',
+            self.event_repo.model.is_deleted == False
+        )
+        event = (await self.db.execute(query)).scalar_one_or_none()
+        if event:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Cannot perform this action. {target_date} is marked as a holiday: {event.title}"
+            )
+        return False
+
     async def get_attendance_by_candidate(self, public_id: UUID):
         query = select(self.attendance_repo.model).join(Candidate).options(
             selectinload(self.attendance_repo.model.batch),
@@ -105,6 +123,8 @@ class TrainingExtensionService:
     async def update_bulk_attendance(self, attendance_list: List[TrainingAttendanceCreate]):
         records = []
         for att in attendance_list:
+            # Validate holiday
+            await self.check_is_holiday(att.batch_id, att.date)
             # Validate attendance marking (dropout check)
             await self.validate_attendance_marking(att.candidate_id, att.batch_id)
             
@@ -276,7 +296,44 @@ class TrainingExtensionService:
         return result.scalars().all()
 
     async def create_batch_event(self, event_in: TrainingBatchEventCreate):
-        return await self.event_repo.create(event_in.model_dump())
+        event = await self.event_repo.create(event_in.model_dump())
+        
+        if event.event_type == 'holiday':
+            # Perform automated cleanup
+            await self.cleanup_holiday_data(event.batch_id, event.date)
+            
+        return event
+
+    async def cleanup_holiday_data(self, batch_id: int, holiday_date: date):
+        """
+        Automated cleanup when a day is marked as a holiday:
+        1. Delete all plan entries for the day
+        2. Delete all attendance for the day
+        3. Trigger DSR sync
+        """
+        # 1. Delete Plans
+        plan_service = TrainingBatchPlanService(self.db)
+        await plan_service.delete_plans_by_date(batch_id, holiday_date)
+        
+        # 2. Delete Attendance (Soft delete)
+        from sqlalchemy import update as sql_update
+        query = (
+            sql_update(self.attendance_repo.model)
+            .where(
+                self.attendance_repo.model.batch_id == batch_id,
+                self.attendance_repo.model.date == holiday_date,
+                self.attendance_repo.model.is_deleted == False,
+            )
+            .values(is_deleted=True)
+        )
+        await self.db.execute(query)
+        
+        # 3. Trigger DSR Sync
+        sync_service = TrainingProjectSyncService(self.db)
+        await sync_service.sync_batch_to_projects(batch_id)
+        
+        await self.db.flush()
+        return True
 
     async def get_batch_event(self, event_id: int):
         return await self.event_repo.get(event_id)

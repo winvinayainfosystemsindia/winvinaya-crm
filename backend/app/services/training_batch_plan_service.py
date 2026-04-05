@@ -6,7 +6,9 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.training_batch_plan import TrainingBatchPlan
-from app.schemas.training_batch_plan import TrainingBatchPlanCreate, TrainingBatchPlanUpdate
+from app.models.training_batch_event import TrainingBatchEvent
+from app.schemas.training_batch_plan import TrainingBatchPlanCreate, TrainingBatchPlanResponse, TrainingBatchPlanUpdate
+from sqlalchemy import select
 from app.repositories.training_batch_plan_repository import TrainingBatchPlanRepository
 from app.repositories.training_batch_repository import TrainingBatchRepository
 from app.repositories.user_repository import UserRepository
@@ -68,6 +70,20 @@ class TrainingBatchPlanService:
             raise HTTPException(status_code=400, detail="Batch identification required")
 
         # Business Logic: Validation
+        # 0. Check if it's a holiday
+        holiday_query = select(TrainingBatchEvent).where(
+            TrainingBatchEvent.batch_id == batch_id,
+            TrainingBatchEvent.date == plan_in.date,
+            TrainingBatchEvent.event_type == 'holiday',
+            TrainingBatchEvent.is_deleted == False
+        )
+        holiday = (await self.db.execute(holiday_query)).scalar_one_or_none()
+        if holiday:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Cannot add plan entry. {plan_in.date} is marked as a holiday: {holiday.title}"
+            )
+
         # 1. Slot duration calculation
         start_dt = datetime.combine(plan_in.date, plan_in.start_time)
         end_dt = datetime.combine(plan_in.date, plan_in.end_time)
@@ -206,4 +222,18 @@ class TrainingBatchPlanService:
         await self.sync_service.sync_batch_to_projects(batch.id)
         
         return True
+
+    async def delete_plans_by_date(self, batch_id: int, plan_date: date) -> int:
+        """
+        Delete all plan entries for a specific batch and date.
+        Internal helper for holiday cleanup.
+        """
+        from sqlalchemy import delete as sql_delete
+        query = sql_delete(self.repository.model).where(
+            self.repository.model.batch_id == batch_id,
+            self.repository.model.date == plan_date
+        )
+        result = await self.db.execute(query)
+        # Note: DSR sync should be triggered by the caller after all cleanups
+        return result.rowcount
 

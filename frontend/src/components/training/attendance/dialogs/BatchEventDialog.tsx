@@ -11,7 +11,8 @@ import {
 	FormControlLabel,
 	Radio,
 	TextField,
-	Button
+	Button,
+	Alert
 } from '@mui/material';
 import { format } from 'date-fns';
 
@@ -57,6 +58,11 @@ const BatchEventDialog: React.FC<BatchEventDialogProps> = ({
 							<FormControlLabel value="event" control={<Radio />} label="Special Event" />
 						</RadioGroup>
 					</FormControl>
+					{newEvent.event_type === 'holiday' && (
+						<Alert severity="warning" variant="outlined">
+							<strong>Warning:</strong> Marking this day as a holiday will <strong>permanently delete</strong> all existing training plans and attendance for this date.
+						</Alert>
+					)}
 					<TextField
 						fullWidth
 						label="Event Title"

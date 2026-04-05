@@ -312,23 +312,60 @@ export const useWeeklyPlanManager = (selectedBatch: TrainingBatch) => {
 				if (!confirm) return;
 			}
 
-			let count = 0;
-			for (const entry of prevWeekPlans) {
-				const entryDate = parseISO(entry.date);
-				const newDate = addDays(entryDate, 7);
+			// Define what is a holiday (batch events marked as holiday)
+			const isHoliday = (d: Date) => {
+				const dStr = format(d, 'yyyy-MM-dd');
+				return batchEvents.some(e => e.date === dStr && e.event_type === 'holiday');
+			};
 
-				if (newDate <= maxDate) {
-					await dispatch(createPlanEntry({
-						...entry,
-						date: format(newDate, 'yyyy-MM-dd'),
-						batch_public_id: selectedBatch.public_id,
-						public_id: undefined
-					})).unwrap();
-					count++;
-				}
+			// Build list of working days for previous week (Mon-Sun)
+			const prevWorkingDays: Date[] = [];
+			for (let i = 0; i < 7; i++) {
+				const d = addDays(prevWeekStart, i);
+				if (!isHoliday(d)) prevWorkingDays.push(d);
 			}
 
-			enqueueSnackbar(`Successfully copied ${count} entries from previous week`, { variant: 'success' });
+			// Build list of working days for current week and next week (buffer)
+			// Mapping to the next available 14 working days starting from this week's Monday
+			const currWorkingDays: Date[] = [];
+			for (let i = 0; i < 14; i++) {
+				const d = addDays(weekStart, i);
+				if (!isHoliday(d)) currWorkingDays.push(d);
+			}
+
+			// Map entries from prevWorkingDay[idx] to currWorkingDay[idx]
+			const entriesByPrevDate: Record<string, TrainingBatchPlan[]> = {};
+			prevWeekPlans.forEach(p => {
+				if (!entriesByPrevDate[p.date]) entriesByPrevDate[p.date] = [];
+				entriesByPrevDate[p.date].push(p);
+			});
+
+			let count = 0;
+			// For each working day of last week that HAS entries
+			prevWorkingDays.forEach((prevDate, idx) => {
+				const prevDateStr = format(prevDate, 'yyyy-MM-dd');
+				const dayPlans = entriesByPrevDate[prevDateStr];
+				
+				if (dayPlans && idx < currWorkingDays.length) {
+					const targetDate = currWorkingDays[idx];
+					const targetDateStr = format(targetDate, 'yyyy-MM-dd');
+					
+					// Only copy if within batch scope
+					if (targetDate <= maxDate) {
+						for (const entry of dayPlans) {
+							dispatch(createPlanEntry({
+								...entry,
+								date: targetDateStr,
+								batch_public_id: selectedBatch.public_id,
+								public_id: undefined
+							}));
+							count++;
+						}
+					}
+				}
+			});
+
+			enqueueSnackbar(`Successfully copied ${count} entries based on working-day sequence`, { variant: 'success' });
 			dispatch(fetchWeeklyPlan({
 				batchPublicId: selectedBatch.public_id,
 				startDate: format(weekStart, 'yyyy-MM-dd')
