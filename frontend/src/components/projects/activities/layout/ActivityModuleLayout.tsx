@@ -7,17 +7,13 @@ import {
 	useTheme,
 	useMediaQuery,
 	Paper,
-	CircularProgress,
-	Divider,
-	Chip
+	CircularProgress
 } from '@mui/material';
-import {
-	Person as OwnerIcon
-} from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { fetchProjects } from '../../../../store/slices/dsrSlice';
 import type { DSRProject } from '../../../../models/dsr';
 import ProjectSelectionHeader from '../common/ProjectSelectionHeader';
+import ProjectInfoBar from '../common/ProjectInfoBar';
 
 interface ActivityModuleLayoutProps {
 	title: string;
@@ -92,53 +88,7 @@ const ActivityModuleLayout: React.FC<ActivityModuleLayoutProps> = ({
 					</Box>
 
 					{selectedProject && (
-						<Paper
-							elevation={0}
-							sx={{
-								bgcolor: 'rgba(255, 255, 255, 0.05)',
-								borderRadius: '2px',
-								p: 2,
-								border: '1px solid rgba(255, 255, 255, 0.1)',
-								display: 'flex',
-								flexWrap: 'wrap',
-								gap: 4
-							}}
-						>
-							<Box>
-								<Typography variant="caption" sx={{ color: '#aab7bd', display: 'block', mb: 0.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-									Project Name
-								</Typography>
-								<Typography variant="body2" sx={{ fontWeight: 600, color: 'white' }}>{selectedProject.name}</Typography>
-							</Box>
-							<Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-							<Box>
-								<Typography variant="caption" sx={{ color: '#aab7bd', display: 'block', mb: 0.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-									Owner
-								</Typography>
-								<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-									<OwnerIcon sx={{ fontSize: 14, color: '#aab7bd' }} />
-									<Typography variant="body2" sx={{ color: 'white' }}>{selectedProject.owner?.full_name || selectedProject.owner?.username || 'N/A'}</Typography>
-								</Box>
-							</Box>
-							<Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-							<Box>
-								<Typography variant="caption" sx={{ color: '#aab7bd', display: 'block', mb: 0.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-									Status
-								</Typography>
-								<Chip
-									label={selectedProject.is_active ? 'ACTIVE' : 'INACTIVE'}
-									size="small"
-									sx={{
-										height: 20,
-										fontSize: '0.65rem',
-										fontWeight: 900,
-										bgcolor: selectedProject.is_active ? '#037f0c' : '#5f6368',
-										color: 'white',
-										borderRadius: '2px'
-									}}
-								/>
-							</Box>
-						</Paper>
+						<ProjectInfoBar project={selectedProject} />
 					)}
 				</Container>
 			</Box>
