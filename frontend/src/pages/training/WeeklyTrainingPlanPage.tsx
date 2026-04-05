@@ -12,7 +12,7 @@ import PlanEntryDialog from '../../components/training/plan/dialogs/PlanEntryDia
 import WeeklyPlanStats from '../../components/training/plan/stats/WeeklyPlanStats';
 
 import ConfirmDialog from '../../components/common/ConfirmDialog';
-import BatchEventDialog from '../../components/training/attendance/dialogs/BatchEventDialog';
+import BatchEventDialog from '../../components/training/plan/dialogs/BatchEventDialog';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { syncBatchWithProject } from '../../store/slices/trainingPlanSlice';
 import { useSnackbar } from 'notistack';
@@ -61,7 +61,8 @@ const WeeklyPlanManager: React.FC<WeeklyPlanManagerProps> = ({ selectedBatch }) 
 		batchEvents,
 		handleConfirmEvent,
 		handleDeleteEvent,
-		handleCopyPreviousWeek
+		handleCopyPreviousWeek,
+		handleCopyDay
 	} = useWeeklyPlanManager(selectedBatch);
 
 	const [eventDialogOpen, setEventDialogOpen] = useState(false);
@@ -149,6 +150,7 @@ const WeeklyPlanManager: React.FC<WeeklyPlanManagerProps> = ({ selectedBatch }) 
 						batchEvents={batchEvents}
 						handleOpenEventDialog={handleOpenEventDialog}
 						handleDeleteEvent={handleDeleteEvent}
+						handleCopyDay={handleCopyDay}
 						tableRef={tableRef}
 						isExporting={isExporting}
 						batchName={selectedBatch.batch_name}
