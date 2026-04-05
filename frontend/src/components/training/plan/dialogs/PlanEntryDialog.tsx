@@ -62,10 +62,31 @@ const PlanEntryDialog: React.FC<PlanEntryDialogProps> = ({
 	const { users } = useAppSelector((state: RootState) => state.users);
 	const courses = selectedBatch?.courses || [];
 
+	// Derive the trainer's public ID — try all possible sources
+	// This handles entries where trainer_user_id was not saved (only trainer name was saved)
+	const trainerValue = (
+		selectedEntry?.trainer_user_public_id
+		|| selectedEntry?.trainer_user?.public_id
+		|| (selectedEntry?.trainer
+			? (users.find(u => u.full_name === selectedEntry.trainer)?.public_id
+				|| users.find(u => u.username === selectedEntry.trainer)?.public_id)
+			: undefined)
+		|| ''
+	) as string;
+
 	const handleSaveEntry = async () => {
 		if (!selectedEntry) return;
 
-		const errors = validatePlan(selectedEntry);
+		// Ensure trainer_user_public_id is set (may have been resolved via name-fallback)
+		const entryToSave = {
+			...selectedEntry,
+			trainer_user_public_id: selectedEntry.trainer_user_public_id 
+				|| selectedEntry.trainer_user?.public_id 
+				|| trainerValue
+				|| null
+		};
+
+		const errors = validatePlan(entryToSave);
 		if (errors) {
 			setFormErrors(errors);
 			return;
@@ -73,16 +94,16 @@ const PlanEntryDialog: React.FC<PlanEntryDialogProps> = ({
 
 		setFormLoading(true);
 		try {
-			if (selectedEntry.public_id) {
-				const { public_id, id, date, batch_id, created_at, updated_at, ...updateData } = selectedEntry as any;
+			if (entryToSave.public_id) {
+				const { public_id, id, date, batch_id, created_at, updated_at, trainer_user, ...updateData } = entryToSave as any;
 				await dispatch(updatePlanEntry({
-					publicId: selectedEntry.public_id,
+					publicId: entryToSave.public_id,
 					data: updateData
 				})).unwrap();
 				enqueueSnackbar('Entry updated successfully', { variant: 'success' });
 			} else {
 				await dispatch(createPlanEntry({
-					...selectedEntry,
+					...entryToSave,
 					batch_public_id: selectedBatch.public_id
 				})).unwrap();
 				enqueueSnackbar('Entry created successfully', { variant: 'success' });
@@ -277,7 +298,7 @@ const PlanEntryDialog: React.FC<PlanEntryDialogProps> = ({
 							<Select
 								required
 								label="Trainer / Faculty"
-								value={selectedEntry?.trainer_user_public_id || ''}
+								value={trainerValue}
 								onChange={(e) => {
 									const user = users.find(u => u.public_id === e.target.value);
 									setSelectedEntry({ 
@@ -289,7 +310,7 @@ const PlanEntryDialog: React.FC<PlanEntryDialogProps> = ({
 								}}
 								renderValue={(selected) => {
 									const user = users.find(u => u.public_id === selected);
-									return user?.full_name || user?.username || 'Select Trainer';
+									return user?.full_name || user?.username || (selected ? 'Unknown Trainer' : 'Select Trainer');
 								}}
 							>
 								{users

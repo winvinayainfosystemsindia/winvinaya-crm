@@ -11,6 +11,7 @@ from app.repositories.training_batch_plan_repository import TrainingBatchPlanRep
 from app.repositories.training_batch_repository import TrainingBatchRepository
 from app.repositories.user_repository import UserRepository
 from app.services.training_project_sync_service import TrainingProjectSyncService
+from app.models.user import User
 
 
 class TrainingBatchPlanService:
@@ -104,12 +105,23 @@ class TrainingBatchPlanService:
         data["batch_id"] = batch_id
         data["trainer_user_id"] = trainer_user_id
         
+        # Ensure the 'trainer' text name is also populated for immediate display consistency
+        # if a trainer user was resolved but the input 'trainer' name was missing or different.
+        if trainer_user_id and not data.get("trainer"):
+            trainer_u = await self.db.get(User, trainer_user_id)
+            if trainer_u:
+                data["trainer"] = trainer_u.full_name or trainer_u.username
+        
         result = await self.repository.create(data)
+        
+        # Explicitly flush/refresh to ensure it's visible in the session for the sync service
+        await self.db.flush()
         
         # Trigger sync to DSR projects
         await self.sync_service.sync_batch_to_projects(batch_id)
         
-        return result
+        # Re-fetch to ensure relationships (trainer_user) are loaded for the response
+        return await self.get_plan_by_public_id(result.public_id)
 
     async def update_plan_entry(self, public_id: UUID, plan_in: TrainingBatchPlanUpdate) -> TrainingBatchPlan:
         """Update a training plan entry"""
@@ -129,6 +141,10 @@ class TrainingBatchPlanService:
                 if not users:
                     raise HTTPException(status_code=404, detail="Trainer user not found")
                 update_data["trainer_user_id"] = users[0].id
+                
+                # Sync trainer name text for consistency if not provided
+                if not update_data.get("trainer"):
+                    update_data["trainer"] = users[0].full_name or users[0].username
             else:
                 update_data["trainer_user_id"] = None
 
@@ -137,7 +153,8 @@ class TrainingBatchPlanService:
         # Trigger sync to DSR projects
         await self.sync_service.sync_batch_to_projects(plan.batch_id)
         
-        return updated
+        # Re-fetch to ensure relationships (trainer_user) are loaded for the response
+        return await self.get_plan_by_public_id(updated.public_id)
 
     async def delete_plan_entry(self, public_id: UUID) -> bool:
         """Delete a training plan entry"""
@@ -151,4 +168,42 @@ class TrainingBatchPlanService:
             await self.sync_service.sync_batch_to_projects(batch_id)
         
         return success
+
+    async def full_sync_batch(self, batch_public_id: UUID) -> bool:
+        """
+        Perform a full synchronization for all entries in a batch.
+        Useful for older entries that lack trainer_user_id linkage.
+        """
+        batch = await self.batch_repository.get_by_public_id(str(batch_public_id))
+        if not batch:
+            raise HTTPException(status_code=404, detail="Training batch not found")
+
+        # Load all entries for the batch
+        entries = await self.repository.get_all_by_batch_id(batch.id)
+        if not entries:
+            return True
+
+        # Link trainers by name for entries where trainer_user_id is missing
+        updated_count = 0
+        all_users = await self.user_repository.get_multi(limit=1000)
+        
+        # User mapping for faster lookup
+        user_name_map = {u.full_name: u.id for u in all_users if u.full_name}
+        user_nick_map = {u.username: u.id for u in all_users if u.username}
+
+        for entry in entries:
+            if not entry.trainer_user_id and entry.trainer:
+                # Try name lookup
+                trainer_id = user_name_map.get(entry.trainer) or user_nick_map.get(entry.trainer)
+                if trainer_id:
+                    await self.repository.update(entry.id, {"trainer_user_id": trainer_id})
+                    updated_count += 1
+        
+        if updated_count > 0:
+            await self.db.flush()
+
+        # Trigger sync for the entire batch
+        await self.sync_service.sync_batch_to_projects(batch.id)
+        
+        return True
 

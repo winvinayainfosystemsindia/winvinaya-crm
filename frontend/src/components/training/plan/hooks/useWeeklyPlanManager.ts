@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { useSnackbar } from 'notistack';
 import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval, parseISO } from 'date-fns';
-import { fetchWeeklyPlan, createPlanEntry, deletePlanEntry, fetchAllBatchPlans } from '../../../../store/slices/trainingPlanSlice';
+import { fetchWeeklyPlan, createPlanEntry, deletePlanEntry, fetchAllBatchPlans, resetWeeklyPlan } from '../../../../store/slices/trainingPlanSlice';
 import trainingPlanService from '../../../../services/trainingPlanService';
 import { fetchUsers } from '../../../../store/slices/userSlice';
 import { DEFAULT_START_TIME, HARD_END_TIME } from '../utils/planConstants';
@@ -23,14 +23,18 @@ export const useWeeklyPlanManager = (selectedBatch: TrainingBatch) => {
 		return { minDate: start, maxDate: end };
 	}, [selectedBatch]);
 
-	const [currentDate, setCurrentDate] = useState(new Date());
-	const [initialDateSet, setInitialDateSet] = useState(false);
+	// Initialize currentDate directly to the batch's start date
+	const [currentDate, setCurrentDate] = useState(() => {
+		if (selectedBatch?.start_date) return parseISO(selectedBatch.start_date);
+		return new Date();
+	});
+
+	// UI States
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [selectedEntry, setSelectedEntry] = useState<Partial<TrainingBatchPlan> | null>(null);
 	const [formLoading, setFormLoading] = useState(false);
 	const [activeTab, setActiveTab] = useState(0);
 	const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-
 	const [confirmDialog, setConfirmDialog] = useState({
 		open: false,
 		title: '',
@@ -39,12 +43,13 @@ export const useWeeklyPlanManager = (selectedBatch: TrainingBatch) => {
 		loading: false
 	});
 
+	// Handle batch switching
 	useEffect(() => {
-		if (selectedBatch?.start_date && !initialDateSet) {
+		if (selectedBatch?.start_date) {
 			setCurrentDate(parseISO(selectedBatch.start_date));
-			setInitialDateSet(true);
+			dispatch(resetWeeklyPlan());
 		}
-	}, [selectedBatch?.start_date, initialDateSet]);
+	}, [selectedBatch?.public_id, dispatch]);
 
 	const canEdit = useMemo(() => {
 		return user?.role === 'admin' || user?.role === 'manager';
@@ -189,7 +194,6 @@ export const useWeeklyPlanManager = (selectedBatch: TrainingBatch) => {
 		weeklyPlan.forEach(entry => {
 			const duration = parseTimeValue(entry.end_time) - parseTimeValue(entry.start_time);
 
-			// Top level stats
 			if (entry.activity_type === 'course') breakdown.course += duration;
 			if (entry.activity_type === 'hr_session') breakdown.hr_session += duration;
 			if (entry.activity_type === 'mock_interview') breakdown.mock_interview += duration;
@@ -198,13 +202,11 @@ export const useWeeklyPlanManager = (selectedBatch: TrainingBatch) => {
 			if (entry.activity_type !== 'break') {
 				breakdown.training_total += duration;
 
-				// Details
 				const type = entry.activity_type as 'course' | 'hr_session' | 'mock_interview';
 				if (breakdown.details[type]) {
 					breakdown.details[type][entry.activity_name] = (breakdown.details[type][entry.activity_name] || 0) + duration;
 				}
 
-				// Trainer Breakdown
 				const trainerName = entry.trainer || 'Unassigned';
 				breakdown.details.trainer[trainerName] = (breakdown.details.trainer[trainerName] || 0) + duration;
 			}
@@ -212,9 +214,7 @@ export const useWeeklyPlanManager = (selectedBatch: TrainingBatch) => {
 			breakdown.total += duration;
 		});
 
-		// If on stats tab, override with allPlans data for overall stats
 		if (activeTab === 1) {
-			// Reset
 			breakdown.course = 0;
 			breakdown.hr_session = 0;
 			breakdown.mock_interview = 0;
@@ -253,11 +253,14 @@ export const useWeeklyPlanManager = (selectedBatch: TrainingBatch) => {
 		return breakdown;
 	}, [weeklyPlan, allPlans, activeTab]);
 
-	// Removed duplicate handleOpenDialog
-
 	const handleEditEntry = useCallback((entry: TrainingBatchPlan) => {
 		if (!canEdit) return;
-		setSelectedEntry(entry);
+		// Normalize: populate trainer_user_public_id from the nested trainer_user object if missing
+		const normalizedEntry = {
+			...entry,
+			trainer_user_public_id: entry.trainer_user_public_id || entry.trainer_user?.public_id || null
+		};
+		setSelectedEntry(normalizedEntry);
 		setDialogOpen(true);
 	}, [canEdit]);
 
@@ -265,11 +268,10 @@ export const useWeeklyPlanManager = (selectedBatch: TrainingBatch) => {
 		if (!canEdit) return;
 		let nextDay = addDays(parseISO(entry.date), 1);
 
-		// Skip weekends
-		const dayOfWeek = nextDay.getDay(); // 0 is Sunday, 6 is Saturday
-		if (dayOfWeek === 6) { // Saturday -> Monday
+		const dayOfWeek = nextDay.getDay();
+		if (dayOfWeek === 6) {
 			nextDay = addDays(nextDay, 2);
-		} else if (dayOfWeek === 0) { // Sunday -> Monday
+		} else if (dayOfWeek === 0) {
 			nextDay = addDays(nextDay, 1);
 		}
 
@@ -305,7 +307,6 @@ export const useWeeklyPlanManager = (selectedBatch: TrainingBatch) => {
 				return;
 			}
 
-			// Check if current week already has plans
 			if (weeklyPlan.length > 0) {
 				const confirm = window.confirm('Current week already has plans. This will add copied plans to existing ones. Continue?');
 				if (!confirm) return;
@@ -328,7 +329,6 @@ export const useWeeklyPlanManager = (selectedBatch: TrainingBatch) => {
 			}
 
 			enqueueSnackbar(`Successfully copied ${count} entries from previous week`, { variant: 'success' });
-			// Refresh current week
 			dispatch(fetchWeeklyPlan({
 				batchPublicId: selectedBatch.public_id,
 				startDate: format(weekStart, 'yyyy-MM-dd')

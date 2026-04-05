@@ -147,12 +147,21 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 
 	// Helper to check if user can edit a specific period
 	const checkCanEditPeriod = useCallback((periodId: number) => {
-		if (user?.is_superuser || user?.role === 'admin') return true;
+		if (user?.is_superuser || user?.role === 'admin' || user?.role === 'manager') return true;
 
 		const period = dailyPlan.find(p => p.id === periodId);
 		if (!period) return false;
 
-		return user?.full_name === period.trainer;
+		// Primary: match by user ID
+		if (period.trainer_user_id && user?.id && period.trainer_user_id === user.id) return true;
+
+		// Fallback: match by name
+		if (user?.full_name && period.trainer && user.full_name === period.trainer) return true;
+
+		// Also check public_id
+		if (period.trainer_user?.public_id && user?.public_id && period.trainer_user.public_id === user.public_id) return true;
+
+		return false;
 	}, [user, dailyPlan]);
 
 	// Handle period-specific status change

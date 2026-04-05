@@ -17,7 +17,9 @@ interface WeeklyPlanHeaderProps {
 	canEdit: boolean;
 	onExportPNG: () => void;
 	handleCopyPreviousWeek: () => void;
+	onSync?: () => void;
 	isExporting?: boolean;
+	loading?: boolean;
 }
 
 const WeeklyPlanHeader: React.FC<WeeklyPlanHeaderProps> = ({
@@ -34,7 +36,9 @@ const WeeklyPlanHeader: React.FC<WeeklyPlanHeaderProps> = ({
 	canEdit,
 	onExportPNG,
 	handleCopyPreviousWeek,
-	isExporting = false
+	onSync,
+	isExporting = false,
+	loading = false
 }) => {
 	return (
 		<Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
@@ -74,6 +78,18 @@ const WeeklyPlanHeader: React.FC<WeeklyPlanHeaderProps> = ({
 								color="primary"
 							>
 								Copy Previous Week
+							</Button>
+						)}
+						{canEdit && onSync && (
+							<Button
+								variant="outlined"
+								size="small"
+								startIcon={<CopyIcon />}
+								onClick={onSync}
+								color="secondary"
+								disabled={loading}
+							>
+								{loading ? 'Syncing...' : 'Sync with Project'}
 							</Button>
 						)}
 						<Button

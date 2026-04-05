@@ -53,6 +53,7 @@ class TrainingBatchPlanResponse(TrainingBatchPlanBase):
     public_id: uuid.UUID
     batch_id: int
     trainer_user_id: Optional[int] = None
+    trainer_user_public_id: Optional[uuid.UUID] = None
     trainer_user: Optional[TrainerUserSnapshot] = None
     created_at: datetime
     updated_at: datetime

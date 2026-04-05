@@ -76,12 +76,27 @@ export const deletePlanEntry = createAsyncThunk(
 	}
 );
 
+export const syncBatchWithProject = createAsyncThunk(
+	'trainingPlan/syncBatchWithProject',
+	async (batchPublicId: string, { rejectWithValue }) => {
+		try {
+			await trainingPlanService.syncBatchWithProject(batchPublicId);
+			return batchPublicId;
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.detail || 'Failed to synchronize batch with project');
+		}
+	}
+);
+
 const trainingPlanSlice = createSlice({
 	name: 'trainingPlan',
 	initialState,
 	reducers: {
 		clearPlanError: (state) => {
 			state.error = null;
+		},
+		resetWeeklyPlan: (state) => {
+			state.weeklyPlan = [];
 		},
 	},
 	extraReducers: (builder) => {
@@ -121,9 +136,20 @@ const trainingPlanSlice = createSlice({
 			.addCase(fetchAllBatchPlans.rejected, (state, action: PayloadAction<any>) => {
 				state.loading = false;
 				state.error = action.payload;
+			})
+			.addCase(syncBatchWithProject.pending, (state) => {
+				state.loading = true;
+				state.error = null;
+			})
+			.addCase(syncBatchWithProject.fulfilled, (state) => {
+				state.loading = false;
+			})
+			.addCase(syncBatchWithProject.rejected, (state, action: PayloadAction<any>) => {
+				state.loading = false;
+				state.error = action.payload;
 			});
 	},
 });
 
-export const { clearPlanError } = trainingPlanSlice.actions;
+export const { clearPlanError, resetWeeklyPlan } = trainingPlanSlice.actions;
 export default trainingPlanSlice.reducer;

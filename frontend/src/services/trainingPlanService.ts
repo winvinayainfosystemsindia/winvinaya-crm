@@ -25,6 +25,11 @@ const trainingPlanService = {
 	deletePlanEntry: async (publicId: string) => {
 		const response = await api.delete(`/training-batch-plans/${publicId}`);
 		return response.data;
+	},
+
+	syncBatchWithProject: async (batchPublicId: string) => {
+		const response = await api.post(`/training-batch-plans/batch/${batchPublicId}/sync`);
+		return response.data;
 	}
 };
 

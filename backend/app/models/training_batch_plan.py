@@ -50,5 +50,10 @@ class TrainingBatchPlan(BaseModel):
     batch: Mapped[TrainingBatch] = relationship("TrainingBatch")
     trainer_user: Mapped[User | None] = relationship("User", foreign_keys=[trainer_user_id])
     
+    @property
+    def trainer_user_public_id(self) -> uuid.UUID | None:
+        """Helper to get public_id of the associated trainer user"""
+        return self.trainer_user.public_id if self.trainer_user else None
+    
     def __repr__(self) -> str:
         return f"<TrainingBatchPlan(id={self.id}, public_id={self.public_id}, batch_id={self.batch_id}, date={self.date})>"

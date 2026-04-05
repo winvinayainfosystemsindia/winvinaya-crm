@@ -13,12 +13,18 @@ import WeeklyPlanStats from '../../components/training/plan/stats/WeeklyPlanStat
 
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import BatchEventDialog from '../../components/training/attendance/dialogs/BatchEventDialog';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { syncBatchWithProject } from '../../store/slices/trainingPlanSlice';
+import { useSnackbar } from 'notistack';
 
 interface WeeklyPlanManagerProps {
 	selectedBatch: TrainingBatch;
 }
 
 const WeeklyPlanManager: React.FC<WeeklyPlanManagerProps> = ({ selectedBatch }) => {
+	const dispatch = useAppDispatch();
+	const { enqueueSnackbar } = useSnackbar();
+	const { loading: sliceLoading } = useAppSelector(state => state.trainingPlan);
 	const {
 		weekDays,
 		weekStart,
@@ -91,6 +97,15 @@ const WeeklyPlanManager: React.FC<WeeklyPlanManagerProps> = ({ selectedBatch }) 
 		}
 	};
 
+	const handleSync = async () => {
+		try {
+			await dispatch(syncBatchWithProject(selectedBatch.public_id)).unwrap();
+			enqueueSnackbar('Batch synchronized with project successfully', { variant: 'success' });
+		} catch (err: any) {
+			enqueueSnackbar(err || 'Failed to sync batch', { variant: 'error' });
+		}
+	};
+
 	return (
 		<Box>
 			<Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
@@ -116,6 +131,8 @@ const WeeklyPlanManager: React.FC<WeeklyPlanManagerProps> = ({ selectedBatch }) 
 						canEdit={canEdit}
 						onExportPNG={handleExportPNG}
 						handleCopyPreviousWeek={handleCopyPreviousWeek}
+						onSync={handleSync}
+						loading={sliceLoading}
 						isExporting={isExporting}
 					/>
 					<WeeklyPlanTable

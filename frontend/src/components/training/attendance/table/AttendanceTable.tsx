@@ -79,12 +79,19 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 		if (!isActive) return false;
 		if (period.activity_type === 'break') return false; // Never edit breaks
 
-		// Admins and Superusers can edit anything
-		if (currentUser?.is_superuser || currentUser?.role === 'admin') return true;
+		// Admins, Superusers and Managers can edit anything
+		if (currentUser?.is_superuser || currentUser?.role === 'admin' || currentUser?.role === 'manager') return true;
 
-		// Trainers and Managers are restricted to their assigned periods
-		// If trainer name matches current user's full name
-		return currentUser?.full_name === period.trainer;
+		// Primary check: match by user ID (reliable, works after trainer_user_id is saved)
+		if (period.trainer_user_id && currentUser?.id && period.trainer_user_id === currentUser.id) return true;
+
+		// Fallback check: match by name (for entries created before trainer_user_id was linked)
+		if (currentUser?.full_name && period.trainer && currentUser.full_name === period.trainer) return true;
+
+		// Also check trainer_user?.public_id vs currentUser?.public_id if available
+		if (period.trainer_user?.public_id && currentUser?.public_id && period.trainer_user.public_id === currentUser.public_id) return true;
+
+		return false;
 	};
 
 	return (

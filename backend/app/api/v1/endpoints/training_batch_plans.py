@@ -139,3 +139,17 @@ async def delete_plan_entry(
     )
     
     return None
+
+
+@router.post("/batch/{batch_public_id}/sync", status_code=status.HTTP_200_OK)
+async def sync_batch_with_project(
+    batch_public_id: UUID,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Trigger a full synchronization of batch plan entries with DSR activities (Admin/Manager only).
+    """
+    service = TrainingBatchPlanService(db)
+    await service.full_sync_batch(batch_public_id)
+    return {"message": "Batch synchronized successfully"}
