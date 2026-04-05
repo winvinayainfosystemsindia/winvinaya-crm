@@ -33,6 +33,21 @@ const ProjectTableRow: React.FC<ProjectTableRowProps> = ({
 					</Typography>
 				</Box>
 			</TableCell>
+			<TableCell sx={{ py: 2 }}>
+				<Chip
+					label={project.project_type.toUpperCase()}
+					size="small"
+					variant="outlined"
+					sx={{
+						fontSize: '0.7rem',
+						fontWeight: 700,
+						height: 20,
+						bgcolor: project.project_type === 'training' ? '#f3e5f5' : '#f5f5f5',
+						color: project.project_type === 'training' ? '#7b1fa2' : '#616161',
+						borderColor: project.project_type === 'training' ? '#ab47bc' : '#bdbdbd'
+					}}
+				/>
+			</TableCell>
 			<TableCell sx={{ fontSize: '0.8125rem', py: 2 }}>
 				<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
 					{project.project_type === 'training' && project.linked_batches && project.linked_batches.length > 0 ? (

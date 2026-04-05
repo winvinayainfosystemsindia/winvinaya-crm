@@ -13,6 +13,7 @@ const ProjectTableHead: React.FC = () => {
 		<TableHead>
 			<TableRow sx={{ borderBottom: `1px solid ${theme.palette.divider}` }}>
 				<TableCell sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.8125rem', py: 2 }}>Project Name</TableCell>
+				<TableCell sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.8125rem', py: 2 }}>Type</TableCell>
 				<TableCell sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.8125rem', py: 2 }}>Training Batches</TableCell>
 				<TableCell sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.8125rem', py: 2 }}>Owner</TableCell>
 				<TableCell sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.8125rem', py: 2 }}>Created By</TableCell>
