@@ -21,16 +21,12 @@ import ProjectTableEmpty from './ProjectTableEmpty';
 interface ProjectTableProps {
 	onEdit: (project: DSRProject) => void;
 	onDelete: (project: DSRProject) => void;
-	onManageActivities: (project: DSRProject) => void;
-	onViewSummary: (project: DSRProject) => void;
 	refreshKey: number;
 }
 
 const ProjectTable: React.FC<ProjectTableProps> = ({
 	onEdit,
 	onDelete,
-	onManageActivities,
-	onViewSummary,
 	refreshKey
 }) => {
 	const theme = useTheme();
@@ -119,8 +115,6 @@ const ProjectTable: React.FC<ProjectTableProps> = ({
 				activeProject={activeProject}
 				onEdit={onEdit}
 				onDelete={onDelete}
-				onManageActivities={onManageActivities}
-				onViewSummary={onViewSummary}
 			/>
 		</Paper>
 	);

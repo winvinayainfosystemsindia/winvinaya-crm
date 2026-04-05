@@ -3,17 +3,12 @@ import {
 	Box,
 	Container,
 	Typography,
-	Button,
-	Drawer,
-	IconButton,
-	Divider
+	Button
 } from '@mui/material';
 import {
 	Add as AddIcon,
-	CloudUpload as ImportIcon,
-	Close as CloseIcon
+	CloudUpload as ImportIcon
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
 import type { DSRProject } from '../../models/dsr';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { updateProject, deleteProject } from '../../store/slices/dsrSlice';
@@ -22,12 +17,10 @@ import dsrProjectService from '../../services/dsrProjectService';
 import ProjectTable from '../../components/projects/management/table/ProjectTable';
 import ProjectDialog from '../../components/projects/management/forms/ProjectDialog';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
-import ProjectStats from '../../components/projects/management/stats/ProjectStats';
 import ExcelImportModal from '../../components/common/ExcelImportModal';
-import TrainingProjectSummary from '../../components/projects/management/stats/TrainingProjectSummary';
+import ProjectStats from '../../components/projects/management/stats/ProjectStats';
 
 const ProjectManagement: React.FC = () => {
-	const navigate = useNavigate();
 	const dispatch = useAppDispatch();
 	const toast = useToast();
 	const { loading } = useAppSelector((state) => state.dsr);
@@ -42,7 +35,6 @@ const ProjectManagement: React.FC = () => {
 	const [importModalOpen, setImportModalOpen] = useState(false);
 	const [maintenanceConfirmOpen, setMaintenanceConfirmOpen] = useState(false);
 	const [maintenanceLoading, setMaintenanceLoading] = useState(false);
-	const [summaryDrawerOpen, setSummaryDrawerOpen] = useState(false);
 
 	const handleAdd = () => {
 		setSelectedProject(null);
@@ -92,10 +84,6 @@ const ProjectManagement: React.FC = () => {
 			setMaintenanceLoading(false);
 			setMaintenanceConfirmOpen(false);
 		}
-	};
-
-	const handleManageActivities = (project: DSRProject) => {
-		navigate(`/projects/${project.public_id}/activities`);
 	};
 
 	return (
@@ -172,11 +160,6 @@ const ProjectManagement: React.FC = () => {
 				<ProjectTable
 					onEdit={handleEdit}
 					onDelete={handleDeleteRequest}
-					onManageActivities={handleManageActivities}
-					onViewSummary={(project: DSRProject) => {
-						setSelectedProject(project);
-						setSummaryDrawerOpen(true);
-					}}
 					refreshKey={refreshKey}
 				/>
 
@@ -191,29 +174,6 @@ const ProjectManagement: React.FC = () => {
 					}}
 					onDelete={handleDeleteRequest}
 				/>
-
-				<Drawer
-					anchor="right"
-					open={summaryDrawerOpen}
-					onClose={() => setSummaryDrawerOpen(false)}
-					PaperProps={{
-						sx: { width: { xs: '100%', md: '800px' }, p: 3, bgcolor: '#f8f9fa' }
-					}}
-				>
-					<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-						<Typography variant="h5" sx={{ fontWeight: 700 }}>Project Insights</Typography>
-						<IconButton onClick={() => setSummaryDrawerOpen(false)}>
-							<CloseIcon />
-						</IconButton>
-					</Box>
-					<Divider />
-					{selectedProject && (
-						<TrainingProjectSummary 
-							projectPublicId={selectedProject.public_id} 
-							refreshKey={refreshKey}
-						/>
-					)}
-				</Drawer>
 
 				<ConfirmDialog
 					open={confirmOpen}

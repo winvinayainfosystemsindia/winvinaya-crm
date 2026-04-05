@@ -5,7 +5,8 @@ import {
 	Box,
 	Typography,
 	IconButton,
-	useTheme
+	useTheme,
+	Chip
 } from '@mui/material';
 import { MoreVert as MoreIcon } from '@mui/icons-material';
 import type { DSRProject } from '../../../../models/dsr';
@@ -30,6 +31,30 @@ const ProjectTableRow: React.FC<ProjectTableRowProps> = ({
 					<Typography variant="body2" sx={{ fontWeight: 500 }}>
 						{project.name}
 					</Typography>
+				</Box>
+			</TableCell>
+			<TableCell sx={{ fontSize: '0.8125rem', py: 2 }}>
+				<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+					{project.project_type === 'training' && project.linked_batches && project.linked_batches.length > 0 ? (
+						project.linked_batches.map((batch) => (
+							<Chip
+								key={batch.public_id}
+								label={batch.batch_name}
+								size="small"
+								variant="outlined"
+								sx={{
+									fontSize: '0.75rem',
+									height: 20,
+									bgcolor: '#f1f8ff',
+									color: '#005fb8',
+									borderColor: '#005fb8',
+									fontWeight: 500
+								}}
+							/>
+						))
+					) : (
+						<Typography variant="caption" color="text.secondary">-</Typography>
+					)}
 				</Box>
 			</TableCell>
 			<TableCell sx={{ fontSize: '0.8125rem', py: 2, color: theme.palette.text.primary }}>
