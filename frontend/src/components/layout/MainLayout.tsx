@@ -23,7 +23,7 @@ const MainLayout: React.FC = () => {
 					width: '100%', // Take full available space
 					transition: (theme) => theme.transitions.create(['margin', 'width'], {
 						easing: theme.transitions.easing.sharp,
-						duration: theme.transitions.duration.leavingScreen,
+						duration: theme.transitions.duration.standard,
 					}),
 					mt: '48px',
 					display: 'flex',

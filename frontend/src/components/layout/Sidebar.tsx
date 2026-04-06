@@ -7,7 +7,8 @@ import {
 	ListItemIcon,
 	ListItemText,
 	Box,
-	Collapse
+	Collapse,
+	Tooltip
 } from '@mui/material';
 import {
 	ExpandLess,
@@ -20,7 +21,8 @@ import { toggleSidebar } from '../../store/slices/uiSlice';
 import { topNavigation, bottomNavigation } from '../../config/navigation';
 import type { NavigationItem } from '../../config/navigation';
 
-const drawerWidth = 280;
+const DRAWER_WIDTH = 260;
+const COLLAPSED_WIDTH = 60;
 
 const Sidebar: React.FC = () => {
 	const navigate = useNavigate();
@@ -100,59 +102,94 @@ const Sidebar: React.FC = () => {
 		const active = isActive(item.path);
 		const Icon = item.icon;
 
-		return (
-			<ListItem disablePadding sx={{ display: 'block' }}>
-				<ListItemButton
-					onClick={() => item.path && handleNavigate(item.path)}
-					selected={active}
-					sx={{
-						minHeight: 32,
-						py: 0.5,
-						pl: depth * 2.5 + 2,
-						pr: 2,
-						justifyContent: 'flex-start',
-						borderLeft: '3px solid transparent',
-						'&.Mui-selected': {
-							bgcolor: 'rgba(236, 114, 17, 0.08)',
-							borderLeftColor: 'primary.main',
-							'&:hover': {
-								bgcolor: 'rgba(236, 114, 17, 0.12)',
-							},
-							'& .MuiListItemText-primary': {
-								color: 'primary.main',
-								fontWeight: 700,
-							},
-							'& .MuiListItemIcon-root': {
-								color: 'primary.main',
-							},
-						},
+		const content = (
+			<ListItemButton
+				onClick={() => item.path && handleNavigate(item.path)}
+				selected={active}
+				sx={{
+					minHeight: 40,
+					p: 0,
+					pl: open ? (depth * 2 + 2) : 0,
+					pr: open ? 2 : 0,
+					width: '100%',
+					justifyContent: open ? 'initial' : 'center',
+					borderLeft: active ? '4px solid #ec7211' : '4px solid transparent',
+					transition: theme => theme.transitions.create(['background-color', 'border-left-color', 'padding'], {
+						duration: theme.transitions.duration.standard,
+					}),
+					'&.Mui-selected': {
+						bgcolor: 'rgba(236, 114, 17, 0.15)',
 						'&:hover': {
-							bgcolor: '#f2f3f3',
+							bgcolor: 'rgba(236, 114, 17, 0.2)',
 						},
+						'& .MuiListItemText-primary': {
+							color: '#ec7211',
+							fontWeight: 700,
+						},
+						'& .MuiListItemIcon-root': {
+							color: '#ec7211',
+						},
+					},
+					'&:hover': {
+						bgcolor: 'rgba(255, 255, 255, 0.08)',
+					},
+				}}
+			>
+				{Icon && (
+					<ListItemIcon
+						sx={{
+							minWidth: 0,
+							mr: open ? 1.5 : 0,
+							justifyContent: 'center',
+							color: active ? '#ec7211' : '#aab7b8',
+							transition: theme => theme.transitions.create(['margin', 'color'], {
+								duration: theme.transitions.duration.standard,
+							}),
+						}}
+					>
+						<Icon sx={{ fontSize: '1.2rem' }} />
+					</ListItemIcon>
+				)}
+				<Box
+					sx={{
+						opacity: open ? 1 : 0,
+						width: open ? 'auto' : 0,
+						transform: open ? 'translateX(0)' : 'translateX(-10px)',
+						transition: theme => theme.transitions.create(['opacity', 'width', 'transform'], {
+							duration: theme.transitions.duration.standard,
+							easing: theme.transitions.easing.sharp,
+						}),
+						overflow: 'hidden',
+						flexGrow: 1,
+						display: open ? 'flex' : 'none',
+						alignItems: 'center',
 					}}
 				>
-					{Icon && (
-						<ListItemIcon
-							sx={{
-								minWidth: 0,
-								mr: 2,
-								justifyContent: 'center',
-								color: active ? 'primary.main' : '#545b64',
-							}}
-						>
-							<Icon fontSize="small" />
-						</ListItemIcon>
-					)}
 					<ListItemText
 						primary={item.label}
-						primaryTypographyProps={{
-							fontSize: '0.9rem',
-							fontWeight: active ? 700 : 500,
-							color: active ? 'primary.main' : '#16191f',
-							noWrap: true,
+						sx={{
+							m: 0,
+							'& .MuiListItemText-primary': {
+								fontSize: '0.85rem',
+								fontWeight: active ? 700 : 500,
+								color: active ? '#ec7211' : '#eaeded',
+								whiteSpace: 'nowrap',
+								overflow: 'hidden',
+								textOverflow: 'ellipsis',
+							}
 						}}
 					/>
-				</ListItemButton>
+				</Box>
+			</ListItemButton>
+		);
+
+		return (
+			<ListItem disablePadding sx={{ display: 'block' }}>
+				{open ? content : (
+					<Tooltip title={item.label} placement="right" arrow>
+						{content}
+					</Tooltip>
+				)}
 			</ListItem>
 		);
 	};
@@ -164,49 +201,94 @@ const Sidebar: React.FC = () => {
 		const Icon = group.icon;
 		const activeChild = group.children?.some(child => isActive(child.path));
 
+		const content = (
+			<ListItemButton
+				onClick={() => {
+					if (!open) {
+						dispatch(toggleSidebar());
+					} else {
+						group.label && toggleGroup(group.label);
+					}
+				}}
+				sx={{
+					minHeight: 40,
+					p: 0,
+					pl: open ? (depth * 2 + 2) : 0,
+					pr: open ? 2 : 0,
+					width: '100%',
+					justifyContent: open ? 'initial' : 'center',
+					borderLeft: activeChild ? '4px solid #ec7211' : '4px solid transparent',
+					transition: theme => theme.transitions.create(['background-color', 'border-left-color'], {
+						duration: theme.transitions.duration.standard,
+					}),
+					'&:hover': {
+						bgcolor: 'rgba(255, 255, 255, 0.08)',
+					},
+				}}
+			>
+				{Icon && (
+					<ListItemIcon
+						sx={{
+							minWidth: 0,
+							mr: open ? 1.5 : 0,
+							justifyContent: 'center',
+							color: activeChild ? '#ec7211' : '#aab7b8',
+							transition: theme => theme.transitions.create(['color'], {
+								duration: theme.transitions.duration.standard,
+							}),
+						}}
+					>
+						<Icon sx={{ fontSize: '1.2rem' }} />
+					</ListItemIcon>
+				)}
+				<Box
+					sx={{
+						opacity: open ? 1 : 0,
+						width: open ? 'auto' : 0,
+						transform: open ? 'translateX(0)' : 'translateX(-10px)',
+						transition: theme => theme.transitions.create(['opacity', 'width', 'transform'], {
+							duration: theme.transitions.duration.standard,
+							easing: theme.transitions.easing.sharp,
+						}),
+						overflow: 'hidden',
+						flexGrow: 1,
+						display: open ? 'flex' : 'none',
+						alignItems: 'center',
+						justifyContent: 'space-between',
+					}}
+				>
+					<ListItemText
+						primary={group.label}
+						sx={{
+							m: 0,
+							'& .MuiListItemText-primary': {
+								fontSize: '0.85rem',
+								fontWeight: activeChild ? 700 : 500,
+								color: activeChild ? '#ec7211' : '#eaeded',
+								whiteSpace: 'nowrap',
+								overflow: 'hidden',
+								textOverflow: 'ellipsis',
+							}
+						}}
+					/>
+					{isExpanded ?
+						<ExpandLess sx={{ fontSize: 18, color: '#aab7b8' }} /> :
+						<ExpandMore sx={{ fontSize: 18, color: '#aab7b8' }} />
+					}
+				</Box>
+			</ListItemButton>
+		);
+
 		return (
 			<>
 				<ListItem disablePadding sx={{ display: 'block' }}>
-					<ListItemButton
-						onClick={() => group.label && toggleGroup(group.label)}
-						sx={{
-							minHeight: 36,
-							py: 0.5,
-							pl: depth * 2.5 + 2,
-							pr: 2,
-							justifyContent: 'flex-start',
-							'&:hover': {
-								bgcolor: '#f2f3f3',
-							},
-						}}
-					>
-						{Icon && (
-							<ListItemIcon
-								sx={{
-									minWidth: 0,
-									mr: 2,
-									justifyContent: 'center',
-									color: activeChild ? 'primary.main' : '#545b64',
-								}}
-							>
-								<Icon fontSize="small" />
-							</ListItemIcon>
-						)}
-						<ListItemText
-							primary={group.label}
-							primaryTypographyProps={{
-								fontSize: '0.9rem',
-								fontWeight: activeChild ? 700 : 500,
-								color: activeChild ? 'primary.main' : '#16191f',
-							}}
-						/>
-						{isExpanded ?
-							<ExpandLess sx={{ fontSize: 18, color: '#545b64' }} /> :
-							<ExpandMore sx={{ fontSize: 18, color: '#545b64' }} />
-						}
-					</ListItemButton>
+					{open ? content : (
+						<Tooltip title={group.label} placement="right" arrow>
+							{content}
+						</Tooltip>
+					)}
 				</ListItem>
-				<Collapse in={isExpanded} timeout="auto" unmountOnExit>
+				<Collapse in={isExpanded && open} timeout="auto" unmountOnExit>
 					<List component="div" disablePadding>
 						{group.children?.map((child, index) => (
 							<NavItem key={index} item={child} depth={depth + 1} />
@@ -219,35 +301,42 @@ const Sidebar: React.FC = () => {
 
 	return (
 		<Drawer
-			variant={isMobile ? 'temporary' : 'persistent'}
+			variant={isMobile ? 'temporary' : 'permanent'}
 			anchor="left"
 			open={open}
 			onClose={() => dispatch(toggleSidebar())}
 			ModalProps={{ keepMounted: true }}
 			sx={{
-				width: open ? drawerWidth : 0,
+				width: open ? DRAWER_WIDTH : (isMobile ? 0 : COLLAPSED_WIDTH),
 				flexShrink: 0,
+				whiteSpace: 'nowrap',
 				transition: (theme) => theme.transitions.create('width', {
 					easing: theme.transitions.easing.sharp,
-					duration: theme.transitions.duration.enteringScreen,
+					duration: theme.transitions.duration.standard,
 				}),
 				'& .MuiDrawer-paper': {
-					width: drawerWidth,
+					width: open ? DRAWER_WIDTH : (isMobile ? 0 : COLLAPSED_WIDTH),
+					overflowX: 'hidden',
+					transition: (theme) => theme.transitions.create('width', {
+						easing: theme.transitions.easing.sharp,
+						duration: theme.transitions.duration.standard,
+					}),
 					boxSizing: 'border-box',
 					top: isMobile ? 0 : '48px',
 					height: isMobile ? '100%' : 'calc(100% - 48px)',
-					backgroundColor: '#ffffff',
-					borderRight: '1px solid #d5dbdb',
-					boxShadow: '2px 0 5px rgba(0,0,0,0.02)',
+					backgroundColor: '#232f3e',
+					borderRight: '1px solid #16191f',
+					boxShadow: 'none',
 				},
 			}}
 		>
-			<Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+			<Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', color: '#eaeded' }}>
 				<Box
 					sx={{
 						flexGrow: 1,
 						overflowY: 'auto',
-						py: 1,
+						overflowX: 'hidden',
+						py: 0.5,
 					}}
 				>
 					<List disablePadding>
@@ -261,7 +350,7 @@ const Sidebar: React.FC = () => {
 					</List>
 				</Box>
 
-				<Box sx={{ py: 1, borderTop: '1px solid #eaeded' }}>
+				<Box sx={{ py: 0.5, borderTop: '1px solid rgba(255, 255, 255, 0.1)', overflowX: 'hidden' }}>
 					<List disablePadding>
 						{bottomNavigation.map((item, index) => (
 							item.children ? (
