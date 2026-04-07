@@ -6,10 +6,11 @@ import WorkIcon from '@mui/icons-material/Work';
 import BusinessIcon from '@mui/icons-material/Business';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import StatCard from '../components/dashboard/StatCard';
-import RecentActivity from '../components/dashboard/RecentActivity';
-import SystemStatus from '../components/dashboard/SystemStatus';
+// import RecentActivity from '../components/dashboard/RecentActivity';
+// import SystemStatus from '../components/dashboard/SystemStatus';
 import RegistrationLinkModal from '../components/dashboard/RegistrationLinkModal';
 import type { CandidateStats } from '../models/candidate';
+import BIReport from '../components/dashboard/BIReport';
 
 interface CandidateStatCardsProps {
 	stats: CandidateStats;
@@ -46,15 +47,16 @@ const Home: React.FC<CandidateStatCardsProps> = ({ stats }) => {
 					<StatCard title="Total Placements" count="0" icon={<CheckCircleIcon fontSize="large" />} color="#9c27b0" />
 				</Grid>
 			</Grid>
-
-			<Grid container spacing={{ xs: 2, sm: 3 }}>
-				<Grid size={{ xs: 12, md: 8 }}>
+			<BIReport />
+			{/* <Grid container spacing={{ xs: 2, sm: 3 }}>
+				<Grid size={{ xs: 24, md: 24 }}>
 					<RecentActivity />
+
 				</Grid>
 				<Grid size={{ xs: 12, md: 4 }}>
 					<SystemStatus />
 				</Grid>
-			</Grid>
+			</Grid> */}
 		</Box>
 	);
 };
