@@ -9,13 +9,15 @@ export const usePlanMetrics = (weeklyPlan: TrainingBatchPlan[], allPlans: Traini
 			hr_session: 0,
 			mock_interview: 0,
 			training_total: 0,
+			unassigned_total: 0,
 			break: 0,
 			total: 0,
 			details: {
 				course: {} as Record<string, number>,
 				hr_session: {} as Record<string, number>,
 				mock_interview: {} as Record<string, number>,
-				trainer: {} as Record<string, number>
+				trainer: {} as Record<string, number>,
+				unassigned: {} as Record<string, { hours: number; type: string }>
 			}
 		};
 
@@ -37,8 +39,17 @@ export const usePlanMetrics = (weeklyPlan: TrainingBatchPlan[], allPlans: Traini
 					breakdown.details[type][entry.activity_name] = (breakdown.details[type][entry.activity_name] || 0) + duration;
 				}
 
-				const trainerName = entry.trainer || 'Unassigned';
-				breakdown.details.trainer[trainerName] = (breakdown.details.trainer[trainerName] || 0) + duration;
+				const trainerName = entry.trainer;
+				if (trainerName) {
+					breakdown.details.trainer[trainerName] = (breakdown.details.trainer[trainerName] || 0) + duration;
+				} else {
+					breakdown.unassigned_total += duration;
+					const current = breakdown.details.unassigned[entry.activity_name] || { hours: 0, type: entry.activity_type };
+					breakdown.details.unassigned[entry.activity_name] = {
+						hours: current.hours + duration,
+						type: entry.activity_type
+					};
+				}
 			}
 
 			breakdown.total += duration;

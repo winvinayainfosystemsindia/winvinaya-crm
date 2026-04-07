@@ -57,7 +57,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend, color = 
 			</Box>
 
 			<Box>
-				<Typography variant="h4" component="div" sx={{ fontWeight: 700, mb: 0.5, color: '#1a1f36' }}>
+				<Typography variant="h5" component="div" sx={{ fontWeight: 600, mb: 0.5, color: '#1a1f36' }}>
 					{value}
 				</Typography>
 
