@@ -88,7 +88,20 @@ const Sidebar: React.FC = () => {
 	};
 
 	const toggleGroup = (label: string) => {
-		setExpandedGroups(prev => ({ ...prev, [label]: !prev[label] }));
+		setExpandedGroups(prev => {
+			const isCurrentlyExpanded = prev[label];
+			// Collapse all first
+			const newState = Object.keys(prev).reduce((acc, key) => {
+				acc[key] = false;
+				return acc;
+			}, {} as Record<string, boolean>);
+
+			// If the clicked one was closed, expand it
+			if (!isCurrentlyExpanded) {
+				newState[label] = true;
+			}
+			return newState;
+		});
 	};
 
 	const hasPermission = (item: NavigationItem) => {
@@ -322,6 +335,7 @@ const Sidebar: React.FC = () => {
 						duration: theme.transitions.duration.standard,
 					}),
 					boxSizing: 'border-box',
+					overflow: 'hidden',
 					top: '48px',
 					height: 'calc(100% - 48px)',
 					backgroundColor: '#232f3e',
@@ -337,6 +351,20 @@ const Sidebar: React.FC = () => {
 						overflowY: 'auto',
 						overflowX: 'hidden',
 						py: 0.5,
+						/* Custom scrollbar for enterprise look */
+						'&::-webkit-scrollbar': {
+							width: '6px',
+						},
+						'&::-webkit-scrollbar-track': {
+							background: 'transparent',
+						},
+						'&::-webkit-scrollbar-thumb': {
+							background: 'rgba(255, 255, 255, 0.1)',
+							borderRadius: '3px',
+						},
+						'&::-webkit-scrollbar-thumb:hover': {
+							background: 'rgba(255, 255, 255, 0.2)',
+						},
 					}}
 				>
 					<List disablePadding>
@@ -350,7 +378,13 @@ const Sidebar: React.FC = () => {
 					</List>
 				</Box>
 
-				<Box sx={{ py: 0.5, borderTop: '1px solid rgba(255, 255, 255, 0.1)', overflowX: 'hidden' }}>
+				<Box sx={{
+					flexShrink: 0,
+					py: 0.5,
+					borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+					overflow: 'hidden',
+					bgcolor: '#232f3e' // Ensure background matches for pinning effect
+				}}>
 					<List disablePadding>
 						{bottomNavigation.map((item, index) => (
 							item.children ? (
