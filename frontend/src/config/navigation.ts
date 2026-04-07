@@ -41,12 +41,12 @@ export const topNavigation: NavigationItem[] = [
 			{
 				label: 'Projects',
 				path: '/projects',
-				roles: ['admin', 'manager', 'trainer', 'sourcing', 'project_coordinator', 'developer', 'placement']
+				roles: ['admin', 'manager']
 			},
 			{
 				label: 'Activities',
 				path: '/projects/activities',
-				roles: ['admin', 'manager', 'trainer', 'sourcing', 'project_coordinator', 'developer', 'placement']
+				roles: ['admin', 'manager']
 			},
 			{
 				label: 'Timesheet',
@@ -60,47 +60,46 @@ export const topNavigation: NavigationItem[] = [
 		icon: BusinessIcon,
 		roles: ['admin', 'manager', 'placement'],
 		children: [
-			// { label: 'Dashboard', path: '/crm/dashboard' },
-			{ label: 'Companies', path: '/crm/companies' },
-			{ label: 'Contacts', path: '/crm/contacts' },
-			// { label: 'Leads', path: '/crm/leads' },
-			// { label: 'Deals', path: '/crm/deals' },
-			// { label: 'Tasks', path: '/crm/tasks' },
+			{ label: 'Companies', path: '/crm/companies', roles: ['admin', 'manager', 'placement'] },
+			{ label: 'Contacts', path: '/crm/contacts', roles: ['admin', 'manager', 'placement'] },
 		],
 	},
 	{
 		label: 'Candidate Management',
 		icon: CandidatesIcon,
+		roles: ['admin', 'manager', 'sourcing', 'trainer', 'counselor', 'placement'],
 		children: [
-			{ label: 'All Candidates', path: '/candidates' },
+			{
+				label: 'All Candidates',
+				path: '/candidates',
+				roles: ['admin', 'manager', 'sourcing', 'placement', 'trainer', 'counselor']
+			},
 			{
 				label: 'Screening',
 				path: '/candidates/screening',
-				roles: ['admin', 'sourcing', 'manager', 'project_coordinator', 'developer']
+				roles: ['admin', 'manager', 'sourcing']
 			},
 			{
 				label: 'Counseling',
 				path: '/candidates/counseling',
-				roles: ['admin', 'trainer', 'manager', 'project_coordinator', 'developer']
+				roles: ['admin', 'manager', 'trainer', 'counselor']
 			},
 			{
 				label: 'Document Collection',
 				path: '/candidates/documents',
-				roles: ['admin', 'sourcing', 'trainer', 'manager', 'project_coordinator', 'developer']
+				roles: ['admin', 'manager', 'sourcing', 'trainer', 'placement']
 			},
 		],
 	},
 	{
 		label: 'Training Management',
 		icon: SchoolIcon,
+		roles: ['admin', 'manager', 'trainer', 'project_coordinator'],
 		children: [
-			{ label: 'Training Batch', path: '/training/batches', roles: ['admin', 'manager', 'trainer', 'sourcing', 'project_coordinator', 'developer'] },
-			{ label: 'Weekly Training Plan', path: '/training/weekly-plan', roles: ['admin', 'manager', 'trainer', 'project_coordinator', 'developer'] },
-			{ label: 'Candidate Allocation', path: '/training/allocation', roles: ['admin', 'manager', 'trainer', 'sourcing', 'project_coordinator', 'developer'] },
-			{ label: 'Attendance', path: '/training/attendance', roles: ['admin', 'manager', 'trainer', 'project_coordinator', 'developer'] },
-			// { label: 'Assignment', path: '/training/assignment', roles: ['admin', 'manager', 'trainer'] },
-			// { label: 'Mock Interview', path: '/training/mock-interview', roles: ['admin', 'manager', 'trainer'] },
-
+			{ label: 'Training Batch', path: '/training/batches', roles: ['admin', 'manager', 'sourcing', 'trainer', 'placement'] },
+			{ label: 'Weekly Training Plan', path: '/training/weekly-plan', roles: ['admin', 'manager', 'trainer', 'placement'] },
+			{ label: 'Candidate Allocation', path: '/training/allocation', roles: ['admin', 'manager', 'trainer', 'placement'] },
+			{ label: 'Attendance', path: '/training/attendance', roles: ['admin', 'manager', 'trainer', 'placement'] },
 		],
 	},
 	{
@@ -108,8 +107,8 @@ export const topNavigation: NavigationItem[] = [
 		icon: PlacementIcon,
 		roles: ['admin', 'manager', 'placement'],
 		children: [
-			{ label: 'Job Roles', path: '/placement/job-roles' },
-			{ label: 'Candidate Mapping', path: '/placement/candidate-mapping' },
+			{ label: 'Job Roles', path: '/placement/job-roles', roles: ['admin', 'manager', 'placement'] },
+			{ label: 'Candidate Mapping', path: '/placement/candidate-mapping', roles: ['admin', 'manager', 'placement'] },
 		],
 	},
 ];
@@ -119,6 +118,7 @@ export const bottomNavigation: NavigationItem[] = [
 		label: 'Reports',
 		path: '/reports',
 		icon: AssessmentIcon,
+		roles: ['admin', 'manager'],
 	},
 	{
 		label: 'Settings',

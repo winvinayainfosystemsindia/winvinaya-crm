@@ -32,12 +32,26 @@ const Sidebar: React.FC = () => {
 	const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 	const open = useAppSelector((state) => state.ui.sidebarOpen);
 	const user = useAppSelector((state) => state.auth.user);
-	const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
-		'CRM': false,
-		'Candidate Management': false,
-		'Training Management': false,
-		'Project Management': false
-	});
+	const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+
+	// Auto-expand the group of the active path on mount or navigation
+	React.useEffect(() => {
+		if (open) {
+			const findAndExpandActiveGroup = (items: NavigationItem[]) => {
+				for (const item of items) {
+					if (item.children?.some(child => isActive(child.path))) {
+						if (item.label) {
+							setExpandedGroups(prev => ({ ...prev, [item.label!]: true }));
+						}
+						return true;
+					}
+				}
+				return false;
+			};
+			findAndExpandActiveGroup(topNavigation);
+			findAndExpandActiveGroup(bottomNavigation);
+		}
+	}, [location.pathname, open]);
 
 	const isActive = (path?: string) => {
 		if (!path) return false;
@@ -104,9 +118,28 @@ const Sidebar: React.FC = () => {
 		});
 	};
 
-	const hasPermission = (item: NavigationItem) => {
-		if (!item.roles) return true;
-		return user?.role && item.roles.includes(user.role);
+	const hasPermission = (item: NavigationItem): boolean => {
+		// Admin always has access to everything
+		if (user?.role === 'admin') return true;
+
+		// Check if the item itself has roles
+		const hasDirectPermission = !item.roles || (user?.role && item.roles.includes(user.role));
+
+		if (item.children) {
+			// A group is visible if its own roles match (if provided)
+			// AND it has at least one child with permission
+			const hasVisibleChildren = item.children.some(child => hasPermission(child));
+			
+			// If group has specific roles, user must match AND have a visible child
+			if (item.roles) {
+				return !!hasDirectPermission && hasVisibleChildren;
+			}
+			
+			// If group has no roles, it's visible if it has at least one visible child
+			return hasVisibleChildren;
+		}
+
+		return !!hasDirectPermission;
 	};
 
 	const NavItem = ({ item, depth = 0 }: { item: NavigationItem; depth?: number }) => {
