@@ -16,7 +16,7 @@ export const usePlanMetrics = (weeklyPlan: TrainingBatchPlan[], allPlans: Traini
 				course: {} as Record<string, number>,
 				hr_session: {} as Record<string, number>,
 				mock_interview: {} as Record<string, number>,
-				trainer: {} as Record<string, number>,
+				trainer: {} as Record<string, { total: number; sessions: Record<string, { hours: number; type: string }> }>,
 				unassigned: {} as Record<string, { hours: number; type: string }>
 			}
 		};
@@ -36,8 +36,8 @@ export const usePlanMetrics = (weeklyPlan: TrainingBatchPlan[], allPlans: Traini
 				const type = entry.activity_type as 'course' | 'hr_session' | 'mock_interview';
 				const trainerName = entry.trainer;
 
-				if (isCoreTraining && trainerName) {
-					// Add to training totals
+				if (isCoreTraining) {
+					// Add to training totals regardless of trainer assignment
 					breakdown.training_total += duration;
 
 					// Add to specific type details
@@ -45,10 +45,23 @@ export const usePlanMetrics = (weeklyPlan: TrainingBatchPlan[], allPlans: Traini
 						breakdown.details[type][entry.activity_name] = (breakdown.details[type][entry.activity_name] || 0) + duration;
 					}
 
-					// Add to trainer stats
-					breakdown.details.trainer[trainerName] = (breakdown.details.trainer[trainerName] || 0) + duration;
+					// Add to trainer stats with detailed breakdown ONLY if trainer is assigned
+					if (trainerName) {
+						if (!breakdown.details.trainer[trainerName]) {
+							breakdown.details.trainer[trainerName] = { total: 0, sessions: {} };
+						}
+						const trainerData = breakdown.details.trainer[trainerName];
+						trainerData.total += duration;
+						
+						const currentSession = trainerData.sessions[entry.activity_name] || { hours: 0, type: entry.activity_type };
+						trainerData.sessions[entry.activity_name] = {
+							hours: currentSession.hours + duration,
+							type: entry.activity_type
+						};
+					}
 				} else {
-					// 'other', 'event', or unassigned training sessions
+					// 'other' or 'event' sessions
+					breakdown.training_total += duration; // Add to grand total as requested
 					breakdown.unassigned_total += duration;
 					const current = breakdown.details.unassigned[entry.activity_name] || { hours: 0, type: entry.activity_type };
 					breakdown.details.unassigned[entry.activity_name] = {

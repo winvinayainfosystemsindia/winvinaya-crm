@@ -34,7 +34,7 @@ interface WeeklyPlanStatsProps {
 			course: Record<string, number>;
 			hr_session: Record<string, number>;
 			mock_interview: Record<string, number>;
-			trainer: Record<string, number>;
+			trainer: Record<string, { total: number; sessions: Record<string, { hours: number; type: string }> }>;
 			unassigned: Record<string, { hours: number; type: string }>;
 		};
 	};
@@ -69,7 +69,7 @@ const WeeklyPlanStats: React.FC<WeeklyPlanStatsProps> = ({ hoursBreakdown }) => 
 			color: '#ed6c02'
 		},
 		{
-			title: 'Mock Interactions',
+			title: 'Mock Interviews',
 			value: formatHours(hoursBreakdown.mock_interview),
 			icon: <InterviewIcon />,
 			color: '#2e7d32'
@@ -189,7 +189,13 @@ const WeeklyPlanStats: React.FC<WeeklyPlanStatsProps> = ({ hoursBreakdown }) => 
 								boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
 								minHeight: 110
 							}}
-						/>
+						>
+							{stat.title === 'Total Training' && (
+								<Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem', lineHeight: 1.1, display: 'block' }}>
+									Combined total of Courses, HR, Mock Interviews, Events, and Other activities.
+								</Typography>
+							)}
+						</StatCard>
 					</Grid>
 				))}
 			</Grid>
@@ -209,7 +215,7 @@ const WeeklyPlanStats: React.FC<WeeklyPlanStatsProps> = ({ hoursBreakdown }) => 
 					{renderMetricTable('HR Activity Volume', hoursBreakdown.details.hr_session, <HRIcon />, '#ed6c02')}
 				</Grid>
 				<Grid size={{ xs: 12, md: 4 }}>
-					{renderMetricTable('Interview Prep', hoursBreakdown.details.mock_interview, <InterviewIcon />, '#2e7d32')}
+					{renderMetricTable('Mock Interviews', hoursBreakdown.details.mock_interview, <InterviewIcon />, '#2e7d32')}
 				</Grid>
 
 				<Grid size={{ xs: 12, md: Object.entries(hoursBreakdown.details.unassigned).length > 0 ? 6 : 12 }}>
@@ -238,22 +244,45 @@ const WeeklyPlanStats: React.FC<WeeklyPlanStatsProps> = ({ hoursBreakdown }) => 
 								</Typography>
 							</Box>
 						) : (
-							<TableContainer sx={{ maxHeight: 320, overflowY: 'auto' }}>
+							<TableContainer sx={{ maxHeight: 400, overflowY: 'auto' }}>
 								<Table size="small">
 									<TableBody>
 										{Object.entries(hoursBreakdown.details.trainer)
-											.sort((a, b) => b[1] - a[1])
-											.map(([name, hours]) => (
-												<TableRow key={name} sx={{ '&:last-child td': { border: 0 } }}>
-													<TableCell sx={{ py: 1.5 }}>
-														<Typography variant="body2" fontWeight="600">{name}</Typography>
-													</TableCell>
-													<TableCell align="right" sx={{ py: 1.5 }}>
-														<Typography variant="body2" fontWeight="600" color="primary.main">
-															{formatHours(hours)}
-														</Typography>
-													</TableCell>
-												</TableRow>
+											.sort((a, b) => b[1].total - a[1].total)
+											.map(([name, data]) => (
+												<React.Fragment key={name}>
+													<TableRow sx={{ bgcolor: 'rgba(69, 39, 160, 0.05)' }}>
+														<TableCell sx={{ py: 1.5 }}>
+															<Typography variant="body2" fontWeight="700" color="#4527a0">
+																{name}
+															</Typography>
+														</TableCell>
+														<TableCell align="right" sx={{ py: 1.5 }}>
+															<Typography variant="body2" fontWeight="800" color="#4527a0">
+																{formatHours(data.total)}
+															</Typography>
+														</TableCell>
+													</TableRow>
+													{Object.entries(data.sessions)
+														.sort((a, b) => b[1].hours - a[1].hours)
+														.map(([sessionName, sessionData]) => (
+															<TableRow key={sessionName} sx={{ '&:last-child td': { borderBottom: '1px solid #eaeded' } }}>
+																<TableCell sx={{ py: 1, pl: 4 }}>
+																	<Typography variant="body2" sx={{ fontSize: '0.8rem', fontWeight: 500 }}>
+																		{sessionName}
+																	</Typography>
+																	<Typography variant="caption" sx={{ color: 'text.secondary', opacity: 0.8, textTransform: 'uppercase', fontSize: '0.6rem', fontWeight: 700 }}>
+																		{sessionData.type.replace('_', ' ')}
+																	</Typography>
+																</TableCell>
+																<TableCell align="right" sx={{ py: 1 }}>
+																	<Typography variant="caption" sx={{ fontWeight: 700, color: 'text.primary' }}>
+																		{formatHours(sessionData.hours)}
+																	</Typography>
+																</TableCell>
+															</TableRow>
+														))}
+												</React.Fragment>
 											))}
 									</TableBody>
 								</Table>
@@ -261,6 +290,7 @@ const WeeklyPlanStats: React.FC<WeeklyPlanStatsProps> = ({ hoursBreakdown }) => 
 						)}
 					</Paper>
 				</Grid>
+
 
 				{Object.entries(hoursBreakdown.details.unassigned).length > 0 && (
 					<Grid size={{ xs: 12, md: 6 }}>
