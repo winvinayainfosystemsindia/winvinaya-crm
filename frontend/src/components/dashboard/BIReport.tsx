@@ -108,10 +108,10 @@ const BIReport: React.FC = () => {
               <MenuItem value="timesheet">Timesheet Report</MenuItem>
             </Select>
           </FormControl>
-          
+
           <Tooltip title="Open in Fullscreen">
-            <IconButton 
-              size="small" 
+            <IconButton
+              size="small"
               onClick={handleFullscreen}
               sx={{ color: '#545b64' }}
             >
