@@ -61,13 +61,12 @@ class DSRLeaveService:
             "status": DSRLeaveStatus.PENDING,
         }
         
-        # For Admins/Managers, auto-approve? Let's keep it pending for now as per "Request" flow.
-        # But maybe we want to auto-approve for them?
-        if current_user.role in (UserRole.ADMIN, UserRole.MANAGER):
-            leave_data["status"] = DSRLeaveStatus.APPROVED
-            leave_data["handled_by"] = current_user.id
-            leave_data["handled_at"] = datetime.utcnow()
-            leave_data["admin_notes"] = "Auto-approved for privileged user."
+        # For now, all leaves go through the pending workflow.
+        # if current_user.role in (UserRole.ADMIN, UserRole.MANAGER):
+        #     leave_data["status"] = DSRLeaveStatus.APPROVED
+        #     leave_data["handled_by"] = current_user.id
+        #     leave_data["handled_at"] = datetime.utcnow()
+        #     leave_data["admin_notes"] = "Auto-approved for privileged user."
 
         return await self.repo.create(leave_data)
 

@@ -228,6 +228,7 @@ export interface DSRLeaveApplication {
 	id: number;
 	public_id: string;
 	user_id: number;
+	user?: DSRUserSnapshot;
 	start_date: string;
 	end_date: string;
 	leave_type: string;

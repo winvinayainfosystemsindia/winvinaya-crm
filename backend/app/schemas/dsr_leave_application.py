@@ -24,10 +24,18 @@ class DSRLeaveApplicationUpdate(BaseModel):
     admin_notes: Optional[str] = None
 
 
+class DSRLeaveUser(BaseModel):
+    full_name: Optional[str] = None
+    username: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class DSRLeaveApplicationRead(DSRLeaveApplicationBase):
     id: int
     public_id: uuid.UUID
     user_id: int
+    user: Optional[DSRLeaveUser] = None
     status: DSRLeaveStatus
     admin_notes: Optional[str] = None
     handled_by: Optional[int] = None

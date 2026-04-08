@@ -4,8 +4,10 @@ from datetime import date
 from typing import Optional, List, Tuple
 from uuid import UUID
 from sqlalchemy import select, func, and_, or_
+from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.dsr_leave_application import DSRLeaveApplication, DSRLeaveStatus
+from app.models.user import User
 from app.repositories.base import BaseRepository
 
 
@@ -54,7 +56,14 @@ class DSRLeaveApplicationRepository(BaseRepository[DSRLeaveApplication]):
             base = and_(base, DSRLeaveApplication.user_id == user_id)
             
         count_query = select(func.count()).select_from(DSRLeaveApplication).where(base)
-        query = select(DSRLeaveApplication).where(base).order_by(DSRLeaveApplication.start_date.desc()).offset(skip).limit(limit)
+        query = (
+            select(DSRLeaveApplication)
+            .options(joinedload(DSRLeaveApplication.user))
+            .where(base)
+            .order_by(DSRLeaveApplication.start_date.desc())
+            .offset(skip)
+            .limit(limit)
+        )
         
         total = (await self.db.execute(count_query)).scalar_one()
         result = await self.db.execute(query)

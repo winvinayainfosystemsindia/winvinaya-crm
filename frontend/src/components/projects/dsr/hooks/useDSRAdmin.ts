@@ -7,7 +7,9 @@ import {
 	grantDSRPermission,
 	fetchPermissionRequests,
 	handlePermissionRequestAction,
-	revokeEntryAction
+	revokeEntryAction,
+	fetchAllLeaves,
+	handleLeaveAction as handleLeaveActionAction
 } from '../../../../store/slices/dsrSlice';
 import useToast from '../../../../hooks/useToast';
 
@@ -22,6 +24,8 @@ export const useDSRAdmin = () => {
 		totalAdminEntries: totalEntries,
 		permissionRequests,
 		totalPermissionRequests,
+		adminLeaves,
+		totalAdminLeaves,
 		loading
 	} = useAppSelector((state) => state.dsr);
 
@@ -43,6 +47,10 @@ export const useDSRAdmin = () => {
 	const [historyFilterDrawerOpen, setHistoryFilterDrawerOpen] = useState(false);
 	const [permissionFilterDrawerOpen, setPermissionFilterDrawerOpen] = useState(false);
 	const [permissionStatusFilter, setPermissionStatusFilter] = useState<string | null>(null);
+	const [leavePage, setLeavePage] = useState(0);
+	const [leaveRowsPerPage, setLeaveRowsPerPage] = useState(10);
+	const [leaveStatusFilter, setLeaveStatusFilter] = useState<string | null>(null);
+	const [leaveFilterDrawerOpen, setLeaveFilterDrawerOpen] = useState(false);
 
 	useEffect(() => {
 		const timer = setTimeout(() => setDebouncedSubmissionsSearch(submissionsSearchTerm), 300);
@@ -72,7 +80,12 @@ export const useDSRAdmin = () => {
 			search: debouncedSubmissionsSearch || undefined,
 			status: (statusFilter as any) || undefined
 		}));
-	}, [dispatch, isPrivileged, reportDate, entryPage, entryRowsPerPage, historyDateFrom, historyDateTo, debouncedSubmissionsSearch, statusFilter, permissionPage, permissionRowsPerPage, debouncedPermissionsSearch, permissionStatusFilter]);
+		dispatch(fetchAllLeaves({
+			skip: leavePage * leaveRowsPerPage,
+			limit: leaveRowsPerPage,
+			status: leaveStatusFilter || undefined
+		}));
+	}, [dispatch, isPrivileged, reportDate, entryPage, entryRowsPerPage, historyDateFrom, historyDateTo, debouncedSubmissionsSearch, statusFilter, permissionPage, permissionRowsPerPage, debouncedPermissionsSearch, permissionStatusFilter, leavePage, leaveRowsPerPage, leaveStatusFilter]);
 
 	useEffect(() => {
 		fetchData();
@@ -146,6 +159,20 @@ export const useDSRAdmin = () => {
 		}
 	};
 
+	const handleLeaveAction = async (publicId: string, status: 'approved' | 'rejected', admin_notes?: string) => {
+		try {
+			await dispatch(handleLeaveActionAction({ publicId, status, admin_notes })).unwrap();
+			toast.success(`Leave ${status} successfully`);
+			dispatch(fetchAllLeaves({
+				skip: leavePage * leaveRowsPerPage,
+				limit: leaveRowsPerPage,
+				status: leaveStatusFilter || undefined
+			}));
+		} catch (error: any) {
+			toast.error(error || `Failed to ${status} leave`);
+		}
+	};
+
 	const reviewQueueTotal = adminEntries.filter(e => e.status === 'submitted').length;
 
 	return {
@@ -183,10 +210,21 @@ export const useDSRAdmin = () => {
 		setPermissionFilterDrawerOpen,
 		permissionStatusFilter,
 		setPermissionStatusFilter,
+		adminLeaves,
+		totalAdminLeaves,
+		leavePage,
+		setLeavePage,
+		leaveRowsPerPage,
+		setLeaveRowsPerPage,
+		leaveStatusFilter,
+		setLeaveStatusFilter,
+		leaveFilterDrawerOpen,
+		setLeaveFilterDrawerOpen,
 		handleSendReminders,
 		handleGrantPermission,
 		handlePermissionAction,
 		handleRevokeEntry,
+		handleLeaveAction,
 		handleRefresh
 	};
 };

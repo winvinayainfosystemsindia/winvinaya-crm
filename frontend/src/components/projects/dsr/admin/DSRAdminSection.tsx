@@ -18,6 +18,7 @@ import PermissionRequestsTable from './PermissionRequestsTable';
 import AllSubmissionsTable from './AllSubmissionsTable';
 import DSRActivityTypeManagement from './DSRActivityTypeManagement';
 import HolidayTable from './HolidayTable';
+import LeavesApprovalTable from './LeavesApprovalTable';
 import type { useDSRAdmin } from '../hooks/useDSRAdmin';
 
 interface DSRAdminSectionProps {
@@ -89,6 +90,7 @@ const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin }) => {
 	};
 
 	const pendingPermissions = admin.permissionRequests.filter(r => r.status === 'pending').length;
+	const pendingLeaves = admin.adminLeaves.filter(l => l.status === 'pending').length;
 
 	return (
 		<Box>
@@ -170,9 +172,26 @@ const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin }) => {
 						<Tab
 							label={
 								<TabLabel
+									icon={<HolidayIcon sx={{ fontSize: 18 }} />}
+									label="Leaves"
+									count={pendingLeaves}
+									active={activeTab === 2}
+								/>
+							}
+							sx={{
+								textTransform: 'none',
+								minHeight: 48,
+								px: 3,
+								color: '#545b64',
+								'&.Mui-selected': { color: '#ec7211' }
+							}}
+						/>
+						<Tab
+							label={
+								<TabLabel
 									icon={<ReviewIcon sx={{ fontSize: 18 }} />}
 									label="Activity Types"
-									active={activeTab === 2}
+									active={activeTab === 3}
 								/>
 							}
 							sx={{
@@ -188,7 +207,7 @@ const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin }) => {
 								<TabLabel
 									icon={<HolidayIcon sx={{ fontSize: 18 }} />}
 									label="Holidays"
-									active={activeTab === 3}
+									active={activeTab === 4}
 								/>
 							}
 							sx={{
@@ -203,9 +222,7 @@ const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin }) => {
 				</Box>
 
 				<Box sx={{ p: 3 }}>
-
 					<TabPanel value={activeTab} index={0}>
-						<Box>
 						<PermissionRequestsTable
 							requests={admin.permissionRequests}
 							total={admin.totalPermissionRequests}
@@ -224,7 +241,6 @@ const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin }) => {
 							filterDrawerOpen={admin.permissionFilterDrawerOpen}
 							onFilterDrawerOpen={admin.setPermissionFilterDrawerOpen}
 						/>
-						</Box>
 					</TabPanel>
 
 					<TabPanel value={activeTab} index={1}>
@@ -252,12 +268,30 @@ const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin }) => {
 						/>
 					</TabPanel>
 
-
 					<TabPanel value={activeTab} index={2}>
-						<DSRActivityTypeManagement />
+						<LeavesApprovalTable
+							leaves={admin.adminLeaves}
+							total={admin.totalAdminLeaves}
+							loading={admin.loading}
+							onHandle={admin.handleLeaveAction}
+							onRefresh={admin.handleRefresh}
+							page={admin.leavePage}
+							rowsPerPage={admin.leaveRowsPerPage}
+							onPageChange={(_: unknown, p: number) => admin.setLeavePage(p)}
+							onRowsPerPageChange={(e: React.ChangeEvent<HTMLInputElement>) => admin.setLeaveRowsPerPage(parseInt(e.target.value, 10))}
+							onRowsPerPageSelectChange={(r: number) => admin.setLeaveRowsPerPage(r)}
+							statusFilter={admin.leaveStatusFilter}
+							onStatusFilterChange={admin.setLeaveStatusFilter}
+							filterDrawerOpen={admin.leaveFilterDrawerOpen}
+							onFilterDrawerOpen={admin.setLeaveFilterDrawerOpen}
+						/>
 					</TabPanel>
 
 					<TabPanel value={activeTab} index={3}>
+						<DSRActivityTypeManagement />
+					</TabPanel>
+
+					<TabPanel value={activeTab} index={4}>
 						<HolidayTable />
 					</TabPanel>
 				</Box>

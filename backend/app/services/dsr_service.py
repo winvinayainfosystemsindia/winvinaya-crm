@@ -281,13 +281,24 @@ class DSRService:
         if not entry.is_leave and not entry.items:
             raise HTTPException(status_code=422, detail="Cannot submit an empty DSR. Add at least one work item or mark as Leave.")
 
-        # Transition directly to APPROVED as per new requirement
+        # Transition directly to APPROVED as per new requirement, UNLESS it's a leave
+        status_val = DSRStatus.APPROVED
+        admin_notes = "Auto-approved upon submission"
+        reviewed_by = current_user.id
+        reviewed_at = datetime.utcnow()
+
+        if entry.is_leave:
+            status_val = DSRStatus.SUBMITTED
+            admin_notes = None
+            reviewed_by = None
+            reviewed_at = None
+
         await self.repo.update(entry.id, {
-            "status": DSRStatus.APPROVED,
+            "status": status_val,
             "submitted_at": datetime.utcnow(),
-            "reviewed_by": current_user.id, # Auto-approved by system/self
-            "reviewed_at": datetime.utcnow(),
-            "admin_notes": "Auto-approved upon submission"
+            "reviewed_by": reviewed_by,
+            "reviewed_at": reviewed_at,
+            "admin_notes": admin_notes
         })
 
         # Update Activity Actuals

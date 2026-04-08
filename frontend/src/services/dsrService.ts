@@ -76,6 +76,26 @@ const dsrService = {
 		return response.data;
 	},
 
+	getAllLeaves: async (
+		skip = 0,
+		limit = 100,
+		status?: string,
+		user_id?: number
+	): Promise<{ items: any[], total: number }> => {
+		const response = await api.get('/dsr/leaves/all', {
+			params: { skip, limit, status, user_id }
+		});
+		return response.data;
+	},
+
+	handleLeaveRequest: async (
+		publicId: string,
+		data: { status: string, admin_notes?: string }
+	): Promise<any> => {
+		const response = await api.patch(`/dsr/leaves/${publicId}`, data);
+		return response.data;
+	},
+
 	// Admin Actions
 	getAdminOverview: async (
 		skip = 0,

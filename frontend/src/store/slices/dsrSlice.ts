@@ -23,6 +23,8 @@ interface DSRState {
 	permissionRequests: DSRPermissionRequest[];
 	permissionStats: DSRPermissionStats | null;
 	leaveStats: DSRLeaveStats | null;
+	adminLeaves: DSRLeaveApplication[];
+	totalAdminLeaves: number;
 	totalProjects: number;
 	totalActivities: number;
 	totalMyEntries: number;
@@ -51,6 +53,8 @@ const initialState: DSRState = {
 	permissionRequests: [],
 	permissionStats: null,
 	leaveStats: null,
+	adminLeaves: [],
+	totalAdminLeaves: 0,
 	totalProjects: 0,
 	totalActivities: 0,
 	totalMyEntries: 0,
@@ -401,6 +405,29 @@ export const handlePermissionRequestAction = createAsyncThunk(
 	}
 );
 
+export const fetchAllLeaves = createAsyncThunk(
+	'dsr/fetchAllLeaves',
+	async (params: { skip?: number; limit?: number; status?: string; user_id?: number } | undefined, { rejectWithValue }) => {
+		try {
+			const { skip = 0, limit = 100, status, user_id } = params || {};
+			return await dsrService.getAllLeaves(skip, limit, status, user_id);
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.detail || 'Failed to fetch leave applications');
+		}
+	}
+);
+
+export const handleLeaveAction = createAsyncThunk(
+	'dsr/handleLeaveAction',
+	async ({ publicId, status, admin_notes }: { publicId: string; status: string; admin_notes?: string }, { rejectWithValue }) => {
+		try {
+			return await dsrService.handleLeaveRequest(publicId, { status, admin_notes });
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.detail || 'Failed to handle leave application');
+		}
+	}
+);
+
 export const fetchPermissionStats = createAsyncThunk(
 	'dsr/fetchPermissionStats',
 	async (params: { user_id?: number } | undefined, { rejectWithValue }) => {
@@ -608,6 +635,23 @@ const dsrSlice = createSlice({
 			.addCase(fetchLeaveStats.fulfilled, (state, action: PayloadAction<DSRLeaveStats>) => {
 				state.loading = false;
 				state.leaveStats = action.payload;
+			})
+			.addCase(fetchAllLeaves.fulfilled, (state, action: PayloadAction<{ items: DSRLeaveApplication[]; total: number }>) => {
+				state.loading = false;
+				state.adminLeaves = action.payload.items;
+				state.totalAdminLeaves = action.payload.total;
+			})
+			.addCase(handleLeaveAction.fulfilled, (state, action: PayloadAction<DSRLeaveApplication>) => {
+				state.loading = false;
+				const index = state.adminLeaves.findIndex(l => l.public_id === action.payload.public_id);
+				if (index !== -1) {
+					state.adminLeaves[index] = action.payload;
+				}
+				// Also update in user's myLeaves if present
+				const myIndex = state.myLeaves.findIndex(l => l.public_id === action.payload.public_id);
+				if (myIndex !== -1) {
+					state.myLeaves[myIndex] = action.payload;
+				}
 			})
 			.addCase(fetchMyStatsSummary.fulfilled, (state, action: PayloadAction<any>) => {
 				state.loading = false;

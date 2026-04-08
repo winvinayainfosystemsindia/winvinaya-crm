@@ -19,6 +19,7 @@ interface DSRAdminTableHeaderProps {
 	onFilterOpen?: () => void;
 	placeholder?: string;
 	actions?: React.ReactNode;
+	hideSearch?: boolean;
 }
 
 const DSRAdminTableHeader: React.FC<DSRAdminTableHeaderProps> = ({
@@ -29,7 +30,8 @@ const DSRAdminTableHeader: React.FC<DSRAdminTableHeaderProps> = ({
 	activeFilterCount = 0,
 	onFilterOpen,
 	placeholder = "Search...",
-	actions
+	actions,
+	hideSearch = false
 }) => {
 	const theme = useTheme();
 
@@ -50,33 +52,35 @@ const DSRAdminTableHeader: React.FC<DSRAdminTableHeaderProps> = ({
 						{title}
 					</Typography>
 				)}
-				<TextField
-					placeholder={placeholder}
-					value={searchTerm}
-					onChange={(e) => onSearchChange(e.target.value)}
-					size="small"
-					fullWidth
-					sx={{
-						maxWidth: { xs: '100%', md: '350px' },
-						'& .MuiOutlinedInput-root': {
-							bgcolor: 'white',
-							height: '36px',
-							'& fieldset': {
-								borderColor: '#d5dbdb',
-							},
-							'&:hover fieldset': {
-								borderColor: theme.palette.primary.main,
-							},
-						}
-					}}
-					InputProps={{
-						startAdornment: (
-							<InputAdornment position="start">
-								<Search sx={{ color: 'text.secondary', fontSize: 18 }} />
-							</InputAdornment>
-						),
-					}}
-				/>
+				{!hideSearch && (
+					<TextField
+						placeholder={placeholder}
+						value={searchTerm}
+						onChange={(e) => onSearchChange(e.target.value)}
+						size="small"
+						fullWidth
+						sx={{
+							maxWidth: { xs: '100%', md: '350px' },
+							'& .MuiOutlinedInput-root': {
+								bgcolor: 'white',
+								height: '36px',
+								'& fieldset': {
+									borderColor: '#d5dbdb',
+								},
+								'&:hover fieldset': {
+									borderColor: theme.palette.primary.main,
+								},
+							}
+						}}
+						InputProps={{
+							startAdornment: (
+								<InputAdornment position="start">
+									<Search sx={{ color: 'text.secondary', fontSize: 18 }} />
+								</InputAdornment>
+							),
+						}}
+					/>
+				)}
 			</Box>
 
 			<Box sx={{ display: 'flex', gap: 1, alignItems: 'center', justifyContent: { xs: 'space-between', md: 'flex-end' } }}>
