@@ -163,10 +163,18 @@ const PlanEntryDialog: React.FC<PlanEntryDialogProps> = ({
 							value={selectedEntry?.activity_type || 'course'}
 							label="Activity Type"
 							onChange={(e) => {
+								const newType = e.target.value as any;
+								const isCoreTraining = ['course', 'hr_session', 'mock_interview'].includes(newType);
 								setSelectedEntry({
 									...selectedEntry,
-									activity_type: e.target.value as any,
-									activity_name: e.target.value === 'break' ? 'General Break' : ''
+									activity_type: newType,
+									activity_name: newType === 'break' ? 'General Break' : '',
+									// Clear trainer fields if the new type is not core training
+									...(isCoreTraining ? {} : {
+										trainer: '',
+										trainer_user_public_id: '',
+										trainer_user: undefined
+									})
 								});
 								if (formErrors.activity_type) setFormErrors({ ...formErrors, activity_type: '' });
 							}}

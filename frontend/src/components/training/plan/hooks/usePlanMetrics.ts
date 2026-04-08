@@ -32,17 +32,23 @@ export const usePlanMetrics = (weeklyPlan: TrainingBatchPlan[], allPlans: Traini
 			if (entry.activity_type === 'break') breakdown.break += duration;
 
 			if (entry.activity_type !== 'break') {
-				breakdown.training_total += duration;
-
+				const isCoreTraining = ['course', 'hr_session', 'mock_interview'].includes(entry.activity_type);
 				const type = entry.activity_type as 'course' | 'hr_session' | 'mock_interview';
-				if (breakdown.details[type]) {
-					breakdown.details[type][entry.activity_name] = (breakdown.details[type][entry.activity_name] || 0) + duration;
-				}
-
 				const trainerName = entry.trainer;
-				if (trainerName) {
+
+				if (isCoreTraining && trainerName) {
+					// Add to training totals
+					breakdown.training_total += duration;
+
+					// Add to specific type details
+					if (breakdown.details[type]) {
+						breakdown.details[type][entry.activity_name] = (breakdown.details[type][entry.activity_name] || 0) + duration;
+					}
+
+					// Add to trainer stats
 					breakdown.details.trainer[trainerName] = (breakdown.details.trainer[trainerName] || 0) + duration;
 				} else {
+					// 'other', 'event', or unassigned training sessions
 					breakdown.unassigned_total += duration;
 					const current = breakdown.details.unassigned[entry.activity_name] || { hours: 0, type: entry.activity_type };
 					breakdown.details.unassigned[entry.activity_name] = {

@@ -40,7 +40,7 @@ const PlanEntryCard: React.FC<PlanEntryCardProps> = ({
 					<Typography variant="caption" display="flex" alignItems="center" color="primary.dark" fontWeight="500">
 						{formatTime12h(entry.start_time)} - {formatTime12h(entry.end_time)}
 					</Typography>
-					{entry.trainer && (
+					{entry.trainer && ['course', 'hr_session', 'mock_interview'].includes(entry.activity_type) && (
 						<Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
 							Trainer: {entry.trainer}
 						</Typography>
