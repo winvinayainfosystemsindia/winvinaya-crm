@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from app.models.candidate import Candidate
+from app.models.training_batch_plan import TrainingBatchPlan
 from app.models.training_candidate_allocation import TrainingCandidateAllocation
 from app.repositories.training_attendance_repository import TrainingAttendanceRepository
 from app.repositories.training_assignment_repository import TrainingAssignmentRepository
@@ -35,7 +36,7 @@ class TrainingExtensionService:
     async def get_attendance(self, batch_id: int, start_date: date = None, end_date: date = None):
         query = select(self.attendance_repo.model).options(
             selectinload(self.attendance_repo.model.batch),
-            selectinload(self.attendance_repo.model.period),
+            selectinload(self.attendance_repo.model.period).selectinload(TrainingBatchPlan.trainer_user),
             selectinload(self.attendance_repo.model.candidate)
         ).where(
             self.attendance_repo.model.batch_id == batch_id,
@@ -53,7 +54,7 @@ class TrainingExtensionService:
         """Get all attendance records for a specific batch and date"""
         query = select(self.attendance_repo.model).options(
             selectinload(self.attendance_repo.model.batch),
-            selectinload(self.attendance_repo.model.period),
+            selectinload(self.attendance_repo.model.period).selectinload(TrainingBatchPlan.trainer_user),
             selectinload(self.attendance_repo.model.candidate)
         ).where(
             self.attendance_repo.model.batch_id == batch_id,
@@ -112,7 +113,7 @@ class TrainingExtensionService:
     async def get_attendance_by_candidate(self, public_id: UUID):
         query = select(self.attendance_repo.model).join(Candidate).options(
             selectinload(self.attendance_repo.model.batch),
-            selectinload(self.attendance_repo.model.period)
+            selectinload(self.attendance_repo.model.period).selectinload(TrainingBatchPlan.trainer_user)
         ).where(
             Candidate.public_id == public_id,
             self.attendance_repo.model.is_deleted == False
@@ -156,7 +157,7 @@ class TrainingExtensionService:
         ids = [r.id for r in records]
         query = select(self.attendance_repo.model).options(
             selectinload(self.attendance_repo.model.batch),
-            selectinload(self.attendance_repo.model.period)
+            selectinload(self.attendance_repo.model.period).selectinload(TrainingBatchPlan.trainer_user)
         ).where(self.attendance_repo.model.id.in_(ids))
         result = await self.db.execute(query)
         return result.scalars().all()
@@ -170,7 +171,7 @@ class TrainingExtensionService:
         # Re-fetch with batch and period
         query = select(self.attendance_repo.model).options(
             selectinload(self.attendance_repo.model.batch),
-            selectinload(self.attendance_repo.model.period)
+            selectinload(self.attendance_repo.model.period).selectinload(TrainingBatchPlan.trainer_user)
         ).where(self.attendance_repo.model.id == attendance_id)
         result = await self.db.execute(query)
         return result.scalar_one_or_none()

@@ -45,6 +45,12 @@ import type { RootState } from '../../../store/store';
 
 const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocations }) => {
 	const currentUser = useSelector((state: RootState) => state.auth.user);
+
+	// Filter allocations to exclude 'allocated' status candidates as they haven't started training yet
+	const filteredAllocations = React.useMemo(() => {
+		return allocations.filter(a => a.status !== 'allocated');
+	}, [allocations]);
+
 	const {
 		loading,
 		saving,
@@ -62,11 +68,11 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 		handleStatusChange,
 		handleRemarkChange,
 		handlePeriodStatusChange,
-		handleTrainerNotesChange,
 		handlePeriodMarkAll,
+		handleTrainerNotesChange,
 		handleSave,
 		isDroppedOut
-	} = useAttendance(batch, allocations, currentUser);
+	} = useAttendance(batch, filteredAllocations, currentUser);
 
 
 
@@ -164,7 +170,7 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 							)}
 
 							<AttendanceTable
-								allocations={allocations}
+								allocations={filteredAllocations}
 								selectedDate={selectedDate}
 								attendance={attendance}
 								dailyPlan={dailyPlan}
@@ -194,7 +200,7 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 			) : (
 				<AttendanceReport
 					attendance={attendance}
-					allocations={allocations}
+					allocations={filteredAllocations}
 					batch={batch}
 					batchEvents={batchEvents}
 				/>
