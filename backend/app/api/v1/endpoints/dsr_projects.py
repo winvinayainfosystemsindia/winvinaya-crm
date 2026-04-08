@@ -71,7 +71,7 @@ async def list_projects(
     active_only: bool = Query(default=False),
     assigned_to: Optional[UUID] = Query(default=None, description="Filter by assigned user"),
     search: Optional[str] = Query(default=None),
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER, UserRole.MARKETING])),
     db: AsyncSession = Depends(get_db),
 ):
     """List all DSR projects (all roles)."""
@@ -85,7 +85,7 @@ async def list_projects(
 @router.get("/{public_id}", response_model=DSRProjectResponse)
 async def get_project(
     public_id: UUID,
-    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER])),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER, UserRole.MARKETING])),
     db: AsyncSession = Depends(get_db),
 ):
     """Get a single DSR project by public_id (all roles)."""
