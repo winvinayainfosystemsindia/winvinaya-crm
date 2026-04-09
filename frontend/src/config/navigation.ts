@@ -1,14 +1,14 @@
 import {
 	Home as HomeIcon,
 	ManageAccounts as UserIcon,
-	// Business as BusinessIcon,
+	Business as BusinessIcon,
 	Group as CandidatesIcon,
 	School as SchoolIcon,
 	Assessment as AssessmentIcon,
 	Settings as SettingsIcon,
 	HelpOutline as HelpIcon,
 	Folder as ProjectIcon,
-	// Work as PlacementIcon,
+	Work as PlacementIcon,
 } from '@mui/icons-material';
 import type { SvgIconComponent } from '@mui/icons-material';
 
@@ -55,15 +55,15 @@ export const topNavigation: NavigationItem[] = [
 			},
 		],
 	},
-	// {
-	// 	label: 'CRM Management',
-	// 	icon: BusinessIcon,
-	// 	roles: ['admin', 'manager', 'placement'],
-	// 	children: [
-	// 		{ label: 'Companies', path: '/crm/companies', roles: ['admin', 'manager', 'placement'] },
-	// 		{ label: 'Contacts', path: '/crm/contacts', roles: ['admin', 'manager', 'placement'] },
-	// 	],
-	// },
+	{
+		label: 'CRM Management',
+		icon: BusinessIcon,
+		roles: ['admin', 'manager', 'placement'],
+		children: [
+			{ label: 'Companies', path: '/crm/companies', roles: ['admin', 'manager', 'placement'] },
+			{ label: 'Contacts', path: '/crm/contacts', roles: ['admin', 'manager', 'placement'] },
+		],
+	},
 	{
 		label: 'Candidate Management',
 		icon: CandidatesIcon,
@@ -102,15 +102,15 @@ export const topNavigation: NavigationItem[] = [
 			{ label: 'Attendance', path: '/training/attendance', roles: ['admin', 'manager', 'trainer', 'placement'] },
 		],
 	},
-	// {
-	// 	label: 'Placement Management',
-	// 	icon: PlacementIcon,
-	// 	roles: ['admin', 'manager', 'placement'],
-	// 	children: [
-	// 		{ label: 'Job Roles', path: '/placement/job-roles', roles: ['admin', 'manager', 'placement'] },
-	// 		{ label: 'Candidate Mapping', path: '/placement/candidate-mapping', roles: ['admin', 'manager', 'placement'] },
-	// 	],
-	// },
+	{
+		label: 'Placement Management',
+		icon: PlacementIcon,
+		roles: ['admin', 'manager', 'placement'],
+		children: [
+			{ label: 'Job Roles', path: '/placement/job-roles', roles: ['admin', 'manager', 'placement'] },
+			{ label: 'Candidate Mapping', path: '/placement/candidate-mapping', roles: ['admin', 'manager', 'placement'] },
+		],
+	},
 ];
 
 export const bottomNavigation: NavigationItem[] = [
@@ -118,7 +118,6 @@ export const bottomNavigation: NavigationItem[] = [
 		label: 'Reports',
 		path: '/reports',
 		icon: AssessmentIcon,
-		roles: ['admin', 'manager'],
 	},
 	{
 		label: 'Settings',
