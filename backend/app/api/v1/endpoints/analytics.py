@@ -36,6 +36,18 @@ from app.models.contact import Contact
 from app.models.crm_task import CRMTask
 from app.models.crm_activity_log import CRMActivityLog
 from app.models.candidate_assignment import CandidateAssignment
+from app.models.job_role import JobRole
+from app.models.system_setting import SystemSetting
+from app.models.company_holiday import CompanyHoliday
+from app.models.notification import Notification
+from app.models.whatsapp_message import WhatsAppMessage
+from app.models.skill import Skill
+from app.models.placement_mapping import PlacementMapping
+from app.models.placement_pipeline_history import PlacementPipelineHistory
+from app.models.placement_interview import PlacementInterview
+from app.models.placement_offer import PlacementOffer
+from app.models.placement_note import PlacementNote
+from app.models.ticket import TicketMessage
 from app.utils.activity_tracker import log_read
 from app.schemas.analytics import ManagementReportResponse, UserReportMetric
 from app.services import analytics_service
@@ -54,10 +66,13 @@ async def export_table_for_power_bi(
     Supported tables: users, candidates, screenings, counselings, documents,
     activity_logs, allocations, batches, attendance, assignments, 
     mock_interviews, batch_events, batch_plans, batch_extensions, 
-    fields, tickets, dsr_entries, dsr_projects, dsr_activities, 
+    fields, tickets, ticket_messages, dsr_entries, dsr_projects, dsr_activities, 
     dsr_activity_types, dsr_permission_requests, dsr_leave_applications, 
     dsr_project_requests, leads, deals, companies, contacts, 
-    crm_tasks, crm_activity_logs, candidate_assignments
+    crm_tasks, crm_activity_logs, candidate_assignments, job_roles,
+    system_settings, company_holidays, notifications, whatsapp_messages,
+    skills, placement_mappings, placement_pipeline_history,
+    placement_interviews, placement_offers, placement_notes
     """
     from fastapi import HTTPException
     
@@ -92,6 +107,18 @@ async def export_table_for_power_bi(
         "crm_tasks": CRMTask,
         "crm_activity_logs": CRMActivityLog,
         "candidate_assignments": CandidateAssignment,
+        "job_roles": JobRole,
+        "system_settings": SystemSetting,
+        "company_holidays": CompanyHoliday,
+        "notifications": Notification,
+        "whatsapp_messages": WhatsAppMessage,
+        "skills": Skill,
+        "placement_mappings": PlacementMapping,
+        "placement_pipeline_history": PlacementPipelineHistory,
+        "placement_interviews": PlacementInterview,
+        "placement_offers": PlacementOffer,
+        "placement_notes": PlacementNote,
+        "ticket_messages": TicketMessage,
     }
     
     if table_name not in model_map:
