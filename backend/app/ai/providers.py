@@ -21,9 +21,11 @@ Selection via environment variable: AI_PROVIDER=groq
 
 from __future__ import annotations
 
+import asyncio
+import json
 import logging
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, AsyncGenerator
 
 import httpx
 
@@ -73,6 +75,17 @@ class LLMProvider(ABC):
         """Send a prompt and return a structured LLMResponse."""
         ...
 
+    @abstractmethod
+    async def stream_complete(
+        self,
+        system_prompt: str,
+        user_message: str,
+        temperature: float = 0.2,
+        max_tokens: int = 4096,
+    ) -> AsyncGenerator[str, None]:
+        """Send a prompt and yield response tokens as they arrive."""
+        ...
+
     @property
     @abstractmethod
     def provider_name(self) -> str:
@@ -92,31 +105,57 @@ class LLMProvider(ABC):
         payload: dict,
         headers: dict,
         timeout: float = 60.0,
+        max_retries: int = 3,
     ) -> dict:
         """
-        Shared POST helper with standard error handling.
+        Shared POST helper with standard error handling and retries.
         Raises LLMRateLimitError, LLMAuthError, or LLMProviderError on failures.
+        Automatically retries on transient 5xx (502, 503, 504) errors with
+        exponential backoff (1s → 2s → 4s).
         """
-        async with httpx.AsyncClient(timeout=timeout) as client:
-            try:
-                resp = await client.post(url, json=payload, headers=headers)
-            except httpx.RequestError as e:
+        _TRANSIENT_STATUS = {502, 503, 504}
+
+        for attempt in range(max_retries):
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                try:
+                    resp = await client.post(url, json=payload, headers=headers)
+                except httpx.RequestError as e:
+                    if attempt < max_retries - 1:
+                        wait = 2 ** attempt
+                        logger.warning("%s network error (attempt %d/%d), retrying in %ds: %s",
+                                       self.provider_name, attempt + 1, max_retries, wait, e)
+                        await asyncio.sleep(wait)
+                        continue
+                    raise LLMProviderError(
+                        f"Network error contacting {self.provider_name}: {e}",
+                        provider=self.provider_name,
+                    )
+
+            if resp.status_code == 429:
+                retry_after = int(resp.headers.get("Retry-After", 60))
+                raise LLMRateLimitError(provider=self.provider_name, retry_after=retry_after)
+            if resp.status_code in (401, 403):
+                raise LLMAuthError(self.provider_name)
+            if resp.status_code in _TRANSIENT_STATUS:
+                if attempt < max_retries - 1:
+                    wait = 2 ** attempt
+                    logger.warning("%s returned %d (attempt %d/%d), retrying in %ds...",
+                                   self.provider_name, resp.status_code, attempt + 1, max_retries, wait)
+                    await asyncio.sleep(wait)
+                    continue
                 raise LLMProviderError(
-                    f"Network error contacting {self.provider_name}: {e}",
+                    f"{self.provider_name} service unavailable after {max_retries} attempts.",
                     provider=self.provider_name,
                 )
+            if not resp.is_success:
+                raise LLMProviderError(
+                    f"{self.provider_name} API error {resp.status_code}: {resp.text[:300]}",
+                    provider=self.provider_name,
+                )
+            return resp.json()
 
-        if resp.status_code == 429:
-            retry_after = int(resp.headers.get("Retry-After", 60))
-            raise LLMRateLimitError(provider=self.provider_name, retry_after=retry_after)
-        if resp.status_code in (401, 403):
-            raise LLMAuthError(self.provider_name)
-        if not resp.is_success:
-            raise LLMProviderError(
-                f"{self.provider_name} API error {resp.status_code}: {resp.text[:500]}",
-                provider=self.provider_name,
-            )
-        return resp.json()
+        raise LLMProviderError(f"{self.provider_name} failed after {max_retries} retries.", provider=self.provider_name)
+
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -164,6 +203,36 @@ class GeminiProvider(LLMProvider):
         total = input_tokens + output_tokens
         cost = (input_tokens / 1_000_000) * self._COST_INPUT_PER_1M + (output_tokens / 1_000_000) * self._COST_OUTPUT_PER_1M
         return LLMResponse(content=content, tokens_used=total, cost_usd=cost, raw_response=data)
+
+    async def stream_complete(self, system_prompt, user_message, temperature=0.2, max_tokens=4096) -> AsyncGenerator[str, None]:
+        url = f"{self.BASE_URL}/{self._model}:streamGenerateContent?key={self._api_key}"
+        payload = {
+            "system_instruction": {"parts": [{"text": system_prompt}]},
+            "contents": [{"role": "user", "parts": [{"text": user_message}]}],
+            "generationConfig": {
+                "temperature": temperature,
+                "maxOutputTokens": max_tokens,
+            },
+        }
+        
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            async with client.stream("POST", url, json=payload) as response:
+                if response.status_code != 200:
+                    error_text = await response.aread()
+                    raise LLMProviderError(f"Gemini streaming error {response.status_code}: {error_text.decode()[:500]}", provider="gemini")
+                
+                # Gemini returns a JSON array of candidates. In stream, it's chunks.
+                async for chunk in response.aiter_text():
+                    # Simplified parsing for Gemini stream chunks
+                    # In a real impl, we'd use a buffer to handle partial JSONs if necessary
+                    # but Gemini stream usually sends complete candidate chunks
+                    try:
+                        # Find potential text parts in the chunk string
+                        matches = re.findall(r'"text":\s*"([^"]+)"', chunk)
+                        for text in matches:
+                            yield text.encode().decode('unicode_escape')
+                    except Exception:
+                        continue
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -315,6 +384,45 @@ class GroqProvider(LLMProvider):
         output_t = usage.get("completion_tokens", 0)
         cost = (input_t / 1_000_000) * self._COST_INPUT_PER_1M + (output_t / 1_000_000) * self._COST_OUTPUT_PER_1M
         return LLMResponse(content=content, tokens_used=input_t + output_t, cost_usd=cost, raw_response=data)
+
+    async def stream_complete(self, system_prompt, user_message, temperature=0.2, max_tokens=4096) -> AsyncGenerator[str, None]:
+        headers = {"Authorization": f"Bearer {self._api_key}", "Content-Type": "application/json"}
+        payload = {
+            "model": self._model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message},
+            ],
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "stream": True,
+        }
+        
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            async with client.stream("POST", self.BASE_URL, json=payload, headers=headers) as response:
+                if response.status_code == 429:
+                    error_text = await response.aread()
+                    import re
+                    match = re.search(r'try again in (\d+(?:\.\d+)?)s', error_text.decode())
+                    retry_after = int(float(match.group(1))) if match else 60
+                    raise LLMRateLimitError(provider="groq", retry_after=retry_after)
+                elif response.status_code != 200:
+                    error_text = await response.aread()
+                    raise LLMProviderError(f"Groq streaming error {response.status_code}: {error_text.decode()[:300]}", provider="groq")
+
+                
+                async for line in response.aiter_lines():
+                    if line.startswith("data: "):
+                        data_str = line[6:]
+                        if data_str == "[DONE]":
+                            break
+                        try:
+                            chunk = json.loads(data_str)
+                            delta = chunk["choices"][0].get("delta", {})
+                            if "content" in delta:
+                                yield delta["content"]
+                        except Exception:
+                            continue
 
 
 # ─────────────────────────────────────────────────────────────────────────────

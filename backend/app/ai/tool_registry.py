@@ -34,13 +34,14 @@ class BaseTool:
 
     definition: ToolDefinition  # Must be set on every subclass
 
-    async def execute(self, params: dict[str, Any], db: "AsyncSession") -> ToolResult:
+    async def execute(self, params: dict[str, Any], db: "AsyncSession", user: "User") -> ToolResult:
         """
-        Execute this tool with the given parameters.
+        Execute this tool with the given parameters and user context.
 
         Args:
             params: Validated parameter dict matching the tool's schema
             db:     Active async SQLAlchemy session
+            user:   The user who triggered this AI action (for RBAC)
 
         Returns:
             ToolResult — always returns, never raises (errors go in result.error)

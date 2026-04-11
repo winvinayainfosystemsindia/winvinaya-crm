@@ -16,6 +16,7 @@ from app.repositories.candidate_repository import CandidateRepository
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
+    from app.models.user import User
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,7 @@ class SearchCandidatesTool(BaseTool):
         required_parameters=[]
     )
 
-    async def execute(self, params: dict[str, Any], db: "AsyncSession") -> ToolResult:
+    async def execute(self, params: dict[str, Any], db: "AsyncSession", user: "User") -> ToolResult:
         try:
             repo = CandidateRepository(db)
             include_stats = params.get("include_stats", False)

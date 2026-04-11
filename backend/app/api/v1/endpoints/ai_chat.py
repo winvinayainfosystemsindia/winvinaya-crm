@@ -1,14 +1,15 @@
 """AI Engine — Chat API Endpoints"""
 
-from __future__ import annotations
 
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
+from app.core.rate_limiter import limiter
 from app.ai.chat_service import AIChatService
 from app.models.user import User
 from app.schemas.ai_chat import (
@@ -24,7 +25,9 @@ router = APIRouter()
 
 
 @router.post("/sessions", response_model=AIChatSessionDetail)
+@limiter.limit("5/minute")
 async def create_chat_session(
+    request: Request,
     *,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user),
@@ -59,8 +62,10 @@ async def get_chat_session(
     return session
 
 
-@router.post("/sessions/{session_id}/messages", response_model=AIChatResponse)
+@router.post("/sessions/{session_id}/messages")
+@limiter.limit("10/minute")
 async def send_chat_message(
+    request: Request,
     session_id: int,
     *,
     db: AsyncSession = Depends(deps.get_db),
@@ -68,23 +73,13 @@ async def send_chat_message(
     message_in: AIChatMessageCreate,
 ) -> Any:
     """
-    Send a message to the AI and get an agentic response.
-    The response may include metadata about background tasks/tools triggered.
+    Send a message to the AI and get a streaming agentic response (SSE).
     """
     service = AIChatService(db, current_user)
     
-    # handle_message returns the assistant's message object
-    assistant_msg = await service.handle_message(session_id, message_in)
-    
-    # Build response including the task log public_id if available
-    task_public_id = None
-    if assistant_msg.task_log:
-        task_public_id = assistant_msg.task_log.public_id
-        
-    return AIChatResponse(
-        session_id=uuid.uuid4(), # Placeholder or actual session UUID
-        reply=assistant_msg,
-        task_id=task_public_id
+    return StreamingResponse(
+        service.stream_message(session_id, message_in),
+        media_type="text/event-stream"
     )
 
 

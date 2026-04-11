@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import api from '../../services/api';
-import type { AIChatSession, AIChatMessage, AIChatResponse } from '../../models/ai';
+import type { AIChatSession, AIChatMessage } from '../../models/ai';
 
 interface AIChatState {
   sessions: AIChatSession[];
@@ -8,6 +8,8 @@ interface AIChatState {
   messages: AIChatMessage[];
   loading: boolean;
   sending: boolean;
+  streamingStatus: 'idle' | 'planning' | 'executing' | 'typing' | 'completed';
+  streamingMessage: string;
   error: string | null;
   isOpen: boolean;
 }
@@ -18,6 +20,8 @@ const initialState: AIChatState = {
   messages: [],
   loading: false,
   sending: false,
+  streamingStatus: 'idle',
+  streamingMessage: '',
   error: null,
   isOpen: false,
 };
@@ -62,12 +66,71 @@ export const fetchSessionDetails = createAsyncThunk(
 
 export const sendMessage = createAsyncThunk(
   'aiChat/sendMessage',
-  async ({ sessionId, content }: { sessionId: number; content: string }, { rejectWithValue }) => {
+  async ({ sessionId, content }: { sessionId: number; content: string }, { dispatch, rejectWithValue }) => {
     try {
-      const response = await api.post(`/ai/chat/sessions/${sessionId}/messages`, { content });
-      return response.data as AIChatResponse;
+      // @ts-ignore
+      const token = localStorage.getItem('access_token'); 
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/ai/chat/sessions/${sessionId}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ content })
+      });
+
+      if (!response.ok) throw new Error('Failed to send message');
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let assistantMessage = '';
+
+      if (reader) {
+        // Add a placeholder assistant message
+        dispatch(addLocalMessage({
+          id: Date.now(),
+          session_id: sessionId,
+          role: 'assistant',
+          content: '',
+          task_log_id: null,
+          created_at: new Date().toISOString()
+        }));
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.status) {
+                  dispatch(setStreamingStatus(data.status));
+                  if (data.message) {
+                    dispatch(addTokenToLastMessage(`\n*${data.message}*\n`));
+                  }
+                }
+                if (data.token) {
+                  assistantMessage += data.token;
+                  dispatch(addTokenToLastMessage(data.token));
+                }
+                if (data.status === 'completed') {
+                  dispatch(setStreamingStatus('completed'));
+                }
+              } catch (e) {
+                // Ignore parse errors for partial chunks
+              }
+            }
+          }
+        }
+      }
+
+      return { success: true };
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.detail || 'Failed to send message');
+      return rejectWithValue(error.message || 'Failed to send message');
     }
   }
 );
@@ -110,6 +173,15 @@ const aiChatSlice = createSlice({
     },
     addLocalMessage: (state, action: PayloadAction<AIChatMessage>) => {
       state.messages.push(action.payload);
+    },
+    addTokenToLastMessage: (state, action: PayloadAction<string>) => {
+      const lastMsg = state.messages[state.messages.length - 1];
+      if (lastMsg && lastMsg.role === 'assistant') {
+        lastMsg.content += action.payload;
+      }
+    },
+    setStreamingStatus: (state, action: PayloadAction<AIChatState['streamingStatus']>) => {
+      state.streamingStatus = action.payload;
     }
   },
   extraReducers: (builder) => {
@@ -141,9 +213,9 @@ const aiChatSlice = createSlice({
       .addCase(sendMessage.pending, (state) => {
         state.sending = true;
       })
-      .addCase(sendMessage.fulfilled, (state, action) => {
+      .addCase(sendMessage.fulfilled, (state) => {
         state.sending = false;
-        state.messages.push(action.payload.reply);
+        state.streamingStatus = 'completed';
       })
       .addCase(sendMessage.rejected, (state, action) => {
         state.sending = false;
@@ -161,5 +233,8 @@ const aiChatSlice = createSlice({
   },
 });
 
-export const { toggleChat, openChat, closeChat, clearError, setActiveSession, addLocalMessage } = aiChatSlice.actions;
+export const { 
+  toggleChat, openChat, closeChat, clearError, setActiveSession, 
+  addLocalMessage, addTokenToLastMessage, setStreamingStatus 
+} = aiChatSlice.actions;
 export default aiChatSlice.reducer;

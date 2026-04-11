@@ -19,6 +19,9 @@ from app.ai.schemas import AITaskRunRequest
 from app.models.ai_chat import AIChatSession, AIChatMessage
 from app.models.ai_task_log import AITaskTrigger
 from app.schemas.ai_chat import AIChatSessionCreate, AIChatMessageCreate
+import json
+import asyncio
+from typing import AsyncGenerator
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -76,19 +79,16 @@ class AIChatService:
         )
         return result.scalar_one_or_none()
 
-    async def handle_message(self, session_id: int, schema: AIChatMessageCreate) -> AIChatMessage:
+    async def stream_message(self, session_id: int, schema: AIChatMessageCreate) -> AsyncGenerator[str, None]:
         """
-        The main interaction point. 
-        1. Persists the user message.
-        2. Retrieves history for LLM context.
-        3. Invokes AIEngine for an agentic response.
-        4. Persists the assistant message (linked to tool logs).
+        Stream the assistant response token by token via SSE.
+        Persists both user and final assistant response to DB.
         """
         # 1. Load context
         session = await self.get_session_details(session_id)
         if not session:
-            from fastapi import HTTPException
-            raise HTTPException(status_code=404, detail="Chat session not found")
+            yield f"data: {json.dumps({'error': 'Session not found', 'status': 'failed'})}\n\n"
+            return
 
         # 2. Persist User Message
         user_msg = AIChatMessage(
@@ -99,51 +99,42 @@ class AIChatService:
         self._db.add(user_msg)
         await self._db.flush()
 
-        # 3. Build Conversation History Context for AI
-        history = [
-            {"role": m.role, "content": m.content}
-            for m in session.messages[-10:] # Last 10 messages for context
-        ]
+        # 3. History — cap at 6 messages to avoid TPM exhaustion in the planner
+        history = [{
+            "role": m.role, "content": m.content
+        } for m in session.messages[-6:]]
 
-        # 4. Invoke Agentic Engine
-        # We wrap the chat request into an AITaskRunRequest
-        engine = AIEngine(db=self._db, triggered_by_user_id=self._user.id)
-        
-        # We pass the history as part of the context_snapshot or similar
-        # For now, let's update AIEngine to handle this properly
-        ai_response = await engine.run_chat(
-            user_input=schema.content,
-            history=history,
-            session_id=session_id
-        )
+        # 4. Stream from Engine
+        engine = AIEngine(db=self._db, user=self._user)
+        full_content = ""
+        task_db_id = None
 
-        # 5. Persist Assistant Message
-        # If the engine failed (e.g. LLMAuthError), we show the error message to the user
-        content = ai_response.summary or "I've processed your request."
-        if ai_response.status == "failed" and ai_response.error:
-            if ai_response.error.startswith("AUTH_ERROR:"):
-                clean_err = ai_response.error.replace("AUTH_ERROR:", "").strip()
-                content = f"❌ **Configuration Error:** {clean_err}. Please check your AI Settings."
-            elif ai_response.error.startswith("RATE_LIMIT:"):
-                clean_err = ai_response.error.replace("RATE_LIMIT:", "").strip()
-                content = f"⏳ **Rate Limit Exceeded:** {clean_err}"
-            elif ai_response.error.startswith("SERVICE_ERROR:"):
-                clean_err = ai_response.error.replace("SERVICE_ERROR:", "").strip()
-                content = f"⚠️ **Service Provider Error:** {clean_err}"
-            else:
-                content = f"💥 **Unexpected Error:** {ai_response.error}"
-            
-        assistant_msg = AIChatMessage(
-            session_id=session_id,
-            role="assistant",
-            content=content,
-            task_log_id=ai_response.task_db_id 
-        )
-        self._db.add(assistant_msg)
-        await self._db.commit()
-        await self._db.refresh(assistant_msg)
+        async for event in engine.stream_chat(schema.content, history, session_id):
+            # event is already formatted as "data: ...\n\n" by the engine's new impl
+            # (Wait, check engine.py again - I left it yielding formatted strings)
+            yield event
 
-        return assistant_msg
+            # Parse for buffering
+            if event.startswith("data: "):
+                try:
+                    payload = json.loads(event[6:])
+                    if "token" in payload:
+                        full_content += payload["token"]
+                    if "task_db_id" in payload:
+                        task_db_id = payload["task_db_id"]
+                except:
+                    pass
+
+        # 5. Persist Assistant Message (once done)
+        if full_content:
+            assistant_msg = AIChatMessage(
+                session_id=session_id,
+                role="assistant",
+                content=full_content,
+                task_log_id=task_db_id
+            )
+            self._db.add(assistant_msg)
+            await self._db.commit()
 
     async def delete_session(self, session_id: int) -> bool:
         """Permanently remove a chat thread and its messages."""

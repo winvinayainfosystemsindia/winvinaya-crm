@@ -126,6 +126,7 @@ class Planner:
         history: list[dict] | None = None,
         context_snapshot: dict | None = None,
         allowed_categories: list[str] | None = None,
+        system_prompt_override: str | None = None,
     ) -> ToolCallPlan:
         """
         Generate a tool execution plan for the given task.
@@ -133,19 +134,16 @@ class Planner:
         Args:
             task_hint:         Natural language description of what to accomplish
             input_data:        Raw trigger data (e.g., WhatsApp message payload)
+            history:           Conversation history for context
             context_snapshot:  Pre-loaded DB context (e.g., existing contact records)
             allowed_categories: Restrict the tool list to specific categories
+            system_prompt_override: Custom instructions from the database
 
         Returns:
             A validated ToolCallPlan
-
-        Raises:
-            NoPlanGeneratedError:     LLM returned empty steps
-            LLMResponseParseError:    Response could not be parsed as JSON
-            PlanningError:            Business-logic planning issue
-            LLMProviderError:         Network/quota/auth failure
         """
-        system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
+        template = system_prompt_override or SYSTEM_PROMPT_TEMPLATE
+        system_prompt = template.format(
             tool_block=self._registry.to_prompt_block(categories=allowed_categories)
         )
 

@@ -23,9 +23,12 @@ get a clean response, never a raw exception.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
-from datetime import datetime, timezone
-from typing import Any, TYPE_CHECKING
+import time
+import uuid
+from datetime import datetime, timezone, timedelta
+from typing import Any, AsyncGenerator, TYPE_CHECKING
 
 from app.ai.exceptions import (
     AIEngineError,
@@ -38,8 +41,9 @@ from app.ai.planner import Planner
 from app.ai.providers import get_llm_provider
 from app.ai.schemas import AITaskRunRequest, AITaskRunResponse, ToolCallPlan, ToolCallRequest, ToolResult
 from app.ai.task_journal import TaskJournal
-from app.ai.tool_registry import ToolRegistry, registry as global_registry
+from app.ai.tool_registry import registry as global_registry
 import app.ai.tools  # Trigger tool discovery and registration
+from app.repositories.system_setting_repository import SystemSettingRepository
 from app.core.config import settings
 from app.models.ai_task_log import AITaskStatus, AITaskTrigger
 
@@ -60,12 +64,13 @@ class AIEngine:
     def __init__(
         self,
         db: "AsyncSession",
-        registry: ToolRegistry | None = None,
-        triggered_by_user_id: int | None = None,
+        user: "User",
     ):
         self._db = db
-        self._registry = registry or global_registry
-        self._user_id = triggered_by_user_id
+        self._user = user
+        self._user_id = user.id
+        self._registry = global_registry
+        self._ist_offset = timedelta(hours=5, minutes=30)
         
         # Log tool count for diagnostics
         logger.debug(f"AIEngine initialized with {len(self._registry.all())} tools.")
@@ -89,7 +94,7 @@ class AIEngine:
         except (LLMAuthError, LLMProviderError) as e:
             logger.error("Cannot initialize LLM provider: %s", str(e))
             return AITaskRunResponse(
-                task_id=__import__("uuid").uuid4(),
+                task_id=uuid.uuid4(),
                 status="failed",
                 task_name=request.task_hint,
                 steps_planned=0,
@@ -137,35 +142,28 @@ class AIEngine:
             )
             return self._build_response(journal, status="failed", error=str(e))
     
-    async def run_chat(
+    async def stream_chat(
         self,
         user_input: str,
         history: list[dict],
         session_id: int,
-    ) -> AITaskRunResponse:
+    ) -> AsyncGenerator[str, None]:
         """
-        Execute an agentic chat turn. 
-        Contextualizes the plan based on conversation history.
+        Execute an agentic chat turn with SSE streaming.
+        Yields tokens and status events.
         """
-        # Initialise LLM provider
+        # Load system prompt from DB
+        repo = SystemSettingRepository(self._db)
+        stored_prompt = await repo.get_by_key("AI_SYSTEM_PROMPT")
+        system_prompt = stored_prompt.value if stored_prompt else None
+
+        # 1. Init Provider
         try:
             provider = await get_llm_provider(self._db)
-        except LLMAuthError as e:
-            logger.error("LLM Auth failed: %s", str(e))
-            return self._build_response(
-                None, 
-                status="failed", 
-                error=f"AUTH_ERROR: {str(e)}"
-            )
-        except (LLMProviderError, LLMRateLimitError) as e:
-            logger.error("LLM Provider error: %s", str(e))
-            return self._build_response(
-                None, 
-                status="failed", 
-                error=f"SERVICE_ERROR: {str(e)}"
-            )
+        except Exception as e:
+            yield f"data: {json.dumps({'error': str(e), 'status': 'failed'})}\n\n"
+            return
 
-        # Create the journal (DB row) immediately
         journal = await TaskJournal.create(
             db=self._db,
             task_name="AI Coworker Chat",
@@ -178,7 +176,8 @@ class AIEngine:
         )
 
         try:
-            # 1. Planning Phase (with history)
+            # 2. Planning Phase
+            yield f"data: {json.dumps({'status': 'planning', 'message': 'Planning response...'})}\n\n"
             await journal.mark_planning()
             planner = Planner(provider=provider, registry=self._registry)
             
@@ -186,55 +185,80 @@ class AIEngine:
                 task_hint=user_input,
                 input_data={},
                 history=history,
+                system_prompt_override=system_prompt,
             )
             await journal.record_plan(plan)
 
-            # 2. Execution Phase
+            # 3. Execution Phase (Status Yielding)
+            if plan.steps:
+                for step in plan.steps:
+                    yield f"data: {json.dumps({'status': 'executing', 'message': f'Running {step.tool_name}...'})}\n\n"
+            
             response, results = await self._execute_task_with_plan(plan, journal)
             
-            # 3. Synthesis Phase: Produce a data-backed final answer
-            if results:
-                try:
-                    synthesis = await planner.synthesize(
-                        task_hint=user_input,
-                        reasoning=plan.reasoning,
-                        tool_results=results
-                    )
-                    response.summary = synthesis
-                    # Finalize the journal again with the human-readable result
-                    await journal.finalize(status=AITaskStatus.SUCCESS, summary=synthesis)
-                except (LLMRateLimitError, LLMAuthError, LLMProviderError):
-                    # Re-raise transient/service errors so the outer handler shows the ⏳ or ❌ message
-                    raise
-                except Exception as sys_err:
-                    logger.error("Synthesis synthesis failed unexpectedly: %s", sys_err)
-                    # For unknown synthesis errors, we stick with the original plan summary if available
-                    if plan.response_to_user:
-                        response.summary = plan.response_to_user
-
-            elif plan.response_to_user:
-                response.summary = plan.response_to_user
+            # 4. Synthesis (Streaming tokens)
+            yield f"data: {json.dumps({'status': 'typing'})}\n\n"
             
-            return response
+            full_content = ""
+            if results:
+                # ──────────────────────────────────────────────────────────────
+                # TOKEN-EFFICIENT SYNTHESIS:
+                # Rather than dumping full JSON payloads (which exhausts TPM),
+                # we extract only the pre-compressed REVEAL_DATA summary and
+                # the short message string from each tool result.
+                # ──────────────────────────────────────────────────────────────
+                summary_parts = []
+                for i, (req, res) in enumerate(results, start=1):
+                    # Prefer the pre-compressed REVEAL_DATA key if present
+                    reveal = res.data.get("REVEAL_DATA") if res.data else None
+                    if reveal:
+                        summary_parts.append(f"Tool {i} ({req.tool_name}): {reveal}")
+                    else:
+                        summary_parts.append(f"Tool {i} ({req.tool_name}): {res.message}")
+
+                compact_summary = "\n".join(summary_parts)
+
+                synth_prompt = (
+                    f"The user asked: \"{user_input}\"\n\n"
+                    f"Data retrieved:\n{compact_summary}\n\n"
+                    f"Write a professional, concise response to the user using the exact numbers and facts above. "
+                    f"Never say 'I have checked' — always state actual values directly."
+                )
+
+                async for token in provider.stream_complete(
+                    system_prompt="You are ARIA, a professional CRM assistant. Answer concisely using exact data.",
+                    user_message=synth_prompt,
+                    max_tokens=512,
+                ):
+                    full_content += token
+                    yield f"data: {json.dumps({'token': token})}\n\n"
+            else:
+                # Direct reply from plan if no tools were needed
+                content = plan.response_to_user or "I've processed your request."
+                for token in content.split(" "):
+                    yield f"data: {json.dumps({'token': token + ' '})}\n\n"
+                    full_content += token + " "
+                    await asyncio.sleep(0.01)
+
+            # 5. Finalize
+            await journal.finalize(status=AITaskStatus.COMPLETED, summary=full_content)
+            yield f"data: {json.dumps({'status': 'completed', 'summary': full_content, 'task_db_id': journal.task_id})}\n\n"
 
         except LLMRateLimitError as e:
             logger.warning("Rate limit hit during chat: %s", str(e))
-            await journal.finalize(status=AITaskStatus.FAILED, summary="⏳ Rate limit exceeded.", error_message=str(e))
-            return self._build_response(journal, status="failed", error=f"RATE_LIMIT: {str(e)}")
+            msg = f"⏳ **Rate Limit Exceeded:** {str(e)}. Please wait a moment."
+            await journal.finalize(status=AITaskStatus.FAILED, summary=msg, error_message=str(e))
+            yield f"data: {json.dumps({'error': msg, 'status': 'failed'})}\n\n"
         except LLMAuthError as e:
-            await journal.finalize(status=AITaskStatus.FAILED, summary="❌ Authentication failed.", error_message=str(e))
-            return self._build_response(journal, status="failed", error=f"AUTH_ERROR: {str(e)}")
-        except LLMProviderError as e:
-            await journal.finalize(status=AITaskStatus.FAILED, summary="⚠️ Provider error.", error_message=str(e))
-            return self._build_response(journal, status="failed", error=f"SERVICE_ERROR: {str(e)}")
+            msg = f"❌ **AI Configuration Error:** {str(e)}. Please check API keys."
+            await journal.finalize(status=AITaskStatus.FAILED, summary=msg, error_message=str(e))
+            yield f"data: {json.dumps({'error': msg, 'status': 'failed'})}\n\n"
         except Exception as e:
             logger.exception("Chat execution failed")
-            await journal.finalize(
-                status=AITaskStatus.FAILED,
-                summary="Sorry, I encountered an error processing your request.",
-                error_message=str(e),
-            )
-            return self._build_response(journal, status="failed", error=f"UNKNOWN_ERROR: {str(e)}")
+            msg = f"💥 **Unexpected Error:** {str(e)}"
+            await journal.finalize(status=AITaskStatus.FAILED, summary=msg, error_message=str(e))
+            yield f"data: {json.dumps({'error': msg, 'status': 'failed'})}\n\n"
+        return
 
     # ── Private: Main Execution Flow ──────────────────────────────────────────
 
@@ -364,7 +388,7 @@ class AIEngine:
             # Execute
             try:
                 from app.ai.schemas import ToolResult
-                result = await tool.execute(params=step.parameters, db=self._db)
+                result = await tool.execute(params=step.parameters, db=self._db, user=self._user)
                 await journal.record_step_result(step_num, result)
                 execution_results.append((step, result))
                 if not result.success:

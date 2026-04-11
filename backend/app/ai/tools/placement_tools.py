@@ -17,6 +17,7 @@ from app.schemas.job_role import JobRoleCreate
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
+    from app.models.user import User
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ class CreateJobRoleTool(BaseTool):
         required_parameters=["title", "description", "company_name"]
     )
 
-    async def execute(self, params: dict[str, Any], db: "AsyncSession") -> ToolResult:
+    async def execute(self, params: dict[str, Any], db: "AsyncSession", user: "User") -> ToolResult:
         try:
             repo = JobRoleRepository(db)
             

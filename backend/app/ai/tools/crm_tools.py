@@ -11,6 +11,7 @@ from __future__ import annotations
 import logging
 from typing import Any, TYPE_CHECKING
 
+from sqlalchemy import select, func
 from app.ai.schemas import ToolDefinition, ToolParameterSchema, ToolResult
 from app.ai.tool_registry import BaseTool, registry
 from app.api.deps import get_current_user
@@ -24,6 +25,7 @@ from app.schemas.company import CompanyCreate
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
+    from app.models.user import User
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +51,7 @@ class SearchContactsTool(BaseTool):
         required_parameters=["query"]
     )
 
-    async def execute(self, params: dict[str, Any], db: "AsyncSession") -> ToolResult:
+    async def execute(self, params: dict[str, Any], db: "AsyncSession", user: "User") -> ToolResult:
         query = params["query"]
         repo = ContactRepository(db)
         contacts = await repo.get_contacts(search=query, limit=5)
@@ -109,7 +111,7 @@ class CreateLeadTool(BaseTool):
         required_parameters=["title", "company_name", "contact_name"]
     )
 
-    async def execute(self, params: dict[str, Any], db: "AsyncSession") -> ToolResult:
+    async def execute(self, params: dict[str, Any], db: "AsyncSession", user: "User") -> ToolResult:
         try:
             # 1. Handle Company
             comp_repo = CompanyRepository(db)
@@ -161,7 +163,97 @@ class CreateLeadTool(BaseTool):
             return ToolResult(success=False, message=f"Failed to create lead: {str(e)}", error=str(e))
 
 
+# ── CRM Metrics ───────────────────────────────────────────────────────────────
+
+class GetDealStatsTool(BaseTool):
+    """
+    Retrieves global deal metrics using optimized SQL aggregation.
+    """
+    definition = ToolDefinition(
+        name="get_deal_stats",
+        description="Get current CRM deal statistics: total volume, stage-wise breakdown, and pipeline value.",
+        category="crm",
+        is_read_only=True,
+        parameters={}
+    )
+
+    async def execute(self, params: dict[str, Any], db: "AsyncSession", user: "User") -> ToolResult:
+        try:
+            from app.models.deal import Deal
+            # Aggregate by stage
+            query = select(
+                Deal.deal_stage,
+                func.count(Deal.id).label("count"),
+                func.sum(Deal.deal_value).label("total_value")
+            ).group_by(Deal.deal_stage)
+            
+            result = await db.execute(query)
+            stage_stats = []
+            total_val = 0
+            
+            for row in result.all():
+                stage_stats.append({
+                    "stage": row[0],
+                    "count": row[1],
+                    "value": float(row[2]) if row[2] else 0
+                })
+                total_val += float(row[2]) if row[2] else 0
+
+            msg = f"Retrieved pipeline stats with {len(stage_stats)} stages. Total value: INR {total_val:,.2f}."
+            return ToolResult(
+                success=True,
+                message=msg,
+                data={
+                    "pipeline_stats": stage_stats,
+                    "total_pipeline_value": total_val,
+                    "REVEAL_DATA": f"PIPELINE_VALUE: {total_val}, STAGES: {len(stage_stats)}"
+                }
+            )
+        except Exception as e:
+            logger.exception("Error in get_deal_stats tool")
+            return ToolResult(success=False, message=str(e), error=str(e))
+
+
+class GetLeadStatsTool(BaseTool):
+    """
+    Retrieves lead status breakdown.
+    """
+    definition = ToolDefinition(
+        name="get_lead_stats",
+        description="Get lead conversion statistics: counts by status (new, qualified, lost).",
+        category="crm",
+        is_read_only=True,
+        parameters={}
+    )
+
+    async def execute(self, params: dict[str, Any], db: "AsyncSession", user: "User") -> ToolResult:
+        try:
+            # Aggregate by status
+            query = select(
+                Lead.lead_status,
+                func.count(Lead.id).label("count")
+            ).group_by(Lead.lead_status)
+            
+            result = await db.execute(query)
+            stats = {row[0]: row[1] for row in result.all()}
+            
+            msg = f"Lead breakdown: {stats.get('new', 0)} new, {stats.get('qualified', 0)} qualified."
+            return ToolResult(
+                success=True,
+                message=msg,
+                data={
+                    "status_counts": stats,
+                    "REVEAL_DATA": f"LEAD_COUNTS: {stats}"
+                }
+            )
+        except Exception as e:
+            logger.exception("Error in get_lead_stats tool")
+            return ToolResult(success=False, message=str(e), error=str(e))
+
+
 # ── Registration ─────────────────────────────────────────────────────────────
 
 registry.register(SearchContactsTool())
 registry.register(CreateLeadTool())
+registry.register(GetDealStatsTool())
+registry.register(GetLeadStatsTool())

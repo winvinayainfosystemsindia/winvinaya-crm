@@ -1,6 +1,5 @@
 """AI Chat schemas — Request and response models for the chat API."""
 
-from __future__ import annotations
 
 import uuid
 from datetime import datetime
