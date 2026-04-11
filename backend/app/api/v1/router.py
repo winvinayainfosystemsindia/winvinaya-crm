@@ -31,7 +31,6 @@ from app.api.v1.endpoints import (
     placement_offers,
     placement_notes,
     system_settings,
-    chat,
     training_batch_plans,
     dsr_projects,
     dsr_activities,
@@ -41,7 +40,6 @@ from app.api.v1.endpoints import (
     dsr_project_requests,
     company_holidays,
     notifications,
-    whatsapp_webhook,
     x0pa,
     maintenance,
     skills,
@@ -64,7 +62,6 @@ router.include_router(training_batches.router)
 router.include_router(training_candidate_allocations.router)
 router.include_router(settings.router)
 router.include_router(system_settings.router)
-router.include_router(chat.router)
 router.include_router(tickets.router)
 router.include_router(training_attendance.router, prefix="/training-extensions")
 router.include_router(training_assignments.router, prefix="/training-extensions")
@@ -99,9 +96,6 @@ router.include_router(dsr_project_requests.router, prefix="/dsr/project-requests
 router.include_router(company_holidays.router, prefix="/dsr/holidays", tags=["Company Holidays"])
 router.include_router(maintenance.router, prefix="/maintenance", tags=["Maintenance"])
 router.include_router(skills.router, prefix="/skills", tags=["Skills"])
-
-# WhatsApp Integration
-router.include_router(whatsapp_webhook.router)
 
 # X0PA Integration
 router.include_router(x0pa.router)

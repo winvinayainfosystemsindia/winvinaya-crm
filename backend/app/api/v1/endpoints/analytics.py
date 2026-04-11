@@ -40,7 +40,6 @@ from app.models.job_role import JobRole
 from app.models.system_setting import SystemSetting
 from app.models.company_holiday import CompanyHoliday
 from app.models.notification import Notification
-from app.models.whatsapp_message import WhatsAppMessage
 from app.models.skill import Skill
 from app.models.placement_mapping import PlacementMapping
 from app.models.placement_pipeline_history import PlacementPipelineHistory
@@ -70,7 +69,7 @@ async def export_table_for_power_bi(
     dsr_activity_types, dsr_permission_requests, dsr_leave_applications, 
     dsr_project_requests, leads, deals, companies, contacts, 
     crm_tasks, crm_activity_logs, candidate_assignments, job_roles,
-    system_settings, company_holidays, notifications, whatsapp_messages,
+    system_settings, company_holidays, notifications,
     skills, placement_mappings, placement_pipeline_history,
     placement_interviews, placement_offers, placement_notes
     """
@@ -111,7 +110,6 @@ async def export_table_for_power_bi(
         "system_settings": SystemSetting,
         "company_holidays": CompanyHoliday,
         "notifications": Notification,
-        "whatsapp_messages": WhatsAppMessage,
         "skills": Skill,
         "placement_mappings": PlacementMapping,
         "placement_pipeline_history": PlacementPipelineHistory,

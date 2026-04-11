@@ -8,7 +8,6 @@ import { store } from './store/store';
 import { BrowserRouter as Router } from 'react-router-dom';
 import AppRouter from './router/AppRouter';
 import AuthInitializer from './components/auth/AuthInitializer';
-import ChatWidget from './components/chat/ChatWidget';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 
@@ -25,7 +24,6 @@ function App() {
                   <AppRouter />
                 </AuthInitializer>
               </AuthProvider>
-              <ChatWidget />
             </Router>
           </LocalizationProvider>
         </SnackbarProvider>

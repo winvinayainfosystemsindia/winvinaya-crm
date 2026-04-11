@@ -35,7 +35,7 @@ from app.models.dsr_leave_application import DSRLeaveApplication, DSRLeaveStatus
 from app.models.dsr_project_request import DSRProjectRequest, DSRProjectRequestStatus
 from app.models.company_holiday import CompanyHoliday
 from app.models.notification import Notification
-from app.models.whatsapp_message import WhatsAppMessage, WAProcessingStatus
+from app.models.notification import Notification
 from app.models.placement_mapping import PlacementMapping, PlacementStatus
 from app.models.placement_pipeline_history import PlacementPipelineHistory
 from app.models.placement_interview import PlacementInterview, InterviewRoundType, InterviewMode, InterviewResult
@@ -106,9 +106,7 @@ __all__ = [
     "DSRProjectRequestStatus",
     "CompanyHoliday",
     "Notification",
-    # WhatsApp Integration
-    "WhatsAppMessage",
-    "WAProcessingStatus",
+    # WhatsApp Integration removed
     "Skill",
     "PlacementMapping",
     "PlacementStatus",

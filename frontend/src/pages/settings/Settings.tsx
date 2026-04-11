@@ -11,16 +11,10 @@ import {
 import {
 	Assignment as ScreeningIcon,
 	FactCheck as CounselingIcon,
-	SmartToy as AIIcon,
 	School as SchoolIcon,
-	WhatsApp as WhatsAppIcon,
-	ChatOutlined as ChatIcon
 } from '@mui/icons-material';
 import DynamicFieldsSection from '../../components/settings/DynamicFieldsSection';
-import AIConfigurationSection from '../../components/settings/AIConfigurationSection';
-import ChatbotConfigurationSection from '../../components/settings/ChatbotConfigurationSection';
 import TrainingConfigurationSection from '../../components/settings/TrainingConfigurationSection';
-import WhatsAppConfigurationSection from '../../components/settings/WhatsAppConfigurationSection';
 
 const Settings: React.FC = () => {
 	const [tabValue, setTabValue] = useState(() => {
@@ -43,12 +37,6 @@ const Settings: React.FC = () => {
 			case 1:
 				return <DynamicFieldsSection entityType="counseling" />;
 			case 2:
-				return <AIConfigurationSection />;
-			case 3:
-				return <ChatbotConfigurationSection />;
-			case 4:
-				return <WhatsAppConfigurationSection />;
-			case 5:
 				return <TrainingConfigurationSection />;
 			default:
 				return (
@@ -114,9 +102,6 @@ const Settings: React.FC = () => {
 				>
 					<Tab icon={<ScreeningIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Screening Fields" />
 					<Tab icon={<CounselingIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Counseling Fields" />
-					<Tab icon={<AIIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="AI Engine" />
-					<Tab icon={<ChatIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Chatbot Config" />
-					<Tab icon={<WhatsAppIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="WhatsApp Channel" />
 					<Tab icon={<SchoolIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Training Config" />
 				</Tabs>
 			</Box>
