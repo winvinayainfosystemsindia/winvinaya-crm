@@ -42,6 +42,7 @@ from app.models.placement_interview import PlacementInterview, InterviewRoundTyp
 from app.models.placement_offer import PlacementOffer, OfferResponse, JoiningStatus
 from app.models.placement_note import PlacementNote, NoteType
 from app.models.skill import Skill
+from app.models.ai_task_log import AITaskLog, AITaskStatus, AITaskTrigger
 
 __all__ = [
     "User",
@@ -107,6 +108,10 @@ __all__ = [
     "CompanyHoliday",
     "Notification",
     # WhatsApp Integration removed
+    # AI Engine
+    "AITaskLog",
+    "AITaskStatus",
+    "AITaskTrigger",
     "Skill",
     "PlacementMapping",
     "PlacementStatus",

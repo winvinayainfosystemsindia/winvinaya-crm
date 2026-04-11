@@ -43,6 +43,7 @@ from app.api.v1.endpoints import (
     x0pa,
     maintenance,
     skills,
+    ai,
 )
 
 
@@ -96,6 +97,9 @@ router.include_router(dsr_project_requests.router, prefix="/dsr/project-requests
 router.include_router(company_holidays.router, prefix="/dsr/holidays", tags=["Company Holidays"])
 router.include_router(maintenance.router, prefix="/maintenance", tags=["Maintenance"])
 router.include_router(skills.router, prefix="/skills", tags=["Skills"])
+
+# AI Engine
+router.include_router(ai.router)
 
 # X0PA Integration
 router.include_router(x0pa.router)

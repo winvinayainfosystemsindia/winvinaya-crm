@@ -95,6 +95,42 @@ class Settings(BaseSettings):
     # Email Recipients (Override in .env)
     SOURCING_EMAIL: str = "sourcing@winvinayafoundation.org"
     TIMESHEET_SUBMISSION_EMAIL: str = "timesheet.submission@winvinaya.com"
+
+    # ── AI Engine ─────────────────────────────────────────────────────────────
+    AI_ENABLED: bool = True
+
+    # Active provider — one of the keys below
+    # Supported: gemini | openai | anthropic | groq | mistral | together | cohere | ollama
+    AI_PROVIDER: str = "gemini"
+
+    # Provider API Keys
+    GEMINI_API_KEY: Optional[str] = None
+    OPENAI_API_KEY: Optional[str] = None
+    ANTHROPIC_API_KEY: Optional[str] = None     # Claude
+    GROQ_API_KEY: Optional[str] = None          # Groq (blazing fast inference)
+    MISTRAL_API_KEY: Optional[str] = None       # Mistral AI
+    TOGETHER_API_KEY: Optional[str] = None      # Together AI (open-source models)
+    COHERE_API_KEY: Optional[str] = None        # Cohere
+
+    # Model Selection Per Provider (override in .env)
+    AI_MODEL_GEMINI: str = "gemini-1.5-flash"
+    AI_MODEL_OPENAI: str = "gpt-4o-mini"
+    AI_MODEL_ANTHROPIC: str = "claude-3-5-haiku-20241022"  # Best value Claude model
+    AI_MODEL_GROQ: str = "llama-3.1-8b-instant"           # Ultra-fast Groq model
+    AI_MODEL_MISTRAL: str = "mistral-small-latest"
+    AI_MODEL_TOGETHER: str = "meta-llama/Llama-3.1-8B-Instruct-Turbo"
+    AI_MODEL_COHERE: str = "command-r"
+
+    # Ollama (local/self-hosted)
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
+    OLLAMA_MODEL: str = "llama3.1"
+
+    # Engine Behaviour
+    AI_MAX_TOOL_CALLS_PER_RUN: int = 15     # Hard limit per task execution
+    AI_TASK_TIMEOUT_SECONDS: int = 120      # Max time for a single task run
+    AI_MAX_RETRIES: int = 3                 # Retry failed tool calls
+    AI_APPROVAL_RECORD_THRESHOLD: int = 5   # Tasks touching >N records need approval
+    AI_LOG_RETENTION_DAYS: int = 90         # How long to keep AI task journals
     
     model_config = SettingsConfigDict(
         env_file=os.getenv("ENV_FILE", ".env"),
