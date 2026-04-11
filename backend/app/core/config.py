@@ -92,6 +92,10 @@ class Settings(BaseSettings):
     EMAILS_FROM_EMAIL: Optional[str] = None
     EMAILS_FROM_NAME: Optional[str] = None
     
+    # Email Recipients (Override in .env)
+    SOURCING_EMAIL: str = "sourcing@winvinayafoundation.org"
+    TIMESHEET_SUBMISSION_EMAIL: str = "timesheet.submission@winvinaya.com"
+    
     model_config = SettingsConfigDict(
         env_file=os.getenv("ENV_FILE", ".env"),
         env_file_encoding="utf-8",

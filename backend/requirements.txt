@@ -3,6 +3,7 @@ fastapi==0.109.0
 uvicorn[standard]==0.27.0
 python-multipart==0.0.6
 aiosmtplib==4.0.0
+jinja2==3.1.3
 
 # Database
 sqlalchemy[asyncio]==2.0.25
