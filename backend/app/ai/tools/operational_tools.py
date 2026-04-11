@@ -46,15 +46,23 @@ class GetUserPerformanceTool(BaseTool):
 
     async def execute(self, params: dict[str, Any], db: "AsyncSession", user: "User") -> ToolResult:
         try:
-            # RBAC: Only Admin/Managers can see performance models for others
             target_email = params.get("email")
             days = params.get("days", 30)
-            
+
+            # ── RBAC ENFORCEMENT ──────────────────────────────────────────────
+            # Only Admin, Manager, or Superuser can view OTHER users' performance.
+            # Non-privileged users are silently restricted to their own data.
+            privileged = user.is_superuser or user.role in (UserRole.ADMIN, UserRole.MANAGER)
+            if not privileged:
+                # Non-privileged: force scope to requesting user only
+                target_email = user.email
+            # ─────────────────────────────────────────────────────────────────
+
             # Use IST for business lookback
             now_ist = datetime.now(timezone.utc) + self._ist_offset
             since_date = now_ist - timedelta(days=days)
 
-            # 1. Screening Counts
+            # Screening Counts (aggregated)
             query = select(
                 User.full_name,
                 User.email,
@@ -74,7 +82,8 @@ class GetUserPerformanceTool(BaseTool):
                 for r in result.all()
             ]
 
-            msg = f"Retrieved performance stats for {len(stats)} user(s) over the last {days} days."
+            scope_note = "(all staff)" if privileged and not params.get("email") else f"for {target_email}"
+            msg = f"Retrieved performance stats {scope_note} over the last {days} days."
             perf_summary = ", ".join([f"{s['name']}({s['screenings']})" for s in stats])
             return ToolResult(
                 success=True,
@@ -153,6 +162,17 @@ class GetDSROperationsTool(BaseTool):
 
     async def execute(self, params: dict[str, Any], db: "AsyncSession", user: "User") -> ToolResult:
         try:
+            # ── RBAC ENFORCEMENT ──────────────────────────────────────────────
+            # DSR compliance report is restricted to Admin, Manager, and Superuser.
+            privileged = user.is_superuser or user.role in (UserRole.ADMIN, UserRole.MANAGER)
+            if not privileged:
+                return ToolResult(
+                    success=False,
+                    message="🔐 Access denied. DSR compliance reports are restricted to Admin and Manager roles.",
+                    error="RBAC_DENIED"
+                )
+            # ─────────────────────────────────────────────────────────────────
+
             report_date_str = params.get("report_date")
             if report_date_str:
                 report_date = date.fromisoformat(report_date_str)

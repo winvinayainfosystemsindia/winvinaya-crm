@@ -43,18 +43,20 @@ import remarkGfm from 'remark-gfm';
 
 const AIChatWidget: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { isOpen, activeSession, messages, sessions, sending, loading } = useAppSelector((state) => state.aiChat);
+  const { isOpen, activeSession, messages, sessions, sending, loading, sessionsFetched } = useAppSelector((state) => state.aiChat);
   const [inputValue, setInputValue] = useState('');
   const [showHistory, setShowHistory] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Fetch sessions only on first open — subsequent opens use the Redux cache.
+  // Sessions are automatically updated when created/deleted via their thunks.
   useEffect(() => {
-    if (isOpen && sessions.length === 0) {
+    if (isOpen && !sessionsFetched) {
       dispatch(fetchSessions());
     }
-  }, [isOpen, sessions.length, dispatch]);
+  }, [isOpen, sessionsFetched, dispatch]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

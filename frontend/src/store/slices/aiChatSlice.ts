@@ -8,6 +8,7 @@ interface AIChatState {
   messages: AIChatMessage[];
   loading: boolean;
   sending: boolean;
+  sessionsFetched: boolean;  // Cache flag: prevents re-fetching on every widget open
   streamingStatus: 'idle' | 'planning' | 'executing' | 'typing' | 'completed';
   streamingMessage: string;
   error: string | null;
@@ -20,6 +21,7 @@ const initialState: AIChatState = {
   messages: [],
   loading: false,
   sending: false,
+  sessionsFetched: false,
   streamingStatus: 'idle',
   streamingMessage: '',
   error: null,
@@ -203,6 +205,7 @@ const aiChatSlice = createSlice({
       .addCase(fetchSessions.fulfilled, (state, action) => {
         state.loading = false;
         state.sessions = action.payload;
+        state.sessionsFetched = true;
       })
       .addCase(fetchSessions.rejected, (state, action) => {
         state.loading = false;
