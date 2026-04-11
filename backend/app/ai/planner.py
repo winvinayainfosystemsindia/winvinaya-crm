@@ -41,12 +41,14 @@ logger = logging.getLogger(__name__)
 SYSTEM_PROMPT_TEMPLATE = """\
 You are ARIA — the Agentic Reasoning and Intelligence Assistant for WinVinaya CRM.
 You are an expert at analyzing business tasks and orchestrating CRM operations.
+You work as a helpful CO-WORKER to the user.
 
 Your role is to:
 1. UNDERSTAND the user's task and business context carefully
 2. PLAN a precise, minimal sequence of tool calls to accomplish the goal
 3. AVOID creating duplicates — always search/check before creating
-4. RETURN a valid JSON response matching the required schema exactly
+4. CONTEXTUALIZE your plan based on the conversation history provided
+5. RETURN a valid JSON response matching the required schema exactly
 
 ## Available Tools
 {tool_block}
@@ -58,6 +60,7 @@ You MUST return only valid JSON. No explanation text outside the JSON.
   "task_name": "<short descriptive name for this task>",
   "reasoning": "<your step-by-step thinking about what needs to happen and why>",
   "estimated_record_impact": <integer: estimated number of DB records that will be created/updated>,
+  "response_to_user": "<human-readable reply to show the user (e.g. 'I've created that lead for you.')>",
   "steps": [
     {{
       "tool_name": "<exact tool name>",
@@ -75,6 +78,7 @@ You MUST return only valid JSON. No explanation text outside the JSON.
 - Steps MUST be in logical dependency order (e.g., create company before creating contact)
 - Parameters MUST match the tool's defined schema exactly
 - estimated_record_impact should be conservative (err on the lower side)
+- response_to_user should be professional and concise, summarizing what you will DO.
 """
 
 
@@ -96,6 +100,7 @@ class Planner:
         self,
         task_hint: str,
         input_data: dict,
+        history: list[dict] | None = None,
         context_snapshot: dict | None = None,
         allowed_categories: list[str] | None = None,
     ) -> ToolCallPlan:
@@ -121,7 +126,7 @@ class Planner:
             tool_block=self._registry.to_prompt_block(categories=allowed_categories)
         )
 
-        user_message = self._build_user_message(task_hint, input_data, context_snapshot)
+        user_message = self._build_user_message(task_hint, input_data, history, context_snapshot)
 
         logger.info("Planner → LLM request: task='%s'", task_hint)
 
@@ -149,9 +154,20 @@ class Planner:
         self,
         task_hint: str,
         input_data: dict,
-        context_snapshot: dict | None,
+        history: list[dict] | None = None,
+        context_snapshot: dict | None = None,
     ) -> str:
-        parts = [f"## Task\n{task_hint}\n"]
+        parts = []
+        
+        if history:
+            parts.append("## Conversation History")
+            for msg in history:
+                role = msg.get("role", "user").upper()
+                content = msg.get("content", "")
+                parts.append(f"<{role}>: {content}")
+            parts.append("---\n")
+            
+        parts.append(f"## Current Task\n{task_hint}\n")
 
         if input_data:
             parts.append(f"## Input Data\n```json\n{json.dumps(input_data, indent=2)}\n```\n")
@@ -211,6 +227,7 @@ class Planner:
         return ToolCallPlan(
             task_name=data["task_name"],
             reasoning=data["reasoning"],
+            response_to_user=data.get("response_to_user"),
             steps=steps,
             estimated_record_impact=data.get("estimated_record_impact", 0),
         )

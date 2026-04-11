@@ -123,6 +123,10 @@ class ToolCallPlan(BaseModel):
     """The structured output the LLM Planner produces before execution begins."""
     task_name: str
     reasoning: str = Field(..., description="Chain-of-thought explanation of the overall plan")
+    response_to_user: str | None = Field(
+        None,
+        description="Immediate reply to show the user while tools are running"
+    )
     steps: list[ToolCallRequest] = Field(..., description="Ordered list of tool calls to make")
     estimated_record_impact: int = Field(
         default=0,
@@ -166,6 +170,7 @@ class AITaskRunRequest(BaseModel):
 class AITaskRunResponse(BaseModel):
     """Response from POST /api/v1/ai/run"""
     task_id: uuid.UUID
+    task_db_id: int | None = None  # Internal ID for linking
     status: str
     task_name: str
     steps_planned: int

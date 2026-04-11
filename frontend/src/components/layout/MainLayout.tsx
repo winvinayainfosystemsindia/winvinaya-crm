@@ -6,6 +6,7 @@ import Sidebar from './Sidebar';
 import Footer from './Footer';
 import Breadcrumbs from '../common/Breadcrumbs';
 import { useNotificationWatcher } from '../../hooks/useNotificationWatcher';
+import AIChatWidget from '../ai/AIChatWidget';
 
 const MainLayout: React.FC = () => {
 	useNotificationWatcher();
@@ -38,6 +39,8 @@ const MainLayout: React.FC = () => {
 				</Box>
 				<Footer />
 			</Box>
+			{/* Floating AI Coworker Widget */}
+			<AIChatWidget />
 		</Box>
 	);
 };

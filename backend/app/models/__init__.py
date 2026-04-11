@@ -43,6 +43,7 @@ from app.models.placement_offer import PlacementOffer, OfferResponse, JoiningSta
 from app.models.placement_note import PlacementNote, NoteType
 from app.models.skill import Skill
 from app.models.ai_task_log import AITaskLog, AITaskStatus, AITaskTrigger
+from app.models.ai_chat import AIChatSession, AIChatMessage
 
 __all__ = [
     "User",
@@ -112,6 +113,8 @@ __all__ = [
     "AITaskLog",
     "AITaskStatus",
     "AITaskTrigger",
+    "AIChatSession",
+    "AIChatMessage",
     "Skill",
     "PlacementMapping",
     "PlacementStatus",

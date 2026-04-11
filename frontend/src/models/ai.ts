@@ -55,3 +55,30 @@ export interface AITasksResponse {
   page_size: number;
   total_pages: number;
 }
+
+// ── AI Chat Interfaces ──────────────────────────────────────────────────────
+
+export interface AIChatMessage {
+  id: number;
+  session_id: number;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  task_log_id: number | null;
+  created_at: string;
+}
+
+export interface AIChatSession {
+  id: number;
+  public_id: string;
+  user_id: number;
+  title: string;
+  is_active: boolean;
+  created_at: string;
+  messages?: AIChatMessage[];
+}
+
+export interface AIChatResponse {
+  session_id: string;
+  reply: AIChatMessage;
+  task_id: string | null; // public_id of the AITaskLog
+}

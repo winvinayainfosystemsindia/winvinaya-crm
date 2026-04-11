@@ -25,6 +25,7 @@ import holidayReducer from './slices/holidaySlice';
 import healthReducer from './slices/healthSlice';
 import x0paReducer from './slices/x0paSlice';
 import aiReducer from './slices/aiSlice';
+import aiChatReducer from './slices/aiChatSlice';
 
 export const store = configureStore({
 	reducer: {
@@ -53,6 +54,7 @@ export const store = configureStore({
 		health: healthReducer,
 		x0pa: x0paReducer,
 		ai: aiReducer,
+		aiChat: aiChatReducer,
 		// Placement Slices
 		jobRoles: jobRoleReducer,
 		placementMapping: placementMappingReducer,

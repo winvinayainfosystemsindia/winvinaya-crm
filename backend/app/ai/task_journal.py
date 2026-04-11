@@ -61,6 +61,7 @@ class TaskJournal:
         ai_provider: str,
         ai_model: str,
         triggered_by_user_id: int | None = None,
+        chat_session_id: int | None = None,
     ) -> "TaskJournal":
         """Create a new task journal entry and persist it immediately."""
         log = AITaskLog(
@@ -71,6 +72,7 @@ class TaskJournal:
             ai_provider=ai_provider,
             ai_model=ai_model,
             triggered_by_user_id=triggered_by_user_id,
+            chat_session_id=chat_session_id,
             steps=[],
             tools_called=0,
             tools_succeeded=0,

@@ -30,7 +30,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
-from app.ai.providers import SUPPORTED_PROVIDERS, get_provider_info
+from app.ai.providers import SUPPORTED_PROVIDERS, get_provider_info, get_llm_provider
 from app.core.config import settings
 from app.models.user import User, UserRole
 from app.repositories.system_setting_repository import SystemSettingRepository
@@ -214,8 +214,9 @@ async def test_connection(
             _apply_temp_key(provider_name, stored.value)
 
     try:
-        provider_class = PROVIDER_REGISTRY[provider_name]
-        provider = provider_class()
+        # Use the standard factory to get the provider (async)
+        # We pass the override to force the provider being tested
+        provider = await get_llm_provider(db, override=provider_name)
 
         start = time.monotonic()
         response = await provider.complete(

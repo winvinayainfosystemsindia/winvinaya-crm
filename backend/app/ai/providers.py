@@ -27,8 +27,10 @@ from typing import Any
 
 import httpx
 
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.ai.exceptions import LLMAuthError, LLMProviderError, LLMRateLimitError
+from app.repositories.system_setting_repository import SystemSettingRepository
 
 logger = logging.getLogger(__name__)
 
@@ -128,11 +130,12 @@ class GeminiProvider(LLMProvider):
     _COST_INPUT_PER_1M = 0.075   # gemini-1.5-flash pricing
     _COST_OUTPUT_PER_1M = 0.30
 
-    def __init__(self) -> None:
-        if not settings.GEMINI_API_KEY:
+    def __init__(self, api_key: str | None = None, model: str | None = None) -> None:
+        self._api_key = api_key or settings.GEMINI_API_KEY
+        self._model = model or settings.AI_MODEL_GEMINI
+        
+        if not self._api_key:
             raise LLMAuthError("gemini")
-        self._api_key = settings.GEMINI_API_KEY
-        self._model = settings.AI_MODEL_GEMINI
 
     @property
     def provider_name(self) -> str:
@@ -174,11 +177,12 @@ class OpenAIProvider(LLMProvider):
     _COST_INPUT_PER_1M = 0.15    # gpt-4o-mini
     _COST_OUTPUT_PER_1M = 0.60
 
-    def __init__(self) -> None:
-        if not settings.OPENAI_API_KEY:
+    def __init__(self, api_key: str | None = None, model: str | None = None) -> None:
+        self._api_key = api_key or settings.OPENAI_API_KEY
+        self._model = model or settings.AI_MODEL_OPENAI
+        
+        if not self._api_key:
             raise LLMAuthError("openai")
-        self._api_key = settings.OPENAI_API_KEY
-        self._model = settings.AI_MODEL_OPENAI
 
     @property
     def provider_name(self) -> str:
@@ -224,11 +228,12 @@ class AnthropicProvider(LLMProvider):
     _COST_INPUT_PER_1M = 0.80    # claude-3-5-haiku pricing
     _COST_OUTPUT_PER_1M = 4.00
 
-    def __init__(self) -> None:
-        if not settings.ANTHROPIC_API_KEY:
+    def __init__(self, api_key: str | None = None, model: str | None = None) -> None:
+        self._api_key = api_key or settings.ANTHROPIC_API_KEY
+        self._model = model or settings.AI_MODEL_ANTHROPIC
+        
+        if not self._api_key:
             raise LLMAuthError("anthropic")
-        self._api_key = settings.ANTHROPIC_API_KEY
-        self._model = settings.AI_MODEL_ANTHROPIC
 
     @property
     def provider_name(self) -> str:
@@ -275,11 +280,12 @@ class GroqProvider(LLMProvider):
     _COST_INPUT_PER_1M = 0.05    # llama-3.1-8b-instant pricing
     _COST_OUTPUT_PER_1M = 0.08
 
-    def __init__(self) -> None:
-        if not settings.GROQ_API_KEY:
+    def __init__(self, api_key: str | None = None, model: str | None = None) -> None:
+        self._api_key = api_key or settings.GROQ_API_KEY
+        self._model = model or settings.AI_MODEL_GROQ
+        
+        if not self._api_key:
             raise LLMAuthError("groq")
-        self._api_key = settings.GROQ_API_KEY
-        self._model = settings.AI_MODEL_GROQ
 
     @property
     def provider_name(self) -> str:
@@ -325,11 +331,12 @@ class MistralProvider(LLMProvider):
     _COST_INPUT_PER_1M = 0.20    # mistral-small pricing
     _COST_OUTPUT_PER_1M = 0.60
 
-    def __init__(self) -> None:
-        if not settings.MISTRAL_API_KEY:
+    def __init__(self, api_key: str | None = None, model: str | None = None) -> None:
+        self._api_key = api_key or settings.MISTRAL_API_KEY
+        self._model = model or settings.AI_MODEL_MISTRAL
+        
+        if not self._api_key:
             raise LLMAuthError("mistral")
-        self._api_key = settings.MISTRAL_API_KEY
-        self._model = settings.AI_MODEL_MISTRAL
 
     @property
     def provider_name(self) -> str:
@@ -374,11 +381,12 @@ class TogetherProvider(LLMProvider):
     _COST_INPUT_PER_1M = 0.10
     _COST_OUTPUT_PER_1M = 0.10
 
-    def __init__(self) -> None:
-        if not settings.TOGETHER_API_KEY:
+    def __init__(self, api_key: str | None = None, model: str | None = None) -> None:
+        self._api_key = api_key or settings.TOGETHER_API_KEY
+        self._model = model or settings.AI_MODEL_TOGETHER
+        
+        if not self._api_key:
             raise LLMAuthError("together")
-        self._api_key = settings.TOGETHER_API_KEY
-        self._model = settings.AI_MODEL_TOGETHER
 
     @property
     def provider_name(self) -> str:
@@ -423,11 +431,12 @@ class CohereProvider(LLMProvider):
     _COST_INPUT_PER_1M = 0.15    # command-r pricing
     _COST_OUTPUT_PER_1M = 0.60
 
-    def __init__(self) -> None:
-        if not settings.COHERE_API_KEY:
+    def __init__(self, api_key: str | None = None, model: str | None = None) -> None:
+        self._api_key = api_key or settings.COHERE_API_KEY
+        self._model = model or settings.AI_MODEL_COHERE
+        
+        if not self._api_key:
             raise LLMAuthError("cohere")
-        self._api_key = settings.COHERE_API_KEY
-        self._model = settings.AI_MODEL_COHERE
 
     @property
     def provider_name(self) -> str:
@@ -471,9 +480,9 @@ class OllamaProvider(LLMProvider):
     Zero cost, full privacy. Ideal for sensitive data environments.
     """
 
-    def __init__(self) -> None:
-        self._base_url = settings.OLLAMA_BASE_URL.rstrip("/")
-        self._model = settings.OLLAMA_MODEL
+    def __init__(self, base_url: str | None = None, model: str | None = None) -> None:
+        self._base_url = (base_url or settings.OLLAMA_BASE_URL).rstrip("/")
+        self._model = model or settings.OLLAMA_MODEL
 
     @property
     def provider_name(self) -> str:
@@ -519,22 +528,25 @@ PROVIDER_REGISTRY: dict[str, type[LLMProvider]] = {
 SUPPORTED_PROVIDERS = list(PROVIDER_REGISTRY.keys())
 
 
-def get_llm_provider(override: str | None = None) -> LLMProvider:
+async def get_llm_provider(db: AsyncSession, override: str | None = None) -> LLMProvider:
     """
-    Factory — returns the active LLM provider instance.
+    Factory — returns the active LLM provider instance based on DB settings.
+    Falls back to .env if DB settings are missing.
 
     Args:
+        db: Async database session
         override: Optional provider name to use instead of settings.AI_PROVIDER.
-                  Useful for per-request provider switching.
-
-    Returns:
-        An initialized LLMProvider ready to call .complete()
-
-    Raises:
-        LLMProviderError: If the provider name is unknown
-        LLMAuthError:     If the required API key is not configured
     """
-    provider_name = (override or settings.AI_PROVIDER).lower().strip()
+    repo = SystemSettingRepository(db)
+    
+    # 1. Resolve Provider Name
+    # Priority: override argument > DB setting > .env setting
+    provider_name = override
+    if not provider_name:
+        stored_provider = await repo.get_by_key("AI_PROVIDER")
+        provider_name = stored_provider.value if stored_provider and stored_provider.value else settings.AI_PROVIDER
+    
+    provider_name = provider_name.lower().strip()
 
     if provider_name not in PROVIDER_REGISTRY:
         raise LLMProviderError(
@@ -543,9 +555,28 @@ def get_llm_provider(override: str | None = None) -> LLMProvider:
             provider=provider_name,
         )
 
+    # 2. Resolve API Key / Model / Base URL from DB
+    key_field = f"{provider_name.upper()}_API_KEY"
+    stored_key = await repo.get_by_key(key_field)
+    api_key = stored_key.value if stored_key and stored_key.value else None
+    
+    stored_model_override = await repo.get_by_key("AI_MODEL_OVERRIDE")
+    model = stored_model_override.value if stored_model_override and stored_model_override.value else None
+
+    # Ollama special cases
+    base_url = None
+    if provider_name == "ollama":
+        stored_url = await repo.get_by_key("OLLAMA_BASE_URL")
+        base_url = stored_url.value if stored_url and stored_url.value else None
+        stored_ollama_model = await repo.get_by_key("OLLAMA_MODEL")
+        model = stored_ollama_model.value if stored_ollama_model and stored_ollama_model.value else model
+
     provider_class = PROVIDER_REGISTRY[provider_name]
-    logger.debug("Initializing LLM provider: %s", provider_name)
-    return provider_class()
+    logger.debug("Initializing AI provider: %s (DB-first)", provider_name)
+    
+    if provider_name == "ollama":
+        return provider_class(base_url=base_url, model=model)
+    return provider_class(api_key=api_key, model=model)
 
 
 def get_provider_info() -> list[dict]:

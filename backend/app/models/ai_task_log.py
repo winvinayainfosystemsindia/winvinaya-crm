@@ -14,6 +14,7 @@ from app.models.base import BaseModel
 
 if TYPE_CHECKING:
     from app.models.user import User
+    from app.models.ai_chat import AIChatSession
 
 
 class AITaskStatus(str, enum.Enum):
@@ -86,6 +87,14 @@ class AITaskLog(BaseModel):
         nullable=True,
         index=True,
         comment="User who triggered this task (null for automated/webhook triggers)"
+    )
+
+    chat_session_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("ai_chat_sessions.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+        comment="Chat session from which this task was spawned"
     )
 
     # ── AI Provider Info ──────────────────────────────────────────────────────
@@ -229,6 +238,12 @@ class AITaskLog(BaseModel):
     approved_by: Mapped[User | None] = relationship(
         "User",
         foreign_keys=[approved_by_user_id],
+        lazy="selectin",
+    )
+
+    chat_session: Mapped[AIChatSession | None] = relationship(
+        "AIChatSession",
+        foreign_keys=[chat_session_id],
         lazy="selectin",
     )
 

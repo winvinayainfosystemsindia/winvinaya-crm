@@ -29,12 +29,9 @@ from typing import Any, TYPE_CHECKING
 
 from app.ai.exceptions import (
     AIEngineError,
-    ApprovalRequiredError,
-    ToolInputValidationError,
-    ToolLimitExceededError,
-    TaskTimeoutError,
+    LLMAuthError,
     LLMProviderError,
-    NoPlanGeneratedError,
+    TaskTimeoutError,
 )
 from app.ai.planner import Planner
 from app.ai.providers import get_llm_provider
@@ -83,9 +80,9 @@ class AIEngine:
 
         # Initialise LLM provider
         try:
-            provider = get_llm_provider()
-        except AIEngineError as e:
-            logger.error("Cannot initialize LLM provider: %s", e.message)
+            provider = await get_llm_provider(self._db)
+        except (LLMAuthError, LLMProviderError) as e:
+            logger.error("Cannot initialize LLM provider: %s", str(e))
             return AITaskRunResponse(
                 task_id=__import__("uuid").uuid4(),
                 status="failed",
@@ -131,6 +128,70 @@ class AIEngine:
             await journal.finalize(
                 status=AITaskStatus.FAILED,
                 summary="💥 An unexpected error occurred.",
+                error_message=str(e),
+            )
+            return self._build_response(journal, status="failed", error=str(e))
+    
+    async def run_chat(
+        self,
+        user_input: str,
+        history: list[dict],
+        session_id: int,
+    ) -> AITaskRunResponse:
+        """
+        Execute an agentic chat turn. 
+        Contextualizes the plan based on conversation history.
+        """
+        # Initialise LLM provider
+        try:
+            provider = await get_llm_provider(self._db)
+        except (LLMAuthError, LLMProviderError) as e:
+            logger.error("LLM Provider initialization failed: %s", str(e))
+            return self._build_response(
+                None, 
+                status="failed", 
+                error=f"AI Engine is not configured correctly: {str(e)}. Please check your AI Settings."
+            )
+
+        # Create the journal (DB row) immediately
+        journal = await TaskJournal.create(
+            db=self._db,
+            task_name="AI Coworker Chat",
+            trigger=AITaskTrigger.MANUAL, # Or specific CHAT trigger
+            raw_input={"message": user_input},
+            ai_provider=provider.provider_name,
+            ai_model=provider.model_name,
+            triggered_by_user_id=self._user_id,
+            chat_session_id=session_id,
+        )
+
+        try:
+            # Planning Phase (with history)
+            await journal.mark_planning()
+            planner = Planner(provider=provider, registry=self._registry)
+            
+            plan: ToolCallPlan = await planner.plan(
+                task_hint=user_input,
+                input_data={},
+                history=history,
+            )
+            await journal.record_plan(plan)
+
+            # Execution Phase
+            # Reuse core _execute_task_steps logic (refactored slightly)
+            response = await self._execute_task_with_plan(plan, journal)
+            
+            # Extract the AI's direct response to the user
+            if plan.response_to_user:
+                response.summary = plan.response_to_user
+            
+            return response
+
+        except Exception as e:
+            logger.exception("Chat execution failed")
+            await journal.finalize(
+                status=AITaskStatus.FAILED,
+                summary="Sorry, I encountered an error processing your request.",
                 error_message=str(e),
             )
             return self._build_response(journal, status="failed", error=str(e))
@@ -188,10 +249,16 @@ class AIEngine:
             return self._build_response(journal, status="completed")
 
         # ── 2. Execution Phase ────────────────────────────────────────────────
+        return await self._execute_task_with_plan(plan, journal)
+
+    async def _execute_task_with_plan(
+        self,
+        plan: ToolCallPlan,
+        journal: TaskJournal,
+    ) -> AITaskRunResponse:
+        """Shared logic to execute a series of tool calls from a plan."""
         await journal.mark_running()
 
-        llm_tokens = 0
-        llm_cost = 0.0
         final_status = AITaskStatus.COMPLETED
 
         for step_num, step in enumerate(plan.steps, start=1):
@@ -257,13 +324,11 @@ class AIEngine:
                 )
                 final_status = AITaskStatus.PARTIALLY_COMPLETED
 
-        # ── 3. Finalise ───────────────────────────────────────────────────────
+        # Finalise journal
         summary = self._build_summary(plan, journal)
         await journal.finalize(
             status=final_status,
             summary=summary,
-            llm_tokens_used=llm_tokens or None,
-            llm_cost_usd=llm_cost or None,
         )
 
         return self._build_response(journal, status=final_status.value)
