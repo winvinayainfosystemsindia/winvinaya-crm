@@ -44,6 +44,7 @@ from app.api.v1.endpoints import (
     maintenance,
     skills,
     ai,
+    ai_settings,
 )
 
 
@@ -99,7 +100,8 @@ router.include_router(maintenance.router, prefix="/maintenance", tags=["Maintena
 router.include_router(skills.router, prefix="/skills", tags=["Skills"])
 
 # AI Engine
-router.include_router(ai.router)
+router.include_router(ai.router, prefix="/ai", tags=["AI Engine"])
+router.include_router(ai_settings.router, prefix="/ai/settings", tags=["AI Engine Settings"])
 
 # X0PA Integration
 router.include_router(x0pa.router)

@@ -27,20 +27,20 @@ from app.api import deps
 from app.ai.engine import AIEngine
 from app.ai.task_journal import TaskJournal, get_task_log_by_public_id, list_task_logs
 from app.ai.tool_registry import registry
-from app.ai.schemas import (
+from app.schemas.ai import (
     AITaskRunRequest,
     AITaskRunResponse,
     AITaskLogRead,
     AITaskLogListItem,
-    ToolDefinition,
 )
+from app.ai.schemas import ToolDefinition
 from app.core.config import settings
 from app.models.ai_task_log import AITaskStatus
 from app.models.user import User
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/ai", tags=["AI Engine"])
+router = APIRouter()
 
 
 # ─────────────────────────────────────────────────────────────────────────────

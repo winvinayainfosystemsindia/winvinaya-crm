@@ -8,13 +8,10 @@ import {
 	Tab,
 	Stack
 } from '@mui/material';
-import {
-	Assignment as ScreeningIcon,
-	FactCheck as CounselingIcon,
-	School as SchoolIcon,
-} from '@mui/icons-material';
 import DynamicFieldsSection from '../../components/settings/DynamicFieldsSection';
 import TrainingConfigurationSection from '../../components/settings/TrainingConfigurationSection';
+import AIEngineSection from '../../components/settings/AIEngineSection';
+import { settingsTabs } from '../../config/navigation';
 
 const Settings: React.FC = () => {
 	const [tabValue, setTabValue] = useState(() => {
@@ -32,12 +29,10 @@ const Settings: React.FC = () => {
 
 	const renderContent = () => {
 		switch (tabValue) {
-			case 0:
-				return <DynamicFieldsSection entityType="screening" />;
-			case 1:
-				return <DynamicFieldsSection entityType="counseling" />;
-			case 2:
-				return <TrainingConfigurationSection />;
+			case 0: return <DynamicFieldsSection entityType="screening" />;
+			case 1: return <DynamicFieldsSection entityType="counseling" />;
+			case 2: return <TrainingConfigurationSection />;
+			case 3: return <AIEngineSection />;
 			default:
 				return (
 					<Box sx={{ p: 8, textAlign: 'center' }}>
@@ -49,20 +44,12 @@ const Settings: React.FC = () => {
 		}
 	};
 
+	const isAITab = tabValue === 3;
+
 	return (
-		<Box sx={{
-			minHeight: '100vh',
-			display: 'flex',
-			flexDirection: 'column'
-		}}>
+		<Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
 			{/* Page Header */}
-			<Box sx={{
-				bgcolor: '#ffffff',
-				borderBottom: '1px solid #e2e8f0',
-				pt: 3,
-				pb: 0,
-				px: 4
-			}}>
+			<Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', pt: 3, pb: 0, px: 4 }}>
 				<Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
 					<Box>
 						<Typography variant="h5" sx={{ fontWeight: 600, color: '#1e293b', letterSpacing: '-0.02em', mb: 0.5 }}>
@@ -79,6 +66,7 @@ const Settings: React.FC = () => {
 					onChange={handleTabChange}
 					variant="scrollable"
 					scrollButtons="auto"
+					id="settings-tabs"
 					sx={{
 						'& .MuiTab-root': {
 							textTransform: 'none',
@@ -89,20 +77,27 @@ const Settings: React.FC = () => {
 							minHeight: 48,
 							color: '#64748b',
 							transition: 'all 0.2s',
-							'&.Mui-selected': {
-								color: '#ec7211',
-							}
+							'&.Mui-selected': { color: isAITab ? '#6366f1' : '#ec7211' },
 						},
 						'& .MuiTabs-indicator': {
-							backgroundColor: '#ec7211',
+							backgroundColor: isAITab ? '#6366f1' : '#ec7211',
 							height: 3,
-							borderRadius: '3px 3px 0 0'
+							borderRadius: '3px 3px 0 0',
 						}
 					}}
 				>
-					<Tab icon={<ScreeningIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Screening Fields" />
-					<Tab icon={<CounselingIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Counseling Fields" />
-					<Tab icon={<SchoolIcon sx={{ fontSize: 20 }} />} iconPosition="start" label="Training Config" />
+					{settingsTabs.map((tab, idx) => {
+						const Icon = tab.icon;
+						return (
+							<Tab
+								key={tab.label}
+								id={`settings-tab-${idx}`}
+								icon={<Icon sx={{ fontSize: 20 }} />}
+								iconPosition="start"
+								label={tab.label}
+							/>
+						);
+					})}
 				</Tabs>
 			</Box>
 

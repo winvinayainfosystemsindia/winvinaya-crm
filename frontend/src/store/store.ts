@@ -24,6 +24,7 @@ import dsrActivityTypeReducer from './slices/dsrActivityTypeSlice';
 import holidayReducer from './slices/holidaySlice';
 import healthReducer from './slices/healthSlice';
 import x0paReducer from './slices/x0paSlice';
+import aiReducer from './slices/aiSlice';
 
 export const store = configureStore({
 	reducer: {
@@ -51,6 +52,7 @@ export const store = configureStore({
 		// System Health
 		health: healthReducer,
 		x0pa: x0paReducer,
+		ai: aiReducer,
 		// Placement Slices
 		jobRoles: jobRoleReducer,
 		placementMapping: placementMappingReducer,

@@ -9,6 +9,9 @@ import {
 	HelpOutline as HelpIcon,
 	Folder as ProjectIcon,
 	Work as PlacementIcon,
+	Assignment as ScreeningIcon,
+	FactCheck as CounselingIcon,
+	SmartToy as AIIcon,
 } from '@mui/icons-material';
 import type { SvgIconComponent } from '@mui/icons-material';
 
@@ -134,4 +137,11 @@ export const bottomNavigation: NavigationItem[] = [
 		path: '/support',
 		icon: HelpIcon,
 	},
+];
+
+export const settingsTabs = [
+	{ label: 'Screening Fields', icon: ScreeningIcon },
+	{ label: 'Counseling Fields', icon: CounselingIcon },
+	{ label: 'Training Config', icon: SchoolIcon },
+	{ label: 'AI Engine', icon: AIIcon },
 ];
