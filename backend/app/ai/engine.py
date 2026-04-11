@@ -220,6 +220,8 @@ class AIEngine:
                                     f"There are currently **{count}** registered candidates in the system.\n\n"
                                     f"*Detailed breakdown:* {res.message}"
                                 )
+                            elif "CANDIDATE_ANALYTICS" in reveal:
+                                full_content = f"📊 **Candidate Analytics**\n\n{res.message}"
                             elif "PIPELINE_VALUE" in reveal:
                                 full_content = f"📊 **Sales Pipeline Overview**\n\n{res.message}"
                             elif "STAFF_PERFORMANCE" in reveal:
