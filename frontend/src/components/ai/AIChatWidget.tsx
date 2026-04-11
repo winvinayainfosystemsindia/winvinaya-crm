@@ -46,6 +46,7 @@ const AIChatWidget: React.FC = () => {
   const { isOpen, activeSession, messages, sessions, sending, loading } = useAppSelector((state) => state.aiChat);
   const [inputValue, setInputValue] = useState('');
   const [showHistory, setShowHistory] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -98,9 +99,18 @@ const AIChatWidget: React.FC = () => {
 
   const handleDeleteSession = (e: React.MouseEvent, sessionId: number) => {
     e.stopPropagation();
-    if (window.confirm('Are you sure you want to delete this conversation?')) {
-      dispatch(deleteSession(sessionId));
-    }
+    setConfirmDeleteId(sessionId);
+  };
+
+  const handleConfirmDelete = (e: React.MouseEvent, sessionId: number) => {
+    e.stopPropagation();
+    dispatch(deleteSession(sessionId));
+    setConfirmDeleteId(null);
+  };
+
+  const handleCancelDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setConfirmDeleteId(null);
   };
 
   if (!isOpen) {
@@ -228,29 +238,61 @@ const AIChatWidget: React.FC = () => {
                   <ListItem 
                     key={s.id} 
                     component="div"
-                    sx={{ cursor: 'pointer', '&:hover': { bgcolor: '#f8fafc' } }}
-                    onClick={() => handleSessionSelect(s.id)}
+                    sx={{ 
+                      cursor: 'pointer', 
+                      '&:hover': { bgcolor: '#f8fafc' },
+                      flexDirection: confirmDeleteId === s.id ? 'column' : 'row',
+                      alignItems: confirmDeleteId === s.id ? 'flex-start' : 'center',
+                      gap: 0.5
+                    }}
+                    onClick={() => confirmDeleteId !== s.id && handleSessionSelect(s.id)}
                     secondaryAction={
-                      <IconButton 
-                        edge="end" 
-                        size="small" 
-                        onClick={(e) => handleDeleteSession(e, s.id)}
-                        sx={{ color: '#94a3b8', '&:hover': { color: '#ef4444' } }}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
+                      confirmDeleteId !== s.id ? (
+                        <IconButton 
+                          edge="end" 
+                          size="small" 
+                          onClick={(e) => handleDeleteSession(e, s.id)}
+                          sx={{ color: '#94a3b8', '&:hover': { color: '#ef4444' } }}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      ) : undefined
                     }
                   >
-                    <Box sx={{ py: 1, pr: 4 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {s.title}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: '#64748b', display: 'flex', gap: 1 }}>
-                        <span>{new Date(s.created_at).toLocaleDateString()}</span>
-                        <span>•</span>
-                        <span>{new Date(s.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                      </Typography>
-                    </Box>
+                    {confirmDeleteId === s.id ? (
+                      <Box sx={{ width: '100%', py: 0.5 }}>
+                        <Typography variant="caption" sx={{ color: '#ef4444', fontWeight: 600, display: 'block', mb: 1 }}>
+                          Delete this conversation?
+                        </Typography>
+                        <Stack direction="row" spacing={1}>
+                          <Button 
+                            size="small" variant="contained" color="error"
+                            onClick={(e) => handleConfirmDelete(e, s.id)}
+                            sx={{ fontSize: '0.7rem', py: 0.3, minWidth: 0, px: 1.5, textTransform: 'none' }}
+                          >
+                            Delete
+                          </Button>
+                          <Button 
+                            size="small" variant="outlined"
+                            onClick={handleCancelDelete}
+                            sx={{ fontSize: '0.7rem', py: 0.3, minWidth: 0, px: 1.5, textTransform: 'none', color: '#64748b', borderColor: '#e2e8f0' }}
+                          >
+                            Cancel
+                          </Button>
+                        </Stack>
+                      </Box>
+                    ) : (
+                      <Box sx={{ py: 1, pr: 4 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {s.title}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#64748b', display: 'flex', gap: 1 }}>
+                          <span>{new Date(s.created_at).toLocaleDateString()}</span>
+                          <span>•</span>
+                          <span>{new Date(s.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        </Typography>
+                      </Box>
+                    )}
                   </ListItem>
                 ))}
               </List>

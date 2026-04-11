@@ -120,6 +120,9 @@ export const sendMessage = createAsyncThunk(
                 if (data.status === 'completed') {
                   dispatch(setStreamingStatus('completed'));
                 }
+                if (data.session_title_update && data.session_id) {
+                  dispatch(updateSessionTitle({ id: data.session_id, title: data.session_title_update }));
+                }
               } catch (e) {
                 // Ignore parse errors for partial chunks
               }
@@ -182,7 +185,14 @@ const aiChatSlice = createSlice({
     },
     setStreamingStatus: (state, action: PayloadAction<AIChatState['streamingStatus']>) => {
       state.streamingStatus = action.payload;
-    }
+    },
+    updateSessionTitle: (state, action: PayloadAction<{ id: number; title: string }>) => {
+      const session = state.sessions.find(s => s.id === action.payload.id);
+      if (session) session.title = action.payload.title;
+      if (state.activeSession?.id === action.payload.id) {
+        state.activeSession.title = action.payload.title;
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -235,6 +245,6 @@ const aiChatSlice = createSlice({
 
 export const { 
   toggleChat, openChat, closeChat, clearError, setActiveSession, 
-  addLocalMessage, addTokenToLastMessage, setStreamingStatus 
+  addLocalMessage, addTokenToLastMessage, setStreamingStatus, updateSessionTitle
 } = aiChatSlice.actions;
 export default aiChatSlice.reducer;

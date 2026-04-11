@@ -99,6 +99,15 @@ class AIChatService:
         self._db.add(user_msg)
         await self._db.flush()
 
+        # Auto-name the session from the first user message if still default
+        if session.title in ("New Conversation", "") and schema.content.strip():
+            # Truncate to 40 chars, strip newlines for a clean title
+            new_title = schema.content.strip().replace("\n", " ")[:40]
+            if len(schema.content.strip()) > 40:
+                new_title += "…"
+            session.title = new_title
+            await self._db.flush()
+
         # 3. History — cap at 6 messages to avoid TPM exhaustion in the planner
         history = [{
             "role": m.role, "content": m.content
@@ -135,6 +144,8 @@ class AIChatService:
             )
             self._db.add(assistant_msg)
             await self._db.commit()
+            # Emit updated session title so the frontend can rename it instantly
+            yield f"data: {json.dumps({'session_title_update': session.title, 'session_id': session_id})}\n\n"
 
     async def delete_session(self, session_id: int) -> bool:
         """Permanently remove a chat thread and its messages."""
