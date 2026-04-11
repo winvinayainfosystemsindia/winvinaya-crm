@@ -269,6 +269,13 @@ class Planner:
                 context={"raw": raw[:500]},
             )
 
+        # Normalize 'reasoning' — LLMs occasionally return a list instead of a string
+        raw_reasoning = data.get("reasoning", "")
+        if isinstance(raw_reasoning, list):
+            reasoning = " ".join(str(r) for r in raw_reasoning)
+        else:
+            reasoning = str(raw_reasoning) if raw_reasoning else ""
+
         try:
             steps = [
                 ToolCallRequest(
@@ -286,7 +293,7 @@ class Planner:
 
         return ToolCallPlan(
             task_name=data["task_name"],
-            reasoning=data["reasoning"],
+            reasoning=reasoning,
             response_to_user=data.get("response_to_user"),
             steps=steps,
             estimated_record_impact=data.get("estimated_record_impact", 0),

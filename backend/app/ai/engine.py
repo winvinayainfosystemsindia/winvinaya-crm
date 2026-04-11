@@ -196,49 +196,61 @@ class AIEngine:
             
             response, results = await self._execute_task_with_plan(plan, journal)
             
-            # 4. Synthesis (Streaming tokens)
+            # 4. Local synthesis — NO second LLM call (prevents rate limit exhaustion)
+            # The tool's `message` field is already a professional human-readable summary.
+            # We stream it token-by-token to maintain the animated streaming UX.
             yield f"data: {json.dumps({'status': 'typing'})}\n\n"
-            
+
             full_content = ""
             if results:
-                # ──────────────────────────────────────────────────────────────
-                # TOKEN-EFFICIENT SYNTHESIS:
-                # Rather than dumping full JSON payloads (which exhausts TPM),
-                # we extract only the pre-compressed REVEAL_DATA summary and
-                # the short message string from each tool result.
-                # ──────────────────────────────────────────────────────────────
-                summary_parts = []
-                for i, (req, res) in enumerate(results, start=1):
-                    # Prefer the pre-compressed REVEAL_DATA key if present
-                    reveal = res.data.get("REVEAL_DATA") if res.data else None
-                    if reveal:
-                        summary_parts.append(f"Tool {i} ({req.tool_name}): {reveal}")
+                # Build a professional response from tool results without an LLM call
+                response_lines = []
+                for req, res in results:
+                    if res.success:
+                        # Use the tool's own message — already human-readable
+                        response_lines.append(res.message)
+                        # Append any REVEAL_DATA as structured context
+                        if res.data and res.data.get("REVEAL_DATA"):
+                            reveal = res.data["REVEAL_DATA"]
+                            # Parse REVEAL_DATA into readable format
+                            # e.g. "ACTUAL_CANDIDATE_COUNT: 150" → "There are **150** registered candidates."
+                            if "ACTUAL_CANDIDATE_COUNT" in reveal:
+                                count = reveal.split(":")[-1].strip()
+                                full_content = (
+                                    f"There are currently **{count}** registered candidates in the system.\n\n"
+                                    f"*Detailed breakdown:* {res.message}"
+                                )
+                            elif "PIPELINE_VALUE" in reveal:
+                                full_content = f"📊 **Sales Pipeline Overview**\n\n{res.message}"
+                            elif "STAFF_PERFORMANCE" in reveal:
+                                full_content = f"👤 **Staff Performance Report**\n\n{res.message}"
+                            elif "PENDING_DSR_COUNT" in reveal:
+                                count = reveal.split("PENDING_DSR_COUNT:")[-1].split(",")[0].strip()
+                                full_content = f"📋 **{count} users** have not submitted their DSR.\n\n{res.message}"
+                            elif "TRAINING_STATS" in reveal:
+                                full_content = f"🎓 **Training Analytics**\n\n{res.message}"
+                            elif "LEAD_COUNTS" in reveal:
+                                full_content = f"🎯 **Lead Pipeline**\n\n{res.message}"
+                            else:
+                                full_content = res.message
+                        else:
+                            full_content = res.message
                     else:
-                        summary_parts.append(f"Tool {i} ({req.tool_name}): {res.message}")
+                        full_content = f"⚠️ Tool '{req.tool_name}' encountered an issue: {res.message}"
 
-                compact_summary = "\n".join(summary_parts)
+                # If multiple tools, join results
+                if len(results) > 1 and not full_content:
+                    full_content = "\n\n".join(response_lines)
 
-                synth_prompt = (
-                    f"The user asked: \"{user_input}\"\n\n"
-                    f"Data retrieved:\n{compact_summary}\n\n"
-                    f"Write a professional, concise response to the user using the exact numbers and facts above. "
-                    f"Never say 'I have checked' — always state actual values directly."
-                )
-
-                async for token in provider.stream_complete(
-                    system_prompt="You are ARIA, a professional CRM assistant. Answer concisely using exact data.",
-                    user_message=synth_prompt,
-                    max_tokens=512,
-                ):
-                    full_content += token
-                    yield f"data: {json.dumps({'token': token})}\n\n"
             else:
-                # Direct reply from plan if no tools were needed
-                content = plan.response_to_user or "I've processed your request."
-                for token in content.split(" "):
-                    yield f"data: {json.dumps({'token': token + ' '})}\n\n"
-                    full_content += token + " "
-                    await asyncio.sleep(0.01)
+                full_content = plan.response_to_user or "I've processed your request."
+
+            # Stream the pre-built answer word-by-word for animated UX
+            words = full_content.split(" ")
+            for i, word in enumerate(words):
+                token = word + (" " if i < len(words) - 1 else "")
+                yield f"data: {json.dumps({'token': token})}\n\n"
+                await asyncio.sleep(0.015)
 
             # 5. Finalize
             await journal.finalize(status=AITaskStatus.COMPLETED, summary=full_content)
