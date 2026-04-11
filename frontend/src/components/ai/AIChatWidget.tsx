@@ -9,14 +9,12 @@ import {
   InputAdornment,
   Avatar,
   Stack,
-  CircularProgress,
   Tooltip,
   Badge,
   Zoom,
   Fade,
   List,
   ListItem,
-  Divider,
   Button,
   Chip,
 } from '@mui/material';
@@ -26,9 +24,9 @@ import {
   Send as SendIcon,
   History as HistoryIcon,
   Add as NewChatIcon,
-  Minimize as MinimizeIcon,
   Psychology as ThinkingIcon,
   Code as ToolIcon,
+  DeleteOutline as DeleteIcon,
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import {
@@ -36,8 +34,9 @@ import {
   fetchSessions,
   createSession,
   sendMessage,
-  setActiveSession,
   fetchSessionDetails,
+  addLocalMessage,
+  deleteSession,
 } from '../../store/slices/aiChatSlice';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -48,6 +47,7 @@ const AIChatWidget: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const [showHistory, setShowHistory] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen && sessions.length === 0) {
@@ -59,10 +59,31 @@ const AIChatWidget: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Refocus input when sending finishes
+  useEffect(() => {
+    if (!sending && isOpen) {
+      inputRef.current?.focus();
+    }
+  }, [sending, isOpen]);
+
   const handleSend = () => {
     if (!inputValue.trim() || !activeSession) return;
+    
+    // Optimistic update: Add user message to UI immediately
+    dispatch(addLocalMessage({
+      session_id: activeSession.id,
+      role: 'user',
+      content: inputValue,
+      created_at: new Date().toISOString()
+    } as any));
+
     dispatch(sendMessage({ sessionId: activeSession.id, content: inputValue }));
     setInputValue('');
+
+    // Refocus the input
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0);
   };
 
   const handleNewChat = () => {
@@ -73,6 +94,13 @@ const AIChatWidget: React.FC = () => {
   const handleSessionSelect = (sessionId: number) => {
     dispatch(fetchSessionDetails(sessionId));
     setShowHistory(false);
+  };
+
+  const handleDeleteSession = (e: React.MouseEvent, sessionId: number) => {
+    e.stopPropagation();
+    if (window.confirm('Are you sure you want to delete this conversation?')) {
+      dispatch(deleteSession(sessionId));
+    }
   };
 
   if (!isOpen) {
@@ -202,9 +230,21 @@ const AIChatWidget: React.FC = () => {
                     component="div"
                     sx={{ cursor: 'pointer', '&:hover': { bgcolor: '#f8fafc' } }}
                     onClick={() => handleSessionSelect(s.id)}
+                    secondaryAction={
+                      <IconButton 
+                        edge="end" 
+                        size="small" 
+                        onClick={(e) => handleDeleteSession(e, s.id)}
+                        sx={{ color: '#94a3b8', '&:hover': { color: '#ef4444' } }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    }
                   >
-                    <Box sx={{ py: 1 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>{s.title}</Typography>
+                    <Box sx={{ py: 1, pr: 4 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {s.title}
+                      </Typography>
                       <Typography variant="caption" color="text.secondary">
                         {new Date(s.created_at).toLocaleDateString()}
                       </Typography>
@@ -315,6 +355,7 @@ const AIChatWidget: React.FC = () => {
         {/* Footer / Input */}
         <Box sx={{ p: 2, bgcolor: '#ffffff', borderTop: '1px solid #f1f5f9' }}>
           <TextField
+            inputRef={inputRef}
             fullWidth
             placeholder={activeSession ? "Talk to ARIA..." : "Select a session to chat"}
             size="small"

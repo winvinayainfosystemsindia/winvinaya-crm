@@ -72,6 +72,18 @@ export const sendMessage = createAsyncThunk(
   }
 );
 
+export const deleteSession = createAsyncThunk(
+  'aiChat/deleteSession',
+  async (sessionId: number, { rejectWithValue }) => {
+    try {
+      await api.delete(`/ai/chat/sessions/${sessionId}`);
+      return sessionId;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.detail || 'Failed to delete conversation');
+    }
+  }
+);
+
 // ── Slice ───────────────────────────────────────────────────────────────────
 
 const aiChatSlice = createSlice({
@@ -136,6 +148,15 @@ const aiChatSlice = createSlice({
       .addCase(sendMessage.rejected, (state, action) => {
         state.sending = false;
         state.error = action.payload as string;
+      })
+      // Delete Session
+      .addCase(deleteSession.fulfilled, (state, action) => {
+        const deletedId = action.payload;
+        state.sessions = state.sessions.filter(s => s.id !== deletedId);
+        if (state.activeSession?.id === deletedId) {
+          state.activeSession = null;
+          state.messages = [];
+        }
       });
   },
 });

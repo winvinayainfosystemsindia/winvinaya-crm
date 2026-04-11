@@ -110,7 +110,17 @@ class AIChatService:
         # If the engine failed (e.g. LLMAuthError), we show the error message to the user
         content = ai_response.summary or "I've processed your request."
         if ai_response.status == "failed" and ai_response.error:
-            content = f"❌ **Configuration Error:** {ai_response.error}"
+            if ai_response.error.startswith("AUTH_ERROR:"):
+                clean_err = ai_response.error.replace("AUTH_ERROR:", "").strip()
+                content = f"❌ **Configuration Error:** {clean_err}. Please check your AI Settings."
+            elif ai_response.error.startswith("RATE_LIMIT:"):
+                clean_err = ai_response.error.replace("RATE_LIMIT:", "").strip()
+                content = f"⏳ **Rate Limit Exceeded:** {clean_err}"
+            elif ai_response.error.startswith("SERVICE_ERROR:"):
+                clean_err = ai_response.error.replace("SERVICE_ERROR:", "").strip()
+                content = f"⚠️ **Service Provider Error:** {clean_err}"
+            else:
+                content = f"💥 **Unexpected Error:** {ai_response.error}"
             
         assistant_msg = AIChatMessage(
             session_id=session_id,
@@ -123,3 +133,13 @@ class AIChatService:
         await self._db.refresh(assistant_msg)
 
         return assistant_msg
+
+    async def delete_session(self, session_id: int) -> bool:
+        """Permanently remove a chat thread and its messages."""
+        session = await self.get_session_details(session_id)
+        if not session:
+            return False
+            
+        await self._db.delete(session)
+        await self._db.commit()
+        return True

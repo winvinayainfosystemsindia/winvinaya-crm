@@ -12,3 +12,6 @@ Phase 5: notification_tools
 
 # Tools are loaded on-demand by importing this package.
 # Each tool module self-registers via: from app.ai.tool_registry import registry
+from . import crm_tools
+from . import placement_tools
+from . import candidate_tools

@@ -26,7 +26,7 @@ from app.ai.exceptions import (
     PlanningError,
 )
 from app.ai.providers import LLMProvider
-from app.ai.schemas import ToolCallPlan, ToolCallRequest
+from app.ai.schemas import ToolCallPlan, ToolCallRequest, ToolResult
 from app.ai.tool_registry import ToolRegistry
 
 if TYPE_CHECKING:
@@ -73,12 +73,32 @@ You MUST return only valid JSON. No explanation text outside the JSON.
 
 ## Critical Rules:
 - ALWAYS check if a record exists before creating it (use search/find tools first)
-- NEVER call the same write tool twice on the same entity in one plan
-- If the task is ambiguous or impossible with available tools, return steps: [] with a clear reasoning
-- Steps MUST be in logical dependency order (e.g., create company before creating contact)
-- Parameters MUST match the tool's defined schema exactly
-- estimated_record_impact should be conservative (err on the lower side)
-- response_to_user should be professional and concise, summarizing what you will DO.
+- FETCH & ANALYZE: If the user asks for data or analysis, use search tools first to gather the information, then summarize/analyze it in the `response_to_user`.
+- CONVERSATIONAL FALLBACK: If the task is a greeting, general question, or simple analysis that doesn't require a tool call, return steps: [] and provide your answer in `response_to_user`.
+- NEVER call the same write tool twice on the same entity in one plan.
+- Steps MUST be in logical dependency order (e.g., search before update).
+- Parameters MUST match the tool's defined schema exactly.
+- estimated_record_impact should be conservative (0 for read-only or chat).
+- response_to_user should be professional and concise, summarizing what you will DO or answering the user's question.
+"""
+
+SYNTHESIS_PROMPT_TEMPLATE = """\
+You are ARIA — the Agentic Reasoning and Intelligence Assistant for WinVinaya CRM.
+The user's original request was: "{task_hint}"
+
+You have executed the following actions to fulfill this request:
+{execution_summary}
+
+## Tool Results (JSON):
+{tool_results_block}
+
+## Instructions:
+1. REVIEW the tool results carefully to find the answer to the user's question.
+2. SYNTHESIZE a final, professional, and helpful response to the user.
+3. Be specific — use names, dates, counts, and IDs from the tool results.
+4. If no data was found, acknowledge it politely (e.g., "I couldn't find any candidates matching those criteria.").
+5. If an error occurred in a tool, explain it simply without being too technical.
+6. Provide ONLY the natural language response. Do not use JSON or markdown code blocks for the final answer.
 """
 
 
@@ -139,14 +159,53 @@ class Planner:
 
         plan = self._parse_response(llm_response.content)
 
-        if not plan.steps:
-            raise NoPlanGeneratedError()
+        # We no longer raise NoPlanGeneratedError for empty steps, 
+        # as it allows for conversational fallback and analysis.
 
         logger.info(
             "Planner → Plan ready: task='%s', steps=%d, impact=%d",
             plan.task_name, len(plan.steps), plan.estimated_record_impact
         )
         return plan
+
+    async def synthesize(
+        self,
+        task_hint: str,
+        reasoning: str,
+        tool_results: list[tuple[ToolCallRequest, ToolResult]],
+    ) -> str:
+        """
+        Produce a final natural language answer based on tool outputs.
+        """
+        # Build execution summary and tool results block
+        summary_lines = []
+        results_map = {}
+        
+        for i, (req, res) in enumerate(tool_results, start=1):
+            summary_lines.append(f"{i}. Executed {req.tool_name}: {req.reasoning}")
+            results_map[f"step_{i}_{req.tool_name}"] = {
+                "success": res.success,
+                "message": res.message,
+                "data": res.data,
+                "error": res.error
+            }
+
+        synthesis_prompt = SYNTHESIS_PROMPT_TEMPLATE.format(
+            task_hint=task_hint,
+            execution_summary="\n".join(summary_lines),
+            tool_results_block=json.dumps(results_map, indent=2)
+        )
+
+        logger.info("Planner → Synthesis request for task='%s'", task_hint[:50])
+
+        llm_response = await self._provider.complete(
+            system_prompt="You are a helpful CRM assistant providing a final summary of your work.",
+            user_message=synthesis_prompt,
+            temperature=0.3, # Slightly higher for more natural synthesis
+            max_tokens=1024,
+        )
+
+        return llm_response.content.strip()
 
     # ── Private Methods ───────────────────────────────────────────────────────
 

@@ -86,3 +86,18 @@ async def send_chat_message(
         reply=assistant_msg,
         task_id=task_public_id
     )
+
+
+@router.delete("/sessions/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_chat_session(
+    session_id: int,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+):
+    """Permanently delete a chat session and all its messages."""
+    service = AIChatService(db, current_user)
+    success = await service.delete_session(session_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Session not found")
+    from fastapi import Response
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

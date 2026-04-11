@@ -31,11 +31,12 @@ from app.ai.exceptions import (
     AIEngineError,
     LLMAuthError,
     LLMProviderError,
+    LLMRateLimitError,
     TaskTimeoutError,
 )
 from app.ai.planner import Planner
 from app.ai.providers import get_llm_provider
-from app.ai.schemas import AITaskRunRequest, AITaskRunResponse, ToolCallPlan
+from app.ai.schemas import AITaskRunRequest, AITaskRunResponse, ToolCallPlan, ToolCallRequest, ToolResult
 from app.ai.task_journal import TaskJournal
 from app.ai.tool_registry import ToolRegistry, registry as global_registry
 from app.core.config import settings
@@ -145,19 +146,26 @@ class AIEngine:
         # Initialise LLM provider
         try:
             provider = await get_llm_provider(self._db)
-        except (LLMAuthError, LLMProviderError) as e:
-            logger.error("LLM Provider initialization failed: %s", str(e))
+        except LLMAuthError as e:
+            logger.error("LLM Auth failed: %s", str(e))
             return self._build_response(
                 None, 
                 status="failed", 
-                error=f"AI Engine is not configured correctly: {str(e)}. Please check your AI Settings."
+                error=f"AUTH_ERROR: {str(e)}"
+            )
+        except (LLMProviderError, LLMRateLimitError) as e:
+            logger.error("LLM Provider error: %s", str(e))
+            return self._build_response(
+                None, 
+                status="failed", 
+                error=f"SERVICE_ERROR: {str(e)}"
             )
 
         # Create the journal (DB row) immediately
         journal = await TaskJournal.create(
             db=self._db,
             task_name="AI Coworker Chat",
-            trigger=AITaskTrigger.MANUAL, # Or specific CHAT trigger
+            trigger=AITaskTrigger.MANUAL,
             raw_input={"message": user_input},
             ai_provider=provider.provider_name,
             ai_model=provider.model_name,
@@ -166,7 +174,7 @@ class AIEngine:
         )
 
         try:
-            # Planning Phase (with history)
+            # 1. Planning Phase (with history)
             await journal.mark_planning()
             planner = Planner(provider=provider, registry=self._registry)
             
@@ -177,16 +185,44 @@ class AIEngine:
             )
             await journal.record_plan(plan)
 
-            # Execution Phase
-            # Reuse core _execute_task_steps logic (refactored slightly)
-            response = await self._execute_task_with_plan(plan, journal)
+            # 2. Execution Phase
+            response, results = await self._execute_task_with_plan(plan, journal)
             
-            # Extract the AI's direct response to the user
-            if plan.response_to_user:
+            # 3. Synthesis Phase: Produce a data-backed final answer
+            if results:
+                try:
+                    synthesis = await planner.synthesize(
+                        task_hint=user_input,
+                        reasoning=plan.reasoning,
+                        tool_results=results
+                    )
+                    response.summary = synthesis
+                    # Finalize the journal again with the human-readable result
+                    await journal.finalize(status=AITaskStatus.SUCCESS, summary=synthesis)
+                except (LLMRateLimitError, LLMAuthError, LLMProviderError):
+                    # Re-raise transient/service errors so the outer handler shows the ⏳ or ❌ message
+                    raise
+                except Exception as sys_err:
+                    logger.error("Synthesis synthesis failed unexpectedly: %s", sys_err)
+                    # For unknown synthesis errors, we stick with the original plan summary if available
+                    if plan.response_to_user:
+                        response.summary = plan.response_to_user
+
+            elif plan.response_to_user:
                 response.summary = plan.response_to_user
             
             return response
 
+        except LLMRateLimitError as e:
+            logger.warning("Rate limit hit during chat: %s", str(e))
+            await journal.finalize(status=AITaskStatus.FAILED, summary="⏳ Rate limit exceeded.", error_message=str(e))
+            return self._build_response(journal, status="failed", error=f"RATE_LIMIT: {str(e)}")
+        except LLMAuthError as e:
+            await journal.finalize(status=AITaskStatus.FAILED, summary="❌ Authentication failed.", error_message=str(e))
+            return self._build_response(journal, status="failed", error=f"AUTH_ERROR: {str(e)}")
+        except LLMProviderError as e:
+            await journal.finalize(status=AITaskStatus.FAILED, summary="⚠️ Provider error.", error_message=str(e))
+            return self._build_response(journal, status="failed", error=f"SERVICE_ERROR: {str(e)}")
         except Exception as e:
             logger.exception("Chat execution failed")
             await journal.finalize(
@@ -194,7 +230,7 @@ class AIEngine:
                 summary="Sorry, I encountered an error processing your request.",
                 error_message=str(e),
             )
-            return self._build_response(journal, status="failed", error=str(e))
+            return self._build_response(journal, status="failed", error=f"UNKNOWN_ERROR: {str(e)}")
 
     # ── Private: Main Execution Flow ──────────────────────────────────────────
 
@@ -249,17 +285,33 @@ class AIEngine:
             return self._build_response(journal, status="completed")
 
         # ── 2. Execution Phase ────────────────────────────────────────────────
-        return await self._execute_task_with_plan(plan, journal)
+        response, results = await self._execute_task_with_plan(plan, journal)
+        
+        # Synthesis for background tasks too, to provide better logs
+        if results and response.status == "completed":
+             try:
+                 synthesis = await planner.synthesize(
+                     task_hint=request.task_hint,
+                     reasoning=plan.reasoning,
+                     tool_results=results
+                 )
+                 response.summary = synthesis
+                 await journal.finalize(status=AITaskStatus.COMPLETED, summary=synthesis)
+             except Exception:
+                 pass
+                 
+        return response
 
     async def _execute_task_with_plan(
         self,
         plan: ToolCallPlan,
         journal: TaskJournal,
-    ) -> AITaskRunResponse:
+    ) -> tuple[AITaskRunResponse, list[tuple[ToolCallRequest, ToolResult]]]:
         """Shared logic to execute a series of tool calls from a plan."""
         await journal.mark_running()
 
         final_status = AITaskStatus.COMPLETED
+        execution_results: list[tuple[ToolCallRequest, ToolResult]] = []
 
         for step_num, step in enumerate(plan.steps, start=1):
             # Safety limit
@@ -310,6 +362,7 @@ class AIEngine:
                 from app.ai.schemas import ToolResult
                 result = await tool.execute(params=step.parameters, db=self._db)
                 await journal.record_step_result(step_num, result)
+                execution_results.append((step, result))
                 if not result.success:
                     final_status = AITaskStatus.PARTIALLY_COMPLETED
             except Exception as e:
@@ -324,14 +377,7 @@ class AIEngine:
                 )
                 final_status = AITaskStatus.PARTIALLY_COMPLETED
 
-        # Finalise journal
-        summary = self._build_summary(plan, journal)
-        await journal.finalize(
-            status=final_status,
-            summary=summary,
-        )
-
-        return self._build_response(journal, status=final_status.value)
+        return self._build_response(journal, status=final_status.value), execution_results
 
     # ── Private: Helpers ──────────────────────────────────────────────────────
 
@@ -341,6 +387,10 @@ class AIEngine:
         fail = log.tools_failed
         total = log.tools_called
         records = log.records_affected
+
+        # If zero tools called, return the AI's conversational response
+        if total == 0 and plan.response_to_user:
+            return plan.response_to_user
 
         if fail == 0:
             emoji = "✅"
