@@ -48,8 +48,6 @@ from app.models.placement_offer import PlacementOffer
 from app.models.placement_note import PlacementNote
 from app.models.ticket import TicketMessage
 from app.utils.activity_tracker import log_read
-from app.schemas.analytics import ManagementReportResponse, UserReportMetric
-from app.services import analytics_service
 
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
@@ -132,14 +130,3 @@ async def export_table_for_power_bi(
     return jsonable_encoder(data)
 
 
-@router.get("/management-report", response_model=ManagementReportResponse)
-async def get_management_report(
-    db: AsyncSession = Depends(deps.get_db),
-    api_key: str = Depends(deps.verify_api_key)
-):
-    """
-    Get candidate management status report grouped by user.
-    Metrics: screened, counseled, documents collected, registrations.
-    Includes today's progress per user.
-    """
-    return await analytics_service.get_management_report_data(db)
