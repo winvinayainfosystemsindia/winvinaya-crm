@@ -348,6 +348,9 @@ const AIEngineSection: React.FC = () => {
                         </InputAdornment>
                       ),
                     }}
+                    inputProps={{
+                      autoComplete: 'new-password'
+                    }}
                     sx={{ '& .MuiInputBase-root': { borderRadius: '8px' } }}
                     helperText={
                       isKeySet(activeProvider)

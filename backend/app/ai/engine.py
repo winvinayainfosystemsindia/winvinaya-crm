@@ -39,6 +39,7 @@ from app.ai.providers import get_llm_provider
 from app.ai.schemas import AITaskRunRequest, AITaskRunResponse, ToolCallPlan, ToolCallRequest, ToolResult
 from app.ai.task_journal import TaskJournal
 from app.ai.tool_registry import ToolRegistry, registry as global_registry
+import app.ai.tools  # Trigger tool discovery and registration
 from app.core.config import settings
 from app.models.ai_task_log import AITaskStatus, AITaskTrigger
 
@@ -65,6 +66,9 @@ class AIEngine:
         self._db = db
         self._registry = registry or global_registry
         self._user_id = triggered_by_user_id
+        
+        # Log tool count for diagnostics
+        logger.debug(f"AIEngine initialized with {len(self._registry.all())} tools.")
 
     async def run(self, request: AITaskRunRequest) -> AITaskRunResponse:
         """

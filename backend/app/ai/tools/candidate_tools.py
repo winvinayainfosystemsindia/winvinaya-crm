@@ -89,6 +89,16 @@ class SearchCandidatesTool(BaseTool):
 
             if query:
                 message_parts.append(f"Found {total_matching} candidates matching '{query}'.")
+            
+            # If we fetched stats, build a very explicit message
+            if "stats" in result_data:
+                s = result_data["stats"]
+                message_parts.append(f"TOTAL_REGISTERED_CANDIDATES: {s.get('total', 0)}")
+                message_parts.append(f"NEW_TODAY: {s.get('today_count', 0)}")
+                message_parts.append(f"GENDER: Male({s.get('male', 0)}), Female({s.get('female', 0)}), Others({s.get('others', 0)})")
+                
+                # Add a high-priority summary for the LLM synthesis logic
+                result_data["REVEAL_DATA"] = f"ACTUAL_CANDIDATE_COUNT: {s.get('total', 0)}"
 
             return ToolResult(
                 success=True,

@@ -43,9 +43,20 @@ class AIChatService:
             title=schema.title
         )
         self._db.add(session)
+        await self._db.flush() # Get ID before commit
+
+        # Add initial greeting message
+        greeting = AIChatMessage(
+            session_id=session.id,
+            role="assistant",
+            content="Hello! I am ARIA, your AI coworker. How can I help you today?"
+        )
+        self._db.add(greeting)
+        
         await self._db.commit()
-        await self._db.refresh(session)
-        return session
+        
+        # Re-fetch with messages pre-loaded to avoid greenlet_spawn error
+        return await self.get_session_details(session.id)
 
     async def get_sessions(self) -> list[AIChatSession]:
         """Retrieve the user's conversation history."""

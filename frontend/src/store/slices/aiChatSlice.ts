@@ -130,7 +130,7 @@ const aiChatSlice = createSlice({
       .addCase(createSession.fulfilled, (state, action) => {
         state.sessions.unshift(action.payload);
         state.activeSession = action.payload;
-        state.messages = [];
+        state.messages = action.payload.messages || []; // Load the initial greeting
       })
       // Fetch Details
       .addCase(fetchSessionDetails.fulfilled, (state, action) => {

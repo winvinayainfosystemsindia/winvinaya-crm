@@ -216,6 +216,37 @@ async def get_users(
     )
 
 
+@router.get("/search", response_model=PaginatedResponse)
+@rate_limit_medium()
+async def search_users(
+    request: Request,
+    q: str = Query(..., description="Search query string"),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Search users by name, email, or username (Alias for get_users)
+    """
+    user_service = UserService(db)
+    users = await user_service.get_users(skip=skip, limit=limit, search=q)
+    total = await user_service.repository.count(
+        filter_expr=(
+            User.full_name.ilike(f"%{q}%") | 
+            User.email.ilike(f"%{q}%") | 
+            User.username.ilike(f"%{q}%")
+        )
+    )
+    return PaginatedResponse(
+        items=users,
+        total=total,
+        page=(skip // limit) + 1,
+        page_size=limit,
+        total_pages=(total + limit - 1) // limit
+    )
+
+
 @router.get("/{user_id}", response_model=UserResponse)
 @rate_limit_medium()
 async def get_user(

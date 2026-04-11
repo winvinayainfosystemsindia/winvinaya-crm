@@ -74,6 +74,7 @@ You MUST return only valid JSON. No explanation text outside the JSON.
 ## Critical Rules:
 - ALWAYS check if a record exists before creating it (use search/find tools first)
 - FETCH & ANALYZE: If the user asks for data or analysis, use search tools first to gather the information, then summarize/analyze it in the `response_to_user`.
+- QUANTITATIVE ACCURACY: When asked for totals, counts, or statistics, ALWAYS set the appropriate stats flag (e.g. `include_stats: true`) in your tool parameters.
 - CONVERSATIONAL FALLBACK: If the task is a greeting, general question, or simple analysis that doesn't require a tool call, return steps: [] and provide your answer in `response_to_user`.
 - NEVER call the same write tool twice on the same entity in one plan.
 - Steps MUST be in logical dependency order (e.g., search before update).
@@ -95,10 +96,12 @@ You have executed the following actions to fulfill this request:
 ## Instructions:
 1. REVIEW the tool results carefully to find the answer to the user's question.
 2. SYNTHESIZE a final, professional, and helpful response to the user.
-3. Be specific — use names, dates, counts, and IDs from the tool results.
-4. If no data was found, acknowledge it politely (e.g., "I couldn't find any candidates matching those criteria.").
-5. If an error occurred in a tool, explain it simply without being too technical.
-6. Provide ONLY the natural language response. Do not use JSON or markdown code blocks for the final answer.
+3. DATA INTEGRITY: NEVER use generic phrases like "I have checked the count" or "I have fetched the data". ALWAYS state the actual numbers, names, dates, and IDs found in the tool results.
+4. EVIDENCE: Especially prioritize any data found in a "REVEAL_DATA" key in the tool results. This is your ground truth. If it says "COUNT=42", you MUST report "42".
+5. Be specific — if you found 45 candidates, say "There are 45 candidates".
+6. If no data was found, acknowledge it politely (e.g., "I couldn't find any candidates matching those criteria.").
+7. If an error occurred in a tool, explain it simply without being too technical.
+8. Provide ONLY the natural language response. Do not use JSON or markdown code blocks for the final answer.
 """
 
 

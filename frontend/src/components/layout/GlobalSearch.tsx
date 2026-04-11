@@ -279,7 +279,8 @@ const GlobalSearch: React.FC = () => {
 						'aria-label': 'Search for services, features, candidates or users',
 						'aria-autocomplete': 'list',
 						'aria-controls': resultsId,
-						'aria-activedescendant': selectedIndex >= 0 ? `search-option-${selectedIndex}` : undefined
+						'aria-activedescendant': selectedIndex >= 0 ? `search-option-${selectedIndex}` : undefined,
+						autoComplete: 'off'
 					}}
 				/>
 				<ShortcutHint aria-hidden="true">

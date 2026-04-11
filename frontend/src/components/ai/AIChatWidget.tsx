@@ -242,11 +242,13 @@ const AIChatWidget: React.FC = () => {
                     }
                   >
                     <Box sx={{ py: 1, pr: 4 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {s.title}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {new Date(s.created_at).toLocaleDateString()}
+                      <Typography variant="caption" sx={{ color: '#64748b', display: 'flex', gap: 1 }}>
+                        <span>{new Date(s.created_at).toLocaleDateString()}</span>
+                        <span>•</span>
+                        <span>{new Date(s.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                       </Typography>
                     </Box>
                   </ListItem>
@@ -308,15 +310,29 @@ const AIChatWidget: React.FC = () => {
                     border: msg.role === 'user' ? 'none' : '1px solid #e2e8f0',
                   }}
                 >
-                  <Typography variant="body2" component="div" sx={{ 
-                    '& p': { m: 0 },
-                    '& ul, & ol': { pl: 2, my: 1 },
-                    '& code': { bgcolor: 'rgba(0,0,0,0.05)', px: 0.5, borderRadius: '4px' }
-                  }}>
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {msg.content}
-                    </ReactMarkdown>
-                  </Typography>
+                  <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                    <Typography variant="body2" component="div" sx={{ 
+                      '& p': { m: 0 },
+                      '& ul, & ol': { pl: 2, my: 1 },
+                      '& code': { bgcolor: 'rgba(0,0,0,0.05)', px: 0.5, borderRadius: '4px' }
+                    }}>
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {msg.content}
+                      </ReactMarkdown>
+                    </Typography>
+                    <Typography 
+                      variant="caption" 
+                      sx={{ 
+                        alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start', 
+                        mt: 0.5, 
+                        opacity: 0.6,
+                        fontSize: '0.65rem',
+                        color: msg.role === 'user' ? 'rgba(255,255,255,0.7)' : 'inherit'
+                      }}
+                    >
+                      {msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                    </Typography>
+                  </Box>
                 </Paper>
                 
                 {/* Meta info / Tool badges */}

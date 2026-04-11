@@ -23,7 +23,7 @@ from app.schemas.ai_chat import (
 router = APIRouter()
 
 
-@router.post("/sessions", response_model=AIChatSessionRead)
+@router.post("/sessions", response_model=AIChatSessionDetail)
 async def create_chat_session(
     *,
     db: AsyncSession = Depends(deps.get_db),
