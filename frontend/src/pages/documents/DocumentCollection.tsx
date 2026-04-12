@@ -11,7 +11,13 @@ import {
   Alert,
   CircularProgress,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  LinearProgress,
+  Stack,
+  Avatar,
+  Divider,
+  Grid,
+  IconButton,
 } from '@mui/material';
 import {
   CloudUpload as UploadIcon,
@@ -19,7 +25,12 @@ import {
   Description as FileIcon,
   CheckCircle as CheckCircleIcon,
   ArrowBack as ArrowBackIcon,
-  Download as DownloadIcon
+  Badge as IDIcon,
+  School as EducationIcon,
+  Article as ResumeIcon,
+  Verified as VerifiedIcon,
+  Preview as PreviewIcon,
+  HistoryEdu as MetaIcon
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
@@ -28,13 +39,13 @@ import authService from '../../services/authService';
 
 
 const REQUIRED_DOCUMENTS = [
-  { type: 'resume', label: 'Resume', description: 'Updated CV/Resume' },
-  { type: '10th_certificate', label: '10th Certificate', description: 'Class 10 Marksheet' },
-  { type: '12th_certificate', label: '12th Certificate', description: 'Class 12 Marksheet' },
-  { type: 'degree_certificate', label: 'Degree Certificate', description: 'UG/PG Degree Certificate' },
-  { type: 'pan_card', label: 'PAN Card', description: 'PAN Card for ID proof' },
-  { type: 'aadhar_card', label: 'Aadhar Card', description: 'Aadhar Card for Address/ID proof' },
-  { type: 'disability_certificate', label: 'Disability Certificate', description: 'Valid Disability Certificate' }
+  { type: 'resume', label: 'Resume', description: 'Updated CV/Resume', icon: <ResumeIcon sx={{ color: '#007eb9' }} /> },
+  { type: '10th_certificate', label: '10th Certificate', description: 'Class 10 Marksheet', icon: <EducationIcon sx={{ color: '#1a73e8' }} /> },
+  { type: '12th_certificate', label: '12th Certificate', description: 'Class 12 Marksheet', icon: <EducationIcon sx={{ color: '#1a73e8' }} /> },
+  { type: 'degree_certificate', label: 'Degree Certificate', description: 'UG/PG Degree Certificate', icon: <EducationIcon sx={{ color: '#1a73e8' }} /> },
+  { type: 'pan_card', label: 'PAN Card', description: 'PAN Card for ID proof', icon: <IDIcon sx={{ color: '#6b7280' }} /> },
+  { type: 'aadhar_card', label: 'Aadhar Card', description: 'Aadhar Card for ID/Address', icon: <IDIcon sx={{ color: '#6b7280' }} /> },
+  { type: 'disability_certificate', label: 'Disability Certificate', description: 'Authorized Medical Certificate', icon: <VerifiedIcon sx={{ color: '#059669' }} /> }
 ];
 
 const DocumentCollection: React.FC = () => {
@@ -123,55 +134,82 @@ const DocumentCollection: React.FC = () => {
 
   const getDocumentStatus = (type: string) => {
     const doc = documents.find(d => d.document_type === type);
-    if (!doc) return <Chip label="Pending" size="small" color="warning" variant="outlined" />;
+    if (!doc) return (
+      <Chip
+        label="Pending"
+        size="small"
+        variant="outlined"
+        sx={{
+          bgcolor: '#fff7ed',
+          color: '#c2410c',
+          borderColor: '#fdba74',
+          fontWeight: 800,
+          fontSize: '0.65rem',
+          height: 20
+        }}
+      />
+    );
 
     return (
       <Box sx={{ width: '100%' }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-          <Chip icon={<CheckCircleIcon />} label="Uploaded" size="small" color="success" />
-          <Typography variant="caption" color="text.secondary">
-            {new Date(doc.created_at).toLocaleDateString()}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+          <Chip
+            icon={<CheckCircleIcon style={{ fontSize: 14, color: '#059669' }} />}
+            label="Verified Upload"
+            size="small"
+            sx={{
+              bgcolor: '#f0fdf4',
+              color: '#15803d',
+              borderColor: '#bbf7d0',
+              fontWeight: 800,
+              fontSize: '0.65rem',
+              height: 20
+            }}
+          />
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.7rem' }}>
+            {new Date(doc.created_at).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}
           </Typography>
         </Box>
-        <Paper variant="outlined" sx={{ p: 1.5, bgcolor: '#f8f9fa', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, overflow: 'hidden', minWidth: '150px' }}>
-            <FileIcon color="action" fontSize="small" />
+        <Paper elevation={0} sx={{
+          p: 1.25,
+          bgcolor: '#f8fafc',
+          borderRadius: '8px',
+          border: '1px solid #f1f5f9',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 1
+        }}>
+          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ overflow: 'hidden' }}>
+            <Box sx={{ p: 0.75, bgcolor: '#fff', borderRadius: '6px', border: '1px solid #e2e8f0', display: 'flex' }}>
+              <FileIcon sx={{ color: 'text.secondary', fontSize: 18 }} />
+            </Box>
             <Box sx={{ overflow: 'hidden' }}>
-              <Typography variant="body2" noWrap title={doc.document_name} sx={{ fontWeight: 500, maxWidth: '180px' }}>
+              <Typography variant="body2" noWrap sx={{ fontWeight: 700, color: 'secondary.main', fontSize: '0.8rem' }}>
                 {doc.document_name}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {(doc.file_size ? (doc.file_size / 1024).toFixed(0) + ' KB' : 'Unknown size')}
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>
+                {(doc.file_size ? (doc.file_size / 1024).toFixed(0) + ' KB' : 'PDF Document')}
               </Typography>
             </Box>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 0.5 }}>
-            <Button
+          </Stack>
+          <Stack direction="row" spacing={0.5}>
+            <IconButton
               size="small"
               onClick={() => handlePreview(doc.id)}
-              sx={{ minWidth: 0, px: 1 }}
-              title="Preview"
+              sx={{ color: 'primary.main', '&:hover': { bgcolor: 'rgba(0,126,185,0.08)' } }}
             >
-              Preview
-            </Button>
-            <Button
-              size="small"
-              onClick={() => handleDownload(doc.id)}
-              sx={{ minWidth: 0, px: 1 }}
-              title="Download"
-            >
-              <DownloadIcon fontSize="small" />
-            </Button>
-            <Button
+              <PreviewIcon fontSize="small" />
+            </IconButton>
+            <IconButton
               size="small"
               color="error"
               onClick={() => handleDelete(doc.id)}
-              sx={{ minWidth: 0, px: 1 }}
-              title="Delete"
+              sx={{ '&:hover': { bgcolor: 'rgba(211,47,47,0.08)' } }}
             >
               <DeleteIcon fontSize="small" />
-            </Button>
-          </Box>
+            </IconButton>
+          </Stack>
         </Paper>
       </Box>
     );
@@ -198,92 +236,161 @@ const DocumentCollection: React.FC = () => {
     );
   }
 
+  const filteredRequiredDocs = REQUIRED_DOCUMENTS.filter(doc => doc.type !== 'disability_certificate' || !!candidate?.disability_details?.is_disabled);
+  const uploadedCount = filteredRequiredDocs.filter(d => !!getDocumentForType(d.type)).length;
+  const progressPercent = (uploadedCount / filteredRequiredDocs.length) * 100;
+
   return (
-    <Box sx={{ p: isMobile ? 2 : 3 }}>
-      <Box sx={{ mb: 4 }}>
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/candidates/documents')}
-          sx={{ mb: 2 }}
-        >
-          Back to Candidates
-        </Button>
-        <Typography
-          variant="h4"
-          component="h1"
-          sx={{
-            fontWeight: 300,
-            color: '#232f3e',
-            mb: 0.5
-          }}
-        >
-          Document Collection
-        </Typography>
-        <Typography variant="subtitle1" color="text.secondary">
-          {candidate.name} ({candidate.email})
-        </Typography>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#f1f5f9' }}>
+      {/* ENTERPRISE DARK HEADER */}
+      <Box sx={{ bgcolor: 'secondary.main', pt: 4, pb: 8, px: isMobile ? 2 : 4, color: '#fff' }}>
+        <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
+          <Button
+            startIcon={<ArrowBackIcon />}
+            onClick={() => navigate('/candidates/documents')}
+            sx={{ color: 'rgba(255,255,255,0.7)', mb: 3, textTransform: 'none', '&:hover': { color: '#fff', bgcolor: 'rgba(255,255,255,0.1)' } }}
+          >
+            Back to Candidates
+          </Button>
+
+          <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }} spacing={3}>
+            <Stack direction="row" spacing={2.5} alignItems="center">
+              <Avatar sx={{ width: 64, height: 64, bgcolor: 'primary.main', fontSize: '1.5rem', fontWeight: 800 }}>
+                {candidate.name.charAt(0)}
+              </Avatar>
+              <Box>
+                <Typography variant="h4" sx={{ fontWeight: 800, letterSpacing: '-0.02em', mb: 0.5 }}>
+                  Document Verification
+                </Typography>
+                <Stack direction="row" spacing={2} divider={<Divider orientation="vertical" flexItem sx={{ bgcolor: 'rgba(255,255,255,0.1)' }} />}>
+                  <Typography sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 600, fontSize: '0.9rem' }}>{candidate.name}</Typography>
+                  <Typography sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 600, fontSize: '0.9rem' }}>{candidate.email}</Typography>
+                </Stack>
+              </Box>
+            </Stack>
+
+            <Box sx={{ minWidth: { xs: '100%', md: 300 } }}>
+              <Stack direction="row" justifyContent="space-between" sx={{ mb: 1 }}>
+                <Typography sx={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(255,255,255,0.5)' }}>Collection Progress</Typography>
+                <Typography sx={{ fontSize: '0.75rem', fontWeight: 800, color: 'primary.main' }}>{uploadedCount} / {filteredRequiredDocs.length} Collected</Typography>
+              </Stack>
+              <LinearProgress
+                variant="determinate"
+                value={progressPercent}
+                sx={{
+                  height: 8,
+                  borderRadius: 4,
+                  bgcolor: 'rgba(255,255,255,0.1)',
+                  '& .MuiLinearProgress-bar': { borderRadius: 4, bgcolor: 'primary.main' }
+                }}
+              />
+            </Box>
+          </Stack>
+        </Box>
       </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => dispatch(clearError())}>
-          {error}
-        </Alert>
-      )}
+      {/* DOCUMENT GRID AREA */}
+      <Box sx={{ mt: -5, px: isMobile ? 2 : 4, pb: 6 }}>
+        <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
+          {error && (
+            <Alert severity="error" sx={{ mb: 3, borderRadius: '12px', bgcolor: '#fef2f2' }} onClose={() => dispatch(clearError())}>
+              {error}
+            </Alert>
+          )}
 
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', mx: -1.5 }}>
-        {REQUIRED_DOCUMENTS.filter(doc => doc.type !== 'disability_certificate' || !!candidate?.disability_details?.is_disabled).map((docType) => {
-          const existingDoc = getDocumentForType(docType.type);
+          <Grid container spacing={3}>
+            {filteredRequiredDocs.map((docType) => {
+              const existingDoc = getDocumentForType(docType.type);
 
-          return (
-            <Box key={docType.type} sx={{ width: { xs: '100%', md: '50%' }, p: 1.5 }}>
-              <Card variant="outlined" sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Box sx={{
+              return (
+                <Grid size={{ xs: 12, md: 6, lg: 4 }} key={docType.type}>
+                  <Card sx={{
+                    height: '100%',
                     display: 'flex',
-                    flexDirection: { xs: 'column', sm: 'row' },
-                    justifyContent: 'space-between',
-                    alignItems: { xs: 'stretch', sm: 'start' },
-                    gap: 2,
-                    mb: 2
+                    flexDirection: 'column',
+                    borderRadius: '16px',
+                    border: '1px solid #e2e8f0',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                      borderColor: 'primary.main'
+                    }
                   }}>
-                    <Box>
-                      <Typography variant="h6" component="div">
+                    <CardContent sx={{ flexGrow: 1, p: 3 }}>
+                      <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 3 }}>
+                        <Box sx={{
+                          p: 1.5,
+                          bgcolor: '#f1f5f9',
+                          borderRadius: '12px',
+                          display: 'flex',
+                          color: 'secondary.main'
+                        }}>
+                          {docType.icon}
+                        </Box>
+                        {getDocumentStatus(docType.type)}
+                      </Stack>
+
+                      <Typography variant="h6" sx={{ fontWeight: 800, color: 'secondary.main', mb: 0.5 }}>
                         {docType.label}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500, fontSize: '0.85rem' }}>
                         {docType.description}
                       </Typography>
-                    </Box>
-                    <Box sx={{ alignSelf: { xs: 'flex-start', sm: 'auto' } }}>
-                      {getDocumentStatus(docType.type)}
-                    </Box>
-                  </Box>
-                </CardContent>
-                <CardActions sx={{ p: 2, pt: 0 }}>
-                  {!existingDoc && (
-                    <Button
-                      component="label"
-                      variant="contained"
-                      startIcon={uploading === docType.type ? <CircularProgress size={20} color="inherit" /> : <UploadIcon />}
-                      disabled={uploading === docType.type}
-                      fullWidth
-                    >
-                      Upload {docType.label}
-                      <input
-                        type="file"
-                        hidden
-                        onChange={(e) => handleFileUpload(e, docType.type)}
-                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                      />
-                    </Button>
-                  )}
-                </CardActions>
-              </Card>
-            </Box>
-          );
-        })}
+                    </CardContent>
+
+                    <CardActions sx={{ p: 3, pt: 0 }}>
+                      {!existingDoc ? (
+                        <Button
+                          component="label"
+                          variant="contained"
+                          startIcon={uploading === docType.type ? <CircularProgress size={18} color="inherit" /> : <UploadIcon />}
+                          disabled={uploading === docType.type}
+                          fullWidth
+                          sx={{
+                            borderRadius: '10px',
+                            py: 1.25,
+                            fontWeight: 800,
+                            textTransform: 'none',
+                            bgcolor: 'primary.main',
+                            '&:hover': { bgcolor: 'primary.dark' }
+                          }}
+                        >
+                          {uploading === docType.type ? 'Uploading...' : `Upload ${docType.label}`}
+                          <input
+                            type="file"
+                            hidden
+                            onChange={(e) => handleFileUpload(e, docType.type)}
+                            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                          />
+                        </Button>
+                      ) : (
+                        <Button
+                          fullWidth
+                          variant="outlined"
+                          startIcon={<MetaIcon />}
+                          onClick={() => handleDownload(existingDoc.id)}
+                          sx={{
+                            borderRadius: '10px',
+                            py: 1.25,
+                            fontWeight: 700,
+                            textTransform: 'none',
+                            color: 'text.secondary',
+                            borderColor: '#e2e8f0'
+                          }}
+                        >
+                          Download Receipt
+                        </Button>
+                      )}
+                    </CardActions>
+                  </Card>
+                </Grid>
+              );
+            })}
+          </Grid>
+        </Box>
       </Box>
-    </Box >
+    </Box>
   );
 };
 
