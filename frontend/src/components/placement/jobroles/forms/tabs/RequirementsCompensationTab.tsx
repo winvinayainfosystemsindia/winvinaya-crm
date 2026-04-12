@@ -180,12 +180,12 @@ const RequirementsCompensationTab: React.FC<RequirementsCompensationTabProps> = 
 									const { key: _key, ...rest } = props;
 									const isAdd = (option as any).inputValue;
 									return (
-										<li key={isAdd ? `add-${(option as any).inputValue}` : (option as Skill).id} {...rest}>
+										<Box component="li" key={isAdd ? `add-${(option as any).inputValue}` : (option as Skill).id} {...rest}>
 											<Stack direction="row" spacing={1} alignItems="center">
 												{isAdd && <AddIcon color="primary" fontSize="small" />}
 												<Typography>{isAdd ? `Add "${(option as any).inputValue}"` : (option as Skill).name}</Typography>
 											</Stack>
-										</li>
+										</Box>
 									);
 								}}
 								renderInput={(params) => <TextField {...params} placeholder="Type or select skills" {...commonTextFieldProps} />}

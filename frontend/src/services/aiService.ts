@@ -47,6 +47,28 @@ export const aiService = {
     const res = await api.get(`${BASE}/health`);
     return res.data;
   },
+
+  /** Extract Job Role details from JD text or PDF file */
+  async extractJobRole(jdText?: string, file?: File): Promise<{
+    data: any;
+    suggestions: {
+      company_id: number | null;
+      company_name: string | null;
+      contact_id: number | null;
+      contact_name: string | null;
+    };
+  }> {
+    const formData = new FormData();
+    if (jdText) formData.append('jd_text', jdText);
+    if (file) formData.append('file', file);
+
+    const res = await api.post(`${BASE}/extract/job-role`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return res.data;
+  },
 };
 
 export default aiService;

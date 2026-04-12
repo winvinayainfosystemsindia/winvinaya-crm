@@ -75,3 +75,16 @@ class AITaskLogRead(AITaskLogListItem):
     llm_cost_usd: float | None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class JobRoleExtractionRequest(BaseModel):
+    """Request to extract job role details from JD text."""
+    jd_text: str = Field(..., description="Raw Job Description text")
+
+
+class JobRoleExtractionResponse(BaseModel):
+    """Structured data extracted from a JD."""
+    data: dict[str, Any] = Field(..., description="Extracted job role fields matching JobRoleCreate schema")
+    suggestions: dict[str, Any] = Field(..., description="Suggested matches for company/contact")
+    raw_content: str | None = Field(None, description="Raw JSON from the AI (for debugging)")
+

@@ -17,10 +17,10 @@ Access:
 
 from __future__ import annotations
 
+from typing import Annotated, Optional
 import logging
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, File, UploadFile, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
@@ -32,7 +32,10 @@ from app.schemas.ai import (
     AITaskRunResponse,
     AITaskLogRead,
     AITaskLogListItem,
+    JobRoleExtractionRequest,
+    JobRoleExtractionResponse,
 )
+from app.ai.extractors import JobRoleExtractor
 from app.ai.schemas import ToolDefinition
 from app.core.config import settings
 from app.models.ai_task_log import AITaskStatus
@@ -215,3 +218,42 @@ async def ai_health(
         "supported_providers": SUPPORTED_PROVIDERS,
         "providers": get_provider_info(),
     }
+# ─────────────────────────────────────────────────────────────────────────────
+# POST /ai/extract/job-role — Parse JD text
+# ─────────────────────────────────────────────────────────────────────────────
+
+@router.post(
+    "/extract/job-role",
+    response_model=JobRoleExtractionResponse,
+    summary="Extract Job Role details from JD text",
+    description=(
+        "Uses the AI Engine to parse unstructured job description text into "
+        "structured Job Role fields. Also attempts to find matching companies "
+        "and contacts in the CRM."
+    ),
+)
+async def extract_job_role(
+    jd_text: Optional[str] = Form(None),
+    file: Optional[UploadFile] = File(None),
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+) -> JobRoleExtractionResponse:
+    if not settings.AI_ENABLED:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="AI Engine is disabled.",
+        )
+
+    extractor = JobRoleExtractor(db, current_user)
+    try:
+        file_bytes = None
+        if file:
+            file_bytes = await file.read()
+            
+        result = await extractor.extract_from_source(jd_text=jd_text, pdf_file=file_bytes)
+        return JobRoleExtractionResponse(**result)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("JD extraction failed")
+        raise HTTPException(status_code=500, detail="AI extraction failed unexpectedly.")
