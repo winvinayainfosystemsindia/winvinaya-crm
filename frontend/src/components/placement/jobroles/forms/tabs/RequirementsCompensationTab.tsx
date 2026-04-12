@@ -236,9 +236,6 @@ const RequirementsCompensationTab: React.FC<RequirementsCompensationTabProps> = 
 						<Box>
 							<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
 								<Typography variant="awsFieldLabel" sx={{ mb: 0 }}>Disability Types Preferred</Typography>
-								{highlightMissing && !formData.requirements?.disability_preferred?.length && (
-									<Typography variant="caption" sx={{ color: '#ec7211', fontWeight: 700 }}>VERIFICATION REQUIRED</Typography>
-								)}
 							</Stack>
 							<Autocomplete
 								multiple
@@ -264,7 +261,7 @@ const RequirementsCompensationTab: React.FC<RequirementsCompensationTabProps> = 
 										{...params} 
 										placeholder="Select Disability Preferences" 
 										{...commonTextFieldProps} 
-										sx={getFieldStyle(formData.requirements?.disability_preferred, true)}
+										sx={getFieldStyle(formData.requirements?.disability_preferred, false)}
 									/>
 								)}
 							/>

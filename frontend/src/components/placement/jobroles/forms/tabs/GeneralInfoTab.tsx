@@ -39,6 +39,14 @@ interface GeneralInfoTabProps {
 		contact_id: number | null;
 		contact_name: string | null;
 	} | null;
+	pendingEntities: {
+		company_name: string | null;
+		contact_name: string | null;
+	};
+	setPendingEntities: React.Dispatch<React.SetStateAction<{
+		company_name: string | null;
+		contact_name: string | null;
+	}>>;
 	highlightMissing?: boolean;
 }
 
@@ -49,18 +57,20 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({
 	companies,
 	contacts,
 	suggestions,
+	pendingEntities,
+	setPendingEntities,
 	highlightMissing
 }) => {
 	const { awsPanel, helperBox } = awsStyles;
 
-	const getFieldStyle = (value: any, isRequired: boolean = false) => {
-		const isMissing = highlightMissing && isRequired && !value;
+	const getFieldStyle = (value: any, isRequired: boolean = false, isPending: boolean = false) => {
+		const isMissing = highlightMissing && isRequired && !value && !isPending;
 		return {
 			...commonTextFieldProps.sx,
 			'& .MuiInputBase-root': {
 				...commonTextFieldProps.sx['& .MuiInputBase-root'],
-				border: isMissing ? '1px dashed #ec7211' : 'none',
-				bgcolor: isMissing ? 'rgba(236, 114, 17, 0.03)' : '#fcfcfc',
+				border: isMissing ? '1px dashed #ec7211' : (isPending ? '1px solid #1a73e8' : 'none'),
+				bgcolor: isMissing ? 'rgba(236, 114, 17, 0.03)' : (isPending ? 'rgba(26, 115, 232, 0.03)' : '#fcfcfc'),
 			}
 		};
 	};
@@ -229,18 +239,55 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({
 							</Stack>
 							<Autocomplete
 								options={companies}
-								getOptionLabel={(option) => option.name || ''}
-								value={companies.find((c) => c.id === formData.company_id) || null}
+								getOptionLabel={(option) => {
+									if (typeof option === 'string') return option;
+									if ((option as any).inputValue) return (option as any).inputValue;
+									return option.name || '';
+								}}
+								filterOptions={(options, params) => {
+									const filtered = options.filter(o => 
+										o.name.toLowerCase().includes(params.inputValue.toLowerCase())
+									);
+									const { inputValue } = params;
+									const isExisting = options.some((option) => inputValue === option.name);
+									if (inputValue !== '' && !isExisting) {
+										filtered.push({
+											inputValue,
+											name: `+ Add "${inputValue}" as new company`,
+											id: -1 // Temporary ID marker
+										} as any);
+									}
+									return filtered;
+								}}
+								freeSolo
+								value={
+									companies.find((c) => c.id === formData.company_id) || 
+									(pendingEntities.company_name ? { name: pendingEntities.company_name } : null) as any
+								}
 								onChange={(_, newValue) => {
-									handleChange('company_id', newValue?.id);
+									if (typeof newValue === 'string') {
+										setPendingEntities(p => ({ ...p, company_name: newValue }));
+										handleChange('company_id', null);
+									} else if (newValue && newValue.inputValue) {
+										setPendingEntities(p => ({ ...p, company_name: newValue.inputValue }));
+										handleChange('company_id', null);
+									} else if (newValue && newValue.id !== -1) {
+										handleChange('company_id', newValue.id);
+										setPendingEntities(p => ({ ...p, company_name: null }));
+									} else {
+										handleChange('company_id', null);
+										setPendingEntities(p => ({ ...p, company_name: null }));
+									}
 									handleChange('contact_id', null);
+									setPendingEntities(p => ({ ...p, contact_name: null }));
 								}}
 								renderInput={(params) => (
 									<TextField 
 										{...params} 
-										placeholder="Select Company" 
+										placeholder="Search or Type New Company" 
 										{...commonTextFieldProps} 
-										sx={getFieldStyle(formData.company_id, true)}
+										sx={getFieldStyle(formData.company_id, true, !!pendingEntities.company_name)}
+										helperText={pendingEntities.company_name ? "Will create new company" : ""}
 									/>
 								)}
 							/>
@@ -265,16 +312,55 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({
 							</Stack>
 							<Autocomplete
 								options={contacts}
-								getOptionLabel={(option) => `${option.first_name} ${option.last_name}`}
-								value={contacts.find((c) => c.id === formData.contact_id) || null}
-								onChange={(_, newValue) => handleChange('contact_id', newValue?.id)}
-								disabled={!formData.company_id}
+								getOptionLabel={(option) => {
+									if (typeof option === 'string') return option;
+									if ((option as any).inputValue) return (option as any).inputValue;
+									return `${option.first_name} ${option.last_name}`;
+								}}
+								filterOptions={(options, params) => {
+									const filtered = options.filter(o => 
+										`${o.first_name} ${o.last_name}`.toLowerCase().includes(params.inputValue.toLowerCase())
+									);
+									const { inputValue } = params;
+									const isExisting = options.some((option) => inputValue === `${option.first_name} ${option.last_name}`);
+									if (inputValue !== '' && !isExisting) {
+										filtered.push({
+											inputValue,
+											first_name: `+ Add "${inputValue}"`,
+											last_name: `as new contact`,
+											id: -1
+										} as any);
+									}
+									return filtered;
+								}}
+								freeSolo
+								value={
+									contacts.find((c) => c.id === formData.contact_id) || 
+									(pendingEntities.contact_name ? { first_name: pendingEntities.contact_name, last_name: '' } : null) as any
+								}
+								onChange={(_, newValue) => {
+									if (typeof newValue === 'string') {
+										setPendingEntities(p => ({ ...p, contact_name: newValue }));
+										handleChange('contact_id', null);
+									} else if (newValue && newValue.inputValue) {
+										setPendingEntities(p => ({ ...p, contact_name: newValue.inputValue }));
+										handleChange('contact_id', null);
+									} else if (newValue && newValue.id !== -1) {
+										handleChange('contact_id', newValue.id);
+										setPendingEntities(p => ({ ...p, contact_name: null }));
+									} else {
+										handleChange('contact_id', null);
+										setPendingEntities(p => ({ ...p, contact_name: null }));
+									}
+								}}
+								disabled={!formData.company_id && !pendingEntities.company_name}
 								renderInput={(params) => (
 									<TextField
 										{...params}
-										placeholder={formData.company_id ? "Select Contact" : "Select a company first"}
+										placeholder={formData.company_id || pendingEntities.company_name ? "Search or Type New Contact" : "Select a company first"}
 										{...commonTextFieldProps}
-										sx={getFieldStyle(formData.contact_id, true)}
+										sx={getFieldStyle(formData.contact_id, true, !!pendingEntities.contact_name)}
+										helperText={pendingEntities.contact_name ? "Will create new contact for this company" : ""}
 									/>
 								)}
 							/>

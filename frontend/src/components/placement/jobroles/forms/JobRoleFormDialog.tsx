@@ -40,6 +40,8 @@ import type { JobRole, JobRoleCreate, JobRoleUpdate } from '../../../../models/j
 import { JOB_ROLE_STATUS } from '../../../../models/jobRole';
 import { fetchCompanies } from '../../../../store/slices/companySlice';
 import { fetchContacts } from '../../../../store/slices/contactSlice';
+import companyService from '../../../../services/companyService';
+import contactService from '../../../../services/contactService';
 
 import GeneralInfoTab from './tabs/GeneralInfoTab';
 import JobDescriptionTab from './tabs/JobDescriptionTab';
@@ -65,6 +67,11 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 	jobRole,
 	loading = false
 }) => {
+	const getDefaultCloseDate = () => {
+		const date = new Date();
+		date.setDate(date.getDate() + 20);
+		return date.toISOString().split('T')[0];
+	};
 	const dispatch = useAppDispatch();
 	const { list: companies } = useAppSelector((state: RootState) => state.companies);
 	const { list: contacts } = useAppSelector((state: RootState) => state.contacts);
@@ -89,6 +96,10 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 		contact_name: string | null;
 	} | null>(null);
 	const [dragActive, setDragActive] = useState(false);
+	const [pendingEntities, setPendingEntities] = useState<{
+		company_name: string | null;
+		contact_name: string | null;
+	}>({ company_name: null, contact_name: null });
 
 	const [formData, setFormData] = useState<Partial<JobRole>>({
 		title: '',
@@ -112,6 +123,7 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 			setActiveStep(0);
 			setFormMode(jobRole ? 'manual' : null);
 			setSuggestions(null);
+			setPendingEntities({ company_name: null, contact_name: null });
 			setJdText('');
 			setSelectedFile(null);
 			if (jobRole) {
@@ -134,8 +146,14 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 					title: '',
 					status: JOB_ROLE_STATUS.ACTIVE,
 					is_visible: true,
+					no_of_vacancies: 1,
+					close_date: getDefaultCloseDate(),
 					location: { cities: [], states: [], country: 'India' },
-					requirements: { skills: [], qualifications: [], disability_preferred: [] },
+					requirements: {
+						skills: [],
+						qualifications: ['Any Graduation'],
+						disability_preferred: []
+					},
 					job_details: { designation: '', workplace_type: 'Onsite', job_type: 'Full Time' }
 				});
 			}
@@ -162,13 +180,15 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 		try {
 			const result = await aiService.extractJobRole(jdText || undefined, selectedFile || undefined);
 			const extracted = result.data;
-			
+
 			// Directly merge into formData to keep a single source of truth
 			setFormData(prev => ({
 				...prev,
 				...extracted,
 				company_id: result.suggestions?.company_id || prev.company_id,
 				contact_id: result.suggestions?.contact_id || prev.contact_id,
+				no_of_vacancies: extracted.no_of_vacancies || prev.no_of_vacancies || 1,
+				close_date: extracted.close_date || prev.close_date || getDefaultCloseDate(),
 				location: {
 					...prev.location,
 					...extracted.location,
@@ -176,7 +196,10 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 				},
 				requirements: {
 					...prev.requirements,
-					...extracted.requirements
+					...extracted.requirements,
+					qualifications: extracted.requirements?.qualifications?.length
+						? extracted.requirements.qualifications
+						: (prev.requirements?.qualifications?.length ? prev.requirements.qualifications : ['Any degree'])
 				},
 				job_details: {
 					...prev.job_details,
@@ -185,6 +208,15 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 			}));
 
 			setSuggestions(result.suggestions);
+
+			// Handle on-the-fly entity suggestions
+			if (!result.suggestions.company_id && result.suggestions.company_name) {
+				setPendingEntities(prev => ({ ...prev, company_name: result.suggestions.company_name }));
+			}
+			if (!result.suggestions.contact_id && result.suggestions.contact_name) {
+				setPendingEntities(prev => ({ ...prev, contact_name: result.suggestions.contact_name }));
+			}
+
 			setActiveStep(2); // Jump to Review & Publish
 			toast.success('AI Analysis complete. Please verify the results and publish.');
 		} catch (error: unknown) {
@@ -234,11 +266,16 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 	};
 
 	// Comprehensive cross-tab validation helper
-	const validateData = (data: Partial<JobRole>) => {
-		const basicInfoValid = !!(data.title && data.job_details?.designation && data.company_id && data.contact_id);
+	const validateData = (data: Partial<JobRole>, pending: typeof pendingEntities) => {
+		const basicInfoValid = !!(
+			data.title &&
+			data.job_details?.designation &&
+			(data.company_id || pending.company_name) &&
+			(data.contact_id || pending.contact_name)
+		);
 		const descriptionValid = (data.description || '').trim().length >= 10;
 		const locationValid = !!(data.location?.states?.length && data.location?.country);
-		const requirementsValid = !!(data.requirements?.qualifications?.length && data.requirements?.disability_preferred?.length);
+		const requirementsValid = !!(data.requirements?.qualifications?.length);
 
 		return {
 			basicInfo: basicInfoValid,
@@ -249,7 +286,7 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 		};
 	};
 
-	const validation = useMemo(() => validateData(formData), [formData]);
+	const validation = useMemo(() => validateData(formData, pendingEntities), [formData, pendingEntities]);
 
 	// Keyboard shortcut listener
 	useEffect(() => {
@@ -264,18 +301,54 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 		return () => window.removeEventListener('keydown', handleKeyDown);
 	}, [activeStep, validation]);
 
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!validation.isValid) return;
 
-		const submitData = { ...formData };
-		const fieldsToExclude = ['id', 'public_id', 'created_at', 'updated_at', 'company', 'contact', 'creator'] as const;
+		let finalFormData = { ...formData };
 
-		fieldsToExclude.forEach(field => {
-			delete (submitData as Record<string, unknown>)[field];
-		});
+		try {
+			// 1. Create New Company if pending
+			if (!finalFormData.company_id && pendingEntities.company_name) {
+				const newCompany = await companyService.create({
+					name: pendingEntities.company_name,
+					status: 'active'
+				});
+				finalFormData.company_id = newCompany.id;
+				toast.info(`Created new company: ${newCompany.name}`);
+				dispatch(fetchCompanies({ limit: 1000 }));
+			}
 
-		onSubmit(submitData as JobRoleCreate);
+			// 2. Create New Contact if pending
+			if (!finalFormData.contact_id && pendingEntities.contact_name && finalFormData.company_id) {
+				const names = pendingEntities.contact_name.split(' ');
+				const firstName = names[0];
+				const lastName = names.slice(1).join(' ') || '.';
+
+				const newContact = await contactService.create({
+					company_id: finalFormData.company_id,
+					first_name: firstName,
+					last_name: lastName,
+					is_primary: true,
+					is_decision_maker: false
+				});
+				finalFormData.contact_id = newContact.id;
+				toast.info(`Created new contact: ${newContact.first_name}`);
+				dispatch(fetchContacts({ companyId: finalFormData.company_id, limit: 1000 }));
+			}
+
+			const submitData = { ...finalFormData };
+			const fieldsToExclude = ['id', 'public_id', 'created_at', 'updated_at', 'company', 'contact', 'creator'] as const;
+
+			fieldsToExclude.forEach(field => {
+				delete (submitData as Record<string, unknown>)[field];
+			});
+
+			onSubmit(submitData as JobRoleCreate);
+		} catch (error: any) {
+			console.error('Final submission error:', error);
+			toast.error(error.response?.data?.detail || 'Failed to create linked entities. Please check the form.');
+		}
 	};
 
 
@@ -517,12 +590,12 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 			{/* UNIFIED SCROLLABLE AREA - Flow controlled by DialogContent */}
 			<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: { xs: 2, md: 4 } }}>
 				{!validation.isValid && (
-					<Alert 
-						severity="error" 
-						variant="filled" 
+					<Alert
+						severity="error"
+						variant="filled"
 						sx={{ mb: 2, width: '100%', maxWidth: 900, borderRadius: '12px', bgcolor: 'error.dark' }}
 					>
-						<strong>Missing Mandatory Information:</strong> Please complete the sections marked with red indicators to publish this requisition. 
+						<strong>Missing Mandatory Information:</strong> Please complete the sections marked with red indicators to publish this requisition.
 						(Check Company and Contact on the General tab).
 					</Alert>
 				)}
@@ -538,6 +611,8 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 										companies={companies}
 										contacts={contacts}
 										suggestions={suggestions}
+										pendingEntities={pendingEntities}
+										setPendingEntities={setPendingEntities}
 										highlightMissing={true}
 									/>
 								)}
@@ -614,7 +689,7 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 									color="primary"
 									onClick={handleSubmit}
 									disabled={loading || !validation.isValid}
-									startIcon={loading ? <CircularProgress size= {18} color="inherit" /> : null}
+									startIcon={loading ? <CircularProgress size={18} color="inherit" /> : null}
 									sx={{ px: 4, fontWeight: 700, borderRadius: '8px' }}
 								>
 									{jobRole ? 'Update Requisition' : 'Publish Requisition'}
