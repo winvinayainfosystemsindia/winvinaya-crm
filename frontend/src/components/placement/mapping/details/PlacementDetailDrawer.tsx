@@ -32,7 +32,13 @@ import {
 	LocationOn as LocationIcon,
 	Link as LinkIcon,
 	Work as WorkIcon,
-	Send as SendIcon
+	Send as SendIcon,
+	TaskAlt as SuccessIcon,
+	HourglassTop as InProgressIcon,
+	Handshake as HandshakeIcon,
+	ThumbUp as JoinedIcon,
+	ThumbDown as RejectedIcon,
+	PersonSearch as SearchIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import placementMappingService from '../../../../services/placementMappingService';
@@ -85,24 +91,47 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 		}
 	}, [open, mappingId, tabValue, fetchData]);
 
-	const getStatusColor = (status: string) => {
-		const config: any = {
-			applied: '#0066cc',
-			shortlisted: '#1d8102',
-			interview_l1: '#684eb8',
-			interview_l2: '#684eb8',
-			technical_round: '#684eb8',
-			hr_round: '#684eb8',
-			offer_made: '#ff9900',
-			offer_accepted: '#1d8102',
-			offer_rejected: '#d13212',
-			joined: '#1d8102',
-			not_joined: '#d13212',
-			dropped: '#545b64',
-			rejected: '#d13212',
-			on_hold: '#ff9900',
+	const getStatusConfig = (status: string) => {
+		const statusKey = status.toLowerCase();
+
+		const colors: any = {
+			applied: 'info.main',
+			shortlisted: 'success.main',
+			interview_l1: 'accent.main',
+			interview_l2: 'accent.main',
+			technical_round: 'accent.main',
+			hr_round: 'accent.main',
+			offer_made: 'warning.main',
+			offer_accepted: 'success.main',
+			offer_rejected: 'error.main',
+			joined: 'success.main',
+			not_joined: 'error.main',
+			dropped: 'text.secondary',
+			rejected: 'error.main',
+			on_hold: 'warning.main',
 		};
-		return config[status.toLowerCase()] || '#545b64';
+
+		const icons: any = {
+			applied: <SearchIcon sx={{ fontSize: 14 }} />,
+			shortlisted: <SuccessIcon sx={{ fontSize: 14 }} />,
+			interview_l1: <ScheduleIcon sx={{ fontSize: 14 }} />,
+			interview_l2: <ScheduleIcon sx={{ fontSize: 14 }} />,
+			technical_round: <EventIcon sx={{ fontSize: 14 }} />,
+			hr_round: <HandshakeIcon sx={{ fontSize: 14 }} />,
+			offer_made: <OfferIcon sx={{ fontSize: 14 }} />,
+			offer_accepted: <SuccessIcon sx={{ fontSize: 14 }} />,
+			offer_rejected: <RejectedIcon sx={{ fontSize: 14 }} />,
+			joined: <JoinedIcon sx={{ fontSize: 14 }} />,
+			not_joined: <RejectedIcon sx={{ fontSize: 14 }} />,
+			dropped: <InProgressIcon sx={{ fontSize: 14 }} />,
+			rejected: <RejectedIcon sx={{ fontSize: 14 }} />,
+			on_hold: <InProgressIcon sx={{ fontSize: 14 }} />,
+		};
+
+		return {
+			color: colors[statusKey] || 'text.secondary',
+			icon: icons[statusKey] || <InProgressIcon sx={{ fontSize: 14 }} />
+		};
 	};
 
 	return (
@@ -114,21 +143,21 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 				zIndex: 1400, // Ensure it's above system headers
 				'& .MuiDrawer-paper': {
 					width: { xs: '100%', sm: 500, md: 600 },
-					bgcolor: '#f8f9fa',
-					boxShadow: '-4px 0 20px rgba(0,0,0,0.1)'
+					bgcolor: 'background.default',
+					boxShadow: (theme) => `-4px 0 20px ${theme.palette.divider}`
 				}
 			}}
 		>
-			<Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: '#232f3e', color: 'white' }}>
+			<Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'secondary.light', color: 'white' }}>
 				<Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-					<Box sx={{ bgcolor: '#ff9900', p: 1, borderRadius: '4px', display: 'flex' }}>
-						<WorkIcon sx={{ color: '#232f3e', fontSize: 20 }} />
+					<Box sx={{ bgcolor: 'accent.main', p: 1, borderRadius: '4px', display: 'flex' }}>
+						<WorkIcon sx={{ color: 'secondary.light', fontSize: 20 }} />
 					</Box>
 					<Box>
-						<Typography variant="subtitle1" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+						<Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2, letterSpacing: '0.2px' }}>
 							Placement Lifecycle
 						</Typography>
-						<Typography variant="caption" sx={{ color: '#aab7bd', fontSize: '0.7rem' }}>
+						<Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.75rem', fontWeight: 500 }}>
 							{candidateName} • {jobTitle}
 						</Typography>
 					</Box>
@@ -138,25 +167,25 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 				</IconButton>
 			</Box>
 
-			<Box sx={{ bgcolor: 'white', borderBottom: '1px solid #e0e0e0', position: 'sticky', top: 0, zIndex: 1 }}>
+			<Box sx={{ bgcolor: 'background.paper', borderBottom: '1px solid', borderColor: 'divider', position: 'sticky', top: 0, zIndex: 1 }}>
 				<Tabs
 					value={tabValue}
 					onChange={(_, v) => setTabValue(v)}
 					variant="fullWidth"
-					sx={{ 
-						'& .MuiTab-root': { 
-							minHeight: 56, 
-							textTransform: 'none', 
-							fontWeight: 600, 
+					sx={{
+						'& .MuiTab-root': {
+							minHeight: 56,
+							textTransform: 'none',
+							fontWeight: 700,
 							fontSize: '0.85rem',
-							color: '#545b64'
+							color: 'text.secondary'
 						},
 						'& .MuiTabs-indicator': {
 							height: 3,
-							bgcolor: '#ec7211'
+							bgcolor: 'accent.main'
 						},
 						'& .Mui-selected': {
-							color: '#ec7211 !important'
+							color: 'accent.main !important'
 						}
 					}}
 				>
@@ -177,74 +206,88 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 					<>
 						{tabValue === 0 && (
 							<Timeline sx={{ p: 0, m: 0 }}>
-								{history.map((item, index) => (
-									<TimelineItem key={index} sx={{ '&:before': { display: 'none' } }}>
-										<Box sx={{ display: 'flex', gap: 2, width: '100%' }}>
-											<Box sx={{ minWidth: 70, textAlign: 'right', pt: 0.5 }}>
-												<Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', display: 'block' }}>
-													{format(new Date(item.changed_at), 'MMM dd')}
-												</Typography>
-												<Typography variant="caption" sx={{ color: 'textDisabled', fontSize: '0.65rem' }}>
-													{format(new Date(item.changed_at), 'p')}
-												</Typography>
-											</Box>
-											
-											<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-												<TimelineDot 
-													sx={{ 
-														bgcolor: getStatusColor(item.to_status), 
-														boxShadow: 'none',
-														width: 12,
-														height: 12,
-														m: 0,
-														border: '2px solid white'
-													}} 
-												/>
-												{index < history.length - 1 && <TimelineConnector sx={{ bgcolor: '#eaeded', width: 2 }} />}
-											</Box>
-											
-											<Box sx={{ pb: 4, flex: 1 }}>
-												<Stack direction="row" spacing={1} alignItems="center">
-													<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-														{item.to_status.replace('_', ' ')}
+								{history.map((item, index) => {
+									const config = getStatusConfig(item.to_status);
+									return (
+										<TimelineItem key={index} sx={{ '&:before': { display: 'none' } }}>
+											<Box sx={{ display: 'flex', gap: 3, width: '100%', mb: 1 }}>
+												{/* Date & Time Column */}
+												<Box sx={{ minWidth: 80, textAlign: 'right', pt: 1 }}>
+													<Typography variant="body2" sx={{ fontWeight: 800, color: 'text.primary', display: 'block', fontSize: '0.9rem' }}>
+														{format(new Date(item.changed_at), 'MMM dd')}
 													</Typography>
-													{item.changed_by_name && (
-														<Typography variant="caption" sx={{ color: 'textSecondary', fontSize: '0.7rem', fontStyle: 'italic' }}>
-															• {item.changed_by_name}
-														</Typography>
+													<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+														{format(new Date(item.changed_at), 'p')}
+													</Typography>
+												</Box>
+
+												{/* Icon Axis */}
+												<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+													<TimelineDot
+														variant="outlined"
+														sx={{
+															borderColor: config.color,
+															color: config.color,
+															bgcolor: 'background.paper',
+															boxShadow: '0 0 0 4px #ffffff',
+															width: 32,
+															height: 32,
+															m: 0,
+															display: 'flex',
+															alignItems: 'center',
+															justifyContent: 'center',
+															padding: 0
+														}}
+													>
+														{config.icon}
+													</TimelineDot>
+													{index < history.length - 1 && (
+														<TimelineConnector sx={{ bgcolor: 'divider', width: 2, my: 1 }} />
 													)}
-												</Stack>
-												
-												{item.remarks && (
-													<Box sx={{ 
-														mt: 1, 
-														p: 1.5, 
-														bgcolor: 'white', 
-														borderRadius: '4px',
-														border: '1px solid #eaeded',
-														boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
-														position: 'relative',
-														'&:before': {
-															content: '""',
-															position: 'absolute',
-															left: 0,
-															top: 0,
-															bottom: 0,
-															width: '3px',
-															bgcolor: getStatusColor(item.to_status),
-															borderTopLeftRadius: '4px',
-															borderBottomLeftRadius: '4px'
-														}
-													}}>
-														<Typography variant="body2" sx={{ fontSize: '0.825rem', color: '#545b64', lineHeight: 1.5 }}>
-															{item.remarks}
+												</Box>
+
+												{/* Content Area */}
+												<Box sx={{ pb: 5, flex: 1 }}>
+													<Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1 }}>
+														<Typography variant="awsSectionTitle" sx={{ fontSize: '0.95rem', color: 'text.primary' }}>
+															{item.to_status.replace(/_/g, ' ')}
 														</Typography>
-													</Box>
-												)}
+														{item.changed_by_name && (
+															<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+																• {item.changed_by_name}
+															</Typography>
+														)}
+													</Stack>
+
+													{item.remarks && (
+														<Box sx={{
+															p: 2,
+															bgcolor: 'background.default',
+															borderRadius: 1,
+															border: '1px solid',
+															borderColor: 'divider',
+															position: 'relative',
+															'&:before': {
+																content: '""',
+																position: 'absolute',
+																left: 0,
+																top: 12,
+																bottom: 12,
+																width: '4px',
+																bgcolor: config.color,
+																borderRadius: '0 4px 4px 0'
+															}
+														}}>
+															<Typography variant="body2" sx={{ fontSize: '0.875rem', color: 'text.primary', lineHeight: 1.6, pl: 0.5 }}>
+																{item.remarks}
+															</Typography>
+														</Box>
+													)}
+												</Box>
 											</Box>
-										</Box>
-									</TimelineItem>
-								))}
+										</TimelineItem>
+									);
+								})}
 								{history.length === 0 && (
 									<Box sx={{ textAlign: 'center', py: 10 }}>
 										<HistoryIcon sx={{ fontSize: 48, color: '#eaeded', mb: 2 }} />
@@ -253,19 +296,20 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 								)}
 							</Timeline>
 						)}
-						
+
 						{tabValue === 1 && (
 							<Box>
 								<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
 									<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e' }}>Interview Rounds</Typography>
-									<Button 
-										variant="contained" 
+									<Button
+										variant="contained"
 										size="small"
 										startIcon={<ScheduleIcon sx={{ fontSize: 16 }} />}
-										sx={{ 
-											textTransform: 'none', 
-											bgcolor: '#ec7211',
-											'&:hover': { bgcolor: '#eb5f07' }
+										sx={{
+											textTransform: 'none',
+											bgcolor: 'accent.main',
+											fontWeight: 700,
+											'&:hover': { bgcolor: 'accent.dark' }
 										}}
 									>
 										Schedule Round
@@ -275,22 +319,24 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 									{interviews.map((iv, index) => (
 										<Paper key={index} elevation={0} sx={{ border: '1px solid #eaeded', borderRadius: '8px', overflow: 'hidden' }}>
 											<Box sx={{ display: 'flex' }}>
-												<Box sx={{ width: 80, bgcolor: '#f3faff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', p: 2 }}>
-													<Typography variant="h4" sx={{ fontWeight: 300, color: '#0066cc' }}>{iv.round_number}</Typography>
-													<Typography variant="caption" sx={{ fontWeight: 800, color: '#0066cc', fontSize: '0.6rem' }}>ROUND</Typography>
+												<Box sx={{ width: 80, bgcolor: 'action.hover', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', p: 2 }}>
+													<Typography variant="h4" sx={{ fontWeight: 400, color: 'primary.main' }}>{iv.round_number}</Typography>
+													<Typography variant="caption" sx={{ fontWeight: 800, color: 'primary.main', fontSize: '0.6rem', letterSpacing: '0.5px' }}>ROUND</Typography>
 												</Box>
 												<Box sx={{ p: 2, flexGrow: 1 }}>
 													<Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
 														<Typography variant="body2" sx={{ fontWeight: 700, color: '#232f3e' }}>{iv.round_type?.toUpperCase()}</Typography>
-														<Chip 
-															label={iv.result?.toUpperCase() || 'PENDING'} 
+														<Chip
+															label={iv.result?.toUpperCase() || 'PENDING'}
 															size="small"
-															sx={{ 
+															sx={{
 																height: 20,
-																fontSize: '0.65rem', 
+																fontSize: '0.7rem',
 																fontWeight: 700,
-																bgcolor: iv.result === 'passed' ? '#e7f4e4' : iv.result === 'failed' ? '#fdeaea' : '#fff4e5',
-																color: iv.result === 'passed' ? '#1d8102' : iv.result === 'failed' ? '#d13212' : '#ff9900'
+																borderRadius: '4px',
+																bgcolor: iv.result === 'passed' ? 'success.light' : iv.result === 'failed' ? 'error.light' : 'warning.light',
+																color: iv.result === 'passed' ? 'success.dark' : iv.result === 'failed' ? 'error.dark' : 'warning.dark',
+																'& .MuiChip-label': { px: 1 }
 															}}
 														/>
 													</Box>
@@ -307,10 +353,10 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 														</Grid>
 													</Grid>
 													{iv.interview_link && (
-														<Button 
-															size="small" 
-															startIcon={<LinkIcon />} 
-															href={iv.interview_link} 
+														<Button
+															size="small"
+															startIcon={<LinkIcon />}
+															href={iv.interview_link}
 															target="_blank"
 															sx={{ mt: 1.5, textTransform: 'none', fontSize: '0.75rem', color: '#0066cc' }}
 														>
@@ -330,23 +376,23 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 								)}
 							</Box>
 						)}
-						
+
 						{tabValue === 2 && (
 							<Box>
 								{offer ? (
 									<Paper elevation={0} sx={{ border: '1px solid #eaeded', borderRadius: '8px', bgcolor: 'white', overflow: 'hidden' }}>
-										<Box sx={{ p: 2, bgcolor: '#f3faff', borderBottom: '1px solid #eaeded', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-											<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#0066cc' }}>Employment Offer</Typography>
-											<Chip 
-												label={offer.joining_status || offer.candidate_response?.toUpperCase()} 
-												sx={{ fontWeight: 800, bgcolor: '#ec7211', color: 'white', height: 24, fontSize: '0.7rem' }}
+										<Box sx={{ p: 2, bgcolor: 'action.hover', borderBottom: '1px solid', borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+											<Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'primary.main' }}>Employment Offer</Typography>
+											<Chip
+												label={offer.joining_status || offer.candidate_response?.toUpperCase()}
+												sx={{ fontWeight: 800, bgcolor: 'accent.main', color: 'white', height: 24, fontSize: '0.7rem', borderRadius: '4px' }}
 											/>
 										</Box>
 										<Box sx={{ p: 3 }}>
 											<Grid container spacing={3}>
 												<Grid size={{ xs: 6 }}>
-													<Typography variant="caption" color="textSecondary">Annual CTC</Typography>
-													<Typography variant="body1" sx={{ fontWeight: 700, color: '#232f3e' }}>₹{offer.offered_ctc?.toLocaleString() || 'N/A'}</Typography>
+													<Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem' }}>Annual CTC</Typography>
+													<Typography variant="body1" sx={{ fontWeight: 700, color: 'text.primary' }}>₹{offer.offered_ctc?.toLocaleString() || 'N/A'}</Typography>
 												</Grid>
 												<Grid size={{ xs: 6 }}>
 													<Typography variant="caption" color="textSecondary">Designation</Typography>
@@ -379,7 +425,7 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 								)}
 							</Box>
 						)}
-						
+
 						{tabValue === 3 && (
 							<Box>
 								<Box sx={{ mb: 3 }}>
@@ -393,18 +439,18 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 										sx={{ bgcolor: 'white' }}
 									/>
 									<Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-										<Button 
-											variant="contained" 
-											size="small" 
+										<Button
+											variant="contained"
+											size="small"
 											endIcon={<SendIcon sx={{ fontSize: 14 }} />}
-											sx={{ textTransform: 'none', bgcolor: '#ec7211' }}
+											sx={{ textTransform: 'none', bgcolor: 'accent.main', fontWeight: 700 }}
 											disabled={!newNote.trim()}
 										>
 											Add Note
 										</Button>
 									</Box>
 								</Box>
-								
+
 								<Stack spacing={2}>
 									{notes.map((note, index) => (
 										<Paper key={index} elevation={0} sx={{ p: 2, border: '1px solid #eaeded', bgcolor: 'white' }}>
