@@ -27,21 +27,40 @@ import dsrProjectService from '../../services/dsrProjectService';
 
 const SearchContainer = styled('div')(({ theme }) => ({
 	position: 'relative',
-	borderRadius: 4,
-	backgroundColor: alpha('#ffffff', 0.15),
+	borderRadius: 8,
+	backgroundColor: alpha(theme.palette.common.white, 0.08),
+	border: `1px solid ${alpha(theme.palette.common.white, 0.1)}`,
 	'&:hover': {
-		backgroundColor: alpha('#ffffff', 0.25),
+		backgroundColor: alpha(theme.palette.common.white, 0.12),
+		borderColor: alpha(theme.palette.common.white, 0.2),
+	},
+	'&:focus-within': {
+		backgroundColor: theme.palette.common.white,
+		borderColor: theme.palette.accent.main,
+		boxShadow: `0 0 0 2px ${alpha(theme.palette.accent.main, 0.2)}`,
+		'& .MuiInputBase-input': {
+			color: theme.palette.secondary.main,
+			'&::placeholder': {
+				color: theme.palette.text.secondary,
+			},
+		},
+		'& .MuiSvgIcon-root': {
+			color: theme.palette.text.secondary,
+		},
+		'& .shortcut-hint': {
+			display: 'none',
+		}
 	},
 	marginRight: theme.spacing(2),
 	marginLeft: 0,
 	width: '100%',
-	maxWidth: '450px',
+	maxWidth: '600px',
+	transition: 'all 0.2s ease-in-out',
 	[theme.breakpoints.up('sm')]: {
 		marginLeft: theme.spacing(3),
 		width: 'auto',
 		minWidth: '400px',
 	},
-	fontFamily: '"Amazon Ember", "Helvetica Neue", "Helvetica", "Arial", sans-serif',
 }));
 
 const SearchIconWrapper = styled('div')(({ theme }) => ({
@@ -52,22 +71,23 @@ const SearchIconWrapper = styled('div')(({ theme }) => ({
 	display: 'flex',
 	alignItems: 'center',
 	justifyContent: 'center',
-	color: '#ffffff',
+	color: theme.palette.common.white,
 }));
 
 const StyledInputBase = styled(InputBase)(({ theme }) => ({
-	color: '#ffffff',
+	color: theme.palette.common.white,
 	width: '100%',
 	'& .MuiInputBase-input': {
 		padding: theme.spacing(1, 1, 1, 0),
-		// vertical padding + font size from searchIcon
 		paddingLeft: `calc(1em + ${theme.spacing(4)})`,
 		transition: theme.transitions.create('width'),
 		width: '100%',
-		fontSize: '0.875rem',
+		fontSize: '0.85rem',
+		fontWeight: 500,
 		'&::placeholder': {
-			color: alpha('#ffffff', 0.7),
+			color: alpha(theme.palette.common.white, 0.5),
 			opacity: 1,
+			fontWeight: 400,
 		},
 	},
 }));
@@ -79,9 +99,9 @@ const ShortcutHint = styled('div')(({ theme }) => ({
 	transform: 'translateY(-50%)',
 	padding: '2px 6px',
 	borderRadius: '4px',
-	backgroundColor: alpha('#ffffff', 0.1),
-	border: `1px solid ${alpha('#ffffff', 0.2)}`,
-	color: alpha('#ffffff', 0.6),
+	backgroundColor: alpha(theme.palette.common.white, 0.1),
+	border: `1px solid ${alpha(theme.palette.common.white, 0.2)}`,
+	color: alpha(theme.palette.common.white, 0.6),
 	fontSize: '0.7rem',
 	fontWeight: 700,
 	pointerEvents: 'none',
@@ -260,7 +280,7 @@ const GlobalSearch: React.FC = () => {
 					<SearchIcon fontSize="small" />
 				</SearchIconWrapper>
 				<StyledInputBase
-					placeholder="Search services, features, candidates [Alt+S]"
+					placeholder="Search services, features, candidates"
 					inputRef={inputRef}
 					value={query}
 					onChange={(e) => {
@@ -283,10 +303,8 @@ const GlobalSearch: React.FC = () => {
 						autoComplete: 'off'
 					}}
 				/>
-				<ShortcutHint aria-hidden="true">
-					<Typography variant="inherit" sx={{ fontSize: 'inherit', fontWeight: 'inherit' }}>Alt</Typography>
-					<Typography variant="inherit" sx={{ fontSize: 'inherit', fontWeight: 'inherit' }}>+</Typography>
-					<Typography variant="inherit" sx={{ fontSize: 'inherit', fontWeight: 'inherit' }}>S</Typography>
+				<ShortcutHint aria-hidden="true" className="shortcut-hint">
+					<Typography variant="inherit" sx={{ fontSize: 'inherit', fontWeight: 'inherit' }}>Alt + S</Typography>
 				</ShortcutHint>
 
 				{isOpen && filteredResults.length > 0 && (
@@ -303,13 +321,13 @@ const GlobalSearch: React.FC = () => {
 							maxHeight: '400px',
 							overflowY: 'auto',
 							zIndex: 1400,
-							backgroundColor: '#ffffff',
+							backgroundColor: 'background.paper',
 							borderRadius: '4px',
 							border: `1px solid ${theme.palette.divider}`,
 						}}
 					>
-						<Box sx={{ px: 2, py: 1, backgroundColor: '#f1f3f3', borderBottom: `1px solid ${theme.palette.divider}` }}>
-							<Typography variant="caption" sx={{ fontWeight: 700, color: '#545b64', textTransform: 'uppercase' }}>
+						<Box sx={{ px: 2, py: 1, backgroundColor: alpha(theme.palette.secondary.main, 0.04), borderBottom: `1px solid ${theme.palette.divider}` }}>
+							<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.text.secondary, textTransform: 'uppercase' }}>
 								Results ({filteredResults.length})
 							</Typography>
 						</Box>
@@ -320,8 +338,8 @@ const GlobalSearch: React.FC = () => {
 
 								return (
 									<React.Fragment key={cat}>
-										<Box sx={{ px: 2, py: 0.5, backgroundColor: '#f9f9f9', borderBottom: `1px solid ${theme.palette.divider}`, borderTop: cat !== 'General' ? `1px solid ${theme.palette.divider}` : 'none' }}>
-											<Typography variant="caption" sx={{ fontWeight: 700, color: '#879596', textTransform: 'uppercase', fontSize: '0.65rem' }}>
+										<Box sx={{ px: 2, py: 0.5, backgroundColor: alpha(theme.palette.secondary.main, 0.02), borderBottom: `1px solid ${theme.palette.divider}`, borderTop: cat !== 'General' ? `1px solid ${theme.palette.divider}` : 'none' }}>
+											<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.text.secondary, textTransform: 'uppercase', fontSize: '0.65rem' }}>
 												{cat === 'Candidate' || cat === 'User' || cat === 'Job Role' || cat === 'Project' ? `${cat}s` : cat}
 											</Typography>
 										</Box>
@@ -349,8 +367,8 @@ const GlobalSearch: React.FC = () => {
 														<ListItemText
 															primary={action.title}
 															secondary={cat === 'Candidate' || cat === 'User' ? action.id.split('-')[1] : action.category}
-															primaryTypographyProps={{ fontSize: '0.8125rem', fontWeight: 500, color: '#232f3e' }}
-															secondaryTypographyProps={{ fontSize: '0.7rem', color: '#545b64' }}
+															primaryTypographyProps={{ fontSize: '0.8125rem', fontWeight: 500, color: theme.palette.secondary.main }}
+															secondaryTypographyProps={{ fontSize: '0.7rem', color: theme.palette.text.secondary }}
 														/>
 													</ListItemButton>
 												</ListItem>

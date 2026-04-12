@@ -5,10 +5,22 @@ declare module '@mui/material/styles' {
 	interface TypographyVariants {
 		awsSectionTitle: React.CSSProperties;
 		awsFieldLabel: React.CSSProperties;
+		navLogo: React.CSSProperties;
+		sidebarItem: React.CSSProperties;
+		sidebarActive: React.CSSProperties;
 	}
 	interface TypographyVariantsOptions {
 		awsSectionTitle?: React.CSSProperties;
 		awsFieldLabel?: React.CSSProperties;
+		navLogo?: React.CSSProperties;
+		sidebarItem?: React.CSSProperties;
+		sidebarActive?: React.CSSProperties;
+	}
+	interface Palette {
+		accent: Palette['primary'];
+	}
+	interface PaletteOptions {
+		accent?: PaletteOptions['primary'];
 	}
 }
 
@@ -16,6 +28,9 @@ declare module '@mui/material/Typography' {
 	interface TypographyPropsVariantOverrides {
 		awsSectionTitle: true;
 		awsFieldLabel: true;
+		navLogo: true;
+		sidebarItem: true;
+		sidebarActive: true;
 	}
 }
 
@@ -27,10 +42,12 @@ const theme = createTheme({
 			dark: '#0033cc',
 		},
 		secondary: {
-			main: '#0f172a', // Deep Slate / Navy
+			main: '#16191f', // Premium Console Dark
+			light: '#232f3e',
+			dark: '#0f141a',
 		},
 		background: {
-			default: '#f8fafc', // Modern split background
+			default: '#f1f5f9', // Slightly cooler background
 			paper: '#ffffff',
 		},
 		text: {
@@ -48,6 +65,11 @@ const theme = createTheme({
 		},
 		info: {
 			main: '#3b82f6',
+		},
+		accent: {
+			main: '#ec7211', // Enterprise Brand Orange
+			light: '#ff8a33',
+			dark: '#c15d0e',
 		}
 	},
 	typography: {
@@ -94,6 +116,19 @@ const theme = createTheme({
 			textTransform: 'uppercase', // Small caps labels are more professional
 			letterSpacing: '0.05em',
 			display: 'block'
+		},
+		navLogo: {
+			fontSize: '1.1rem',
+			fontWeight: 800,
+			letterSpacing: '-0.5px'
+		},
+		sidebarItem: {
+			fontSize: '0.85rem',
+			fontWeight: 500
+		},
+		sidebarActive: {
+			fontSize: '0.85rem',
+			fontWeight: 800
 		}
 	},
 	spacing: 8,
@@ -156,8 +191,9 @@ const theme = createTheme({
 		MuiDrawer: {
 			styleOverrides: {
 				paper: {
-					backgroundColor: '#f2f3f3',
-					borderRight: '1px solid #d5dbdb',
+					backgroundColor: '#16191f',
+					borderRight: '1px solid #000000',
+					color: '#f2f3f3',
 				}
 			}
 		},

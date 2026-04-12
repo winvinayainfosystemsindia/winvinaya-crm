@@ -8,7 +8,8 @@ import {
 	ListItemText,
 	Box,
 	Collapse,
-	Tooltip
+	Tooltip,
+	alpha
 } from '@mui/material';
 import {
 	ExpandLess,
@@ -27,8 +28,8 @@ const COLLAPSED_WIDTH = 60;
 const Sidebar: React.FC = () => {
 	const navigate = useNavigate();
 	const location = useLocation();
-	const dispatch = useAppDispatch();
 	const theme = useTheme();
+	const dispatch = useAppDispatch();
 	const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 	const open = useAppSelector((state) => state.ui.sidebarOpen);
 	const user = useAppSelector((state) => state.auth.user);
@@ -159,25 +160,24 @@ const Sidebar: React.FC = () => {
 					pr: open ? 2 : 0,
 					width: '100%',
 					justifyContent: open ? 'initial' : 'center',
-					borderLeft: active ? '4px solid #ec7211' : '4px solid transparent',
+					borderLeft: active ? `4px solid ${theme.palette.accent.main}` : '4px solid transparent',
 					transition: theme => theme.transitions.create(['background-color', 'border-left-color', 'padding'], {
 						duration: theme.transitions.duration.standard,
 					}),
 					'&.Mui-selected': {
-						bgcolor: 'rgba(236, 114, 17, 0.15)',
+						bgcolor: alpha(theme.palette.accent.main, 0.12),
 						'&:hover': {
-							bgcolor: 'rgba(236, 114, 17, 0.2)',
+							bgcolor: alpha(theme.palette.accent.main, 0.18),
 						},
 						'& .MuiListItemText-primary': {
-							color: '#ec7211',
-							fontWeight: 700,
+							color: theme.palette.accent.main,
 						},
 						'& .MuiListItemIcon-root': {
-							color: '#ec7211',
+							color: theme.palette.accent.main,
 						},
 					},
 					'&:hover': {
-						bgcolor: 'rgba(255, 255, 255, 0.08)',
+						bgcolor: alpha(theme.palette.common.white, 0.05),
 					},
 				}}
 			>
@@ -187,7 +187,7 @@ const Sidebar: React.FC = () => {
 							minWidth: 0,
 							mr: open ? 1.5 : 0,
 							justifyContent: 'center',
-							color: active ? '#ec7211' : '#aab7b8',
+							color: active ? theme.palette.accent.main : theme.palette.text.secondary,
 							transition: theme => theme.transitions.create(['margin', 'color'], {
 								duration: theme.transitions.duration.standard,
 							}),
@@ -213,12 +213,13 @@ const Sidebar: React.FC = () => {
 				>
 					<ListItemText
 						primary={item.label}
+						primaryTypographyProps={{ 
+							variant: active ? "sidebarActive" : "sidebarItem" 
+						}}
 						sx={{
 							m: 0,
 							'& .MuiListItemText-primary': {
-								fontSize: '0.85rem',
-								fontWeight: active ? 700 : 500,
-								color: active ? '#ec7211' : '#eaeded',
+								color: active ? theme.palette.accent.main : theme.palette.secondary.contrastText,
 								whiteSpace: 'nowrap',
 								overflow: 'hidden',
 								textOverflow: 'ellipsis',
@@ -263,12 +264,12 @@ const Sidebar: React.FC = () => {
 					pr: open ? 2 : 0,
 					width: '100%',
 					justifyContent: open ? 'initial' : 'center',
-					borderLeft: activeChild ? '4px solid #ec7211' : '4px solid transparent',
+					borderLeft: activeChild ? `4px solid ${theme.palette.accent.main}` : '4px solid transparent',
 					transition: theme => theme.transitions.create(['background-color', 'border-left-color'], {
 						duration: theme.transitions.duration.standard,
 					}),
 					'&:hover': {
-						bgcolor: 'rgba(255, 255, 255, 0.08)',
+						bgcolor: alpha(theme.palette.common.white, 0.05),
 					},
 				}}
 			>
@@ -278,7 +279,7 @@ const Sidebar: React.FC = () => {
 							minWidth: 0,
 							mr: open ? 1.5 : 0,
 							justifyContent: 'center',
-							color: activeChild ? '#ec7211' : '#aab7b8',
+							color: activeChild ? theme.palette.accent.main : theme.palette.text.secondary,
 							transition: theme => theme.transitions.create(['color'], {
 								duration: theme.transitions.duration.standard,
 							}),
@@ -305,12 +306,13 @@ const Sidebar: React.FC = () => {
 				>
 					<ListItemText
 						primary={group.label}
+						primaryTypographyProps={{ 
+							variant: activeChild ? "sidebarActive" : "sidebarItem" 
+						}}
 						sx={{
 							m: 0,
 							'& .MuiListItemText-primary': {
-								fontSize: '0.85rem',
-								fontWeight: activeChild ? 700 : 500,
-								color: activeChild ? '#ec7211' : '#eaeded',
+								color: activeChild ? theme.palette.accent.main : theme.palette.secondary.contrastText,
 								whiteSpace: 'nowrap',
 								overflow: 'hidden',
 								textOverflow: 'ellipsis',
@@ -318,8 +320,8 @@ const Sidebar: React.FC = () => {
 						}}
 					/>
 					{isExpanded ?
-						<ExpandLess sx={{ fontSize: 18, color: '#aab7b8' }} /> :
-						<ExpandMore sx={{ fontSize: 18, color: '#aab7b8' }} />
+						<ExpandLess sx={{ fontSize: 16, color: alpha(theme.palette.common.white, 0.4) }} /> :
+						<ExpandMore sx={{ fontSize: 16, color: alpha(theme.palette.common.white, 0.4) }} />
 					}
 				</Box>
 			</ListItemButton>
@@ -371,8 +373,8 @@ const Sidebar: React.FC = () => {
 					overflow: 'hidden',
 					top: '48px',
 					height: 'calc(100% - 48px)',
-					backgroundColor: '#232f3e',
-					borderRight: '1px solid #16191f',
+					backgroundColor: 'secondary.main',
+					borderRight: `1px solid ${theme.palette.common.black}`,
 					boxShadow: 'none',
 				},
 			}}
@@ -414,9 +416,9 @@ const Sidebar: React.FC = () => {
 				<Box sx={{
 					flexShrink: 0,
 					py: 0.5,
-					borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+					borderTop: '1px solid rgba(255, 255, 255, 0.05)',
 					overflow: 'hidden',
-					bgcolor: '#232f3e' // Ensure background matches for pinning effect
+					bgcolor: 'secondary.main' // Ensure background matches for pinning effect
 				}}>
 					<List disablePadding>
 						{bottomNavigation.map((item, index) => (

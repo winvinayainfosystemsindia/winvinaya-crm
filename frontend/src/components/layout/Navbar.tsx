@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, IconButton, Box, Badge, Menu, MenuItem, Button, Divider, alpha, ListItemIcon, ListItemText } from '@mui/material';
+import { AppBar, Toolbar, Typography, IconButton, Box, Badge, Menu, MenuItem, Button, Divider, alpha, ListItemIcon, ListItemText, useTheme } from '@mui/material';
 import {
 	Menu as MenuIcon,
 	Notifications as NotificationsIcon,
@@ -17,6 +17,7 @@ import GlobalSearch from './GlobalSearch';
 import NotificationPopover from './NotificationPopover';
 
 const Navbar: React.FC = () => {
+	const theme = useTheme();
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
 	const { user } = useAppSelector((state) => state.auth);
@@ -46,7 +47,12 @@ const Navbar: React.FC = () => {
 	};
 
 	return (
-		<AppBar position="fixed" component="nav" aria-label="Main Navigation" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, backgroundColor: '#232f3e' }}>
+		<AppBar position="fixed" component="nav" aria-label="Main Navigation" sx={{ 
+			zIndex: (theme) => theme.zIndex.drawer + 1, 
+			backgroundColor: 'secondary.main',
+			borderBottom: `1px solid ${alpha(theme.palette.common.white, 0.05)}`,
+			boxShadow: 'none'
+		}}>
 			<Toolbar variant="dense">
 				<IconButton
 					color="inherit"
@@ -57,7 +63,7 @@ const Navbar: React.FC = () => {
 				>
 					<MenuIcon aria-hidden="true" />
 				</IconButton>
-				<Typography variant="h6" noWrap component="div" sx={{ display: { xs: 'none', md: 'block' }, fontSize: '1rem', fontWeight: 400, mr: 2 }}>
+				<Typography variant="navLogo" noWrap component="div" sx={{ display: { xs: 'none', md: 'block' }, mr: 2 }}>
 					WinVinaya Console
 				</Typography>
 
@@ -70,7 +76,7 @@ const Navbar: React.FC = () => {
 						aria-label={`You have ${unreadCount} new notifications`}
 						color="inherit"
 						onClick={handleNotifMenu}
-						sx={{ mr: 1, '&:hover': { backgroundColor: alpha('#ffffff', 0.1) } }}
+						sx={{ mr: 1, '&:hover': { backgroundColor: alpha(theme.palette.common.white, 0.1) } }}
 					>
 						<Badge badgeContent={unreadCount} color="error">
 							<NotificationsIcon aria-hidden="true" />
@@ -94,7 +100,7 @@ const Navbar: React.FC = () => {
 								height: '40px',
 								borderRadius: '4px',
 								'&:hover': {
-									backgroundColor: alpha('#ffffff', 0.1),
+									backgroundColor: alpha(theme.palette.common.white, 0.1),
 								},
 								display: 'flex',
 								alignItems: 'center',
@@ -134,13 +140,13 @@ const Navbar: React.FC = () => {
 						}}
 					>
 						<Box sx={{ p: 2, backgroundColor: '#f8f9fa' }}>
-							<Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#232f3e', lineHeight: 1.2 }}>
+							<Typography variant="subtitle1" sx={{ fontWeight: 700, color: theme.palette.secondary.main, lineHeight: 1.2 }}>
 								{user?.full_name || user?.username}
 							</Typography>
-							<Typography variant="body2" sx={{ color: '#545b64', mt: 0.5 }}>
+							<Typography variant="body2" sx={{ color: theme.palette.text.secondary, mt: 0.5 }}>
 								{user?.email}
 							</Typography>
-							<Typography variant="caption" sx={{ display: 'block', mt: 1, textTransform: 'uppercase', fontWeight: 700, color: '#ec7211' }}>
+							<Typography variant="caption" sx={{ display: 'block', mt: 1, textTransform: 'uppercase', fontWeight: 700, color: theme.palette.accent.main }}>
 								{user?.role} Role
 							</Typography>
 						</Box>
@@ -152,9 +158,9 @@ const Navbar: React.FC = () => {
 							<ListItemText primary="Account Settings" primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }} />
 						</MenuItem>
 						<Divider />
-						<MenuItem onClick={handleLogout} sx={{ py: 1.5, color: '#d13212' }}>
+						<MenuItem onClick={handleLogout} sx={{ py: 1.5, color: theme.palette.error.main }}>
 							<ListItemIcon>
-								<LogoutIcon fontSize="small" sx={{ color: '#d13212' }} />
+								<LogoutIcon fontSize="small" sx={{ color: theme.palette.error.main }} />
 							</ListItemIcon>
 							<ListItemText primary="Sign Out" primaryTypographyProps={{ variant: 'body2', fontWeight: 700 }} />
 						</MenuItem>
