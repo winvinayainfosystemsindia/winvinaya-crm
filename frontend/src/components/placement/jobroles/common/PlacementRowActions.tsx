@@ -32,6 +32,7 @@ const PlacementRowActions: React.FC<PlacementRowActionsProps> = ({ onEdit, onDel
 				anchorEl={anchorEl}
 				open={open}
 				onClose={handleClose}
+				onClick={(e) => e.stopPropagation()}
 				PaperProps={{
 					elevation: 0,
 					sx: {

@@ -108,7 +108,11 @@ const JobRoleTableRow: React.FC<JobRoleTableRowProps> = ({ jobRole, onEdit, onDe
 			</TableCell>
 
 			<TableCell align="center" sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-				<Tooltip title={`${jobRole.mappings_count || 0} candidates mapped`}>
+				<Tooltip title={
+					jobRole.mappings_count && jobRole.mappings_count > 0 
+						? `${jobRole.mappings_count} candidates mapped. Deletion restricted.` 
+						: 'No candidates mapped'
+				}>
 					<Chip 
 						icon={<GroupIcon sx={{ fontSize: '1rem !important' }} />}
 						label={jobRole.mappings_count || 0}
@@ -127,7 +131,7 @@ const JobRoleTableRow: React.FC<JobRoleTableRowProps> = ({ jobRole, onEdit, onDe
 			<TableCell align="right">
 				<PlacementRowActions
 					onEdit={() => onEdit(jobRole)}
-					onDelete={isAdmin ? () => onDelete(jobRole) : undefined}
+					onDelete={isAdmin && (jobRole.mappings_count || 0) === 0 ? () => onDelete(jobRole) : undefined}
 				/>
 			</TableCell>
 		</TableRow>

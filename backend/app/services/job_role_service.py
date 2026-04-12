@@ -74,6 +74,14 @@ class JobRoleService:
     async def delete_job_role(self, public_id: UUID) -> bool:
         """Soft delete a job role"""
         job_role = await self.get_job_role(public_id)
+        
+        # Check if any candidates are mapped to this role
+        if hasattr(job_role, 'mappings_count') and job_role.mappings_count > 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Cannot delete job role with {job_role.mappings_count} active candidate mappings."
+            )
+            
         return await self.repository.delete(job_role.id, soft=True)
 
     async def change_status(self, public_id: UUID, new_status: JobRoleStatus) -> JobRole:
