@@ -80,12 +80,12 @@ const theme = createTheme({
 			fontSize: '1.75rem',
 		},
 		h5: {
-			fontWeight: 700,
+			fontWeight: 600,
 			letterSpacing: '-0.01em',
 			fontSize: '1.5rem',
 		},
 		h6: {
-			fontWeight: 700,
+			fontWeight: 500,
 			fontSize: '1.125rem',
 		},
 		button: {

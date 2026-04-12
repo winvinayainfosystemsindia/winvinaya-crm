@@ -41,20 +41,6 @@ const JobRoleHeader: React.FC<JobRoleHeaderProps> = ({ jobRole, onEdit, onRefres
 				>
 					Back to Job Roles
 				</Button>
-				<Typography
-					variant={isMobile ? "h5" : "h4"}
-					component="h1"
-					sx={{
-						fontWeight: 700,
-						color: 'text.primary',
-						mb: 0.5
-					}}
-				>
-					{jobRole.title}
-				</Typography>
-				<Typography variant="body2" color="text.secondary">
-					Pipeline Management • {jobRole.public_id}
-				</Typography>
 			</Box>
 
 			{/* AWS Style Header */}
