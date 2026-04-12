@@ -1,85 +1,142 @@
 import React from 'react';
-import { Box, Paper, Typography, SvgIcon } from '@mui/material';
+import { Box, Typography, SvgIcon, alpha } from '@mui/material';
 import type { SvgIconComponent } from '@mui/icons-material';
+import type { SxProps, Theme } from '@mui/material';
 
 interface StatCardProps {
-	title: string;
-	value: string | number;
+	title?: string;
+	label?: string; // Alias for title
+	value?: string | number;
+	count?: string | number; // Alias for value
+	unit?: string;
+	subtitle?: string; // Descriptive text at the bottom
 	icon?: React.ReactNode | SvgIconComponent;
-	trend?: {
-		value: number;
-		label: string;
-		direction: 'up' | 'down' | 'neutral';
-	};
 	color?: string; // Accent color
 	children?: React.ReactNode;
-	sx?: any;
+	sx?: SxProps<Theme>;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend, color = 'primary.main', children, sx }) => {
-	// Determine trend color
-	const getTrendColor = () => {
-		if (!trend) return 'text.secondary';
-		if (trend.direction === 'up') return 'success.main';
-		if (trend.direction === 'down') return 'error.main';
-		return 'text.secondary';
-	};
+const StatCard: React.FC<StatCardProps> = ({ 
+	title, 
+	label, 
+	value: propValue, 
+	count, 
+	unit, 
+	subtitle,
+	icon, 
+	children,
+	color = '#1976d2', 
+	sx 
+}) => {
+	const finalTitle = title || label;
+	const finalValue = propValue !== undefined ? propValue : count;
 
 	return (
-		<Paper
-			elevation={0}
-			variant="outlined"
+		<Box
 			sx={{
-				p: 2, // Reduced padding for professional look
-				height: '100%',
+				p: 2.5,
+				bgcolor: 'white',
+				borderRadius: '12px',
+				border: '1px solid #f1f5f9',
+				boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
 				display: 'flex',
 				flexDirection: 'column',
-				justifyContent: 'space-between',
-				borderLeft: `4px solid`,
-				borderLeftColor: color,
-				transition: 'all 0.2s ease-in-out',
+				gap: 1.5,
+				transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
 				'&:hover': {
-					borderColor: color,
-					boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+					transform: 'translateY(-2px)',
+					boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
 				},
+				height: '100%',
 				...sx
 			}}
 		>
-			<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-				<Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.5px' }}>
-					{title}
-				</Typography>
+			{/* Top: Icon + Title */}
+			<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
 				{icon && (
-					<Box sx={{ color: color, opacity: 0.8 }}>
-						{React.isValidElement(icon) ? icon : <SvgIcon component={icon as any} />}
+					<Box 
+						sx={{ 
+							display: 'flex', 
+							alignItems: 'center', 
+							justifyContent: 'center',
+							width: 32,
+							height: 32,
+							borderRadius: '8px',
+							bgcolor: alpha(color, 0.1),
+							color: color
+						}}
+					>
+						{React.isValidElement(icon) ? 
+							React.cloneElement(icon as React.ReactElement<any>, { 
+								sx: { fontSize: '1.2rem' } 
+							}) : 
+							<SvgIcon component={icon as any} sx={{ fontSize: '1.2rem' }} />
+						}
 					</Box>
 				)}
-			</Box>
-
-			<Box>
-				<Typography variant="h5" component="div" sx={{ fontWeight: 600, mb: 0.5, color: '#1a1f36' }}>
-					{value}
+				<Typography 
+					variant="caption" 
+					sx={{ 
+						color: '#64748b', 
+						fontWeight: 700, 
+						textTransform: 'uppercase', 
+						letterSpacing: '0.025em', 
+						fontSize: '0.7rem' 
+					}}
+				>
+					{finalTitle}
 				</Typography>
+			</Box>
 
-				{trend && (
-					<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-						<Typography variant="caption" sx={{ fontWeight: 600, color: getTrendColor() }}>
-							{trend.direction === 'up' ? '↗' : trend.direction === 'down' ? '↘' : '•'} {Math.abs(trend.value)}%
+			{/* Middle: Value + Unit */}
+			<Box sx={{ mt: 'auto' }}>
+				<Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
+					<Typography 
+						variant="h4" 
+						sx={{ 
+							fontWeight: 700, 
+							color: '#1e293b',
+							lineHeight: 1
+						}}
+					>
+						{finalValue}
+					</Typography>
+					{unit && (
+						<Typography 
+							variant="subtitle2" 
+							sx={{ 
+								color: '#475569', 
+								fontWeight: 600 
+							}}
+						>
+							{unit}
 						</Typography>
-						<Typography variant="caption" color="text.secondary">
-							{trend.label}
-						</Typography>
+					)}
+				</Box>
+
+				{/* Bottom: Subtitle or Children */}
+				{subtitle && !children && (
+					<Typography 
+						variant="caption" 
+						sx={{ 
+							color: '#94a3b8', 
+							fontWeight: 500,
+							mt: 0.5,
+							display: 'block'
+						}}
+					>
+						{subtitle}
+					</Typography>
+				)}
+				{children && (
+					<Box sx={{ mt: 0.5 }}>
+						{children}
 					</Box>
 				)}
 			</Box>
-
-			{children && (
-				<Box sx={{ mt: 2 }}>
-					{children}
-				</Box>
-			)}
-		</Paper>
+		</Box>
 	);
 };
+
 
 export default StatCard;

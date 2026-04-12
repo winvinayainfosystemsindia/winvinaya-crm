@@ -5,7 +5,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import WorkIcon from '@mui/icons-material/Work';
 import BusinessIcon from '@mui/icons-material/Business';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import StatCard from '../../components/dashboard/StatCard';
+import StatCard from '../../components/common/StatCard';
 import RegistrationLinkModal from '../../components/dashboard/RegistrationLinkModal';
 import BIReport from '../../components/dashboard/BIReport';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
@@ -58,7 +58,8 @@ const Dashboard: React.FC = () => {
 					<StatCard
 						title="Total Candidates"
 						count={(currentStats.total || 0).toLocaleString()}
-						icon={<PeopleIcon fontSize="large" />}
+						subtitle="Total registered candidates"
+						icon={<PeopleIcon />}
 						color="#1976d2"
 					/>
 				</Grid>
@@ -66,7 +67,8 @@ const Dashboard: React.FC = () => {
 					<StatCard
 						title="Active Interviews"
 						count="0"
-						icon={<WorkIcon fontSize="large" />}
+						subtitle="Ongoing recruitment drives"
+						icon={<WorkIcon />}
 						color="#ed6c02"
 					/>
 				</Grid>
@@ -74,7 +76,8 @@ const Dashboard: React.FC = () => {
 					<StatCard
 						title="Partner Companies"
 						count="0"
-						icon={<BusinessIcon fontSize="large" />}
+						subtitle="Registered corporate partners"
+						icon={<BusinessIcon />}
 						color="#2e7d32"
 					/>
 				</Grid>
@@ -82,11 +85,13 @@ const Dashboard: React.FC = () => {
 					<StatCard
 						title="Total Placements"
 						count="0"
-						icon={<CheckCircleIcon fontSize="large" />}
+						subtitle="Successfully placed"
+						icon={<CheckCircleIcon />}
 						color="#9c27b0"
 					/>
 				</Grid>
 			</Grid>
+
 
 			<BIReport />
 		</Box>

@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Box, CircularProgress, Alert } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchCandidateStats } from '../../store/slices/candidateSlice';
-import StatCard from '../dashboard/StatCard';
+import StatCard from '../common/StatCard';
 import DescriptionIcon from '@mui/icons-material/Description';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
