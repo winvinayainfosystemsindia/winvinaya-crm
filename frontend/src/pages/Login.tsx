@@ -1,31 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import {
-	Button,
 	Container,
 	Box,
 	Typography,
-	Paper,
-	TextField,
-	CircularProgress,
-	IconButton,
-	InputAdornment
+	useTheme,
+	Fade,
 } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
-
 import { useNavigate } from 'react-router-dom';
 import useToast from '../hooks/useToast';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { loginUser, clearError } from '../store/slices/authSlice';
+import LoginForm from '../components/auth/LoginForm';
 
 const Login: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
 	const toast = useToast();
+	const theme = useTheme();
 	const { loading, error, isAuthenticated, isInitialized } = useAppSelector((state) => state.auth);
-
-	const [email, setEmail] = useState('');
-	const [password, setPassword] = useState('');
-	const [showPassword, setShowPassword] = useState(false);
 
 	useEffect(() => {
 		// Only redirect if auth is initialized and user is authenticated
@@ -37,17 +29,19 @@ const Login: React.FC = () => {
 	useEffect(() => {
 		if (error) {
 			toast.error(typeof error === 'string' ? error : 'Login failed');
-			dispatch(clearError());
+			// We clear the error in the store after showing it as a toast
+			// but we keep it for the LoginForm to display locally if needed
+			// actually, if we clear it here, it will disappear from LoginForm too.
+			// Let's clear it only in the cleanup or on unmount, or let the user clear it manually.
+			// The original code cleared it immediately.
+			const timer = setTimeout(() => {
+				dispatch(clearError());
+			}, 5000);
+			return () => clearTimeout(timer);
 		}
 	}, [error, toast, dispatch]);
 
-	const handleTogglePasswordVisibility = () => {
-		setShowPassword((prev: boolean) => !prev);
-	};
-
-
-	const handleLogin = async (e: React.FormEvent) => {
-		e.preventDefault();
+	const handleLogin = async (email: string, password: string) => {
 		try {
 			await dispatch(loginUser({ email, password })).unwrap();
 			toast.success('Login successful');
@@ -56,131 +50,70 @@ const Login: React.FC = () => {
 		}
 	};
 
-
 	return (
 		<Box
 			component="main"
 			sx={{
 				minHeight: '100vh',
 				display: 'flex',
+				flexDirection: 'column',
 				alignItems: 'center',
 				justifyContent: 'center',
-				backgroundColor: '#f2f3f3'
+				backgroundColor: theme.palette.background.default,
+				backgroundImage: `radial-gradient(circle at 50% 50%, ${theme.palette.background.default} 0%, ${theme.palette.secondary.dark}30 100%)`,
+				position: 'relative',
+				overflow: 'hidden',
 			}}
 		>
-			<Container maxWidth="xs">
-				<Box sx={{ mb: 4, textAlign: 'center' }}>
-					{/* Find a logo or use text */}
-					<Typography variant="h4" component="h1" fontWeight="bold" sx={{ color: '#232f3e' }}>
-						WinVinaya
-					</Typography>
-				</Box>
-				<Paper
-					elevation={0}
-					sx={{ p: 4, display: 'flex', flexDirection: 'column', border: '1px solid #ddd', borderRadius: '4px' }}
-				>
-					<Typography component="h2" variant="h5" sx={{ mb: 3, fontWeight: 500 }}>
-						Sign in
-					</Typography>
+			{/* Decorative elements for enterprise feel */}
+			<Box
+				sx={{
+					position: 'absolute',
+					top: -100,
+					right: -100,
+					width: 300,
+					height: 300,
+					borderRadius: '50%',
+					background: `radial-gradient(circle, ${theme.palette.accent.main}10 0%, transparent 70%)`,
+					zIndex: 0,
+				}}
+			/>
+			<Box
+				sx={{
+					position: 'absolute',
+					bottom: -150,
+					left: -150,
+					width: 400,
+					height: 400,
+					borderRadius: '50%',
+					background: `radial-gradient(circle, ${theme.palette.primary.main}10 0%, transparent 70%)`,
+					zIndex: 0,
+				}}
+			/>
 
-					{/* Accessible error announcement */}
-					{error && (
-						<Box
-							role="alert"
-							aria-live="assertive"
-							sx={{
-								mb: 2,
-								p: 1.5,
-								bgcolor: '#fdeded',
-								color: '#5f2120',
-								borderRadius: '4px',
-								border: '1px solid #5f2120',
-								fontSize: '0.875rem'
-							}}
-						>
-							<Typography variant="body2">{typeof error === 'string' ? error : 'Login failed'}</Typography>
-						</Box>
-					)}
+			<Container maxWidth="xs" sx={{ position: 'relative', zIndex: 1 }}>
 
-					<Box component="form" onSubmit={handleLogin} noValidate>
-						<TextField
-							margin="normal"
-							required
-							fullWidth
-							id="email"
-							label="Email Address"
-							name="email"
-							autoComplete="email"
-							autoFocus
-							size="small"
-							value={email}
-							onChange={(e) => setEmail(e.target.value)}
-							sx={{ mb: 2 }}
-							inputProps={{
-								'aria-required': 'true'
-							}}
+
+				<Fade in={true} timeout={1200}>
+					<Box>
+						<LoginForm
+							loading={loading}
+							error={typeof error === 'string' ? error : null}
+							onLogin={handleLogin}
 						/>
-						<TextField
-							margin="normal"
-							required
-							fullWidth
-							name="password"
-							label="Password"
-							type={showPassword ? 'text' : 'password'}
-							id="password"
-							autoComplete="current-password"
-							size="small"
-							value={password}
-							onChange={(e) => setPassword(e.target.value)}
-							sx={{ mb: 3 }}
-							inputProps={{
-								'aria-required': 'true'
-							}}
-							InputProps={{
-								endAdornment: (
-									<InputAdornment position="end">
-										<IconButton
-											aria-label={showPassword ? "hide password" : "show password"}
-											onClick={handleTogglePasswordVisibility}
-											edge="end"
-											size="small"
-											title={showPassword ? "Hide password" : "Show password"}
-										>
-											{showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-										</IconButton>
-									</InputAdornment>
-								),
-							}}
-						/>
-
-						<Button
-							type="submit"
-							fullWidth
-							variant="contained"
-							disabled={loading}
-							aria-busy={loading}
-							aria-label={loading ? "Signing in" : "Sign in"}
-							sx={{
-								py: 1,
-								backgroundColor: '#ec7211',
-								'&:hover': { backgroundColor: '#eb5f07' },
-								textTransform: 'none',
-								fontWeight: 'bold'
-							}}
-						>
-							{loading ? <CircularProgress size={24} color="inherit" aria-hidden="true" /> : 'Sign In'}
-						</Button>
 					</Box>
-				</Paper>
-				<Box sx={{ mt: 3, textAlign: 'center' }}>
-					<Typography variant="body2" color="text.secondary">
-						Protected by reCAPTCHA and subject to the Privacy Policy and Terms of Service.
-					</Typography>
-				</Box>
+				</Fade>
+
+				<Fade in={true} timeout={1600}>
+					<Box sx={{ mt: 4, textAlign: 'center' }}>
+						<Typography variant="caption" color="text.secondary" sx={{ opacity: 0.7 }}>
+							© {new Date().getFullYear()} WinVinaya InfoSystems. All rights reserved.
+						</Typography>
+					</Box>
+				</Fade>
 			</Container>
 		</Box>
 	);
-
 };
 
 export default Login;
