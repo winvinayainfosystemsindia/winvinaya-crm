@@ -17,21 +17,28 @@ Your task is to analyze a Job Description (JD) and extract details into a struct
 
 FIELDS TO EXTRACT:
 - title: The job title (e.g., "Full Stack Developer").
-- description: A concise summary of the role.
-- no_of_vacancies: Number of openings if specified, else null.
-- close_date: The application deadline in YYYY-MM-DD format (ISO) if specified, else null.
-- location: Object with { "cities": list[str], "states": list[str], "country": str }. Default country to "India" if not specified.
+- description: A professional, high-fidelity summary of the role. 
+    - MUST be less than 2000 characters.
+    - MUST use professional Markdown formatting (bullet points for responsibilities, bolding for key terms).
+    - Focus on the essence of the role and what makes it a great opportunity.
+- no_of_vacancies: Number of openings as an integer. If not found, return null.
+- close_date: The application deadline in YYYY-MM-DD format (ISO). If not found, return null.
+- location: Object with { "cities": list[str], "states": list[str], "country": str }. 
+    - If specific states aren't found, return null for "states".
+    - Default country to "India" if not specified.
 - salary_range: Object with { "min": float|null, "max": float|null, "currency": "INR" }.
 - experience: Object with { "min": float|null, "max": float|null } in years.
-- requirements: Object with { "skills": list[str], "qualifications": list[str], "disability_preferred": list[str] }. IMPORTANT: Ensure "skills" are single granular tags (e.g. "React", "TypeScript" instead of "React and TypeScript").
+- requirements: Object with { "skills": list[str], "qualifications": list[str], "disability_preferred": list[str] }. 
+    - IMPORTANT: Ensure "skills" are single granular tags (e.g. "React", "TypeScript" instead of "React and TypeScript").
 - job_details: Object with { "designation": str, "workplace_type": "Onsite"|"Remote"|"Hybrid", "job_type": "Full Time"|"Part Time"|"Contract" }.
-- company_name: Name of the hiring company.
-- contact_name: Name of the contact person or recruiter if specified.
+- company_name: Name of the hiring company. If not found, return null.
+- contact_name: Name of the contact person or recruiter. If not found, return null.
 
 RESPONSE RULES:
 1. Return ONLY a valid JSON object.
-2. If a field is not found, use null or an empty list/object as appropriate.
+2. If a field is not found in the text, use null (do not guess).
 3. Ensure the JSON is strictly correctly formatted.
+4. The description MUST be professional and under 2000 characters.
 """
 
 class JobRoleExtractor:
@@ -73,13 +80,23 @@ class JobRoleExtractor:
         )
 
         try:
-            # Clean response if LLM added markdown blockers
-            cleaned_content = response.content.strip()
-            if cleaned_content.startswith("```json"):
-                cleaned_content = cleaned_content[7:-3].strip()
-            elif cleaned_content.startswith("```"):
-                cleaned_content = cleaned_content[3:-3].strip()
+            # Robust JSON extraction from LLM response
+            content = response.content.strip()
             
+            # Try to extract content between triple backticks
+            import re
+            json_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', content, re.DOTALL)
+            if json_match:
+                cleaned_content = json_match.group(1).strip()
+            else:
+                # If no backticks, try to find the first '{' and last '}'
+                first_brace = content.find('{')
+                last_brace = content.rfind('}')
+                if first_brace != -1 and last_brace != -1:
+                    cleaned_content = content[first_brace:last_brace+1].strip()
+                else:
+                    cleaned_content = content
+
             extracted_data = json.loads(cleaned_content)
         except Exception as e:
             logger.error(f"Failed to parse AI response: {str(e)}\nContent: {response.content}")

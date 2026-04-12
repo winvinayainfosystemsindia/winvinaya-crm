@@ -250,10 +250,21 @@ class Planner:
 
     def _parse_response(self, raw: str) -> ToolCallPlan:
         """Parse and validate the LLM's JSON response into a ToolCallPlan."""
-        # Strip markdown code fences if the LLM wrapped the output
-        cleaned = re.sub(r"^```(?:json)?\s*", "", raw.strip(), flags=re.MULTILINE)
-        cleaned = re.sub(r"\s*```$", "", cleaned.strip(), flags=re.MULTILINE)
-        cleaned = cleaned.strip()
+        # Robust JSON extraction from LLM response
+        raw_strip = raw.strip()
+        
+        # Try to extract content between triple backticks
+        json_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', raw_strip, re.DOTALL)
+        if json_match:
+            cleaned = json_match.group(1).strip()
+        else:
+            # If no backticks, try to find the first '{' and last '}'
+            first_brace = raw_strip.find('{')
+            last_brace = raw_strip.rfind('}')
+            if first_brace != -1 and last_brace != -1:
+                cleaned = raw_strip[first_brace:last_brace+1].strip()
+            else:
+                cleaned = raw_strip
 
         try:
             data = json.loads(cleaned)

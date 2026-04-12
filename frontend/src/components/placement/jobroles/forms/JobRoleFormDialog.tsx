@@ -3,41 +3,35 @@ import {
 	Dialog,
 	DialogTitle,
 	DialogContent,
-	DialogActions,
 	Button,
 	Typography,
 	Box,
 	IconButton,
-	Tabs,
-	Tab,
 	Divider,
 	Stack,
-	Tooltip,
 	useMediaQuery,
 	useTheme,
-	Stepper,
-	Step,
-	StepLabel,
 	Paper,
+	Grid,
 	Alert,
-	Chip,
-	Grid
+	DialogActions
 } from '@mui/material';
 import {
 	Close as CloseIcon,
-	Business as BusinessIcon,
 	Person as ContactIcon,
-	Event as DateIcon,
-	SmartToy as AIIcon,
 	AutoAwesome as MagicIcon,
-	KeyboardArrowDown as ExpandIcon,
-	KeyboardArrowUp as CollapseIcon,
 	CloudUpload as UploadIcon,
-	Check as CheckIcon,
-	NavigateNext as NextIcon,
-	NavigateBefore as BackIcon
+	AssignmentTurnedIn as VerifiedIcon,
 } from '@mui/icons-material';
-import { TextField, CircularProgress, Collapse } from '@mui/material';
+import {
+	TextField,
+	CircularProgress,
+	Stepper,
+	Step,
+	StepLabel,
+	Card,
+	CardActionArea,
+} from '@mui/material';
 import { aiService } from '../../../../services/aiService';
 import useToast from '../../../../hooks/useToast';
 import { useAppSelector, useAppDispatch } from '../../../../store/hooks';
@@ -61,26 +55,6 @@ interface JobRoleFormDialogProps {
 	loading?: boolean;
 }
 
-interface TabPanelProps {
-	children?: React.ReactNode;
-	index: number;
-	value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-	const { children, value, index, ...other } = props;
-	return (
-		<div
-			role="tabpanel"
-			hidden={value !== index}
-			id={`jobrole-form-tabpanel-${index}`}
-			aria-labelledby={`jobrole-form-tab-${index}`}
-			{...other}
-		>
-			{value === index && <Box sx={{ pt: 3, pb: 2 }}>{children}</Box>}
-		</div>
-	);
-}
 
 
 
@@ -97,24 +71,24 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const toast = useToast();
-	const [tabValue, setTabValue] = useState(0);
+	// Navigation & Mode States
+	const [reviewTabValue, setReviewTabValue] = useState(0);
+	const [activeStep, setActiveStep] = useState(0);
+	const [showSource, setShowSource] = useState(false);
+	const [formMode, setFormMode] = useState<'select' | 'ai' | 'manual' | null>(null);
 
-	// AI Extraction & Review States
-	const [showAIInput, setShowAIInput] = useState(false);
+
+	// AI Extraction States
 	const [jdText, setJdText] = useState('');
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 	const [isExtracting, setIsExtracting] = useState(false);
-	const [isReviewing, setIsReviewing] = useState(false);
-	const [activeReviewStep, setActiveReviewStep] = useState(0);
-	const [extractedData, setExtractedData] = useState<any>(null);
-	const [suggestions, setSuggestions] = useState<any>(null);
-
-	const reviewSteps = [
-		'Basic Information',
-		'Job Description',
-		'Location & Details',
-		'Requirements & Skills'
-	];
+	const [suggestions, setSuggestions] = useState<{
+		company_id: number | null;
+		company_name: string | null;
+		contact_id: number | null;
+		contact_name: string | null;
+	} | null>(null);
+	const [dragActive, setDragActive] = useState(false);
 
 	const [formData, setFormData] = useState<Partial<JobRole>>({
 		title: '',
@@ -128,12 +102,20 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 		job_details: { designation: '', workplace_type: '', job_type: '' },
 	});
 
+	const steps = jobRole
+		? ['Edit Details']
+		: ['Selection Mode', 'Input Source', 'Review & Publish'];
+
 	useEffect(() => {
 		if (open) {
 			dispatch(fetchCompanies({ limit: 1000 }));
-			setTabValue(0);
+			setActiveStep(0);
+			setFormMode(jobRole ? 'manual' : null);
+			setSuggestions(null);
+			setJdText('');
+			setSelectedFile(null);
 			if (jobRole) {
-				const legacyState = (jobRole.location as any)?.state;
+				const legacyState = (jobRole.location as Record<string, unknown>)?.state as string | undefined;
 				setFormData({
 					...jobRole,
 					close_date: jobRole.close_date?.split('T')[0],
@@ -166,9 +148,9 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 		}
 	}, [dispatch, formData.company_id]);
 
-	const handleChange = (field: string, value: any) => setFormData(prev => ({ ...prev, [field]: value }));
-	const handleNestedChange = (parent: string, field: string, value: any) =>
-		setFormData(prev => ({ ...prev, [parent]: { ...((prev as any)[parent] || {}), [field]: value } }));
+	const handleChange = (field: string, value: unknown) => setFormData(prev => ({ ...prev, [field]: value }));
+	const handleNestedChange = (parent: string, field: string, value: unknown) =>
+		setFormData(prev => ({ ...prev, [parent]: { ...((prev as Record<string, Record<string, unknown>>)[parent] || {}), [field]: value } }));
 
 	const handleExtractFromSource = async () => {
 		if (!jdText.trim() && !selectedFile) {
@@ -179,39 +161,64 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 		setIsExtracting(true);
 		try {
 			const result = await aiService.extractJobRole(jdText || undefined, selectedFile || undefined);
-			setExtractedData(result.data);
-			setSuggestions(result.suggestions);
+			const extracted = result.data;
+			
+			// Directly merge into formData to keep a single source of truth
+			setFormData(prev => ({
+				...prev,
+				...extracted,
+				company_id: result.suggestions?.company_id || prev.company_id,
+				contact_id: result.suggestions?.contact_id || prev.contact_id,
+				location: {
+					...prev.location,
+					...extracted.location,
+					cities: extracted.location?.cities || prev.location?.cities || []
+				},
+				requirements: {
+					...prev.requirements,
+					...extracted.requirements
+				},
+				job_details: {
+					...prev.job_details,
+					...extracted.job_details
+				}
+			}));
 
-			// Enter review mode
-			setIsReviewing(true);
-			setActiveReviewStep(0);
-			toast.success('AI Analysis complete. Please review the extracted details.');
-		} catch (error: any) {
+			setSuggestions(result.suggestions);
+			setActiveStep(2); // Jump to Review & Publish
+			toast.success('AI Analysis complete. Please verify the results and publish.');
+		} catch (error: unknown) {
 			console.error('Extraction error:', error);
-			toast.error(error.response?.data?.detail || 'Failed to analyze JD. Please check your AI settings.');
+			const errorMessage = error instanceof Error ? error.message : 'Failed to analyze JD. Please check your AI settings.';
+			toast.error(errorMessage);
 		} finally {
 			setIsExtracting(false);
 		}
 	};
 
-	const handleReviewComplete = () => {
-		// Map extractedData and suggestions to formData
-		setFormData(prev => ({
-			...prev,
-			...extractedData,
-			company_id: suggestions?.company_id || prev.company_id,
-			contact_id: suggestions?.contact_id || prev.contact_id,
-			location: { ...prev.location, ...extractedData.location },
-			requirements: { ...prev.requirements, ...extractedData.requirements },
-			job_details: { ...prev.job_details, ...extractedData.job_details }
-		}));
+	const handleDrag = (e: React.DragEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		if (e.type === "dragenter" || e.type === "dragover") {
+			setDragActive(true);
+		} else if (e.type === "dragleave") {
+			setDragActive(false);
+		}
+	};
 
-		setIsReviewing(false);
-		setShowAIInput(false);
-		setJdText('');
-		setSelectedFile(null);
-		setTabValue(0);
-		toast.success('Form populated with verified details.');
+	const handleDrop = (e: React.DragEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		setDragActive(false);
+		if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+			const file = e.dataTransfer.files[0];
+			if (file.type !== 'application/pdf') {
+				toast.error('Only PDF files are supported.');
+				return;
+			}
+			setSelectedFile(file);
+			setJdText('');
+		}
 	};
 
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -226,12 +233,12 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 		}
 	};
 
-	// Comprehensive cross-tab validation
-	const validation = useMemo(() => {
-		const basicInfoValid = !!(formData.title && formData.job_details?.designation && formData.company_id && formData.contact_id);
-		const descriptionValid = (formData.description || '').trim().length >= 10;
-		const locationValid = !!(formData.location?.states?.length && formData.location?.country);
-		const requirementsValid = !!(formData.requirements?.qualifications?.length && formData.requirements?.disability_preferred?.length);
+	// Comprehensive cross-tab validation helper
+	const validateData = (data: Partial<JobRole>) => {
+		const basicInfoValid = !!(data.title && data.job_details?.designation && data.company_id && data.contact_id);
+		const descriptionValid = (data.description || '').trim().length >= 10;
+		const locationValid = !!(data.location?.states?.length && data.location?.country);
+		const requirementsValid = !!(data.requirements?.qualifications?.length && data.requirements?.disability_preferred?.length);
 
 		return {
 			basicInfo: basicInfoValid,
@@ -240,411 +247,470 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 			requirements: requirementsValid,
 			isValid: basicInfoValid && descriptionValid && locationValid && requirementsValid
 		};
-	}, [formData]);
+	};
+
+	const validation = useMemo(() => validateData(formData), [formData]);
+
+	// Keyboard shortcut listener
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+				if (activeStep === 2 && validation.isValid) {
+					handleSubmit(e as any);
+				}
+			}
+		};
+		window.addEventListener('keydown', handleKeyDown);
+		return () => window.removeEventListener('keydown', handleKeyDown);
+	}, [activeStep, validation]);
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!validation.isValid) return;
 
-		const {
-			id: _id,
-			public_id: _pid,
-			created_at: _cat,
-			updated_at: _uat,
-			company: _comp,
-			contact: _cont,
-			creator: _creat,
-			...submitData
-		} = formData as any;
+		const submitData = { ...formData };
+		const fieldsToExclude = ['id', 'public_id', 'created_at', 'updated_at', 'company', 'contact', 'creator'] as const;
+
+		fieldsToExclude.forEach(field => {
+			delete (submitData as Record<string, unknown>)[field];
+		});
 
 		onSubmit(submitData as JobRoleCreate);
 	};
 
-	const selectedCompany = companies.find((c) => c.id === formData.company_id)?.name;
-	const selectedContact = contacts.find((c) => c.id === formData.contact_id);
+
+	const renderSelectionMode = () => (
+		<Box sx={{ p: 4, textAlign: 'center' }}>
+			<Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>Build your job opening</Typography>
+			<Typography variant="body1" color="text.secondary" sx={{ mb: 6 }}>
+				Choose how you want to start. Let our AI handle the data entry or build it yourself.
+			</Typography>
+			<Grid container spacing={4} sx={{ maxWidth: 800, mx: 'auto' }}>
+				<Grid size={{ xs: 12, md: 6 }}>
+					<Card
+						sx={{
+							height: '100%',
+							border: '2px solid transparent',
+							'&:hover': { borderColor: 'primary.main', bgcolor: 'rgba(236, 114, 17, 0.04)' },
+							transition: 'all 0.3s'
+						}}
+					>
+						<CardActionArea
+							onClick={() => { setFormMode('ai'); setActiveStep(1); }}
+							sx={{ height: '100%', p: 3 }}
+						>
+							<Box sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
+								<Box sx={{ p: 2, bgcolor: 'rgba(236, 114, 17, 0.1)', borderRadius: '50%' }}>
+									<MagicIcon sx={{ fontSize: 48, color: 'primary.main' }} />
+								</Box>
+							</Box>
+							<Typography variant="h6" gutterBottom>AI Smart Draft</Typography>
+							<Typography variant="body2" color="text.secondary">
+								Upload a JD or paste text. We'll extract skills, location, and key requirements automatically.
+							</Typography>
+						</CardActionArea>
+					</Card>
+				</Grid>
+				<Grid size={{ xs: 12, md: 6 }}>
+					<Card
+						sx={{
+							height: '100%',
+							border: '2px solid transparent',
+							'&:hover': { borderColor: 'secondary.main', bgcolor: 'rgba(35, 47, 62, 0.04)' },
+							transition: 'all 0.3s'
+						}}
+					>
+						<CardActionArea
+							onClick={() => { setFormMode('manual'); setActiveStep(2); }}
+							sx={{ height: '100%', p: 3 }}
+						>
+							<Box sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
+								<Box sx={{ p: 2, bgcolor: 'rgba(35, 47, 62, 0.1)', borderRadius: '50%' }}>
+									<ContactIcon sx={{ fontSize: 48, color: 'secondary.main' }} />
+								</Box>
+							</Box>
+							<Typography variant="h6" gutterBottom>Manual Setup</Typography>
+							<Typography variant="body2" color="text.secondary">
+								Start with a clean slate. Fill in the details manually using our optimized enterprise form.
+							</Typography>
+						</CardActionArea>
+					</Card>
+				</Grid>
+			</Grid>
+		</Box>
+	);
+
+	const renderInputSource = () => (
+		<Box sx={{ display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
+			{/* CONTENT AREA - Managed by DialogContent */}
+			<Box sx={{ p: 4 }}>
+				<Box sx={{ maxWidth: 800, mx: 'auto' }}>
+					<Typography variant="h6" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1.5, color: 'secondary.main' }}>
+						<Box sx={{ p: 1, bgcolor: 'primary.light', color: '#fff', borderRadius: '8px', display: 'flex' }}>
+							<UploadIcon fontSize="small" />
+						</Box>
+						Attach Source Document
+					</Typography>
+					<Typography variant="body2" color="text.secondary" sx={{ mb: 4, ml: 6 }}>
+						Accelerate your workflow with AI-assisted data mapping by providing a job description.
+					</Typography>
+
+					<Paper elevation={0} sx={{ p: 4, border: '1px solid #e2e8f0', borderRadius: '12px', bgcolor: '#fff' }}>
+						<Box
+							onDragEnter={handleDrag}
+							onDragLeave={handleDrag}
+							onDragOver={handleDrag}
+							onDrop={handleDrop}
+							sx={{
+								p: 5,
+								mb: 4,
+								border: '2px dashed',
+								borderColor: dragActive ? 'primary.main' : '#e2e8f0',
+								borderRadius: '8px',
+								bgcolor: dragActive ? 'rgba(0, 77, 230, 0.02)' : '#f8fafc',
+								textAlign: 'center',
+								transition: 'all 0.2s',
+								cursor: 'pointer'
+							}}
+							onClick={() => !selectedFile && document.querySelector('input[type="file"]')?.dispatchEvent(new MouseEvent('click'))}
+						>
+							{selectedFile ? (
+								<Box sx={{ py: 1 }}>
+									<VerifiedIcon sx={{ color: 'success.main', fontSize: 40, mb: 1 }} />
+									<Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'secondary.main' }}>{selectedFile.name}</Typography>
+									<Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>PDF Document Ready for Analysis</Typography>
+									<Button size="small" variant="text" color="error" onClick={(e) => { e.stopPropagation(); setSelectedFile(null); }} sx={{ mt: 2, fontWeight: 700 }}>
+										Replace Document
+									</Button>
+								</Box>
+							) : (
+								<Box>
+									<UploadIcon sx={{ fontSize: 40, color: '#94a3b8', mb: 2 }} />
+									<Typography variant="body1" sx={{ fontWeight: 600, color: 'secondary.main', mb: 0.5 }}>
+										Drag & Drop PDF or click to browse
+									</Typography>
+									<Typography variant="caption" color="text.secondary">Support PDF only (max 10MB)</Typography>
+									<input type="file" hidden accept=".pdf" onChange={handleFileChange} />
+								</Box>
+							)}
+						</Box>
+
+						<Divider sx={{ mb: 4 }}><Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, letterSpacing: '0.1em' }}>OR PASTE JOB DESCRIPTION</Typography></Divider>
+
+						<Typography variant="awsFieldLabel">Raw Content</Typography>
+						<TextField
+							multiline
+							rows={10}
+							fullWidth
+							placeholder="Paste the job description text here for extraction..."
+							value={jdText}
+							onChange={(e) => { setJdText(e.target.value); if (e.target.value) setSelectedFile(null); }}
+							sx={{
+								'& .MuiInputBase-root': { bgcolor: '#fff', borderRadius: '8px' },
+								'& .MuiOutlinedInput-notchedOutline': { borderColor: '#e2e8f0' }
+							}}
+						/>
+					</Paper>
+				</Box>
+			</Box>
+
+		</Box>
+	);
+
+	const renderReviewAnalysis = () => (
+		<Box sx={{ display: 'flex', flexDirection: 'column', bgcolor: '#f1f5f9' }}>
+			{/* STICKY HEADER SECTION */}
+			<Box sx={{ position: 'sticky', top: 0, zIndex: 100, bgcolor: '#fff', borderBottom: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+				<Box sx={{ py: 1.25, px: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+					<Stack spacing={0.25}>
+						<Typography variant="h6" sx={{ color: 'secondary.main', fontWeight: 800, fontSize: '1.1rem' }}>Review & Publish</Typography>
+						<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>Review and validate the structured data before publishing.</Typography>
+					</Stack>
+
+					<Stack direction="row" spacing={3} alignItems="center">
+						<Stack direction="row" spacing={1} alignItems="center">
+							<Box sx={{ textAlign: 'right' }}>
+								<Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', display: 'block', fontSize: '0.65rem', textTransform: 'uppercase' }}>Extraction confidence</Typography>
+								<Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'flex-end' }}>
+									<Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'success.main' }} />
+									<Typography variant="body2" sx={{ fontWeight: 800, color: 'success.main' }}>High (92%)</Typography>
+								</Box>
+							</Box>
+						</Stack>
+
+						<Divider orientation="vertical" flexItem sx={{ height: 32, my: 'auto' }} />
+
+						<Box sx={{ textAlign: 'right' }}>
+							<Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', display: 'block', fontSize: '0.65rem', textTransform: 'uppercase' }}>Fields auto-mapped</Typography>
+							<Typography variant="body2" sx={{ fontWeight: 800, color: 'primary.main' }}>
+								{Object.keys(formData || {}).length} Attributes
+							</Typography>
+						</Box>
+
+						<Divider orientation="vertical" flexItem sx={{ height: 32, my: 'auto' }} />
+
+						<Button
+							size="small"
+							variant="contained"
+							color="primary"
+							startIcon={<UploadIcon sx={{ fontSize: 16 }} />}
+							onClick={() => setShowSource(!showSource)}
+							sx={{
+								borderRadius: '8px',
+								textTransform: 'none',
+								fontWeight: 700,
+								px: 3,
+								height: 40,
+								boxShadow: 'none',
+								'&:hover': { boxShadow: 'none' }
+							}}
+						>
+							{showSource ? 'Hide Source' : 'Peek Source'}
+						</Button>
+					</Stack>
+				</Box>
+
+				{/* STICKY SEGMENTED TABS NAVIGATION */}
+				<Box sx={{ py: 1, display: 'flex', justifyContent: 'center', bgcolor: '#f8fafc', borderTop: '1px solid #f1f5f9' }}>
+					<Paper elevation={0} sx={{
+						p: 0.5,
+						bgcolor: '#e2e8f0',
+						borderRadius: '12px',
+						display: 'inline-flex',
+						gap: 0.5
+					}}>
+						{[
+							{ label: 'General', icon: <MagicIcon sx={{ fontSize: 16 }} />, valid: validation.basicInfo },
+							{ label: 'Job Narrative', icon: <UploadIcon sx={{ fontSize: 16 }} />, valid: validation.description },
+							{ label: 'Location', icon: <VerifiedIcon sx={{ fontSize: 16 }} />, valid: validation.location },
+							{ label: 'Requirements', icon: <VerifiedIcon sx={{ fontSize: 16 }} />, valid: validation.requirements }
+						].map((tab, idx) => (
+							<Button
+								key={tab.label}
+								onClick={() => setReviewTabValue(idx)}
+								variant="text"
+								size="small"
+								sx={{
+									px: 3,
+									py: 0.5,
+									borderRadius: '10px',
+									color: reviewTabValue === idx ? '#fff' : 'text.secondary',
+									bgcolor: reviewTabValue === idx ? 'secondary.main' : 'transparent',
+									fontWeight: 700,
+									display: 'flex',
+									gap: 1,
+									'&:hover': {
+										bgcolor: reviewTabValue === idx ? 'secondary.main' : 'rgba(15, 23, 42, 0.08)'
+									}
+								}}
+							>
+								{tab.label}
+								{!tab.valid && (
+									<Box sx={{ width: 8, height: 8, bgcolor: 'error.main', borderRadius: '50%', ml: 0.5 }} />
+								)}
+							</Button>
+						))}
+					</Paper>
+				</Box>
+			</Box>
+
+			{/* UNIFIED SCROLLABLE AREA - Flow controlled by DialogContent */}
+			<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: { xs: 2, md: 4 } }}>
+				{!validation.isValid && (
+					<Alert 
+						severity="error" 
+						variant="filled" 
+						sx={{ mb: 2, width: '100%', maxWidth: 900, borderRadius: '12px', bgcolor: 'error.dark' }}
+					>
+						<strong>Missing Mandatory Information:</strong> Please complete the sections marked with red indicators to publish this requisition. 
+						(Check Company and Contact on the General tab).
+					</Alert>
+				)}
+				<Box sx={{ width: '100%', maxWidth: 900 }}>
+					<Paper elevation={1} sx={{ p: 4, bgcolor: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+						{formData && (
+							<>
+								{reviewTabValue === 0 && (
+									<GeneralInfoTab
+										formData={formData}
+										handleChange={handleChange}
+										handleNestedChange={handleNestedChange}
+										companies={companies}
+										contacts={contacts}
+										suggestions={suggestions}
+										highlightMissing={true}
+									/>
+								)}
+								{reviewTabValue === 1 && (
+									<JobDescriptionTab
+										formData={formData}
+										handleChange={handleChange}
+										highlightMissing={true}
+									/>
+								)}
+								{reviewTabValue === 2 && (
+									<LocationWorkplaceTab
+										formData={formData}
+										handleNestedChange={handleNestedChange}
+										workplaceTypes={WORKPLACE_TYPES}
+										jobTypes={JOB_TYPES}
+										highlightMissing={true}
+									/>
+								)}
+								{reviewTabValue === 3 && (
+									<RequirementsCompensationTab
+										formData={formData}
+										handleNestedChange={handleNestedChange}
+										highlightMissing={true}
+									/>
+								)}
+							</>
+						)}
+					</Paper>
+				</Box>
+			</Box>
+		</Box >
+	);
+
+	const renderFooterActions = () => {
+		if (activeStep === 0) return null;
+
+		return (
+			<DialogActions sx={{ p: 2.5, px: 4, bgcolor: '#f8fafc', borderTop: '1px solid #e2e8f0', justifyContent: 'space-between' }}>
+				<Button onClick={onClose} sx={{ color: 'text.secondary', fontWeight: 700 }}>
+					Cancel Requisition
+				</Button>
+
+				<Stack direction="row" spacing={2}>
+					{activeStep === 1 && (
+						<>
+							<Button onClick={() => setActiveStep(0)} sx={{ fontWeight: 700, color: 'text.secondary' }}>Back</Button>
+							<Button
+								variant="contained"
+								color="primary"
+								onClick={handleExtractFromSource}
+								disabled={isExtracting || (!jdText.trim() && !selectedFile)}
+								startIcon={isExtracting ? <CircularProgress size={18} color="inherit" /> : <MagicIcon />}
+								sx={{ px: 4, fontWeight: 700, borderRadius: '8px' }}
+							>
+								{isExtracting ? 'Analyzing Source...' : 'Analyze & Extraction'}
+							</Button>
+						</>
+					)}
+
+					{activeStep === 2 && (
+						<>
+							<Stack direction="row" spacing={3} alignItems="center">
+								{!validation.isValid && (
+									<Typography variant="caption" sx={{ color: 'error.main', fontWeight: 600 }}>
+										Complete required fields to publish
+									</Typography>
+								)}
+								<Button color="inherit" sx={{ fontWeight: 700 }} onClick={() => setActiveStep(formMode === 'ai' ? 1 : 0)}>
+									Back
+								</Button>
+								<Button
+									variant="contained"
+									color="primary"
+									onClick={handleSubmit}
+									disabled={loading || !validation.isValid}
+									startIcon={loading ? <CircularProgress size= {18} color="inherit" /> : null}
+									sx={{ px: 4, fontWeight: 700, borderRadius: '8px' }}
+								>
+									{jobRole ? 'Update Requisition' : 'Publish Requisition'}
+								</Button>
+							</Stack>
+						</>
+					)}
+				</Stack>
+			</DialogActions>
+		);
+	};
 
 	return (
 		<Dialog
 			open={open}
 			onClose={onClose}
-			maxWidth="md"
+			maxWidth="lg"
 			fullWidth
 			fullScreen={isMobile}
-			PaperProps={{ sx: { borderRadius: isMobile ? 0 : 0, border: isMobile ? 'none' : '1px solid #d5dbdb', boxShadow: 'none' } }}
+			PaperProps={{
+				sx: {
+					borderRadius: isMobile ? 0 : '16px',
+					overflow: 'hidden',
+					boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+					bgcolor: 'background.default'
+				}
+			}}
 		>
-			<DialogTitle sx={{ bgcolor: '#232f3e', color: '#ffffff', py: 2 }}>
-				<Stack direction="row" justifyContent="space-between" alignItems="center">
-					<Box sx={{ flex: 1 }}>
-						<Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-							{jobRole ? 'Edit Job Role' : 'Create New Job Opening'}
-							{!jobRole && (
-								<Tooltip title="Auto-fill using AI analysis of a JD">
-									<Button
-										size="small"
-										onClick={() => setShowAIInput(!showAIInput)}
-										startIcon={<MagicIcon />}
-										endIcon={showAIInput ? <CollapseIcon /> : <ExpandIcon />}
-										sx={{
-											ml: 2,
-											textTransform: 'none',
-											color: '#ff9900',
-											fontWeight: 700,
-											bgcolor: 'rgba(255, 153, 0, 0.1)',
-											borderRadius: '4px',
-											'&:hover': { bgcolor: 'rgba(255, 153, 0, 0.2)' }
-										}}
-									>
-										Analyze with AI
-									</Button>
-								</Tooltip>
-							)}
+			<DialogTitle sx={{
+				p: 0,
+				bgcolor: 'secondary.main',
+				color: '#fff',
+				position: 'relative',
+				borderBottom: '1px solid rgba(255,255,255,0.05)'
+			}}>
+				<Box sx={{ px: 4, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+					<Stack spacing={0.25}>
+						<Typography variant="h6" sx={{ color: '#fff', fontWeight: 800, letterSpacing: '-0.8px' }}>
+							{jobRole ? 'Modify Requisition' : 'New Talent Pipeline'}
 						</Typography>
-						<Stack direction="row" spacing={3} alignItems="center" sx={{ opacity: 0.85 }}>
-							{selectedCompany && (
-								<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-									<BusinessIcon sx={{ fontSize: 16 }} />
-									<Typography variant="caption" sx={{ fontSize: '0.875rem' }}>
-										{selectedCompany}
-									</Typography>
-								</Box>
-							)}
-							{selectedContact && (
-								<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-									<ContactIcon sx={{ fontSize: 16 }} />
-									<Typography variant="caption" sx={{ fontSize: '0.875rem' }}>
-										{selectedContact.first_name} {selectedContact.last_name}
-									</Typography>
-								</Box>
-							)}
-							<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-								<DateIcon sx={{ fontSize: 16 }} />
-								<Typography variant="caption" sx={{ fontSize: '0.875rem' }}>
-									<Typography component="span" variant="caption" sx={{ fontWeight: 600, mr: 0.5 }}>DATE:</Typography>
-									{jobRole ? new Date(jobRole.created_at).toLocaleDateString() : new Date().toLocaleDateString()}
-								</Typography>
-							</Box>
-						</Stack>
-					</Box>
-					<IconButton onClick={onClose} sx={{ color: '#ffffff', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
-						<CloseIcon />
+						<Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.65rem' }}>
+							Enterprise Job Architect • {jobRole?.public_id || 'ID-PENDING'}
+						</Typography>
+					</Stack>
+					<IconButton onClick={onClose} size="small" sx={{ color: 'rgba(255,255,255,0.6)', '&:hover': { color: '#fff', bgcolor: 'rgba(255,255,255,0.1)' } }}>
+						<CloseIcon sx={{ fontSize: 24 }} />
 					</IconButton>
-				</Stack>
+				</Box>
+
+				{!jobRole && (
+					<Box sx={{ px: 5, pb: 2.5 }}>
+						<Stepper
+							activeStep={activeStep}
+							alternativeLabel={!isMobile}
+							sx={{
+								'& .MuiStepIcon-root': {
+									color: 'rgba(255,255,255,0.1)',
+									width: 24,
+									height: 24,
+									'&.Mui-active': { color: 'primary.main', filter: 'drop-shadow(0 0 8px rgba(0,77,230,0.4))' },
+									'&.Mui-completed': { color: 'success.main' }
+								},
+								'& .MuiStepLabel-label': {
+									color: 'rgba(255,255,255,0.3)',
+									fontSize: '0.65rem',
+									fontWeight: 800,
+									mt: 1,
+									textTransform: 'uppercase',
+									letterSpacing: '0.05em',
+									'&.Mui-active': { color: '#fff' },
+									'&.Mui-completed': { color: 'success.main' }
+								},
+								'& .MuiStepConnector-line': {
+									borderColor: 'rgba(255,255,255,0.05)',
+									borderTopWidth: 2
+								}
+							}}
+						>
+							{steps.map((label) => (
+								<Step key={label}>
+									<StepLabel>{label}</StepLabel>
+								</Step>
+							))}
+						</Stepper>
+					</Box>
+				)}
 			</DialogTitle>
 
-			<Box sx={{ borderBottom: 1, borderColor: '#d5dbdb', bgcolor: '#fff' }}>
-				<Tabs
-					value={tabValue}
-					onChange={(_, v) => setTabValue(v)}
-					variant={isMobile ? "scrollable" : "fullWidth"}
-					scrollButtons={isMobile ? "auto" : false}
-					allowScrollButtonsMobile
-					sx={{
-						px: isMobile ? 0 : 2,
-						'& .MuiTabs-indicator': { bgcolor: 'primary.main', height: 3 },
-						'& .MuiTab-root': {
-							fontWeight: 700,
-							textTransform: 'none',
-							py: 2,
-							color: 'text.secondary',
-							fontSize: '0.875rem',
-							'&.Mui-selected': { color: 'primary.main' }
-						}
-					}}
-				>
-					<Tab label="1. General info" />
-					<Tab label="2. Job description" />
-					<Tab label="3. Location & workplace" />
-					<Tab label="4. Requirements" />
-				</Tabs>
-			</Box>
-
-			<DialogContent sx={{ p: 0, bgcolor: 'background.default', minHeight: isMobile ? 'auto' : 450 }}>
-				{isReviewing ? (
-					<Box sx={{ p: 4, height: '100%', display: 'flex', flexDirection: 'column' }}>
-						<Stepper activeStep={activeReviewStep} sx={{ mb: 4 }}>
-							{reviewSteps.map((label) => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
-						</Stepper>
-
-						<Paper variant="outlined" sx={{ p: 3, flexGrow: 1, bgcolor: '#fff', borderRadius: '4px' }}>
-							{activeReviewStep === 0 && (
-								<Stack spacing={3}>
-									<Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-										<BusinessIcon color="primary" /> Basic Information
-									</Typography>
-									<TextField
-										fullWidth
-										label="Job Title"
-										value={extractedData?.title || ''}
-										onChange={(e) => setExtractedData({ ...extractedData, title: e.target.value })}
-										variant="outlined"
-									/>
-									<Box sx={{ p: 2, bgcolor: '#f8f9f9', borderRadius: '4px', border: '1px solid #d5dbdb' }}>
-										<Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>AI Match Analysis</Typography>
-										<Stack spacing={1}>
-											<Alert severity={suggestions?.company_id ? "success" : "warning"} icon={<BusinessIcon />}>
-												{suggestions?.company_id
-													? `Matched existing company: ${suggestions.company_name}`
-													: `New company detected: ${suggestions?.company_name || 'Unknown'}`}
-											</Alert>
-											<Alert severity={suggestions?.contact_id ? "success" : "info"} icon={<ContactIcon />}>
-												{suggestions?.contact_id
-													? `Matched priority contact: ${suggestions.contact_name}`
-													: `Suggested recruiter name: ${suggestions?.contact_name || 'Not found'}`}
-											</Alert>
-										</Stack>
-									</Box>
-								</Stack>
-							)}
-
-							{activeReviewStep === 1 && (
-								<Stack spacing={2}>
-									<Typography variant="h6">Job Description Extract</Typography>
-									<TextField
-										multiline
-										rows={12}
-										fullWidth
-										value={extractedData?.description || ''}
-										onChange={(e) => setExtractedData({ ...extractedData, description: e.target.value })}
-									/>
-								</Stack>
-							)}
-
-							{activeReviewStep === 2 && (
-								<Stack spacing={3}>
-									<Typography variant="h6">Location & Workplace</Typography>
-									<Grid container spacing={2}>
-										<Grid size={{ xs: 12, md: 6 }}>
-											<Typography variant="caption" sx={{ fontWeight: 700 }}>EXTRACTED CITIES</Typography>
-											<Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-												{extractedData?.location?.cities?.map((c: string) => <Chip key={c} label={c} size="small" />)}
-											</Box>
-										</Grid>
-										<Grid size={{ xs: 12, md: 6 }}>
-											<Typography variant="caption" sx={{ fontWeight: 700 }}>WORKPLACE TYPE</Typography>
-											<Box sx={{ mt: 1 }}>
-												<Chip label={extractedData?.job_details?.workplace_type} color="primary" />
-											</Box>
-										</Grid>
-									</Grid>
-								</Stack>
-							)}
-
-							{activeReviewStep === 3 && (
-								<Stack spacing={3}>
-									<Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-										<AIIcon color="primary" /> Requirements & Skills
-									</Typography>
-									<Typography variant="body2" color="text.secondary">
-										AI has extracted the following granular technical skills. These will be added as individual tags.
-									</Typography>
-									<Paper variant="outlined" sx={{ p: 2, bgcolor: '#f1faff', border: '1px solid #007eb9' }}>
-										<Typography variant="caption" sx={{ color: '#007eb9', fontWeight: 700, mb: 1, display: 'block' }}>TECHNICAL SKILL TAGS (ATOMIC)</Typography>
-										<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-											{extractedData?.requirements?.skills?.map((s: string, idx: number) => (
-												<Chip
-													key={idx}
-													label={s}
-													color="primary"
-													variant="outlined"
-													onDelete={() => {
-														const newSkills = [...extractedData.requirements.skills];
-														newSkills.splice(idx, 1);
-														setExtractedData({ ...extractedData, requirements: { ...extractedData.requirements, skills: newSkills } });
-													}}
-													sx={{ bgcolor: '#fff', borderRadius: '2px', fontWeight: 600 }}
-												/>
-											))}
-										</Box>
-									</Paper>
-								</Stack>
-							)}
-						</Paper>
-
-						<Stack direction="row" justifyContent="space-between" sx={{ mt: 4 }}>
-							<Button
-								startIcon={<BackIcon />}
-								onClick={() => activeReviewStep === 0 ? setIsReviewing(false) : setActiveReviewStep(v => v - 1)}
-								sx={{ textTransform: 'none' }}
-							>
-								{activeReviewStep === 0 ? 'Quit Review' : 'Back'}
-							</Button>
-							<Button
-								variant="contained"
-								endIcon={activeReviewStep === 3 ? <CheckIcon /> : <NextIcon />}
-								onClick={() => activeReviewStep === 3 ? handleReviewComplete() : setActiveReviewStep(v => v + 1)}
-								sx={{ textTransform: 'none', px: 4 }}
-							>
-								{activeReviewStep === 3 ? 'Finish & Populate' : 'Confirm & Next'}
-							</Button>
-						</Stack>
-					</Box>
-				) : (
-					<>
-						{/* AI JD Input Area */}
-						<Collapse in={showAIInput}>
-							<Box sx={{
-								p: 3,
-								bgcolor: '#f8f9f9',
-								borderBottom: '1px solid #d5dbdb',
-								display: 'flex',
-								flexDirection: 'column',
-								gap: 2
-							}}>
-								<Stack direction="row" alignItems="center" spacing={1} sx={{ color: 'primary.main', mb: 1 }}>
-									<AIIcon />
-									<Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-										Enterprise AI Job Description Analysis
-									</Typography>
-								</Stack>
-								<Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-									Upload a PDF JD or paste the text below. Our AI will perform deep analysis to extract structured data and map CRM records.
-								</Typography>
-
-								<Stack direction="row" spacing={2} sx={{ mb: 1 }}>
-									<TextField
-										multiline
-										rows={jdText ? 6 : 2}
-										fullWidth
-										placeholder="Paste JD text here..."
-										value={jdText}
-										onChange={(e) => setJdText(e.target.value)}
-										disabled={isExtracting || !!selectedFile}
-										sx={{
-											bgcolor: '#fff',
-											'& .MuiOutlinedInput-root': {
-												borderRadius: '2px',
-												'&.Mui-focused fieldset': { borderColor: 'primary.main' }
-											}
-										}}
-									/>
-									<Box sx={{ minWidth: 200, display: 'flex', flexDirection: 'column', gap: 1 }}>
-										<Button
-											component="label"
-											variant="outlined"
-											startIcon={selectedFile ? <CheckIcon color="success" /> : <UploadIcon />}
-											sx={{ height: '100%', borderStyle: 'dashed', textTransform: 'none' }}
-											disabled={isExtracting || !!jdText.trim()}
-										>
-											{selectedFile ? selectedFile.name : 'Upload JD (PDF)'}
-											<input type="file" hidden accept=".pdf" onChange={handleFileChange} />
-										</Button>
-										{selectedFile && (
-											<Button
-												size="small"
-												color="error"
-												onClick={() => setSelectedFile(null)}
-												sx={{ textTransform: 'none' }}
-											>
-												Clear File
-											</Button>
-										)}
-									</Box>
-								</Stack>
-								<Stack direction="row" justifyContent="flex-end" spacing={2} sx={{ mt: 1 }}>
-									<Button
-										onClick={() => setShowAIInput(false)}
-										disabled={isExtracting}
-										sx={{ textTransform: 'none', fontWeight: 600 }}
-									>
-										Cancel
-									</Button>
-									<Button
-										variant="contained"
-										onClick={handleExtractFromSource}
-										disabled={isExtracting || (!jdText.trim() && !selectedFile)}
-										startIcon={isExtracting ? <CircularProgress size={20} color="inherit" /> : <MagicIcon />}
-										sx={{
-											textTransform: 'none',
-											fontWeight: 700,
-											px: 3,
-											borderRadius: '2px',
-											boxShadow: 'none'
-										}}
-									>
-										{isExtracting ? 'Analyzing JD...' : 'Analyze & Review'}
-									</Button>
-								</Stack>
-							</Box>
-						</Collapse>
-
-						<Box sx={{ px: { xs: 2, sm: 4 }, py: 2 }}>
-							<TabPanel value={tabValue} index={0}>
-								<GeneralInfoTab
-									formData={formData}
-									handleChange={handleChange}
-									handleNestedChange={handleNestedChange}
-									companies={companies}
-									contacts={contacts}
-								/>
-							</TabPanel>
-							<TabPanel value={tabValue} index={1}>
-								<JobDescriptionTab
-									formData={formData}
-									handleChange={handleChange}
-								/>
-							</TabPanel>
-							<TabPanel value={tabValue} index={2}>
-								<LocationWorkplaceTab
-									formData={formData}
-									handleNestedChange={handleNestedChange}
-									workplaceTypes={WORKPLACE_TYPES}
-									jobTypes={JOB_TYPES}
-								/>
-							</TabPanel>
-							<TabPanel value={tabValue} index={3}>
-								<RequirementsCompensationTab
-									formData={formData}
-									handleNestedChange={handleNestedChange}
-								/>
-							</TabPanel>
-						</Box>
-					</>
-				)}
-			</DialogContent>
-
-			<Divider sx={{ borderColor: '#d5dbdb' }} />
-			<DialogActions sx={{ p: 3, bgcolor: '#fff', justifyContent: 'space-between' }}>
-				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 1 }}>
-					{!validation.isValid && (
-						<>
-							<Typography variant="caption" sx={{ color: 'error.main', fontWeight: 600 }}>
-								Please complete all mandatory fields before saving.
-							</Typography>
-						</>
-					)}
+			<DialogContent sx={{ p: 0, bgcolor: 'background.default', display: 'flex', flexDirection: 'column', overflowY: 'auto', maxHeight: '75vh' }}>
+				<Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+					{activeStep === 0 && renderSelectionMode()}
+					{activeStep === 1 && renderInputSource()}
+					{activeStep === 2 && renderReviewAnalysis()}
 				</Box>
-				<Stack direction="row" spacing={2}>
-					<Button
-						onClick={onClose}
-						sx={{ color: 'text.secondary', fontWeight: 700, textTransform: 'none', px: 3 }}
-					>
-						Cancel
-					</Button>
-					<Tooltip title={!validation.isValid ? "Complete all required fields" : ""}>
-						<span>
-							<Button
-								onClick={handleSubmit}
-								variant="contained"
-								disabled={loading || !validation.isValid}
-								sx={{
-									bgcolor: 'primary.main',
-									px: 4,
-									py: 1,
-									fontWeight: 700,
-									borderRadius: '2px',
-									textTransform: 'none',
-									boxShadow: 'none',
-									border: '1px solid primary.main',
-									'&:hover': { bgcolor: '#eb5f07', borderColor: '#eb5f07' },
-									'&.Mui-disabled': { bgcolor: 'background.default', color: '#aab7b8', borderColor: 'divider' }
-								}}
-							>
-								{loading ? 'Processing...' : (jobRole ? 'Update Changes' : 'Save Opening')}
-							</Button>
-						</span>
-					</Tooltip>
-				</Stack>
-			</DialogActions>
+			</DialogContent>
+			{renderFooterActions()}
 		</Dialog>
 	);
 };

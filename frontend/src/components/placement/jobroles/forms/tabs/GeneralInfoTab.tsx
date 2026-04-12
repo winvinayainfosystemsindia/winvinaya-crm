@@ -12,7 +12,8 @@ import {
 	Select,
 	MenuItem,
 	FormControlLabel,
-	Switch
+	Switch,
+	Chip
 } from '@mui/material';
 import {
 	InfoOutlined as InfoIcon,
@@ -32,6 +33,13 @@ interface GeneralInfoTabProps {
 	handleNestedChange: (parent: string, field: string, value: any) => void;
 	companies: Company[];
 	contacts: Contact[];
+	suggestions?: {
+		company_id: number | null;
+		company_name: string | null;
+		contact_id: number | null;
+		contact_name: string | null;
+	} | null;
+	highlightMissing?: boolean;
 }
 
 const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({
@@ -39,9 +47,23 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({
 	handleChange,
 	handleNestedChange,
 	companies,
-	contacts
+	contacts,
+	suggestions,
+	highlightMissing
 }) => {
 	const { awsPanel, helperBox } = awsStyles;
+
+	const getFieldStyle = (value: any, isRequired: boolean = false) => {
+		const isMissing = highlightMissing && isRequired && !value;
+		return {
+			...commonTextFieldProps.sx,
+			'& .MuiInputBase-root': {
+				...commonTextFieldProps.sx['& .MuiInputBase-root'],
+				border: isMissing ? '1px dashed #ec7211' : 'none',
+				bgcolor: isMissing ? 'rgba(236, 114, 17, 0.03)' : '#fcfcfc',
+			}
+		};
+	};
 
 	const commonTextFieldProps = {
 		size: 'small' as const,
@@ -79,7 +101,12 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({
 				<Grid container spacing={3}>
 					<Grid size={{ xs: 12, md: 6 }}>
 						<Box>
-							<Typography variant="awsFieldLabel">Job Title</Typography>
+							<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+								<Typography variant="awsFieldLabel" sx={{ mb: 0 }}>Job Title</Typography>
+								{highlightMissing && !formData.title && (
+									<Typography variant="caption" sx={{ color: '#ec7211', fontWeight: 700 }}>VERIFICATION REQUIRED</Typography>
+								)}
+							</Stack>
 							<TextField
 								fullWidth
 								value={formData.title || ''}
@@ -88,12 +115,18 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({
 								inputProps={{ maxLength: 100 }}
 								helperText={`${(formData.title || '').length}/100`}
 								{...commonTextFieldProps}
+								sx={getFieldStyle(formData.title, true)}
 							/>
 						</Box>
 					</Grid>
 					<Grid size={{ xs: 12, md: 6 }}>
 						<Box>
-							<Typography variant="awsFieldLabel">Designation</Typography>
+							<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+								<Typography variant="awsFieldLabel" sx={{ mb: 0 }}>Designation</Typography>
+								{highlightMissing && !(formData as any).job_details?.designation && (
+									<Typography variant="caption" sx={{ color: '#ec7211', fontWeight: 700 }}>VERIFICATION REQUIRED</Typography>
+								)}
+							</Stack>
 							<TextField
 								fullWidth
 								value={(formData as any).job_details?.designation || ''}
@@ -102,6 +135,7 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({
 								inputProps={{ maxLength: 100 }}
 								helperText={`${((formData as any).job_details?.designation || '').length}/100`}
 								{...commonTextFieldProps}
+								sx={getFieldStyle((formData as any).job_details?.designation, true)}
 							/>
 						</Box>
 					</Grid>
@@ -178,7 +212,21 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({
 				<Grid container spacing={3}>
 					<Grid size={{ xs: 12, md: 6 }}>
 						<Box>
-							<Typography variant="awsFieldLabel">Hiring Company</Typography>
+							<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+								<Typography variant="awsFieldLabel" sx={{ mb: 0 }}>Hiring Company</Typography>
+								{highlightMissing && !formData.company_id && (
+									<Typography variant="caption" sx={{ color: '#ec7211', fontWeight: 700 }}>VERIFICATION REQUIRED</Typography>
+								)}
+								{suggestions && formData.company_id && (
+									<Chip 
+										label={suggestions.company_id ? 'Verified Entity' : 'New Entity'} 
+										size="small" 
+										color={suggestions.company_id ? 'info' : 'warning'}
+										variant="outlined"
+										sx={{ height: 20, fontSize: '0.65rem', borderRadius: '2px', fontWeight: 700 }}
+									/>
+								)}
+							</Stack>
 							<Autocomplete
 								options={companies}
 								getOptionLabel={(option) => option.name || ''}
@@ -188,14 +236,33 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({
 									handleChange('contact_id', null);
 								}}
 								renderInput={(params) => (
-									<TextField {...params} placeholder="Select Company" {...commonTextFieldProps} />
+									<TextField 
+										{...params} 
+										placeholder="Select Company" 
+										{...commonTextFieldProps} 
+										sx={getFieldStyle(formData.company_id, true)}
+									/>
 								)}
 							/>
 						</Box>
 					</Grid>
 					<Grid size={{ xs: 12, md: 6 }}>
 						<Box>
-							<Typography variant="awsFieldLabel">Primary Contact Person</Typography>
+							<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+								<Typography variant="awsFieldLabel" sx={{ mb: 0 }}>Primary Contact Person</Typography>
+								{highlightMissing && !formData.contact_id && (
+									<Typography variant="caption" sx={{ color: '#ec7211', fontWeight: 700 }}>VERIFICATION REQUIRED</Typography>
+								)}
+								{suggestions && formData.contact_id && (
+									<Chip 
+										label={suggestions.contact_id ? 'Known Contact' : 'Candidate Contact'} 
+										size="small" 
+										color={suggestions.contact_id ? 'info' : 'secondary'}
+										variant="outlined"
+										sx={{ height: 20, fontSize: '0.65rem', borderRadius: '2px', fontWeight: 700 }}
+									/>
+								)}
+							</Stack>
 							<Autocomplete
 								options={contacts}
 								getOptionLabel={(option) => `${option.first_name} ${option.last_name}`}
@@ -207,6 +274,7 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({
 										{...params}
 										placeholder={formData.company_id ? "Select Contact" : "Select a company first"}
 										{...commonTextFieldProps}
+										sx={getFieldStyle(formData.contact_id, true)}
 									/>
 								)}
 							/>

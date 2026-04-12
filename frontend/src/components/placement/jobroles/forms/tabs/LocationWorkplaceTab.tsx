@@ -27,15 +27,30 @@ interface LocationWorkplaceTabProps {
 	handleNestedChange: (parent: string, field: string, value: any) => void;
 	workplaceTypes: string[];
 	jobTypes: string[];
+	highlightMissing?: boolean;
 }
 
 const LocationWorkplaceTab: React.FC<LocationWorkplaceTabProps> = ({
 	formData,
 	handleNestedChange,
 	workplaceTypes,
-	jobTypes
+	jobTypes,
+	highlightMissing
 }) => {
 	const { awsPanel, helperBox } = awsStyles;
+
+	const getFieldStyle = (value: any, isRequired: boolean = false) => {
+		const isEmpty = Array.isArray(value) ? value.length === 0 : !value;
+		const isMissing = highlightMissing && isRequired && isEmpty;
+		return {
+			...commonTextFieldProps.sx,
+			'& .MuiInputBase-root': {
+				...commonTextFieldProps.sx['& .MuiInputBase-root'],
+				border: isMissing ? '1px dashed #ec7211' : 'none',
+				bgcolor: isMissing ? 'rgba(236, 114, 17, 0.03)' : '#fcfcfc',
+			}
+		};
+	};
 
 	const commonTextFieldProps = {
 		size: 'small' as const,
@@ -103,7 +118,12 @@ const LocationWorkplaceTab: React.FC<LocationWorkplaceTabProps> = ({
 				<Grid container spacing={3}>
 					<Grid size={{ xs: 12, md: 4 }}>
 						<Box>
-							<Typography variant="awsFieldLabel">Primary Country</Typography>
+							<Stack direction="row" justifyContent="space-between" alignItems="flex-end" sx={{ mb: 0.5, flexWrap: 'nowrap' }}>
+								<Typography variant="awsFieldLabel" sx={{ mb: 0, whiteSpace: 'nowrap' }}>Primary Country</Typography>
+								{highlightMissing && !formData.location?.country && (
+									<Typography variant="caption" sx={{ color: '#ec7211', fontWeight: 800, fontSize: '0.6rem', lineHeight: 1.2, pb: 0.2 }}>VERIFICATION REQUIRED</Typography>
+								)}
+							</Stack>
 							<Autocomplete
 								options={countries}
 								getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
@@ -116,13 +136,25 @@ const LocationWorkplaceTab: React.FC<LocationWorkplaceTabProps> = ({
 									handleNestedChange('location', 'states', []);
 									handleNestedChange('location', 'cities', []);
 								}}
-								renderInput={(params) => <TextField {...params} placeholder="Select Country" {...commonTextFieldProps} />}
+								renderInput={(params) => (
+									<TextField 
+										{...params} 
+										placeholder="Select Country" 
+										{...commonTextFieldProps} 
+										sx={getFieldStyle(formData.location?.country, true)}
+									/>
+								)}
 							/>
 						</Box>
 					</Grid>
 					<Grid size={{ xs: 12, md: 4 }}>
 						<Box>
-							<Typography variant="awsFieldLabel">State/Province (Multiple Selection)</Typography>
+							<Stack direction="row" justifyContent="space-between" alignItems="flex-end" sx={{ mb: 0.5, flexWrap: 'nowrap' }}>
+								<Typography variant="awsFieldLabel" sx={{ mb: 0, whiteSpace: 'nowrap' }}>State/Province</Typography>
+								{highlightMissing && !formData.location?.states?.length && (
+									<Typography variant="caption" sx={{ color: '#ec7211', fontWeight: 800, fontSize: '0.6rem', lineHeight: 1.2, pb: 0.2 }}>VERIFICATION REQUIRED</Typography>
+								)}
+							</Stack>
 							<Autocomplete
 								multiple
 								options={states}
@@ -138,12 +170,8 @@ const LocationWorkplaceTab: React.FC<LocationWorkplaceTabProps> = ({
 									const remainingStateIsos = v.map(item => item.isoCode);
 									const currentCities = formData.location?.cities || [];
 									
-									// If states were removed, we might need to filter the selected cities too
-									// But for simplicity in the UI, we just let them persist or reset.
-									// Let's implement a filter:
 									if (selectedCountryObj) {
 										const validCities = currentCities.filter(cityName => {
-											// This is inefficient but precise
 											return remainingStateIsos.some(iso => {
 												return City.getCitiesOfState(selectedCountryObj.isoCode, iso).some(c => c.name === cityName);
 											});
@@ -168,7 +196,14 @@ const LocationWorkplaceTab: React.FC<LocationWorkplaceTabProps> = ({
 										);
 									})
 								}
-								renderInput={(params) => <TextField {...params} placeholder={selectedCountryObj ? "Select States" : "Select Country first"} {...commonTextFieldProps} />}
+								renderInput={(params) => (
+									<TextField 
+										{...params} 
+										placeholder={selectedCountryObj ? "Select States" : "Select Country first"} 
+										{...commonTextFieldProps} 
+										sx={getFieldStyle(formData.location?.states, true)}
+									/>
+								)}
 							/>
 						</Box>
 					</Grid>

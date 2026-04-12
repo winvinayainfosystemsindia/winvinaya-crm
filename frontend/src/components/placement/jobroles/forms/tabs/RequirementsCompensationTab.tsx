@@ -28,15 +28,30 @@ const filter = createFilterOptions<Skill | { inputValue: string; name: string }>
 interface RequirementsCompensationTabProps {
 	formData: Partial<JobRole>;
 	handleNestedChange: (parent: string, field: string, value: any) => void;
+	highlightMissing?: boolean;
 }
 
 
 
 const RequirementsCompensationTab: React.FC<RequirementsCompensationTabProps> = ({
 	formData,
-	handleNestedChange
+	handleNestedChange,
+	highlightMissing
 }) => {
 	const { awsPanel, helperBox } = awsStyles;
+
+	const getFieldStyle = (value: any, isRequired: boolean = false) => {
+		const isEmpty = Array.isArray(value) ? value.length === 0 : !value;
+		const isMissing = highlightMissing && isRequired && isEmpty;
+		return {
+			...commonTextFieldProps.sx,
+			'& .MuiInputBase-root': {
+				...commonTextFieldProps.sx['& .MuiInputBase-root'],
+				border: isMissing ? '1px dashed #ec7211' : 'none',
+				bgcolor: isMissing ? 'rgba(236, 114, 17, 0.03)' : '#fcfcfc',
+			}
+		};
+	};
 	const [skillOptions, setSkillOptions] = useState<Skill[]>([]);
 	const [loadingSkills, setLoadingSkills] = useState(false);
 
@@ -91,7 +106,12 @@ const RequirementsCompensationTab: React.FC<RequirementsCompensationTabProps> = 
 				<Grid container spacing={3}>
 					<Grid size={{ xs: 12, md: 6 }}>
 						<Box>
-							<Typography variant="awsFieldLabel">Required Qualifications</Typography>
+							<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+								<Typography variant="awsFieldLabel" sx={{ mb: 0 }}>Required Qualifications</Typography>
+								{highlightMissing && !formData.requirements?.qualifications?.length && (
+									<Typography variant="caption" sx={{ color: '#ec7211', fontWeight: 700 }}>VERIFICATION REQUIRED</Typography>
+								)}
+							</Stack>
 							<Autocomplete
 								multiple
 								options={QUALIFICATIONS}
@@ -111,7 +131,14 @@ const RequirementsCompensationTab: React.FC<RequirementsCompensationTabProps> = 
 										);
 									})
 								}
-								renderInput={(params) => <TextField {...params} placeholder="Select Education" {...commonTextFieldProps} />}
+								renderInput={(params) => (
+									<TextField 
+										{...params} 
+										placeholder="Select Education" 
+										{...commonTextFieldProps} 
+										sx={getFieldStyle(formData.requirements?.qualifications, true)}
+									/>
+								)}
 							/>
 						</Box>
 					</Grid>
@@ -207,7 +234,12 @@ const RequirementsCompensationTab: React.FC<RequirementsCompensationTabProps> = 
 				<Grid container spacing={3}>
 					<Grid size={{ xs: 12 }}>
 						<Box>
-							<Typography variant="awsFieldLabel">Disability Types Preferred</Typography>
+							<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+								<Typography variant="awsFieldLabel" sx={{ mb: 0 }}>Disability Types Preferred</Typography>
+								{highlightMissing && !formData.requirements?.disability_preferred?.length && (
+									<Typography variant="caption" sx={{ color: '#ec7211', fontWeight: 700 }}>VERIFICATION REQUIRED</Typography>
+								)}
+							</Stack>
 							<Autocomplete
 								multiple
 								options={disabilityTypes}
@@ -227,7 +259,14 @@ const RequirementsCompensationTab: React.FC<RequirementsCompensationTabProps> = 
 										);
 									})
 								}
-								renderInput={(params) => <TextField {...params} placeholder="Select Disability Preferences" {...commonTextFieldProps} />}
+								renderInput={(params) => (
+									<TextField 
+										{...params} 
+										placeholder="Select Disability Preferences" 
+										{...commonTextFieldProps} 
+										sx={getFieldStyle(formData.requirements?.disability_preferred, true)}
+									/>
+								)}
 							/>
 						</Box>
 					</Grid>

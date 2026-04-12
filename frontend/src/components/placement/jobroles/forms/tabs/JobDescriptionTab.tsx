@@ -32,11 +32,13 @@ import type { JobRole } from '../../../../../models/jobRole';
 interface JobDescriptionTabProps {
 	formData: Partial<JobRole>;
 	handleChange: (field: string, value: any) => void;
+	highlightMissing?: boolean;
 }
 
 const JobDescriptionTab: React.FC<JobDescriptionTabProps> = ({
 	formData,
-	handleChange
+	handleChange,
+	highlightMissing
 }) => {
 	const { awsPanel, helperBox } = awsStyles;
 	const textFieldRef = useRef<HTMLTextAreaElement>(null);
@@ -107,7 +109,12 @@ const JobDescriptionTab: React.FC<JobDescriptionTabProps> = ({
 				<Grid container spacing={2} sx={{ width: '100%' }}>
 					<Grid size={{ xs: 12 }}>
 						<Box sx={{ width: '100%', mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-							<Typography variant="awsFieldLabel">Job Description Content</Typography>
+							<Stack direction="row" spacing={2} alignItems="center">
+								<Typography variant="awsFieldLabel" sx={{ mb: 0 }}>Job Description Content</Typography>
+								{highlightMissing && (!formData.description || formData.description.length < 10) && (
+									<Typography variant="caption" sx={{ color: '#ec7211', fontWeight: 700 }}>VERIFICATION REQUIRED</Typography>
+								)}
+							</Stack>
 							<ToggleButtonGroup
 								value={activeView}
 								exclusive
@@ -126,9 +133,9 @@ const JobDescriptionTab: React.FC<JobDescriptionTabProps> = ({
 						</Box>
 
 						<Box sx={{ 
-							border: '1px solid #d5dbdb', 
+							border: highlightMissing && (!formData.description || formData.description.length < 10) ? '1px dashed #ec7211' : '1px solid #d5dbdb', 
 							borderRadius: '2px', 
-							bgcolor: activeView === 'preview' ? '#fbfbfb' : '#fafafa',
+							bgcolor: highlightMissing && (!formData.description || formData.description.length < 10) ? 'rgba(236, 114, 17, 0.03)' : (activeView === 'preview' ? '#fbfbfb' : '#fafafa'),
 							overflow: 'hidden',
 							minHeight: 400
 						}}>
