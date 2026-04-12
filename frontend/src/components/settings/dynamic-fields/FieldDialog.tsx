@@ -21,7 +21,7 @@ import {
 	Close as CloseIcon,
 	InfoOutlined as InfoIcon
 } from '@mui/icons-material';
-import { settingsService, type DynamicField, type DynamicFieldCreate } from '../../services/settingsService';
+import { settingsService, type DynamicField, type DynamicFieldCreate } from '../../../services/settingsService';
 import { useSnackbar } from 'notistack';
 
 interface FieldDialogProps {

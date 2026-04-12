@@ -8,9 +8,11 @@ import {
 	Tab,
 	Stack
 } from '@mui/material';
-import DynamicFieldsSection from '../../components/settings/DynamicFieldsSection';
-import TrainingConfigurationSection from '../../components/settings/TrainingConfigurationSection';
-import AIEngineSection from '../../components/settings/AIEngineSection';
+import {
+	DynamicFieldsSection,
+	TrainingConfigurationSection,
+	AIEngineSection
+} from '../../components/settings';
 import { settingsTabs } from '../../config/navigation';
 
 const Settings: React.FC = () => {

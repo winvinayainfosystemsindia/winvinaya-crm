@@ -1,21 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Box, CircularProgress, Typography, Stack } from '@mui/material';
-import useToast from '../../hooks/useToast';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import useToast from '../../../hooks/useToast';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import {
   fetchAISettings,
   updateAISettings,
   testAIConnection,
   clearAIError,
   clearTestResult,
-} from '../../store/slices/aiSlice';
-import { AI_SETTING_KEYS, SECRET_MASK } from '../../constants/ai';
+} from '../../../store/slices/aiSlice';
+import { AI_SETTING_KEYS, SECRET_MASK } from '../../../constants/ai';
 
-import AIEngineSectionHeader from './ai/AIEngineSectionHeader';
-import EnableToggle from './ai/EnableToggle';
-import ProviderGrid from './ai/ProviderGrid';
-import ProviderConfig from './ai/ProviderConfig';
-import ProviderTips from './ai/ProviderTips';
+import AIEngineSectionHeader from './AIEngineSectionHeader';
+import EnableToggle from './EnableToggle';
+import ProviderGrid from './ProviderGrid';
+import ProviderConfig from './ProviderConfig';
+import ProviderTips from './ProviderTips';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 

@@ -20,10 +20,10 @@ import {
 	EditOutlined as EditIcon,
 	LayersOutlined as LayersIcon
 } from '@mui/icons-material';
-import { settingsService, type DynamicField } from '../../services/settingsService';
+import { settingsService, type DynamicField } from '../../../services/settingsService';
 import { useSnackbar } from 'notistack';
 import FieldDialog from './FieldDialog';
-import ConfirmDialog from '../common/ConfirmDialog';
+import ConfirmDialog from '../../common/ConfirmDialog';
 
 interface DynamicFieldsSectionProps {
 	entityType: 'screening' | 'counseling';

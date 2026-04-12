@@ -14,7 +14,7 @@ import {
 	SaveOutlined as SaveIcon,
 	LabelOutlined as TagIcon
 } from '@mui/icons-material';
-import { settingsService, type SystemSetting } from '../../services/settingsService';
+import { settingsService, type SystemSetting } from '../../../services/settingsService';
 import { useSnackbar } from 'notistack';
 
 const TrainingConfigurationSection: React.FC = () => {
