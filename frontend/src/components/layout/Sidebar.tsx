@@ -379,7 +379,7 @@ const Sidebar: React.FC = () => {
 				},
 			}}
 		>
-			<Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', color: '#eaeded' }}>
+			<Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', color: theme.palette.secondary.contrastText }}>
 				<Box
 					sx={{
 						flexGrow: 1,
@@ -394,11 +394,11 @@ const Sidebar: React.FC = () => {
 							background: 'transparent',
 						},
 						'&::-webkit-scrollbar-thumb': {
-							background: 'rgba(255, 255, 255, 0.1)',
+							background: alpha(theme.palette.common.white, 0.1),
 							borderRadius: '3px',
 						},
 						'&::-webkit-scrollbar-thumb:hover': {
-							background: 'rgba(255, 255, 255, 0.2)',
+							background: alpha(theme.palette.common.white, 0.2),
 						},
 					}}
 				>
@@ -416,7 +416,7 @@ const Sidebar: React.FC = () => {
 				<Box sx={{
 					flexShrink: 0,
 					py: 0.5,
-					borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+					borderTop: `1px solid ${alpha(theme.palette.common.white, 0.05)}`,
 					overflow: 'hidden',
 					bgcolor: 'secondary.main' // Ensure background matches for pinning effect
 				}}>

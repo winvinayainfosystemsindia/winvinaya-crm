@@ -24,6 +24,7 @@ const Navbar: React.FC = () => {
 	const { unreadCount } = useAppSelector((state) => state.notifications);
 	const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 	const [notifAnchorEl, setNotifAnchorEl] = React.useState<null | HTMLElement>(null);
+
 	const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
 		setAnchorEl(event.currentTarget);
 	};
@@ -98,7 +99,7 @@ const Navbar: React.FC = () => {
 								px: 1.5,
 								py: 0.5,
 								height: '40px',
-								borderRadius: '4px',
+								borderRadius: 1,
 								'&:hover': {
 									backgroundColor: alpha(theme.palette.common.white, 0.1),
 								},
@@ -133,13 +134,13 @@ const Navbar: React.FC = () => {
 							sx: {
 								width: 280,
 								mt: 1.5,
-								borderRadius: '4px',
+								borderRadius: 1,
 								overflow: 'hidden',
 								'& .MuiList-root': { py: 0 }
 							}
 						}}
 					>
-						<Box sx={{ p: 2, backgroundColor: '#f8f9fa' }}>
+						<Box sx={{ p: 2, backgroundColor: theme.palette.background.default }}>
 							<Typography variant="subtitle1" sx={{ fontWeight: 700, color: theme.palette.secondary.main, lineHeight: 1.2 }}>
 								{user?.full_name || user?.username}
 							</Typography>

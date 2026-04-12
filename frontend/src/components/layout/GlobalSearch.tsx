@@ -27,7 +27,7 @@ import dsrProjectService from '../../services/dsrProjectService';
 
 const SearchContainer = styled('div')(({ theme }) => ({
 	position: 'relative',
-	borderRadius: 8,
+	borderRadius: theme.shape.borderRadius,
 	backgroundColor: alpha(theme.palette.common.white, 0.08),
 	border: `1px solid ${alpha(theme.palette.common.white, 0.1)}`,
 	'&:hover': {
@@ -82,7 +82,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 		paddingLeft: `calc(1em + ${theme.spacing(4)})`,
 		transition: theme.transitions.create('width'),
 		width: '100%',
-		fontSize: '0.85rem',
+		fontSize: theme.typography.body2.fontSize,
 		fontWeight: 500,
 		'&::placeholder': {
 			color: alpha(theme.palette.common.white, 0.5),
@@ -98,7 +98,7 @@ const ShortcutHint = styled('div')(({ theme }) => ({
 	top: '50%',
 	transform: 'translateY(-50%)',
 	padding: '2px 6px',
-	borderRadius: '4px',
+	borderRadius: 1,
 	backgroundColor: alpha(theme.palette.common.white, 0.1),
 	border: `1px solid ${alpha(theme.palette.common.white, 0.2)}`,
 	color: alpha(theme.palette.common.white, 0.6),
@@ -293,7 +293,7 @@ const GlobalSearch: React.FC = () => {
 					}}
 					onKeyDown={handleKeyDown}
 					endAdornment={loading ? (
-						<CircularProgress size={16} sx={{ color: alpha('#ffffff', 0.7), mr: 2 }} />
+						<CircularProgress size={16} sx={{ color: alpha(theme.palette.common.white, 0.7), mr: 2 }} />
 					) : null}
 					inputProps={{
 						'aria-label': 'Search for services, features, candidates or users',
@@ -322,7 +322,7 @@ const GlobalSearch: React.FC = () => {
 							overflowY: 'auto',
 							zIndex: 1400,
 							backgroundColor: 'background.paper',
-							borderRadius: '4px',
+							borderRadius: 1,
 							border: `1px solid ${theme.palette.divider}`,
 						}}
 					>

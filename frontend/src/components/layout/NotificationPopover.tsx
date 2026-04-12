@@ -11,7 +11,8 @@ import {
 	Button,
 	IconButton,
 	alpha,
-	ListItemButton
+	ListItemButton,
+	useTheme
 } from '@mui/material';
 import {
 	PersonAdd as PersonIcon,
@@ -32,6 +33,7 @@ interface NotificationPopoverProps {
 }
 
 const NotificationPopover: React.FC<NotificationPopoverProps> = ({ anchorEl, onClose }) => {
+	const theme = useTheme();
 	const dispatch = useAppDispatch();
 	const navigate = useNavigate();
 	const { notifications, unreadCount } = useAppSelector((state) => state.notifications);
@@ -57,12 +59,12 @@ const NotificationPopover: React.FC<NotificationPopoverProps> = ({ anchorEl, onC
 	const getIcon = (type: string) => {
 		switch (type) {
 			case 'dsr_approved':
-				return <ApprovedIcon sx={{ color: '#2e7d32' }} fontSize="small" />;
+				return <ApprovedIcon sx={{ color: theme.palette.success.main }} fontSize="small" />;
 			case 'dsr_rejected':
 			case 'permission_rejected':
-				return <RejectedIcon sx={{ color: '#d32f2f' }} fontSize="small" />;
+				return <RejectedIcon sx={{ color: theme.palette.error.main }} fontSize="small" />;
 			case 'permission_granted':
-				return <PermissionIcon sx={{ color: '#ed6c02' }} fontSize="small" />;
+				return <PermissionIcon sx={{ color: theme.palette.warning.main }} fontSize="small" />;
 			case 'registration':
 				return <PersonIcon color="primary" fontSize="small" />;
 			default:
@@ -88,21 +90,21 @@ const NotificationPopover: React.FC<NotificationPopoverProps> = ({ anchorEl, onC
 					width: 360,
 					maxHeight: 500,
 					mt: 1.5,
-					borderRadius: '4px',
+					borderRadius: 1,
 					overflow: 'hidden',
 					display: 'flex',
 					flexDirection: 'column',
-					boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+					boxShadow: theme.shadows[4]
 				}
 			}}
 		>
-			<Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8f9fa', borderBottom: '1px solid #e0e0e0' }}>
+			<Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: theme.palette.background.default, borderBottom: `1px solid ${theme.palette.divider}` }}>
 				<Box>
-					<Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#232f3e' }}>
+					<Typography variant="subtitle1" sx={{ fontWeight: 700, color: theme.palette.secondary.light }}>
 						Notifications
 					</Typography>
 					{unreadCount > 0 && (
-						<Typography variant="caption" sx={{ color: '#ec7211', fontWeight: 600 }}>
+						<Typography variant="caption" sx={{ color: theme.palette.accent.main, fontWeight: 600 }}>
 							{unreadCount} unread
 						</Typography>
 					)}
@@ -120,8 +122,8 @@ const NotificationPopover: React.FC<NotificationPopoverProps> = ({ anchorEl, onC
 			<Box sx={{ overflowY: 'auto', flexGrow: 1 }}>
 				{notifications.length === 0 ? (
 					<Box sx={{ p: 4, textAlign: 'center' }}>
-						<NotificationsIcon sx={{ fontSize: 48, color: '#d5dbdb', mb: 1 }} />
-						<Typography variant="body2" sx={{ color: '#545b64' }}>
+						<NotificationsIcon sx={{ fontSize: 48, color: theme.palette.divider, mb: 1 }} />
+						<Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
 							You don't have any notifications right now.
 						</Typography>
 					</Box>
@@ -132,9 +134,9 @@ const NotificationPopover: React.FC<NotificationPopoverProps> = ({ anchorEl, onC
 								<ListItem
 									disablePadding
 									sx={{
-										backgroundColor: n.read ? 'transparent' : alpha('#ec7211', 0.04),
+										backgroundColor: n.read ? 'transparent' : alpha(theme.palette.accent.main, 0.04),
 										'&:hover': {
-											backgroundColor: alpha('#000000', 0.04)
+											backgroundColor: alpha(theme.palette.common.black, 0.04)
 										},
 										transition: 'background-color 0.2s'
 									}}
@@ -153,18 +155,18 @@ const NotificationPopover: React.FC<NotificationPopoverProps> = ({ anchorEl, onC
 										<ListItemText
 											primary={
 												<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-													<Typography variant="body2" sx={{ fontWeight: n.read ? 500 : 700, color: '#232f3e', pr: 1 }}>
+													<Typography variant="body2" sx={{ fontWeight: n.read ? 500 : 700, color: theme.palette.secondary.light, pr: 1 }}>
 														{n.title}
 													</Typography>
-													{!n.read && <DotIcon sx={{ fontSize: 10, color: '#ec7211' }} />}
+													{!n.read && <DotIcon sx={{ fontSize: 10, color: theme.palette.accent.main }} />}
 												</Box>
 											}
 											secondary={
 												<>
-													<Typography variant="caption" sx={{ display: 'block', color: '#545b64', mt: 0.5, lineHeight: 1.4 }}>
+													<Typography variant="caption" sx={{ display: 'block', color: theme.palette.text.secondary, mt: 0.5, lineHeight: 1.4 }}>
 														{n.message}
 													</Typography>
-													<Typography variant="caption" sx={{ display: 'block', color: '#aab7b8', mt: 0.5 }}>
+													<Typography variant="caption" sx={{ display: 'block', color: alpha(theme.palette.text.secondary, 0.6), mt: 0.5 }}>
 														{n.timestamp}
 													</Typography>
 												</>
@@ -180,8 +182,8 @@ const NotificationPopover: React.FC<NotificationPopoverProps> = ({ anchorEl, onC
 			</Box>
 
 			<Divider />
-			<Box sx={{ p: 1, textAlign: 'center', backgroundColor: '#f8f9fa' }}>
-				<Button fullWidth onClick={() => { navigate('/activity-logs'); onClose(); }} sx={{ textTransform: 'none', color: '#0073bb', fontWeight: 600 }}>
+			<Box sx={{ p: 1, textAlign: 'center', backgroundColor: theme.palette.background.default }}>
+				<Button fullWidth onClick={() => { navigate('/activity-logs'); onClose(); }} sx={{ textTransform: 'none', color: theme.palette.primary.main, fontWeight: 600 }}>
 					View all activity logs
 				</Button>
 			</Box>
