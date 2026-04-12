@@ -13,8 +13,8 @@ import { toggleSidebar } from '../../store/slices/uiSlice';
 import { logoutUser } from '../../store/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
 
-import GlobalSearch from './GlobalSearch';
-import NotificationPopover from './NotificationPopover';
+import GlobalSearch from '../common/GlobalSearch';
+import NotificationPopover from '../common/NotificationPopover';
 
 const Navbar: React.FC = () => {
 	const theme = useTheme();
