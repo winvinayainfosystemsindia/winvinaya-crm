@@ -7,10 +7,10 @@ import {
 	Fade,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import useToast from '../hooks/useToast';
-import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { loginUser, clearError } from '../store/slices/authSlice';
-import LoginForm from '../components/auth/LoginForm';
+import useToast from '../../hooks/useToast';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { loginUser, clearError } from '../../store/slices/authSlice';
+import LoginForm from '../../components/auth/LoginForm';
 
 const Login: React.FC = () => {
 	const dispatch = useAppDispatch();
@@ -29,11 +29,6 @@ const Login: React.FC = () => {
 	useEffect(() => {
 		if (error) {
 			toast.error(typeof error === 'string' ? error : 'Login failed');
-			// We clear the error in the store after showing it as a toast
-			// but we keep it for the LoginForm to display locally if needed
-			// actually, if we clear it here, it will disappear from LoginForm too.
-			// Let's clear it only in the cleanup or on unmount, or let the user clear it manually.
-			// The original code cleared it immediately.
 			const timer = setTimeout(() => {
 				dispatch(clearError());
 			}, 5000);
@@ -92,7 +87,36 @@ const Login: React.FC = () => {
 			/>
 
 			<Container maxWidth="xs" sx={{ position: 'relative', zIndex: 1 }}>
-
+				<Fade in={true} timeout={800}>
+					<Box sx={{ mb: 5, textAlign: 'center' }}>
+						<Typography
+							variant="h4"
+							component="h1"
+							sx={{
+								fontWeight: 800,
+								color: theme.palette.secondary.light,
+								letterSpacing: '-0.03em',
+								display: 'flex',
+								alignItems: 'center',
+								justifyContent: 'center',
+								gap: 1
+							}}
+						>
+							<Box
+								component="span"
+								sx={{
+									color: theme.palette.accent.main,
+									position: 'relative'
+								}}
+							>
+								WinVinaya
+							</Box>
+						</Typography>
+						<Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontWeight: 500 }}>
+							Foundation Management Portal
+						</Typography>
+					</Box>
+				</Fade>
 
 				<Fade in={true} timeout={1200}>
 					<Box>
@@ -107,7 +131,7 @@ const Login: React.FC = () => {
 				<Fade in={true} timeout={1600}>
 					<Box sx={{ mt: 4, textAlign: 'center' }}>
 						<Typography variant="caption" color="text.secondary" sx={{ opacity: 0.7 }}>
-							© {new Date().getFullYear()} WinVinaya InfoSystems. All rights reserved.
+							© {new Date().getFullYear()} WinVinaya InfoSystems Pvt Ltd. All rights reserved.
 						</Typography>
 					</Box>
 				</Fade>
