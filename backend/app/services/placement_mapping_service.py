@@ -60,9 +60,9 @@ class PlacementMappingService:
 
         # requirements: {"skills": [], "qualifications": [], "disability_preferred": []}
         reqs = job_role.requirements or {}
-        job_skills = set(s.lower() for s in reqs.get("skills", []))
-        job_quals = set(q.lower() for q in reqs.get("qualifications", []))
-        job_disability = set(d.lower() for d in reqs.get("disability_preferred", []))
+        job_skills = set(s.lower() for s in (reqs.get("skills") or []))
+        job_quals = set(q.lower() for q in (reqs.get("qualifications") or []))
+        job_disability = set(d.lower() for d in (reqs.get("disability_preferred") or []))
 
         # Fetch only placement-ready candidates: Screened (Completed) AND Counseled (Selected)
         candidates, _ = await self.candidate_repo.get_screened(

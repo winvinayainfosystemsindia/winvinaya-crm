@@ -32,11 +32,11 @@ const JobRoleHeader: React.FC<JobRoleHeaderProps> = ({ jobRole, onEdit, onRefres
 					startIcon={<ArrowBackIcon />}
 					onClick={() => navigate('/placement/job-roles')}
 					sx={{
-						color: '#545b64',
+						color: 'text.secondary',
 						fontWeight: 600,
 						textTransform: 'none',
 						mb: 1,
-						'&:hover': { bgcolor: 'transparent', color: '#16191f' }
+						'&:hover': { bgcolor: 'transparent', color: 'text.primary' }
 					}}
 				>
 					Back to Job Roles
@@ -45,42 +45,42 @@ const JobRoleHeader: React.FC<JobRoleHeaderProps> = ({ jobRole, onEdit, onRefres
 					variant={isMobile ? "h5" : "h4"}
 					component="h1"
 					sx={{
-						fontWeight: 300,
+						fontWeight: 700,
 						color: 'text.primary',
 						mb: 0.5
 					}}
 				>
-					Job Role Details
+					{jobRole.title}
 				</Typography>
 				<Typography variant="body2" color="text.secondary">
-					View the job role details and manage candidate mapping
+					Pipeline Management • {jobRole.public_id}
 				</Typography>
 			</Box>
 
 			{/* AWS Style Header */}
-			<Box sx={{ bgcolor: '#232f3e', color: 'white', px: 4, py: 3, borderBottom: '1px solid #354552' }}>
+			<Box sx={{ bgcolor: 'secondary.light', color: 'white', px: 4, py: 3, borderBottom: '1px solid', borderColor: 'divider' }}>
 				<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
 					<Box sx={{ mb: isMobile ? 2 : 0 }}>
 						<Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 1.5 }}>
-							<Typography variant="h4" sx={{ fontWeight: 500, fontSize: '1.85rem', letterSpacing: '-0.02em' }}>
+							<Typography variant="h5" sx={{ color: 'white' }}>
 								{jobRole.title}
 							</Typography>
 							<PlacementStatusBadge label={jobRole.status} status={jobRole.status} />
 						</Stack>
-						<Stack direction="row" spacing={3} sx={{ color: '#aab7b8', flexWrap: 'wrap', gap: 1.5 }}>
+						<Stack direction="row" spacing={3} sx={{ color: 'rgba(255,255,255,0.7)', flexWrap: 'wrap', gap: 1.5 }}>
 							<Stack direction="row" spacing={0.75} alignItems="center">
-								<BusinessIcon sx={{ fontSize: 16, color: '#aab7b8' }} />
-								<Typography variant="body2" sx={{ fontWeight: 600 }}>{jobRole.company?.name || 'N/A'}</Typography>
+								<BusinessIcon sx={{ fontSize: 16 }} />
+								<Typography variant="body2" sx={{ fontWeight: 600, color: 'white' }}>{jobRole.company?.name || 'N/A'}</Typography>
 							</Stack>
 							<Stack direction="row" spacing={0.75} alignItems="center">
-								<LocationOnIcon sx={{ fontSize: 16, color: '#aab7b8' }} />
+								<LocationOnIcon sx={{ fontSize: 16 }} />
 								<Typography variant="body2">
 									{jobRole.location?.cities?.join(', ') || jobRole.location?.states?.join(', ') || 'Remote'}
 								</Typography>
 							</Stack>
 							<Stack direction="row" spacing={0.75} alignItems="center">
-								<PersonIcon sx={{ fontSize: 16, color: '#aab7b8' }} />
-								<Typography variant="body2">Owned by <span style={{ color: 'white' }}>{jobRole.creator?.full_name || jobRole.creator?.username || 'System'}</span></Typography>
+								<PersonIcon sx={{ fontSize: 16 }} />
+								<Typography variant="body2">Owned by <span style={{ color: 'white', fontWeight: 600 }}>{jobRole.creator?.full_name || jobRole.creator?.username || 'System'}</span></Typography>
 							</Stack>
 						</Stack>
 					</Box>
@@ -91,10 +91,7 @@ const JobRoleHeader: React.FC<JobRoleHeaderProps> = ({ jobRole, onEdit, onRefres
 							onClick={onRefresh}
 							sx={{
 								color: 'white',
-								borderColor: '#545b64',
-								textTransform: 'none',
-								fontWeight: 600,
-								px: 2.5,
+								borderColor: 'rgba(255,255,255,0.3)',
 								'&:hover': { borderColor: 'white', bgcolor: 'rgba(255,255,255,0.05)' }
 							}}
 						>
@@ -105,13 +102,8 @@ const JobRoleHeader: React.FC<JobRoleHeaderProps> = ({ jobRole, onEdit, onRefres
 							startIcon={<EditIcon />}
 							onClick={onEdit}
 							sx={{
-								bgcolor: '#ec7211',
-								color: 'white',
-								'&:hover': { bgcolor: '#eb5f07' },
-								textTransform: 'none',
-								fontWeight: 700,
-								px: 3,
-								boxShadow: 'none'
+								bgcolor: 'accent.main',
+								'&:hover': { bgcolor: 'accent.dark' },
 							}}
 						>
 							Edit Role
