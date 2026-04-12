@@ -41,12 +41,12 @@ const PlacementRowActions: React.FC<PlacementRowActionsProps> = ({ onEdit, onDel
 					}
 				}}
 			>
-				<MenuItem onClick={() => { handleClose(); onEdit(); }}>
+				<MenuItem onClick={(e) => { e.stopPropagation(); handleClose(); onEdit(); }}>
 					<ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
 					<ListItemText primary="Edit" primaryTypographyProps={{ fontSize: '0.875rem' }} />
 				</MenuItem>
 				{onDelete && (
-					<MenuItem onClick={() => { handleClose(); onDelete(); }} sx={{ color: '#d13212' }}>
+					<MenuItem onClick={(e) => { e.stopPropagation(); handleClose(); onDelete(); }} sx={{ color: '#d13212' }}>
 						<ListItemIcon><DeleteIcon fontSize="small" sx={{ color: '#d13212' }} /></ListItemIcon>
 						<ListItemText primary="Delete" primaryTypographyProps={{ fontSize: '0.875rem' }} />
 					</MenuItem>

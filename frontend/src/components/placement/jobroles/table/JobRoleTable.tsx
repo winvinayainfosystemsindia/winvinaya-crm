@@ -98,7 +98,7 @@ const JobRoleTable: React.FC<JobRoleTableProps> = ({ onEditJobRole }) => {
 									jobRole={role}
 									onEdit={onEditJobRole}
 									onDelete={handleDeleteClick}
-									isAdmin={user?.role === 'admin' || user?.role === 'manager'}
+									isAdmin={user?.role === 'admin' || user?.role === 'manager' || user?.role === 'placement'}
 								/>
 							))
 						)}
@@ -118,10 +118,10 @@ const JobRoleTable: React.FC<JobRoleTableProps> = ({ onEditJobRole }) => {
 			<ConfirmDialog
 				open={deleteDialogOpen}
 				title="Delete Job Role"
-				message={`Are you sure you want to PERMANENTLY delete job role "${jobRoleToDelete?.title}"? This action cannot be undone.`}
+				message={`Are you sure you want to remove the job role "${jobRoleToDelete?.title}"? This action will archive the record and it will no longer appear in active lists.`}
 				onClose={handleDeleteCancel}
 				onConfirm={handleDeleteConfirm}
-				confirmText="Delete permanently"
+				confirmText="Delete"
 				loading={deleteLoading}
 				severity="error"
 			/>
