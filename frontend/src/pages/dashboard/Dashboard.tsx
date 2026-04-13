@@ -1,11 +1,7 @@
 import React, { useEffect } from 'react';
 import { Box } from '@mui/material';
 import Grid from '@mui/material/Grid';
-import PeopleIcon from '@mui/icons-material/People';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import SchoolIcon from '@mui/icons-material/School';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import StatCard from '../../components/common/StatCard';
+import CandidateStatsGrid from '../../components/dashboard/CandidateStatsGrid';
 import BIReport from '../../components/dashboard/BIReport';
 import ApiSpeedometer from '../../components/dashboard/ApiSpeedometer';
 import SystemHealthMonitor from '../../components/dashboard/SystemHealthMonitor';
@@ -53,44 +49,7 @@ const Dashboard: React.FC = () => {
 		<Box component="main" sx={{ p: { xs: 1, sm: 0 } }}>
 			<WelcomeHeader />
 
-			<Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mb: 4 }}>
-				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-					<StatCard
-						title="Total Candidates"
-						count={(currentStats.total || 0).toLocaleString()}
-						subtitle="Total registered candidates"
-						icon={<PeopleIcon />}
-						color="#1976d2"
-					/>
-				</Grid>
-				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-					<StatCard
-						title="In Training"
-						count={(currentStats.in_training || 0).toLocaleString()}
-						subtitle="Candidates currently in batches"
-						icon={<SchoolIcon />}
-						color="#ed6c02"
-					/>
-				</Grid>
-				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-					<StatCard
-						title="Moved to Placement"
-						count={(currentStats.moved_to_placement || 0).toLocaleString()}
-						subtitle="Candidates in pipeline"
-						icon={<TrendingUpIcon />}
-						color="#2e7d32"
-					/>
-				</Grid>
-				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-					<StatCard
-						title="Got Job"
-						count={(currentStats.got_job || 0).toLocaleString()}
-						subtitle="Successfully placed"
-						icon={<CheckCircleIcon />}
-						color="#9c27b0"
-					/>
-				</Grid>
-			</Grid>
+			<CandidateStatsGrid stats={currentStats} />
 
 
 			<Grid container spacing={3} sx={{ alignItems: 'stretch' }}>
