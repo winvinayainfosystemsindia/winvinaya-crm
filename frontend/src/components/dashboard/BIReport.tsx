@@ -53,7 +53,7 @@ const BIReport: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        minHeight: '650px'
+        minHeight: '500px'
       }}
     >
       {/* Enterprise-style Header */}
@@ -122,7 +122,7 @@ const BIReport: React.FC = () => {
       </Box>
 
       {/* Content Area with Loading Overlay */}
-      <Box sx={{ flexGrow: 1, width: '100%', position: 'relative', bgcolor: '#f2f3f3', minHeight: '600px' }}>
+      <Box sx={{ flexGrow: 1, width: '100%', position: 'relative', bgcolor: '#f2f3f3', minHeight: '450px' }}>
         {loading && (
           <Box
             sx={{
@@ -145,7 +145,7 @@ const BIReport: React.FC = () => {
           title={`${reportType} PowerBI Dashboard`}
           width="100%"
           height="100%"
-          style={{ border: 0, minHeight: '600px', display: 'block', position: 'absolute', top: 0, left: 0 }}
+          style={{ border: 0, minHeight: '450px', display: 'block', position: 'absolute', top: 0, left: 0 }}
           src={REPORTS[reportType]}
           allowFullScreen
           onLoad={handleIframeLoad}

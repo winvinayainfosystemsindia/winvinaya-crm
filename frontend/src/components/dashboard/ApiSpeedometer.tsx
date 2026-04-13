@@ -58,8 +58,7 @@ const ApiSpeedometer: React.FC = () => {
       elevation={0}
       sx={{
         p: 3,
-        height: '100%',
-        minHeight: '650px',
+        flex: 1,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -78,7 +77,7 @@ const ApiSpeedometer: React.FC = () => {
           API Performance
         </Typography>
       </Box>
-      <Typography variant="caption" sx={{ color: '#545b64', mb: 4, alignSelf: 'flex-start', px: 1 }}>
+      <Typography variant="caption" sx={{ color: '#545b64', mb: 2, alignSelf: 'flex-start', px: 1 }}>
         Real-time server response latency
       </Typography>
 
@@ -90,8 +89,8 @@ const ApiSpeedometer: React.FC = () => {
         <>
           <Box sx={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Gauge
-              width={250}
-              height={250}
+              width={180}
+              height={180}
               value={latency || 0}
               valueMin={0}
               valueMax={100}
@@ -99,7 +98,7 @@ const ApiSpeedometer: React.FC = () => {
               endAngle={110}
               sx={{
                 [`& .${gaugeClasses.valueText}`]: {
-                  fontSize: 28,
+                  fontSize: 22,
                   fontWeight: 'bold',
                   fill: getStatusColor(latency || 0),
                   transform: 'translate(0px, 0px)',
@@ -115,11 +114,13 @@ const ApiSpeedometer: React.FC = () => {
             />
 
             <Chip
-              icon={<BoltIcon />}
+              icon={<BoltIcon sx={{ fontSize: '1rem !important' }} />}
               label={getStatusLabel(latency || 0)}
               size="small"
               sx={{
                 mt: -2,
+                height: 20,
+                fontSize: '0.7rem',
                 bgcolor: `${getStatusColor(latency || 0)}15`,
                 color: getStatusColor(latency || 0),
                 fontWeight: 'bold',
@@ -129,7 +130,7 @@ const ApiSpeedometer: React.FC = () => {
             />
           </Box>
 
-          <Box sx={{ mt: 6, width: '100%', px: 2 }}>
+          <Box sx={{ mt: 2, width: '100%', px: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
               <Typography variant="body2" color="textSecondary">Network Health</Typography>
               <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>Live</Typography>

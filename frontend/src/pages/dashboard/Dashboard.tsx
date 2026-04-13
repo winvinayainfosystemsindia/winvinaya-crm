@@ -9,6 +9,7 @@ import StatCard from '../../components/common/StatCard';
 import RegistrationLinkModal from '../../components/dashboard/RegistrationLinkModal';
 import BIReport from '../../components/dashboard/BIReport';
 import ApiSpeedometer from '../../components/dashboard/ApiSpeedometer';
+import SystemHealthMonitor from '../../components/dashboard/SystemHealthMonitor';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchCandidateStats } from '../../store/slices/candidateSlice';
 
@@ -97,12 +98,15 @@ const Dashboard: React.FC = () => {
 			</Grid>
 
 
-			<Grid container spacing={3}>
+			<Grid container spacing={3} sx={{ alignItems: 'stretch' }}>
 				<Grid size={{ xs: 12, lg: 9 }}>
 					<BIReport />
 				</Grid>
 				<Grid size={{ xs: 12, lg: 3 }}>
-					<ApiSpeedometer />
+					<Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, height: '100%' }}>
+						<ApiSpeedometer />
+						<SystemHealthMonitor />
+					</Box>
 				</Grid>
 			</Grid>
 		</Box>
