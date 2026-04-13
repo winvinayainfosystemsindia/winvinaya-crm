@@ -3,28 +3,19 @@ import {
 	Paper,
 	Table,
 	TableBody,
-	TableCell,
 	TableContainer,
-	TableHead,
-	TableRow,
-	TableSortLabel,
 	useTheme
 } from '@mui/material';
 import CustomTablePagination from '../CustomTablePagination';
 import DataTableHeader from './DataTableHeader';
-import type { DataTableHeaderProps } from './DataTableHeader';
-
+import DataTableHead from './DataTableHead';
 import DataTableEmpty from './DataTableEmpty';
 import DataTableSkeleton from './DataTableSkeleton';
 
-export interface ColumnDefinition<T> {
-	id: keyof T | 'actions';
-	label: string;
-	sortable?: boolean;
-	align?: 'left' | 'right' | 'center';
-	width?: string | number;
-	hidden?: boolean;
-}
+import type { DataTableHeaderProps } from './DataTableHeader';
+import type { ColumnDefinition } from './DataTableHead';
+
+export type { ColumnDefinition };
 
 export interface DataTableProps<T> extends DataTableHeaderProps {
 	columns: ColumnDefinition<T>[];
@@ -92,46 +83,12 @@ const DataTable = <T,>({
 
 			<TableContainer>
 				<Table sx={{ minWidth: 650 }}>
-					<TableHead>
-						<TableRow sx={{ bgcolor: theme.palette.background.default }}>
-							{visibleColumns.map((column) => (
-								<TableCell
-									key={String(column.id)}
-									align={column.align || 'left'}
-									style={{ width: column.width }}
-									sx={{
-										fontWeight: 700,
-										color: theme.palette.text.secondary,
-										whiteSpace: 'nowrap',
-										fontSize: '0.75rem',
-										textTransform: 'uppercase',
-										letterSpacing: '0.05em',
-										borderBottom: `2px solid ${theme.palette.divider}`,
-										py: 1.5
-									}}
-								>
-									{column.sortable && onSortRequest ? (
-										<TableSortLabel
-											active={orderBy === column.id}
-											direction={orderBy === column.id ? order : 'asc'}
-											onClick={() => onSortRequest(column.id as keyof T)}
-											sx={{
-												'&.Mui-active': {
-													fontWeight: 800,
-													color: theme.palette.text.primary
-												},
-												'& .MuiTableSortLabel-icon': { fontSize: 16 }
-											}}
-										>
-											{column.label}
-										</TableSortLabel>
-									) : (
-										column.label
-									)}
-								</TableCell>
-							))}
-						</TableRow>
-					</TableHead>
+					<DataTableHead
+						columns={columns}
+						orderBy={orderBy}
+						order={order}
+						onSortRequest={onSortRequest}
+					/>
 					<TableBody aria-busy={loading}>
 						{loading ? (
 							<DataTableSkeleton

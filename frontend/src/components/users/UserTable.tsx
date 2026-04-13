@@ -31,11 +31,11 @@ const UserTable: React.FC<UserTableProps> = ({ onEditUser, onViewUser, onDeleteU
 	const dispatch = useAppDispatch();
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const isMedium = useMediaQuery(theme.breakpoints.down('md'));
-	
+
 	// Redux state
 	const { user: currentUser } = useAppSelector((state) => state.auth);
 	const { users, loading, totalCount, roles } = useAppSelector((state) => state.users);
-	
+
 	// Local UI state
 	const [searchTerm, setSearchTerm] = useState('');
 	const [page, setPage] = useState(0);
@@ -63,9 +63,9 @@ const UserTable: React.FC<UserTableProps> = ({ onEditUser, onViewUser, onDeleteU
 
 	// Fetch users logic via Redux Thunk
 	const fetchUsersData = useCallback(() => {
-		dispatch(fetchUsersThunk({ 
-			skip: page * rowsPerPage, 
-			limit: rowsPerPage, 
+		dispatch(fetchUsersThunk({
+			skip: page * rowsPerPage,
+			limit: rowsPerPage,
 			search: searchTerm,
 			role: activeFilters.role || undefined
 		}));
@@ -91,9 +91,9 @@ const UserTable: React.FC<UserTableProps> = ({ onEditUser, onViewUser, onDeleteU
 			key: 'role',
 			label: 'System Role',
 			type: 'single-select',
-			options: roles.map(r => ({ 
-				value: r, 
-				label: r.charAt(0).toUpperCase() + r.slice(1).replace('_', ' ') 
+			options: roles.map(r => ({
+				value: r,
+				label: r.charAt(0).toUpperCase() + r.slice(1).replace('_', ' ')
 			}))
 		}
 	], [roles]);
