@@ -110,31 +110,28 @@ const CRMRowActions: React.FC<CRMRowActionsProps> = ({
 					</MenuItem>
 				)}
 				
-				{extraActions.map((action, index) => (
-					<React.Fragment key={index}>
-						{action.divider && <Divider sx={{ my: '4px !important' }} />}
-						<MenuItem 
-							onClick={handleAction(action.onClick)}
-							disabled={action.disabled}
-						>
-							<ListItemIcon sx={{ minWidth: '32px !important', color: action.color }}>
-								{action.icon}
-							</ListItemIcon>
-							<ListItemText sx={{ color: action.color }}>{action.label}</ListItemText>
-						</MenuItem>
-					</React.Fragment>
-				))}
+				{extraActions.flatMap((action, index) => [
+					action.divider ? <Divider key={`div-${index}`} sx={{ my: '4px !important' }} /> : null,
+					<MenuItem 
+						key={`action-${index}`}
+						onClick={handleAction(action.onClick)}
+						disabled={action.disabled}
+					>
+						<ListItemIcon sx={{ minWidth: '32px !important', color: action.color }}>
+							{action.icon}
+						</ListItemIcon>
+						<ListItemText sx={{ color: action.color }}>{action.label}</ListItemText>
+					</MenuItem>
+				]).filter(Boolean)}
 
+				{onDelete && <Divider sx={{ my: '4px !important' }} />}
 				{onDelete && (
-					<>
-						<Divider sx={{ my: '4px !important' }} />
-						<MenuItem onClick={handleAction(onDelete)} sx={{ color: '#d13212' }}>
-							<ListItemIcon sx={{ minWidth: '32px !important' }}>
-								<DeleteIcon fontSize="small" sx={{ color: '#d13212' }} />
-							</ListItemIcon>
-							<ListItemText>Delete</ListItemText>
-						</MenuItem>
-					</>
+					<MenuItem onClick={handleAction(onDelete)} sx={{ color: '#d13212' }}>
+						<ListItemIcon sx={{ minWidth: '32px !important' }}>
+							<DeleteIcon fontSize="small" sx={{ color: '#d13212' }} />
+						</ListItemIcon>
+						<ListItemText>Delete</ListItemText>
+					</MenuItem>
 				)}
 			</Menu>
 		</>

@@ -84,25 +84,24 @@ const TrainingTableActions: React.FC<TrainingTableActionsProps> = ({
 				}}
 			>
 				{canEdit && (
-					<>
-						<MenuItem onClick={() => handleAction(() => onExtend(batch))}>
-							<ListItemIcon>
-								<EventRepeat fontSize="small" sx={{ color: 'primary.main' }} />
-							</ListItemIcon>
-							<ListItemText>
-								<Typography variant="body2">Extend Batch</Typography>
-							</ListItemText>
-						</MenuItem>
-
-						<MenuItem onClick={() => handleAction(() => onEdit(batch))}>
-							<ListItemIcon>
-								<Edit fontSize="small" sx={{ color: 'warning.main' }} />
-							</ListItemIcon>
-							<ListItemText>
-								<Typography variant="body2">Edit Batch</Typography>
-							</ListItemText>
-						</MenuItem>
-					</>
+					<MenuItem onClick={() => handleAction(() => onExtend(batch))}>
+						<ListItemIcon>
+							<EventRepeat fontSize="small" sx={{ color: 'primary.main' }} />
+						</ListItemIcon>
+						<ListItemText>
+							<Typography variant="body2">Extend Batch</Typography>
+						</ListItemText>
+					</MenuItem>
+				)}
+				{canEdit && (
+					<MenuItem onClick={() => handleAction(() => onEdit(batch))}>
+						<ListItemIcon>
+							<Edit fontSize="small" sx={{ color: 'warning.main' }} />
+						</ListItemIcon>
+						<ListItemText>
+							<Typography variant="body2">Edit Batch</Typography>
+						</ListItemText>
+					</MenuItem>
 				)}
 
 				{isAdmin && (
