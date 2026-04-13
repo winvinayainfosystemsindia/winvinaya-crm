@@ -1,44 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-	Box,
-	Paper,
-	Table,
-	TableBody,
-	TableCell,
-	TableContainer,
-	TableHead,
 	TableRow,
-	TextField,
+	TableCell,
 	Chip,
-	IconButton,
-	InputAdornment,
 	Typography,
 	useMediaQuery,
-	useTheme,
-	Menu,
-	MenuItem,
-	ListItemIcon as MuiListItemIcon,
-	ListItemText,
-	Skeleton
+	useTheme
 } from '@mui/material';
 
-import {
-	Search,
-	Edit,
-	Visibility,
-	Delete,
-	WhatsApp as WhatsAppIcon,
-	MoreVert as MoreVertIcon
-} from '@mui/icons-material';
-import { format } from 'date-fns';
-import { useAppSelector } from '../../store/hooks';
-import userService from '../../services/userService';
-import type { User } from '../../models/user';
-import CustomTablePagination from '../common/CustomTablePagination';
+import { WhatsApp as WhatsAppIcon } from '@mui/icons-material';
 import { alpha } from '@mui/material/styles';
 
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchUsers as fetchUsersThunk, fetchRoles } from '../../store/slices/userSlice';
+import type { User } from '../../models/user';
+
+// Import modular table components
+import { DataTable, DataTableActions } from '../common/table';
+import { useUserTableConfig, getRoleColor, formatDate } from './UserTableConfig';
+import FilterDrawer, { type FilterField } from '../common/FilterDrawer';
+
 interface UserTableProps {
-	onAddUser?: () => void;
 	onEditUser?: (user: User) => void;
 	onViewUser?: (user: User) => void;
 	onDeleteUser?: (user: User) => void;
@@ -46,347 +28,229 @@ interface UserTableProps {
 
 const UserTable: React.FC<UserTableProps> = ({ onEditUser, onViewUser, onDeleteUser }) => {
 	const theme = useTheme();
+	const dispatch = useAppDispatch();
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const isMedium = useMediaQuery(theme.breakpoints.down('md'));
+	
+	// Redux state
 	const { user: currentUser } = useAppSelector((state) => state.auth);
-	const [users, setUsers] = useState<User[]>([]);
-	const [loading, setLoading] = useState(false);
+	const { users, loading, totalCount, roles } = useAppSelector((state) => state.users);
+	
+	// Local UI state
 	const [searchTerm, setSearchTerm] = useState('');
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(5);
-	const [totalCount, setTotalCount] = useState(0);
 
-	// Add effect for debounced search
+	// Filtering state
+	const [isFilterOpen, setIsFilterOpen] = useState(false);
+	const [activeFilters, setActiveFilters] = useState<Record<string, any>>({ role: '' });
+	const [tempFilters, setTempFilters] = useState<Record<string, any>>({ role: '' });
+
+	// Fetch roles on mount
+	useEffect(() => {
+		dispatch(fetchRoles());
+	}, [dispatch]);
+
+	// Table Configuration Hook
+	const { columns, rowActions } = useUserTableConfig({
+		isMobile,
+		isMedium,
+		currentUser,
+		onViewUser,
+		onEditUser,
+		onDeleteUser
+	});
+
+	// Fetch users logic via Redux Thunk
+	const fetchUsersData = useCallback(() => {
+		dispatch(fetchUsersThunk({ 
+			skip: page * rowsPerPage, 
+			limit: rowsPerPage, 
+			search: searchTerm,
+			role: activeFilters.role || undefined
+		}));
+	}, [dispatch, page, rowsPerPage, searchTerm, activeFilters.role]);
+
 	useEffect(() => {
 		const timer = setTimeout(() => {
-			fetchUsers();
+			fetchUsersData();
 		}, 500);
 		return () => clearTimeout(timer);
-	}, [page, rowsPerPage, searchTerm]);
+	}, [fetchUsersData]);
 
-	const fetchUsers = async () => {
-		setLoading(true);
-		try {
-			// Using backend search by passing searchTerm to getAll
-			const response = await userService.getAll(page * rowsPerPage, rowsPerPage, undefined, searchTerm);
-			setUsers(response.items);
-			setTotalCount(response.total);
-		} catch (error) {
-			console.error('Failed to fetch users:', error);
-		} finally {
-			setLoading(false);
+	// Synchronize temp filters when drawer opens
+	useEffect(() => {
+		if (isFilterOpen) {
+			setTempFilters(activeFilters);
 		}
-	};
+	}, [isFilterOpen, activeFilters]);
 
-	const handleChangePage = (_event: unknown, newPage: number) => {
-		setPage(newPage);
-	};
+	// Filter Field definitions
+	const filterFields = useMemo((): FilterField[] => [
+		{
+			key: 'role',
+			label: 'System Role',
+			type: 'single-select',
+			options: roles.map(r => ({ 
+				value: r, 
+				label: r.charAt(0).toUpperCase() + r.slice(1).replace('_', ' ') 
+			}))
+		}
+	], [roles]);
 
-	const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-		setRowsPerPage(parseInt(event.target.value, 10));
+	// Filter Handlers
+	const handleFilterChange = useCallback((key: string, value: any) => {
+		setTempFilters(prev => ({ ...prev, [key]: value }));
+	}, []);
+
+	const handleApplyFilters = () => {
+		setActiveFilters(tempFilters);
 		setPage(0);
+		setIsFilterOpen(false);
 	};
 
-	const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-		setSearchTerm(event.target.value);
+	const handleClearFilters = () => {
+		const cleared = { role: '' };
+		setTempFilters(cleared);
+		setActiveFilters(cleared);
 		setPage(0);
+		setIsFilterOpen(false);
 	};
 
-	const getRoleColor = (role: string): 'error' | 'warning' | 'info' | 'success' | 'secondary' | 'primary' => {
-		switch (role.toLowerCase()) {
-			case 'admin': return 'error';
-			case 'manager': return 'warning';
-			case 'trainer': return 'info';
-			case 'counselor': return 'success';
-			case 'project_coordinator': return 'secondary';
-			case 'developer': return 'primary';
-			default: return 'info';
-		}
-	};
+	const activeFilterCount = Object.values(activeFilters).filter(v => v !== '' && v !== null).length;
 
-	const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
-	const [activeUser, setActiveUser] = useState<User | null>(null);
+	const renderRow = (user: User) => (
+		<TableRow
+			key={user.id}
+			sx={{
+				'&:hover': { bgcolor: '#f5f8fa' },
+				'&:last-child td': { borderBottom: 0 }
+			}}
+		>
+			<TableCell>
+				<Typography variant="body2" sx={{ fontWeight: 500 }}>
+					{user.full_name || '-'}
+				</Typography>
+			</TableCell>
+			<TableCell>
+				<Typography variant="body2" color="text.secondary">
+					{user.email}
+				</Typography>
+			</TableCell>
+			<TableCell>
+				{user.mobile ? (() => {
+					const cleanPhone = user.mobile.replace(/\D/g, '');
+					const displayPhone = cleanPhone.length === 12 && cleanPhone.startsWith('91')
+						? `+91 - ${cleanPhone.slice(2)}`
+						: cleanPhone.length === 10
+							? `+91 - ${cleanPhone}`
+							: user.mobile;
 
-	const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, user: User) => {
-		setMenuAnchorEl(event.currentTarget);
-		setActiveUser(user);
-	};
-
-	const handleMenuClose = () => {
-		setMenuAnchorEl(null);
-		setActiveUser(null);
-	};
-
-	const formatDate = (dateString: string) => {
-		if (!dateString) return '-';
-		try {
-			return format(new Date(dateString), 'd MMM yyyy');
-		} catch {
-			return '-';
-		}
-	};
+					return (
+						<Chip
+							icon={<WhatsAppIcon sx={{ fontSize: '1.1rem !important', color: '#075E54 !important' }} />}
+							label={displayPhone}
+							size="small"
+							variant="outlined"
+							onClick={() => window.open(`https://wa.me/${cleanPhone.startsWith('91') ? cleanPhone : `91${cleanPhone}`}`, '_blank')}
+							sx={{
+								borderColor: '#075E54',
+								color: '#075E54',
+								fontWeight: 600,
+								borderRadius: '4px',
+								'&:hover': {
+									bgcolor: alpha('#25D366', 0.1),
+									borderColor: '#128C7E'
+								},
+								'& .MuiChip-label': { px: 1 }
+							}}
+						/>
+					);
+				})() : '-'}
+			</TableCell>
+			{!isMedium && (
+				<TableCell>
+					<Typography variant="body2" color="text.secondary">
+						{user.username}
+					</Typography>
+				</TableCell>
+			)}
+			{!isMobile && (
+				<TableCell>
+					<Chip
+						label={user.role.toUpperCase()}
+						color={getRoleColor(user.role)}
+						size="small"
+						variant={'outlined'}
+						sx={{ fontWeight: 600, borderRadius: 0, fontSize: '0.75rem' }}
+					/>
+				</TableCell>
+			)}
+			{!isMobile && (
+				<TableCell>
+					<Chip
+						label={user.is_active ? 'Active' : 'Inactive'}
+						size="small"
+						variant="outlined"
+						sx={{
+							fontWeight: 700,
+							borderRadius: '2px',
+							fontSize: '0.7rem',
+							minWidth: 70,
+							height: 24,
+							textTransform: 'none',
+							bgcolor: user.is_active ? '#f3f9ff' : '#f8f9fa',
+							color: user.is_active ? '#0073bb' : '#5c7080',
+							borderColor: user.is_active ? '#0073bb' : '#d5dbdb',
+							'& .MuiChip-label': { px: 1.5 }
+						}}
+					/>
+				</TableCell>
+			)}
+			{!isMedium && (
+				<TableCell>
+					<Typography variant="body2" color="text.secondary">
+						{user.created_at ? formatDate(user.created_at) : '-'}
+					</Typography>
+				</TableCell>
+			)}
+			<TableCell align="right">
+				<DataTableActions item={user} actions={rowActions} />
+			</TableCell>
+		</TableRow>
+	);
 
 	return (
-		<Paper sx={{ border: '1px solid #d5dbdb', boxShadow: 'none', borderRadius: 0 }}>
-			{/* Header with Search and Add Button */}
-			<Box sx={{
-				p: 2,
-				display: 'flex',
-				justifyContent: 'flex-start',
-				alignItems: 'center',
-				borderBottom: '1px solid #d5dbdb',
-				bgcolor: '#fafafa'
-			}}>
-				<TextField
-					placeholder="Search users..."
-					value={searchTerm}
-					onChange={handleSearch}
-					size="small"
-					sx={{
-						width: isMobile ? '100%' : '400px',
-						'& .MuiOutlinedInput-root': {
-							bgcolor: 'white',
-							'& fieldset': {
-								borderColor: '#d5dbdb',
-							},
-							'&:hover fieldset': {
-								borderColor: theme.palette.primary.main,
-							},
-						}
-					}}
-					InputProps={{
-						startAdornment: (
-							<InputAdornment position="start">
-								<Search sx={{ color: 'text.secondary', fontSize: 20 }} />
-							</InputAdornment>
-						),
-					}}
-				/>
-			</Box>
-
-			{/* Table */}
-			<TableContainer>
-				<Table sx={{ minWidth: 650 }} aria-label="user table">
-					<TableHead>
-						<TableRow sx={{ bgcolor: '#fafafa' }}>
-							<TableCell sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem', borderBottom: '2px solid #d5dbdb' }}>
-								Name
-							</TableCell>
-							<TableCell sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem', borderBottom: '2px solid #d5dbdb' }}>
-								Email
-							</TableCell>
-							<TableCell sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem', borderBottom: '2px solid #d5dbdb' }}>
-								WhatsApp
-							</TableCell>
-							<TableCell sx={{
-								fontWeight: 'bold',
-								color: 'text.secondary',
-								fontSize: '0.875rem',
-								borderBottom: '2px solid #d5dbdb',
-								display: isMedium ? 'none' : 'table-cell'
-							}}>
-								Username
-							</TableCell>
-							<TableCell sx={{
-								fontWeight: 'bold',
-								color: 'text.secondary',
-								fontSize: '0.875rem',
-								borderBottom: '2px solid #d5dbdb',
-								display: isMobile ? 'none' : 'table-cell'
-							}}>
-								Role
-							</TableCell>
-							<TableCell sx={{
-								fontWeight: 'bold',
-								color: 'text.secondary',
-								fontSize: '0.875rem',
-								borderBottom: '2px solid #d5dbdb',
-								display: isMobile ? 'none' : 'table-cell'
-							}}>
-								Status
-							</TableCell>
-							<TableCell sx={{
-								fontWeight: 'bold',
-								color: 'text.secondary',
-								fontSize: '0.875rem',
-								borderBottom: '2px solid #d5dbdb',
-								display: isMedium ? 'none' : 'table-cell'
-							}}>
-								Created Date
-							</TableCell>
-							<TableCell align="right" sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem', borderBottom: '2px solid #d5dbdb' }}>
-								Actions
-							</TableCell>
-						</TableRow>
-					</TableHead>
-					<TableBody aria-busy={loading}>
-						{loading ? (
-							Array.from(new Array(5)).map((_, index) => (
-								<TableRow key={`skeleton-${index}`}>
-									<TableCell><Skeleton variant="text" width="80%" /></TableCell>
-									<TableCell><Skeleton variant="text" width="90%" /></TableCell>
-									<TableCell><Skeleton variant="rectangular" width={100} height={24} sx={{ borderRadius: '4px' }} /></TableCell>
-									<TableCell sx={{ display: isMedium ? 'none' : 'table-cell' }}><Skeleton variant="text" width="100%" /></TableCell>
-									<TableCell sx={{ display: isMobile ? 'none' : 'table-cell' }}><Skeleton variant="rectangular" width={80} height={24} /></TableCell>
-									<TableCell sx={{ display: isMobile ? 'none' : 'table-cell' }}><Skeleton variant="rectangular" width={70} height={24} /></TableCell>
-									<TableCell sx={{ display: isMedium ? 'none' : 'table-cell' }}><Skeleton variant="text" width="60%" /></TableCell>
-									<TableCell align="right"><Skeleton variant="circular" width={24} height={24} sx={{ ml: 'auto' }} /></TableCell>
-								</TableRow>
-							))
-						) : users.length === 0 ? (
-							<TableRow>
-								<TableCell colSpan={8} align="center" sx={{ py: 4 }}>
-									<Typography color="text.secondary">No users found</Typography>
-								</TableCell>
-							</TableRow>
-						) : (
-							users.map((user) => (
-								<TableRow
-									key={user.id}
-									sx={{
-										'&:hover': {
-											bgcolor: '#f5f8fa',
-										},
-										'&:last-child td': {
-											borderBottom: 0
-										}
-									}}
-								>
-									<TableCell>
-										<Typography variant="body2" sx={{ fontWeight: 500 }}>
-											{user.full_name || '-'}
-										</Typography>
-									</TableCell>
-									<TableCell>
-										<Typography variant="body2" color="text.secondary">
-											{user.email}
-										</Typography>
-									</TableCell>
-									<TableCell>
-										{user.mobile ? (() => {
-											const cleanPhone = user.mobile.replace(/\D/g, '');
-											const displayPhone = cleanPhone.length === 12 && cleanPhone.startsWith('91')
-												? `+91 - ${cleanPhone.slice(2)}`
-												: cleanPhone.length === 10
-													? `+91 - ${cleanPhone}`
-													: user.mobile;
-
-											return (
-												<Chip
-													icon={<WhatsAppIcon sx={{ fontSize: '1.1rem !important', color: '#075E54 !important' }} />}
-													label={displayPhone}
-													size="small"
-													variant="outlined"
-													onClick={() => window.open(`https://wa.me/${cleanPhone.startsWith('91') ? cleanPhone : `91${cleanPhone}`}`, '_blank')}
-													sx={{
-														borderColor: '#075E54',
-														color: '#075E54',
-														fontWeight: 600,
-														borderRadius: '4px',
-														'&:hover': {
-															bgcolor: alpha('#25D366', 0.1),
-															borderColor: '#128C7E'
-														},
-														'& .MuiChip-label': {
-															px: 1
-														}
-													}}
-												/>
-											);
-										})() : '-'}
-									</TableCell>
-									<TableCell sx={{ display: isMedium ? 'none' : 'table-cell' }}>
-										<Typography variant="body2" color="text.secondary">
-											{user.username}
-										</Typography>
-									</TableCell>
-									<TableCell sx={{ display: isMobile ? 'none' : 'table-cell' }}>
-										<Chip
-											label={user.role.toUpperCase()}
-											color={getRoleColor(user.role)}
-											size="small"
-											variant={'outlined'}
-											sx={{ fontWeight: 600, borderRadius: 0, fontSize: '0.75rem' }}
-											aria-label={`Role: ${user.role}`}
-										/>
-									</TableCell>
-									<TableCell sx={{ display: isMobile ? 'none' : 'table-cell' }}>
-										<Chip
-											label={user.is_active ? 'Active' : 'Inactive'}
-											size="small"
-											variant="outlined"
-											sx={{
-												fontWeight: 700,
-												borderRadius: '2px',
-												fontSize: '0.7rem',
-												minWidth: 70,
-												height: 24,
-												textTransform: 'none',
-												bgcolor: user.is_active ? '#f3f9ff' : '#f8f9fa',
-												color: user.is_active ? '#0073bb' : '#5c7080',
-												borderColor: user.is_active ? '#0073bb' : '#d5dbdb',
-												'& .MuiChip-label': { px: 1.5 }
-											}}
-											aria-label={`Status: ${user.is_active ? 'Active' : 'Inactive'}`}
-										/>
-									</TableCell>
-									<TableCell sx={{ display: isMedium ? 'none' : 'table-cell' }}>
-										<Typography variant="body2" color="text.secondary">
-											{user.created_at ? formatDate(user.created_at) : '-'}
-										</Typography>
-									</TableCell>
-									<TableCell align="right">
-										<IconButton
-											size="small"
-											onClick={(e) => handleMenuOpen(e, user)}
-											aria-label="Actions"
-											sx={{ color: '#545b64' }}
-										>
-											<MoreVertIcon fontSize="small" />
-										</IconButton>
-									</TableCell>
-								</TableRow>
-							))
-						)}
-					</TableBody>
-
-				</Table>
-			</TableContainer>
-
-			<CustomTablePagination
-				count={totalCount}
+		<>
+			<DataTable<User>
+				columns={columns}
+				data={users}
+				loading={loading}
+				totalCount={totalCount}
 				page={page}
 				rowsPerPage={rowsPerPage}
-				onPageChange={handleChangePage}
-				onRowsPerPageChange={handleChangeRowsPerPage}
-				onRowsPerPageSelectChange={setRowsPerPage}
+				onPageChange={setPage}
+				onRowsPerPageChange={setRowsPerPage}
+				searchTerm={searchTerm}
+				onSearchChange={(val) => { setSearchTerm(val); setPage(0); }}
+				searchPlaceholder="Search users..."
+				onRefresh={fetchUsersData}
+				onFilterOpen={() => setIsFilterOpen(true)}
+				activeFilterCount={activeFilterCount}
+				renderRow={renderRow}
+				emptyMessage="No users found"
 			/>
 
-			{/* Actions Menu */}
-			<Menu anchorEl={menuAnchorEl} open={Boolean(menuAnchorEl)} onClose={handleMenuClose} PaperProps={{
-				sx: {
-					borderRadius: 0,
-					boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-					border: '1px solid #d5dbdb',
-					minWidth: 150
-				}
-			}}>
-				<MenuItem onClick={() => { onViewUser?.(activeUser!); handleMenuClose(); }}>
-					<MuiListItemIcon><Visibility fontSize="small" /></MuiListItemIcon>
-					<ListItemText primary="View Details" primaryTypographyProps={{ fontSize: '0.875rem' }} />
-				</MenuItem>
-				{currentUser?.role === 'admin' && [
-					<MenuItem key="edit" onClick={() => { onEditUser?.(activeUser!); handleMenuClose(); }}>
-						<MuiListItemIcon><Edit fontSize="small" sx={{ color: 'warning.main' }} /></MuiListItemIcon>
-						<ListItemText primary="Edit User" primaryTypographyProps={{ fontSize: '0.875rem' }} />
-					</MenuItem>,
-					<MenuItem key="delete" onClick={() => { onDeleteUser?.(activeUser!); handleMenuClose(); }}>
-						<MuiListItemIcon><Delete fontSize="small" sx={{ color: 'error.main' }} /></MuiListItemIcon>
-						<ListItemText primary="Delete User" primaryTypographyProps={{ fontSize: '0.875rem' }} />
-					</MenuItem>
-				]}
-			</Menu>
-		</Paper>
+			<FilterDrawer
+				open={isFilterOpen}
+				onClose={() => setIsFilterOpen(false)}
+				fields={filterFields}
+				activeFilters={tempFilters}
+				onFilterChange={handleFilterChange}
+				onApplyFilters={handleApplyFilters}
+				onClearFilters={handleClearFilters}
+			/>
+		</>
 	);
 };
 

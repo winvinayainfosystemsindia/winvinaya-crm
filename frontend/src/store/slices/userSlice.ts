@@ -20,10 +20,10 @@ const initialState: UserState = {
 
 export const fetchUsers = createAsyncThunk(
 	'users/fetchAll',
-	async (params: { skip?: number; limit?: number } | undefined, { rejectWithValue }) => {
+	async (params: { skip?: number; limit?: number; search?: string; role?: string } | undefined, { rejectWithValue }) => {
 		try {
-			const { skip = 0, limit = 100 } = params || {};
-			const response = await userService.getAll(skip, limit);
+			const { skip = 0, limit = 100, search, role } = params || {};
+			const response = await userService.getAll(skip, limit, role, search);
 			return response;
 		} catch (error: any) {
 			return rejectWithValue(error.message || 'Failed to fetch users');
