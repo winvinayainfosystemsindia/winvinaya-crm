@@ -85,7 +85,7 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = memo(({
 						<Tooltip title="Refresh data">
 							<Button
 								variant="outlined"
-								startIcon={<Refresh />}
+								startIcon={<Refresh className={loading ? 'spin-animation' : ''} />}
 								onClick={onRefresh}
 								disabled={loading}
 								sx={{
@@ -144,6 +144,17 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = memo(({
 					</Button>
 				)}
 			</Box>
+			<style>
+				{`
+					@keyframes spin {
+						from { transform: rotate(0deg); }
+						to { transform: rotate(360deg); }
+					}
+					.spin-animation {
+						animation: spin 1s linear infinite;
+					}
+				`}
+			</style>
 		</Box>
 	);
 });

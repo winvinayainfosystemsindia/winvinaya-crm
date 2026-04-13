@@ -8,13 +8,14 @@ import {
 	TableHead,
 	TableRow,
 	TableSortLabel,
-	Typography,
-	Skeleton,
 	useTheme
 } from '@mui/material';
 import CustomTablePagination from '../CustomTablePagination';
 import DataTableHeader from './DataTableHeader';
 import type { DataTableHeaderProps } from './DataTableHeader';
+
+import DataTableEmpty from './DataTableEmpty';
+import DataTableSkeleton from './DataTableSkeleton';
 
 export interface ColumnDefinition<T> {
 	id: keyof T | 'actions';
@@ -69,11 +70,11 @@ const DataTable = <T,>({
 	const visibleColumns = columns.filter(col => !col.hidden);
 
 	return (
-		<Paper sx={{ 
-			border: `1px solid ${theme.palette.divider}`, 
-			boxShadow: 'none', 
-			borderRadius: `${theme.shape.borderRadius}px`, 
-			overflow: 'hidden' 
+		<Paper sx={{
+			border: `1px solid ${theme.palette.divider}`,
+			boxShadow: 'none',
+			borderRadius: `${theme.shape.borderRadius}px`,
+			overflow: 'hidden'
 		}}>
 			<DataTableHeader
 				searchTerm={searchTerm}
@@ -115,7 +116,7 @@ const DataTable = <T,>({
 											direction={orderBy === column.id ? order : 'asc'}
 											onClick={() => onSortRequest(column.id as keyof T)}
 											sx={{
-												'&.Mui-active': { 
+												'&.Mui-active': {
 													fontWeight: 800,
 													color: theme.palette.text.primary
 												},
@@ -133,26 +134,15 @@ const DataTable = <T,>({
 					</TableHead>
 					<TableBody aria-busy={loading}>
 						{loading ? (
-							Array.from(new Array(rowsPerPage || 5)).map((_, index) => (
-								<TableRow key={`skeleton-${index}`}>
-									{visibleColumns.map((col, colIdx) => (
-										<TableCell key={`skeleton-cell-${colIdx}`} align={col.align || 'left'}>
-											<Skeleton variant="text" width={col.id === 'actions' ? 60 : '80%'} height={24} sx={{ 
-												ml: col.align === 'right' ? 'auto' : 0,
-												mr: col.align === 'center' ? 'auto' : 0
-											}} />
-										</TableCell>
-									))}
-								</TableRow>
-							))
+							<DataTableSkeleton
+								columns={visibleColumns}
+								rowsPerPage={rowsPerPage || 5}
+							/>
 						) : data.length === 0 ? (
-							<TableRow>
-								<TableCell colSpan={visibleColumns.length} align="center" sx={{ py: 8 }}>
-									<Typography variant="body2" color="text.secondary">
-										{emptyMessage}
-									</Typography>
-								</TableCell>
-							</TableRow>
+							<DataTableEmpty
+								colSpan={visibleColumns.length}
+								message={emptyMessage}
+							/>
 						) : (
 							data.map(renderRow)
 						)}
