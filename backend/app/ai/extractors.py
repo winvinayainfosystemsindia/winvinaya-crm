@@ -33,6 +33,8 @@ FIELDS TO EXTRACT:
 - job_details: Object with { "designation": str, "workplace_type": "Onsite"|"Remote"|"Hybrid", "job_type": "Full Time"|"Part Time"|"Contract" }.
 - company_name: Name of the hiring company. If not found, return null.
 - contact_name: Name of the contact person or recruiter. If not found, return null.
+- contact_email: Email of the contact person if found. If not found, return null.
+- contact_phone: Phone number of the contact person if found. If not found, return null.
 
 RESPONSE RULES:
 1. Return ONLY a valid JSON object.
@@ -105,12 +107,16 @@ class JobRoleExtractor:
         # 2. DB Lookups for Suggestions
         company_name = extracted_data.get("company_name")
         contact_name = extracted_data.get("contact_name")
+        contact_email = extracted_data.get("contact_email")
+        contact_phone = extracted_data.get("contact_phone")
         
         suggestions = {
             "company_id": None,
             "company_name": company_name,
             "contact_id": None,
-            "contact_name": contact_name
+            "contact_name": contact_name,
+            "contact_email": contact_email,
+            "contact_phone": contact_phone
         }
 
         if company_name:
@@ -121,17 +127,30 @@ class JobRoleExtractor:
                 suggestions["company_id"] = companies[0].id
                 suggestions["company_name"] = companies[0].name
                 
-                # If we have a company and a contact name, look for the contact in that company
-                if contact_name and suggestions["company_id"]:
+                # If we have a company and a contact name/email, look for the contact in that company
+                if (contact_name or contact_email) and suggestions["company_id"]:
                     contact_repo = ContactRepository(self._db)
-                    contacts, _ = await contact_repo.get_multi(
-                        company_id=suggestions["company_id"],
-                        search=contact_name,
-                        limit=1
-                    )
+                    
+                    # Try searching by email first if available
+                    contacts = []
+                    if contact_email:
+                        existing_contact = await contact_repo.get_by_email(contact_email)
+                        if existing_contact:
+                            contacts = [existing_contact]
+                    
+                    # If not found by email, try searching by name within the company
+                    if not contacts and contact_name:
+                        contacts, _ = await contact_repo.get_multi(
+                            company_id=suggestions["company_id"],
+                            search=contact_name,
+                            limit=1
+                        )
+                    
                     if contacts:
                         suggestions["contact_id"] = contacts[0].id
                         suggestions["contact_name"] = f"{contacts[0].first_name} {contacts[0].last_name}"
+                        suggestions["contact_email"] = contacts[0].email
+                        suggestions["contact_phone"] = contacts[0].phone
 
         return {
             "data": extracted_data,

@@ -38,14 +38,20 @@ interface GeneralInfoTabProps {
 		company_name: string | null;
 		contact_id: number | null;
 		contact_name: string | null;
+		contact_email: string | null;
+		contact_phone: string | null;
 	} | null;
 	pendingEntities: {
 		company_name: string | null;
 		contact_name: string | null;
+		contact_email: string | null;
+		contact_phone: string | null;
 	};
 	setPendingEntities: React.Dispatch<React.SetStateAction<{
 		company_name: string | null;
 		contact_name: string | null;
+		contact_email: string | null;
+		contact_phone: string | null;
 	}>>;
 	highlightMissing?: boolean;
 }

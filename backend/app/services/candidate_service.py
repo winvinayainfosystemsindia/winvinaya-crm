@@ -24,14 +24,14 @@ class CandidateService:
     async def validate_personal_info(self, email: str, phone: str, pincode: str, country_code: str = "IN") -> dict:
         """Validate email, phone availability and pincode existence"""
         # Check existing email
-        if await self.repository.get_by_email(email):
+        if email and await self.repository.get_by_email(email):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email already registered"
             )
-
+        
         # Check existing phone
-        if await self.repository.get_by_phone(phone):
+        if phone and await self.repository.get_by_phone(phone):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Phone number already registered"

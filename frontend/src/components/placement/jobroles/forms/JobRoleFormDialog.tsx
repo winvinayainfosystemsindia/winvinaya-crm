@@ -94,12 +94,16 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 		company_name: string | null;
 		contact_id: number | null;
 		contact_name: string | null;
+		contact_email: string | null;
+		contact_phone: string | null;
 	} | null>(null);
 	const [dragActive, setDragActive] = useState(false);
 	const [pendingEntities, setPendingEntities] = useState<{
 		company_name: string | null;
 		contact_name: string | null;
-	}>({ company_name: null, contact_name: null });
+		contact_email: string | null;
+		contact_phone: string | null;
+	}>({ company_name: null, contact_name: null, contact_email: null, contact_phone: null });
 
 	const [formData, setFormData] = useState<Partial<JobRole>>({
 		title: '',
@@ -123,7 +127,12 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 			setActiveStep(0);
 			setFormMode(jobRole ? 'manual' : null);
 			setSuggestions(null);
-			setPendingEntities({ company_name: null, contact_name: null });
+			setPendingEntities({ 
+				company_name: null, 
+				contact_name: null,
+				contact_email: null,
+				contact_phone: null
+			});
 			setJdText('');
 			setSelectedFile(null);
 			if (jobRole) {
@@ -214,7 +223,12 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 				setPendingEntities(prev => ({ ...prev, company_name: result.suggestions.company_name }));
 			}
 			if (!result.suggestions.contact_id && result.suggestions.contact_name) {
-				setPendingEntities(prev => ({ ...prev, contact_name: result.suggestions.contact_name }));
+				setPendingEntities(prev => ({ 
+					...prev, 
+					contact_name: result.suggestions.contact_name,
+					contact_email: result.suggestions.contact_email,
+					contact_phone: result.suggestions.contact_phone
+				}));
 			}
 
 			setActiveStep(2); // Jump to Review & Publish
@@ -329,6 +343,8 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 					company_id: finalFormData.company_id,
 					first_name: firstName,
 					last_name: lastName,
+					email: pendingEntities.contact_email || undefined,
+					phone: pendingEntities.contact_phone || undefined,
 					is_primary: true,
 					is_decision_maker: false
 				});
