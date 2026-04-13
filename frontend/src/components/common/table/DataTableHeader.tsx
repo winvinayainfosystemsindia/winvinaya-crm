@@ -59,6 +59,10 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = memo(({
 						onChange={(e) => onSearchChange(e.target.value)}
 						size="small"
 						fullWidth
+						inputProps={{
+							autoComplete: 'off',
+							name: 'enterprise-table-search'
+						}}
 						sx={{
 							maxWidth: { xs: '100%', sm: '350px' },
 							'& .MuiOutlinedInput-root': {

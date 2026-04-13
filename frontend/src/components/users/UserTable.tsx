@@ -21,12 +21,13 @@ import { useUserTableConfig, getRoleColor, formatDate } from './UserTableConfig'
 import FilterDrawer, { type FilterField } from '../common/FilterDrawer';
 
 interface UserTableProps {
+	onAddUser?: () => void;
 	onEditUser?: (user: User) => void;
 	onViewUser?: (user: User) => void;
 	onDeleteUser?: (user: User) => void;
 }
 
-const UserTable: React.FC<UserTableProps> = ({ onEditUser, onViewUser, onDeleteUser }) => {
+const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser, onDeleteUser }) => {
 	const theme = useTheme();
 	const dispatch = useAppDispatch();
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -237,6 +238,8 @@ const UserTable: React.FC<UserTableProps> = ({ onEditUser, onViewUser, onDeleteU
 				onRefresh={fetchUsersData}
 				onFilterOpen={() => setIsFilterOpen(true)}
 				activeFilterCount={activeFilterCount}
+				onCreateClick={onAddUser}
+				createButtonText="Add User"
 				renderRow={renderRow}
 				emptyMessage="No users found"
 			/>
