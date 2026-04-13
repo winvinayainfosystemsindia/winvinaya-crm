@@ -9,23 +9,21 @@ import {
 	TableHead,
 	TableRow,
 	TextField,
-	Button,
 	Chip,
 	IconButton,
 	InputAdornment,
 	Typography,
 	useMediaQuery,
 	useTheme,
-	CircularProgress,
 	Menu,
 	MenuItem,
 	ListItemIcon as MuiListItemIcon,
-	ListItemText
+	ListItemText,
+	Skeleton
 } from '@mui/material';
 
 import {
 	Search,
-	Add,
 	Edit,
 	Visibility,
 	Delete,
@@ -46,7 +44,7 @@ interface UserTableProps {
 	onDeleteUser?: (user: User) => void;
 }
 
-const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser, onDeleteUser }) => {
+const UserTable: React.FC<UserTableProps> = ({ onEditUser, onViewUser, onDeleteUser }) => {
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const isMedium = useMediaQuery(theme.breakpoints.down('md'));
@@ -134,10 +132,8 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 			<Box sx={{
 				p: 2,
 				display: 'flex',
-				flexDirection: isMobile ? 'column' : 'row',
-				justifyContent: 'space-between',
-				alignItems: isMobile ? 'stretch' : 'center',
-				gap: 2,
+				justifyContent: 'flex-start',
+				alignItems: 'center',
 				borderBottom: '1px solid #d5dbdb',
 				bgcolor: '#fafafa'
 			}}>
@@ -166,26 +162,6 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 						),
 					}}
 				/>
-
-				{currentUser?.role === 'admin' && (
-					<Button
-						variant="contained"
-						startIcon={<Add />}
-						onClick={onAddUser}
-						fullWidth={isMobile}
-						sx={{
-							bgcolor: '#ec7211',
-							color: 'white',
-							textTransform: 'none',
-							fontWeight: 600,
-							'&:hover': {
-								bgcolor: '#eb5f07',
-							}
-						}}
-					>
-						Add User
-					</Button>
-				)}
 			</Box>
 
 			{/* Table */}
@@ -245,14 +221,18 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 					</TableHead>
 					<TableBody aria-busy={loading}>
 						{loading ? (
-							<TableRow>
-								<TableCell colSpan={8} align="center" sx={{ py: 4 }}>
-									<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-										<CircularProgress size={24} />
-										<Typography color="text.secondary">Loading users...</Typography>
-									</Box>
-								</TableCell>
-							</TableRow>
+							Array.from(new Array(5)).map((_, index) => (
+								<TableRow key={`skeleton-${index}`}>
+									<TableCell><Skeleton variant="text" width="80%" /></TableCell>
+									<TableCell><Skeleton variant="text" width="90%" /></TableCell>
+									<TableCell><Skeleton variant="rectangular" width={100} height={24} sx={{ borderRadius: '4px' }} /></TableCell>
+									<TableCell sx={{ display: isMedium ? 'none' : 'table-cell' }}><Skeleton variant="text" width="100%" /></TableCell>
+									<TableCell sx={{ display: isMobile ? 'none' : 'table-cell' }}><Skeleton variant="rectangular" width={80} height={24} /></TableCell>
+									<TableCell sx={{ display: isMobile ? 'none' : 'table-cell' }}><Skeleton variant="rectangular" width={70} height={24} /></TableCell>
+									<TableCell sx={{ display: isMedium ? 'none' : 'table-cell' }}><Skeleton variant="text" width="60%" /></TableCell>
+									<TableCell align="right"><Skeleton variant="circular" width={24} height={24} sx={{ ml: 'auto' }} /></TableCell>
+								</TableRow>
+							))
 						) : users.length === 0 ? (
 							<TableRow>
 								<TableCell colSpan={8} align="center" sx={{ py: 4 }}>
@@ -285,12 +265,12 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 									<TableCell>
 										{user.mobile ? (() => {
 											const cleanPhone = user.mobile.replace(/\D/g, '');
-											const displayPhone = cleanPhone.length === 12 && cleanPhone.startsWith('91') 
+											const displayPhone = cleanPhone.length === 12 && cleanPhone.startsWith('91')
 												? `+91 - ${cleanPhone.slice(2)}`
-												: cleanPhone.length === 10 
-													? `+91 - ${cleanPhone}` 
+												: cleanPhone.length === 10
+													? `+91 - ${cleanPhone}`
 													: user.mobile;
-											
+
 											return (
 												<Chip
 													icon={<WhatsAppIcon sx={{ fontSize: '1.1rem !important', color: '#075E54 !important' }} />}
@@ -298,7 +278,7 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 													size="small"
 													variant="outlined"
 													onClick={() => window.open(`https://wa.me/${cleanPhone.startsWith('91') ? cleanPhone : `91${cleanPhone}`}`, '_blank')}
-													sx={{ 
+													sx={{
 														borderColor: '#075E54',
 														color: '#075E54',
 														fontWeight: 600,
@@ -333,10 +313,20 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 									<TableCell sx={{ display: isMobile ? 'none' : 'table-cell' }}>
 										<Chip
 											label={user.is_active ? 'Active' : 'Inactive'}
-											color={user.is_active ? 'success' : 'default'}
 											size="small"
-											variant={user.is_active ? 'filled' : 'outlined'}
-											sx={{ fontWeight: 600, borderRadius: 0, fontSize: '0.75rem', minWidth: 70 }}
+											variant="outlined"
+											sx={{
+												fontWeight: 700,
+												borderRadius: '2px',
+												fontSize: '0.7rem',
+												minWidth: 70,
+												height: 24,
+												textTransform: 'none',
+												bgcolor: user.is_active ? '#f3f9ff' : '#f8f9fa',
+												color: user.is_active ? '#0073bb' : '#5c7080',
+												borderColor: user.is_active ? '#0073bb' : '#d5dbdb',
+												'& .MuiChip-label': { px: 1.5 }
+											}}
 											aria-label={`Status: ${user.is_active ? 'Active' : 'Inactive'}`}
 										/>
 									</TableCell>

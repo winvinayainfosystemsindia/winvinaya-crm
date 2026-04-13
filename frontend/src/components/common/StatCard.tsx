@@ -6,8 +6,8 @@ import type { SxProps, Theme } from '@mui/material';
 interface StatCardProps {
 	title?: string;
 	label?: string; // Alias for title
-	value?: string | number;
-	count?: string | number; // Alias for value
+	value?: React.ReactNode;
+	count?: React.ReactNode; // Alias for value
 	unit?: string;
 	subtitle?: string; // Descriptive text at the bottom
 	icon?: React.ReactNode | SvgIconComponent;

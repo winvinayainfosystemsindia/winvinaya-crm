@@ -1,21 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Link, Popover, useTheme, CircularProgress, Stack } from '@mui/material';
-import { People, SupervisorAccount, CheckCircle } from '@mui/icons-material';
+import { Box, Typography, Link, Popover, useTheme, Stack, Tooltip, Skeleton } from '@mui/material';
+import { People, SupervisorAccount, CheckCircle, Block, InfoOutlined } from '@mui/icons-material';
 import api from '../../services/api';
 import StatCard from '../common/StatCard';
 
 interface UserStats {
 	total: number;
-	by_role: {
-		admin: number;
-		trainer: number;
-		counselor: number;
-		manager: number;
-		placement: number;
-		sourcing: number;
-	};
+	by_role: Record<string, number>;
 	active: number;
 	inactive: number;
+	roles_count: number;
 }
 
 const UserStatCards: React.FC = () => {
@@ -47,110 +41,130 @@ const UserStatCards: React.FC = () => {
 		setRoleAnchor(null);
 	};
 
-	if (loading) {
-		return (
-			<Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-				<CircularProgress />
-			</Box>
-		);
-	}
+	const skeleton = (
+		<Skeleton variant="text" sx={{ fontSize: '2rem', width: '40%' }} />
+	);
 
-	if (!stats) return null;
+	const formatRoleName = (role: string) => {
+		return role.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+	};
 
 	return (
-		<Box sx={{ display: 'flex', gap: 3, mb: 3, flexWrap: 'wrap' }}>
+		<Box 
+			sx={{ 
+				display: 'grid', 
+				gridTemplateColumns: {
+					xs: '1fr',
+					sm: '1fr 1fr',
+					lg: '1fr 1fr 1fr 1fr'
+				},
+				gap: 3, 
+				mb: 3 
+			}}
+		>
 			{/* Total Users Card */}
-			<Box sx={{ flex: '1 1 300px' }}>
-				<StatCard
-					title="Total Users"
-					count={stats.total}
-					icon={People}
-					color={theme.palette.primary.main}
-					subtitle="Registered in the system"
-				/>
-			</Box>
+			<StatCard
+				title="Total Users"
+				count={loading ? skeleton : stats?.total}
+				icon={People}
+				color={theme.palette.primary.main}
+				subtitle="Total registered in the system"
+			/>
 
-			{/* Users by Role Card */}
-			<Box sx={{ flex: '1 1 300px' }}>
-				<StatCard
-					title="Users by Role"
-					count={stats.total}
-					icon={SupervisorAccount}
-					color={theme.palette.secondary.main}
+			{/* Active Users Card */}
+			<StatCard
+				title="Active Users"
+				count={loading ? skeleton : stats?.active}
+				icon={CheckCircle}
+				color={theme.palette.success.main}
+				subtitle="Currently active accounts"
+			/>
+
+			{/* Inactive Users Card */}
+			<StatCard
+				title="Inactive Users"
+				count={loading ? skeleton : stats?.inactive}
+				icon={Block}
+				color={theme.palette.error.main}
+				subtitle="Disabled or pending access"
+			/>
+
+			{/* System Roles Card */}
+			<StatCard
+				title="System Roles"
+				count={loading ? skeleton : stats?.roles_count}
+				icon={SupervisorAccount}
+				color={theme.palette.secondary.main}
+			>
+				{loading ? (
+					<Skeleton variant="text" sx={{ width: '60%', mt: 0.5 }} />
+				) : (
+					<Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+						<Link
+							component="button"
+							variant="caption"
+							onClick={handleRoleOpen}
+							sx={{
+								fontWeight: 700,
+								color: theme.palette.secondary.main,
+								textDecoration: 'none',
+								textTransform: 'uppercase',
+								fontSize: '0.65rem',
+								'&:hover': { textDecoration: 'underline' }
+							}}
+						>
+							View Distribution
+						</Link>
+						<Tooltip title="Breakdown of users by their assigned roles">
+							<InfoOutlined sx={{ fontSize: '0.9rem', color: 'text.secondary', cursor: 'help' }} />
+						</Tooltip>
+					</Box>
+				)}
+
+				<Popover
+					open={Boolean(roleAnchor)}
+					anchorEl={roleAnchor}
+					onClose={handleRoleClose}
+					anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+					transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+					PaperProps={{
+						sx: {
+							border: '1px solid #e5e7eb',
+							boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+							borderRadius: '12px',
+							p: 2,
+							minWidth: 240
+						}
+					}}
 				>
-					<Link
-						component="button"
-						variant="body2"
-						onClick={handleRoleOpen}
-						sx={{
-							fontWeight: 700,
-							color: theme.palette.primary.main,
-							textDecoration: 'none',
-							mt: 0.5,
-							'&:hover': { textDecoration: 'underline' }
-						}}
-					>
-						View Distribution
-					</Link>
-					<Popover
-						open={Boolean(roleAnchor)}
-						anchorEl={roleAnchor}
-						onClose={handleRoleClose}
-						anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-						transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-						PaperProps={{
-							sx: {
-								border: '1px solid #e5e7eb',
-								boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-								borderRadius: '8px',
-								p: 2,
-								minWidth: 220
-							}
-						}}
-					>
-						<Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 700, color: '#1e293b' }}>
-							Role Distribution
-						</Typography>
-						<Stack spacing={1}>
-							{[
-								{ label: 'Admin', value: stats.by_role.admin },
-								{ label: 'Manager', value: stats.by_role.manager },
-								{ label: 'Trainer', value: stats.by_role.trainer },
-								{ label: 'Counselor', value: stats.by_role.counselor },
-								{ label: 'Placement', value: stats.by_role.placement },
-								{ label: 'Sourcing', value: stats.by_role.sourcing },
-							].map((item) => (
-								<Box key={item.label} sx={{ display: 'flex', justifyContent: 'space-between' }}>
-									<Typography variant="body2" color="textSecondary">{item.label}</Typography>
-									<Typography variant="body2" fontWeight="700">{item.value}</Typography>
+					<Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 700, color: '#1e293b' }}>
+						Role Distribution
+					</Typography>
+					<Stack spacing={1}>
+						{stats && Object.entries(stats.by_role)
+							.sort((a, b) => b[1] - a[1]) // Sort by count descending
+							.map(([role, count]) => (
+								<Box key={role} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+									<Typography variant="body2" color="textSecondary">
+										{formatRoleName(role)}
+									</Typography>
+									<Box sx={{ 
+										px: 1, 
+										py: 0.25, 
+										bgcolor: 'action.hover', 
+										borderRadius: '4px',
+										minWidth: 24,
+										textAlign: 'center'
+									}}>
+										<Typography variant="caption" fontWeight="700">
+											{count}
+										</Typography>
+									</Box>
 								</Box>
 							))}
-						</Stack>
-					</Popover>
-				</StatCard>
-			</Box>
-
-			{/* User Status Card */}
-			<Box sx={{ flex: '1 1 300px' }}>
-				<StatCard
-					title="User Status"
-					icon={CheckCircle}
-					color={theme.palette.success.main}
-				>
-					<Box sx={{ mt: 1 }}>
-						<Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-							<Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'success.main', mr: 1 }} />
-							<Typography variant="body2" color="textSecondary" sx={{ flexGrow: 1 }}>Active</Typography>
-							<Typography variant="body2" fontWeight="700">{stats.active}</Typography>
-						</Box>
-						<Box sx={{ display: 'flex', alignItems: 'center' }}>
-							<Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'error.main', mr: 1 }} />
-							<Typography variant="body2" color="textSecondary" sx={{ flexGrow: 1 }}>Inactive</Typography>
-							<Typography variant="body2" fontWeight="700">{stats.inactive}</Typography>
-						</Box>
-					</Box>
-				</StatCard>
-			</Box>
+					</Stack>
+				</Popover>
+			</StatCard>
 		</Box>
 	);
 };

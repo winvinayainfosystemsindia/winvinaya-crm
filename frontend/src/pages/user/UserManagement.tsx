@@ -12,7 +12,7 @@ import {
 	Button,
 	IconButton
 } from '@mui/material';
-import { Close as CloseIcon, Warning as WarningIcon } from '@mui/icons-material';
+import { Close as CloseIcon, Warning as WarningIcon, Add } from '@mui/icons-material';
 import { useAppSelector } from '../../store/hooks';
 import userService from '../../services/userService';
 import UserStatCards from '../../components/users/UserStatCards';
@@ -107,21 +107,48 @@ const UserManagement: React.FC = () => {
 		<Box component="main" sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
 			<Container maxWidth="xl" sx={{ py: 3 }}>
 				{/* Page Header */}
-				<Box sx={{ mb: 3 }}>
-					<Typography
-						variant="h4"
-						component="h1"
-						sx={{
-							fontWeight: 300,
-							color: 'text.primary',
-							mb: 0.5
-						}}
-					>
-						User Management
-					</Typography>
-					<Typography variant="body2" color="text.secondary">
-						Manage system users, roles, and permissions
-					</Typography>
+				<Box sx={{ 
+					display: 'flex', 
+					justifyContent: 'space-between', 
+					alignItems: 'flex-start',
+					mb: 3 
+				}}>
+					<Box>
+						<Typography
+							variant="h4"
+							component="h1"
+							sx={{
+								fontWeight: 300,
+								color: 'text.primary',
+								mb: 0.5
+							}}
+						>
+							User Management
+						</Typography>
+						<Typography variant="body2" color="text.secondary">
+							Manage system users, roles, and permissions
+						</Typography>
+					</Box>
+
+					{currentUser?.role === 'admin' && (
+						<Button
+							variant="contained"
+							startIcon={<Add />}
+							onClick={handleAddUser}
+							sx={{
+								bgcolor: '#ec7211',
+								color: 'white',
+								textTransform: 'none',
+								fontWeight: 600,
+								px: 3,
+								'&:hover': {
+									bgcolor: '#eb5f07',
+								}
+							}}
+						>
+							Add User
+						</Button>
+					)}
 				</Box>
 
 				{/* Stat Cards */}

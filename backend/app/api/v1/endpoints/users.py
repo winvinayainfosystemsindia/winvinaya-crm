@@ -127,14 +127,10 @@ async def get_user_stats(
     
     return {
         "total": total,
-        "by_role": {
-            "admin": role_counts.get("admin", 0),
-            "trainer": role_counts.get("trainer", 0),
-            "counselor": role_counts.get("counselor", 0),
-            "manager": role_counts.get("manager", 0),
-        },
+        "by_role": role_counts,
         "active": active,
-        "inactive": inactive
+        "inactive": inactive,
+        "roles_count": len(role_counts)
     }
 
 
