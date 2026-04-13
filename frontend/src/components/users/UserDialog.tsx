@@ -1,33 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
 	Dialog,
-	DialogTitle,
-	DialogContent,
-	DialogActions,
-	Button,
-	Typography,
-	Box,
-	Stack,
-	IconButton,
-	Divider,
 	TextField,
 	FormControl,
 	Select,
 	MenuItem,
 	Switch,
 	FormControlLabel,
-	Alert,
-	Chip,
-	CircularProgress,
+	InputAdornment,
+	Box,
+	Typography,
 	useTheme,
 	useMediaQuery,
-	InputAdornment
+	alpha,
+	Grid,
+	IconButton
 } from '@mui/material';
-import { Close as CloseIcon, Visibility, VisibilityOff } from '@mui/icons-material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchRoles, createUser, updateUser } from '../../store/slices/userSlice';
 import type { User, UserCreate, UserUpdate } from '../../models/user';
+
+// Import modular form components
+import { EnterpriseForm, type FormStep } from '../common/form';
+import { awsStyles } from '../../theme/theme';
 
 interface UserDialogProps {
 	open: boolean;
@@ -52,6 +49,8 @@ const UserDialog: React.FC<UserDialogProps> = ({
 	const [error, setError] = useState<string | null>(null);
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+	const { fieldLabel, sectionTitle } = awsStyles;
 
 	// Fetch roles on mount via Redux
 	useEffect(() => {
@@ -117,13 +116,10 @@ const UserDialog: React.FC<UserDialogProps> = ({
 		setLoading(true);
 		setError(null);
 
-		// Validation
-		if (mode === 'add') {
-			if (!formData.password) {
-				setError('Password is required');
-				setLoading(false);
-				return;
-			}
+		if (mode === 'add' && !formData.password) {
+			setError('Password is required');
+			setLoading(false);
+			return;
 		}
 
 		if (formData.password && formData.password !== formData.confirmPassword) {
@@ -152,10 +148,8 @@ const UserDialog: React.FC<UserDialogProps> = ({
 				await dispatch(updateUser({ id: user.id.toString(), userData: updateData })).unwrap();
 				if (onSuccess) onSuccess('User updated successfully');
 			}
-
 			onClose();
 		} catch (err: any) {
-			console.error("User save error:", err);
 			setError(err || `Failed to ${mode} user`);
 		} finally {
 			setLoading(false);
@@ -178,24 +172,238 @@ const UserDialog: React.FC<UserDialogProps> = ({
 		}
 	};
 
-	const AWSInfoRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
-		<Box sx={{ mb: 2.5 }}>
-			<Typography variant="caption" sx={{ color: '#545b64', fontWeight: 600, display: 'block', mb: 0.5, textTransform: 'uppercase' }}>
-				{label}
-			</Typography>
-			<Typography variant="body2" sx={{ fontWeight: 500, color: '#232f3e' }}>
-				{value || '-'}
-			</Typography>
-		</Box>
-	);
-
-	const getTitle = () => {
-		switch (mode) {
-			case 'add': return 'Add New User';
-			case 'edit': return 'Edit User';
-			case 'view': return 'User Details';
-			default: return '';
+	// High-precision Input Styling
+	const inputSx = {
+		'& .MuiOutlinedInput-root': {
+			borderRadius: '4px',
+			bgcolor: alpha(theme.palette.background.paper, 0.8),
+			'& fieldset': { borderColor: theme.palette.divider },
+			'&:hover fieldset': { borderColor: alpha(theme.palette.text.primary, 0.2) },
+			'&.Mui-focused fieldset': { borderColor: theme.palette.primary.main, borderWidth: '1px' },
+			'& input': { padding: '10.5px 14px' }
 		}
+	};
+
+	const steps = useMemo((): FormStep[] => [
+		{
+			label: 'Basic Information',
+			description: 'Profile & Identity',
+			content: (
+				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+					<Box>
+						<Typography variant="awsSectionTitle" sx={{ mb: 2, color: theme.palette.primary.main }}>
+							Account Identity
+						</Typography>
+						<Grid container spacing={3}>
+							<Grid size={{ xs: 12, md: 6 }}>
+								<Typography variant="awsFieldLabel">Full Name</Typography>
+								<TextField
+									fullWidth
+									size="small"
+									value={formData.full_name}
+									onChange={(e) => handleChange('full_name', e.target.value)}
+									disabled={loading || mode === 'view'}
+									placeholder="e.g. John Doe"
+									sx={inputSx}
+								/>
+							</Grid>
+							<Grid size={{ xs: 12, md: 6 }}>
+								<Typography variant="awsFieldLabel">Username</Typography>
+								<TextField
+									fullWidth
+									size="small"
+									value={formData.username}
+									onChange={(e) => handleChange('username', e.target.value)}
+									disabled={loading || mode === 'view'}
+									placeholder="unique_username"
+									sx={inputSx}
+								/>
+							</Grid>
+						</Grid>
+					</Box>
+
+					<Box>
+						<Typography variant="awsSectionTitle" sx={{ mb: 2, color: theme.palette.primary.main }}>
+							Communication Channels
+						</Typography>
+						<Grid container spacing={3}>
+							<Grid size={{ xs: 12, md: 6 }}>
+								<Typography variant="awsFieldLabel">Email Address</Typography>
+								<TextField
+									fullWidth
+									size="small"
+									value={formData.email}
+									onChange={(e) => handleChange('email', e.target.value)}
+									disabled={loading || mode === 'view'}
+									placeholder="user@example.com"
+									sx={inputSx}
+								/>
+							</Grid>
+							<Grid size={{ xs: 12, md: 6 }}>
+								<Typography variant="awsFieldLabel">WhatsApp Number</Typography>
+								<TextField
+									fullWidth
+									size="small"
+									value={formData.mobile}
+									onChange={(e) => handleChange('mobile', e.target.value)}
+									disabled={loading || mode === 'view'}
+									placeholder="e.g. 919876543210"
+									helperText={mode !== 'view' ? "Format: 91 followed by 10 digits" : ""}
+									sx={inputSx}
+								/>
+							</Grid>
+						</Grid>
+					</Box>
+				</Box>
+			)
+		},
+		{
+			label: 'Permissions & Status',
+			description: 'Security & Metadata',
+			content: (
+				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+					<Box>
+						<Typography variant="awsSectionTitle" sx={{ mb: 2, color: theme.palette.primary.main }}>
+							System Authorization
+						</Typography>
+						<Grid container spacing={3}>
+							<Grid size={{ xs: 12, md: 6 }}>
+								<Typography variant="awsFieldLabel">Managed Security Role</Typography>
+								<FormControl fullWidth size="small">
+									<Select
+										value={formData.role}
+										onChange={(e) => handleChange('role', e.target.value)}
+										disabled={loading || mode === 'view'}
+										sx={{ borderRadius: '4px', bgcolor: theme.palette.background.paper }}
+									>
+										{roles.map((role) => (
+											<MenuItem key={role} value={role}>
+												{formatRoleName(role)}
+											</MenuItem>
+										))}
+									</Select>
+								</FormControl>
+							</Grid>
+						</Grid>
+					</Box>
+
+					{mode !== 'add' && (
+						<Box>
+							<Typography variant="awsSectionTitle" sx={{ mb: 2, color: theme.palette.primary.main }}>
+								Lifecycle Governance
+							</Typography>
+							<Box sx={{ p: 3, bgcolor: alpha(theme.palette.background.paper, 0.4), border: `1px solid ${theme.palette.divider}`, borderRadius: '4px' }}>
+								<FormControlLabel
+									control={
+										<Switch
+											checked={formData.is_active}
+											onChange={(e) => handleChange('is_active', e.target.checked)}
+											disabled={loading || mode === 'view'}
+											color="success"
+										/>
+									}
+									label={
+										<Typography variant="body2" sx={{ fontWeight: 700 }}>
+											ACCOUNT STATE: {formData.is_active ? 'ACTIVE' : 'LOCKED'}
+										</Typography>
+									}
+								/>
+								<Grid container spacing={3} sx={{ mt: 2 }}>
+									{mode === 'view' && user && (
+										<>
+											<Grid size={{ xs: 6 }}>
+												<Typography variant="caption" sx={{ fontWeight: 700, color: 'text.disabled', display: 'block' }}>AUDIT: INITIALIZED</Typography>
+												<Typography variant="body2" sx={{ fontWeight: 600 }}>{formatDate(user.created_at)}</Typography>
+											</Grid>
+											<Grid size={{ xs: 6 }}>
+												<Typography variant="caption" sx={{ fontWeight: 700, color: 'text.disabled', display: 'block' }}>AUDIT: LAST SYNC</Typography>
+												<Typography variant="body2" sx={{ fontWeight: 600 }}>{formatDate(user.updated_at)}</Typography>
+											</Grid>
+										</>
+									)}
+								</Grid>
+							</Box>
+						</Box>
+					)}
+				</Box>
+			)
+		},
+		{
+			label: 'Security',
+			description: 'Authentication Secrets',
+			content: (
+				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+					<Box>
+						<Typography variant="awsSectionTitle" sx={{ mb: 2, color: theme.palette.primary.main }}>
+							Credential Policy
+						</Typography>
+						{mode === 'view' ? (
+							<Box sx={{ py: 6, px: 2, textAlign: 'center', bgcolor: alpha(theme.palette.info.main, 0.03), border: `1px dashed ${theme.palette.info.light}`, borderRadius: '4px' }}>
+								<Typography variant="body2" color="info.main" sx={{ fontWeight: 600 }}>
+									Individual secrets are encrypted and managed via the identity provider.
+								</Typography>
+							</Box>
+						) : (
+							<Grid container spacing={3}>
+								<Grid size={{ xs: 12, md: 6 }}>
+									<Typography variant="awsFieldLabel">
+										{mode === 'edit' ? 'Update Domain Password' : 'Initial Password'}
+									</Typography>
+									<TextField
+										fullWidth
+										size="small"
+										type={showPassword ? 'text' : 'password'}
+										value={formData.password}
+										onChange={(e) => handleChange('password', e.target.value)}
+										disabled={loading}
+										placeholder={mode === 'edit' ? "Enter only if updating" : "Complexity required"}
+										sx={inputSx}
+										InputProps={{
+											endAdornment: (
+												<InputAdornment position="end">
+													<IconButton onClick={() => setShowPassword(!showPassword)} size="small">
+														{showPassword ? <VisibilityOff /> : <Visibility />}
+													</IconButton>
+												</InputAdornment>
+											),
+										}}
+									/>
+								</Grid>
+								{(mode === 'add' || formData.password) && (
+									<Grid size={{ xs: 12, md: 6 }}>
+										<Typography variant="awsFieldLabel">Verify Lifecycle Credentials</Typography>
+										<TextField
+											fullWidth
+											size="small"
+											type={showConfirmPassword ? 'text' : 'password'}
+											value={formData.confirmPassword}
+											onChange={(e) => handleChange('confirmPassword', e.target.value)}
+											disabled={loading}
+											placeholder="Re-enter for verification"
+											sx={inputSx}
+											InputProps={{
+												endAdornment: (
+													<InputAdornment position="end">
+														<IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)} size="small">
+															{showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+														</IconButton>
+													</InputAdornment>
+												),
+											}}
+										/>
+									</Grid>
+								)}
+							</Grid>
+						)}
+					</Box>
+				</Box>
+			)
+		}
+	], [formData, loading, mode, isMobile, roles, user, theme, sectionTitle, fieldLabel]);
+
+	const getMode = () => {
+		if (mode === 'add') return 'create';
+		return mode;
 	};
 
 	return (
@@ -204,320 +412,25 @@ const UserDialog: React.FC<UserDialogProps> = ({
 			onClose={onClose}
 			maxWidth="md"
 			fullWidth
-			scroll="paper"
 			PaperProps={{
 				sx: {
 					borderRadius: 0,
 					boxShadow: 'none',
-					border: '1px solid #d5dbdb'
+					bgcolor: 'transparent'
 				}
 			}}
 		>
-			<DialogTitle sx={{ bgcolor: '#232f3e', color: '#ffffff', py: 2 }}>
-				<Stack direction="row" justifyContent="space-between" alignItems="center">
-					<Box>
-						<Typography variant="h6" sx={{ fontSize: '1.25rem', fontWeight: 700 }}>
-							{getTitle()}
-						</Typography>
-						<Typography variant="caption" sx={{ color: '#aab7b8' }}>
-							{mode === 'add' ? 'Create a new system user' :
-								mode === 'edit' ? `Modify settings for ${user?.username}` :
-									`Viewing details for ${user?.username}`}
-						</Typography>
-					</Box>
-					<IconButton onClick={onClose} sx={{ color: '#ffffff' }}>
-						<CloseIcon />
-					</IconButton>
-				</Stack>
-			</DialogTitle>
-
-			<DialogContent sx={{ p: 0, bgcolor: '#f2f3f3' }}>
-				{error && (
-					<Alert
-						severity="error"
-						sx={{
-							m: 3,
-							mb: 0,
-							borderRadius: 0,
-							borderLeft: '4px solid #d91d11',
-							bgcolor: '#fdf3f2'
-						}}
-					>
-						{error}
-					</Alert>
-				)}
-
-				<Box sx={{ p: 3 }}>
-					{mode === 'view' && user ? (
-						<Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, bgcolor: '#ffffff', p: 3, border: '1px solid #d5dbdb' }}>
-							<Box sx={{ gridColumn: 'span 2' }}>
-								<Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#232f3e', mb: 2 }}>
-									Account Information
-								</Typography>
-							</Box>
-							<AWSInfoRow label="Full Name" value={user.full_name} />
-							<AWSInfoRow label="Username" value={user.username} />
-							<AWSInfoRow label="Email Address" value={user.email} />
-							<AWSInfoRow label="WhatsApp Number" value={user.mobile} />
-							<AWSInfoRow
-								label="System Role"
-								value={
-									<Chip
-										label={formatRoleName(user.role)}
-										size="small"
-										sx={{
-											fontWeight: 700,
-											borderRadius: 0,
-											bgcolor:
-												user.role === 'admin' ? '#d91d11' :
-													user.role === 'manager' ? '#ec7211' :
-														user.role === 'trainer' ? '#116cc3' :
-															user.role === 'project_coordinator' ? '#8c31b4' :
-																user.role === 'developer' ? '#31b48c' : 
-																	user.role === 'marketing' ? '#007eb9' : '#68b266',
-											color: 'white',
-											fontSize: '0.65rem'
-										}}
-									/>
-								}
-							/>
-							<Box sx={{ gridColumn: 'span 2', mt: 2 }}>
-								<Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#232f3e', mb: 2 }}>
-									Status & Metadata
-								</Typography>
-							</Box>
-							<AWSInfoRow
-								label="Account Status"
-								value={
-									<Chip
-										label={user.is_active ? 'Active' : 'Inactive'}
-										size="small"
-										sx={{
-											fontWeight: 700,
-											borderRadius: 0,
-											bgcolor: user.is_active ? '#1d8102' : '#d91d11',
-											color: 'white',
-											fontSize: '0.65rem'
-										}}
-									/>
-								}
-							/>
-							<AWSInfoRow label="Email Verified" value={user.is_verified ? 'Yes' : 'No'} />
-							<AWSInfoRow label="Created On" value={formatDate(user.created_at)} />
-							<AWSInfoRow label="Last Modified" value={formatDate(user.updated_at)} />
-						</Box>
-					) : (
-						<Box sx={{ bgcolor: '#ffffff', p: 3, border: '1px solid #d5dbdb', display: 'flex', flexDirection: 'column', gap: 3 }}>
-							{/* Basic Info */}
-							<Box>
-								<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e', mb: 2, textTransform: 'uppercase' }}>
-									Basic Information
-								</Typography>
-								<Box sx={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 2 }}>
-									<Box>
-										<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 0.5 }}>Full Name</Typography>
-										<TextField
-											fullWidth
-											size="small"
-											value={formData.full_name}
-											onChange={(e) => handleChange('full_name', e.target.value)}
-											disabled={loading}
-											placeholder="e.g. John Doe"
-											sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-										/>
-									</Box>
-									<Box>
-										<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 0.5 }}>Username</Typography>
-										<TextField
-											fullWidth
-											size="small"
-											value={formData.username}
-											onChange={(e) => handleChange('username', e.target.value)}
-											disabled={loading}
-											placeholder="unique_username"
-											sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-										/>
-									</Box>
-									<Box sx={{ gridColumn: isMobile ? 'span 1' : 'span 2' }}>
-										<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 0.5 }}>Email Address</Typography>
-										<TextField
-											fullWidth
-											size="small"
-											value={formData.email}
-											onChange={(e) => handleChange('email', e.target.value)}
-											disabled={loading}
-											placeholder="user@example.com"
-											sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-										/>
-									</Box>
-									<Box sx={{ gridColumn: isMobile ? 'span 1' : 'span 2' }}>
-										<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 0.5 }}>WhatsApp Number (for Forward-to-CRM)</Typography>
-										<TextField
-											fullWidth
-											size="small"
-											value={formData.mobile}
-											onChange={(e) => handleChange('mobile', e.target.value)}
-											disabled={loading}
-											placeholder="e.g. 919876543210"
-											helperText="Enter in E.164 format (e.g. 91 followed by 10 digit number)"
-											sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-										/>
-									</Box>
-								</Box>
-							</Box>
-
-							<Divider />
-
-							{/* Role & Permissions */}
-							<Box>
-								<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e', mb: 2, textTransform: 'uppercase' }}>
-									Permissions & Status
-								</Typography>
-								<Box sx={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 2 }}>
-									<Box>
-										<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 0.5 }}>System Role</Typography>
-										<FormControl fullWidth size="small">
-											<Select
-												value={formData.role}
-												onChange={(e) => handleChange('role', e.target.value)}
-												disabled={loading}
-												sx={{ borderRadius: 0 }}
-											>
-												{roles.map((role) => (
-													<MenuItem key={role} value={role}>
-														{formatRoleName(role)}
-													</MenuItem>
-												))}
-											</Select>
-										</FormControl>
-									</Box>
-									{mode === 'edit' && (
-										<Box>
-											<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 0.5 }}>Account Status</Typography>
-											<FormControlLabel
-												control={
-													<Switch
-														checked={formData.is_active}
-														onChange={(e) => handleChange('is_active', e.target.checked)}
-														disabled={loading}
-													/>
-												}
-												label={formData.is_active ? 'Active' : 'Inactive'}
-												sx={{ ml: 0 }}
-											/>
-										</Box>
-									)}
-								</Box>
-							</Box>
-
-							<Divider />
-
-							{/* Password */}
-							<Box>
-								<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e', mb: 2, textTransform: 'uppercase' }}>
-									Security
-								</Typography>
-								<Box sx={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 2 }}>
-									<Box>
-										<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 0.5 }}>
-											{mode === 'edit' ? 'New Password (Optional)' : 'Password'}
-										</Typography>
-										<TextField
-											fullWidth
-											size="small"
-											type={showPassword ? 'text' : 'password'}
-											value={formData.password}
-											onChange={(e) => handleChange('password', e.target.value)}
-											disabled={loading}
-											placeholder={mode === 'edit' ? "Leave blank to keep current" : "Enter password"}
-											sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-											InputProps={{
-												endAdornment: (
-													<InputAdornment position="end">
-														<IconButton
-															aria-label="toggle password visibility"
-															onClick={() => setShowPassword(!showPassword)}
-															onMouseDown={(e) => e.preventDefault()}
-															edge="end"
-															size="small"
-														>
-															{showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-														</IconButton>
-													</InputAdornment>
-												),
-											}}
-										/>
-									</Box>
-									<Box>
-										{(mode === 'add' || formData.password) && (
-											<>
-												<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e', mb: 0.5 }}>Confirm Password</Typography>
-												<TextField
-													fullWidth
-													size="small"
-													type={showConfirmPassword ? 'text' : 'password'}
-													value={formData.confirmPassword}
-													onChange={(e) => handleChange('confirmPassword', e.target.value)}
-													disabled={loading}
-													placeholder="Re-enter password"
-													sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
-													InputProps={{
-														endAdornment: (
-															<InputAdornment position="end">
-																<IconButton
-																	aria-label="toggle confirm password visibility"
-																	onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-																	onMouseDown={(e) => e.preventDefault()}
-																	edge="end"
-																	size="small"
-																>
-																	{showConfirmPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-																</IconButton>
-															</InputAdornment>
-														),
-													}}
-												/>
-											</>
-										)}
-									</Box>
-								</Box>
-							</Box>
-						</Box>
-					)}
-				</Box>
-			</DialogContent>
-
-			<Divider sx={{ borderColor: '#d5dbdb' }} />
-
-			<DialogActions sx={{ p: 2, bgcolor: '#ffffff' }}>
-				<Button
-					onClick={onClose}
-					variant="text"
-					sx={{ color: '#545b64', fontWeight: 700, px: 3, textTransform: 'none' }}
-				>
-					{mode === 'view' ? 'Close' : 'Cancel'}
-				</Button>
-				{mode !== 'view' && (
-					<Button
-						onClick={handleSubmit}
-						variant="contained"
-						disabled={loading}
-						sx={{
-							bgcolor: '#ec7211',
-							color: '#ffffff',
-							px: 4,
-							fontWeight: 700,
-							borderRadius: '2px',
-							textTransform: 'none',
-							border: '1px solid #ec7211',
-							'&:hover': { bgcolor: '#eb5f07', borderColor: '#eb5f07' },
-							boxShadow: 'none'
-						}}
-					>
-						{loading ? <CircularProgress size={24} color="inherit" /> : (mode === 'add' ? 'Create User' : 'Save Changes')}
-					</Button>
-				)}
-			</DialogActions>
+				<EnterpriseForm
+					title={mode === 'add' ? 'Create Domain Identity' : mode === 'edit' ? 'Governance: User Context' : 'User Runtime Properties'}
+					subtitle={mode === 'add' ? 'Initialize a new system entity within the secure administrative perimeter' : `Infrastructure governance for: ${user?.username}`}
+					mode={getMode() as 'create' | 'edit' | 'view'}
+					steps={steps}
+					onSave={handleSubmit}
+					onCancel={onClose}
+					isSubmitting={loading}
+					saveButtonText={mode === 'add' ? 'Provision Account' : 'Commit Changes'}
+					error={error}
+				/>
 		</Dialog>
 	);
 };
