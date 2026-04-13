@@ -38,7 +38,10 @@ const CandidateList: React.FC = () => {
 		files_to_collect: 0,
 		candidates_fully_submitted: 0,
 		candidates_partially_submitted: 0,
-		candidates_not_submitted: 0
+		candidates_not_submitted: 0,
+		in_training: 0,
+		moved_to_placement: 0,
+		got_job: 0
 	};
 
 	const handleEditCandidate = (id: string) => {
