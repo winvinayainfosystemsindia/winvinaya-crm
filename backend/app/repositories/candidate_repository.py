@@ -728,6 +728,9 @@ class CandidateRepository(BaseRepository[Candidate]):
         from app.models.candidate_counseling import CandidateCounseling
         from app.models.candidate_screening import CandidateScreening
         from app.models.candidate_document import CandidateDocument
+        from app.models.training_candidate_allocation import TrainingCandidateAllocation
+        from app.models.training_batch import TrainingBatch
+        from app.models.placement_mapping import PlacementMapping
         
         try:
             # Helper to execute count query
@@ -870,6 +873,34 @@ class CandidateRepository(BaseRepository[Candidate]):
             docs_pending = docs_total - docs_completed
 
             weekly = await get_weekly_stats()
+
+            # New metrics for dashboard
+            # 1. In Training: count distinct candidates assigned to active batches who have not dropped out
+            stmt_training = select(func.count(func.distinct(TrainingCandidateAllocation.candidate_id))).join(
+                TrainingBatch, TrainingCandidateAllocation.batch_id == TrainingBatch.id
+            ).where(
+                and_(
+                    TrainingBatch.status.in_(['planned', 'running', 'extended']),
+                    TrainingCandidateAllocation.is_deleted == False,
+                    TrainingCandidateAllocation.is_dropout == False,
+                    TrainingBatch.is_deleted == False
+                )
+            )
+            result_training = await self.db.execute(stmt_training)
+            in_training_count = result_training.scalar() or 0
+
+            # 2. Moved to Placement: count distinct candidates in placement_mappings 
+            # (any candidate who has reached the placement stage)
+            stmt_moved_placement = select(func.count(func.distinct(PlacementMapping.candidate_id)))
+            result_moved_placement = await self.db.execute(stmt_moved_placement)
+            moved_to_placement_count = result_moved_placement.scalar() or 0
+
+            # 3. Got Job: count distinct candidates who have accepted offers or joined
+            stmt_got_job = select(func.count(func.distinct(PlacementMapping.candidate_id))).where(
+                PlacementMapping.status.in_(['offer_accepted', 'joined'])
+            )
+            result_got_job = await self.db.execute(stmt_got_job)
+            got_job_count = result_got_job.scalar() or 0
             
             return {
                 "total": total,
@@ -893,7 +924,10 @@ class CandidateRepository(BaseRepository[Candidate]):
                 "candidates_partially_submitted": candidates_partially_submitted,
                 "candidates_not_submitted": candidates_not_submitted,
                 "screening_distribution": screening_distribution,
-                "counseling_distribution": counseling_counts
+                "counseling_distribution": counseling_counts,
+                "in_training": in_training_count,
+                "moved_to_placement": moved_to_placement_count,
+                "got_job": got_job_count
             }
         except Exception as e:
             import traceback

@@ -280,6 +280,9 @@ export interface CandidateStats {
 	candidates_not_submitted: number;
 	screening_distribution?: Record<string, number>;
 	counseling_distribution?: Record<string, number>;
+	in_training: number;
+	moved_to_placement: number;
+	got_job: number;
 }
 
 export interface ScreeningStats {

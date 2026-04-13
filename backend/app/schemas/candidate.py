@@ -506,6 +506,9 @@ class CandidateStats(BaseModel):
     candidates_not_submitted: int = 0
     screening_distribution: dict = {}
     counseling_distribution: dict = {}
+    in_training: int = 0
+    moved_to_placement: int = 0
+    got_job: int = 0
 
 class ScreeningStats(BaseModel):
     not_screened: int

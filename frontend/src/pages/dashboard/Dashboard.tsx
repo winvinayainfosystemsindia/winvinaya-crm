@@ -2,9 +2,9 @@ import React, { useEffect } from 'react';
 import { Typography, Box } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import PeopleIcon from '@mui/icons-material/People';
-import WorkIcon from '@mui/icons-material/Work';
-import BusinessIcon from '@mui/icons-material/Business';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import SchoolIcon from '@mui/icons-material/School';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import StatCard from '../../components/common/StatCard';
 import RegistrationLinkModal from '../../components/dashboard/RegistrationLinkModal';
 import BIReport from '../../components/dashboard/BIReport';
@@ -39,7 +39,10 @@ const Dashboard: React.FC = () => {
 		files_to_collect: 0,
 		candidates_fully_submitted: 0,
 		candidates_partially_submitted: 0,
-		candidates_not_submitted: 0
+		candidates_not_submitted: 0,
+		in_training: 0,
+		moved_to_placement: 0,
+		got_job: 0
 	};
 
 	const currentStats = stats || defaultStats;
@@ -65,26 +68,26 @@ const Dashboard: React.FC = () => {
 				</Grid>
 				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
 					<StatCard
-						title="Active Interviews"
-						count="0"
-						subtitle="Ongoing recruitment drives"
-						icon={<WorkIcon />}
+						title="In Training"
+						count={(currentStats.in_training || 0).toLocaleString()}
+						subtitle="Candidates currently in batches"
+						icon={<SchoolIcon />}
 						color="#ed6c02"
 					/>
 				</Grid>
 				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
 					<StatCard
-						title="Partner Companies"
-						count="0"
-						subtitle="Registered corporate partners"
-						icon={<BusinessIcon />}
+						title="Moved to Placement"
+						count={(currentStats.moved_to_placement || 0).toLocaleString()}
+						subtitle="Candidates in pipeline"
+						icon={<TrendingUpIcon />}
 						color="#2e7d32"
 					/>
 				</Grid>
 				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
 					<StatCard
-						title="Total Placements"
-						count="0"
+						title="Got Job"
+						count={(currentStats.got_job || 0).toLocaleString()}
 						subtitle="Successfully placed"
 						icon={<CheckCircleIcon />}
 						color="#9c27b0"
