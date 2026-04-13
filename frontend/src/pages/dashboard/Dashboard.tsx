@@ -1,15 +1,15 @@
 import React, { useEffect } from 'react';
-import { Typography, Box } from '@mui/material';
+import { Box } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import PeopleIcon from '@mui/icons-material/People';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import SchoolIcon from '@mui/icons-material/School';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import StatCard from '../../components/common/StatCard';
-import RegistrationLinkModal from '../../components/dashboard/RegistrationLinkModal';
 import BIReport from '../../components/dashboard/BIReport';
 import ApiSpeedometer from '../../components/dashboard/ApiSpeedometer';
 import SystemHealthMonitor from '../../components/dashboard/SystemHealthMonitor';
+import WelcomeHeader from '../../components/dashboard/WelcomeHeader';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchCandidateStats } from '../../store/slices/candidateSlice';
 
@@ -51,12 +51,7 @@ const Dashboard: React.FC = () => {
 
 	return (
 		<Box component="main" sx={{ p: { xs: 1, sm: 0 } }}>
-			<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-				<Typography variant="h5" component="h1" sx={{ fontWeight: 600, color: '#16191f' }}>
-					Dashboard
-				</Typography>
-				<RegistrationLinkModal />
-			</Box>
+			<WelcomeHeader />
 
 			<Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mb: 4 }}>
 				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
