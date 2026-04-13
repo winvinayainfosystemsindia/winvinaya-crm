@@ -11,13 +11,16 @@ import {
 	FormControlLabel,
 	Radio,
 	RadioGroup,
-	TextField
+	TextField,
+	useTheme,
+	alpha
 } from '@mui/material';
-import { Close, FilterAlt } from '@mui/icons-material';
+import { Close, FilterAltOutlined } from '@mui/icons-material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
+import { awsStyles } from '../../theme/theme';
 
 // Types for filter configuration
 export interface FilterOption {
@@ -51,13 +54,27 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
 	onClearFilters,
 	onApplyFilters
 }) => {
+	const theme = useTheme();
+	const { awsPanel } = awsStyles;
+
+	// Theme-driven input styles
+	const inputSx = {
+		'& .MuiInputBase-root': {
+			borderRadius: `${(theme.shape.borderRadius as number) / 3}px`, // Aiming for that sharp '2px' console look
+			bgcolor: theme.palette.background.paper,
+		},
+		'& .MuiOutlinedInput-notchedOutline': { borderColor: theme.palette.divider },
+		'&:hover .MuiOutlinedInput-notchedOutline': { borderColor: alpha(theme.palette.text.primary, 0.4) },
+		'&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: theme.palette.accent.main }
+	};
+
 	// Calculate active filter count
 	const activeFilterCount = fields.reduce((count, field) => {
 		const value = activeFilters[field.key];
 		if (field.type === 'multi-select') {
 			return count + (Array.isArray(value) ? value.length : 0);
 		} else {
-			return count + (value ? 1 : 0);
+			return count + (value && value !== '' ? 1 : 0);
 		}
 	}, 0);
 
@@ -81,7 +98,12 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
 			PaperProps={{
 				sx: {
 					width: { xs: '100%', sm: 400 },
-					bgcolor: '#fafafa'
+					bgcolor: theme.palette.background.default,
+					color: theme.palette.text.primary,
+					display: 'flex',
+					flexDirection: 'column',
+					boxShadow: 'none',
+					borderLeft: `1px solid ${theme.palette.divider}`
 				}
 			}}
 		>
@@ -91,23 +113,32 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
 				display: 'flex',
 				justifyContent: 'space-between',
 				alignItems: 'center',
-				bgcolor: 'white',
-				borderBottom: '1px solid #d5dbdb'
+				bgcolor: theme.palette.background.paper,
+				borderBottom: `1px solid ${theme.palette.divider}`,
+				boxShadow: theme.shadows[1]
 			}}>
-				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-					<FilterAlt sx={{ color: 'primary.main' }} />
-					<Typography variant="h6" fontWeight="600">Filters</Typography>
+				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+					<FilterAltOutlined sx={{ color: theme.palette.text.secondary, fontSize: 20 }} />
+					<Typography variant="h6" sx={{ color: theme.palette.secondary.main, fontWeight: 700, fontSize: '1rem' }}>
+						Filters
+					</Typography>
 					{activeFilterCount > 0 && (
 						<Chip
 							label={`${activeFilterCount} active`}
 							size="small"
-							color="primary"
-							sx={{ height: 24, fontSize: '0.75rem' }}
+							sx={{ 
+								height: 18, 
+								fontSize: '0.65rem', 
+								bgcolor: theme.palette.accent.main,
+								color: 'white',
+								borderRadius: `${(theme.shape.borderRadius as number) / 3}px`,
+								fontWeight: 700
+							}}
 						/>
 					)}
 				</Box>
-				<IconButton onClick={onClose} size="small">
-					<Close />
+				<IconButton onClick={onClose} size="small" sx={{ color: theme.palette.text.secondary }}>
+					<Close fontSize="small" />
 				</IconButton>
 			</Box>
 
@@ -116,151 +147,185 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
 				flex: 1,
 				overflowY: 'auto',
 				p: 2.5,
-				height: '100%',
-				'overscrollBehavior': 'contain' // Prevents scroll leakage to background
+				'overscrollBehavior': 'contain'
 			}}>
 				{fields.map((field, index) => (
 					<Box
 						key={field.key}
 						sx={{
 							mb: index === fields.length - 1 ? 0 : 3,
-							bgcolor: 'white',
-							p: 2,
-							borderRadius: 1,
-							border: '1px solid #d5dbdb'
 						}}
 					>
-						<Typography variant="subtitle2" fontWeight="600" sx={{ mb: 1.5, color: 'text.primary' }}>
+						<Typography variant="awsSectionTitle" sx={{ mb: 1, fontSize: '0.85rem' }}>
 							{field.label}
 						</Typography>
 
-						{field.type === 'multi-select' ? (
-							field.options && field.options.length > 0 ? (
-								<Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, maxHeight: 200, overflow: 'auto' }}>
-									{field.options.map((option) => (
-										<FormControlLabel
-											key={option.value}
-											control={
-												<Checkbox
-													size="small"
-													checked={(activeFilters[field.key] || []).includes(option.value)}
-													onChange={() => handleMultiSelectChange(field.key, option.value)}
+						<Box sx={{
+							...awsPanel,
+							p: 0,
+							overflow: 'hidden',
+							bgcolor: theme.palette.background.paper,
+							borderColor: theme.palette.divider,
+							boxShadow: theme.shadows[1]
+						}}>
+							{field.type === 'multi-select' ? (
+								field.options && field.options.length > 0 ? (
+									<Box sx={{ display: 'flex', flexDirection: 'column', maxHeight: 300, overflow: 'auto' }}>
+										{field.options.map((option, optIdx) => (
+											<Box key={option.value} sx={{ 
+												px: 1.5,
+												borderBottom: optIdx === field.options!.length - 1 ? 0 : `1px solid ${theme.palette.divider}`,
+												'&:hover': { bgcolor: '#f1faff' }
+											}}>
+												<FormControlLabel
+													control={
+														<Checkbox
+															size="small"
+															checked={(activeFilters[field.key] || []).includes(option.value)}
+															onChange={() => handleMultiSelectChange(field.key, option.value)}
+															sx={{ color: theme.palette.divider, '&.Mui-checked': { color: theme.palette.accent.main } }}
+														/>
+													}
+													label={<Typography variant="body2" sx={{ fontSize: '0.85rem' }}>{option.label}</Typography>}
+													sx={{ width: '100%', m: 0, py: 0.5 }}
 												/>
-											}
-											label={option.label}
+											</Box>
+										))}
+									</Box>
+								) : (
+									<Box sx={{ p: 2 }}>
+										<Typography variant="body2" color="text.secondary">No options available</Typography>
+									</Box>
+								)
+							) : field.type === 'single-select' ? (
+								<RadioGroup
+									value={activeFilters[field.key] || ''}
+									onChange={(e) => handleSingleSelectChange(field.key, e.target.value)}
+									sx={{ display: 'flex', flexDirection: 'column' }}
+								>
+									<Box sx={{ 
+										px: 1.5,
+										borderBottom: `1px solid ${theme.palette.divider}`,
+										'&:hover': { bgcolor: '#f1faff' }
+									}}>
+										<FormControlLabel 
+											value="" 
+											control={<Radio size="small" sx={{ color: '#d5dbdb', '&.Mui-checked': { color: theme.palette.accent.main } }} />} 
+											label={<Typography variant="body2" sx={{ fontSize: '0.85rem' }}>All</Typography>}
+											sx={{ width: '100%', m: 0, py: 0.5 }}
 										/>
+									</Box>
+									{field.options && field.options.map((option, optIdx) => (
+										<Box key={option.value} sx={{ 
+											px: 1.5,
+											borderBottom: optIdx === field.options!.length - 1 ? 0 : `1px solid ${theme.palette.divider}`,
+											'&:hover': { bgcolor: '#f1faff' }
+										}}>
+											<FormControlLabel
+												value={option.value}
+												control={<Radio size="small" sx={{ color: theme.palette.divider, '&.Mui-checked': { color: theme.palette.accent.main } }} />}
+												label={<Typography variant="body2" sx={{ fontSize: '0.85rem' }}>{option.label}</Typography>}
+												sx={{ width: '100%', m: 0, py: 0.5 }}
+											/>
+										</Box>
 									))}
+								</RadioGroup>
+							) : field.type === 'range' ? (
+								<Box sx={{ p: 2, display: 'flex', gap: 1.5, alignItems: 'center' }}>
+									<TextField
+										label="Min"
+										size="small"
+										type="number"
+										value={(activeFilters[field.key] || {}).min || ''}
+										onChange={(e) => onFilterChange(field.key, { ...(activeFilters[field.key] || {}), min: e.target.value })}
+										sx={{ flex: 1, ...inputSx }}
+									/>
+									<Typography variant="body2" color="text.secondary">-</Typography>
+									<TextField
+										label="Max"
+										size="small"
+										type="number"
+										value={(activeFilters[field.key] || {}).max || ''}
+										onChange={(e) => onFilterChange(field.key, { ...(activeFilters[field.key] || {}), max: e.target.value })}
+										sx={{ flex: 1, ...inputSx }}
+									/>
+								</Box>
+							) : field.type === 'text' ? (
+								<Box sx={{ p: 1.5 }}>
+									<TextField
+										fullWidth
+										size="small"
+										placeholder={`Filter by ${field.label}...`}
+										value={activeFilters[field.key] || ''}
+										onChange={(e) => onFilterChange(field.key, e.target.value)}
+										autoFocus
+										sx={inputSx}
+									/>
+								</Box>
+							) : field.type === 'date' ? (
+								<Box sx={{ p: 1.5 }}>
+									<LocalizationProvider dateAdapter={AdapterDayjs}>
+										<DatePicker
+											label={field.label}
+											format="DD/MMM/YYYY"
+											value={activeFilters[field.key] ? dayjs(activeFilters[field.key]) : null}
+											onChange={(newValue) => onFilterChange(field.key, newValue ? newValue.format('YYYY-MM-DD') : null)}
+											slotProps={{
+												textField: {
+													size: 'small',
+													fullWidth: true,
+													sx: inputSx
+												}
+											}}
+										/>
+									</LocalizationProvider>
 								</Box>
 							) : (
-								<Typography variant="body2" color="text.secondary">No options available</Typography>
-							)
-						) : field.type === 'single-select' ? (
-							<RadioGroup
-								value={activeFilters[field.key] || ''}
-								onChange={(e) => handleSingleSelectChange(field.key, e.target.value)}
-							>
-								<FormControlLabel value="" control={<Radio size="small" />} label="All" />
-								{field.options && field.options.map((option) => (
+								<Box sx={{ px: 1.5, '&:hover': { bgcolor: '#f1faff' } }}>
 									<FormControlLabel
-										key={option.value}
-										value={option.value}
-										control={<Radio size="small" />}
-										label={option.label}
-									/>
-								))}
-							</RadioGroup>
-						) : field.type === 'range' ? (
-							<Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-								<TextField
-									label="Min"
-									size="small"
-									type="number"
-									value={(activeFilters[field.key] || {}).min || ''}
-									onChange={(e) => onFilterChange(field.key, { ...(activeFilters[field.key] || {}), min: e.target.value })}
-									InputProps={{ inputProps: { min: 0, max: 100 } }}
-									sx={{ flex: 1 }}
-								/>
-								<Typography>-</Typography>
-								<TextField
-									label="Max"
-									size="small"
-									type="number"
-									value={(activeFilters[field.key] || {}).max || ''}
-									onChange={(e) => onFilterChange(field.key, { ...(activeFilters[field.key] || {}), max: e.target.value })}
-									InputProps={{ inputProps: { min: 0, max: 100 } }}
-									sx={{ flex: 1 }}
-								/>
-							</Box>
-						) : field.type === 'text' ? (
-							<TextField
-								fullWidth
-								size="small"
-								placeholder={`Filter by ${field.label}...`}
-								value={activeFilters[field.key] || ''}
-								onChange={(e) => onFilterChange(field.key, e.target.value)}
-							/>
-						) : field.type === 'date' ? (
-							<LocalizationProvider dateAdapter={AdapterDayjs}>
-								<DatePicker
-									label={field.label}
-									format="DD/MMM/YYYY"
-									value={activeFilters[field.key] ? dayjs(activeFilters[field.key]) : null}
-									onChange={(newValue) => onFilterChange(field.key, newValue ? newValue.format('YYYY-MM-DD') : null)}
-									slotProps={{
-										textField: {
-											size: 'small',
-											fullWidth: true,
+										control={
+											<Checkbox
+												size="small"
+												checked={!!activeFilters[field.key]}
+												onChange={(e) => onFilterChange(field.key, e.target.checked)}
+												sx={{ color: '#d5dbdb', '&.Mui-checked': { color: theme.palette.accent.main } }}
+											/>
 										}
-									}}
-								/>
-							</LocalizationProvider>
-						) : (
-							<FormControlLabel
-								control={
-									<Checkbox
-										size="small"
-										checked={!!activeFilters[field.key]}
-										onChange={(e) => onFilterChange(field.key, e.target.checked)}
+										label={<Typography variant="body2" sx={{ fontSize: '0.85rem' }}>Enable {field.label}</Typography>}
+										sx={{ width: '100%', m: 0, py: 0.5 }}
 									/>
-								}
-								label={`Enable ${field.label}`}
-							/>
-						)}
+								</Box>
+							)}
+						</Box>
 					</Box>
 				))}
 			</Box>
 
-			{/* Footer with Apply & Clear buttons */}
-			<Divider />
-			<Box sx={{ p: 2.5, bgcolor: 'white', borderTop: '1px solid #d5dbdb', display: 'flex', gap: 2 }}>
+			{/* Footer */}
+			<Divider sx={{ borderColor: theme.palette.divider }} />
+			<Box sx={{ p: 2, bgcolor: theme.palette.background.paper, display: 'flex', gap: 1.5, justifyContent: 'flex-end', boxShadow: theme.shadows[1] }}>
 				<Button
-					variant="outlined"
-					fullWidth
+					variant="text"
 					onClick={onClearFilters}
 					sx={{
-						borderColor: '#d5dbdb',
-						color: 'text.secondary',
-						textTransform: 'none',
-						fontWeight: 600,
-						'&:hover': {
-							borderColor: '#aab7b8',
-							bgcolor: '#f5f8fa'
-						}
+						color: theme.palette.text.secondary,
+						px: 2,
+						'&:hover': { bgcolor: alpha(theme.palette.secondary.light, 0.05) }
 					}}
 				>
 					Clear All
 				</Button>
 				<Button
 					variant="contained"
-					fullWidth
 					onClick={onApplyFilters}
 					sx={{
-						bgcolor: '#ec7211',
+						bgcolor: theme.palette.accent.main,
 						color: 'white',
-						textTransform: 'none',
-						fontWeight: 600,
+						px: 3,
+						boxShadow: '0 1px 2px 0 rgba(0,0,0,0.1)',
 						'&:hover': {
-							bgcolor: '#eb5f07'
+							bgcolor: theme.palette.accent.dark,
+							boxShadow: '0 2px 4px 0 rgba(0,0,0,0.2)'
 						}
 					}}
 				>
