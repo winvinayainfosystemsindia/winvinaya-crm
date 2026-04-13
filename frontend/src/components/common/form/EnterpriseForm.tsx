@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { Box, Paper, useTheme } from '@mui/material';
+import { Box, Paper, useTheme, Fade, Slide, alpha, Alert, Collapse } from '@mui/material';
 import EnterpriseFormHeader, { type FormStep } from './EnterpriseFormHeader';
 import EnterpriseFormFooter from './EnterpriseFormFooter';
-import { awsStyles } from '../../../theme/theme';
 
 interface EnterpriseFormProps {
 	title: string;
@@ -13,12 +12,13 @@ interface EnterpriseFormProps {
 	onCancel: () => void;
 	isSubmitting?: boolean;
 	saveButtonText?: string;
+	error?: string | null;
 }
 
 /**
  * EnterpriseForm Component.
- * A premium, multi-step layout for creating, editing, and viewing entities.
- * Features a guided Stepper, sticky Header/Footer, and strict theme alignment.
+ * A high-precision, multi-step layout for enterprise management consoles.
+ * Synchronized with theme tokens for a professional "Enterprise Outcome".
  */
 const EnterpriseForm: React.FC<EnterpriseFormProps> = ({
 	title,
@@ -28,26 +28,30 @@ const EnterpriseForm: React.FC<EnterpriseFormProps> = ({
 	onSave,
 	onCancel,
 	isSubmitting = false,
-	saveButtonText
+	saveButtonText,
+	error
 }) => {
 	const theme = useTheme();
 	const [activeStep, setActiveStep] = useState(0);
+	const [direction, setDirection] = useState<'left' | 'right'>('left');
 
 	const handleNext = () => {
 		if (activeStep < steps.length - 1) {
+			setDirection('left');
 			setActiveStep(prev => prev + 1);
 		}
 	};
 
 	const handleBack = () => {
 		if (activeStep > 0) {
+			setDirection('right');
 			setActiveStep(prev => prev - 1);
 		}
 	};
 
 	const handleStepClick = (step: number) => {
-		// Allow free navigation in View mode; restricted to backward or completed steps in others
 		if (mode === 'view' || step < activeStep) {
+			setDirection(step > activeStep ? 'left' : 'right');
 			setActiveStep(step);
 		}
 	};
@@ -56,15 +60,16 @@ const EnterpriseForm: React.FC<EnterpriseFormProps> = ({
 
 	return (
 		<Paper elevation={0} sx={{
-			...awsStyles.awsPanel,
 			display: 'flex',
 			flexDirection: 'column',
-			minHeight: { xs: 'calc(100vh - 100px)', md: '600px' },
-			maxHeight: 'calc(100vh - 32px)',
+			minHeight: { xs: 'calc(100vh - 100px)', md: '620px' },
+			maxHeight: 'calc(100vh - 40px)',
 			overflow: 'hidden',
-			borderRadius: `${theme.shape.borderRadius}px`,
+			borderRadius: '4px', // Enterprise standard precision
 			border: `1px solid ${theme.palette.divider}`,
-			bgcolor: theme.palette.background.paper
+			bgcolor: theme.palette.background.paper,
+			boxShadow: theme.shadows[3],
+			transition: 'all 0.2s ease-in-out'
 		}}>
 			<EnterpriseFormHeader
 				title={title}
@@ -73,17 +78,46 @@ const EnterpriseForm: React.FC<EnterpriseFormProps> = ({
 				activeStep={activeStep}
 				steps={steps}
 				onStepClick={handleStepClick}
+				onClose={onCancel}
 			/>
 
 			<Box sx={{
 				flex: 1,
-				p: { xs: 2.5, md: 4, lg: 6 },
+				p: { xs: 3, md: 5, lg: 6 },
 				overflowY: 'auto',
-				bgcolor: theme.palette.background.paper
+				overflowX: 'hidden',
+				bgcolor: alpha(theme.palette.background.default, 0.4),
+				position: 'relative'
 			}}>
 				{/* Step Content Container */}
-				<Box sx={{ maxWidth: '1000px', mx: 'auto' }}>
-					{steps[activeStep].content}
+				<Box sx={{ maxWidth: '1000px', mx: 'auto', position: 'relative' }}>
+					<Collapse in={!!error}>
+						{error && (
+							<Alert 
+								severity="error" 
+								sx={{ 
+									mb: 4, 
+									borderRadius: '4px',
+									border: `1px solid ${alpha(theme.palette.error.main, 0.2)}`,
+									bgcolor: alpha(theme.palette.error.main, 0.02),
+									'& .MuiAlert-message': { fontWeight: 600 }
+								}}
+							>
+								{error}
+							</Alert>
+						)}
+					</Collapse>
+					{steps.map((step, index) => (
+						index === activeStep && (
+							<Fade in key={index} timeout={300}>
+								<Slide direction={direction === 'left' ? 'left' : 'right'} in={index === activeStep} mountOnEnter unmountOnExit timeout={300}>
+									<Box>
+										{step.content}
+									</Box>
+								</Slide>
+							</Fade>
+						)
+					))}
 				</Box>
 			</Box>
 

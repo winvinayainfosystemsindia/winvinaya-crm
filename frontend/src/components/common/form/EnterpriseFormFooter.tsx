@@ -4,7 +4,8 @@ import {
 	Button,
 	Typography,
 	useTheme,
-	alpha
+	alpha,
+	CircularProgress
 } from '@mui/material';
 import { NavigateBefore, NavigateNext, Save } from '@mui/icons-material';
 
@@ -22,7 +23,7 @@ interface EnterpriseFormFooterProps {
 
 /**
  * Standard Footer for EnterpriseForm.
- * Provides sticky navigation buttons and primary action triggers.
+ * Features theme-synced navigation and professional console interactions.
  */
 const EnterpriseFormFooter: React.FC<EnterpriseFormFooterProps> = ({
 	activeStep,
@@ -38,11 +39,17 @@ const EnterpriseFormFooter: React.FC<EnterpriseFormFooterProps> = ({
 	const theme = useTheme();
 	const isLastStep = activeStep === totalSteps - 1;
 
+	// Use accent from palette if available (via cast to avoid isolation issues in tsc)
+	const accentColor = (theme.palette as any).accent?.main || theme.palette.primary.main;
+	const accentDark = (theme.palette as any).accent?.dark || theme.palette.primary.dark;
+
 	return (
 		<Box sx={{
-			p: { xs: 2, md: 3 },
+			p: { xs: 2, md: 2.5 },
+			px: { xs: 3, md: 4 },
 			borderTop: `1px solid ${theme.palette.divider}`,
-			bgcolor: theme.palette.background.default,
+			bgcolor: alpha(theme.palette.background.paper, 0.95),
+			backdropFilter: 'blur(8px)',
 			display: 'flex',
 			justifyContent: 'space-between',
 			alignItems: 'center',
@@ -56,8 +63,10 @@ const EnterpriseFormFooter: React.FC<EnterpriseFormFooterProps> = ({
 				sx={{
 					textTransform: 'none',
 					fontWeight: 600,
+					px: 3,
 					color: theme.palette.text.secondary,
 					borderColor: theme.palette.divider,
+					borderRadius: '4px', // Enterprise precision
 					'&:hover': {
 						borderColor: theme.palette.text.primary,
 						bgcolor: alpha(theme.palette.text.primary, 0.05)
@@ -67,10 +76,10 @@ const EnterpriseFormFooter: React.FC<EnterpriseFormFooterProps> = ({
 				{mode === 'view' ? 'Close' : 'Cancel'}
 			</Button>
 
-			<Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+			<Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
 				{totalSteps > 1 && (
-					<Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-						Step {activeStep + 1} of {totalSteps}
+					<Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: '0.02em' }}>
+						STEP {activeStep + 1} OF {totalSteps}
 					</Typography>
 				)}
 
@@ -83,7 +92,10 @@ const EnterpriseFormFooter: React.FC<EnterpriseFormFooterProps> = ({
 							sx={{
 								textTransform: 'none',
 								fontWeight: 600,
-								borderRadius: '2px'
+								borderRadius: '4px',
+								px: 2,
+								color: theme.palette.text.primary,
+								borderColor: theme.palette.divider
 							}}
 						>
 							Back
@@ -94,16 +106,19 @@ const EnterpriseFormFooter: React.FC<EnterpriseFormFooterProps> = ({
 						isLastStep ? (
 							<Button
 								variant="contained"
-								startIcon={<Save />}
+								startIcon={isSubmitting ? <CircularProgress size={16} color="inherit" /> : <Save />}
 								onClick={onSave}
 								disabled={isSubmitting}
 								sx={{
 									textTransform: 'none',
 									fontWeight: 700,
-									borderRadius: '2px',
-									bgcolor: theme.palette.accent.main,
+									borderRadius: '4px',
+									px: 4,
+									bgcolor: accentColor,
+									boxShadow: 'none',
 									'&:hover': {
-										bgcolor: theme.palette.accent.dark
+										bgcolor: accentDark,
+										boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
 									}
 								}}
 							>
@@ -117,8 +132,14 @@ const EnterpriseFormFooter: React.FC<EnterpriseFormFooterProps> = ({
 								sx={{
 									textTransform: 'none',
 									fontWeight: 700,
-									borderRadius: '2px',
-									bgcolor: theme.palette.primary.main
+									borderRadius: '4px',
+									px: 3,
+									bgcolor: theme.palette.primary.main,
+									boxShadow: 'none',
+									'&:hover': {
+										bgcolor: theme.palette.primary.dark,
+										boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+									}
 								}}
 							>
 								Next Step
