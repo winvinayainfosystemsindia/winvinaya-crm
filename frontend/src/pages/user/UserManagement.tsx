@@ -5,19 +5,15 @@ import {
 	Typography,
 	Snackbar,
 	Alert,
-	Dialog,
-	DialogTitle,
-	DialogContent,
-	DialogActions,
-	Button,
-	IconButton
+	Button
 } from '@mui/material';
-import { Close as CloseIcon, Warning as WarningIcon, Add } from '@mui/icons-material';
+import { Add } from '@mui/icons-material';
 import { useAppSelector } from '../../store/hooks';
 import userService from '../../services/userService';
 import UserStatCards from '../../components/users/UserStatCards';
 import UserTable from '../../components/users/UserTable';
 import UserDialog from '../../components/users/UserDialog';
+import { ConfirmationDialog } from '../../components/common/dialogbox';
 import type { User } from '../../models/user';
 
 const UserManagement: React.FC = () => {
@@ -107,11 +103,11 @@ const UserManagement: React.FC = () => {
 		<Box component="main" sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
 			<Container maxWidth="xl" sx={{ py: 3 }}>
 				{/* Page Header */}
-				<Box sx={{ 
-					display: 'flex', 
-					justifyContent: 'space-between', 
+				<Box sx={{
+					display: 'flex',
+					justifyContent: 'space-between',
 					alignItems: 'flex-start',
-					mb: 3 
+					mb: 3
 				}}>
 					<Box>
 						<Typography
@@ -185,70 +181,18 @@ const UserManagement: React.FC = () => {
 				/>
 
 				{/* Delete Confirmation Dialog */}
-				<Dialog
+				<ConfirmationDialog
 					open={deleteDialogOpen}
 					onClose={handleCancelDelete}
-					maxWidth="sm"
-					fullWidth
-					PaperProps={{
-						sx: {
-							borderRadius: 0,
-							border: '1px solid #d5dbdb',
-							boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
-						}
-					}}
-				>
-					<DialogTitle sx={{ bgcolor: '#ffffff', color: '#232f3e', py: 2, borderBottom: '1px solid #d5dbdb' }}>
-						<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-							<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-								<WarningIcon sx={{ color: '#d91d11' }} />
-								<Typography variant="h6" sx={{ fontSize: '1.1rem', fontWeight: 700 }}>
-									Delete User
-								</Typography>
-							</Box>
-							<IconButton onClick={handleCancelDelete} size="small">
-								<CloseIcon />
-							</IconButton>
-						</Box>
-					</DialogTitle>
-					<DialogContent sx={{ p: 3, bgcolor: '#ffffff' }}>
-						<Typography variant="body1" sx={{ color: '#232f3e', mb: 1 }}>
-							Are you sure you want to delete user <strong>{userToDelete?.username}</strong>?
-						</Typography>
-						<Typography variant="body2" sx={{ color: '#545b64' }}>
-							This action is permanent and cannot be undone. The user will no longer be able to access the system.
-						</Typography>
-					</DialogContent>
-					<DialogActions sx={{ p: 2, bgcolor: '#f2f3f3', borderTop: '1px solid #d5dbdb' }}>
-						<Button
-							onClick={handleCancelDelete}
-							sx={{
-								textTransform: 'none',
-								fontWeight: 700,
-								color: '#545b64',
-								borderColor: '#d5dbdb',
-								'&:hover': { bgcolor: '#ffffff' }
-							}}
-							variant="outlined"
-						>
-							Cancel
-						</Button>
-						<Button
-							onClick={handleConfirmDelete}
-							sx={{
-								textTransform: 'none',
-								fontWeight: 700,
-								bgcolor: '#d91d11',
-								color: 'white',
-								'&:hover': { bgcolor: '#c3190e' }
-							}}
-							variant="contained"
-							autoFocus
-						>
-							Delete
-						</Button>
-					</DialogActions>
-				</Dialog>
+					onConfirm={handleConfirmDelete}
+					title="Delete User"
+					subtitle="Irreversible Governance Action"
+					message={`Are you sure you want to delete user ${userToDelete?.username}? This action is permanent and cannot be undone.`}
+					confirmLabel="Delete User"
+					cancelLabel="Cancel"
+					severity="error"
+					loading={false}
+				/>
 
 				{/* Global Snackbar */}
 				<Snackbar
