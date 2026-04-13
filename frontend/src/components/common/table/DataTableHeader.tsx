@@ -6,7 +6,8 @@ import {
 	InputAdornment,
 	Badge,
 	useTheme,
-	Tooltip
+	Tooltip,
+	alpha
 } from '@mui/material';
 import { Search, FilterList, Refresh, Add } from '@mui/icons-material';
 
@@ -46,8 +47,8 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = memo(({
 			flexDirection: { xs: 'column', sm: 'row' },
 			justifyContent: 'space-between',
 			alignItems: { xs: 'stretch', sm: 'center' },
-			borderBottom: '1px solid #d5dbdb',
-			bgcolor: '#fafafa',
+			borderBottom: `1px solid ${theme.palette.divider}`,
+			// bgcolor: theme.palette.background.default,
 			gap: 2
 		}}>
 			<Box sx={{ display: 'flex', flex: 1, gap: 2, alignItems: 'center' }}>
@@ -61,9 +62,9 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = memo(({
 						sx={{
 							maxWidth: { xs: '100%', sm: '350px' },
 							'& .MuiOutlinedInput-root': {
-								bgcolor: 'white',
-								'& fieldset': { borderColor: '#d5dbdb' },
-								'&:hover fieldset': { borderColor: theme.palette.primary.main },
+								bgcolor: theme.palette.background.paper,
+								'& fieldset': { borderColor: theme.palette.divider },
+								'&:hover fieldset': { borderColor: theme.palette.accent.main },
 							}
 						}}
 						InputProps={{
@@ -89,11 +90,11 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = memo(({
 								disabled={loading}
 								sx={{
 									textTransform: 'none',
-									color: '#232f3e',
-									borderColor: '#d5dbdb',
+									color: theme.palette.text.primary,
+									borderColor: theme.palette.divider,
 									'&:hover': {
-										borderColor: '#232f3e',
-										bgcolor: '#f5f8fa'
+										borderColor: theme.palette.text.primary,
+										bgcolor: alpha(theme.palette.primary.main, 0.05)
 									}
 								}}
 							>
@@ -110,11 +111,11 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = memo(({
 								onClick={onFilterOpen}
 								sx={{
 									textTransform: 'none',
-									color: '#232f3e',
-									borderColor: '#d5dbdb',
+									color: theme.palette.text.primary,
+									borderColor: theme.palette.divider,
 									'&:hover': {
-										borderColor: '#232f3e',
-										bgcolor: '#f5f8fa'
+										borderColor: theme.palette.text.primary,
+										bgcolor: alpha(theme.palette.primary.main, 0.05)
 									}
 								}}
 							>
@@ -130,12 +131,12 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = memo(({
 						startIcon={<Add />}
 						onClick={onCreateClick}
 						sx={{
-							bgcolor: '#ec7211',
+							bgcolor: theme.palette.accent.main,
 							color: 'white',
 							textTransform: 'none',
 							fontWeight: 600,
 							'&:hover': {
-								bgcolor: '#eb5f07',
+								bgcolor: theme.palette.accent.dark,
 							}
 						}}
 					>

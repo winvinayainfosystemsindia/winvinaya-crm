@@ -9,7 +9,8 @@ import {
 	TableRow,
 	TableSortLabel,
 	Typography,
-	Skeleton
+	Skeleton,
+	useTheme
 } from '@mui/material';
 import CustomTablePagination from '../CustomTablePagination';
 import DataTableHeader from './DataTableHeader';
@@ -64,10 +65,16 @@ const DataTable = <T,>({
 	emptyMessage = 'No records found',
 	renderRow
 }: DataTableProps<T>) => {
+	const theme = useTheme();
 	const visibleColumns = columns.filter(col => !col.hidden);
 
 	return (
-		<Paper sx={{ border: '1px solid #d5dbdb', boxShadow: 'none', borderRadius: '8px', overflow: 'hidden' }}>
+		<Paper sx={{ 
+			border: `1px solid ${theme.palette.divider}`, 
+			boxShadow: 'none', 
+			borderRadius: `${theme.shape.borderRadius}px`, 
+			overflow: 'hidden' 
+		}}>
 			<DataTableHeader
 				searchTerm={searchTerm}
 				onSearchChange={onSearchChange}
@@ -85,18 +92,21 @@ const DataTable = <T,>({
 			<TableContainer>
 				<Table sx={{ minWidth: 650 }}>
 					<TableHead>
-						<TableRow sx={{ bgcolor: '#fafafa' }}>
+						<TableRow sx={{ bgcolor: theme.palette.background.default }}>
 							{visibleColumns.map((column) => (
 								<TableCell
 									key={String(column.id)}
 									align={column.align || 'left'}
 									style={{ width: column.width }}
 									sx={{
-										fontWeight: 600,
-										color: '#545b64',
+										fontWeight: 700,
+										color: theme.palette.text.secondary,
 										whiteSpace: 'nowrap',
-										fontSize: '0.8125rem',
-										borderBottom: '2px solid #d5dbdb'
+										fontSize: '0.75rem',
+										textTransform: 'uppercase',
+										letterSpacing: '0.05em',
+										borderBottom: `2px solid ${theme.palette.divider}`,
+										py: 1.5
 									}}
 								>
 									{column.sortable && onSortRequest ? (
@@ -105,7 +115,10 @@ const DataTable = <T,>({
 											direction={orderBy === column.id ? order : 'asc'}
 											onClick={() => onSortRequest(column.id as keyof T)}
 											sx={{
-												'&.Mui-active': { fontWeight: 700 },
+												'&.Mui-active': { 
+													fontWeight: 800,
+													color: theme.palette.text.primary
+												},
 												'& .MuiTableSortLabel-icon': { fontSize: 16 }
 											}}
 										>

@@ -7,7 +7,8 @@ import {
 	Select,
 	MenuItem,
 	useTheme,
-	useMediaQuery
+	useMediaQuery,
+	alpha
 } from '@mui/material';
 
 interface CustomTablePaginationProps {
@@ -38,11 +39,11 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
 			alignItems: 'center',
 			p: { xs: 1.5, sm: 2 },
 			gap: { xs: 1.5, sm: 2 },
-			bgcolor: '#f8fafc',
-			borderTop: '1px solid #e5e7eb'
+			bgcolor: theme.palette.background.default,
+			borderTop: `1px solid ${theme.palette.divider}`
 		}}>
 			<Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 2 }}>
-				<Typography variant="caption" sx={{ fontWeight: 600, color: '#64748b' }}>
+				<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.text.secondary, letterSpacing: '0.05em' }}>
 					Rows per page:
 				</Typography>
 				<FormControl size="small">
@@ -52,12 +53,12 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
 						sx={{
 							height: '28px',
 							fontSize: '0.75rem',
-							bgcolor: 'white',
+							bgcolor: theme.palette.background.paper,
 							'& .MuiOutlinedInput-notchedOutline': {
-								borderColor: '#e2e8f0',
+								borderColor: theme.palette.divider,
 							},
 							'&:hover .MuiOutlinedInput-notchedOutline': {
-								borderColor: '#cbd5e1',
+								borderColor: alpha(theme.palette.text.primary, 0.4),
 							}
 						}}
 					>
@@ -79,7 +80,7 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
 				onRowsPerPageChange={onRowsPerPageChange}
 				rowsPerPageOptions={[]}
 				labelDisplayedRows={({ from, to, count }) => (
-					<Typography variant="caption" sx={{ fontWeight: 600, color: '#64748b' }}>
+					<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.text.secondary }}>
 						{isMobile ? `${from}-${to} of ${count}` : `Showing ${from} to ${to} of ${count} records`}
 					</Typography>
 				)}
@@ -96,8 +97,8 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
 						marginLeft: { xs: 1, sm: 2 },
 						'& .MuiIconButton-root': {
 							padding: '4px',
-							color: '#ec7211',
-							'&.Mui-disabled': { color: '#e2e8f0' }
+							color: theme.palette.accent.main,
+							'&.Mui-disabled': { color: theme.palette.divider }
 						}
 					},
 					'.MuiTablePagination-selectLabel, .MuiTablePagination-input': {

@@ -6,7 +6,8 @@ import {
 	ListItemIcon,
 	ListItemText,
 	Tooltip,
-	Typography
+	Typography,
+	useTheme
 } from '@mui/material';
 import { MoreVert } from '@mui/icons-material';
 
@@ -33,6 +34,7 @@ const DataTableActions = <T,>({
 	tooltipTitle = 'Actions',
 	menuId = 'data-table-actions-menu'
 }: DataTableActionsProps<T>) => {
+	const theme = useTheme();
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const open = Boolean(anchorEl);
 
@@ -79,7 +81,7 @@ const DataTableActions = <T,>({
 					elevation: 2,
 					sx: {
 						minWidth: 160,
-						border: '1px solid #d5dbdb',
+						border: `1px solid ${theme.palette.divider}`,
 						'& .MuiMenuItem-root': {
 							px: 1.5,
 							py: 1,
