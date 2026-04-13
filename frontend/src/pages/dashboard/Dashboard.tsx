@@ -8,6 +8,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import StatCard from '../../components/common/StatCard';
 import RegistrationLinkModal from '../../components/dashboard/RegistrationLinkModal';
 import BIReport from '../../components/dashboard/BIReport';
+import ApiSpeedometer from '../../components/dashboard/ApiSpeedometer';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchCandidateStats } from '../../store/slices/candidateSlice';
 
@@ -96,7 +97,14 @@ const Dashboard: React.FC = () => {
 			</Grid>
 
 
-			<BIReport />
+			<Grid container spacing={3}>
+				<Grid size={{ xs: 12, lg: 9 }}>
+					<BIReport />
+				</Grid>
+				<Grid size={{ xs: 12, lg: 3 }}>
+					<ApiSpeedometer />
+				</Grid>
+			</Grid>
 		</Box>
 	);
 };
