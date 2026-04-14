@@ -23,8 +23,13 @@ import { topNavigation, bottomNavigation } from '../../config/navigation';
 import type { NavigationItem } from '../../config/navigation';
 
 const DRAWER_WIDTH = 260;
-const COLLAPSED_WIDTH = 60;
+const COLLAPSED_WIDTH = 64; // Standardized slightly wider for icon centering
+const NAVBAR_HEIGHT = 48; // Matches 'dense' Toolbar height
 
+/**
+ * Enterprise Sidebar - Modern Console Navigation
+ * strictly aligned with theme tokens and topography variants.
+ */
 const Sidebar: React.FC = () => {
 	const navigate = useNavigate();
 	const location = useLocation();
@@ -60,13 +65,10 @@ const Sidebar: React.FC = () => {
 			return location.pathname + location.search === path;
 		}
 
-		// Special handling for All Candidates to avoid highlighting when on sibling routes
-		// Special handling for Projects to avoid highlighting when on sibling routes
 		if (path === '/projects') {
 			if (location.pathname === path) return true;
 			if (location.pathname.startsWith(path + '/')) {
 				const subPath = location.pathname.substring(path.length);
-				// Don't highlight "Projects" if we are on these specific sibling routes
 				if (subPath.startsWith('/activities') ||
 					subPath.startsWith('/dsr') ||
 					subPath.startsWith('/timesheet')) {
@@ -81,7 +83,6 @@ const Sidebar: React.FC = () => {
 			if (location.pathname === path) return true;
 			if (location.pathname.startsWith(path + '/')) {
 				const subPath = location.pathname.substring(path.length);
-				// Don't highlight "All Candidates" if we are on these specific sibling routes
 				if (subPath.startsWith('/screening') ||
 					subPath.startsWith('/counseling') ||
 					subPath.startsWith('/documents')) {
@@ -105,13 +106,11 @@ const Sidebar: React.FC = () => {
 	const toggleGroup = (label: string) => {
 		setExpandedGroups(prev => {
 			const isCurrentlyExpanded = prev[label];
-			// Collapse all first
 			const newState = Object.keys(prev).reduce((acc, key) => {
 				acc[key] = false;
 				return acc;
 			}, {} as Record<string, boolean>);
 
-			// If the clicked one was closed, expand it
 			if (!isCurrentlyExpanded) {
 				newState[label] = true;
 			}
@@ -120,30 +119,21 @@ const Sidebar: React.FC = () => {
 	};
 
 	const hasPermission = (item: NavigationItem): boolean => {
-		// Admin always has access to everything
 		if (user?.role === 'admin') return true;
-
-		// Check if the item itself has roles
 		const hasDirectPermission = !item.roles || (user?.role && item.roles.includes(user.role));
 
 		if (item.children) {
-			// A group is visible if its own roles match (if provided)
-			// AND it has at least one child with permission
 			const hasVisibleChildren = item.children.some(child => hasPermission(child));
-			
-			// If group has specific roles, user must match AND have a visible child
 			if (item.roles) {
 				return !!hasDirectPermission && hasVisibleChildren;
 			}
-			
-			// If group has no roles, it's visible if it has at least one visible child
 			return hasVisibleChildren;
 		}
 
 		return !!hasDirectPermission;
 	};
 
-	const NavItem = ({ item, depth = 0 }: { item: NavigationItem; depth?: number }) => {
+	const NavItem = ({ item }: { item: NavigationItem }) => {
 		if (!hasPermission(item)) return null;
 
 		const active = isActive(item.path);
@@ -154,30 +144,30 @@ const Sidebar: React.FC = () => {
 				onClick={() => item.path && handleNavigate(item.path)}
 				selected={active}
 				sx={{
-					minHeight: 40,
-					p: 0,
-					pl: open ? (depth * 2 + 2) : 0,
-					pr: open ? 2 : 0,
-					width: '100%',
+					minHeight: 44,
+					px: open ? 2 : 0,
+					py: 0,
+					mx: open ? 1 : 0.5, // Floating block effect
+					width: 'auto',
+					borderRadius: 1, // Enterprise 8px (approx)
 					justifyContent: open ? 'initial' : 'center',
-					borderLeft: active ? `4px solid ${theme.palette.accent.main}` : '4px solid transparent',
-					transition: theme => theme.transitions.create(['background-color', 'border-left-color', 'padding'], {
-						duration: theme.transitions.duration.standard,
-					}),
+					transition: theme.transitions.create(['background-color', 'color', 'margin']),
+					
 					'&.Mui-selected': {
-						bgcolor: alpha(theme.palette.accent.main, 0.12),
+						bgcolor: 'primary.main',
 						'&:hover': {
-							bgcolor: alpha(theme.palette.accent.main, 0.18),
+							bgcolor: 'primary.dark',
 						},
 						'& .MuiListItemText-primary': {
-							color: theme.palette.accent.main,
+							color: 'common.white',
+							fontWeight: 800,
 						},
 						'& .MuiListItemIcon-root': {
-							color: theme.palette.accent.main,
+							color: 'common.white',
 						},
 					},
 					'&:hover': {
-						bgcolor: alpha(theme.palette.common.white, 0.05),
+						bgcolor: alpha(theme.palette.action.hover, 0.12),
 					},
 				}}
 			>
@@ -187,61 +177,43 @@ const Sidebar: React.FC = () => {
 							minWidth: 0,
 							mr: open ? 1.5 : 0,
 							justifyContent: 'center',
-							color: active ? theme.palette.accent.main : theme.palette.text.secondary,
-							transition: theme => theme.transitions.create(['margin', 'color'], {
-								duration: theme.transitions.duration.standard,
-							}),
+							color: active ? 'common.white' : alpha(theme.palette.common.white, 0.5),
+							transition: theme.transitions.create(['color', 'margin']),
 						}}
 					>
-						<Icon sx={{ fontSize: '1.2rem' }} />
+						<Icon sx={{ fontSize: '1.25rem' }} />
 					</ListItemIcon>
 				)}
-				<Box
+				<ListItemText
+					primary={item.label}
 					sx={{
 						opacity: open ? 1 : 0,
-						width: open ? 'auto' : 0,
-						transform: open ? 'translateX(0)' : 'translateX(-10px)',
-						transition: theme => theme.transitions.create(['opacity', 'width', 'transform'], {
-							duration: theme.transitions.duration.standard,
-							easing: theme.transitions.easing.sharp,
-						}),
-						overflow: 'hidden',
-						flexGrow: 1,
-						display: open ? 'flex' : 'none',
-						alignItems: 'center',
+						display: open ? 'block' : 'none',
+						m: 0,
+						'& .MuiListItemText-primary': {
+							...theme.typography[active ? 'sidebarActive' : 'sidebarItem'],
+							color: active ? 'common.white' : alpha(theme.palette.common.white, 0.7),
+							whiteSpace: 'nowrap',
+							overflow: 'hidden',
+							textOverflow: 'ellipsis',
+						}
 					}}
-				>
-					<ListItemText
-						primary={item.label}
-						primaryTypographyProps={{ 
-							variant: active ? "sidebarActive" : "sidebarItem" 
-						}}
-						sx={{
-							m: 0,
-							'& .MuiListItemText-primary': {
-								color: active ? theme.palette.accent.main : theme.palette.secondary.contrastText,
-								whiteSpace: 'nowrap',
-								overflow: 'hidden',
-								textOverflow: 'ellipsis',
-							}
-						}}
-					/>
-				</Box>
+				/>
 			</ListItemButton>
 		);
 
 		return (
-			<ListItem disablePadding sx={{ display: 'block' }}>
+			<ListItem disablePadding sx={{ display: 'block', mb: 0.5 }}>
 				{open ? content : (
 					<Tooltip title={item.label} placement="right" arrow>
-						{content}
+						<Box>{content}</Box>
 					</Tooltip>
 				)}
 			</ListItem>
 		);
 	};
 
-	const NavGroup = ({ group, depth = 0 }: { group: NavigationItem; depth?: number }) => {
+	const NavGroup = ({ group }: { group: NavigationItem }) => {
 		if (!hasPermission(group) || !group.label) return null;
 
 		const isExpanded = expandedGroups[group.label];
@@ -258,18 +230,18 @@ const Sidebar: React.FC = () => {
 					}
 				}}
 				sx={{
-					minHeight: 40,
-					p: 0,
-					pl: open ? (depth * 2 + 2) : 0,
-					pr: open ? 2 : 0,
-					width: '100%',
+					minHeight: 44,
+					px: open ? 2 : 0,
+					py: 0,
+					mx: open ? 1 : 0.5,
+					width: 'auto',
+					borderRadius: 1,
 					justifyContent: open ? 'initial' : 'center',
-					borderLeft: activeChild ? `4px solid ${theme.palette.accent.main}` : '4px solid transparent',
-					transition: theme => theme.transitions.create(['background-color', 'border-left-color'], {
-						duration: theme.transitions.duration.standard,
-					}),
+					// Group active background (very subtle if highlighted)
+					bgcolor: activeChild && !isExpanded ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+					
 					'&:hover': {
-						bgcolor: alpha(theme.palette.common.white, 0.05),
+						bgcolor: alpha(theme.palette.common.white, 0.08),
 					},
 				}}
 			>
@@ -279,49 +251,34 @@ const Sidebar: React.FC = () => {
 							minWidth: 0,
 							mr: open ? 1.5 : 0,
 							justifyContent: 'center',
-							color: activeChild ? theme.palette.accent.main : theme.palette.text.secondary,
-							transition: theme => theme.transitions.create(['color'], {
-								duration: theme.transitions.duration.standard,
-							}),
+							color: activeChild ? 'common.white' : alpha(theme.palette.common.white, 0.5),
 						}}
 					>
-						<Icon sx={{ fontSize: '1.2rem' }} />
+						<Icon sx={{ fontSize: '1.25rem' }} />
 					</ListItemIcon>
 				)}
 				<Box
 					sx={{
-						opacity: open ? 1 : 0,
-						width: open ? 'auto' : 0,
-						transform: open ? 'translateX(0)' : 'translateX(-10px)',
-						transition: theme => theme.transitions.create(['opacity', 'width', 'transform'], {
-							duration: theme.transitions.duration.standard,
-							easing: theme.transitions.easing.sharp,
-						}),
-						overflow: 'hidden',
-						flexGrow: 1,
 						display: open ? 'flex' : 'none',
 						alignItems: 'center',
 						justifyContent: 'space-between',
+						flexGrow: 1,
+						overflow: 'hidden'
 					}}
 				>
 					<ListItemText
 						primary={group.label}
-						primaryTypographyProps={{ 
-							variant: activeChild ? "sidebarActive" : "sidebarItem" 
-						}}
 						sx={{
 							m: 0,
 							'& .MuiListItemText-primary': {
-								color: activeChild ? theme.palette.accent.main : theme.palette.secondary.contrastText,
-								whiteSpace: 'nowrap',
-								overflow: 'hidden',
-								textOverflow: 'ellipsis',
+								...theme.typography[activeChild ? 'sidebarActive' : 'sidebarItem'],
+								color: activeChild ? 'common.white' : alpha(theme.palette.common.white, 0.7),
 							}
 						}}
 					/>
 					{isExpanded ?
-						<ExpandLess sx={{ fontSize: 16, color: alpha(theme.palette.common.white, 0.4) }} /> :
-						<ExpandMore sx={{ fontSize: 16, color: alpha(theme.palette.common.white, 0.4) }} />
+						<ExpandLess sx={{ fontSize: 16, opacity: 0.8, color: activeChild ? 'primary.main' : 'common.white' }} /> :
+						<ExpandMore sx={{ fontSize: 16, opacity: 0.8, color: activeChild ? 'primary.main' : 'common.white' }} />
 					}
 				</Box>
 			</ListItemButton>
@@ -332,14 +289,14 @@ const Sidebar: React.FC = () => {
 				<ListItem disablePadding sx={{ display: 'block' }}>
 					{open ? content : (
 						<Tooltip title={group.label} placement="right" arrow>
-							{content}
+							<Box>{content}</Box>
 						</Tooltip>
 					)}
 				</ListItem>
 				<Collapse in={isExpanded && open} timeout="auto" unmountOnExit>
 					<List component="div" disablePadding>
 						{group.children?.map((child, index) => (
-							<NavItem key={index} item={child} depth={depth + 1} />
+							<NavItem key={index} item={child} />
 						))}
 					</List>
 				</Collapse>
@@ -358,47 +315,40 @@ const Sidebar: React.FC = () => {
 				width: open ? DRAWER_WIDTH : (isMobile ? 0 : COLLAPSED_WIDTH),
 				flexShrink: 0,
 				whiteSpace: 'nowrap',
-				transition: (theme) => theme.transitions.create('width', {
+				transition: theme.transitions.create('width', {
 					easing: theme.transitions.easing.sharp,
 					duration: theme.transitions.duration.standard,
 				}),
 				'& .MuiDrawer-paper': {
 					width: open ? DRAWER_WIDTH : (isMobile ? 0 : COLLAPSED_WIDTH),
 					overflowX: 'hidden',
-					transition: (theme) => theme.transitions.create('width', {
+					transition: theme.transitions.create('width', {
 						easing: theme.transitions.easing.sharp,
 						duration: theme.transitions.duration.standard,
 					}),
 					boxSizing: 'border-box',
-					overflow: 'hidden',
-					top: '48px',
-					height: 'calc(100% - 48px)',
+					top: NAVBAR_HEIGHT,
+					height: `calc(100% - ${NAVBAR_HEIGHT}px)`,
 					backgroundColor: 'secondary.main',
-					borderRight: `1px solid ${theme.palette.common.black}`,
+					borderRight: `1px solid ${theme.palette.divider}`,
 					boxShadow: 'none',
 				},
 			}}
 		>
-			<Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', color: theme.palette.secondary.contrastText }}>
+			<Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', color: 'secondary.contrastText' }}>
 				<Box
 					sx={{
 						flexGrow: 1,
 						overflowY: 'auto',
 						overflowX: 'hidden',
-						py: 0.5,
-						/* Custom scrollbar for enterprise look */
-						'&::-webkit-scrollbar': {
-							width: '6px',
-						},
-						'&::-webkit-scrollbar-track': {
-							background: 'transparent',
-						},
+						py: 1,
+						/* Custom enterprise scrollbar */
+						'&::-webkit-scrollbar': { width: 4 },
+						'&::-webkit-scrollbar-track': { background: 'transparent' },
 						'&::-webkit-scrollbar-thumb': {
 							background: alpha(theme.palette.common.white, 0.1),
-							borderRadius: '3px',
-						},
-						'&::-webkit-scrollbar-thumb:hover': {
-							background: alpha(theme.palette.common.white, 0.2),
+							borderRadius: 10,
+							'&:hover': { background: alpha(theme.palette.common.white, 0.2) }
 						},
 					}}
 				>
@@ -416,9 +366,8 @@ const Sidebar: React.FC = () => {
 				<Box sx={{
 					flexShrink: 0,
 					py: 0.5,
-					borderTop: `1px solid ${alpha(theme.palette.common.white, 0.05)}`,
-					overflow: 'hidden',
-					bgcolor: 'secondary.main' // Ensure background matches for pinning effect
+					borderTop: `1px solid ${theme.palette.divider}`,
+					bgcolor: 'secondary.main'
 				}}>
 					<List disablePadding>
 						{bottomNavigation.map((item, index) => (
