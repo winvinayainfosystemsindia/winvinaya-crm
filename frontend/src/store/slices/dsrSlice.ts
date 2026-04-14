@@ -36,6 +36,12 @@ interface DSRState {
 		total_leaves: number;
 		not_worked_days: number;
 	} | null;
+	projectManagementStats: {
+		totalProjects: number;
+		activeProjects: number;
+		totalActivities: number;
+		completedActivities: number;
+	} | null;
 	loading: boolean;
 	error: string | null;
 }
@@ -61,6 +67,7 @@ const initialState: DSRState = {
 	totalAdminEntries: 0,
 	totalPermissionRequests: 0,
 	userStatsSummary: null,
+	projectManagementStats: null,
 	loading: false,
 	error: null,
 };
@@ -451,6 +458,29 @@ export const fetchMyStatsSummary = createAsyncThunk(
 	}
 );
 
+export const fetchProjectManagementStats = createAsyncThunk(
+	'dsr/fetchProjectManagementStats',
+	async (_, { rejectWithValue }) => {
+		try {
+			const [projectsRes, activeProjectsRes, activitiesRes, completedActivitiesRes] = await Promise.all([
+				dsrProjectService.getProjects(0, 1),
+				dsrProjectService.getProjects(0, 1, true),
+				dsrActivityService.getActivities(0, 1),
+				dsrActivityService.getActivities(0, 1, undefined, 'completed')
+			]);
+
+			return {
+				totalProjects: projectsRes.total,
+				activeProjects: activeProjectsRes.total,
+				totalActivities: activitiesRes.total,
+				completedActivities: completedActivitiesRes.total
+			};
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.detail || 'Failed to fetch project management statistics');
+		}
+	}
+);
+
 const dsrSlice = createSlice({
 	name: 'dsr',
 	initialState,
@@ -656,6 +686,10 @@ const dsrSlice = createSlice({
 			.addCase(fetchMyStatsSummary.fulfilled, (state, action: PayloadAction<any>) => {
 				state.loading = false;
 				state.userStatsSummary = action.payload;
+			})
+			.addCase(fetchProjectManagementStats.fulfilled, (state, action: PayloadAction<any>) => {
+				state.loading = false;
+				state.projectManagementStats = action.payload;
 			})
 			.addMatcher(
 				(action) => action.type.startsWith('dsr/') && action.type.endsWith('/pending'),

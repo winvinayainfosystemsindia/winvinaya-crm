@@ -58,11 +58,6 @@ const dsrProjectService = {
 		return response.data;
 	},
 
-	getTrainingSummary: async (publicId: string) => {
-		const response = await api.get<any>(`/dsr/projects/${publicId}/training-summary`);
-		return response.data;
-	},
-
 	syncTrainingProject: async (publicId: string) => {
 		const response = await api.post<{ success: boolean }>(`/dsr/projects/${publicId}/sync`);
 		return response.data;

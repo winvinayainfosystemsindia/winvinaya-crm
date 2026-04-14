@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Grid, useTheme } from '@mui/material';
 import {
 	Assignment as ProjectIcon,
@@ -7,8 +7,8 @@ import {
 	DoneAll as CompletedIcon
 } from '@mui/icons-material';
 import StatCard from '../../../common/StatCard';
-import dsrProjectService from '../../../../services/dsrProjectService';
-import dsrActivityService from '../../../../services/dsrActivityService';
+import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
+import { fetchProjectManagementStats } from '../../../../store/slices/dsrSlice';
 
 interface ProjectStatsProps {
 	refreshKey?: number;
@@ -16,68 +16,56 @@ interface ProjectStatsProps {
 
 const ProjectStats: React.FC<ProjectStatsProps> = ({ refreshKey = 0 }) => {
 	const theme = useTheme();
-	const [stats, setStats] = useState({
+	const dispatch = useAppDispatch();
+	const { projectManagementStats: stats } = useAppSelector((state) => state.dsr);
+
+	useEffect(() => {
+		dispatch(fetchProjectManagementStats());
+	}, [refreshKey, dispatch]);
+
+	const displayStats = stats || {
 		totalProjects: 0,
 		activeProjects: 0,
 		totalActivities: 0,
 		completedActivities: 0
-	});
-
-	useEffect(() => {
-		const fetchStats = async () => {
-			try {
-				const [projectsRes, activeProjectsRes, activitiesRes, completedActivitiesRes] = await Promise.all([
-					dsrProjectService.getProjects(0, 1),
-					dsrProjectService.getProjects(0, 1, true),
-					dsrActivityService.getActivities(0, 1),
-					dsrActivityService.getActivities(0, 1, undefined, 'completed')
-				]);
-
-				setStats({
-					totalProjects: projectsRes.total,
-					activeProjects: activeProjectsRes.total,
-					totalActivities: activitiesRes.total,
-					completedActivities: completedActivitiesRes.total
-				});
-			} catch (error) {
-				console.error('Failed to fetch project stats', error);
-			}
-		};
-		fetchStats();
-	}, [refreshKey]);
+	};
 
 	return (
 		<Grid container spacing={3} sx={{ mb: 4 }}>
 			<Grid size={{ xs: 12, sm: 6, md: 3 }}>
 				<StatCard
 					title="Total Projects"
-					value={stats.totalProjects}
+					value={displayStats.totalProjects}
 					icon={ProjectIcon}
 					color={theme.palette.primary.main}
+					subtitle="Across all domains"
 				/>
 			</Grid>
 			<Grid size={{ xs: 12, sm: 6, md: 3 }}>
 				<StatCard
 					title="Active Projects"
-					value={stats.activeProjects}
+					value={displayStats.activeProjects}
 					icon={ActiveIcon}
-					color="#34a853" // Success color
+					color={theme.palette.success.main}
+					subtitle="Operational entities"
 				/>
 			</Grid>
 			<Grid size={{ xs: 12, sm: 6, md: 3 }}>
 				<StatCard
 					title="Total Activities"
-					value={stats.totalActivities}
+					value={displayStats.totalActivities}
 					icon={ActivityIcon}
 					color={theme.palette.secondary.main}
+					subtitle="Logged task executions"
 				/>
 			</Grid>
 			<Grid size={{ xs: 12, sm: 6, md: 3 }}>
 				<StatCard
-					title="Completed Activities"
-					value={stats.completedActivities}
+					title="Completed"
+					value={displayStats.completedActivities}
 					icon={CompletedIcon}
-					color="#ea4335" // Error/Warning color
+					color={theme.palette.warning.main}
+					subtitle="Verified outcomes"
 				/>
 			</Grid>
 		</Grid>
