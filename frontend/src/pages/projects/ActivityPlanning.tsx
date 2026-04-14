@@ -5,6 +5,8 @@ import {
 } from '@mui/material';
 import {
 	Add as AddIcon,
+	FileDownload as ExportIcon,
+	FileUpload as ImportIcon
 } from '@mui/icons-material';
 import { useSearchParams } from 'react-router-dom';
 import type { DSRActivity } from '../../models/dsr';
@@ -15,10 +17,13 @@ import dsrActivityService from '../../services/dsrActivityService';
 import ActivityTable from '../../components/projects/activities/table/ActivityTable';
 import ActivityDialog from '../../components/projects/activities/forms/ActivityDialog';
 import ActivityStats from '../../components/projects/activities/stats/ActivityStats';
-import ExcelImportModal from '../../components/common/ExcelImportModal';
 import ActivityModuleLayout from '../../components/projects/activities/layout/ActivityModuleLayout';
-import ConfirmDialog from '../../components/common/ConfirmDialog';
+import { ConfirmationDialog, ImportDialog } from '../../components/common/dialogbox';
 
+/**
+ * ActivityPlanning - Modernized Enterprise Module
+ * Features standardized high-fidelity dialogs for all data operations.
+ */
 const ActivityPlanning: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const toast = useToast();
@@ -34,6 +39,7 @@ const ActivityPlanning: React.FC = () => {
 	const [importModalOpen, setImportModalOpen] = useState(false);
 	const [refreshKey, setRefreshKey] = useState(0);
 	const [exporting, setExporting] = useState(false);
+	const [confirmExportOpen, setConfirmExportOpen] = useState(false);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [activityToDelete, setActivityToDelete] = useState<DSRActivity | null>(null);
 	const [deleteLoading, setDeleteLoading] = useState(false);
@@ -77,6 +83,7 @@ const ActivityPlanning: React.FC = () => {
 
 	const handleExport = async () => {
 		if (!projectId) return;
+		setConfirmExportOpen(false);
 		setExporting(true);
 		try {
 			await dsrActivityService.exportActivities(projectId);
@@ -85,6 +92,18 @@ const ActivityPlanning: React.FC = () => {
 			toast.error('Failed to export activities');
 		} finally {
 			setExporting(false);
+		}
+	};
+
+	const handleImport = async (file: File) => {
+		if (!projectId) return;
+		try {
+			await dsrActivityService.importFromExcel(file, projectId);
+			toast.success('Activities imported successfully');
+			setRefreshKey(prev => prev + 1);
+			setImportModalOpen(false);
+		} catch (error) {
+			toast.error('Import failed. Please verify the file structure.');
 		}
 	};
 
@@ -100,38 +119,44 @@ const ActivityPlanning: React.FC = () => {
 							<Box sx={{ display: 'flex', gap: 1.5 }}>
 								<Button
 									variant="outlined"
-									onClick={handleExport}
+									onClick={() => setConfirmExportOpen(true)}
 									disabled={exporting}
+									startIcon={<ExportIcon />}
 									sx={{
-										color: '#545b64',
-										borderColor: '#d5dbdb',
+										color: 'text.secondary',
+										borderColor: 'divider',
 										textTransform: 'none',
 										fontWeight: 700,
 										fontSize: '0.875rem',
-										height: 36,
-										borderRadius: '2px',
+										px: 2.5,
+										height: 38,
+										borderRadius: '4px',
 										'&:hover': {
-											bgcolor: '#f2f3f3',
-											borderColor: '#aab7b7'
+											bgcolor: 'action.hover',
+											borderColor: 'text.primary',
+											color: 'text.primary'
 										}
 									}}
 								>
-									{exporting ? 'Exporting...' : 'Export Activities'}
+									{exporting ? 'Exporting...' : 'Export Results'}
 								</Button>
 								<Button
 									variant="outlined"
 									onClick={() => setImportModalOpen(true)}
+									startIcon={<ImportIcon />}
 									sx={{
-										color: '#545b64',
-										borderColor: '#d5dbdb',
+										color: 'text.secondary',
+										borderColor: 'divider',
 										textTransform: 'none',
 										fontWeight: 700,
 										fontSize: '0.875rem',
-										height: 36,
-										borderRadius: '2px',
+										px: 2.5,
+										height: 38,
+										borderRadius: '4px',
 										'&:hover': {
-											bgcolor: '#f2f3f3',
-											borderColor: '#aab7b7'
+											bgcolor: 'action.hover',
+											borderColor: 'text.primary',
+											color: 'text.primary'
 										}
 									}}
 								>
@@ -142,13 +167,18 @@ const ActivityPlanning: React.FC = () => {
 									startIcon={<AddIcon />}
 									onClick={handleAdd}
 									sx={{
-										bgcolor: '#ec7211',
+										bgcolor: 'primary.main',
 										textTransform: 'none',
 										fontWeight: 700,
 										fontSize: '0.875rem',
-										height: 36,
-										borderRadius: '2px',
-										'&:hover': { bgcolor: '#eb5f07' }
+										px: 3,
+										height: 38,
+										borderRadius: '4px',
+										boxShadow: 'none',
+										'&:hover': { 
+											bgcolor: 'primary.dark',
+											boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+										}
 									}}
 								>
 									Add Activity
@@ -179,25 +209,38 @@ const ActivityPlanning: React.FC = () => {
 						}}
 					/>
 
-					<ExcelImportModal
+					<ImportDialog
 						open={importModalOpen}
 						onClose={() => setImportModalOpen(false)}
-						onImport={(file) => dsrActivityService.importFromExcel(file, selectedProject.public_id)}
-						onSuccess={() => setRefreshKey(prev => prev + 1)}
-						title="Import Activities from Excel"
-						description="Upload an Excel file with 'name', 'description', 'start_date', 'end_date' columns."
+						onImport={handleImport}
+						title="Import Project Activities"
+						subtitle="Upload structured planning data to synchronize with the core engine"
 						onDownloadTemplate={dsrActivityService.downloadTemplate}
+						loading={false}
 					/>
 
-					<ConfirmDialog
+					<ConfirmationDialog
 						open={deleteDialogOpen}
 						title="Delete Activity"
-						message={`Are you sure you want to delete activity "${activityToDelete?.name}"? This action cannot be undone.`}
+						subtitle="Permanent Removal"
+						message={`Are you sure you want to delete "${activityToDelete?.name}"? This action cannot be undone and will affect project metrics.`}
 						onClose={() => setDeleteDialogOpen(false)}
 						onConfirm={handleConfirmDelete}
-						confirmText="Delete"
-						loading={deleteLoading}
+						confirmLabel="Delete Activity"
 						severity="error"
+						loading={deleteLoading}
+					/>
+
+					<ConfirmationDialog
+						open={confirmExportOpen}
+						title="Export Activities"
+						subtitle="Data Extraction"
+						message="Would you like to generate and download the activities report for this project?"
+						onClose={() => setConfirmExportOpen(false)}
+						onConfirm={handleExport}
+						confirmLabel="Generate Report"
+						severity="info"
+						loading={exporting}
 					/>
 				</Box>
 			)}
