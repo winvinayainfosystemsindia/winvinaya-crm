@@ -16,8 +16,7 @@ import useToast from '../../hooks/useToast';
 import dsrProjectService from '../../services/dsrProjectService';
 import ProjectTable from '../../components/projects/management/table/ProjectTable';
 import ProjectDialog from '../../components/projects/management/forms/ProjectDialog';
-import ConfirmDialog from '../../components/common/ConfirmDialog';
-import ExcelImportModal from '../../components/common/ExcelImportModal';
+import { ConfirmationDialog, ImportDialog } from '../../components/common/dialogbox';
 import ProjectStats from '../../components/projects/management/stats/ProjectStats';
 
 const ProjectManagement: React.FC = () => {
@@ -86,6 +85,17 @@ const ProjectManagement: React.FC = () => {
 		}
 	};
 
+	const handleImport = async (file: File) => {
+		try {
+			await dsrProjectService.importFromExcel(file);
+			toast.success('Projects imported successfully');
+			setRefreshKey(prev => prev + 1);
+			setImportModalOpen(false);
+		} catch (error: any) {
+			toast.error(error?.response?.data?.detail || 'Failed to import projects');
+		}
+	};
+
 	return (
 		<Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
 			<Container maxWidth="xl" sx={{ py: { xs: 2, sm: 3 }, px: { xs: 1, sm: 2, md: 3 } }}>
@@ -99,22 +109,21 @@ const ProjectManagement: React.FC = () => {
 						</Typography>
 					</Box>
 					{isPrivileged && (
-						<Box sx={{ display: 'flex', gap: 1 }}>
+						<Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
 							<Button
 								variant="outlined"
 								startIcon={<ImportIcon />}
 								onClick={() => setImportModalOpen(true)}
 								sx={{
-									color: '#545b64',
-									borderColor: '#d5dbdb',
 									textTransform: 'none',
-									fontWeight: 700,
+									fontWeight: 600,
 									fontSize: '0.875rem',
-									height: 36,
-									borderRadius: '2px',
+									height: 40,
+									color: 'text.primary',
+									borderColor: 'divider',
 									'&:hover': {
-										bgcolor: '#f2f3f3',
-										borderColor: '#aab7b7'
+										bgcolor: 'action.hover',
+										borderColor: 'text.secondary'
 									}
 								}}
 							>
@@ -122,14 +131,17 @@ const ProjectManagement: React.FC = () => {
 							</Button>
 							{user?.role === 'admin' && (
 								<Button
-									variant="text"
+									variant="outlined"
 									color="error"
 									onClick={() => setMaintenanceConfirmOpen(true)}
 									sx={{
 										textTransform: 'none',
-										fontSize: '0.8125rem',
-										fontWeight: 700,
-										'&:hover': { bgcolor: 'rgba(211, 47, 47, 0.04)' }
+										fontSize: '0.875rem',
+										fontWeight: 600,
+										height: 40,
+										'&:hover': { 
+											bgcolor: 'rgba(239, 68, 68, 0.04)',
+										}
 									}}
 								>
 									Clear All DSR Data
@@ -140,13 +152,17 @@ const ProjectManagement: React.FC = () => {
 								startIcon={<AddIcon />}
 								onClick={handleAdd}
 								sx={{
-									bgcolor: '#ec7211',
+									bgcolor: 'accent.main',
+									color: 'white',
 									textTransform: 'none',
 									fontWeight: 700,
 									fontSize: '0.875rem',
-									height: 36,
-									borderRadius: '2px',
-									'&:hover': { bgcolor: '#eb5f07' }
+									height: 40,
+									px: 3,
+									'&:hover': { 
+										bgcolor: 'accent.dark',
+										boxShadow: '0 4px 12px rgba(236, 114, 17, 0.3)'
+									}
 								}}
 							>
 								Create project
@@ -175,7 +191,7 @@ const ProjectManagement: React.FC = () => {
 					onDelete={handleDeleteRequest}
 				/>
 
-				<ConfirmDialog
+				<ConfirmationDialog
 					open={confirmOpen}
 					title={user?.role === 'admin' ? "Delete Project" : "Deactivate Project"}
 					message={user?.role === 'admin'
@@ -185,24 +201,26 @@ const ProjectManagement: React.FC = () => {
 					loading={loading}
 					onClose={() => setConfirmOpen(false)}
 					onConfirm={handleDeleteConfirm}
+					severity={user?.role === 'admin' ? "error" : "warning"}
+					confirmLabel={user?.role === 'admin' ? "Delete" : "Deactivate"}
 				/>
 
-				<ExcelImportModal
+				<ImportDialog
 					open={importModalOpen}
 					onClose={() => setImportModalOpen(false)}
-					onImport={(file) => dsrProjectService.importFromExcel(file)}
-					onSuccess={() => setRefreshKey(prev => prev + 1)}
+					onImport={handleImport}
 					title="Import Projects from Excel"
-					description="Upload an Excel file with 'name' and 'owner_email' columns to bulk-create projects."
-					onDownloadTemplate={dsrProjectService.downloadTemplate}
+					subtitle="Upload an Excel file with 'name' and 'owner_email' columns to bulk-create projects."
+					onDownloadTemplate={() => dsrProjectService.downloadTemplate()}
+					loading={loading}
 				/>
 
-				<ConfirmDialog
+				<ConfirmationDialog
 					open={maintenanceConfirmOpen}
 					title="DANGER: Clear All DSR Data"
 					message="This will PERMANENTLY delete all Projects, Activities, DSR Entries, and Requests across the entire system. This action is destructive and cannot be undone. Are you absolutely sure?"
 					loading={maintenanceLoading}
-					confirmText="Yes, Wipe All Data"
+					confirmLabel="Yes, Wipe All Data"
 					onClose={() => setMaintenanceConfirmOpen(false)}
 					onConfirm={handleClearDataConfirm}
 					severity="error"

@@ -28,5 +28,6 @@ export interface ImportDialogProps extends Omit<BaseDialogProps, 'children' | 'a
 	onImport: (file: File) => void | Promise<void>;
 	acceptedFiles?: string;
 	templateUrl?: string;
+	onDownloadTemplate?: () => void | Promise<void>;
 	title?: string;
 }

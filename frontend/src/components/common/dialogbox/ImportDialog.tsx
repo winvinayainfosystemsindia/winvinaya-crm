@@ -26,6 +26,7 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
 	subtitle = 'Upload your structured data file to synchronize with the core database',
 	acceptedFiles = '.csv,.xlsx,.xls',
 	templateUrl,
+	onDownloadTemplate,
 	loading = false,
 	maxWidth = 'sm'
 }) => {
@@ -68,7 +69,30 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
 
 	const actions = (
 		<Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-			{templateUrl ? (
+			{onDownloadTemplate ? (
+				<Link 
+					component="button"
+					variant="body2"
+					onClick={(e) => { e.preventDefault(); onDownloadTemplate(); }}
+					sx={{ 
+						display: 'flex', 
+						alignItems: 'center', 
+						gap: 1, 
+						fontSize: '0.8125rem',
+						color: 'primary.main',
+						textDecoration: 'none',
+						fontWeight: 600,
+						border: 'none',
+						bgcolor: 'transparent',
+						cursor: 'pointer',
+						p: 0,
+						'&:hover': { textDecoration: 'underline' }
+					}}
+				>
+					<DownloadRounded sx={{ fontSize: 18 }} />
+					Download Template
+				</Link>
+			) : templateUrl ? (
 				<Link 
 					href={templateUrl} 
 					download
