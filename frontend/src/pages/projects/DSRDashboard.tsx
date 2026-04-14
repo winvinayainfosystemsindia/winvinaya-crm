@@ -5,7 +5,9 @@ import {
 	Button,
 	Paper,
 	Tabs,
-	Tab
+	Tab,
+	useTheme,
+	alpha
 } from '@mui/material';
 import {
 	Add as AddIcon,
@@ -41,52 +43,57 @@ const TabLabel: React.FC<{
 	label: string;
 	count?: number;
 	active?: boolean;
-}> = ({ icon, label, count, active }) => (
-	<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-		<Box sx={{
-			display: 'flex',
-			alignItems: 'center',
-			color: active ? '#ec7211' : '#545b64',
-			transition: 'color 0.2s ease'
-		}}>
-			{icon}
-		</Box>
-		<Typography
-			variant="inherit"
-			sx={{
-				fontWeight: active ? 700 : 600,
-				fontSize: '0.875rem',
-				color: active ? '#232f3e' : '#545b64'
-			}}
-		>
-			{label}
-		</Typography>
-		{count !== undefined && count > 0 && (
-			<Box
+}> = ({ icon, label, count, active }) => {
+	const theme = useTheme();
+	return (
+		<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+			<Box sx={{
+				display: 'flex',
+				alignItems: 'center',
+				color: active ? 'primary.main' : 'text.secondary',
+				transition: 'color 0.2s ease'
+			}}>
+				{icon}
+			</Box>
+			<Typography
+				variant="inherit"
 				sx={{
-					display: 'inline-flex',
-					alignItems: 'center',
-					justifyContent: 'center',
-					minWidth: 22,
-					height: 18,
-					px: 0.8,
-					borderRadius: '10px',
-					bgcolor: active ? 'rgba(236, 114, 17, 0.1)' : '#f0f2f5',
-					color: active ? '#ec7211' : '#545b64',
-					fontSize: '0.7rem',
-					fontWeight: 800,
-					transition: 'all 0.2s ease',
-					border: active ? `1px solid rgba(236, 114, 17, 0.2)` : '1px solid transparent'
+					fontWeight: active ? 700 : 500,
+					fontSize: '0.875rem',
+					color: active ? 'text.primary' : 'text.secondary'
 				}}
 			>
-				{count}
-			</Box>
-		)}
-	</Box>
-);
+				{label}
+			</Typography>
+			{count !== undefined && count > 0 && (
+				<Box
+					sx={{
+						display: 'inline-flex',
+						alignItems: 'center',
+						justifyContent: 'center',
+						minWidth: 22,
+						height: 18,
+						px: 0.8,
+						borderRadius: '10px',
+						bgcolor: active ? alpha(theme.palette.primary.main, 0.1) : 'action.hover',
+						color: active ? 'primary.main' : 'text.secondary',
+						fontSize: '0.7rem',
+						fontWeight: 800,
+						transition: 'all 0.2s ease',
+						border: '1px solid',
+						borderColor: active ? alpha(theme.palette.primary.main, 0.2) : 'transparent'
+					}}
+				>
+					{count}
+				</Box>
+			)}
+		</Box>
+	);
+};
 
 const DSRDashboard: React.FC = () => {
 	const dispatch = useAppDispatch();
+	const theme = useTheme();
 	const { user } = useAppSelector((state) => state.auth);
 	const isAdmin = user?.role === 'admin';
 	const isPrivileged = user?.role === 'admin' || user?.role === 'manager';
@@ -167,18 +174,18 @@ const DSRDashboard: React.FC = () => {
 		<DSRModuleLayout
 			title="Timesheets"
 			subtitle="Track work hours, manage submissions, and review team activity."
+			headerChildren={<DSRStatsHeader />}
 		>
 			{() => (
 				<Box sx={{ width: '100%', mb: 6 }}>
-					<DSRStatsHeader />
-
-					<Paper elevation={0} variant="outlined" sx={{ borderRadius: '4px', border: '1px solid #eaeded', overflow: 'hidden' }}>
-						<Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: '#fafafa' }}>
+					<Paper elevation={0} variant="outlined" sx={{ borderRadius: 1.5, border: '1px solid', borderColor: 'divider', overflow: 'hidden' }}>
+						<Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: alpha(theme.palette.background.default, 0.5) }}>
 							<Tabs
 								value={activeTab}
 								onChange={handleTabChange}
 								sx={{
-									'& .MuiTabs-indicator': { backgroundColor: '#ec7211' }
+									px: 2,
+									'& .MuiTabs-indicator': { backgroundColor: 'primary.main', height: 3, borderRadius: '3px 3px 0 0' }
 								}}
 							>
 								<Tab
