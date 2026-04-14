@@ -12,7 +12,8 @@ import {
 	ListItemIcon,
 	ListItemText,
 	Tooltip,
-	Paper
+	Paper,
+	alpha
 } from '@mui/material';
 import {
 	Edit as EditIcon,
@@ -174,56 +175,62 @@ const HistoryRow: React.FC<HistoryRowProps> = ({
 	onEdit,
 	onView
 }) => {
+	const theme = useTheme();
 	const totalHours = entry.items.reduce((sum, item) => sum + item.hours, 0);
 	const isRejected = entry.status === DSRStatusValues.DRAFT && entry.admin_notes;
 	const isDraft = entry.status === DSRStatusValues.DRAFT;
-	const theme = useTheme();
 
 	return (
 		<TableRow
 			hover
 			sx={{
-				bgcolor: isRejected ? '#fffafb' : 'inherit',
-				borderLeft: isRejected ? '4px solid #dc2626' : 'none',
-				'&:hover': { bgcolor: isRejected ? '#fff1f2' : '#f9fafb !important' }
+				bgcolor: isRejected ? alpha(theme.palette.error.main, 0.02) : 'inherit',
+				borderLeft: isRejected ? `4px solid ${theme.palette.error.main}` : 'none',
+				transition: theme.transitions.create(['background-color']),
+				'&:hover': { 
+					bgcolor: isRejected ? alpha(theme.palette.error.main, 0.04) : `${alpha(theme.palette.action.hover, 0.04)} !important` 
+				}
 			}}
 		>
-			<TableCell sx={{ py: 2, fontSize: '0.8125rem', color: theme.palette.text.primary }}>
-				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-					<Typography variant="body2" sx={{ fontWeight: 600 }}>
-						{new Date(entry.report_date).toLocaleDateString('en-GB', {
-							day: '2-digit', month: 'short', year: 'numeric'
-						})}
-					</Typography>
-				</Box>
-			</TableCell>
-
+			{/* Report Date */}
 			<TableCell>
-				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-					<StatusChip entry={entry} />
-				</Box>
+				<Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+					{new Date(entry.report_date).toLocaleDateString('en-GB', {
+						day: '2-digit', month: 'short', year: 'numeric'
+					})}
+				</Typography>
 			</TableCell>
 
+			{/* Status */}
 			<TableCell>
-				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-					<Typography variant="body2" sx={{ fontWeight: 700, color: entry.is_leave ? '#c2410c' : '#1e293b' }}>
-						{entry.is_leave ? '—' : `${totalHours.toFixed(1)} hrs`}
-					</Typography>
-				</Box>
+				<StatusChip entry={entry} />
 			</TableCell>
 
-			<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-					<Typography variant="body2" sx={{ fontSize: '0.75rem', color: '#64748b' }}>
-						{entry.submitted_at
-							? new Date(entry.submitted_at).toLocaleString('en-GB', {
-								day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
-							})
-							: '—'}
-					</Typography>
-				</Box>
+			{/* Total Hours */}
+			<TableCell>
+				<Typography 
+					variant="body2" 
+					sx={{ 
+						fontWeight: 700, 
+						color: entry.is_leave ? 'warning.dark' : 'text.primary' 
+					}}
+				>
+					{entry.is_leave ? '—' : `${totalHours.toFixed(1)} hrs`}
+				</Typography>
 			</TableCell>
 
+			{/* Submitted At */}
+			<TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>
+				<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+					{entry.submitted_at
+						? new Date(entry.submitted_at).toLocaleString('en-GB', {
+							day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+						})
+						: '—'}
+				</Typography>
+			</TableCell>
+
+			{/* Actions */}
 			<TableCell align="right" sx={{ pr: 2 }}>
 				<ActionMenu
 					entry={entry}

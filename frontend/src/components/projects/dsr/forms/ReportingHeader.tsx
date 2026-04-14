@@ -3,7 +3,7 @@ import { Box, Typography } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 import StatusDay from './StatusDay';
-import DSRStatsCard from '../common/DSRStatsCard';
+import StatCard from '../../../common/StatCard';
 
 interface ReportingHeaderProps {
 	reportDate: string;
@@ -68,10 +68,10 @@ const ReportingHeader: React.FC<ReportingHeaderProps> = ({
 					/>
 				</Box>
 
-				</Box>
+			</Box>
 
 			<Box sx={{ justifySelf: { md: 'end' } }}>
-				<DSRStatsCard
+				<StatCard
 					label="Total Logged Hours"
 					value={isLeave ? '0.00' : totalHours.toFixed(2)}
 					unit="hrs"

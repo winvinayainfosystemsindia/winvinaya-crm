@@ -334,9 +334,8 @@ const DSRDashboard: React.FC = () => {
 												loading={history.loading}
 												page={history.page}
 												rowsPerPage={history.rowsPerPage}
-												onPageChange={(_, p) => history.setPage(p)}
-												onRowsPerPageChange={(e) => history.setRowsPerPage(parseInt(e.target.value, 10))}
-												onRowsPerPageSelectChange={(rows) => history.setRowsPerPage(rows)}
+												onPageChange={(p) => history.setPage(p)}
+												onRowsPerPageChange={(rows) => history.setRowsPerPage(rows)}
 												onDelete={history.handleDelete}
 												onEdit={handleEditEntry}
 												onView={handleViewEntry}
