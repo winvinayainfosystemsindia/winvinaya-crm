@@ -18,7 +18,7 @@ import ActivityTable from '../../components/projects/activities/table/ActivityTa
 import ActivityDialog from '../../components/projects/activities/forms/ActivityDialog';
 import ActivityStats from '../../components/projects/activities/stats/ActivityStats';
 import ActivityModuleLayout from '../../components/projects/activities/layout/ActivityModuleLayout';
-import { ConfirmationDialog, ImportDialog } from '../../components/common/dialogbox';
+import { ConfirmationDialog, ImportDialog, ExportDialog } from '../../components/common/dialogbox';
 
 /**
  * ActivityPlanning - Modernized Enterprise Module
@@ -81,13 +81,13 @@ const ActivityPlanning: React.FC = () => {
 		}
 	};
 
-	const handleExport = async () => {
+	const handleExport = async (format: 'excel' | 'csv') => {
 		if (!projectId) return;
 		setConfirmExportOpen(false);
 		setExporting(true);
 		try {
 			await dsrActivityService.exportActivities(projectId);
-			toast.success('Activities exported successfully');
+			toast.success(`Activities exported successfully as ${format.toUpperCase()}`);
 		} catch (error) {
 			toast.error('Failed to export activities');
 		} finally {
@@ -231,15 +231,12 @@ const ActivityPlanning: React.FC = () => {
 						loading={deleteLoading}
 					/>
 
-					<ConfirmationDialog
+					<ExportDialog
 						open={confirmExportOpen}
-						title="Export Activities"
-						subtitle="Data Extraction"
-						message="Would you like to generate and download the activities report for this project?"
+						title="Export Project Activities"
+						subtitle="Select your preferred format for data extraction"
 						onClose={() => setConfirmExportOpen(false)}
-						onConfirm={handleExport}
-						confirmLabel="Generate Report"
-						severity="info"
+						onExport={handleExport}
 						loading={exporting}
 					/>
 				</Box>

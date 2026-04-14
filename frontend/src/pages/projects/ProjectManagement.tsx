@@ -139,7 +139,7 @@ const ProjectManagement: React.FC = () => {
 										fontSize: '0.875rem',
 										fontWeight: 600,
 										height: 40,
-										'&:hover': { 
+										'&:hover': {
 											bgcolor: 'rgba(239, 68, 68, 0.04)',
 										}
 									}}
@@ -152,16 +152,17 @@ const ProjectManagement: React.FC = () => {
 								startIcon={<AddIcon />}
 								onClick={handleAdd}
 								sx={{
-									bgcolor: 'accent.main',
-									color: 'white',
+									bgcolor: 'primary.main',
 									textTransform: 'none',
 									fontWeight: 700,
 									fontSize: '0.875rem',
-									height: 40,
 									px: 3,
-									'&:hover': { 
-										bgcolor: 'accent.dark',
-										boxShadow: '0 4px 12px rgba(236, 114, 17, 0.3)'
+									height: 38,
+									borderRadius: '4px',
+									boxShadow: 'none',
+									'&:hover': {
+										bgcolor: 'primary.dark',
+										boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
 									}
 								}}
 							>

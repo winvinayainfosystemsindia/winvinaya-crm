@@ -132,13 +132,17 @@ const UserManagement: React.FC = () => {
 							startIcon={<Add />}
 							onClick={handleAddUser}
 							sx={{
-								bgcolor: '#ec7211',
-								color: 'white',
+								bgcolor: 'primary.main',
 								textTransform: 'none',
-								fontWeight: 600,
+								fontWeight: 700,
+								fontSize: '0.875rem',
 								px: 3,
+								height: 38,
+								borderRadius: '4px',
+								boxShadow: 'none',
 								'&:hover': {
-									bgcolor: '#eb5f07',
+									bgcolor: 'primary.dark',
+									boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
 								}
 							}}
 						>

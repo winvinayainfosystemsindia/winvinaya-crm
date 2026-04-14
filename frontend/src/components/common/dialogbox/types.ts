@@ -31,3 +31,9 @@ export interface ImportDialogProps extends Omit<BaseDialogProps, 'children' | 'a
 	onDownloadTemplate?: () => void | Promise<void>;
 	title?: string;
 }
+
+export interface ExportDialogProps extends Omit<BaseDialogProps, 'children' | 'actions' | 'title'> {
+	onExport: (format: 'excel' | 'csv') => void | Promise<void>;
+	title?: string;
+	recordCount?: number;
+}
