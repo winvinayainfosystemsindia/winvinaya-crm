@@ -1,5 +1,5 @@
 import React from 'react';
-import { Breadcrumbs as MuiBreadcrumbs, Link, Typography, Box } from '@mui/material';
+import { Breadcrumbs as MuiBreadcrumbs, Link, Typography, Box, alpha, useTheme } from '@mui/material';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import {
 	NavigateNext as NavigateNextIcon,
@@ -11,23 +11,26 @@ import {
 	Folder as ProjectIcon
 } from '@mui/icons-material';
 
-// Map of route paths to display names and icons
+/**
+ * Enterprise Breadcrumbs - Standardized Product Outcome
+ * strictly adheres to theme variants and palette tokens.
+ */
 const breadcrumbNameMap: { [key: string]: { name: string; icon?: React.ReactNode } } = {
-	'dashboard': { name: 'Dashboard', icon: <DashboardIcon sx={{ fontSize: 16, mr: 0.5 }} /> },
-	'users': { name: 'User Management', icon: <PeopleIcon sx={{ fontSize: 16, mr: 0.5 }} /> },
-	'candidates': { name: 'Candidates', icon: <PersonAddIcon sx={{ fontSize: 16, mr: 0.5 }} /> },
-	'candidate-registration': { name: 'Candidate Registration', icon: <PersonAddIcon sx={{ fontSize: 16, mr: 0.5 }} /> },
+	'dashboard': { name: 'Dashboard', icon: <DashboardIcon sx={{ fontSize: 'inherit' }} /> },
+	'users': { name: 'User Management', icon: <PeopleIcon sx={{ fontSize: 'inherit' }} /> },
+	'candidates': { name: 'Candidates', icon: <PersonAddIcon sx={{ fontSize: 'inherit' }} /> },
+	'candidate-registration': { name: 'Candidate Registration', icon: <PersonAddIcon sx={{ fontSize: 'inherit' }} /> },
 	'profile': { name: 'Profile' },
-	'settings': { name: 'Settings', icon: <SettingsIcon sx={{ fontSize: 16, mr: 0.5 }} /> },
-	'projects': { name: 'Projects', icon: <ProjectIcon sx={{ fontSize: 16, mr: 0.5 }} /> },
+	'settings': { name: 'Settings', icon: <SettingsIcon sx={{ fontSize: 'inherit' }} /> },
+	'projects': { name: 'Projects', icon: <ProjectIcon sx={{ fontSize: 'inherit' }} /> },
 };
 
 const Breadcrumbs: React.FC = () => {
+	const theme = useTheme();
 	const location = useLocation();
 	const queryParams = new URLSearchParams(location.search);
 	const tab = queryParams.get('tab');
 
-	// Split the path into segments, filtering out empty strings
 	const pathnames = location.pathname.split('/').filter((x) => x);
 
 	if (pathnames.length === 0) {
@@ -45,30 +48,39 @@ const Breadcrumbs: React.FC = () => {
 	};
 
 	return (
-		<Box sx={{ mb: 2, mt: 0.5 }}>
+		<Box sx={{ mb: 3, mt: 1 }}>
 			<MuiBreadcrumbs
-				separator={<NavigateNextIcon sx={{ fontSize: 14, color: '#879196' }} />}
+				separator={
+					<NavigateNextIcon 
+						sx={{ 
+							fontSize: '1rem', 
+							color: alpha(theme.palette.text.secondary, 0.4) 
+						}} 
+					/>
+				}
 				aria-label="breadcrumb"
 				sx={{
 					'& .MuiBreadcrumbs-ol': { alignItems: 'center' }
 				}}
 			>
-				{/* Always show Home link with icon */}
+				{/* Root Navigation */}
 				<Link
 					component={RouterLink}
 					underline="hover"
-					color="inherit"
 					to="/dashboard"
 					sx={{
 						display: 'flex',
 						alignItems: 'center',
-						color: '#545b64',
-						fontSize: '0.8125rem',
-						fontWeight: 500,
-						'&:hover': { color: '#007eb9' }
+						gap: 0.75,
+						color: 'text.secondary',
+						...theme.typography.sidebarItem,
+						transition: theme.transitions.create(['color']),
+						'&:hover': { 
+							color: 'primary.main',
+						}
 					}}
 				>
-					<HomeIcon sx={{ fontSize: 16, mr: 0.5, color: '#879196' }} />
+					<HomeIcon sx={{ fontSize: '1.1rem', color: alpha(theme.palette.text.secondary, 0.6) }} />
 					Home
 				</Link>
 
@@ -76,17 +88,14 @@ const Breadcrumbs: React.FC = () => {
 					const last = index === pathnames.length - 1;
 					const to = `/${pathnames.slice(0, index + 1).join('/')}`;
 
-					// Use map or fallback to title case
 					const breadcrumbInfo = breadcrumbNameMap[value];
 					let name = breadcrumbInfo?.name || value.charAt(0).toUpperCase() + value.slice(1).replace(/-/g, ' ');
 					const icon = breadcrumbInfo?.icon;
 
-					// Specialty logic for training allocation/sub-modules
 					if (value === 'allocation' && pathnames.includes('training')) {
 						name = getTrainingModuleName(tab);
 					}
 
-					// Skip "dashboard" if it's in the path since we have "Home" pointing to it
 					if (value === 'dashboard') {
 						return null;
 					}
@@ -94,15 +103,20 @@ const Breadcrumbs: React.FC = () => {
 					return last ? (
 						<Typography
 							key={to}
+							variant="sidebarItem"
 							sx={{
-
 								display: 'flex',
 								alignItems: 'center',
-								fontSize: '16',
-								color: '#879196'
+								gap: 0.75,
+								color: 'text.primary',
+								fontWeight: 700
 							}}
 						>
-							{icon}
+							{icon && (
+								<Box sx={{ display: 'flex', color: alpha(theme.palette.text.secondary, 0.6) }}>
+									{icon}
+								</Box>
+							)}
 							{name}
 						</Typography>
 					) : (
@@ -114,13 +128,20 @@ const Breadcrumbs: React.FC = () => {
 							sx={{
 								display: 'flex',
 								alignItems: 'center',
-								color: '#545b64',
-								fontSize: '0.8125rem',
-								fontWeight: 500,
-								'&:hover': { color: '#007eb9' }
+								gap: 0.75,
+								color: 'text.secondary',
+								...theme.typography.sidebarItem,
+								transition: theme.transitions.create(['color']),
+								'&:hover': { 
+									color: 'primary.main',
+								}
 							}}
 						>
-							{icon}
+							{icon && (
+								<Box sx={{ display: 'flex', color: alpha(theme.palette.text.secondary, 0.6) }}>
+									{icon}
+								</Box>
+							)}
 							{name}
 						</Link>
 					);
