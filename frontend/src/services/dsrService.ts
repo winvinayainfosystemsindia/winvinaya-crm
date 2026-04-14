@@ -4,7 +4,7 @@ import type { DSREntry, DSREntryCreate, DSRStatus, MissingDSR, PaginationResult,
 const dsrService = {
 	getEntries: async (
 		skip = 0,
-		limit = 10,
+		limit = 100,
 		date_from?: string,
 		date_to?: string,
 		status?: DSRStatus
@@ -17,13 +17,14 @@ const dsrService = {
 
 	getMyEntries: async (
 		skip = 0,
-		limit = 10,
+		limit = 100,
 		date_from?: string,
 		date_to?: string,
-		status?: DSRStatus
+		status?: DSRStatus,
+		search?: string
 	): Promise<PaginationResult<DSREntry>> => {
 		const response = await api.get('/dsr/entries/me', {
-			params: { skip, limit, date_from, date_to, status }
+			params: { skip, limit, date_from, date_to, status, search }
 		});
 		return response.data;
 	},

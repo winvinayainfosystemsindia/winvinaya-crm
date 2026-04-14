@@ -91,6 +91,7 @@ async def get_my_entries(
     date_from: Optional[date] = Query(default=None),
     date_to: Optional[date] = Query(default=None),
     status: Optional[DSRStatus] = Query(default=None),
+    search: Optional[str] = Query(default=None),
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER, UserRole.SOURCING, UserRole.PLACEMENT, UserRole.COUNSELOR, UserRole.PROJECT_COORDINATOR, UserRole.DEVELOPER, UserRole.MARKETING])),
     db: AsyncSession = Depends(get_db),
 ):
@@ -103,6 +104,7 @@ async def get_my_entries(
         date_from=date_from,
         date_to=date_to,
         status=status,
+        search=search,
     )
     return DSREntryListResponse(items=items, total=total, skip=skip, limit=limit)
 

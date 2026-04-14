@@ -354,10 +354,12 @@ class DSRService:
         date_from: Optional[date] = None,
         date_to: Optional[date] = None,
         status: Optional[DSRStatus] = None,
+        search: Optional[str] = None,
     ) -> Tuple[List[DSREntry], int]:
         return await self.repo.get_entries_by_user(
             current_user.id, skip=skip, limit=limit,
             date_from=date_from, date_to=date_to, status=status,
+            search=search,
         )
 
     async def get_all_entries(

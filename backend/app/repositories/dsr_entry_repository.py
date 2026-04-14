@@ -40,6 +40,7 @@ class DSREntryRepository(BaseRepository[DSREntry]):
         date_from: Optional[date] = None,
         date_to: Optional[date] = None,
         status: Optional[DSRStatus] = None,
+        search: Optional[str] = None,
     ) -> Tuple[List[DSREntry], int]:
         base = and_(DSREntry.user_id == user_id, DSREntry.is_deleted == False)
         query = select(DSREntry).where(base)
@@ -54,6 +55,12 @@ class DSREntryRepository(BaseRepository[DSREntry]):
         if status:
             query = query.where(DSREntry.status == status)
             count_query = count_query.where(DSREntry.status == status)
+        
+        if search:
+            # Cast JSONB to text to allow case-insensitive search across project names and descriptions
+            search_filter = DSREntry.items.cast(String).ilike(f"%{search}%")
+            query = query.where(search_filter)
+            count_query = count_query.where(search_filter)
 
         total = (await self.db.execute(count_query)).scalar_one()
         query = query.order_by(DSREntry.report_date.desc()).offset(skip).limit(limit)

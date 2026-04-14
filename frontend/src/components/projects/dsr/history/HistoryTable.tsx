@@ -22,6 +22,12 @@ interface HistoryTableProps {
 	onDelete: (id: string) => void;
 	onEdit?: (id: string) => void;
 	onView?: (id: string) => void;
+	// Header props
+	searchTerm: string;
+	onSearchChange: (value: string) => void;
+	onRefresh: () => void;
+	onFilterOpen: (event: React.MouseEvent<HTMLButtonElement>) => void;
+	activeFilterCount: number;
 }
 
 const HistoryTable: React.FC<HistoryTableProps> = ({
@@ -34,7 +40,12 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
 	onRowsPerPageChange,
 	onDelete,
 	onEdit,
-	onView
+	onView,
+	searchTerm,
+	onSearchChange,
+	onRefresh,
+	onFilterOpen,
+	activeFilterCount
 }) => {
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -83,7 +94,11 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
 			rowsPerPage={rowsPerPage}
 			onPageChange={onPageChange}
 			onRowsPerPageChange={onRowsPerPageChange}
-			searchTerm=""
+			searchTerm={searchTerm}
+			onSearchChange={onSearchChange}
+			onRefresh={onRefresh}
+			onFilterOpen={onFilterOpen}
+			activeFilterCount={activeFilterCount}
 			emptyMessage="No timesheet records found for the selected period."
 			renderRow={(entry) => (
 				<HistoryRow

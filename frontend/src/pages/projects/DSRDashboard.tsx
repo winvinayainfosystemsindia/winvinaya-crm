@@ -36,6 +36,9 @@ import {
 } from '../../store/slices/dsrSlice';
 import DSRStatsHeader from '../../components/projects/dsr/DSRStatsHeader';
 import MyPermissionRequests from '../../components/projects/dsr/user/MyPermissionRequests';
+import FilterDrawer from '../../components/common/FilterDrawer';
+import type { FilterField } from '../../components/common/FilterDrawer';
+import { DSRStatusValues } from '../../models/dsr';
 // PermissionStatsCards removed
 
 const TabLabel: React.FC<{
@@ -106,9 +109,42 @@ const DSRDashboard: React.FC = () => {
 	const [isPermissionRequestOpen, setIsPermissionRequestOpen] = useState(false);
 	const [editEntryId, setEditEntryId] = useState<string | null>(null);
 	const [isViewOnly, setIsViewOnly] = useState(false);
+	const [isFilterOpen, setIsFilterOpen] = useState(false);
 
 	const history = useDSRHistory();
 	const admin = useDSRAdmin();
+
+	const filterFields: FilterField[] = [
+		{
+			key: 'status',
+			label: 'Status',
+			type: 'single-select',
+			options: [
+				{ label: 'Draft', value: DSRStatusValues.DRAFT },
+				{ label: 'Submitted', value: DSRStatusValues.SUBMITTED },
+				{ label: 'Approved', value: DSRStatusValues.APPROVED },
+				{ label: 'Rejected', value: DSRStatusValues.REJECTED }
+			]
+		},
+		{
+			key: 'dateFrom',
+			label: 'Date From',
+			type: 'date'
+		},
+		{
+			key: 'dateTo',
+			label: 'Date To',
+			type: 'date'
+		}
+	];
+
+	const activeFilters = {
+		status: history.status,
+		dateFrom: history.dateFrom,
+		dateTo: history.dateTo
+	};
+
+	const activeFilterCount = Object.values(activeFilters).filter(v => !!v).length;
 
 	// Fetch initial data
 	useEffect(() => {
@@ -339,6 +375,11 @@ const DSRDashboard: React.FC = () => {
 												onDelete={history.handleDelete}
 												onEdit={handleEditEntry}
 												onView={handleViewEntry}
+												searchTerm={history.searchTerm}
+												onSearchChange={history.setSearchTerm}
+												onRefresh={history.fetchHistory}
+												onFilterOpen={() => setIsFilterOpen(true)}
+												activeFilterCount={activeFilterCount}
 											/>
 										</Box>
 									</Box>
@@ -395,6 +436,23 @@ const DSRDashboard: React.FC = () => {
 					<PermissionRequestDialog
 						open={isPermissionRequestOpen}
 						onClose={handlePermissionRequestClose}
+					/>
+
+					<FilterDrawer
+						open={isFilterOpen}
+						onClose={() => setIsFilterOpen(false)}
+						fields={filterFields}
+						activeFilters={activeFilters}
+						onFilterChange={(key, value) => {
+							if (key === 'status') history.setStatus(value);
+							if (key === 'dateFrom') history.setDateFrom(value);
+							if (key === 'dateTo') history.setDateTo(value);
+						}}
+						onClearFilters={history.handleClearFilters}
+						onApplyFilters={() => {
+							setIsFilterOpen(false);
+							history.fetchHistory();
+						}}
 					/>
 				</Box>
 			)}

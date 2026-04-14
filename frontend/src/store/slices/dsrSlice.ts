@@ -219,10 +219,10 @@ export const fetchEntries = createAsyncThunk(
 
 export const fetchMyEntries = createAsyncThunk(
 	'dsr/fetchMyEntries',
-	async (params: { skip?: number; limit?: number; date_from?: string; date_to?: string; status?: DSRStatus } | undefined, { rejectWithValue }) => {
+	async (params: { skip?: number; limit?: number; date_from?: string; date_to?: string; status?: DSRStatus; search?: string } | undefined, { rejectWithValue }) => {
 		try {
-			const { skip = 0, limit = 100, date_from, date_to, status } = params || {};
-			return await dsrService.getMyEntries(Number(skip), Number(limit), date_from, date_to, status);
+			const { skip = 0, limit = 100, date_from, date_to, status, search } = params || {};
+			return await dsrService.getMyEntries(Number(skip), Number(limit), date_from, date_to, status, search);
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.detail || 'Failed to fetch your entries');
 		}

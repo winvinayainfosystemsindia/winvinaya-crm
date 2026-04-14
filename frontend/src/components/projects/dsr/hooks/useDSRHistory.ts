@@ -15,6 +15,7 @@ export const useDSRHistory = () => {
 	const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
 	// Filters
+	const [searchTerm, setSearchTerm] = useState('');
 	const [status, setStatus] = useState<DSRStatus | ''>('');
 	const [dateFrom, setDateFrom] = useState('');
 	const [dateTo, setDateTo] = useState('');
@@ -25,9 +26,10 @@ export const useDSRHistory = () => {
 			limit: rowsPerPage,
 			date_from: dateFrom || undefined,
 			date_to: dateTo || undefined,
-			status: (status as DSRStatus) || undefined
+			status: (status as DSRStatus) || undefined,
+			search: searchTerm || undefined
 		}));
-	}, [dispatch, page, rowsPerPage, status, dateFrom, dateTo]);
+	}, [dispatch, page, rowsPerPage, status, dateFrom, dateTo, searchTerm]);
 
 	useEffect(() => {
 		fetchHistory();
@@ -45,6 +47,7 @@ export const useDSRHistory = () => {
 	};
 
 	const handleClearFilters = () => {
+		setSearchTerm('');
 		setStatus('');
 		setDateFrom('');
 		setDateTo('');
@@ -60,6 +63,8 @@ export const useDSRHistory = () => {
 		setRowsPerPage,
 		expandedRow,
 		setExpandedRow,
+		searchTerm,
+		setSearchTerm,
 		status,
 		setStatus,
 		dateFrom,
