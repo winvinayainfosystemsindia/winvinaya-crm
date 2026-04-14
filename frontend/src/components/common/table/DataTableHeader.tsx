@@ -16,7 +16,7 @@ export interface DataTableHeaderProps {
 	onSearchChange?: (value: string) => void;
 	searchPlaceholder?: string;
 	activeFilterCount?: number;
-	onFilterOpen?: () => void;
+	onFilterOpen?: (event: React.MouseEvent<HTMLButtonElement>) => void;
 	onRefresh?: () => void;
 	onCreateClick?: () => void;
 	createButtonText?: string;

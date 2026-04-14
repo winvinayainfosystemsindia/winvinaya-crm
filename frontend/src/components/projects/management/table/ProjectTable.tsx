@@ -1,22 +1,10 @@
-import React from 'react';
-import {
-	Paper,
-	Table,
-	TableBody,
-	TableContainer,
-	useTheme
-} from '@mui/material';
+import type React from 'react';
+import { Menu, MenuItem } from '@mui/material';
 import type { DSRProject } from '../../../../models/dsr';
-import CustomTablePagination from '../../../common/CustomTablePagination';
 import { useProjectTable } from '../hooks/useProjectTable';
-
-// Sub-components
-import ProjectTableHeader from './ProjectTableHeader';
-import ProjectTableHead from './ProjectTableHead';
+import DataTable, { type ColumnDefinition } from '../../../common/table/DataTable';
 import ProjectTableRow from './ProjectTableRow';
 import ProjectTableActions from './ProjectTableActions';
-import ProjectTableLoader from './ProjectTableLoader';
-import ProjectTableEmpty from './ProjectTableEmpty';
 
 interface ProjectTableProps {
 	onEdit: (project: DSRProject) => void;
@@ -24,12 +12,22 @@ interface ProjectTableProps {
 	refreshKey: number;
 }
 
+const columns: ColumnDefinition<DSRProject>[] = [
+	{ id: 'name', label: 'Project Name' },
+	{ id: 'project_type' as any, label: 'Type' },
+	{ id: 'linked_batches' as any, label: 'Training Batches' },
+	{ id: 'owner' as any, label: 'Owner' },
+	{ id: 'creator' as any, label: 'Created By' },
+	{ id: 'created_at', label: 'Created At' },
+	{ id: 'is_active', label: 'Status' },
+	{ id: 'actions', label: 'Actions', align: 'right' }
+];
+
 const ProjectTable: React.FC<ProjectTableProps> = ({
 	onEdit,
 	onDelete,
 	refreshKey
 }) => {
-	const theme = useTheme();
 	const {
 		projects,
 		loading,
@@ -44,7 +42,6 @@ const ProjectTable: React.FC<ProjectTableProps> = ({
 		filterOpen,
 		actionOpen,
 		handlePageChange,
-		handleRowsPerPageChange,
 		handleSearch,
 		handleFilterClick,
 		handleFilterClose,
@@ -52,7 +49,8 @@ const ProjectTable: React.FC<ProjectTableProps> = ({
 		handleActionClick,
 		handleActionClose,
 		handleRefresh,
-		setRowsPerPage
+		setRowsPerPage,
+		setPage
 	} = useProjectTable(refreshKey);
 
 	const formatDate = (dateString: string) => {
@@ -63,50 +61,52 @@ const ProjectTable: React.FC<ProjectTableProps> = ({
 		});
 	};
 
+	const renderRow = (project: DSRProject) => (
+		<ProjectTableRow
+			key={project.public_id}
+			project={project}
+			onActionClick={handleActionClick}
+			formatDate={formatDate}
+		/>
+	);
+
+	const handleRowsChange = (newRows: number) => {
+		setRowsPerPage(newRows);
+		setPage(0);
+	};
+
 	return (
-		<Paper sx={{ border: `1px solid ${theme.palette.divider}`, boxShadow: 'none', borderRadius: 0, overflow: 'hidden' }}>
-			<ProjectTableHeader
-				searchTerm={searchTerm}
-				onSearchChange={handleSearch}
-				onRefresh={handleRefresh}
-				statusFilter={statusFilter}
-				filterAnchorEl={filterAnchorEl}
-				filterOpen={filterOpen}
-				onFilterClick={handleFilterClick}
-				onFilterClose={handleFilterClose}
-				onStatusSelect={handleStatusSelect}
-			/>
-
-			<TableContainer>
-				<Table size="small">
-					<ProjectTableHead />
-					<TableBody>
-						{loading ? (
-							<ProjectTableLoader />
-						) : projects.length === 0 ? (
-							<ProjectTableEmpty />
-						) : (
-							projects.map((project: DSRProject) => (
-								<ProjectTableRow
-									key={project.public_id}
-									project={project}
-									onActionClick={handleActionClick}
-									formatDate={formatDate}
-								/>
-							))
-						)}
-					</TableBody>
-				</Table>
-			</TableContainer>
-
-			<CustomTablePagination
-				count={totalCount}
+		<>
+			<DataTable
+				columns={columns}
+				data={projects}
+				loading={loading}
+				totalCount={totalCount}
 				page={page}
 				rowsPerPage={rowsPerPage}
-				onPageChange={handlePageChange}
-				onRowsPerPageChange={handleRowsPerPageChange}
-				onRowsPerPageSelectChange={setRowsPerPage}
+				onPageChange={(p) => handlePageChange(null, p)}
+				onRowsPerPageChange={handleRowsChange}
+				searchTerm={searchTerm}
+				onSearchChange={(value) => handleSearch({ target: { value } } as any)}
+				onRefresh={handleRefresh}
+				onFilterOpen={(e: React.MouseEvent<HTMLButtonElement>) => handleFilterClick(e)}
+				activeFilterCount={statusFilter === 'all' ? 0 : 1}
+				searchPlaceholder="Search projects..."
+				renderRow={renderRow}
+				emptyMessage={searchTerm ? `No projects found matching "${searchTerm}"` : "No projects registered yet"}
 			/>
+
+			<Menu
+				anchorEl={filterAnchorEl}
+				open={filterOpen}
+				onClose={handleFilterClose}
+				anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+				transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+			>
+				<MenuItem onClick={() => handleStatusSelect('all')} selected={statusFilter === 'all'}>Status: All</MenuItem>
+				<MenuItem onClick={() => handleStatusSelect('active')} selected={statusFilter === 'active'}>Status: Active</MenuItem>
+				<MenuItem onClick={() => handleStatusSelect('inactive')} selected={statusFilter === 'inactive'}>Status: Inactive</MenuItem>
+			</Menu>
 
 			<ProjectTableActions
 				anchorEl={actionAnchorEl}
@@ -116,8 +116,9 @@ const ProjectTable: React.FC<ProjectTableProps> = ({
 				onEdit={onEdit}
 				onDelete={onDelete}
 			/>
-		</Paper>
+		</>
 	);
 };
 
 export default ProjectTable;
+

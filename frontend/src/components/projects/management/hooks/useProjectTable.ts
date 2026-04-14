@@ -95,6 +95,7 @@ export const useProjectTable = (refreshKey: number) => {
 		handleActionClick,
 		handleActionClose,
 		handleRefresh,
-		setRowsPerPage
+		setRowsPerPage,
+		setPage
 	};
 };
