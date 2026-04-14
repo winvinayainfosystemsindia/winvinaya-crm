@@ -25,7 +25,6 @@ import PermissionRequestDialog from '../../components/projects/dsr/forms/Permiss
 import DSRModuleLayout from '../../components/projects/dsr/layout/DSRModuleLayout';
 import DSRCalendarView from '../../components/projects/dsr/history/DSRCalendarView';
 import MyLeavesTable from '../../components/projects/dsr/user/MyLeavesTable';
-import MyLeaveStatsCards from '../../components/projects/dsr/common/MyLeaveStatsCards';
 import dayjs from 'dayjs';
 import {
 	fetchPermissionRequests,
@@ -91,8 +90,8 @@ const DSRDashboard: React.FC = () => {
 	const { user } = useAppSelector((state) => state.auth);
 	const isAdmin = user?.role === 'admin';
 	const isPrivileged = user?.role === 'admin' || user?.role === 'manager';
-	const { permissionRequests, leaveStats, loading: dsrLoading } = useAppSelector((state) => state.dsr);
-// permissionStats removed
+	const { permissionRequests, loading: dsrLoading } = useAppSelector((state) => state.dsr);
+	// permissionStats removed
 
 	const [activeTab, setActiveTab] = useState(0);
 	const [isSubmissionOpen, setIsSubmissionOpen] = useState(false);
@@ -172,7 +171,7 @@ const DSRDashboard: React.FC = () => {
 			{() => (
 				<Box sx={{ width: '100%', mb: 6 }}>
 					<DSRStatsHeader />
-					
+
 					<Paper elevation={0} variant="outlined" sx={{ borderRadius: '4px', border: '1px solid #eaeded', overflow: 'hidden' }}>
 						<Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: '#fafafa' }}>
 							<Tabs
@@ -231,17 +230,17 @@ const DSRDashboard: React.FC = () => {
 						<Box sx={{ p: 3, bgcolor: 'white' }}>
 							{activeTab === 0 && (
 								<Box>
-									<Box sx={{ 
-										mb: { xs: 2, md: 4 }, 
-										display: 'flex', 
+									<Box sx={{
+										mb: { xs: 2, md: 4 },
+										display: 'flex',
 										flexDirection: { xs: 'column', sm: 'row' },
-										justifyContent: 'space-between', 
+										justifyContent: 'space-between',
 										alignItems: { xs: 'flex-start', sm: 'center' },
 										gap: 2
 									}}>
 										<Typography variant="h6" sx={{ fontWeight: 700, letterSpacing: '-0.01em' }}>My Submissions</Typography>
-										<Box sx={{ 
-											display: 'flex', 
+										<Box sx={{
+											display: 'flex',
 											flexWrap: 'wrap',
 											gap: { xs: 1, sm: 2 },
 											width: { xs: '100%', sm: 'auto' }
@@ -309,7 +308,7 @@ const DSRDashboard: React.FC = () => {
 										gap: { xs: 3, md: 4 }
 									}}>
 										{/* On Laptop/Tablet (md/lg), show Calendar above/first or as a dashboard top-tile */}
-										<Box sx={{ 
+										<Box sx={{
 											order: { xs: 1, xl: 2 },
 											display: 'flex',
 											flexDirection: 'column',
@@ -318,9 +317,9 @@ const DSRDashboard: React.FC = () => {
 											<DSRCalendarView />
 										</Box>
 
-										<Box sx={{ 
-											minWidth: 0, 
-											order: { xs: 2, xl: 1 } 
+										<Box sx={{
+											minWidth: 0,
+											order: { xs: 2, xl: 1 }
 										}}>
 											<HistoryTable
 												entries={history.entries}
@@ -354,7 +353,6 @@ const DSRDashboard: React.FC = () => {
 							{activeTab === 2 && (
 								<Box>
 									<Typography variant="h6" sx={{ fontWeight: 700, mb: 3 }}>My Leave Applications</Typography>
-									<MyLeaveStatsCards stats={leaveStats} loading={dsrLoading} />
 									<MyLeavesTable />
 								</Box>
 							)}
