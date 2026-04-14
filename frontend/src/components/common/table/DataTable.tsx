@@ -30,6 +30,9 @@ export interface DataTableProps<T> extends DataTableHeaderProps {
 	onSortRequest?: (property: keyof T) => void;
 	emptyMessage?: string;
 	renderRow: (item: T) => React.ReactNode;
+	// Selection support
+	numSelected?: number;
+	onSelectAllClick?: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const DataTable = <T,>({
@@ -55,17 +58,21 @@ const DataTable = <T,>({
 	canCreate,
 	headerActions,
 	emptyMessage = 'No records found',
-	renderRow
+	renderRow,
+	numSelected,
+	onSelectAllClick
 }: DataTableProps<T>) => {
 	const theme = useTheme();
 	const visibleColumns = columns.filter(col => !col.hidden);
+	const columnCount = visibleColumns.length + (onSelectAllClick ? 1 : 0);
 
 	return (
 		<Paper sx={{
 			border: `1px solid ${theme.palette.divider}`,
 			boxShadow: 'none',
 			borderRadius: `${theme.shape.borderRadius}px`,
-			overflow: 'hidden'
+			overflow: 'hidden',
+			bgcolor: theme.palette.background.paper
 		}}>
 			<DataTableHeader
 				searchTerm={searchTerm}
@@ -88,6 +95,9 @@ const DataTable = <T,>({
 						orderBy={orderBy}
 						order={order}
 						onSortRequest={onSortRequest}
+						numSelected={numSelected}
+						onSelectAllClick={onSelectAllClick}
+						rowCount={data.length}
 					/>
 					<TableBody aria-busy={loading}>
 						{loading ? (
@@ -97,7 +107,7 @@ const DataTable = <T,>({
 							/>
 						) : data.length === 0 ? (
 							<DataTableEmpty
-								colSpan={visibleColumns.length}
+								colSpan={columnCount}
 								message={emptyMessage}
 							/>
 						) : (

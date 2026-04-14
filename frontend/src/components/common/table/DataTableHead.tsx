@@ -3,6 +3,7 @@ import {
 	TableRow,
 	TableCell,
 	TableSortLabel,
+	Checkbox,
 	useTheme
 } from '@mui/material';
 
@@ -20,24 +21,43 @@ interface DataTableHeadProps<T> {
 	orderBy?: keyof T;
 	order?: 'asc' | 'desc';
 	onSortRequest?: (property: keyof T) => void;
+	// Selection support
+	numSelected?: number;
+	onSelectAllClick?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+	rowCount?: number;
 }
 
 /**
  * Modular TableHead component for DataTable.
- * Manages column rendering and sorting labels with theme-aligned styling.
+ * Manages column rendering, sorting labels, and optional selection checkboxes.
  */
 const DataTableHead = <T,>({
 	columns,
 	orderBy,
 	order = 'asc',
-	onSortRequest
+	onSortRequest,
+	numSelected = 0,
+	onSelectAllClick,
+	rowCount = 0
 }: DataTableHeadProps<T>) => {
 	const theme = useTheme();
 	const visibleColumns = columns.filter(col => !col.hidden);
+	const isAllSelected = rowCount > 0 && numSelected === rowCount;
+	const isSomeSelected = numSelected > 0 && numSelected < rowCount;
 
 	return (
 		<TableHead>
 			<TableRow sx={{ bgcolor: theme.palette.background.default }}>
+				{onSelectAllClick && (
+					<TableCell padding="checkbox" sx={{ borderBottom: `2px solid ${theme.palette.divider}`, py: 1.5 }}>
+						<Checkbox
+							indeterminate={isSomeSelected}
+							checked={isAllSelected}
+							onChange={onSelectAllClick}
+							size="small"
+						/>
+					</TableCell>
+				)}
 				{visibleColumns.map((column) => (
 					<TableCell
 						key={String(column.id)}
