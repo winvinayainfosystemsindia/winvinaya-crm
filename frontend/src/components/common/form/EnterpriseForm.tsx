@@ -13,6 +13,7 @@ interface EnterpriseFormProps {
 	isSubmitting?: boolean;
 	saveButtonText?: string;
 	error?: string | null;
+	onDelete?: () => void;
 }
 
 /**
@@ -29,7 +30,8 @@ const EnterpriseForm: React.FC<EnterpriseFormProps> = ({
 	onCancel,
 	isSubmitting = false,
 	saveButtonText,
-	error
+	error,
+	onDelete
 }) => {
 	const theme = useTheme();
 	const [activeStep, setActiveStep] = useState(0);
@@ -131,6 +133,7 @@ const EnterpriseForm: React.FC<EnterpriseFormProps> = ({
 				isSubmitting={isSubmitting}
 				saveButtonText={saveButtonText}
 				mode={mode}
+				onDelete={onDelete}
 			/>
 		</Paper>
 	);

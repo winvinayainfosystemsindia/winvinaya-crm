@@ -7,7 +7,7 @@ import {
 	alpha,
 	CircularProgress
 } from '@mui/material';
-import { NavigateBefore, NavigateNext, Save } from '@mui/icons-material';
+import { NavigateBefore, NavigateNext, Save, Delete as DeleteIcon } from '@mui/icons-material';
 
 interface EnterpriseFormFooterProps {
 	activeStep: number;
@@ -19,6 +19,7 @@ interface EnterpriseFormFooterProps {
 	isSubmitting?: boolean;
 	saveButtonText?: string;
 	mode: 'create' | 'edit' | 'view';
+	onDelete?: () => void;
 }
 
 /**
@@ -34,12 +35,12 @@ const EnterpriseFormFooter: React.FC<EnterpriseFormFooterProps> = ({
 	onCancel,
 	isSubmitting = false,
 	saveButtonText = 'Save Changes',
-	mode
+	mode,
+	onDelete
 }) => {
 	const theme = useTheme();
 	const isLastStep = activeStep === totalSteps - 1;
 
-	// Use accent from palette if available (via cast to avoid isolation issues in tsc)
 	const accentColor = (theme.palette as any).accent?.main || theme.palette.primary.main;
 	const accentDark = (theme.palette as any).accent?.dark || theme.palette.primary.dark;
 
@@ -57,24 +58,48 @@ const EnterpriseFormFooter: React.FC<EnterpriseFormFooterProps> = ({
 			bottom: 0,
 			zIndex: 10
 		}}>
-			<Button
-				variant="outlined"
-				onClick={onCancel}
-				sx={{
-					textTransform: 'none',
-					fontWeight: 600,
-					px: 3,
-					color: theme.palette.text.secondary,
-					borderColor: theme.palette.divider,
-					borderRadius: '4px', // Enterprise precision
-					'&:hover': {
-						borderColor: theme.palette.text.primary,
-						bgcolor: alpha(theme.palette.text.primary, 0.05)
-					}
-				}}
-			>
-				{mode === 'view' ? 'Close' : 'Cancel'}
-			</Button>
+			<Box sx={{ display: 'flex', gap: 1.5 }}>
+				<Button
+					variant="outlined"
+					onClick={onCancel}
+					sx={{
+						textTransform: 'none',
+						fontWeight: 600,
+						px: 3,
+						color: theme.palette.text.secondary,
+						borderColor: theme.palette.divider,
+						borderRadius: '4px', // Enterprise precision
+						'&:hover': {
+							borderColor: theme.palette.text.primary,
+							bgcolor: alpha(theme.palette.text.primary, 0.05)
+						}
+					}}
+				>
+					{mode === 'view' ? 'Close' : 'Cancel'}
+				</Button>
+
+				{mode === 'edit' && onDelete && (
+					<Button
+						variant="outlined"
+						color="error"
+						startIcon={<DeleteIcon />}
+						onClick={onDelete}
+						sx={{
+							textTransform: 'none',
+							fontWeight: 600,
+							px: 2,
+							borderRadius: '4px',
+							borderColor: alpha(theme.palette.error.main, 0.3),
+							'&:hover': {
+								borderColor: theme.palette.error.main,
+								bgcolor: alpha(theme.palette.error.main, 0.05)
+							}
+						}}
+					>
+						Delete
+					</Button>
+				)}
+			</Box>
 
 			<Box sx={{ display: 'flex', gap: 3, alignItems: 'center' }}>
 				{totalSteps > 1 && (
