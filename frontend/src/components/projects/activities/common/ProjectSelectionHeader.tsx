@@ -3,7 +3,9 @@ import {
 	Box,
 	Typography,
 	Autocomplete,
-	TextField
+	TextField,
+	alpha,
+	useTheme
 } from '@mui/material';
 import type { DSRProject } from '../../../../models/dsr';
 
@@ -18,21 +20,23 @@ const ProjectSelectionHeader: React.FC<ProjectSelectionHeaderProps> = memo(({
 	selectedProject,
 	onProjectChange,
 }) => {
+	const theme = useTheme();
+
 	return (
-		<Box sx={{ width: '100%', maxWidth: 320 }}>
+		<Box sx={{ width: '100%', p: 1 }}>
 			<Typography
 				variant="caption"
 				sx={{
 					fontWeight: 800,
-					color: '#aab7bd',
+					color: alpha(theme.palette.common.white, 0.4),
 					display: 'block',
-					mb: 0.75,
+					mb: 0.5,
 					textTransform: 'uppercase',
-					letterSpacing: '0.05em',
+					letterSpacing: '0.1em',
 					fontSize: '0.65rem'
 				}}
 			>
-				Select Project
+				Select Active Project
 			</Typography>
 			<Autocomplete
 				options={projects}
@@ -49,28 +53,29 @@ const ProjectSelectionHeader: React.FC<ProjectSelectionHeaderProps> = memo(({
 							'& .MuiOutlinedInput-root': {
 								color: 'white',
 								fontSize: '0.875rem',
-								fontWeight: 500,
-								bgcolor: 'rgba(255, 255, 255, 0.05)',
-								borderRadius: '2px',
-								transition: 'all 0.2s ease',
-								height: 36,
+								fontWeight: 600,
+								bgcolor: alpha(theme.palette.common.white, 0.04),
+								borderRadius: 1,
+								transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+								height: 38,
 								'& fieldset': {
-									borderColor: 'rgba(255, 255, 255, 0.2)',
+									borderColor: alpha(theme.palette.common.white, 0.1),
 									borderWidth: '1px'
 								},
 								'&:hover fieldset': {
-									borderColor: 'rgba(255, 255, 255, 0.4)'
+									borderColor: alpha(theme.palette.common.white, 0.3)
 								},
 								'&.Mui-focused fieldset': {
-									borderColor: '#ff9900',
-									borderWidth: '1px'
+									borderColor: theme.palette.primary.light,
+									borderWidth: '2px',
+									boxShadow: `0 0 0 4px ${alpha(theme.palette.primary.main, 0.1)}`
 								},
 							},
 							'& .MuiAutocomplete-input': {
 								py: 0
 							},
 							'& .MuiInputBase-input::placeholder': {
-								color: 'rgba(255, 255, 255, 0.4)',
+								color: alpha(theme.palette.common.white, 0.3),
 								opacity: 1
 							}
 						}}
@@ -78,8 +83,8 @@ const ProjectSelectionHeader: React.FC<ProjectSelectionHeaderProps> = memo(({
 				)}
 				sx={{
 					width: '100%',
-					'& .MuiAutocomplete-popupIndicator': { color: 'rgba(255, 255, 255, 0.6)' },
-					'& .MuiAutocomplete-clearIndicator': { color: 'rgba(255, 255, 255, 0.6)' }
+					'& .MuiAutocomplete-popupIndicator': { color: alpha(theme.palette.common.white, 0.6) },
+					'& .MuiAutocomplete-clearIndicator': { color: alpha(theme.palette.common.white, 0.6) }
 				}}
 			/>
 		</Box>
