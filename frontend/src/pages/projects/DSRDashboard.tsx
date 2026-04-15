@@ -25,7 +25,7 @@ import DSRSubmissionDialog from '../../components/projects/dsr/forms/DSRSubmissi
 import ApplyLeaveDialog from '../../components/projects/dsr/forms/ApplyLeaveDialog';
 import PermissionRequestDialog from '../../components/projects/dsr/forms/PermissionRequestDialog';
 import DSRModuleLayout from '../../components/projects/dsr/layout/DSRModuleLayout';
-import DSRCalendarView from '../../components/projects/dsr/history/DSRCalendarView';
+import DSRCalendarView from '../../components/projects/dsr/calendar';
 import MyLeavesTable from '../../components/projects/dsr/user/MyLeavesTable';
 import dayjs from 'dayjs';
 import {
