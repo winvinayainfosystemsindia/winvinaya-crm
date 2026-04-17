@@ -8,7 +8,9 @@ export const jobRoleService = {
 		search?: string,
 		status?: JobRoleStatus,
 		companyId?: number,
-		contactId?: number
+		contactId?: number,
+		workplaceType?: string,
+		jobType?: string
 	): Promise<JobRolePaginatedResponse> => {
 		const params = new URLSearchParams({
 			skip: skip.toString(),
@@ -18,6 +20,8 @@ export const jobRoleService = {
 		if (status) params.append('status', status);
 		if (companyId) params.append('company_id', companyId.toString());
 		if (contactId) params.append('contact_id', contactId.toString());
+		if (workplaceType) params.append('workplace_type', workplaceType);
+		if (jobType) params.append('job_type', jobType);
 
 		const response = await api.get<JobRolePaginatedResponse>(`/placement/job-roles?${params.toString()}`);
 		return response.data;

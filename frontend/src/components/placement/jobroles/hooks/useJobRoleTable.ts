@@ -19,20 +19,27 @@ export const useJobRoleTable = () => {
 	const [orderBy, setOrderBy] = useState<keyof JobRole>('created_at');
 	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
-	// Filter state
-	const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+	// Committed filters (used for API calls)
 	const [filters, setFilters] = useState({
 		status: '' as string,
 		workplace_type: [] as string[],
 		job_type: [] as string[]
 	});
 
+	// Local filters (pending selection in the drawer)
+	const [localFilters, setLocalFilters] = useState({
+		status: '' as string,
+		workplace_type: [] as string[],
+		job_type: [] as string[]
+	});
+
+	const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [jobRoleToDelete, setJobRoleToDelete] = useState<JobRole | null>(null);
 	const [deleteLoading, setDeleteLoading] = useState(false);
 
 	const fetchJobRolesData = useCallback(async () => {
-		const filterParams: Record<string, unknown> = {
+		const filterParams: any = {
 			skip: page * rowsPerPage,
 			limit: rowsPerPage,
 			search: debouncedSearchTerm,
@@ -82,18 +89,32 @@ export const useJobRoleTable = () => {
 		setOrderBy(property);
 	};
 
-	const handleFilterOpen = () => setFilterDrawerOpen(true);
+	const handleFilterOpen = () => {
+		// Sync local state from committed state when opening
+		setLocalFilters(filters);
+		setFilterDrawerOpen(true);
+	};
+
 	const handleFilterClose = () => setFilterDrawerOpen(false);
-	const handleFilterChange = (key: string, value: unknown) => setFilters(prev => ({ ...prev, [key]: value }));
+
+	const handleFilterChange = (key: string, value: any) => {
+		// Update only local state
+		setLocalFilters(prev => ({ ...prev, [key]: value }));
+	};
 
 	const applyFilters = () => {
+		// Commit local state to primary state
+		setFilters(localFilters);
 		setPage(0);
 		handleFilterClose();
 	};
 
 	const clearFilters = () => {
-		setFilters({ status: '', workplace_type: [], job_type: [] });
+		const reset = { status: '', workplace_type: [], job_type: [] };
+		setLocalFilters(reset);
+		setFilters(reset);
 		setPage(0);
+		handleFilterClose();
 	};
 
 	const handleDeleteClick = (jobRole: JobRole) => {
@@ -133,7 +154,7 @@ export const useJobRoleTable = () => {
 		order,
 		orderBy,
 		filterDrawerOpen,
-		filters,
+		filters: localFilters, // Pass local state to the drawer for pending selection
 		deleteDialogOpen,
 		jobRoleToDelete,
 		deleteLoading,

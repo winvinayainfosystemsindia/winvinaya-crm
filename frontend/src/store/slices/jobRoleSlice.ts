@@ -20,7 +20,7 @@ const initialState: JobRoleState = {
 
 export const fetchJobRoles = createAsyncThunk(
 	'jobRoles/fetchAll',
-	async (params: { skip?: number; limit?: number; search?: string; status?: JobRoleStatus; companyId?: number; contactId?: number }, { rejectWithValue }) => {
+	async (params: { skip?: number; limit?: number; search?: string; status?: JobRoleStatus; companyId?: number; contactId?: number; workplace_type?: string; job_type?: string }, { rejectWithValue }) => {
 		try {
 			const response = await jobRoleService.getAll(
 				params.skip,
@@ -28,7 +28,9 @@ export const fetchJobRoles = createAsyncThunk(
 				params.search,
 				params.status,
 				params.companyId,
-				params.contactId
+				params.contactId,
+				params.workplace_type,
+				params.job_type
 			);
 			return response;
 		} catch (error: any) {
