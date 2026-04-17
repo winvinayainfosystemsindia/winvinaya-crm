@@ -23,6 +23,7 @@ const JobRoleStats: React.FC<JobRoleStatsProps> = ({ list, total }) => {
 				<StatCard
 					title="Total Job Roles"
 					value={total}
+					subtitle="Overall positions created"
 					icon={<JobIcon />}
 					color={theme.palette.primary.main}
 				/>
@@ -31,6 +32,7 @@ const JobRoleStats: React.FC<JobRoleStatsProps> = ({ list, total }) => {
 				<StatCard
 					title="Active Openings"
 					value={list.filter(j => j.status === JOB_ROLE_STATUS.ACTIVE).length}
+					subtitle="Accepting applications"
 					icon={<VisibilityIcon />}
 					color={theme.palette.success.main}
 				/>
@@ -39,6 +41,7 @@ const JobRoleStats: React.FC<JobRoleStatsProps> = ({ list, total }) => {
 				<StatCard
 					title="Total Vacancies"
 					value={list.reduce((acc, j) => acc + (j.no_of_vacancies || 0), 0)}
+					subtitle="Across all active roles"
 					icon={<VacancyIcon />}
 					color={theme.palette.warning.main}
 				/>
@@ -47,6 +50,7 @@ const JobRoleStats: React.FC<JobRoleStatsProps> = ({ list, total }) => {
 				<StatCard
 					title="Partner Companies"
 					value={new Set(list.map(j => j.company_id)).size}
+					subtitle="Unique organization partners"
 					icon={<BusinessIcon />}
 					color={theme.palette.secondary.main}
 				/>
