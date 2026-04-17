@@ -14,6 +14,7 @@ export interface ColumnDefinition<T> {
 	align?: 'left' | 'right' | 'center';
 	width?: string | number;
 	hidden?: boolean;
+	hideOnMobile?: boolean;
 }
 
 interface DataTableHeadProps<T> {
@@ -71,7 +72,8 @@ const DataTableHead = <T,>({
 							textTransform: 'uppercase',
 							letterSpacing: '0.05em',
 							borderBottom: `2px solid ${theme.palette.divider}`,
-							py: 1.5
+							py: 1.5,
+							display: column.hideOnMobile ? { xs: 'none', md: 'table-cell' } : 'table-cell'
 						}}
 					>
 						{column.sortable && onSortRequest ? (

@@ -4,6 +4,7 @@ import { TableRow, TableCell, Skeleton } from '@mui/material';
 interface ColumnDef {
 	id: string | number | symbol;
 	align?: 'left' | 'right' | 'center';
+	hideOnMobile?: boolean;
 }
 
 interface DataTableSkeletonProps {
@@ -21,7 +22,11 @@ const DataTableSkeleton: React.FC<DataTableSkeletonProps> = ({ columns, rowsPerP
 			{Array.from(new Array(rowsPerPage)).map((_, index) => (
 				<TableRow key={`skeleton-${index}`}>
 					{columns.map((col, colIdx) => (
-						<TableCell key={`skeleton-cell-${colIdx}`} align={col.align || 'left'}>
+						<TableCell 
+							key={`skeleton-cell-${colIdx}`} 
+							align={col.align || 'left'}
+							sx={{ display: col.hideOnMobile ? { xs: 'none', md: 'table-cell' } : 'table-cell' }}
+						>
 							<Skeleton 
 								variant="text" 
 								width={col.id === 'actions' ? 60 : '80%'} 

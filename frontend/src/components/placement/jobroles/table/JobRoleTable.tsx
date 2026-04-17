@@ -1,24 +1,14 @@
 import React from 'react';
-import {
-	Paper,
-	Table,
-	TableBody,
-	TableContainer
-} from '@mui/material';
 import ConfirmDialog from '../../../common/ConfirmDialog';
 import { useJobRoleTable } from '../hooks/useJobRoleTable';
 import { getJobRoleFilterFields } from './JobRoleFilters';
-
-// Sub-components
-import JobRoleTableHeader from './JobRoleTableHeader';
-import JobRoleTableHead from './JobRoleTableHead';
+import FilterDrawer from '../../../common/FilterDrawer';
+import DataTable, { type ColumnDefinition } from '../../../common/table/DataTable';
 import JobRoleTableRow from './JobRoleTableRow';
-import CustomTablePagination from '../../../common/CustomTablePagination';
-import JobRoleTableLoader from './JobRoleTableLoader';
-import JobRoleTableEmpty from './JobRoleTableEmpty';
+import type { JobRole } from '../../../../models/jobRole';
 
 interface JobRoleTableProps {
-	onEditJobRole: (jobRole: any) => void;
+	onEditJobRole: (jobRole: JobRole) => void;
 }
 
 const JobRoleTable: React.FC<JobRoleTableProps> = ({ onEditJobRole }) => {
@@ -49,8 +39,7 @@ const JobRoleTable: React.FC<JobRoleTableProps> = ({ onEditJobRole }) => {
 		clearFilters,
 		handleDeleteClick,
 		handleDeleteConfirm,
-		handleDeleteCancel,
-		setRowsPerPage
+		handleDeleteCancel
 	} = useJobRoleTable();
 
 	const activeFilterCount = (
@@ -61,58 +50,62 @@ const JobRoleTable: React.FC<JobRoleTableProps> = ({ onEditJobRole }) => {
 
 	const filterFields = getJobRoleFilterFields();
 
+	// Define columns for the DataTable
+	const columns: ColumnDefinition<JobRole>[] = [
+		{ id: 'title', label: 'Job Title', sortable: true },
+		{ id: 'company_id', label: 'Company & Contact' },
+		{ id: 'status', label: 'Status', sortable: true },
+		{ id: 'location', label: 'Location', hideOnMobile: true },
+		{ id: 'no_of_vacancies', label: 'Vacancies', sortable: true, align: 'center', hideOnMobile: true },
+		{ id: 'close_date', label: 'Close Date', sortable: true, hideOnMobile: true },
+		{ id: 'created_by_id', label: 'Created By', hideOnMobile: true },
+		{ id: 'mappings_count', label: 'Mappings', align: 'center', hideOnMobile: true },
+		{ id: 'actions', label: 'Actions', align: 'right' }
+	];
+
+	// Note: We maintain specific breakpoints logic in JobRoleTableRow for hidden columns
+	// to ensure exact layout fidelity on mobile/tablets.
+
 	return (
-		<Paper sx={{ border: '1px solid', borderColor: 'divider', boxShadow: 'none', borderRadius: 0 }}>
-			<JobRoleTableHeader
-				searchTerm={searchTerm}
-				onSearchChange={handleSearch}
-				onRefresh={fetchJobRolesData}
+		<>
+			<DataTable<JobRole>
+				columns={columns}
+				data={jobRoles}
 				loading={loading}
-				activeFilterCount={activeFilterCount}
-				filterDrawerOpen={filterDrawerOpen}
+				totalCount={totalCount}
+				page={page}
+				rowsPerPage={rowsPerPage}
+				onPageChange={(p) => handleChangePage(null, p)}
+				onRowsPerPageChange={(rows) => handleChangeRowsPerPage({ target: { value: rows.toString() } } as any)}
+				searchTerm={searchTerm}
+				onSearchChange={(v) => handleSearch({ target: { value: v } } as any)}
+				searchPlaceholder="Search job roles..."
+				orderBy={orderBy as keyof JobRole}
+				order={order}
+				onSortRequest={(property) => handleRequestSort(property as keyof JobRole)}
+				onRefresh={fetchJobRolesData}
 				onFilterOpen={handleFilterOpen}
-				onFilterClose={handleFilterClose}
-				filterFields={filterFields}
-				filters={filters}
+				activeFilterCount={activeFilterCount}
+				emptyMessage="No job roles found. Adjust your search or filters."
+				renderRow={(role) => (
+					<JobRoleTableRow
+						key={role.public_id}
+						jobRole={role}
+						onEdit={onEditJobRole}
+						onDelete={handleDeleteClick}
+						isAdmin={user?.role === 'admin' || user?.role === 'manager' || user?.role === 'placement'}
+					/>
+				)}
+			/>
+
+			<FilterDrawer
+				open={filterDrawerOpen}
+				onClose={handleFilterClose}
+				fields={filterFields}
+				activeFilters={filters}
 				onFilterChange={handleFilterChange}
 				onClearFilters={clearFilters}
 				onApplyFilters={applyFilters}
-			/>
-
-			<TableContainer sx={{ minHeight: 400, overflowX: 'auto' }}>
-				<Table stickyHeader size="small" sx={{ minWidth: 900 }}>
-					<JobRoleTableHead
-						order={order}
-						orderBy={orderBy}
-						onRequestSort={handleRequestSort}
-					/>
-					<TableBody>
-						{loading ? (
-							<JobRoleTableLoader rowsPerPage={rowsPerPage} />
-						) : jobRoles.length === 0 ? (
-							<JobRoleTableEmpty />
-						) : (
-							jobRoles.map((role) => (
-								<JobRoleTableRow
-									key={role.public_id}
-									jobRole={role}
-									onEdit={onEditJobRole}
-									onDelete={handleDeleteClick}
-									isAdmin={user?.role === 'admin' || user?.role === 'manager' || user?.role === 'placement'}
-								/>
-							))
-						)}
-					</TableBody>
-				</Table>
-			</TableContainer>
-
-			<CustomTablePagination
-				count={totalCount}
-				page={page}
-				rowsPerPage={rowsPerPage}
-				onPageChange={handleChangePage}
-				onRowsPerPageChange={handleChangeRowsPerPage}
-				onRowsPerPageSelectChange={setRowsPerPage}
 			/>
 
 			<ConfirmDialog
@@ -125,7 +118,7 @@ const JobRoleTable: React.FC<JobRoleTableProps> = ({ onEditJobRole }) => {
 				loading={deleteLoading}
 				severity="error"
 			/>
-		</Paper>
+		</>
 	);
 };
 
