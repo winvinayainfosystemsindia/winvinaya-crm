@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Stack, Button, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Typography, Stack, Button, useTheme, alpha } from '@mui/material';
 import {
 	ArrowBack as ArrowBackIcon,
 	Edit as EditIcon,
@@ -9,6 +9,7 @@ import {
 	Refresh as RefreshIcon
 } from '@mui/icons-material';
 import PlacementStatusBadge from '../common/PlacementStatusBadge';
+import ModuleHeader from '../../../common/header/ModuleHeader';
 import { useNavigate } from 'react-router-dom';
 import type { JobRole } from '../../../../models/jobRole';
 
@@ -20,83 +21,115 @@ interface JobRoleHeaderProps {
 
 const JobRoleHeader: React.FC<JobRoleHeaderProps> = ({ jobRole, onEdit, onRefresh }) => {
 	const theme = useTheme();
-	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const navigate = useNavigate();
+
+	const actions = (
+		<Stack direction="row" spacing={1.5} justifyContent="flex-end" sx={{ width: '100%' }}>
+			<Button
+				variant="outlined"
+				startIcon={<RefreshIcon />}
+				onClick={onRefresh}
+				sx={{
+					color: theme.palette.common.white,
+					borderColor: alpha(theme.palette.common.white, 0.3),
+					textTransform: 'none',
+					fontWeight: 600,
+					'&:hover': { 
+						borderColor: theme.palette.common.white, 
+						bgcolor: alpha(theme.palette.common.white, 0.05) 
+					}
+				}}
+			>
+				Refresh
+			</Button>
+			<Button
+				variant="contained"
+				color="primary"
+				startIcon={<EditIcon />}
+				onClick={onEdit}
+				sx={{
+					textTransform: 'none',
+					fontWeight: 700,
+					px: 3,
+					boxShadow: 'none',
+					'&:hover': {
+						bgcolor: theme.palette.primary.dark,
+						boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+					}
+				}}
+			>
+				Edit Role
+			</Button>
+		</Stack>
+	);
+
+	const infoBar = (
+		<Stack direction="row" spacing={4} sx={{ color: alpha(theme.palette.common.white, 0.8), flexWrap: 'wrap', gap: 2 }}>
+			<Stack direction="row" spacing={1} alignItems="center">
+				<BusinessIcon sx={{ fontSize: 18, color: alpha(theme.palette.common.white, 0.6) }} />
+				<Box>
+					<Typography variant="awsFieldLabel" sx={{ color: alpha(theme.palette.common.white, 0.5), mb: 0 }}>COMPANY</Typography>
+					<Typography variant="body2" sx={{ fontWeight: 600, color: theme.palette.common.white }}>{jobRole.company?.name || 'N/A'}</Typography>
+				</Box>
+			</Stack>
+			
+			<Stack direction="row" spacing={1} alignItems="center">
+				<LocationOnIcon sx={{ fontSize: 18, color: alpha(theme.palette.common.white, 0.6) }} />
+				<Box>
+					<Typography variant="awsFieldLabel" sx={{ color: alpha(theme.palette.common.white, 0.5), mb: 0 }}>LOCATION</Typography>
+					<Typography variant="body2" sx={{ color: theme.palette.common.white, fontWeight: 500 }}>
+						{jobRole.location?.cities?.join(', ') || jobRole.location?.states?.join(', ') || 'Remote'}
+					</Typography>
+				</Box>
+			</Stack>
+
+			<Stack direction="row" spacing={1} alignItems="center">
+				<PersonIcon sx={{ fontSize: 18, color: alpha(theme.palette.common.white, 0.6) }} />
+				<Box>
+					<Typography variant="awsFieldLabel" sx={{ color: alpha(theme.palette.common.white, 0.5), mb: 0 }}>OWNER</Typography>
+					<Typography variant="body2" sx={{ color: theme.palette.common.white, fontWeight: 500 }}>
+						{jobRole.creator?.full_name || jobRole.creator?.username || 'System'}
+					</Typography>
+				</Box>
+			</Stack>
+		</Stack>
+	);
 
 	return (
 		<>
 			{/* Top Bar / Navigation */}
-			<Box sx={{ mb: 3 }}>
+			<Box sx={{ mb: 2 }}>
 				<Button
 					variant="text"
-					startIcon={<ArrowBackIcon />}
+					size="small"
+					startIcon={<ArrowBackIcon sx={{ fontSize: 16 }} />}
 					onClick={() => navigate('/placement/job-roles')}
 					sx={{
-						color: 'text.secondary',
-						fontWeight: 600,
+						color: theme.palette.text.secondary,
+						fontWeight: 700,
 						textTransform: 'none',
-						mb: 1,
-						'&:hover': { bgcolor: 'transparent', color: 'text.primary' }
+						fontSize: '0.75rem',
+						'&:hover': { bgcolor: 'transparent', color: theme.palette.primary.main }
 					}}
 				>
 					Back to Job Roles
 				</Button>
 			</Box>
 
-			{/* AWS Style Header */}
-			<Box sx={{ bgcolor: 'secondary.light', color: 'white', px: 4, py: 3, borderBottom: '1px solid', borderColor: 'divider' }}>
-				<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
-					<Box sx={{ mb: isMobile ? 2 : 0 }}>
-						<Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 1.5 }}>
-							<Typography variant="h5" sx={{ color: 'white' }}>
-								{jobRole.title}
-							</Typography>
-							<PlacementStatusBadge label={jobRole.status} status={jobRole.status} />
-						</Stack>
-						<Stack direction="row" spacing={3} sx={{ color: 'rgba(255,255,255,0.7)', flexWrap: 'wrap', gap: 1.5 }}>
-							<Stack direction="row" spacing={0.75} alignItems="center">
-								<BusinessIcon sx={{ fontSize: 16 }} />
-								<Typography variant="body2" sx={{ fontWeight: 600, color: 'white' }}>{jobRole.company?.name || 'N/A'}</Typography>
-							</Stack>
-							<Stack direction="row" spacing={0.75} alignItems="center">
-								<LocationOnIcon sx={{ fontSize: 16 }} />
-								<Typography variant="body2">
-									{jobRole.location?.cities?.join(', ') || jobRole.location?.states?.join(', ') || 'Remote'}
-								</Typography>
-							</Stack>
-							<Stack direction="row" spacing={0.75} alignItems="center">
-								<PersonIcon sx={{ fontSize: 16 }} />
-								<Typography variant="body2">Owned by <span style={{ color: 'white', fontWeight: 600 }}>{jobRole.creator?.full_name || jobRole.creator?.username || 'System'}</span></Typography>
-							</Stack>
-						</Stack>
-					</Box>
-					<Stack direction="row" spacing={2}>
-						<Button
-							variant="outlined"
-							startIcon={<RefreshIcon />}
-							onClick={onRefresh}
-							sx={{
-								color: 'white',
-								borderColor: 'rgba(255,255,255,0.3)',
-								'&:hover': { borderColor: 'white', bgcolor: 'rgba(255,255,255,0.05)' }
-							}}
-						>
-							Refresh
-						</Button>
-						<Button
-							variant="contained"
-							startIcon={<EditIcon />}
-							onClick={onEdit}
-							sx={{
-								bgcolor: 'accent.main',
-								'&:hover': { bgcolor: 'accent.dark' },
-							}}
-						>
-							Edit Role
-						</Button>
+			<ModuleHeader
+				title={jobRole.title}
+				subtitle={
+					<Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 0.5 }}>
+						<Typography variant="caption" sx={{ color: alpha(theme.palette.common.white, 0.5), fontWeight: 700 }}>
+							ID: {jobRole.public_id}
+						</Typography>
+						<PlacementStatusBadge label={jobRole.status} status={jobRole.status} />
 					</Stack>
-				</Box>
-			</Box>
+				}
+				extra={actions}
+			>
+				{infoBar}
+			</ModuleHeader>
 		</>
 	);
 };

@@ -2,8 +2,8 @@ import React from 'react';
 import { Box, Typography, Container, useTheme, useMediaQuery, alpha } from '@mui/material';
 
 interface ModuleHeaderProps {
-	title: string;
-	subtitle?: string;
+	title: React.ReactNode;
+	subtitle?: React.ReactNode;
 	extra?: React.ReactNode;
 	children?: React.ReactNode; // For info bars or secondary sections
 }
@@ -60,10 +60,10 @@ const ModuleHeader: React.FC<ModuleHeaderProps> = ({
 						flexDirection: isMobile ? 'column' : 'row', 
 						justifyContent: 'space-between', 
 						alignItems: isMobile ? 'flex-start' : 'center', 
-						gap: 3 
+						gap: { xs: 3, md: 5 } 
 					}}
 				>
-					<Box sx={{ flex: 1 }}>
+					<Box sx={{ flex: 1, minWidth: 0 }}>
 						<Typography 
 							variant="h4" 
 							sx={{ 
@@ -72,40 +72,53 @@ const ModuleHeader: React.FC<ModuleHeaderProps> = ({
 								letterSpacing: '-0.02em',
 								color: 'common.white',
 								fontSize: { xs: '1.5rem', sm: '2rem' },
-								textShadow: '0 2px 8px rgba(0,0,0,0.15)'
+								textShadow: '0 2px 8px rgba(0,0,0,0.15)',
+								whiteSpace: 'nowrap',
+								overflow: 'hidden',
+								textOverflow: 'ellipsis'
 							}}
 						>
 							{title}
 						</Typography>
 						{subtitle && (
-							<Typography 
-								variant="body2" 
-								sx={{ 
-									color: alpha(theme.palette.common.white, 0.5), 
-									maxWidth: 650,
-									fontWeight: 400,
-									fontSize: { xs: '0.8rem', sm: '0.9rem' },
-									lineHeight: 1.4
-								}}
-							>
-								{subtitle}
-							</Typography>
+							<Box sx={{ maxWidth: 650 }}>
+								<Typography 
+									variant="body2" 
+									sx={{ 
+										color: alpha(theme.palette.common.white, 0.5), 
+										fontWeight: 400,
+										fontSize: { xs: '0.8rem', sm: '0.9rem' },
+										lineHeight: 1.4
+									}}
+								>
+									{subtitle}
+								</Typography>
+							</Box>
 						)}
 					</Box>
+
 					{extra && (
 						<Box 
 							sx={{ 
-								minWidth: isMobile ? '100%' : 380,
-								bgcolor: alpha(theme.palette.common.white, 0.03),
-								p: 0.25,
+								width: isMobile ? '100%' : 'auto',
+								minWidth: isMobile ? 'none' : 420, // Guaranteed width for professional input elements
+								flexShrink: 0,
+								bgcolor: alpha(theme.palette.common.white, 0.04),
+								p: { xs: 0.5, sm: 0.75 },
+								px: { xs: 1, sm: 2 },
 								borderRadius: 1.5,
-								backdropFilter: 'blur(8px)',
+								backdropFilter: 'blur(12px)',
 								border: '1px solid',
-								borderColor: alpha(theme.palette.common.white, 0.08),
-								boxShadow: '0 4px 10px -3px rgba(0,0,0,0.1)',
-								transition: 'all 0.2s ease',
+								borderColor: alpha(theme.palette.common.white, 0.1),
+								boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+								display: 'flex',
+								alignItems: 'center',
+								justifyContent: isMobile ? 'flex-start' : 'center', // Center content within the box for symmetry
+								transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
 								'&:hover': {
-									bgcolor: alpha(theme.palette.common.white, 0.04),
+									bgcolor: alpha(theme.palette.common.white, 0.07),
+									borderColor: alpha(theme.palette.common.white, 0.15),
+									boxShadow: '0 12px 40px rgba(0,0,0,0.3)',
 								}
 							}}
 						>
