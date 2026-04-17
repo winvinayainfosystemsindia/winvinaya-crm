@@ -17,6 +17,8 @@ interface EnterpriseFormFooterProps {
 	onSave: () => void;
 	onCancel: () => void;
 	isSubmitting?: boolean;
+	saveDisabled?: boolean;
+	useAccent?: boolean; // Toggle between Accent (Orange) and Primary (Blue)
 	saveButtonText?: string;
 	mode: 'create' | 'edit' | 'view';
 	onDelete?: () => void;
@@ -34,6 +36,8 @@ const EnterpriseFormFooter: React.FC<EnterpriseFormFooterProps> = ({
 	onSave,
 	onCancel,
 	isSubmitting = false,
+	saveDisabled = false,
+	useAccent = true,
 	saveButtonText = 'Save Changes',
 	mode,
 	onDelete
@@ -41,8 +45,13 @@ const EnterpriseFormFooter: React.FC<EnterpriseFormFooterProps> = ({
 	const theme = useTheme();
 	const isLastStep = activeStep === totalSteps - 1;
 
-	const accentColor = (theme.palette as any).accent?.main || theme.palette.primary.main;
-	const accentDark = (theme.palette as any).accent?.dark || theme.palette.primary.dark;
+	const accentColor = useAccent 
+		? ((theme.palette as any).accent?.main || theme.palette.primary.main)
+		: theme.palette.primary.main;
+		
+	const accentDark = useAccent
+		? ((theme.palette as any).accent?.dark || theme.palette.primary.dark)
+		: theme.palette.primary.dark;
 
 	return (
 		<Box sx={{
@@ -133,7 +142,7 @@ const EnterpriseFormFooter: React.FC<EnterpriseFormFooterProps> = ({
 								variant="contained"
 								startIcon={isSubmitting ? <CircularProgress size={16} color="inherit" /> : <Save />}
 								onClick={onSave}
-								disabled={isSubmitting}
+								disabled={isSubmitting || saveDisabled}
 								sx={{
 									textTransform: 'none',
 									fontWeight: 700,
@@ -144,6 +153,10 @@ const EnterpriseFormFooter: React.FC<EnterpriseFormFooterProps> = ({
 									'&:hover': {
 										bgcolor: accentDark,
 										boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+									},
+									'&.Mui-disabled': {
+										bgcolor: alpha(accentColor, 0.3),
+										color: alpha('#fff', 0.8)
 									}
 								}}
 							>
@@ -154,6 +167,7 @@ const EnterpriseFormFooter: React.FC<EnterpriseFormFooterProps> = ({
 								variant="contained"
 								endIcon={<NavigateNext />}
 								onClick={onNext}
+								disabled={saveDisabled}
 								sx={{
 									textTransform: 'none',
 									fontWeight: 700,

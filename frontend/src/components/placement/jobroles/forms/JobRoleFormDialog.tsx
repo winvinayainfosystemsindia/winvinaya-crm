@@ -417,6 +417,8 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 					onSave={handleSubmit}
 					onCancel={onClose}
 					isSubmitting={loading || isExtracting}
+					saveDisabled={!validation.isValid}
+					useAccent={false}
 					saveButtonText={activeStep === 1 ? 'Run AI Analysis' : (jobRole ? 'Update Requisition' : 'Publish Requisition')}
 					mode={jobRole ? 'edit' : 'create'}
 				/>
