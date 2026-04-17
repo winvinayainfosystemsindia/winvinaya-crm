@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Button } from '@mui/material';
+import { Box, Button, useTheme } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import { useSnackbar } from 'notistack';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
@@ -18,6 +18,7 @@ interface JobRoleListProps {
 }
 
 const JobRoleList: React.FC<JobRoleListProps> = ({ title = "Job Role Management", subtitle }) => {
+	const theme = useTheme();
 	const dispatch = useAppDispatch();
 	const { enqueueSnackbar } = useSnackbar();
 	const { list, total } = useAppSelector((state: any) => state.jobRoles);
@@ -60,9 +61,19 @@ const JobRoleList: React.FC<JobRoleListProps> = ({ title = "Job Role Management"
 				actions={
 					<Button
 						variant="contained"
+						color="primary"
 						startIcon={<AddIcon />}
 						onClick={handleAdd}
-						sx={{ bgcolor: '#ec7211', px: 3, fontWeight: 700, borderRadius: '2px', '&:hover': { bgcolor: '#eb5f07' } }}
+						sx={{
+							px: 3,
+							fontWeight: 700,
+							borderRadius: `${theme.shape.borderRadius}px`,
+							boxShadow: '0 2px 4px 0 rgba(0,77,230,0.2)', // Thematic shadow based on primary color
+							'&:hover': {
+								bgcolor: theme.palette.primary.dark,
+								boxShadow: '0 4px 8px 0 rgba(0,77,230,0.3)',
+							}
+						}}
 					>
 						Add Job Role
 					</Button>
