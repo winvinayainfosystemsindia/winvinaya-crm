@@ -6,12 +6,12 @@ import {
 	Typography,
 	Stack
 } from '@mui/material';
-import HistoryRow, { HistoryMobileCard } from './HistoryRow';
+import MySubmissionsRow, { MySubmissionsMobileCard } from './MySubmissionsRow';
 import type { DSREntry } from '../../../../models/dsr';
 import DataTable from '../../../common/table/DataTable';
 import type { ColumnDefinition } from '../../../common/table/DataTable';
 
-interface HistoryTableProps {
+interface MySubmissionsTableProps {
 	entries: DSREntry[];
 	total: number;
 	loading: boolean;
@@ -30,7 +30,7 @@ interface HistoryTableProps {
 	activeFilterCount: number;
 }
 
-const HistoryTable: React.FC<HistoryTableProps> = ({
+const MySubmissionsTable: React.FC<MySubmissionsTableProps> = ({
 	entries,
 	total,
 	loading,
@@ -69,7 +69,7 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
 					) : (
 						<Stack spacing={1}>
 							{entries.map((entry) => (
-								<HistoryMobileCard
+								<MySubmissionsMobileCard
 									key={entry.public_id}
 									entry={entry}
 									onDelete={onDelete}
@@ -101,7 +101,7 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
 			activeFilterCount={activeFilterCount}
 			emptyMessage="No timesheet records found for the selected period."
 			renderRow={(entry) => (
-				<HistoryRow
+				<MySubmissionsRow
 					key={entry.public_id}
 					entry={entry}
 					onDelete={onDelete}
@@ -113,4 +113,4 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
 	);
 };
 
-export default HistoryTable;
+export default MySubmissionsTable;

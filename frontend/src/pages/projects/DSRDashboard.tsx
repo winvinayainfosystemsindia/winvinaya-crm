@@ -17,7 +17,7 @@ import {
 	EventBusy as LeaveIcon
 } from '@mui/icons-material';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
-import HistoryTable from '../../components/projects/dsr/history/HistoryTable';
+import MySubmissionsTable from '../../components/projects/dsr/my-submission/MySubmissionsTable';
 import { useDSRHistory } from '../../components/projects/dsr/hooks/useDSRHistory';
 import DSRAdminSection from '../../components/projects/dsr/admin/DSRAdminSection';
 import { useDSRAdmin } from '../../components/projects/dsr/hooks/useDSRAdmin';
@@ -364,7 +364,7 @@ const DSRDashboard: React.FC = () => {
 											minWidth: 0,
 											order: { xs: 2, xl: 1 }
 										}}>
-											<HistoryTable
+											<MySubmissionsTable
 												entries={history.entries}
 												total={history.total}
 												loading={history.loading}

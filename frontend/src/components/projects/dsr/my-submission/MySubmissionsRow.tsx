@@ -30,7 +30,7 @@ import ConfirmDialog from '../../../common/ConfirmDialog';
 import type { DSREntry } from '../../../../models/dsr';
 import { DSRStatusValues } from '../../../../models/dsr';
 
-interface HistoryRowProps {
+interface MySubmissionsRowProps {
 	entry: DSREntry;
 	onDelete: (id: string) => void;
 	onEdit?: (id: string) => void;
@@ -117,7 +117,7 @@ export const StatusChip: React.FC<{ entry: DSREntry }> = ({ entry }) => {
 	);
 };
 
-export const HistoryMobileCard: React.FC<HistoryRowProps> = ({ entry, onDelete, onEdit, onView }) => {
+export const MySubmissionsMobileCard: React.FC<MySubmissionsRowProps> = ({ entry, onDelete, onEdit, onView }) => {
 	const totalHours = entry.items.reduce((sum, item) => sum + item.hours, 0);
 	const isRejected = entry.status === DSRStatusValues.DRAFT && entry.admin_notes;
 	const isDraft = entry.status === DSRStatusValues.DRAFT;
@@ -169,7 +169,7 @@ export const HistoryMobileCard: React.FC<HistoryRowProps> = ({ entry, onDelete, 
 	);
 };
 
-const HistoryRow: React.FC<HistoryRowProps> = ({
+const MySubmissionsRow: React.FC<MySubmissionsRowProps> = ({
 	entry,
 	onDelete,
 	onEdit,
@@ -192,7 +192,6 @@ const HistoryRow: React.FC<HistoryRowProps> = ({
 				}
 			}}
 		>
-			{/* Report Date */}
 			<TableCell>
 				<Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
 					{new Date(entry.report_date).toLocaleDateString('en-GB', {
@@ -201,12 +200,10 @@ const HistoryRow: React.FC<HistoryRowProps> = ({
 				</Typography>
 			</TableCell>
 
-			{/* Status */}
 			<TableCell>
 				<StatusChip entry={entry} />
 			</TableCell>
 
-			{/* Total Hours */}
 			<TableCell>
 				<Typography 
 					variant="body2" 
@@ -219,7 +216,6 @@ const HistoryRow: React.FC<HistoryRowProps> = ({
 				</Typography>
 			</TableCell>
 
-			{/* Submitted At */}
 			<TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>
 				<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
 					{entry.submitted_at
@@ -230,7 +226,6 @@ const HistoryRow: React.FC<HistoryRowProps> = ({
 				</Typography>
 			</TableCell>
 
-			{/* Actions */}
 			<TableCell align="right" sx={{ pr: 2 }}>
 				<ActionMenu
 					entry={entry}
@@ -354,4 +349,4 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ entry, onView, onEdit, onDelete
 	);
 };
 
-export default HistoryRow;
+export default MySubmissionsRow;
