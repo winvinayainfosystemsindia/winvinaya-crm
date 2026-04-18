@@ -47,10 +47,11 @@ class PlacementEmailService:
         user_id: int,
         custom_email: Optional[str] = None,
         custom_subject: Optional[str] = None,
-        custom_message: Optional[str] = None
+        custom_message: Optional[str] = None,
+        document_ids: Optional[List[int]] = None
     ) -> bool:
         """
-        Send multiple candidate profiles and resumes to the company contact in one email.
+        Send multiple candidate profiles and selected documents to the company contact.
         """
         if not mapping_ids:
             raise HTTPException(status_code=400, detail="No candidates selected")
@@ -64,6 +65,9 @@ class PlacementEmailService:
             raise HTTPException(status_code=404, detail="Placement mapping not found")
 
         job_role = await self.db.get(JobRole, first_mapping.job_role_id)
+        if not job_role:
+             raise HTTPException(status_code=404, detail="Job role not found")
+
         contact = await self.db.get(Contact, job_role.contact_id)
         
         if not contact or not (custom_email or contact.email):
@@ -100,24 +104,38 @@ class PlacementEmailService:
             
             candidates_info.append(c)
             
-            # Get Resume
-            resume_query = select(CandidateDocument).where(
-                CandidateDocument.candidate_id == c.id,
-                CandidateDocument.document_type == 'resume'
-            ).order_by(CandidateDocument.created_at.desc())
-            resume_result = await self.db.execute(resume_query)
-            resume = resume_result.scalars().first()
-            
-            if resume:
-                full_path = FileStorageService.get_file_path(resume.file_path)
+            # Identify which documents to attach
+            docs_to_attach = []
+            if document_ids:
+                # Use specified document IDs for this candidate
+                d_query = select(CandidateDocument).where(
+                    CandidateDocument.candidate_id == c.id,
+                    CandidateDocument.id.in_(document_ids)
+                )
+                d_res = await self.db.execute(d_query)
+                docs_to_attach = d_res.scalars().all()
+            else:
+                # Default: latest resume only
+                resume_query = select(CandidateDocument).where(
+                    CandidateDocument.candidate_id == c.id,
+                    CandidateDocument.document_type == 'resume'
+                ).order_by(CandidateDocument.created_at.desc())
+                resume_result = await self.db.execute(resume_query)
+                resume = resume_result.scalars().first()
+                if resume:
+                    docs_to_attach = [resume]
+
+            # Attach each document
+            for doc in docs_to_attach:
+                full_path = FileStorageService.get_file_path(doc.file_path)
                 if full_path and os.path.exists(full_path):
                     try:
                         with open(full_path, "rb") as f:
-                            part = MIMEApplication(f.read(), Name=resume.document_name)
-                        part['Content-Disposition'] = f'attachment; filename="{resume.document_name}"'
+                            part = MIMEApplication(f.read(), Name=doc.document_name)
+                        part['Content-Disposition'] = f'attachment; filename="{doc.document_name}"'
                         msg.attach(part)
                     except Exception as e:
-                        logger.error(f"Failed to attach resume for {c.name}: {str(e)}")
+                        logger.error(f"Failed to attach document {doc.document_name} for {c.name}: {str(e)}")
 
         if not candidates_info:
             raise HTTPException(status_code=404, detail="No valid candidates found for the selected IDs")
@@ -147,7 +165,7 @@ We are pleased to share the profiles of the following candidates for the {job_ro
 
 {profiles_text}
 
-Please find the attached resumes for your review. We look forward to your feedback and scheduling the next steps.
+Please find the attached documents for your review. We look forward to your feedback and scheduling the next steps.
 
 Best regards,
 {email_config.sender_name or 'WinVinaya Placement Team'}
@@ -166,7 +184,7 @@ Candidate Summary:
 - Email: {c.email}
 - Phone: {c.phone}
 
-Please find the attached resume for your review. We look forward to your feedback and scheduling the next steps.
+Please find the attached documents for your review. We look forward to your feedback and scheduling the next steps.
 
 Best regards,
 {email_config.sender_name or 'WinVinaya Placement Team'}

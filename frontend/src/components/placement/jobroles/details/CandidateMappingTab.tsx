@@ -169,11 +169,12 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
         }
     };
 
-    const handleSendBulkEmail = async (data: { email: string; subject: string; message: string }) => {
+    const handleSendBulkEmail = async (data: { email: string; subject: string; message: string; document_ids: number[] }) => {
         setSendingEmail(true);
         try {
             await placementEmailService.sendBulkProfiles({
                 mapping_ids: selectedMappings,
+                document_ids: data.document_ids,
                 custom_email: data.email,
                 custom_subject: data.subject,
                 custom_message: data.message
@@ -667,6 +668,7 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                     open={emailDialogOpen}
                     onClose={() => setEmailDialogOpen(false)}
                     onSend={handleSendBulkEmail}
+                    mappingIds={selectedMappings}
                     candidateNames={selectedCandidateNames}
                     jobTitle={jobRole.title}
                     contactEmail={jobRole.contact.email || ''}

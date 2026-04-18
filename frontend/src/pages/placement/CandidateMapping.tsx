@@ -128,14 +128,16 @@ const CandidateMapping = () => {
 		}
 	};
 
-	const handleSendEmail = async (data: { email: string; subject: string; message: string }) => {
+	const handleSendEmail = async (data: { email: string; subject: string; message: string; document_ids: number[] }) => {
 		if (!candidateForEmail || !candidateForEmail.mapping_id) return;
 		setSendingEmail(true);
 		try {
 			await placementEmailService.sendCandidateProfile(candidateForEmail.mapping_id, {
 				custom_email: data.email,
 				custom_subject: data.subject,
-				custom_message: data.message
+				custom_message: data.message,
+				document_ids: data.document_ids,
+				mapping_ids: [candidateForEmail.mapping_id]
 			});
 			toast.success(`Profile sent successfully to ${data.email}`);
 			setEmailDialogOpen(false);
@@ -305,6 +307,7 @@ const CandidateMapping = () => {
 					open={emailDialogOpen}
 					onClose={() => setEmailDialogOpen(false)}
 					onSend={handleSendEmail}
+					mappingIds={candidateForEmail.mapping_id ? [candidateForEmail.mapping_id] : []}
 					candidateNames={[candidateForEmail.name]}
 					jobTitle={selectedRole.title}
 					contactEmail={selectedRole.contact?.email || ''}

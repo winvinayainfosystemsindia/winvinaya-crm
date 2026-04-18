@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -12,6 +12,14 @@ import {
     IconButton,
     CircularProgress,
     Chip,
+    Checkbox,
+    FormControlLabel,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemIcon,
+    ListItemText,
+    Collapse,
 } from '@mui/material';
 import {
     Close as CloseIcon,
@@ -19,14 +27,19 @@ import {
     Subject as SubjectIcon,
     Message as MessageIcon,
     AttachFile as AttachIcon,
-    Groups as GroupsIcon
+    Groups as GroupsIcon,
+    ExpandLess,
+    ExpandMore,
+    Description as DocIcon
 } from '@mui/icons-material';
+import placementEmailService, { type CandidateAvailableDocuments } from '../../../../services/placementEmailService';
 
 interface CandidateEmailDialogProps {
     open: boolean;
     onClose: () => void;
-    onSend: (data: { email: string; subject: string; message: string }) => void;
-    candidateNames: string[]; // Supports multiple names for bulk
+    onSend: (data: { email: string; subject: string; message: string; document_ids: number[] }) => void;
+    mappingIds: number[];
+    candidateNames: string[];
     jobTitle: string;
     contactEmail: string;
     contactName: string;
@@ -37,6 +50,7 @@ const CandidateEmailDialog: React.FC<CandidateEmailDialogProps> = ({
     open,
     onClose,
     onSend,
+    mappingIds,
     candidateNames,
     jobTitle,
     contactEmail,
@@ -46,8 +60,44 @@ const CandidateEmailDialog: React.FC<CandidateEmailDialogProps> = ({
     const [email, setEmail] = useState(contactEmail);
     const [subject, setSubject] = useState('');
     const [message, setMessage] = useState('');
+    
+    // Document Selection State
+    const [availableDocs, setAvailableDocs] = useState<CandidateAvailableDocuments[]>([]);
+    const [selectedDocIds, setSelectedDocIds] = useState<number[]>([]);
+    const [fetchingDocs, setFetchingDocs] = useState(false);
+    const [expandedCandidates, setExpandedCandidates] = useState<Record<number, boolean>>({});
 
-    const isBulk = candidateNames.length > 1;
+    const isBulk = mappingIds.length > 1;
+
+    const fetchDocuments = useCallback(async () => {
+        if (!mappingIds.length) return;
+        setFetchingDocs(true);
+        try {
+            const docs = await placementEmailService.getAvailableDocuments(mappingIds);
+            setAvailableDocs(docs);
+            
+            // Auto-select latest resumes
+            const resumeIds: number[] = [];
+            docs.forEach(cGroup => {
+                // Find all resumes
+                const resumes = cGroup.documents.filter(d => d.type === 'resume');
+                if (resumes.length > 0) {
+                    // Only select the first resume (usually most recent if backend orders correctly)
+                    resumeIds.push(resumes[0].id);
+                }
+            });
+            setSelectedDocIds(resumeIds);
+            
+            // Expand all by default
+            const expanded: Record<number, boolean> = {};
+            docs.forEach(d => expanded[d.mapping_id] = true);
+            setExpandedCandidates(expanded);
+        } catch (error) {
+            console.error('Failed to fetch candidate documents', error);
+        } finally {
+            setFetchingDocs(false);
+        }
+    }, [mappingIds]);
 
     useEffect(() => {
         if (open) {
@@ -68,17 +118,36 @@ const CandidateEmailDialog: React.FC<CandidateEmailDialogProps> = ({
             setSubject(defaultSubject);
 
             const defaultMessage = isBulk
-                ? `Dear ${contactName},\n\nI hope this email finds you well.\n\nWe are pleased to share the profiles of the following candidates for the ${jobTitle} position at your organization:\n\n${candidateNames.map(n => `- ${n}`).join('\n')}\n\nPlease find the attached resumes for your review. We look forward to your feedback and scheduling the next steps.\n\nBest regards,\nWinVinaya Placement Team`
-                : `Dear ${contactName},\n\nI hope this email finds you well.\n\nWe are pleased to share the profile of ${candidateNames[0]} for the ${jobTitle} position at your organization. \n\nPlease find the attached resume for your review. We look forward to your feedback and scheduling the next steps.\n\nBest regards,\nWinVinaya Placement Team`;
+                ? `Dear ${contactName},\n\nI hope this email finds you well.\n\nWe are pleased to share the profiles of the following candidates for the ${jobTitle} position at your organization:\n\n${candidateNames.map(n => `- ${n}`).join('\n')}\n\nPlease find the attached documents for your review. We look forward to your feedback and scheduling the next steps.\n\nBest regards,\nWinVinaya Placement Team`
+                : `Dear ${contactName},\n\nI hope this email finds you well.\n\nWe are pleased to share the profile of ${candidateNames[0]} for the ${jobTitle} position at your organization. \n\nPlease find the attached documents for your review. We look forward to your feedback and scheduling the next steps.\n\nBest regards,\nWinVinaya Placement Team`;
             
             setMessage(defaultMessage);
+            fetchDocuments();
         }
-    }, [open, candidateNames, jobTitle, contactEmail, contactName, isBulk]);
+    }, [open, candidateNames, jobTitle, contactEmail, contactName, isBulk, fetchDocuments]);
+
+    const handleToggleDoc = (docId: number) => {
+        setSelectedDocIds(prev => 
+            prev.includes(docId) ? prev.filter(id => id !== docId) : [...prev, docId]
+        );
+    };
+
+    const handleToggleExpand = (mappingId: number) => {
+        setExpandedCandidates(prev => ({ ...prev, [mappingId]: !prev[mappingId] }));
+    };
 
     const handleSend = () => {
         if (email.trim() && subject.trim() && message.trim()) {
-            onSend({ email, subject, message });
+            onSend({ email, subject, message, document_ids: selectedDocIds });
         }
+    };
+
+    const formatSize = (bytes: number) => {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
     };
 
     return (
@@ -103,85 +172,157 @@ const CandidateEmailDialog: React.FC<CandidateEmailDialogProps> = ({
             </DialogTitle>
 
             <DialogContent sx={{ p: 4 }}>
-                <Stack spacing={3} sx={{ mt: 1 }}>
-                    {isBulk && (
-                        <Box sx={{ mb: 1 }}>
-                             <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: '#545b64' }}>
-                                SELECTED CANDIDATES
-                            </Typography>
-                            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                                {candidateNames.map((name, i) => (
-                                    <Chip key={i} label={name} size="small" variant="outlined" sx={{ borderRadius: '4px' }} />
-                                ))}
-                            </Stack>
-                        </Box>
-                    )}
-
-                    <Box>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: '#545b64', display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <EmailIcon sx={{ fontSize: 16 }} /> RECIPIENT EMAIL
-                        </Typography>
-                        <TextField
-                            fullWidth
-                            variant="outlined"
-                            size="small"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="contact@company.com"
-                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px' } }}
-                        />
-                    </Box>
-
-                    <Box>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: '#545b64', display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <SubjectIcon sx={{ fontSize: 16 }} /> SUBJECT
-                        </Typography>
-                        <TextField
-                            fullWidth
-                            variant="outlined"
-                            size="small"
-                            value={subject}
-                            onChange={(e) => setSubject(e.target.value)}
-                            placeholder="Enter email subject..."
-                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px' } }}
-                        />
-                    </Box>
-
-                    <Box>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: '#545b64', display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <MessageIcon sx={{ fontSize: 16 }} /> MESSAGE
-                        </Typography>
-                        <TextField
-                            fullWidth
-                            multiline
-                            rows={isBulk ? 10 : 7}
-                            variant="outlined"
-                            value={message}
-                            onChange={(e) => setMessage(e.target.value)}
-                            placeholder="Compose your message..."
-                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px' } }}
-                        />
-                    </Box>
-
-                    <Box sx={{ p: 2, bgcolor: '#f1faff', borderRadius: '8px', border: '1px dashed #0073bb' }}>
-                        <Stack direction="row" spacing={2} alignItems="center">
-                            <AttachIcon sx={{ color: '#0073bb' }} />
+                <Stack spacing={4} sx={{ mt: 1 }}>
+                    <Box sx={{ borderBottom: '1px solid #eaeded', pb: 4 }}>
+                        <Stack spacing={3}>
                             <Box>
-                                <Typography variant="body2" sx={{ fontWeight: 700, color: '#0073bb' }}>
-                                    {isBulk ? `Automatic Attachments (${candidateNames.length} Files)` : 'Automatic Attachment'}
+                                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: '#545b64', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <EmailIcon sx={{ fontSize: 16 }} /> RECIPIENT EMAIL
                                 </Typography>
-                                <Typography variant="caption" sx={{ color: '#545b64' }}>
-                                    {isBulk 
-                                        ? "Resumes for all selected candidates will be automatically attached if available."
-                                        : "Candidate's latest resume will be automatically attached if available."}
+                                <TextField
+                                    fullWidth
+                                    variant="outlined"
+                                    size="small"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px' } }}
+                                />
+                            </Box>
+
+                            <Box>
+                                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: '#545b64', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <SubjectIcon sx={{ fontSize: 16 }} /> SUBJECT
                                 </Typography>
+                                <TextField
+                                    fullWidth
+                                    variant="outlined"
+                                    size="small"
+                                    value={subject}
+                                    onChange={(e) => setSubject(e.target.value)}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px' } }}
+                                />
+                            </Box>
+
+                            <Box>
+                                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: '#545b64', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <MessageIcon sx={{ fontSize: 16 }} /> MESSAGE
+                                </Typography>
+                                <TextField
+                                    fullWidth
+                                    multiline
+                                    rows={6}
+                                    variant="outlined"
+                                    value={message}
+                                    onChange={(e) => setMessage(e.target.value)}
+                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px' } }}
+                                />
                             </Box>
                         </Stack>
+                    </Box>
+
+                    <Box>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 2, color: '#232f3e', display: 'flex', alignItems: 'center', gap: 1, letterSpacing: '0.05rem' }}>
+                            <AttachIcon sx={{ fontSize: 18, color: '#0073bb' }} /> SELECT DOCUMENTS TO ATTACH
+                        </Typography>
+
+                        {fetchingDocs ? (
+                            <Box sx={{ p: 4, textAlign: 'center' }}>
+                                <CircularProgress size={30} sx={{ color: '#0073bb' }} />
+                                <Typography variant="body2" sx={{ mt: 1, color: '#545b64' }}>Fetching candidate documents...</Typography>
+                            </Box>
+                        ) : availableDocs.length > 0 ? (
+                            <List sx={{ bgcolor: '#f8f9f9', borderRadius: '8px', border: '1px solid #eaeded', p: 0 }}>
+                                {availableDocs.map((cGroup) => (
+                                    <React.Fragment key={cGroup.mapping_id}>
+                                        <ListItem 
+                                            disablePadding
+                                            sx={{ 
+                                                borderBottom: '1px solid #eaeded',
+                                                bgcolor: 'white',
+                                                '&:hover': { bgcolor: '#f1faff' }
+                                            }}
+                                        >
+                                            <ListItemButton onClick={() => handleToggleExpand(cGroup.mapping_id)}>
+                                                <ListItemIcon sx={{ minWidth: 40 }}>
+                                                    <GroupsIcon sx={{ color: '#545b64', fontSize: 20 }} />
+                                                </ListItemIcon>
+                                                <ListItemText 
+                                                    primary={cGroup.candidate_name} 
+                                                    primaryTypographyProps={{ variant: 'body2', fontWeight: 700, color: '#232f3e' }}
+                                                    secondary={`${cGroup.documents.length} Available Documents`}
+                                                />
+                                                {expandedCandidates[cGroup.mapping_id] ? <ExpandLess /> : <ExpandMore />}
+                                            </ListItemButton>
+                                        </ListItem>
+                                        <Collapse in={expandedCandidates[cGroup.mapping_id]} timeout="auto" unmountOnExit>
+                                            <List component="div" disablePadding>
+                                                {cGroup.documents.map((doc) => (
+                                                    <ListItem 
+                                                        key={doc.id}
+                                                        sx={{ 
+                                                            pl: 6, 
+                                                            py: 1, 
+                                                            bgcolor: selectedDocIds.includes(doc.id) ? '#f1faff' : 'transparent',
+                                                            borderBottom: '1px solid #f1f1f1',
+                                                            '&:last-child': { borderBottom: 'none' }
+                                                        }}
+                                                    >
+                                                        <FormControlLabel
+                                                            control={
+                                                                <Checkbox 
+                                                                    size="small" 
+                                                                    checked={selectedDocIds.includes(doc.id)} 
+                                                                    onChange={() => handleToggleDoc(doc.id)}
+                                                                />
+                                                            }
+                                                            label={
+                                                                <Stack direction="row" spacing={1} alignItems="center">
+                                                                    <DocIcon sx={{ fontSize: 16, color: doc.type === 'resume' ? '#1d8102' : '#545b64' }} />
+                                                                    <Typography variant="body2" sx={{ fontWeight: doc.type === 'resume' ? 700 : 500 }}>
+                                                                        {doc.name}
+                                                                    </Typography>
+                                                                    {doc.type === 'resume' && (
+                                                                        <Chip label="Resume" size="small" sx={{ height: 18, fontSize: '0.65rem', fontWeight: 700, bgcolor: '#e7f4e4', color: '#1d8102' }} />
+                                                                    )}
+                                                                    <Typography variant="caption" sx={{ color: '#879596' }}>
+                                                                        ({formatSize(doc.size)})
+                                                                    </Typography>
+                                                                </Stack>
+                                                            }
+                                                            sx={{ width: '100%', m: 0 }}
+                                                        />
+                                                    </ListItem>
+                                                ))}
+                                                {cGroup.documents.length === 0 && (
+                                                    <ListItem sx={{ pl: 6, py: 2 }}>
+                                                        <Typography variant="caption" sx={{ fontStyle: 'italic', color: '#879596' }}>
+                                                            No documents found for this candidate.
+                                                        </Typography>
+                                                    </ListItem>
+                                                )}
+                                            </List>
+                                        </Collapse>
+                                    </React.Fragment>
+                                ))}
+                            </List>
+                        ) : (
+                            <Box sx={{ p: 4, bgcolor: '#fcf3e8', border: '1px dashed #f9d9b7', borderRadius: '8px', textAlign: 'center' }}>
+                                <Typography variant="body2" sx={{ color: '#871000', fontWeight: 600 }}>
+                                    No documents found for the selected candidates. Resumes are required for attachments.
+                                </Typography>
+                            </Box>
+                        )}
+                        <Typography variant="caption" sx={{ mt: 1, display: 'block', color: '#545b64', fontStyle: 'italic' }}>
+                            * Selected documents will be sent as email attachments.
+                        </Typography>
                     </Box>
                 </Stack>
             </DialogContent>
 
             <DialogActions sx={{ p: 3, bgcolor: '#f8f9fa', borderTop: '1px solid #e0e0e0' }}>
+                <Typography variant="caption" sx={{ flexGrow: 1, ml: 2, fontWeight: 700, color: '#0073bb' }}>
+                    {selectedDocIds.length} Total Attachments
+                </Typography>
                 <Button onClick={onClose} disabled={loading} sx={{ textTransform: 'none', fontWeight: 600, color: '#545b64' }}>
                     Cancel
                 </Button>
@@ -195,7 +336,7 @@ const CandidateEmailDialog: React.FC<CandidateEmailDialogProps> = ({
                         fontWeight: 700,
                         bgcolor: '#ec7211',
                         borderRadius: '6px',
-                        px: 3,
+                        px: 4,
                         '&:hover': { bgcolor: '#eb5f07' }
                     }}
                 >
