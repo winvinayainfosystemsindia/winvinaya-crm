@@ -23,7 +23,8 @@ import {
     LocalOffer as OfferIcon, 
     Notes as NotesIcon,
 	History as HistoryIcon,
-    Delete as DeleteIcon
+    Delete as DeleteIcon,
+    AlternateEmail as EmailIcon
 } from '@mui/icons-material';
 import useToast from '../../../../../hooks/useToast';
 import PlacementDetailDrawer from '../../details/PlacementDetailDrawer';
@@ -43,9 +44,10 @@ interface Props {
 	};
 	onMap: (candidate: CandidateMatchResult) => void;
 	onUnmap: (candidate: CandidateMatchResult) => void;
+	onEmailClick: (candidate: CandidateMatchResult) => void;
 }
 
-const CandidateMatchTableRow = ({ candidate, widths, onMap, onUnmap }: Props) => {
+const CandidateMatchTableRow = ({ candidate, widths, onMap, onUnmap, onEmailClick }: Props) => {
 	const navigate = useNavigate();
 	const { user } = useAppSelector((state) => state.auth);
 	const dispatch = useAppDispatch();
@@ -410,6 +412,20 @@ const CandidateMatchTableRow = ({ candidate, widths, onMap, onUnmap }: Props) =>
                                     }}
                                 >
                                     <HistoryIcon sx={{ fontSize: 18 }} />
+                                </IconButton>
+                            </Tooltip>
+                        )}
+                        {candidate.is_already_mapped && (
+                            <Tooltip title="Send Profile to Company">
+                                <IconButton 
+                                    size="small" 
+                                    onClick={() => onEmailClick(candidate)}
+                                    sx={{ 
+                                        color: '#ff9900',
+                                        '&:hover': { bgcolor: 'rgba(255, 153, 0, 0.08)' } 
+                                    }}
+                                >
+                                    <EmailIcon sx={{ fontSize: 18 }} />
                                 </IconButton>
                             </Tooltip>
                         )}

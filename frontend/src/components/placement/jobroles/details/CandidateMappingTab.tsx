@@ -5,14 +5,11 @@ import {
     Stack,
     Button,
     Paper,
-    Divider,
     Tooltip,
     TextField,
     CircularProgress,
     List,
     ListItem,
-    ListItemText,
-    ListItemIcon,
     Chip,
     Avatar,
     Dialog,
@@ -27,10 +24,11 @@ import {
     TableHead,
     TableRow,
     TablePagination,
-    IconButton
+    IconButton,
+    Checkbox,
+    alpha
 } from '@mui/material';
 import {
-    CheckCircle as CheckCircleIcon,
     Info as InfoIcon,
     TaskAlt as TaskAltIcon,
     School as SchoolIcon,
@@ -42,16 +40,19 @@ import {
     Business as BusinessIcon,
     Person as PersonIcon,
     TrendingUp as TrendingUpIcon,
-    GroupAdd as GroupAddIcon
+    GroupAdd as GroupAddIcon,
+    AlternateEmail as EmailIcon
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
-import { 
-    fetchMatchesForJobRole, 
-    mapCandidate, 
-    clearMatches, 
+import {
+    fetchMatchesForJobRole,
+    mapCandidate,
+    clearMatches,
     clearPlacementError,
-    type CandidateMatchResult 
+    type CandidateMatchResult
 } from '../../../../store/slices/placementMappingSlice';
+import CandidateEmailDialog from '../../mapping/dialogs/CandidateEmailDialog';
+import placementEmailService from '../../../../services/placementEmailService';
 import useToast from '../../../../hooks/useToast';
 import type { JobRole } from '../../../../models/jobRole';
 
@@ -62,10 +63,10 @@ interface CandidateMappingTabProps {
 const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) => {
     const toast = useToast();
     const dispatch = useAppDispatch();
-    
+
     // Redux State
     const { matches: matchingCandidates, loading, error: placementError } = useAppSelector((state) => state.placementMapping);
-    
+
     // Auto-display errors from slice
     useEffect(() => {
         if (placementError) {
@@ -73,16 +74,21 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
             dispatch(clearPlacementError());
         }
     }, [placementError, toast, dispatch]);
-    
+
     // Pagination State (Frontend)
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
-    
+
     // Mapping State
     const [mapDialogOpen, setMapDialogOpen] = useState(false);
     const [selectedCandidate, setSelectedCandidate] = useState<CandidateMatchResult | null>(null);
     const [mappingNotes, setMappingNotes] = useState('');
     const [submitting, setSubmitting] = useState(false);
+
+    // Bulk Email State
+    const [selectedMappings, setSelectedMappings] = useState<number[]>([]);
+    const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+    const [sendingEmail, setSendingEmail] = useState(false);
 
     const fetchData = useCallback(async () => {
         dispatch(fetchMatchesForJobRole(jobRole.public_id));
@@ -96,13 +102,13 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
     }, [fetchData, dispatch]);
 
     // Compute split lists
-    const suggestions = useMemo(() => 
+    const suggestions = useMemo(() =>
         matchingCandidates.filter(c => !c.is_already_mapped),
-    [matchingCandidates]);
+        [matchingCandidates]);
 
-    const mapped = useMemo(() => 
+    const mapped = useMemo(() =>
         matchingCandidates.filter(c => c.is_already_mapped),
-    [matchingCandidates]);
+        [matchingCandidates]);
 
     // Paginated suggestions
     const paginatedSuggestions = useMemo(() => {
@@ -134,7 +140,7 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                 match_score: selectedCandidate.match_score,
                 notes: mappingNotes
             })).unwrap();
-            
+
             toast.success(`${selectedCandidate.name} has been successfully mapped`);
             setMapDialogOpen(false);
             setMappingNotes('');
@@ -146,9 +152,51 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
         }
     };
 
+    const handleToggleSelection = (mappingId: number) => {
+        setSelectedMappings(prev =>
+            prev.includes(mappingId)
+                ? prev.filter(id => id !== mappingId)
+                : [...prev, mappingId]
+        );
+    };
+
+    const handleSelectAll = (checked: boolean) => {
+        if (checked) {
+            const allMappedIds = mapped.map(m => m.mapping_id).filter((id): id is number => !!id);
+            setSelectedMappings(allMappedIds);
+        } else {
+            setSelectedMappings([]);
+        }
+    };
+
+    const handleSendBulkEmail = async (data: { email: string; subject: string; message: string }) => {
+        setSendingEmail(true);
+        try {
+            await placementEmailService.sendBulkProfiles({
+                mapping_ids: selectedMappings,
+                custom_email: data.email,
+                custom_subject: data.subject,
+                custom_message: data.message
+            });
+            toast.success('Candidate profiles sent successfully');
+            setEmailDialogOpen(false);
+            setSelectedMappings([]);
+        } catch (error: any) {
+            toast.error(error.response?.data?.detail || 'Failed to send bulk email');
+        } finally {
+            setSendingEmail(false);
+        }
+    };
+
+    const selectedCandidateNames = useMemo(() => {
+        return matchingCandidates
+            .filter(c => selectedMappings.includes(c.mapping_id!))
+            .map(c => c.name);
+    }, [matchingCandidates, selectedMappings]);
+
     const getScoreColor = (score: number) => {
         if (score >= 70) return '#1d8102';
-        if (score >= 40) return '#ec7211'; 
+        if (score >= 40) return '#ec7211';
         return '#d13212';
     };
 
@@ -173,14 +221,14 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                             <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#232f3e' }}>
                                 SMART SUGGESTIONS
                             </Typography>
-                            <Chip 
-                                label={`${suggestions.length} available`} 
-                                size="small" 
-                                sx={{ height: 20, fontSize: '0.65rem', fontWeight: 700, bgcolor: '#eaeded', color: '#545b64' }} 
+                            <Chip
+                                label={`${suggestions.length} available`}
+                                size="small"
+                                sx={{ height: 20, fontSize: '0.65rem', fontWeight: 700, bgcolor: '#eaeded', color: '#545b64' }}
                             />
                         </Stack>
                     </Box>
-                    
+
                     <TableContainer sx={{ minHeight: 400 }}>
                         <Table size="small">
                             <TableHead sx={{ bgcolor: '#f8f9f9' }}>
@@ -213,33 +261,33 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                                             <TableCell>
                                                 <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
                                                     <Tooltip title={candidate.skill_match.details}>
-                                                        <Chip 
-                                                            icon={<SkillIcon style={{ fontSize: 14 }} />} 
-                                                            label="Skills" 
-                                                            size="small" 
-                                                            variant="outlined" 
-                                                            color={candidate.skill_match.is_match ? "success" : "default"} 
-                                                            sx={{ height: 22, fontSize: '0.7rem', px: 0.5 }} 
+                                                        <Chip
+                                                            icon={<SkillIcon style={{ fontSize: 14 }} />}
+                                                            label="Skills"
+                                                            size="small"
+                                                            variant="outlined"
+                                                            color={candidate.skill_match.is_match ? "success" : "default"}
+                                                            sx={{ height: 22, fontSize: '0.7rem', px: 0.5 }}
                                                         />
                                                     </Tooltip>
                                                     <Tooltip title={candidate.qualification_match.details}>
-                                                        <Chip 
-                                                            icon={<SchoolIcon style={{ fontSize: 14 }} />} 
-                                                            label="Edu" 
-                                                            size="small" 
-                                                            variant="outlined" 
-                                                            color={candidate.qualification_match.is_match ? "success" : "default"} 
-                                                            sx={{ height: 22, fontSize: '0.7rem', px: 0.5 }} 
+                                                        <Chip
+                                                            icon={<SchoolIcon style={{ fontSize: 14 }} />}
+                                                            label="Edu"
+                                                            size="small"
+                                                            variant="outlined"
+                                                            color={candidate.qualification_match.is_match ? "success" : "default"}
+                                                            sx={{ height: 22, fontSize: '0.7rem', px: 0.5 }}
                                                         />
                                                     </Tooltip>
                                                     <Tooltip title={candidate.disability_match.details}>
-                                                        <Chip 
-                                                            icon={<DisabilityIcon style={{ fontSize: 14 }} />} 
-                                                            label="DMap" 
-                                                            size="small" 
-                                                            variant="outlined" 
-                                                            color={candidate.disability_match.is_match ? "success" : "default"} 
-                                                            sx={{ height: 22, fontSize: '0.7rem', px: 0.5 }} 
+                                                        <Chip
+                                                            icon={<DisabilityIcon style={{ fontSize: 14 }} />}
+                                                            label="DMap"
+                                                            size="small"
+                                                            variant="outlined"
+                                                            color={candidate.disability_match.is_match ? "success" : "default"}
+                                                            sx={{ height: 22, fontSize: '0.7rem', px: 0.5 }}
                                                         />
                                                     </Tooltip>
                                                 </Stack>
@@ -250,11 +298,11 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                                                     size="small"
                                                     disableElevation
                                                     onClick={() => handleOpenMapDialog(candidate)}
-                                                    sx={{ 
-                                                        textTransform: 'none', 
-                                                        fontWeight: 700, 
-                                                        fontSize: '0.75rem', 
-                                                        bgcolor: '#f2f3f3', 
+                                                    sx={{
+                                                        textTransform: 'none',
+                                                        fontWeight: 700,
+                                                        fontSize: '0.75rem',
+                                                        bgcolor: '#f2f3f3',
                                                         color: '#545b64',
                                                         border: '1px solid #d5dbdb',
                                                         '&:hover': { bgcolor: '#eaeded', borderColor: '#aab7b8' }
@@ -278,7 +326,7 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                             </TableBody>
                         </Table>
                     </TableContainer>
-                    
+
                     <TablePagination
                         rowsPerPageOptions={[5, 10, 25]}
                         component="div"
@@ -294,50 +342,169 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
 
             {/* Bottom/Right: Mapped Candidates List */}
             <Grid size={{ xs: 12, md: 3.5 }}>
-                <Paper variant="outlined" sx={{ borderRadius: 0, height: '100%', display: 'flex', flexDirection: 'column' }}>
-                    <Box sx={{ p: 2, bgcolor: '#fbfbfb', borderBottom: '1px solid #d5dbdb' }}>
-                        <Stack direction="row" spacing={1.5} alignItems="center">
+                <Paper 
+                    variant="outlined" 
+                    sx={{ 
+                        borderRadius: 0, 
+                        height: '100%', 
+                        display: 'flex', 
+                        flexDirection: 'column',
+                        bgcolor: 'white',
+                        border: '1px solid #d5dbdb'
+                    }}
+                >
+                    {/* Professional Section Header */}
+                    <Box sx={{ 
+                        p: 2, 
+                        bgcolor: '#fbfbfb', 
+                        borderBottom: '1px solid #d5dbdb', 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        minHeight: '56px'
+                    }}>
+                        <Stack direction="row" spacing={1.25} alignItems="center">
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#1d8102', borderRadius: '4px', p: 0.5 }}>
-                                <TaskAltIcon sx={{ color: 'white', fontSize: 18 }} />
+                                <TaskAltIcon sx={{ color: 'white', fontSize: 16 }} />
                             </Box>
-                            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#232f3e' }}>
-                                MAPPED ({mapped.length})
+                            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#232f3e', letterSpacing: '0.02rem', textTransform: 'uppercase' }}>
+                                Mapped Candidates ({mapped.length})
                             </Typography>
                         </Stack>
-                    </Box>
-                    <List sx={{ p: 0, flexGrow: 1, maxHeight: 520, overflow: 'auto' }}>
-                        {mapped.length > 0 ? (
-                            mapped.map((candidate, index) => (
-                                <React.Fragment key={candidate.public_id}>
-                                    {index > 0 && <Divider />}
-                                    <ListItem 
+
+                        {mapped.length > 0 && (
+                            <Tooltip title={selectedMappings.length > 0 ? `Send ${selectedMappings.length} Profiles` : "Select candidates to bulk email"}>
+                                <span>
+                                    <Button
+                                        size="small"
+                                        variant="outlined"
+                                        disabled={selectedMappings.length === 0}
+                                        onClick={() => setEmailDialogOpen(true)}
+                                        startIcon={<EmailIcon sx={{ fontSize: '16px !important' }} />}
                                         sx={{ 
-                                            py: 2.5, 
-                                            px: 2,
-                                            '&:hover': { bgcolor: '#fbfbfb' }
+                                            textTransform: 'none',
+                                            fontWeight: 700,
+                                            fontSize: '0.75rem',
+                                            py: 0.25,
+                                            px: 1.5,
+                                            borderRadius: '4px',
+                                            borderColor: '#d5dbdb',
+                                            color: '#232f3e',
+                                            bgcolor: 'white',
+                                            '&:hover': { bgcolor: '#f3faff', borderColor: '#0073bb', color: '#0073bb' },
+                                            '&.Mui-disabled': { bgcolor: '#f8f9f9', color: '#aab7b8' }
                                         }}
                                     >
-                                        <ListItemIcon sx={{ minWidth: 40 }}>
-                                            <CheckCircleIcon sx={{ color: '#1d8102', fontSize: 22 }} />
-                                        </ListItemIcon>
-                                        <ListItemText
-                                            primary={
-                                                <Typography variant="body2" sx={{ fontWeight: 700, color: '#232f3e' }}>
+                                        Send
+                                    </Button>
+                                </span>
+                            </Tooltip>
+                        )}
+                    </Box>
+
+                    {/* Compact Selection Bar */}
+                    {mapped.length > 0 && (
+                        <Box sx={{ 
+                            px: 2, 
+                            py: 0.75, 
+                            bgcolor: '#f1faff', 
+                            borderBottom: '1px solid #cdecff', 
+                            display: 'flex', 
+                            alignItems: 'center',
+                            justifyContent: 'space-between'
+                        }}>
+                            <Stack direction="row" spacing={1} alignItems="center">
+                                <Checkbox
+                                    size="small"
+                                    indeterminate={selectedMappings.length > 0 && selectedMappings.length < mapped.length}
+                                    checked={mapped.length > 0 && selectedMappings.length === mapped.length}
+                                    onChange={(e) => handleSelectAll(e.target.checked)}
+                                    sx={{ p: 0, color: '#0073bb' }}
+                                />
+                                <Typography variant="caption" sx={{ fontWeight: 700, color: '#0073bb' }}>
+                                    {selectedMappings.length > 0 ? `${selectedMappings.length} Selected` : 'Select All'}
+                                </Typography>
+                            </Stack>
+                            
+                            {selectedMappings.length > 0 && (
+                                <Button 
+                                    size="small" 
+                                    onClick={() => setSelectedMappings([])}
+                                    sx={{ textTransform: 'none', fontSize: '0.65rem', fontWeight: 700, color: '#545b64', minWidth: 'auto', p: 0 }}
+                                >
+                                    Clear
+                                </Button>
+                            )}
+                        </Box>
+                    )}
+
+                    {/* Candidate List */}
+                    <List sx={{ p: 0, flexGrow: 1, maxHeight: 520, overflow: 'auto' }}>
+                        {mapped.length > 0 ? (
+                            mapped.map((candidate) => (
+                                <React.Fragment key={candidate.public_id}>
+                                    <ListItem
+                                        sx={{
+                                            py: 1.5,
+                                            px: 2,
+                                            borderBottom: '1px solid #eaeded',
+                                            transition: 'background-color 0.2s',
+                                            cursor: 'pointer',
+                                            '&:hover': { bgcolor: '#fbfbfb' },
+                                            '&:last-child': { borderBottom: 'none' }
+                                        }}
+                                        onClick={() => handleToggleSelection(candidate.mapping_id!)}
+                                    >
+                                        <Checkbox
+                                            size="small"
+                                            checked={selectedMappings.includes(candidate.mapping_id!)}
+                                            onClick={(e) => e.stopPropagation()}
+                                            onChange={() => handleToggleSelection(candidate.mapping_id!)}
+                                            sx={{ mr: 1, p: 0 }}
+                                        />
+                                        
+                                        <Stack direction="row" spacing={1.5} sx={{ flexGrow: 1 }} alignItems="center">
+                                            <Avatar 
+                                                sx={{ 
+                                                    width: 30, 
+                                                    height: 30, 
+                                                    bgcolor: getScoreColor(candidate.match_score),
+                                                    fontSize: '0.75rem',
+                                                    fontWeight: 800
+                                                }}
+                                            >
+                                                {candidate.name[0]}
+                                            </Avatar>
+                                            
+                                            <Box sx={{ flexGrow: 1 }}>
+                                                <Typography variant="body2" sx={{ fontWeight: 700, color: '#232f3e', lineHeight: 1.2 }}>
                                                     {candidate.name}
                                                 </Typography>
-                                            }
-                                            secondary={
-                                                <Typography variant="caption" color="textSecondary" sx={{ mt: 0.5, display: 'block' }}>
-                                                    Score: <strong>{candidate.match_score}%</strong> • {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
-                                                </Typography>
-                                            }
-                                        />
+                                                <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.25 }}>
+                                                    <Box sx={{ 
+                                                        px: 0.75, 
+                                                        py: 0.1, 
+                                                        bgcolor: alpha(getScoreColor(candidate.match_score), 0.1),
+                                                        borderRadius: '2px',
+                                                        border: `1px solid ${alpha(getScoreColor(candidate.match_score), 0.2)}`
+                                                    }}>
+                                                        <Typography variant="caption" sx={{ fontWeight: 800, color: getScoreColor(candidate.match_score), fontSize: '0.65rem' }}>
+                                                            {candidate.match_score}%
+                                                        </Typography>
+                                                    </Box>
+                                                    <Typography variant="caption" sx={{ color: '#545b64', fontSize: '0.65rem' }}>
+                                                        {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                                                    </Typography>
+                                                </Stack>
+                                            </Box>
+                                        </Stack>
                                     </ListItem>
                                 </React.Fragment>
                             ))
                         ) : (
                             <Box sx={{ p: 4, textAlign: 'center', mt: 4, opacity: 0.6 }}>
-                                <Typography variant="caption" color="textSecondary">
+                                <InfoIcon sx={{ fontSize: 32, color: '#d5dbdb', mb: 1 }} />
+                                <Typography variant="body2" color="textSecondary" sx={{ fontWeight: 500 }}>
                                     No candidates mapped yet.
                                 </Typography>
                             </Box>
@@ -347,20 +514,20 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
             </Grid>
 
             {/* Map Candidate Dialog (Professional Redesign) */}
-            <Dialog 
-                open={mapDialogOpen} 
-                onClose={() => setMapDialogOpen(false)} 
-                maxWidth="sm" 
+            <Dialog
+                open={mapDialogOpen}
+                onClose={() => setMapDialogOpen(false)}
+                maxWidth="sm"
                 fullWidth
                 PaperProps={{
                     sx: { borderRadius: 0 }
                 }}
             >
-                <DialogTitle sx={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    bgcolor: '#232f3e', 
+                <DialogTitle sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    bgcolor: '#232f3e',
                     color: 'white',
                     px: 3,
                     py: 2
@@ -375,13 +542,13 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                         <CloseIcon />
                     </IconButton>
                 </DialogTitle>
-                
+
                 <DialogContent sx={{ pt: 4, pb: 2 }}>
                     {/* Mapping Flow Component */}
-                    <Box sx={{ 
-                        mb: 4, 
-                        p: 3, 
-                        bgcolor: '#f8f9f9', 
+                    <Box sx={{
+                        mb: 4,
+                        p: 3,
+                        bgcolor: '#f8f9f9',
                         border: '1px solid #eaeded',
                         borderRadius: '4px',
                         position: 'relative'
@@ -400,7 +567,7 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                                     </Box>
                                 </Stack>
                             </Grid>
-                            
+
                             {/* Middle: Match Flow */}
                             <Grid size={{ xs: 2 }}>
                                 <Stack alignItems="center" spacing={0.5}>
@@ -413,7 +580,7 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                                     </Typography>
                                 </Stack>
                             </Grid>
-                            
+
                             {/* Right: Candidate */}
                             <Grid size={{ xs: 5 }}>
                                 <Stack spacing={1} alignItems="center">
@@ -441,17 +608,17 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                         value={mappingNotes}
                         onChange={(e) => setMappingNotes(e.target.value)}
                         variant="outlined"
-                        sx={{ 
+                        sx={{
                             '& .MuiOutlinedInput-root': { borderRadius: 0 },
                             mb: 3
                         }}
                     />
-                    
-                    <Box sx={{ 
-                        p: 2, 
-                        bgcolor: '#fcf3e8', 
-                        border: '1px solid #f9d9b7', 
-                        display: 'flex', 
+
+                    <Box sx={{
+                        p: 2,
+                        bgcolor: '#fcf3e8',
+                        border: '1px solid #f9d9b7',
+                        display: 'flex',
                         gap: 1.5,
                         alignItems: 'flex-start'
                     }}>
@@ -461,13 +628,13 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                         </Typography>
                     </Box>
                 </DialogContent>
-                
+
                 <DialogActions sx={{ p: 3, borderTop: '1px solid #d5dbdb', bgcolor: '#fbfbfb' }}>
-                    <Button 
-                        onClick={() => setMapDialogOpen(false)} 
-                        sx={{ 
-                            color: '#545b64', 
-                            textTransform: 'none', 
+                    <Button
+                        onClick={() => setMapDialogOpen(false)}
+                        sx={{
+                            color: '#545b64',
+                            textTransform: 'none',
                             fontWeight: 700,
                             mr: 1
                         }}
@@ -478,11 +645,11 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                         variant="contained"
                         onClick={handleMapCandidate}
                         disabled={submitting}
-                        sx={{ 
-                            bgcolor: '#ec7211', 
-                            '&:hover': { bgcolor: '#eb5f07' }, 
-                            textTransform: 'none', 
-                            fontWeight: 700, 
+                        sx={{
+                            bgcolor: '#ec7211',
+                            '&:hover': { bgcolor: '#eb5f07' },
+                            textTransform: 'none',
+                            fontWeight: 700,
                             boxShadow: 'none',
                             px: 4,
                             py: 1,
@@ -493,6 +660,20 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Bulk Email Dialog Integration */}
+            {jobRole.contact && (
+                <CandidateEmailDialog
+                    open={emailDialogOpen}
+                    onClose={() => setEmailDialogOpen(false)}
+                    onSend={handleSendBulkEmail}
+                    candidateNames={selectedCandidateNames}
+                    jobTitle={jobRole.title}
+                    contactEmail={jobRole.contact.email || ''}
+                    contactName={jobRole.contact.full_name || 'Hiring Manager'}
+                    loading={sendingEmail}
+                />
+            )}
         </Grid>
     );
 };

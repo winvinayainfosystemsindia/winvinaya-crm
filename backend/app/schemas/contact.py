@@ -3,7 +3,7 @@
 from typing import Optional, Dict, Any
 from uuid import UUID
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, computed_field
 from app.models.contact import ContactSource
 
 
@@ -63,6 +63,11 @@ class ContactRead(ContactBase):
     company: Optional[CompanyMinimal] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+    @computed_field
+    @property
+    def full_name(self) -> str:
+        return f"{self.first_name} {self.last_name}"
 
 
 class ContactListResponse(BaseModel):

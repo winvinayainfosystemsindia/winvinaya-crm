@@ -36,6 +36,8 @@ import JobRoleSelectionHeader from '../../components/placement/mapping/common/Jo
 import JobRoleSpecifications from '../../components/placement/mapping/details/JobRoleSpecifications';
 import CandidateMatchResults from '../../components/placement/mapping/table/CandidateMatchResults';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
+import CandidateEmailDialog from '../../components/placement/mapping/dialogs/CandidateEmailDialog';
+import placementEmailService from '../../services/placementEmailService';
 
 const CandidateMapping = () => {
 	const theme = useTheme();
@@ -55,6 +57,11 @@ const CandidateMapping = () => {
 	const [candidateToMap, setCandidateToMap] = useState<CandidateMatchResult | null>(null);
 	const [candidateToUnmap, setCandidateToUnmap] = useState<CandidateMatchResult | null>(null);
 	const [submitting, setSubmitting] = useState(false);
+
+	// Email Dialog State
+	const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+	const [candidateForEmail, setCandidateForEmail] = useState<CandidateMatchResult | null>(null);
+	const [sendingEmail, setSendingEmail] = useState(false);
 
 	useEffect(() => {
 		dispatch(fetchJobRoles({ skip: 0, limit: 100 }));
@@ -118,6 +125,24 @@ const CandidateMapping = () => {
 			toast.error(error || 'Failed to remove mapping');
 		} finally {
 			setSubmitting(false);
+		}
+	};
+
+	const handleSendEmail = async (data: { email: string; subject: string; message: string }) => {
+		if (!candidateForEmail || !candidateForEmail.mapping_id) return;
+		setSendingEmail(true);
+		try {
+			await placementEmailService.sendCandidateProfile(candidateForEmail.mapping_id, {
+				custom_email: data.email,
+				custom_subject: data.subject,
+				custom_message: data.message
+			});
+			toast.success(`Profile sent successfully to ${data.email}`);
+			setEmailDialogOpen(false);
+		} catch (error: any) {
+			toast.error(error.response?.data?.detail || 'Failed to send email');
+		} finally {
+			setSendingEmail(false);
 		}
 	};
 
@@ -244,6 +269,10 @@ const CandidateMapping = () => {
 									setCandidateToUnmap(candidate);
 									setUnmapDialogOpen(true);
 								}}
+								onEmailClick={(candidate) => {
+									setCandidateForEmail(candidate);
+									setEmailDialogOpen(true);
+								}}
 							/>
 						</Grid>
 					</Grid>
@@ -260,7 +289,6 @@ const CandidateMapping = () => {
 				loading={submitting}
 				severity="info"
 			/>
-
 			<ConfirmDialog
 				open={unmapDialogOpen}
 				title="Remove Candidate Mapping"
@@ -271,6 +299,19 @@ const CandidateMapping = () => {
 				loading={submitting}
 				severity="warning"
 			/>
+
+			{candidateForEmail && selectedRole && (
+				<CandidateEmailDialog
+					open={emailDialogOpen}
+					onClose={() => setEmailDialogOpen(false)}
+					onSend={handleSendEmail}
+					candidateNames={[candidateForEmail.name]}
+					jobTitle={selectedRole.title}
+					contactEmail={selectedRole.contact?.email || ''}
+					contactName={selectedRole.contact?.full_name || 'Hiring Manager'}
+					loading={sendingEmail}
+				/>
+			)}
 		</Box>
 	);
 };

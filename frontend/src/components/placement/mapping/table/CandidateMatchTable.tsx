@@ -15,10 +15,11 @@ interface Props {
 	candidates: CandidateMatchResult[];
 	onMapClick: (candidate: CandidateMatchResult) => void;
 	onUnmapClick: (candidate: CandidateMatchResult) => void;
+	onEmailClick: (candidate: CandidateMatchResult) => void;
 	emptyMsg: string;
 }
 
-const CandidateMatchTable = ({ candidates, onMapClick, onUnmapClick, emptyMsg }: Props) => {
+const CandidateMatchTable = ({ candidates, onMapClick, onUnmapClick, onEmailClick, emptyMsg }: Props) => {
 	// Standardized fixed widths for perfect alignment
 	const COL_WIDTHS = {
 		candidate: '220px',
@@ -57,6 +58,7 @@ const CandidateMatchTable = ({ candidates, onMapClick, onUnmapClick, emptyMsg }:
 									widths={COL_WIDTHS}
 									onMap={onMapClick}
 									onUnmap={onUnmapClick}
+									onEmailClick={onEmailClick}
 								/>
 							))
 						) : (

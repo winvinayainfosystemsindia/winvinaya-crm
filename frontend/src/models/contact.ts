@@ -23,6 +23,7 @@ export interface Contact {
 	created_at: string;
 	updated_at: string;
 	company?: Company;
+	full_name?: string;
 }
 
 export interface ContactCreate extends Omit<Contact, 'id' | 'public_id' | 'created_at' | 'updated_at' | 'company'> { }
