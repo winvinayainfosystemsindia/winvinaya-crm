@@ -44,6 +44,7 @@ from app.models.placement_note import PlacementNote, NoteType
 from app.models.skill import Skill
 from app.models.ai_task_log import AITaskLog, AITaskStatus, AITaskTrigger
 from app.models.ai_chat import AIChatSession, AIChatMessage
+from app.models.user_email_configuration import UserEmailConfiguration
 
 __all__ = [
     "User",
@@ -128,5 +129,6 @@ __all__ = [
     "JoiningStatus",
     "PlacementNote",
     "NoteType",
+    "UserEmailConfiguration",
 ]
 

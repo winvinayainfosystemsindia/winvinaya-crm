@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from app.models.crm_task import CRMTask
     from app.models.crm_activity_log import CRMActivityLog
     from app.models.candidate_assignment import CandidateAssignment
+    from app.models.user_email_configuration import UserEmailConfiguration
 
 
 class UserRole(str, enum.Enum):
@@ -153,6 +154,13 @@ class User(BaseModel):
         "CandidateAssignment",
         foreign_keys="CandidateAssignment.user_id",
         back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
+    email_configuration: Mapped[UserEmailConfiguration | None] = relationship(
+        "UserEmailConfiguration",
+        back_populates="user",
+        uselist=False,
         cascade="all, delete-orphan"
     )
     

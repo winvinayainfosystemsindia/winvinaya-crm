@@ -46,6 +46,7 @@ from app.api.v1.endpoints import (
     ai,
     ai_settings,
     ai_chat,
+    user_email_configuration,
 )
 
 
@@ -104,6 +105,7 @@ router.include_router(skills.router, prefix="/skills", tags=["Skills"])
 router.include_router(ai.router, prefix="/ai", tags=["AI Engine"])
 router.include_router(ai_settings.router, prefix="/ai/settings", tags=["AI Engine Settings"])
 router.include_router(ai_chat.router, prefix="/ai/chat", tags=["AI Engine Chat"])
+router.include_router(user_email_configuration.router, tags=["User Email Configuration"])
 
 # X0PA Integration
 router.include_router(x0pa.router)
