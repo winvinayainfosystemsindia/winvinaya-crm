@@ -237,6 +237,8 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                                     <TableCell sx={{ fontWeight: 700, py: 1.5 }}>CANDIDATE</TableCell>
                                     <TableCell sx={{ fontWeight: 700 }} align="center">SCORE</TableCell>
                                     <TableCell sx={{ fontWeight: 700 }}>MATCH DETAILS</TableCell>
+                                    <TableCell sx={{ fontWeight: 700 }} align="center">EXP</TableCell>
+                                    <TableCell sx={{ fontWeight: 700 }}>MAPPINGS</TableCell>
                                     <TableCell sx={{ fontWeight: 700 }} align="right">ACTION</TableCell>
                                 </TableRow>
                             </TableHead>
@@ -293,6 +295,37 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                                                     </Tooltip>
                                                 </Stack>
                                             </TableCell>
+                                            <TableCell align="center">
+                                                <Typography variant="body2" sx={{ fontWeight: 600, color: '#545b64', fontSize: '0.8125rem' }}>
+                                                    {candidate.year_of_experience || 'Fresher'}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>
+                                                {candidate.other_mappings_count > 0 ? (
+                                                    <Tooltip title={`Mapped to: ${candidate.other_mappings.join(', ')}`}>
+                                                        <Box
+                                                            sx={{
+                                                                display: 'inline-flex',
+                                                                alignItems: 'center',
+                                                                px: 1,
+                                                                py: 0.25,
+                                                                borderRadius: '4px',
+                                                                bgcolor: '#eaf3ff',
+                                                                color: '#0066cc',
+                                                                border: '1px solid #cce3ff',
+                                                                fontSize: '0.65rem',
+                                                                fontWeight: 700,
+                                                            }}
+                                                        >
+                                                            {candidate.other_mappings_count} {candidate.other_mappings_count === 1 ? 'Job' : 'Jobs'}
+                                                        </Box>
+                                                    </Tooltip>
+                                                ) : (
+                                                    <Typography variant="body2" sx={{ color: 'text.disabled', fontSize: '0.8125rem' }}>
+                                                        None
+                                                    </Typography>
+                                                )}
+                                            </TableCell>
                                             <TableCell align="right">
                                                 <Button
                                                     variant="contained"
@@ -316,7 +349,7 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={4} align="center" sx={{ py: 6 }}>
+                                        <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
                                             <Box sx={{ opacity: 0.5 }}>
                                                 <InfoIcon sx={{ fontSize: 40, mb: 1, color: '#d5dbdb' }} />
                                                 <Typography variant="body2">No suggestions available at the moment.</Typography>
@@ -493,7 +526,19 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                                                             {candidate.match_score}%
                                                         </Typography>
                                                     </Box>
-                                                    <Typography variant="caption" sx={{ color: '#545b64', fontSize: '0.65rem' }}>
+                                                    <Box sx={{ bgcolor: '#f2f3f3', px: 0.75, py: 0.1, borderRadius: '2px', border: '1px solid #d5dbdb' }}>
+                                                        <Typography variant="caption" sx={{ fontWeight: 700, color: '#545b64', fontSize: '0.65rem' }}>
+                                                            {candidate.year_of_experience || 'Fresher'}
+                                                        </Typography>
+                                                    </Box>
+                                                    {candidate.other_mappings_count > 0 && (
+                                                        <Box sx={{ bgcolor: '#eaf3ff', px: 0.75, py: 0.1, borderRadius: '2px', border: '1px solid #cce3ff' }}>
+                                                            <Typography variant="caption" sx={{ fontWeight: 800, color: '#0066cc', fontSize: '0.65rem' }}>
+                                                                +{candidate.other_mappings_count}
+                                                            </Typography>
+                                                        </Box>
+                                                    )}
+                                                    <Typography variant="caption" sx={{ color: '#aab7b8', fontSize: '0.65rem' }}>
                                                         {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
                                                     </Typography>
                                                 </Stack>
