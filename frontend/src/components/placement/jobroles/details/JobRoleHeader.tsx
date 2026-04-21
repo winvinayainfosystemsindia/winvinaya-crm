@@ -5,9 +5,9 @@ import {
 	Edit as EditIcon,
 	Business as BusinessIcon,
 	LocationOn as LocationOnIcon,
-	Person as PersonIcon,
-	Refresh as RefreshIcon
+	Person as PersonIcon
 } from '@mui/icons-material';
+import { IconButton } from '@mui/material';
 import PlacementStatusBadge from '../common/PlacementStatusBadge';
 import ModuleHeader from '../../../common/header/ModuleHeader';
 import { useNavigate } from 'react-router-dom';
@@ -19,49 +19,9 @@ interface JobRoleHeaderProps {
 	onRefresh: () => void;
 }
 
-const JobRoleHeader: React.FC<JobRoleHeaderProps> = ({ jobRole, onEdit, onRefresh }) => {
+const JobRoleHeader: React.FC<JobRoleHeaderProps> = ({ jobRole, onEdit }) => {
 	const theme = useTheme();
 	const navigate = useNavigate();
-
-	const actions = (
-		<Stack direction="row" spacing={1.5} justifyContent="flex-end" sx={{ width: '100%' }}>
-			<Button
-				variant="outlined"
-				startIcon={<RefreshIcon />}
-				onClick={onRefresh}
-				sx={{
-					color: theme.palette.common.white,
-					borderColor: alpha(theme.palette.common.white, 0.3),
-					textTransform: 'none',
-					fontWeight: 600,
-					'&:hover': { 
-						borderColor: theme.palette.common.white, 
-						bgcolor: alpha(theme.palette.common.white, 0.05) 
-					}
-				}}
-			>
-				Refresh
-			</Button>
-			<Button
-				variant="contained"
-				color="primary"
-				startIcon={<EditIcon />}
-				onClick={onEdit}
-				sx={{
-					textTransform: 'none',
-					fontWeight: 700,
-					px: 3,
-					boxShadow: 'none',
-					'&:hover': {
-						bgcolor: theme.palette.primary.dark,
-						boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
-					}
-				}}
-			>
-				Edit Role
-			</Button>
-		</Stack>
-	);
 
 	const infoBar = (
 		<Stack direction="row" spacing={4} sx={{ color: alpha(theme.palette.common.white, 0.8), flexWrap: 'wrap', gap: 2 }}>
@@ -72,7 +32,7 @@ const JobRoleHeader: React.FC<JobRoleHeaderProps> = ({ jobRole, onEdit, onRefres
 					<Typography variant="body2" sx={{ fontWeight: 600, color: theme.palette.common.white }}>{jobRole.company?.name || 'N/A'}</Typography>
 				</Box>
 			</Stack>
-			
+
 			<Stack direction="row" spacing={1} alignItems="center">
 				<LocationOnIcon sx={{ fontSize: 18, color: alpha(theme.palette.common.white, 0.6) }} />
 				<Box>
@@ -117,16 +77,36 @@ const JobRoleHeader: React.FC<JobRoleHeaderProps> = ({ jobRole, onEdit, onRefres
 			</Box>
 
 			<ModuleHeader
-				title={jobRole.title}
-				subtitle={
-					<Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 0.5 }}>
-						<Typography variant="caption" sx={{ color: alpha(theme.palette.common.white, 0.5), fontWeight: 700 }}>
-							ID: {jobRole.public_id}
+				title={
+					<Stack direction="row" spacing={2} alignItems="center">
+						<Typography
+							variant="h4"
+							sx={{
+								fontWeight: 700,
+								color: 'common.white',
+								fontSize: { xs: '1.5rem', sm: '2rem' },
+							}}
+						>
+							{jobRole.title}
 						</Typography>
 						<PlacementStatusBadge label={jobRole.status} status={jobRole.status} />
+						<IconButton
+							size="small"
+							onClick={onEdit}
+							sx={{
+								color: alpha(theme.palette.common.white, 0.6),
+								'&:hover': { color: theme.palette.common.white, bgcolor: alpha(theme.palette.common.white, 0.1) }
+							}}
+						>
+							<EditIcon fontSize="small" />
+						</IconButton>
 					</Stack>
 				}
-				extra={actions}
+				subtitle={
+					<Typography variant="caption" sx={{ color: alpha(theme.palette.common.white, 0.5), fontWeight: 700, mt: 0.5, display: 'block' }}>
+						ID: {jobRole.public_id}
+					</Typography>
+				}
 			>
 				{infoBar}
 			</ModuleHeader>
