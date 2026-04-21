@@ -40,6 +40,14 @@ class SkillService:
         """Get skill by ID"""
         return await self.repository.get(skill_id)
 
+    async def update_skill(self, skill_id: int, skill_in: dict) -> Optional[Skill]:
+        """Update a skill"""
+        return await self.repository.update(skill_id, skill_in)
+
+    async def verify_skill(self, skill_id: int) -> Optional[Skill]:
+        """Verify a skill"""
+        return await self.repository.update(skill_id, {"is_verified": True})
+
     async def get_aggregated_skills(self) -> List[str]:
         """
         Aggregate unique skills from:

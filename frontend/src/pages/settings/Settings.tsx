@@ -12,7 +12,8 @@ import {
 	DynamicFieldsSection,
 	TrainingConfigurationSection,
 	AIEngineSection,
-	EmailConfigurationSection
+	EmailConfigurationSection,
+	SkillsSection
 } from '../../components/settings';
 import { settingsTabs } from '../../config/navigation';
 
@@ -37,6 +38,7 @@ const Settings: React.FC = () => {
 			case 2: return <TrainingConfigurationSection />;
 			case 3: return <AIEngineSection />;
 			case 4: return <EmailConfigurationSection />;
+			case 5: return <SkillsSection />;
 			default:
 				return (
 					<Box sx={{ p: 8, textAlign: 'center' }}>

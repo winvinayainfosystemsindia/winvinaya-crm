@@ -13,6 +13,7 @@ import {
 	FactCheck as CounselingIcon,
 	SmartToy as AIIcon,
 	Email as EmailIcon,
+	Psychology as SkillsIcon,
 } from '@mui/icons-material';
 import type { SvgIconComponent } from '@mui/icons-material';
 
@@ -145,4 +146,5 @@ export const settingsTabs = [
 	{ label: 'Training Config', icon: SchoolIcon },
 	{ label: 'AI Engine', icon: AIIcon },
 	{ label: 'Email Configuration', icon: EmailIcon },
+	{ label: 'Skills', icon: SkillsIcon },
 ];

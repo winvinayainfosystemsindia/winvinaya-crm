@@ -27,5 +27,10 @@ export const skillService = {
     async getAggregatedSkills(): Promise<string[]> {
         const response = await api.get<string[]>('/skills/aggregated');
         return response.data;
+    },
+
+    async verifySkill(id: number): Promise<Skill> {
+        const response = await api.patch<Skill>(`/skills/${id}/verify`);
+        return response.data;
     }
 };

@@ -43,3 +43,18 @@ async def create_skill(
     """Create a new skill (master data)"""
     service = SkillService(db)
     return await service.create_skill(skill_in)
+
+
+@router.patch("/{skill_id}/verify", response_model=SkillRead)
+async def verify_skill(
+    skill_id: int,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user)
+) -> Any:
+    """Verify a skill"""
+    service = SkillService(db)
+    skill = await service.verify_skill(skill_id)
+    if not skill:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Skill not found")
+    return skill
