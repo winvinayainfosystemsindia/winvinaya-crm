@@ -28,7 +28,7 @@ class JobRoleService:
                 {"id": "mapped", "label": "Mapped", "category": "lead"},
                 {"id": "shortlisted", "label": "Shortlisted", "category": "shortlisted"},
                 {"id": "interview_l1", "label": "L1 Interview", "category": "interview"},
-                {"id": "offered", "label": "Offered", "category": "offer"},
+                {"id": "offer_made", "label": "Offer Made", "category": "offer"},
                 {"id": "joined", "label": "Joined", "category": "hired"},
                 {"id": "rejected", "label": "Rejected", "category": "rejected"},
                 {"id": "not_joined", "label": "Not Joined", "category": "not_joined"}

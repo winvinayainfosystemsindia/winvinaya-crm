@@ -14,7 +14,9 @@ import {
 	Button,
 	Grid,
 	Avatar,
-	TextField
+	useTheme,
+	TextField,
+	alpha
 } from '@mui/material';
 import {
 	Timeline,
@@ -40,7 +42,6 @@ import {
 	ThumbDown as RejectedIcon,
 	PersonSearch as SearchIcon
 } from '@mui/icons-material';
-import { format } from 'date-fns';
 import placementMappingService from '../../../../services/placementMappingService';
 import useToast from '../../../../hooks/useToast';
 
@@ -54,6 +55,7 @@ interface Props {
 
 const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTitle }: Props) => {
 	const toast = useToast();
+	const theme = useTheme();
 	const [tabValue, setTabValue] = useState(0);
 	const [loading, setLoading] = useState(false);
 	const [history, setHistory] = useState<any[]>([]);
@@ -95,20 +97,20 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 		const statusKey = status.toLowerCase();
 
 		const colors: any = {
-			applied: 'info.main',
-			shortlisted: 'success.main',
-			interview_l1: 'accent.main',
-			interview_l2: 'accent.main',
-			technical_round: 'accent.main',
-			hr_round: 'accent.main',
-			offer_made: 'warning.main',
-			offer_accepted: 'success.main',
-			offer_rejected: 'error.main',
-			joined: 'success.main',
-			not_joined: 'error.main',
-			dropped: 'text.secondary',
-			rejected: 'error.main',
-			on_hold: 'warning.main',
+			applied: theme.palette.info.main,
+			shortlisted: theme.palette.success.main,
+			interview_l1: theme.palette.accent.main,
+			interview_l2: theme.palette.accent.main,
+			technical_round: theme.palette.accent.main,
+			hr_round: theme.palette.accent.main,
+			offer_made: theme.palette.warning.main,
+			offer_accepted: theme.palette.success.main,
+			offer_rejected: theme.palette.error.main,
+			joined: theme.palette.success.main,
+			not_joined: theme.palette.error.main,
+			dropped: theme.palette.text.secondary,
+			rejected: theme.palette.error.main,
+			on_hold: theme.palette.warning.main,
 		};
 
 		const icons: any = {
@@ -129,9 +131,30 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 		};
 
 		return {
-			color: colors[statusKey] || 'text.secondary',
+			color: colors[statusKey] || theme.palette.text.secondary,
 			icon: icons[statusKey] || <InProgressIcon sx={{ fontSize: 14 }} />
 		};
+	};
+
+	// Timezone-aware date helpers (Always IST)
+	const formatDateIST = (dateStr: string) => {
+		const date = new Date(dateStr);
+		return new Intl.DateTimeFormat('en-IN', {
+			day: '2-digit',
+			month: 'short',
+			year: 'numeric',
+			timeZone: 'Asia/Kolkata'
+		}).format(date).replace(/ /g, '-');
+	};
+
+	const formatTimeIST = (dateStr: string) => {
+		const date = new Date(dateStr);
+		return new Intl.DateTimeFormat('en-IN', {
+			hour: '2-digit',
+			minute: '2-digit',
+			hour12: true,
+			timeZone: 'Asia/Kolkata'
+		}).format(date).toUpperCase();
 	};
 
 	return (
@@ -140,52 +163,62 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 			open={open}
 			onClose={onClose}
 			sx={{
-				zIndex: 1400, // Ensure it's above system headers
+				zIndex: 1400,
 				'& .MuiDrawer-paper': {
 					width: { xs: '100%', sm: 500, md: 600 },
 					bgcolor: 'background.default',
-					boxShadow: (theme) => `-4px 0 20px ${theme.palette.divider}`
+					boxShadow: `-4px 0 20px ${alpha(theme.palette.common.black, 0.1)}`,
+					border: 'none'
 				}
 			}}
 		>
-			<Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'secondary.light', color: 'white' }}>
+			<Box sx={{
+				p: 2.5,
+				display: 'flex',
+				alignItems: 'center',
+				justifyContent: 'space-between',
+				bgcolor: theme.palette.secondary.light,
+				color: 'white',
+				borderBottom: `1px solid ${theme.palette.divider}`
+			}}>
 				<Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-					<Box sx={{ bgcolor: 'accent.main', p: 1, borderRadius: '4px', display: 'flex' }}>
-						<WorkIcon sx={{ color: 'secondary.light', fontSize: 20 }} />
+					<Box sx={{ bgcolor: theme.palette.accent.main, p: 1.25, borderRadius: '4px', display: 'flex', boxShadow: `0 2px 4px ${alpha(theme.palette.common.black, 0.2)}` }}>
+						<WorkIcon sx={{ color: 'white', fontSize: 20 }} />
 					</Box>
 					<Box>
-						<Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2, letterSpacing: '0.2px' }}>
+						<Typography variant="subtitle1" sx={{ fontWeight: 800, lineHeight: 1.2, letterSpacing: '0.2px' }}>
 							Placement Lifecycle
 						</Typography>
-						<Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.75rem', fontWeight: 500 }}>
+						<Typography variant="caption" sx={{ color: alpha(theme.palette.common.white, 0.7), fontSize: '0.75rem', fontWeight: 500 }}>
 							{candidateName} • {jobTitle}
 						</Typography>
 					</Box>
 				</Box>
-				<IconButton onClick={onClose} sx={{ color: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}>
+				<IconButton onClick={onClose} sx={{ color: 'white', '&:hover': { bgcolor: alpha(theme.palette.common.white, 0.1) } }}>
 					<CloseIcon fontSize="small" />
 				</IconButton>
 			</Box>
 
-			<Box sx={{ bgcolor: 'background.paper', borderBottom: '1px solid', borderColor: 'divider', position: 'sticky', top: 0, zIndex: 1 }}>
+			<Box sx={{ bgcolor: 'background.paper', borderBottom: `1px solid ${theme.palette.divider}`, position: 'sticky', top: 0, zIndex: 1 }}>
 				<Tabs
 					value={tabValue}
 					onChange={(_, v) => setTabValue(v)}
 					variant="fullWidth"
 					sx={{
 						'& .MuiTab-root': {
-							minHeight: 56,
+							minHeight: 52,
 							textTransform: 'none',
 							fontWeight: 700,
-							fontSize: '0.85rem',
-							color: 'text.secondary'
+							fontSize: '0.8125rem',
+							color: theme.palette.text.secondary,
+							transition: 'all 0.2s'
 						},
 						'& .MuiTabs-indicator': {
 							height: 3,
-							bgcolor: 'accent.main'
+							bgcolor: theme.palette.accent.main
 						},
 						'& .Mui-selected': {
-							color: 'accent.main !important'
+							color: `${theme.palette.accent.main} !important`
 						}
 					}}
 				>
@@ -196,11 +229,13 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 				</Tabs>
 			</Box>
 
-			<Box sx={{ flexGrow: 1, overflowY: 'auto', p: 3 }}>
+			<Box sx={{ flexGrow: 1, overflowY: 'auto', p: 3, bgcolor: alpha(theme.palette.background.default, 0.5) }}>
 				{loading ? (
 					<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 10, gap: 2 }}>
-						<CircularProgress size={32} thickness={5} sx={{ color: '#ec7211' }} />
-						<Typography variant="body2" color="textSecondary">Fetching placement data...</Typography>
+						<CircularProgress size={32} thickness={5} sx={{ color: theme.palette.accent.main }} />
+						<Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+							Syncing Details...
+						</Typography>
 					</Box>
 				) : (
 					<>
@@ -210,14 +245,14 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 									const config = getStatusConfig(item.to_status);
 									return (
 										<TimelineItem key={index} sx={{ '&:before': { display: 'none' } }}>
-											<Box sx={{ display: 'flex', gap: 3, width: '100%', mb: 1 }}>
+											<Box sx={{ display: 'flex', gap: 2.5, width: '100%', mb: 1 }}>
 												{/* Date & Time Column */}
-												<Box sx={{ minWidth: 80, textAlign: 'right', pt: 1 }}>
-													<Typography variant="body2" sx={{ fontWeight: 800, color: 'text.primary', display: 'block', fontSize: '0.9rem' }}>
-														{format(new Date(item.changed_at), 'MMM dd')}
+												<Box sx={{ minWidth: 95, textAlign: 'right', pt: 0.75 }}>
+													<Typography variant="caption" sx={{ fontWeight: 800, color: theme.palette.text.primary, display: 'block', fontSize: '0.75rem', letterSpacing: '0.2px' }}>
+														{formatDateIST(item.changed_at)}
 													</Typography>
-													<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-														{format(new Date(item.changed_at), 'p')}
+													<Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontWeight: 600, fontSize: '0.7rem' }}>
+														{formatTimeIST(item.changed_at)}
 													</Typography>
 												</Box>
 
@@ -226,12 +261,12 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 													<TimelineDot
 														variant="outlined"
 														sx={{
-															borderColor: config.color,
+															borderColor: alpha(config.color as string, 0.3),
 															color: config.color,
-															bgcolor: 'background.paper',
-															boxShadow: '0 0 0 4px #ffffff',
-															width: 32,
-															height: 32,
+															bgcolor: alpha(config.color as string, 0.05),
+															boxShadow: `0 0 0 4px ${theme.palette.background.paper}`,
+															width: 34,
+															height: 34,
 															m: 0,
 															display: 'flex',
 															alignItems: 'center',
@@ -242,18 +277,18 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 														{config.icon}
 													</TimelineDot>
 													{index < history.length - 1 && (
-														<TimelineConnector sx={{ bgcolor: 'divider', width: 2, my: 1 }} />
+														<TimelineConnector sx={{ bgcolor: theme.palette.divider, width: 2, my: 0.5 }} />
 													)}
 												</Box>
 
 												{/* Content Area */}
-												<Box sx={{ pb: 5, flex: 1 }}>
+												<Box sx={{ pb: 4, flex: 1 }}>
 													<Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1 }}>
-														<Typography variant="awsSectionTitle" sx={{ fontSize: '0.95rem', color: 'text.primary' }}>
+														<Typography variant="subtitle2" sx={{ fontWeight: 800, color: theme.palette.text.primary, textTransform: 'capitalize' }}>
 															{item.to_status.replace(/_/g, ' ')}
 														</Typography>
 														{item.changed_by_name && (
-															<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+															<Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontWeight: 600 }}>
 																• {item.changed_by_name}
 															</Typography>
 														)}
@@ -262,23 +297,23 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 													{item.remarks && (
 														<Box sx={{
 															p: 2,
-															bgcolor: 'background.default',
-															borderRadius: 1,
-															border: '1px solid',
-															borderColor: 'divider',
+															bgcolor: theme.palette.background.paper,
+															borderRadius: '4px',
+															border: `1px solid ${theme.palette.divider}`,
 															position: 'relative',
+															boxShadow: `0 1px 2px ${alpha(theme.palette.common.black, 0.05)}`,
 															'&:before': {
 																content: '""',
 																position: 'absolute',
 																left: 0,
-																top: 12,
-																bottom: 12,
-																width: '4px',
+																top: 8,
+																bottom: 8,
+																width: '3px',
 																bgcolor: config.color,
 																borderRadius: '0 4px 4px 0'
 															}
 														}}>
-															<Typography variant="body2" sx={{ fontSize: '0.875rem', color: 'text.primary', lineHeight: 1.6, pl: 0.5 }}>
+															<Typography variant="body2" sx={{ fontSize: '0.8125rem', color: theme.palette.text.primary, lineHeight: 1.6, pl: 0.5 }}>
 																{item.remarks}
 															</Typography>
 														</Box>
@@ -290,8 +325,10 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 								})}
 								{history.length === 0 && (
 									<Box sx={{ textAlign: 'center', py: 10 }}>
-										<HistoryIcon sx={{ fontSize: 48, color: '#eaeded', mb: 2 }} />
-										<Typography variant="body2" color="textSecondary">No activity recorded for this candidate.</Typography>
+										<HistoryIcon sx={{ fontSize: 48, color: theme.palette.divider, mb: 2 }} />
+										<Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontWeight: 500 }}>
+											No activity recorded for this candidate.
+										</Typography>
 									</Box>
 								)}
 							</Timeline>
@@ -300,16 +337,18 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 						{tabValue === 1 && (
 							<Box>
 								<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-									<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e' }}>Interview Rounds</Typography>
+									<Typography variant="awsSectionTitle">Interview Rounds</Typography>
 									<Button
 										variant="contained"
 										size="small"
 										startIcon={<ScheduleIcon sx={{ fontSize: 16 }} />}
 										sx={{
 											textTransform: 'none',
-											bgcolor: 'accent.main',
+											bgcolor: theme.palette.accent.main,
 											fontWeight: 700,
-											'&:hover': { bgcolor: 'accent.dark' }
+											fontSize: '0.75rem',
+											borderRadius: '4px',
+											'&:hover': { bgcolor: theme.palette.accent.dark }
 										}}
 									>
 										Schedule Round
@@ -317,50 +356,88 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 								</Stack>
 								<Stack spacing={2}>
 									{interviews.map((iv, index) => (
-										<Paper key={index} elevation={0} sx={{ border: '1px solid #eaeded', borderRadius: '8px', overflow: 'hidden' }}>
+										<Paper
+											key={index}
+											elevation={0}
+											sx={{
+												border: `1px solid ${theme.palette.divider}`,
+												borderRadius: '8px',
+												overflow: 'hidden',
+												bgcolor: theme.palette.background.paper
+											}}
+										>
 											<Box sx={{ display: 'flex' }}>
-												<Box sx={{ width: 80, bgcolor: 'action.hover', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', p: 2 }}>
-													<Typography variant="h4" sx={{ fontWeight: 400, color: 'primary.main' }}>{iv.round_number}</Typography>
-													<Typography variant="caption" sx={{ fontWeight: 800, color: 'primary.main', fontSize: '0.6rem', letterSpacing: '0.5px' }}>ROUND</Typography>
+												<Box sx={{
+													width: 80,
+													bgcolor: alpha(theme.palette.primary.main, 0.04),
+													display: 'flex',
+													flexDirection: 'column',
+													alignItems: 'center',
+													justifyContent: 'center',
+													p: 2,
+													borderRight: `1px solid ${theme.palette.divider}`
+												}}>
+													<Typography variant="h4" sx={{ fontWeight: 800, color: theme.palette.primary.main }}>{iv.round_number}</Typography>
+													<Typography variant="caption" sx={{ fontWeight: 800, color: theme.palette.primary.main, fontSize: '0.6rem', letterSpacing: '1px' }}>ROUND</Typography>
 												</Box>
-												<Box sx={{ p: 2, flexGrow: 1 }}>
-													<Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-														<Typography variant="body2" sx={{ fontWeight: 700, color: '#232f3e' }}>{iv.round_type?.toUpperCase()}</Typography>
+												<Box sx={{ p: 2.5, flexGrow: 1 }}>
+													<Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
+														<Box>
+															<Typography variant="awsFieldLabel" sx={{ mb: 0.25 }}>Round Type</Typography>
+															<Typography variant="body2" sx={{ fontWeight: 800, color: theme.palette.text.primary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+																{iv.round_type?.replace(/_/g, ' ')}
+															</Typography>
+														</Box>
 														<Chip
 															label={iv.result?.toUpperCase() || 'PENDING'}
 															size="small"
 															sx={{
-																height: 20,
-																fontSize: '0.7rem',
-																fontWeight: 700,
+																height: 22,
+																fontSize: '0.65rem',
+																fontWeight: 800,
 																borderRadius: '4px',
-																bgcolor: iv.result === 'passed' ? 'success.light' : iv.result === 'failed' ? 'error.light' : 'warning.light',
-																color: iv.result === 'passed' ? 'success.dark' : iv.result === 'failed' ? 'error.dark' : 'warning.dark',
-																'& .MuiChip-label': { px: 1 }
+																bgcolor: iv.result === 'passed' ? alpha(theme.palette.success.main, 0.1) : iv.result === 'failed' ? alpha(theme.palette.error.main, 0.1) : alpha(theme.palette.warning.main, 0.1),
+																color: iv.result === 'passed' ? theme.palette.success.main : iv.result === 'failed' ? theme.palette.error.main : theme.palette.warning.main,
+																border: `1px solid ${alpha(iv.result === 'passed' ? theme.palette.success.main : iv.result === 'failed' ? theme.palette.error.main : theme.palette.warning.main, 0.2)}`,
+																'& .MuiChip-label': { px: 1.5 }
 															}}
 														/>
 													</Box>
-													<Grid container spacing={1}>
-														<Grid size={{ xs: 12 }}>
-															<Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary' }}>
-																<WorkIcon sx={{ fontSize: 14 }} /> {iv.interviewer_name || 'Assigned Interviewer'}
-															</Typography>
+													<Grid container spacing={2}>
+														<Grid size={{ xs: 12, sm: 6 }}>
+															<Stack direction="row" spacing={1} alignItems="center">
+																<WorkIcon sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
+																<Typography variant="caption" sx={{ color: theme.palette.text.primary, fontWeight: 600 }}>
+																	{iv.interviewer_name || 'TBD'}
+																</Typography>
+															</Stack>
 														</Grid>
-														<Grid size={{ xs: 12 }}>
-															<Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary' }}>
-																<EventIcon sx={{ fontSize: 14 }} /> {iv.scheduled_at ? format(new Date(iv.scheduled_at), 'PPP • p') : 'Date TBD'}
-															</Typography>
+														<Grid size={{ xs: 12, sm: 6 }}>
+															<Stack direction="row" spacing={1} alignItems="center">
+																<EventIcon sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
+																<Typography variant="caption" sx={{ color: theme.palette.text.primary, fontWeight: 600 }}>
+																	{iv.scheduled_at ? `${formatDateIST(iv.scheduled_at)} • ${formatTimeIST(iv.scheduled_at)}` : 'Date TBD'}
+																</Typography>
+															</Stack>
 														</Grid>
 													</Grid>
 													{iv.interview_link && (
 														<Button
 															size="small"
-															startIcon={<LinkIcon />}
+															startIcon={<LinkIcon fontSize="small" />}
 															href={iv.interview_link}
 															target="_blank"
-															sx={{ mt: 1.5, textTransform: 'none', fontSize: '0.75rem', color: '#0066cc' }}
+															sx={{
+																mt: 2,
+																textTransform: 'none',
+																fontSize: '0.75rem',
+																color: theme.palette.primary.main,
+																fontWeight: 700,
+																bgcolor: alpha(theme.palette.primary.main, 0.05),
+																'&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.1) }
+															}}
 														>
-															Meeting Link
+															Launch Interview
 														</Button>
 													)}
 												</Box>
@@ -369,9 +446,11 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 									))}
 								</Stack>
 								{interviews.length === 0 && (
-									<Box sx={{ textAlign: 'center', py: 10, bgcolor: 'white', borderRadius: '8px', border: '1px dashed #eaeded' }}>
-										<ScheduleIcon sx={{ fontSize: 40, color: '#eaeded', mb: 2 }} />
-										<Typography variant="body2" color="textSecondary">No scheduled interviews found.</Typography>
+									<Box sx={{ textAlign: 'center', py: 10, bgcolor: theme.palette.background.paper, borderRadius: '8px', border: `1px dashed ${theme.palette.divider}` }}>
+										<ScheduleIcon sx={{ fontSize: 40, color: theme.palette.divider, mb: 2 }} />
+										<Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontWeight: 500 }}>
+											No scheduled interviews found.
+										</Typography>
 									</Box>
 								)}
 							</Box>
@@ -380,47 +459,77 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 						{tabValue === 2 && (
 							<Box>
 								{offer ? (
-									<Paper elevation={0} sx={{ border: '1px solid #eaeded', borderRadius: '8px', bgcolor: 'white', overflow: 'hidden' }}>
-										<Box sx={{ p: 2, bgcolor: 'action.hover', borderBottom: '1px solid', borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-											<Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'primary.main' }}>Employment Offer</Typography>
+									<Paper
+										elevation={0}
+										sx={{
+											border: `1px solid ${theme.palette.divider}`,
+											borderRadius: '8px',
+											bgcolor: theme.palette.background.paper,
+											overflow: 'hidden'
+										}}
+									>
+										<Box sx={{ p: 2.5, bgcolor: alpha(theme.palette.secondary.light, 0.02), borderBottom: `1px solid ${theme.palette.divider}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+											<Typography variant="awsSectionTitle" sx={{ color: theme.palette.primary.main }}>Employment Offer</Typography>
 											<Chip
 												label={offer.joining_status || offer.candidate_response?.toUpperCase()}
-												sx={{ fontWeight: 800, bgcolor: 'accent.main', color: 'white', height: 24, fontSize: '0.7rem', borderRadius: '4px' }}
+												sx={{ fontWeight: 800, bgcolor: theme.palette.accent.main, color: 'white', height: 24, fontSize: '0.7rem', borderRadius: '4px' }}
 											/>
 										</Box>
 										<Box sx={{ p: 3 }}>
-											<Grid container spacing={3}>
+											<Grid container spacing={4}>
 												<Grid size={{ xs: 6 }}>
-													<Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem' }}>Annual CTC</Typography>
-													<Typography variant="body1" sx={{ fontWeight: 700, color: 'text.primary' }}>₹{offer.offered_ctc?.toLocaleString() || 'N/A'}</Typography>
-												</Grid>
-												<Grid size={{ xs: 6 }}>
-													<Typography variant="caption" color="textSecondary">Designation</Typography>
-													<Typography variant="body1" sx={{ fontWeight: 700, color: '#232f3e' }}>{offer.offered_designation || 'N/A'}</Typography>
-												</Grid>
-												<Grid size={{ xs: 12 }}><Divider /></Grid>
-												<Grid size={{ xs: 6 }}>
-													<Typography variant="caption" color="textSecondary">Expected Joining</Typography>
-													<Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5, fontWeight: 500 }}>
-														<EventIcon sx={{ fontSize: 16, color: '#ec7211' }} />
-														{offer.joining_date ? format(new Date(offer.joining_date), 'PPP') : 'N/A'}
+													<Typography variant="awsFieldLabel">Annual CTC</Typography>
+													<Typography variant="body1" sx={{ fontWeight: 800, color: theme.palette.text.primary, fontSize: '1.1rem' }}>
+														₹{offer.offered_ctc?.toLocaleString() || 'N/A'}
 													</Typography>
 												</Grid>
 												<Grid size={{ xs: 6 }}>
-													<Typography variant="caption" color="textSecondary">Work Location</Typography>
-													<Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5, fontWeight: 500 }}>
-														<LocationIcon sx={{ fontSize: 16, color: '#d13212' }} />
-														{offer.work_location || 'N/A'}
+													<Typography variant="awsFieldLabel">Designation</Typography>
+													<Typography variant="body1" sx={{ fontWeight: 700, color: theme.palette.text.primary }}>
+														{offer.offered_designation || 'N/A'}
 													</Typography>
+												</Grid>
+												<Grid size={{ xs: 12 }}><Divider sx={{ borderStyle: 'dashed' }} /></Grid>
+												<Grid size={{ xs: 6 }}>
+													<Typography variant="awsFieldLabel">Expected Joining</Typography>
+													<Stack direction="row" spacing={1} alignItems="center">
+														<EventIcon sx={{ fontSize: 18, color: theme.palette.accent.main }} />
+														<Typography variant="body2" sx={{ fontWeight: 700 }}>
+															{offer.joining_date ? formatDateIST(offer.joining_date) : 'N/A'}
+														</Typography>
+													</Stack>
+												</Grid>
+												<Grid size={{ xs: 6 }}>
+													<Typography variant="awsFieldLabel">Work Location</Typography>
+													<Stack direction="row" spacing={1} alignItems="center">
+														<LocationIcon sx={{ fontSize: 18, color: theme.palette.error.main }} />
+														<Typography variant="body2" sx={{ fontWeight: 700 }}>
+															{offer.work_location || 'N/A'}
+														</Typography>
+													</Stack>
 												</Grid>
 											</Grid>
 										</Box>
 									</Paper>
 								) : (
-									<Box sx={{ textAlign: 'center', py: 10, bgcolor: 'white', borderRadius: '8px', border: '1px dashed #eaeded' }}>
-										<OfferIcon sx={{ fontSize: 40, color: '#eaeded', mb: 2 }} />
-										<Typography variant="body2" color="textSecondary">Offer details not available.</Typography>
-										<Button size="small" variant="outlined" sx={{ mt: 3, textTransform: 'none' }}>Create Offer</Button>
+									<Box sx={{ textAlign: 'center', py: 10, bgcolor: theme.palette.background.paper, borderRadius: '8px', border: `1px dashed ${theme.palette.divider}` }}>
+										<OfferIcon sx={{ fontSize: 40, color: theme.palette.divider, mb: 2 }} />
+										<Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontWeight: 500 }}>
+											Offer details not yet projected.
+										</Typography>
+										<Button
+											size="small"
+											variant="outlined"
+											sx={{
+												mt: 3,
+												textTransform: 'none',
+												fontWeight: 700,
+												borderColor: theme.palette.divider,
+												color: theme.palette.text.primary
+											}}
+										>
+											Generate Offer
+										</Button>
 									</Box>
 								)}
 							</Box>
@@ -428,46 +537,67 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 
 						{tabValue === 3 && (
 							<Box>
-								<Box sx={{ mb: 3 }}>
+								<Box sx={{ mb: 4 }}>
+									<Typography variant="awsFieldLabel" sx={{ mb: 1.5 }}>Add Private Observation</Typography>
 									<TextField
 										multiline
-										rows={2}
+										rows={3}
 										fullWidth
-										placeholder="Write a professional internal note..."
+										placeholder="Only visible to internal recruitment team..."
 										value={newNote}
 										onChange={(e) => setNewNote(e.target.value)}
-										sx={{ bgcolor: 'white' }}
+										sx={{
+											bgcolor: theme.palette.background.paper,
+											'& .MuiOutlinedInput-root': { borderRadius: '4px' }
+										}}
 									/>
-									<Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+									<Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1.5 }}>
 										<Button
 											variant="contained"
 											size="small"
 											endIcon={<SendIcon sx={{ fontSize: 14 }} />}
-											sx={{ textTransform: 'none', bgcolor: 'accent.main', fontWeight: 700 }}
+											sx={{
+												textTransform: 'none',
+												bgcolor: theme.palette.accent.main,
+												fontWeight: 700,
+												borderRadius: '4px',
+												px: 3,
+												'&:hover': { bgcolor: theme.palette.accent.dark }
+											}}
 											disabled={!newNote.trim()}
 										>
-											Add Note
+											Commit Note
 										</Button>
 									</Box>
 								</Box>
 
+								<Typography variant="awsSectionTitle" sx={{ mb: 2 }}>Note History</Typography>
 								<Stack spacing={2}>
 									{notes.map((note, index) => (
-										<Paper key={index} elevation={0} sx={{ p: 2, border: '1px solid #eaeded', bgcolor: 'white' }}>
-											<Box sx={{ display: 'flex', gap: 1.5 }}>
-												<Avatar sx={{ width: 28, height: 28, fontSize: '0.75rem', bgcolor: '#545b64' }}>
+										<Paper
+											key={index}
+											elevation={0}
+											sx={{
+												p: 2.5,
+												border: `1px solid ${theme.palette.divider}`,
+												bgcolor: theme.palette.background.paper,
+												borderRadius: '8px'
+											}}
+										>
+											<Box sx={{ display: 'flex', gap: 2 }}>
+												<Avatar sx={{ width: 32, height: 32, fontSize: '0.8125rem', bgcolor: theme.palette.secondary.light, fontWeight: 700 }}>
 													{note.created_by_name?.[0] || 'U'}
 												</Avatar>
 												<Box sx={{ flexGrow: 1 }}>
-													<Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-														<Typography variant="caption" sx={{ fontWeight: 700, color: '#232f3e' }}>
-															{note.created_by_name || 'System Admin'}
+													<Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+														<Typography variant="subtitle2" sx={{ fontWeight: 800, color: theme.palette.text.primary }}>
+															{note.created_by_name || 'System User'}
 														</Typography>
-														<Typography variant="caption" sx={{ color: 'textDisabled' }}>
-															{format(new Date(note.created_at), 'MMM dd, p')}
+														<Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontWeight: 600 }}>
+															{formatDateIST(note.created_at)} • {formatTimeIST(note.created_at)}
 														</Typography>
 													</Box>
-													<Typography variant="body2" sx={{ color: '#545b64', fontSize: '0.85rem', lineHeight: 1.5 }}>
+													<Typography variant="body2" sx={{ color: theme.palette.text.primary, fontSize: '0.875rem', lineHeight: 1.6 }}>
 														{note.content}
 													</Typography>
 												</Box>
@@ -476,9 +606,11 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 									))}
 								</Stack>
 								{notes.length === 0 && (
-									<Box sx={{ textAlign: 'center', py: 6, opacity: 0.5 }}>
-										<NotesIcon sx={{ fontSize: 40, mb: 1.5, color: '#eaeded' }} />
-										<Typography variant="body2">No internal notes captured yet.</Typography>
+									<Box sx={{ textAlign: 'center', py: 8, opacity: 0.6 }}>
+										<NotesIcon sx={{ fontSize: 40, mb: 1.5, color: theme.palette.divider }} />
+										<Typography variant="body2" sx={{ fontWeight: 500, color: theme.palette.text.secondary }}>
+											No internal notes captured yet.
+										</Typography>
 									</Box>
 								)}
 							</Box>

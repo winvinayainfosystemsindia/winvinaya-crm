@@ -24,6 +24,7 @@ class PlacementStatus(str, enum.Enum):
     TECHNICAL_ROUND = "technical_round"
     HR_ROUND = "hr_round"
     OFFER_MADE = "offer_made"
+    OFFERED = "offered" # Legacy alias for offer_made
     OFFER_ACCEPTED = "offer_accepted"
     OFFER_REJECTED = "offer_rejected"
     JOINED = "joined"
