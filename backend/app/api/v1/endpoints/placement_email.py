@@ -72,7 +72,8 @@ async def send_candidate_profile_email(
         user_id=current_user.id,
         custom_email=request_in.custom_email,
         custom_subject=request_in.custom_subject,
-        custom_message=request_in.custom_message
+        custom_message=request_in.custom_message,
+        custom_cc=request_in.custom_cc
     )
     
     if not success:
@@ -102,7 +103,8 @@ async def send_bulk_candidate_profiles(
         custom_email=request_in.custom_email,
         custom_subject=request_in.custom_subject,
         custom_message=request_in.custom_message,
-        document_ids=request_in.document_ids
+        document_ids=request_in.document_ids,
+        custom_cc=request_in.custom_cc
     )
     
     if not success:

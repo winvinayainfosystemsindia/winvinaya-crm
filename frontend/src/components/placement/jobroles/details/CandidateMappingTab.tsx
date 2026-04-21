@@ -283,12 +283,13 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
         );
     }, [selectedCandidateIds]);
 
-    const handleSendBulkEmail = async (data: { email: string; subject: string; message: string; document_ids: number[] }) => {
+    const handleSendBulkEmail = async (data: { email: string; cc?: string; subject: string; message: string; document_ids: number[] }) => {
         try {
             await dispatch(sendBulkProfiles({
                 mapping_ids: selectedMappings,
                 document_ids: data.document_ids,
                 custom_email: data.email,
+                custom_cc: data.cc,
                 custom_subject: data.subject,
                 custom_message: data.message
             })).unwrap();

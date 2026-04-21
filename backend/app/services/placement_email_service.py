@@ -30,7 +30,8 @@ class PlacementEmailService:
         user_id: int,
         custom_email: Optional[str] = None,
         custom_subject: Optional[str] = None,
-        custom_message: Optional[str] = None
+        custom_message: Optional[str] = None,
+        custom_cc: Optional[str] = None
     ) -> bool:
         """Send a single candidate profile email"""
         return await self.send_bulk_candidates_to_company(
@@ -38,7 +39,8 @@ class PlacementEmailService:
             user_id=user_id,
             custom_email=custom_email,
             custom_subject=custom_subject,
-            custom_message=custom_message
+            custom_message=custom_message,
+            custom_cc=custom_cc
         )
 
     async def send_bulk_candidates_to_company(
@@ -48,7 +50,8 @@ class PlacementEmailService:
         custom_email: Optional[str] = None,
         custom_subject: Optional[str] = None,
         custom_message: Optional[str] = None,
-        document_ids: Optional[List[int]] = None
+        document_ids: Optional[List[int]] = None,
+        custom_cc: Optional[str] = None
     ) -> bool:
         """
         Send multiple candidate profiles and selected documents to the company contact.
@@ -88,6 +91,8 @@ class PlacementEmailService:
         msg = MIMEMultipart()
         msg['From'] = f"{email_config.sender_name} <{email_config.sender_email}>"
         msg['To'] = recipient_email
+        if custom_cc:
+            msg['Cc'] = custom_cc
 
         # 4. Collect Candidate Details and Attachments
         candidates_info = []

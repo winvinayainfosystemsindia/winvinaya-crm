@@ -15,6 +15,7 @@ import {
     ListItemIcon,
     ListItemText,
     Collapse,
+    Autocomplete,
     useTheme,
     alpha
 } from '@mui/material';
@@ -35,7 +36,7 @@ import BaseDialog from '../../../common/dialogbox/BaseDialog';
 interface CandidateEmailDialogProps {
     open: boolean;
     onClose: () => void;
-    onSend: (data: { email: string; subject: string; message: string; document_ids: number[] }) => void;
+    onSend: (data: { email: string; cc?: string; subject: string; message: string; document_ids: number[] }) => void;
     mappingIds: number[];
     candidateNames: string[];
     jobTitle: string;
@@ -56,7 +57,8 @@ const CandidateEmailDialog: React.FC<CandidateEmailDialogProps> = ({
     loading = false
 }) => {
     const theme = useTheme();
-    const [email, setEmail] = useState(contactEmail);
+    const [emails, setEmails] = useState<string[]>(contactEmail ? [contactEmail] : []);
+    const [ccEmails, setCcEmails] = useState<string[]>([]);
     const [subject, setSubject] = useState('');
     const [message, setMessage] = useState('');
     
@@ -95,7 +97,7 @@ const CandidateEmailDialog: React.FC<CandidateEmailDialogProps> = ({
 
     useEffect(() => {
         if (open) {
-            setEmail(contactEmail);
+            setEmails(contactEmail ? [contactEmail] : []);
             
             let namesStr = candidateNames[0];
             if (isBulk) {
@@ -131,8 +133,14 @@ const CandidateEmailDialog: React.FC<CandidateEmailDialogProps> = ({
     };
 
     const handleSend = () => {
-        if (email.trim() && subject.trim() && message.trim()) {
-            onSend({ email, subject, message, document_ids: selectedDocIds });
+        if (emails.length > 0 && subject.trim() && message.trim()) {
+            onSend({ 
+                email: emails.join(', '), 
+                cc: ccEmails.join(', '), 
+                subject, 
+                message, 
+                document_ids: selectedDocIds 
+            });
         }
     };
 
@@ -155,7 +163,7 @@ const CandidateEmailDialog: React.FC<CandidateEmailDialogProps> = ({
             <Button
                 onClick={handleSend}
                 variant="contained"
-                disabled={loading || !email.trim() || !subject.trim() || !message.trim()}
+                disabled={loading || emails.length === 0 || !subject.trim() || !message.trim()}
                 startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <EmailIcon />}
                 sx={{
                     bgcolor: theme.palette.primary.main,
@@ -167,6 +175,16 @@ const CandidateEmailDialog: React.FC<CandidateEmailDialogProps> = ({
             </Button>
         </>
     );
+
+    const emailInputStyles = {
+        '& .MuiOutlinedInput-root': { 
+            borderRadius: '6px',
+            bgcolor: '#ffffff',
+            '& fieldset': { borderColor: theme.palette.divider },
+            '&:hover fieldset': { borderColor: theme.palette.primary.main },
+            '&.Mui-focused fieldset': { borderColor: theme.palette.primary.main }
+        }
+    };
 
     return (
         <BaseDialog 
@@ -185,13 +203,63 @@ const CandidateEmailDialog: React.FC<CandidateEmailDialogProps> = ({
                             <Typography variant="awsFieldLabel" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <EmailIcon sx={{ fontSize: 16 }} /> RECIPIENT EMAIL
                             </Typography>
-                            <TextField
-                                fullWidth
-                                variant="outlined"
-                                size="small"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px' } }}
+                            <Autocomplete
+                                multiple
+                                freeSolo
+                                options={[]}
+                                value={emails}
+                                onChange={(_e, newValue) => setEmails(newValue as string[])}
+                                renderTags={(value, getTagProps) =>
+                                    value.map((option, index) => (
+                                        <Chip
+                                            label={option}
+                                            {...getTagProps({ index })}
+                                            size="small"
+                                            sx={{ borderRadius: '4px', fontWeight: 600 }}
+                                        />
+                                    ))
+                                }
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        placeholder="Type email and press enter"
+                                        size="small"
+                                        variant="outlined"
+                                        sx={emailInputStyles}
+                                    />
+                                )}
+                            />
+                        </Box>
+                        
+                        <Box>
+                            <Typography variant="awsFieldLabel" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <EmailIcon sx={{ fontSize: 16 }} /> CC RECIPIENTS (OPTIONAL)
+                            </Typography>
+                            <Autocomplete
+                                multiple
+                                freeSolo
+                                options={[]}
+                                value={ccEmails}
+                                onChange={(_e, newValue) => setCcEmails(newValue as string[])}
+                                renderTags={(value, getTagProps) =>
+                                    value.map((option, index) => (
+                                        <Chip
+                                            label={option}
+                                            {...getTagProps({ index })}
+                                            size="small"
+                                            sx={{ borderRadius: '4px', fontWeight: 600 }}
+                                        />
+                                    ))
+                                }
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        placeholder="Type email and press enter"
+                                        size="small"
+                                        variant="outlined"
+                                        sx={emailInputStyles}
+                                    />
+                                )}
                             />
                         </Box>
 

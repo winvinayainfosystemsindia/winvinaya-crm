@@ -19,6 +19,7 @@ export interface CandidateEmailRequest {
     custom_email?: string;
     custom_subject?: string;
     custom_message?: string;
+    custom_cc?: string;
 }
 
 const placementEmailService = {
