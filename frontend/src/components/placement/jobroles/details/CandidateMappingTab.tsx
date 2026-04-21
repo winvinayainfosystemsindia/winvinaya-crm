@@ -21,7 +21,7 @@ import type { JobRole } from '../../../../models/jobRole';
 import { fetchAggregatedSkills } from '../../../../store/slices/skillSlice';
 import { sendBulkProfiles } from '../../../../store/slices/placementEmailSlice';
 import FilterDrawer from '../../../common/FilterDrawer';
-import ConfirmationDialog from '../../../common/ConfirmationDialog';
+import ConfirmationDialog from '../../../common/dialogbox/ConfirmationDialog';
 import { CANDIDATE_MAPPING_FILTER_FIELDS, INITIAL_FILTERS, type CandidateMappingFiltersState } from './mapping/CandidateMappingFilters';
 
 // Modular Components
@@ -436,7 +436,7 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                 message={`Are you sure you want to unmap ${candidateToUnmap?.name} from this job role? This will reset their placement status.`}
                 confirmLabel="Yes, Unmap"
                 onConfirm={handleConfirmUnmap}
-                onCancel={() => setUnmapConfirmOpen(false)}
+                onClose={() => setUnmapConfirmOpen(false)}
                 loading={submitting}
                 severity="warning"
             />

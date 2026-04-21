@@ -7,26 +7,20 @@ import {
     TextField,
     CircularProgress,
     Avatar,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
     Grid,
-    IconButton,
     useTheme,
     alpha
 } from '@mui/material';
 import {
     Info as InfoIcon,
-    Close as CloseIcon,
     ArrowForward as ArrowForwardIcon,
     Business as BusinessIcon,
     Person as PersonIcon,
     TrendingUp as TrendingUpIcon,
-    GroupAdd as GroupAddIcon,
 } from '@mui/icons-material';
 import { type CandidateMatchResult } from '../../../../../store/slices/placementMappingSlice';
 import type { JobRole } from '../../../../../models/jobRole';
+import BaseDialog from '../../../../common/dialogbox/BaseDialog';
 
 interface MappingDialogProps {
     open: boolean;
@@ -52,37 +46,44 @@ const MappingDialog: React.FC<MappingDialogProps> = ({
     getScoreColor,
 }) => {
     const theme = useTheme();
-    return (
-        <Dialog
-            open={open}
-            onClose={onClose}
-            maxWidth="sm"
-            fullWidth
-            PaperProps={{
-                sx: { borderRadius: theme.shape.borderRadius }
-            }}
-        >
-            <DialogTitle sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                bgcolor: theme.palette.secondary.main,
-                color: theme.palette.secondary.contrastText,
-                px: 3,
-                py: 2
-            }}>
-                <Stack direction="row" spacing={1.5} alignItems="center">
-                    <GroupAddIcon sx={{ color: theme.palette.primary.light }} />
-                    <Typography variant="h6">
-                        Mapping Confirmation
-                    </Typography>
-                </Stack>
-                <IconButton size="small" onClick={onClose} sx={{ color: 'white' }}>
-                    <CloseIcon />
-                </IconButton>
-            </DialogTitle>
+    const actions = (
+        <>
+            <Button
+                onClick={onClose}
+                sx={{
+                    color: theme.palette.text.secondary,
+                    mr: 1
+                }}
+            >
+                Cancel
+            </Button>
+            <Button
+                variant="contained"
+                onClick={onConfirm}
+                disabled={submitting}
+                sx={{
+                    bgcolor: theme.palette.primary.main,
+                    '&:hover': { bgcolor: theme.palette.primary.dark },
+                    px: 4,
+                    py: 1
+                }}
+            >
+                {submitting ? <CircularProgress size={24} color="inherit" /> : 'Confirm Mapping'}
+            </Button>
+        </>
+    );
 
-            <DialogContent sx={{ pt: 4, pb: 2 }}>
+    return (
+        <BaseDialog 
+            open={open} 
+            onClose={onClose} 
+            maxWidth="sm" 
+            title="Mapping Confirmation"
+            subtitle={`Confirming assignment for ${selectedCandidate?.name}`}
+            loading={submitting}
+            actions={actions}
+        >
+            <Box>
                 {/* Mapping Flow Component */}
                 <Box sx={{
                     mb: 4,
@@ -166,33 +167,8 @@ const MappingDialog: React.FC<MappingDialogProps> = ({
                         <strong>Next Steps:</strong> Once confirmed, this candidate will be listed under the "Mapped Candidates" section. You can then manage their screening and interview progression in the Placement Tracking module.
                     </Typography>
                 </Box>
-            </DialogContent>
-
-            <DialogActions sx={{ p: 3, borderTop: `1px solid ${theme.palette.divider}`, bgcolor: theme.palette.background.default }}>
-                <Button
-                    onClick={onClose}
-                    sx={{
-                        color: theme.palette.text.secondary,
-                        mr: 1
-                    }}
-                >
-                    Cancel
-                </Button>
-                <Button
-                    variant="contained"
-                    onClick={onConfirm}
-                    disabled={submitting}
-                    sx={{
-                        bgcolor: theme.palette.primary.main,
-                        '&:hover': { bgcolor: theme.palette.primary.dark },
-                        px: 4,
-                        py: 1
-                    }}
-                >
-                    {submitting ? <CircularProgress size={24} color="inherit" /> : 'Confirm Mapping'}
-                </Button>
-            </DialogActions>
-        </Dialog>
+            </Box>
+        </BaseDialog>
     );
 };
 

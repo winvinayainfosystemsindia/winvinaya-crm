@@ -1,15 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
+    Typography,
     Button,
     TextField,
-    Typography,
     Box,
     Stack,
-    IconButton,
     CircularProgress,
     Chip,
     Checkbox,
@@ -24,7 +19,6 @@ import {
     alpha
 } from '@mui/material';
 import {
-    Close as CloseIcon,
     Email as EmailIcon,
     Subject as SubjectIcon,
     Message as MessageIcon,
@@ -36,6 +30,7 @@ import {
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { fetchAvailableDocuments } from '../../../../store/slices/placementEmailSlice';
+import BaseDialog from '../../../common/dialogbox/BaseDialog';
 
 interface CandidateEmailDialogProps {
     open: boolean;
@@ -149,197 +144,186 @@ const CandidateEmailDialog: React.FC<CandidateEmailDialogProps> = ({
         return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
     };
 
+    const actions = (
+        <>
+            <Typography variant="caption" sx={{ flexGrow: 1, ml: 2, fontWeight: 700, color: theme.palette.primary.main }}>
+                {selectedDocIds.length} Total Attachments
+            </Typography>
+            <Button onClick={onClose} disabled={loading} sx={{ color: theme.palette.text.secondary }}>
+                Cancel
+            </Button>
+            <Button
+                onClick={handleSend}
+                variant="contained"
+                disabled={loading || !email.trim() || !subject.trim() || !message.trim()}
+                startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <EmailIcon />}
+                sx={{
+                    bgcolor: theme.palette.primary.main,
+                    px: 4,
+                    '&:hover': { bgcolor: theme.palette.primary.dark }
+                }}
+            >
+                {loading ? 'Sending...' : isBulk ? 'Send All Profiles' : 'Send Profile'}
+            </Button>
+        </>
+    );
+
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: theme.shape.borderRadius, boxShadow: theme.shadows[8] } }}>
-            <DialogTitle sx={{
-                bgcolor: theme.palette.secondary.main,
-                color: theme.palette.secondary.contrastText,
-                py: 2,
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-            }}>
-                <Stack direction="row" spacing={1.5} alignItems="center">
-                    {isBulk ? <GroupsIcon sx={{ color: theme.palette.primary.light }} /> : <EmailIcon sx={{ color: theme.palette.primary.light }} />}
-                    <Typography variant="h6">
-                        {isBulk ? `Send ${candidateNames.length} Candidate Profiles` : 'Send Candidate Profile'}
+        <BaseDialog 
+            open={open} 
+            onClose={onClose} 
+            maxWidth="md" 
+            title={isBulk ? `Send ${candidateNames.length} Candidate Profiles` : 'Send Candidate Profile'}
+            subtitle={`Share profiles for the ${jobTitle} position`}
+            loading={loading}
+            actions={actions}
+        >
+            <Stack spacing={4}>
+                <Box sx={{ borderBottom: `1px solid ${theme.palette.divider}`, pb: 4 }}>
+                    <Stack spacing={3}>
+                        <Box>
+                            <Typography variant="awsFieldLabel" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <EmailIcon sx={{ fontSize: 16 }} /> RECIPIENT EMAIL
+                            </Typography>
+                            <TextField
+                                fullWidth
+                                variant="outlined"
+                                size="small"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px' } }}
+                            />
+                        </Box>
+
+                        <Box>
+                            <Typography variant="awsFieldLabel" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <SubjectIcon sx={{ fontSize: 16 }} /> SUBJECT
+                            </Typography>
+                            <TextField
+                                fullWidth
+                                variant="outlined"
+                                size="small"
+                                value={subject}
+                                onChange={(e) => setSubject(e.target.value)}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px' } }}
+                            />
+                        </Box>
+
+                        <Box>
+                            <Typography variant="awsFieldLabel" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <MessageIcon sx={{ fontSize: 16 }} /> MESSAGE
+                            </Typography>
+                            <TextField
+                                fullWidth
+                                multiline
+                                rows={6}
+                                variant="outlined"
+                                value={message}
+                                onChange={(e) => setMessage(e.target.value)}
+                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px' } }}
+                            />
+                        </Box>
+                    </Stack>
+                </Box>
+
+                <Box>
+                    <Typography variant="awsSectionTitle" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <AttachIcon sx={{ fontSize: 18, color: theme.palette.primary.main }} /> SELECT DOCUMENTS TO ATTACH
                     </Typography>
-                </Stack>
-                <IconButton onClick={onClose} sx={{ color: theme.palette.secondary.contrastText }} size="small">
-                    <CloseIcon />
-                </IconButton>
-            </DialogTitle>
 
-            <DialogContent sx={{ p: 4 }}>
-                <Stack spacing={4} sx={{ mt: 1 }}>
-                    <Box sx={{ borderBottom: `1px solid ${theme.palette.divider}`, pb: 4 }}>
-                        <Stack spacing={3}>
-                            <Box>
-                                <Typography variant="awsFieldLabel" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <EmailIcon sx={{ fontSize: 16 }} /> RECIPIENT EMAIL
-                                </Typography>
-                                <TextField
-                                    fullWidth
-                                    variant="outlined"
-                                    size="small"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px' } }}
-                                />
-                            </Box>
-
-                            <Box>
-                                <Typography variant="awsFieldLabel" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <SubjectIcon sx={{ fontSize: 16 }} /> SUBJECT
-                                </Typography>
-                                <TextField
-                                    fullWidth
-                                    variant="outlined"
-                                    size="small"
-                                    value={subject}
-                                    onChange={(e) => setSubject(e.target.value)}
-                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px' } }}
-                                />
-                            </Box>
-
-                            <Box>
-                                <Typography variant="awsFieldLabel" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <MessageIcon sx={{ fontSize: 16 }} /> MESSAGE
-                                </Typography>
-                                <TextField
-                                    fullWidth
-                                    multiline
-                                    rows={6}
-                                    variant="outlined"
-                                    value={message}
-                                    onChange={(e) => setMessage(e.target.value)}
-                                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '6px' } }}
-                                />
-                            </Box>
-                        </Stack>
-                    </Box>
-
-                    <Box>
-                        <Typography variant="awsSectionTitle" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <AttachIcon sx={{ fontSize: 18, color: theme.palette.primary.main }} /> SELECT DOCUMENTS TO ATTACH
-                        </Typography>
-
-                        {fetchingDocs ? (
-                            <Box sx={{ p: 4, textAlign: 'center' }}>
-                                <CircularProgress size={30} sx={{ color: theme.palette.primary.main }} />
-                                <Typography variant="body2" sx={{ mt: 1, color: theme.palette.text.secondary }}>Fetching candidate documents...</Typography>
-                            </Box>
-                        ) : availableDocs.length > 0 ? (
-                            <List sx={{ bgcolor: theme.palette.background.default, borderRadius: '8px', border: `1px solid ${theme.palette.divider}`, p: 0 }}>
-                                {availableDocs.map((cGroup) => (
-                                    <React.Fragment key={cGroup.mapping_id}>
-                                        <ListItem 
-                                            disablePadding
-                                            sx={{ 
-                                                borderBottom: `1px solid ${theme.palette.divider}`,
-                                                bgcolor: theme.palette.background.paper,
-                                                '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.04) }
-                                            }}
-                                        >
-                                            <ListItemButton onClick={() => handleToggleExpand(cGroup.mapping_id)}>
-                                                <ListItemIcon sx={{ minWidth: 40 }}>
-                                                    <GroupsIcon sx={{ color: theme.palette.text.secondary, fontSize: 20 }} />
-                                                </ListItemIcon>
-                                                <ListItemText 
-                                                    primary={cGroup.candidate_name} 
-                                                    primaryTypographyProps={{ variant: 'body2', fontWeight: 700, color: theme.palette.text.primary }}
-                                                    secondary={`${cGroup.documents.length} Available Documents`}
-                                                />
-                                                {expandedCandidates[cGroup.mapping_id] ? <ExpandLess /> : <ExpandMore />}
-                                            </ListItemButton>
-                                        </ListItem>
-                                        <Collapse in={expandedCandidates[cGroup.mapping_id]} timeout="auto" unmountOnExit>
-                                            <List component="div" disablePadding>
-                                                {cGroup.documents.map((doc) => (
-                                                    <ListItem 
-                                                        key={doc.id}
-                                                        sx={{ 
-                                                            pl: 6, 
-                                                            py: 1, 
-                                                            bgcolor: selectedDocIds.includes(doc.id) ? alpha(theme.palette.primary.main, 0.08) : 'transparent',
-                                                            borderBottom: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
-                                                            '&:last-child': { borderBottom: 'none' }
-                                                        }}
-                                                    >
-                                                        <FormControlLabel
-                                                            control={
-                                                                <Checkbox 
-                                                                    size="small" 
-                                                                    checked={selectedDocIds.includes(doc.id)} 
-                                                                    onChange={() => handleToggleDoc(doc.id)}
-                                                                />
-                                                            }
-                                                            label={
-                                                                <Stack direction="row" spacing={1} alignItems="center">
-                                                                    <DocIcon sx={{ fontSize: 16, color: doc.type === 'resume' ? theme.palette.success.main : theme.palette.text.secondary }} />
-                                                                    <Typography variant="body2" sx={{ fontWeight: doc.type === 'resume' ? 700 : 500 }}>
-                                                                        {doc.name}
-                                                                    </Typography>
-                                                                    {doc.type === 'resume' && (
-                                                                        <Chip label="Resume" size="small" sx={{ height: 18, fontSize: '0.65rem', fontWeight: 700, bgcolor: alpha(theme.palette.success.main, 0.1), color: theme.palette.success.main }} />
-                                                                    )}
-                                                                    <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
-                                                                        ({formatSize(doc.size)})
-                                                                    </Typography>
-                                                                </Stack>
-                                                            }
-                                                            sx={{ width: '100%', m: 0 }}
-                                                        />
-                                                    </ListItem>
-                                                ))}
-                                                {cGroup.documents.length === 0 && (
-                                                    <ListItem sx={{ pl: 6, py: 2 }}>
-                                                        <Typography variant="caption" sx={{ fontStyle: 'italic', color: theme.palette.text.secondary }}>
-                                                            No documents found for this candidate.
-                                                        </Typography>
-                                                    </ListItem>
-                                                )}
-                                            </List>
-                                        </Collapse>
-                                    </React.Fragment>
-                                ))}
-                            </List>
-                        ) : (
-                            <Box sx={{ p: 4, bgcolor: alpha(theme.palette.warning.main, 0.05), border: `1px dashed ${theme.palette.warning.light}`, borderRadius: '8px', textAlign: 'center' }}>
-                                <Typography variant="body2" sx={{ color: theme.palette.warning.dark, fontWeight: 600 }}>
-                                    No documents found for the selected candidates. Resumes are required for attachments.
-                                </Typography>
-                            </Box>
-                        )}
-                        <Typography variant="caption" sx={{ mt: 1, display: 'block', color: theme.palette.text.secondary, fontStyle: 'italic' }}>
-                            * Selected documents will be sent as email attachments.
-                        </Typography>
-                    </Box>
-                </Stack>
-            </DialogContent>
-
-            <DialogActions sx={{ p: 3, bgcolor: theme.palette.background.default, borderTop: `1px solid ${theme.palette.divider}` }}>
-                <Typography variant="caption" sx={{ flexGrow: 1, ml: 2, fontWeight: 700, color: theme.palette.primary.main }}>
-                    {selectedDocIds.length} Total Attachments
-                </Typography>
-                <Button onClick={onClose} disabled={loading} sx={{ color: theme.palette.text.secondary }}>
-                    Cancel
-                </Button>
-                <Button
-                    onClick={handleSend}
-                    variant="contained"
-                    disabled={loading || !email.trim() || !subject.trim() || !message.trim()}
-                    startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <EmailIcon />}
-                    sx={{
-                        bgcolor: theme.palette.primary.main,
-                        px: 4,
-                        '&:hover': { bgcolor: theme.palette.primary.dark }
-                    }}
-                >
-                    {loading ? 'Sending...' : isBulk ? 'Send All Profiles' : 'Send Profile'}
-                </Button>
-            </DialogActions>
-        </Dialog>
+                    {fetchingDocs ? (
+                        <Box sx={{ p: 4, textAlign: 'center' }}>
+                            <CircularProgress size={30} sx={{ color: theme.palette.primary.main }} />
+                            <Typography variant="body2" sx={{ mt: 1, color: theme.palette.text.secondary }}>Fetching candidate documents...</Typography>
+                        </Box>
+                    ) : availableDocs.length > 0 ? (
+                        <List sx={{ bgcolor: theme.palette.background.default, borderRadius: '8px', border: `1px solid ${theme.palette.divider}`, p: 0 }}>
+                            {availableDocs.map((cGroup) => (
+                                <React.Fragment key={cGroup.mapping_id}>
+                                    <ListItem 
+                                        disablePadding
+                                        sx={{ 
+                                            borderBottom: `1px solid ${theme.palette.divider}`,
+                                            bgcolor: theme.palette.background.paper,
+                                            '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.04) }
+                                        }}
+                                    >
+                                        <ListItemButton onClick={() => handleToggleExpand(cGroup.mapping_id)}>
+                                            <ListItemIcon sx={{ minWidth: 40 }}>
+                                                <GroupsIcon sx={{ color: theme.palette.text.secondary, fontSize: 20 }} />
+                                            </ListItemIcon>
+                                            <ListItemText 
+                                                primary={cGroup.candidate_name} 
+                                                primaryTypographyProps={{ variant: 'body2', fontWeight: 700, color: theme.palette.text.primary }}
+                                                secondary={`${cGroup.documents.length} Available Documents`}
+                                            />
+                                            {expandedCandidates[cGroup.mapping_id] ? <ExpandLess /> : <ExpandMore />}
+                                        </ListItemButton>
+                                    </ListItem>
+                                    <Collapse in={expandedCandidates[cGroup.mapping_id]} timeout="auto" unmountOnExit>
+                                        <List component="div" disablePadding>
+                                            {cGroup.documents.map((doc) => (
+                                                <ListItem 
+                                                    key={doc.id}
+                                                    sx={{ 
+                                                        pl: 6, 
+                                                        py: 1, 
+                                                        bgcolor: selectedDocIds.includes(doc.id) ? alpha(theme.palette.primary.main, 0.08) : 'transparent',
+                                                        borderBottom: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+                                                        '&:last-child': { borderBottom: 'none' }
+                                                    }}
+                                                >
+                                                    <FormControlLabel
+                                                        control={
+                                                            <Checkbox 
+                                                                size="small" 
+                                                                checked={selectedDocIds.includes(doc.id)} 
+                                                                onChange={() => handleToggleDoc(doc.id)}
+                                                            />
+                                                        }
+                                                        label={
+                                                            <Stack direction="row" spacing={1} alignItems="center">
+                                                                <DocIcon sx={{ fontSize: 16, color: doc.type === 'resume' ? theme.palette.success.main : theme.palette.text.secondary }} />
+                                                                <Typography variant="body2" sx={{ fontWeight: doc.type === 'resume' ? 700 : 500 }}>
+                                                                    {doc.name}
+                                                                </Typography>
+                                                                {doc.type === 'resume' && (
+                                                                    <Chip label="Resume" size="small" sx={{ height: 18, fontSize: '0.65rem', fontWeight: 700, bgcolor: alpha(theme.palette.success.main, 0.1), color: theme.palette.success.main }} />
+                                                                )}
+                                                                <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
+                                                                    ({formatSize(doc.size)})
+                                                                </Typography>
+                                                            </Stack>
+                                                        }
+                                                        sx={{ width: '100%', m: 0 }}
+                                                    />
+                                                </ListItem>
+                                            ))}
+                                            {cGroup.documents.length === 0 && (
+                                                <ListItem sx={{ pl: 6, py: 2 }}>
+                                                    <Typography variant="caption" sx={{ fontStyle: 'italic', color: theme.palette.text.secondary }}>
+                                                        No documents found for this candidate.
+                                                    </Typography>
+                                                </ListItem>
+                                            )}
+                                        </List>
+                                    </Collapse>
+                                </React.Fragment>
+                            ))}
+                        </List>
+                    ) : (
+                        <Box sx={{ p: 4, bgcolor: alpha(theme.palette.warning.main, 0.05), border: `1px dashed ${theme.palette.warning.light}`, borderRadius: '8px', textAlign: 'center' }}>
+                            <Typography variant="body2" sx={{ color: theme.palette.warning.dark, fontWeight: 600 }}>
+                                No documents found for the selected candidates. Resumes are required for attachments.
+                            </Typography>
+                        </Box>
+                    )}
+                    <Typography variant="caption" sx={{ mt: 1, display: 'block', color: theme.palette.text.secondary, fontStyle: 'italic' }}>
+                        * Selected documents will be sent as email attachments.
+                    </Typography>
+                </Box>
+            </Stack>
+        </BaseDialog>
     );
 };
 
