@@ -110,3 +110,15 @@ class CandidateMatchResult(BaseModel):
     mapping_id: Optional[int] = None
     
     model_config = ConfigDict(from_attributes=True)
+
+
+# Bulk Mapping Schemas
+class PlacementBulkMappingItem(BaseModel):
+    candidate_id: int
+    match_score: float
+
+
+class PlacementMappingBulkCreate(BaseModel):
+    job_role_id: int
+    mappings: List[PlacementBulkMappingItem]
+    notes: Optional[str] = None

@@ -2,21 +2,22 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
     Box,
     CircularProgress,
-    Grid
+    Grid,
+    Button
 } from '@mui/material';
+import { GroupAdd as BulkIcon } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import {
     fetchMatchesForJobRole,
-    mapCandidate,
+    bulkMapCandidates,
     clearMatches,
     clearPlacementError,
-    type CandidateMatchResult
 } from '../../../../store/slices/placementMappingSlice';
 import CandidateEmailDialog from '../../mapping/dialogs/CandidateEmailDialog';
-import placementEmailService from '../../../../services/placementEmailService';
 import useToast from '../../../../hooks/useToast';
 import type { JobRole } from '../../../../models/jobRole';
-import { skillService } from '../../../../services/skillService';
+import { fetchAggregatedSkills } from '../../../../store/slices/skillSlice';
+import { sendBulkProfiles } from '../../../../store/slices/placementEmailSlice';
 import FilterDrawer from '../../../common/FilterDrawer';
 import { CANDIDATE_MAPPING_FILTER_FIELDS, INITIAL_FILTERS, type CandidateMappingFiltersState } from './mapping/CandidateMappingFilters';
 
@@ -24,7 +25,7 @@ import { CANDIDATE_MAPPING_FILTER_FIELDS, INITIAL_FILTERS, type CandidateMapping
 import {
     SuggestionsTable,
     MappedCandidatesList,
-    MappingDialog
+    BulkMappingDialog
 } from './mapping';
 
 interface CandidateMappingTabProps {
@@ -54,30 +55,26 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
     const [activeFilters, setActiveFilters] = useState<CandidateMappingFiltersState>(INITIAL_FILTERS);
 
     // Mapping State
-    const [mapDialogOpen, setMapDialogOpen] = useState(false);
-    const [selectedCandidate, setSelectedCandidate] = useState<CandidateMatchResult | null>(null);
-    const [mappingNotes, setMappingNotes] = useState('');
     const [submitting, setSubmitting] = useState(false);
+
+    // Skills from Redux
+    const { aggregatedSkills: allPossibleSkills } = useAppSelector(state => state.skills);
+    
+    // Email status from Redux
+    const { sendLoading: sendingEmail } = useAppSelector(state => state.placementEmail);
+
+    // Suggestions Selection State
+    const [selectedCandidateIds, setSelectedCandidateIds] = useState<number[]>([]);
+    const [bulkMapDialogOpen, setBulkMapDialogOpen] = useState(false);
+    const [bulkMappingNotes, setBulkMappingNotes] = useState('');
 
     // Bulk Email State
     const [selectedMappings, setSelectedMappings] = useState<number[]>([]);
     const [emailDialogOpen, setEmailDialogOpen] = useState(false);
-    const [sendingEmail, setSendingEmail] = useState(false);
-
-    // Skills for Filter
-    const [allPossibleSkills, setAllPossibleSkills] = useState<string[]>([]);
 
     useEffect(() => {
-        const loadSkills = async () => {
-            try {
-                const skills = await skillService.getAggregatedSkills();
-                setAllPossibleSkills(skills);
-            } catch (error) {
-                console.error('Failed to load aggregated skills', error);
-            }
-        };
-        loadSkills();
-    }, []);
+        dispatch(fetchAggregatedSkills());
+    }, [dispatch]);
 
     const fetchData = useCallback(async () => {
         dispatch(fetchMatchesForJobRole(jobRole.public_id));
@@ -184,6 +181,35 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
     const handleSearchChange = (val: string) => {
         setSearchTerm(val);
         setPage(0);
+        setSelectedCandidateIds([]); // Clear selection on search
+    };
+
+    const handleSelectToggle = (id: number) => {
+        setSelectedCandidateIds(prev => 
+            prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+        );
+    };
+
+    const handleSelectAllSuggestions = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.checked) {
+            setSelectedCandidateIds(paginatedSuggestions.map(s => s.candidate_id));
+        } else {
+            setSelectedCandidateIds([]);
+        }
+    };
+
+    const handleToggleSelection = (mappingId: number) => {
+        setSelectedMappings(prev =>
+            prev.includes(mappingId) ? prev.filter(id => id !== mappingId) : [...prev, mappingId]
+        );
+    };
+
+    const handleSelectAllMappings = (checked: boolean) => {
+        if (checked) {
+            setSelectedMappings(mapped.map(m => m.mapping_id!).filter(Boolean));
+        } else {
+            setSelectedMappings([]);
+        }
     };
 
     const handleFilterChange = (key: string, value: any) => {
@@ -195,66 +221,78 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
         setIsFilterDrawerOpen(false);
     };
 
-    const handleOpenMapDialog = (candidate: CandidateMatchResult) => {
-        setSelectedCandidate(candidate);
-        setMapDialogOpen(true);
+    const handleBulkMapClick = () => {
+        setBulkMapDialogOpen(true);
     };
 
-    const handleMapCandidate = async () => {
-        if (!selectedCandidate) return;
+    const handleBulkMapConfirm = async () => {
+        if (selectedCandidateIds.length === 0) return;
+        
         setSubmitting(true);
         try {
-            await dispatch(mapCandidate({
-                candidate_id: selectedCandidate.candidate_id,
+            const mappings = selectedCandidateIds.map(id => {
+                const candidate = suggestions.find(c => c.candidate_id === id);
+                return {
+                    candidate_id: id,
+                    match_score: candidate?.match_score || 0
+                };
+            });
+
+            await dispatch(bulkMapCandidates({
                 job_role_id: jobRole.id!,
-                match_score: selectedCandidate.match_score,
-                notes: mappingNotes
+                mappings,
+                notes: bulkMappingNotes
             })).unwrap();
 
-            toast.success(`${selectedCandidate.name} has been successfully mapped`);
-            setMapDialogOpen(false);
-            setMappingNotes('');
+            toast.success(`Successfully mapped ${selectedCandidateIds.length} candidates`);
+            setBulkMapDialogOpen(false);
+            setSelectedCandidateIds([]);
+            setBulkMappingNotes('');
         } catch (error: any) {
-            toast.error(error || 'Failed to map candidate');
+            toast.error(error || 'Failed to bulk map candidates');
         } finally {
             setSubmitting(false);
         }
     };
 
-    const handleToggleSelection = (mappingId: number) => {
-        setSelectedMappings(prev =>
-            prev.includes(mappingId)
-                ? prev.filter(id => id !== mappingId)
-                : [...prev, mappingId]
+    const bulkMapActions = useMemo(() => {
+        if (selectedCandidateIds.length === 0) return null;
+        return (
+            <Button
+                variant="contained"
+                size="small"
+                startIcon={<BulkIcon />}
+                onClick={handleBulkMapClick}
+                sx={{
+                    bgcolor: '#ec7211',
+                    '&:hover': { bgcolor: '#eb5f07' },
+                    textTransform: 'none',
+                    fontWeight: 700,
+                    fontSize: '0.75rem',
+                    borderRadius: '4px',
+                    ml: 1
+                }}
+            >
+                Map {selectedCandidateIds.length} Selected
+            </Button>
         );
-    };
-
-    const handleSelectAll = (checked: boolean) => {
-        if (checked) {
-            const allMappedIds = mapped.map(m => m.mapping_id).filter((id): id is number => !!id);
-            setSelectedMappings(allMappedIds);
-        } else {
-            setSelectedMappings([]);
-        }
-    };
+    }, [selectedCandidateIds]);
 
     const handleSendBulkEmail = async (data: { email: string; subject: string; message: string; document_ids: number[] }) => {
-        setSendingEmail(true);
         try {
-            await placementEmailService.sendBulkProfiles({
+            await dispatch(sendBulkProfiles({
                 mapping_ids: selectedMappings,
                 document_ids: data.document_ids,
                 custom_email: data.email,
                 custom_subject: data.subject,
                 custom_message: data.message
-            });
+            })).unwrap();
+            
             toast.success('Candidate profiles sent successfully');
             setEmailDialogOpen(false);
             setSelectedMappings([]);
         } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Failed to send bulk email');
-        } finally {
-            setSendingEmail(false);
+            toast.error(error || 'Failed to send bulk email');
         }
     };
 
@@ -288,18 +326,25 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                     page={page}
                     rowsPerPage={rowsPerPage}
                     totalCount={suggestions.length}
-                    onPageChange={setPage}
+                    onPageChange={(p) => {
+                        setPage(p);
+                        setSelectedCandidateIds([]); // Clear selection on page change
+                    }}
                     onRowsPerPageChange={(v) => {
                         setRowsPerPage(v);
                         setPage(0);
+                        setSelectedCandidateIds([]); // Clear selection on rows change
                     }}
-                    onMapClick={handleOpenMapDialog}
                     getScoreColor={getScoreColor}
+                    selectedIds={selectedCandidateIds}
+                    onToggleSelect={handleSelectToggle}
+                    onSelectAll={handleSelectAllSuggestions}
                     searchTerm={searchTerm}
                     onSearchChange={handleSearchChange}
                     onRefresh={fetchData}
                     onFilterOpen={() => setIsFilterDrawerOpen(true)}
                     activeFilterCount={activeFilterCount}
+                    headerActions={bulkMapActions}
                 />
             </Grid>
 
@@ -309,23 +354,22 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                     mapped={mapped}
                     selectedMappings={selectedMappings}
                     onToggleSelection={handleToggleSelection}
-                    onSelectAll={handleSelectAll}
+                    onSelectAll={handleSelectAllMappings}
                     onEmailClick={() => setEmailDialogOpen(true)}
                     getScoreColor={getScoreColor}
                 />
             </Grid>
 
-            {/* Map Candidate Dialog */}
-            <MappingDialog
-                open={mapDialogOpen}
-                onClose={() => setMapDialogOpen(false)}
-                onConfirm={handleMapCandidate}
+            {/* Bulk Map Candidates Dialog */}
+            <BulkMappingDialog
+                open={bulkMapDialogOpen}
+                onClose={() => setBulkMapDialogOpen(false)}
+                onConfirm={handleBulkMapConfirm}
                 jobRole={jobRole}
-                selectedCandidate={selectedCandidate}
-                mappingNotes={mappingNotes}
-                onNotesChange={setMappingNotes}
+                selectedCount={selectedCandidateIds.length}
+                notes={bulkMappingNotes}
+                onNotesChange={setBulkMappingNotes}
                 submitting={submitting}
-                getScoreColor={getScoreColor}
             />
 
             {/* Filter Drawer */}

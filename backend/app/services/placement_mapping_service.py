@@ -10,7 +10,12 @@ from app.models.candidate import Candidate
 from app.repositories.placement_mapping_repository import PlacementMappingRepository
 from app.repositories.job_role_repository import JobRoleRepository
 from app.repositories.candidate_repository import CandidateRepository
-from app.schemas.placement_mapping import PlacementMappingCreate, CandidateMatchResult, MatchMatchInfo
+from app.schemas.placement_mapping import (
+    PlacementMappingCreate, 
+    CandidateMatchResult, 
+    MatchMatchInfo,
+    PlacementMappingBulkCreate
+)
 
 
 class PlacementMappingService:
@@ -45,6 +50,31 @@ class PlacementMappingService:
             "mapped_at": datetime.utcnow()
         }
         return await self.repository.create(mapping_data)
+
+    async def bulk_map_candidates(
+        self, bulk_mapping: PlacementMappingBulkCreate, user_id: int
+    ) -> List[PlacementMapping]:
+        """Map multiple candidates to a job role in one pass"""
+        results = []
+        for item in bulk_mapping.mappings:
+            # Check if already mapped
+            existing = await self.repository.get_by_candidate_and_job_role(
+                item.candidate_id, bulk_mapping.job_role_id
+            )
+            if existing:
+                continue # Skip if already mapped
+            
+            mapping_data = {
+                "candidate_id": item.candidate_id,
+                "job_role_id": bulk_mapping.job_role_id,
+                "match_score": item.match_score,
+                "notes": bulk_mapping.notes,
+                "mapped_by_id": user_id,
+                "mapped_at": datetime.utcnow()
+            }
+            mapping = await self.repository.create(mapping_data)
+            results.append(mapping)
+        return results
 
     async def unmap_candidate(self, candidate_id: int, job_role_id: int) -> bool:
         mapping = await self.repository.get_by_candidate_and_job_role(candidate_id, job_role_id)

@@ -10,7 +10,8 @@ from app.schemas.placement_mapping import (
     PlacementMapping, 
     PlacementMappingCreate, 
     CandidateMatchResult,
-    PlacementMappingInDBBase
+    PlacementMappingInDBBase,
+    PlacementMappingBulkCreate
 )
 from app.services.placement_mapping_service import PlacementMappingService
 from app.utils.activity_tracker import log_create, log_delete
@@ -59,6 +60,34 @@ async def map_candidate(
     )
     
     return mapping
+
+
+@router.post("/bulk", response_model=List[PlacementMappingInDBBase], status_code=status.HTTP_201_CREATED)
+@rate_limit_medium()
+async def bulk_map_candidates(
+    request: Request,
+    bulk_in: PlacementMappingBulkCreate,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.PLACEMENT])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Record multiple mappings between candidates and a job role.
+    """
+    service = PlacementMappingService(db)
+    mappings = await service.bulk_map_candidates(bulk_in, current_user.id)
+    
+    # Log the activity for each new mapping
+    for mapping in mappings:
+        await log_create(
+            db=db,
+            request=request,
+            user_id=current_user.id,
+            resource_type="placement_mapping",
+            resource_id=mapping.id,
+            created_object=mapping
+        )
+    
+    return mappings
 
 
 @router.get("/job-role/{job_role_public_id}", response_model=List[PlacementMapping])

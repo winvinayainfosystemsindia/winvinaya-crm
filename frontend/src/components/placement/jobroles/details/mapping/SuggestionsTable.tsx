@@ -3,12 +3,12 @@ import {
     Box,
     Typography,
     Stack,
-    Button,
     Tooltip,
     Chip,
     Avatar,
     TableRow,
     TableCell,
+    Checkbox,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -27,14 +27,18 @@ interface SuggestionsTableProps {
     totalCount: number;
     onPageChange: (newPage: number) => void;
     onRowsPerPageChange: (newRowsPerPage: number) => void;
-    onMapClick: (candidate: CandidateMatchResult) => void;
     getScoreColor: (score: number) => string;
-    // New Header Props
+    // Selection Props
+    selectedIds: number[];
+    onToggleSelect: (candidateId: number) => void;
+    onSelectAll: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    // Header Props
     searchTerm: string;
     onSearchChange: (value: string) => void;
     onRefresh: () => void;
     onFilterOpen: () => void;
     activeFilterCount: number;
+    headerActions?: React.ReactNode;
 }
 
 const SuggestionsTable: React.FC<SuggestionsTableProps> = ({
@@ -45,134 +49,134 @@ const SuggestionsTable: React.FC<SuggestionsTableProps> = ({
     totalCount,
     onPageChange,
     onRowsPerPageChange,
-    onMapClick,
     getScoreColor,
+    selectedIds,
+    onToggleSelect,
+    onSelectAll,
     searchTerm,
     onSearchChange,
     onRefresh,
     onFilterOpen,
     activeFilterCount,
+    headerActions,
 }) => {
     const navigate = useNavigate();
     const columns: ColumnDefinition<CandidateMatchResult>[] = [
-        { id: 'name', label: 'CANDIDATE', width: '25%' },
-        { id: 'match_score', label: 'SCORE', align: 'center', width: '10%' },
-        { id: 'skill_match', label: 'MATCH DETAILS', width: '30%' },
+        { id: 'name', label: 'CANDIDATE', width: '30%' },
+        { id: 'match_score', label: 'SCORE', align: 'center', width: '12%' },
+        { id: 'skill_match', label: 'MATCH DETAILS', width: '33%' },
         { id: 'year_of_experience', label: 'EXP', align: 'center', width: '10%' },
         { id: 'other_mappings_count', label: 'MAPPINGS', width: '15%' },
-        { id: 'actions', label: 'ACTION', align: 'right', width: '10%' },
     ];
 
-    const renderRow = (candidate: CandidateMatchResult) => (
-        <TableRow key={candidate.public_id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-            <TableCell sx={{ py: 2 }}>
-                <Stack direction="row" spacing={2} alignItems="center">
-                    <Avatar 
-                        sx={{ bgcolor: getScoreColor(candidate.match_score), width: 32, height: 32, fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer' }}
-                        onClick={() => navigate(`/candidates/${candidate.public_id}`)}
-                    >
-                        {candidate.name[0]}
-                    </Avatar>
-                    <Typography 
-                        variant="body2" 
-                        sx={{ fontWeight: 700, color: '#007eb9', '&:hover': { textDecoration: 'underline' }, cursor: 'pointer' }}
-                        onClick={() => navigate(`/candidates/${candidate.public_id}`)}
-                    >
-                        {candidate.name}
-                    </Typography>
-                </Stack>
-            </TableCell>
-            <TableCell align="center">
-                <Typography variant="body2" sx={{ fontWeight: 800, color: getScoreColor(candidate.match_score) }}>
-                    {candidate.match_score}%
-                </Typography>
-            </TableCell>
-            <TableCell>
-                <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
-                    <Tooltip title={candidate.skill_match.details}>
-                        <Chip
-                            icon={<SkillIcon style={{ fontSize: 14 }} />}
-                            label="Skills"
-                            size="small"
-                            variant="outlined"
-                            color={candidate.skill_match.is_match ? "success" : "default"}
-                            sx={{ height: 22, fontSize: '0.7rem', px: 0.5 }}
-                        />
-                    </Tooltip>
-                    <Tooltip title={candidate.qualification_match.details}>
-                        <Chip
-                            icon={<SchoolIcon style={{ fontSize: 14 }} />}
-                            label="Edu"
-                            size="small"
-                            variant="outlined"
-                            color={candidate.qualification_match.is_match ? "success" : "default"}
-                            sx={{ height: 22, fontSize: '0.7rem', px: 0.5 }}
-                        />
-                    </Tooltip>
-                    <Tooltip title={candidate.disability_match.details}>
-                        <Chip
-                            icon={<DisabilityIcon style={{ fontSize: 14 }} />}
-                            label="DMap"
-                            size="small"
-                            variant="outlined"
-                            color={candidate.disability_match.is_match ? "success" : "default"}
-                            sx={{ height: 22, fontSize: '0.7rem', px: 0.5 }}
-                        />
-                    </Tooltip>
-                </Stack>
-            </TableCell>
-            <TableCell align="center">
-                <Typography variant="body2" sx={{ fontWeight: 600, color: '#545b64', fontSize: '0.8125rem' }}>
-                    {candidate.year_of_experience || 'Fresher'}
-                </Typography>
-            </TableCell>
-            <TableCell>
-                {candidate.other_mappings_count > 0 ? (
-                    <Tooltip title={`Mapped to: ${candidate.other_mappings.join(', ')}`}>
-                        <Box
-                            sx={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                px: 1,
-                                py: 0.25,
-                                borderRadius: '4px',
-                                bgcolor: '#eaf3ff',
-                                color: '#0066cc',
-                                border: '1px solid #cce3ff',
-                                fontSize: '0.65rem',
-                                fontWeight: 700,
-                            }}
+    const renderRow = (candidate: CandidateMatchResult) => {
+        const isSelected = selectedIds.includes(candidate.candidate_id);
+        
+        return (
+            <TableRow 
+                key={candidate.public_id} 
+                hover 
+                selected={isSelected}
+                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+            >
+                <TableCell padding="checkbox">
+                    <Checkbox
+                        size="small"
+                        checked={isSelected}
+                        onChange={() => onToggleSelect(candidate.candidate_id)}
+                        sx={{ color: '#d5dbdb', '&.Mui-checked': { color: '#007eb9' } }}
+                    />
+                </TableCell>
+                <TableCell sx={{ py: 2 }}>
+                    <Stack direction="row" spacing={2} alignItems="center">
+                        <Avatar 
+                            sx={{ bgcolor: getScoreColor(candidate.match_score), width: 32, height: 32, fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer' }}
+                            onClick={() => navigate(`/candidates/${candidate.public_id}`)}
                         >
-                            {candidate.other_mappings_count} {candidate.other_mappings_count === 1 ? 'Job' : 'Jobs'}
-                        </Box>
-                    </Tooltip>
-                ) : (
-                    <Typography variant="body2" sx={{ color: 'text.disabled', fontSize: '0.8125rem' }}>
-                        None
+                            {candidate.name[0]}
+                        </Avatar>
+                        <Typography 
+                            variant="body2" 
+                            sx={{ fontWeight: 700, color: '#007eb9', '&:hover': { textDecoration: 'underline' }, cursor: 'pointer' }}
+                            onClick={() => navigate(`/candidates/${candidate.public_id}`)}
+                        >
+                            {candidate.name}
+                        </Typography>
+                    </Stack>
+                </TableCell>
+                <TableCell align="center">
+                    <Typography variant="body2" sx={{ fontWeight: 800, color: getScoreColor(candidate.match_score) }}>
+                        {candidate.match_score}%
                     </Typography>
-                )}
-            </TableCell>
-            <TableCell align="right">
-                <Button
-                    variant="contained"
-                    size="small"
-                    disableElevation
-                    onClick={() => onMapClick(candidate)}
-                    sx={{
-                        textTransform: 'none',
-                        fontWeight: 700,
-                        fontSize: '0.75rem',
-                        bgcolor: '#f2f3f3',
-                        color: '#545b64',
-                        border: '1px solid #d5dbdb',
-                        '&:hover': { bgcolor: '#eaeded', borderColor: '#aab7b8' }
-                    }}
-                >
-                    Map Candidate
-                </Button>
-            </TableCell>
-        </TableRow>
-    );
+                </TableCell>
+                <TableCell>
+                    <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
+                        <Tooltip title={candidate.skill_match.details}>
+                            <Chip
+                                icon={<SkillIcon style={{ fontSize: 14 }} />}
+                                label="Skills"
+                                size="small"
+                                variant="outlined"
+                                color={candidate.skill_match.is_match ? "success" : "default"}
+                                sx={{ height: 22, fontSize: '0.7rem', px: 0.5 }}
+                            />
+                        </Tooltip>
+                        <Tooltip title={candidate.qualification_match.details}>
+                            <Chip
+                                icon={<SchoolIcon style={{ fontSize: 14 }} />}
+                                label="Edu"
+                                size="small"
+                                variant="outlined"
+                                color={candidate.qualification_match.is_match ? "success" : "default"}
+                                sx={{ height: 22, fontSize: '0.7rem', px: 0.5 }}
+                            />
+                        </Tooltip>
+                        <Tooltip title={candidate.disability_match.details}>
+                            <Chip
+                                icon={<DisabilityIcon style={{ fontSize: 14 }} />}
+                                label="DMap"
+                                size="small"
+                                variant="outlined"
+                                color={candidate.disability_match.is_match ? "success" : "default"}
+                                sx={{ height: 22, fontSize: '0.7rem', px: 0.5 }}
+                            />
+                        </Tooltip>
+                    </Stack>
+                </TableCell>
+                <TableCell align="center">
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#545b64', fontSize: '0.8125rem' }}>
+                        {candidate.year_of_experience || 'Fresher'}
+                    </Typography>
+                </TableCell>
+                <TableCell>
+                    {candidate.other_mappings_count > 0 ? (
+                        <Tooltip title={`Mapped to: ${candidate.other_mappings.join(', ')}`}>
+                            <Box
+                                sx={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    px: 1,
+                                    py: 0.25,
+                                    borderRadius: '4px',
+                                    bgcolor: '#eaf3ff',
+                                    color: '#0066cc',
+                                    border: '1px solid #cce3ff',
+                                    fontSize: '0.65rem',
+                                    fontWeight: 700,
+                                }}
+                            >
+                                {candidate.other_mappings_count} {candidate.other_mappings_count === 1 ? 'Job' : 'Jobs'}
+                            </Box>
+                        </Tooltip>
+                    ) : (
+                        <Typography variant="body2" sx={{ color: 'text.disabled', fontSize: '0.8125rem' }}>
+                            None
+                        </Typography>
+                    )}
+                </TableCell>
+            </TableRow>
+        );
+    };
 
     return (
         <DataTable
@@ -182,6 +186,8 @@ const SuggestionsTable: React.FC<SuggestionsTableProps> = ({
             totalCount={totalCount}
             page={page}
             rowsPerPage={rowsPerPage}
+            numSelected={selectedIds.length}
+            onSelectAllClick={onSelectAll}
             onPageChange={onPageChange}
             onRowsPerPageChange={onRowsPerPageChange}
             renderRow={renderRow}
@@ -191,6 +197,7 @@ const SuggestionsTable: React.FC<SuggestionsTableProps> = ({
             onRefresh={onRefresh}
             onFilterOpen={onFilterOpen}
             activeFilterCount={activeFilterCount}
+            headerActions={headerActions}
             searchPlaceholder="Search suggestions by name..."
         />
     );

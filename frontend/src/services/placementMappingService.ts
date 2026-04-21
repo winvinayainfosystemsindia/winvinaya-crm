@@ -102,6 +102,11 @@ const placementMappingService = {
     getNotes: async (mapping_id: number): Promise<any[]> => {
         const response = await api.get(`/placement/notes/mapping/${mapping_id}`);
         return response.data;
+    },
+
+    bulkMapCandidates: async (bulkData: { job_role_id: number; mappings: { candidate_id: number; match_score: number }[]; notes?: string }): Promise<PlacementMapping[]> => {
+        const response = await api.post('/placement/mappings/bulk', bulkData);
+        return response.data;
     }
 };
 

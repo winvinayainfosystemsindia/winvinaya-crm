@@ -32,7 +32,8 @@ import {
     ExpandMore,
     Description as DocIcon
 } from '@mui/icons-material';
-import placementEmailService, { type CandidateAvailableDocuments } from '../../../../services/placementEmailService';
+import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
+import { fetchAvailableDocuments } from '../../../../store/slices/placementEmailSlice';
 
 interface CandidateEmailDialogProps {
     open: boolean;
@@ -61,28 +62,25 @@ const CandidateEmailDialog: React.FC<CandidateEmailDialogProps> = ({
     const [subject, setSubject] = useState('');
     const [message, setMessage] = useState('');
     
-    // Document Selection State
-    const [availableDocs, setAvailableDocs] = useState<CandidateAvailableDocuments[]>([]);
+    // Document Selection State from Redux
+    const { availableDocuments: availableDocs, fetchLoading: fetchingDocs } = useAppSelector(state => state.placementEmail);
+    const dispatch = useAppDispatch();
+    
     const [selectedDocIds, setSelectedDocIds] = useState<number[]>([]);
-    const [fetchingDocs, setFetchingDocs] = useState(false);
     const [expandedCandidates, setExpandedCandidates] = useState<Record<number, boolean>>({});
 
     const isBulk = mappingIds.length > 1;
 
     const fetchDocuments = useCallback(async () => {
         if (!mappingIds.length) return;
-        setFetchingDocs(true);
         try {
-            const docs = await placementEmailService.getAvailableDocuments(mappingIds);
-            setAvailableDocs(docs);
+            const docs = await dispatch(fetchAvailableDocuments(mappingIds)).unwrap();
             
             // Auto-select latest resumes
             const resumeIds: number[] = [];
             docs.forEach(cGroup => {
-                // Find all resumes
                 const resumes = cGroup.documents.filter(d => d.type === 'resume');
                 if (resumes.length > 0) {
-                    // Only select the first resume (usually most recent if backend orders correctly)
                     resumeIds.push(resumes[0].id);
                 }
             });
@@ -94,10 +92,8 @@ const CandidateEmailDialog: React.FC<CandidateEmailDialogProps> = ({
             setExpandedCandidates(expanded);
         } catch (error) {
             console.error('Failed to fetch candidate documents', error);
-        } finally {
-            setFetchingDocs(false);
         }
-    }, [mappingIds]);
+    }, [mappingIds, dispatch]);
 
     useEffect(() => {
         if (open) {

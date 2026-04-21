@@ -40,6 +40,17 @@ export const mapCandidate = createAsyncThunk(
     }
 );
 
+export const bulkMapCandidates = createAsyncThunk(
+    'placementMapping/bulkMap',
+    async (bulkData: { job_role_id: number; mappings: { candidate_id: number; match_score: number }[]; notes?: string }, { rejectWithValue }) => {
+        try {
+            return await placementMappingService.bulkMapCandidates(bulkData);
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.detail || 'Failed to bulk map candidates');
+        }
+    }
+);
+
 export const unmapCandidate = createAsyncThunk(
     'placementMapping/unmap',
     async ({ candidateId, jobRoleId }: { candidateId: number; jobRoleId: number }, { rejectWithValue }) => {
@@ -117,6 +128,30 @@ const placementMappingSlice = createSlice({
                 }
             })
             .addCase(mapCandidate.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
+            // Bulk Map Candidates
+            .addCase(bulkMapCandidates.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(bulkMapCandidates.fulfilled, (state, action: PayloadAction<PlacementMapping[]>) => {
+                state.loading = false;
+                // Add all new mappings to the start of the list
+                state.mappings = [...action.payload, ...state.mappings];
+                
+                // Update each match in the matches list
+                action.payload.forEach(mapping => {
+                    const matchIndex = state.matches.findIndex(m => m.candidate_id === mapping.candidate_id);
+                    if (matchIndex !== -1) {
+                        state.matches[matchIndex].is_already_mapped = true;
+                        state.matches[matchIndex].status = mapping.status || 'applied';
+                        state.matches[matchIndex].mapping_id = mapping.id;
+                    }
+                });
+            })
+            .addCase(bulkMapCandidates.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             })
