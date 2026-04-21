@@ -16,6 +16,8 @@ import CandidateEmailDialog from '../../mapping/dialogs/CandidateEmailDialog';
 import placementEmailService from '../../../../services/placementEmailService';
 import useToast from '../../../../hooks/useToast';
 import type { JobRole } from '../../../../models/jobRole';
+import FilterDrawer from '../../../common/FilterDrawer';
+import { CANDIDATE_MAPPING_FILTER_FIELDS, INITIAL_FILTERS, type CandidateMappingFiltersState } from './mapping/CandidateMappingFilters';
 
 // Modular Components
 import {
@@ -43,9 +45,12 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
         }
     }, [placementError, toast, dispatch]);
 
-    // Pagination State (Frontend)
+    // UI States
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+    const [activeFilters, setActiveFilters] = useState<CandidateMappingFiltersState>(INITIAL_FILTERS);
 
     // Mapping State
     const [mapDialogOpen, setMapDialogOpen] = useState(false);
@@ -69,10 +74,26 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
         };
     }, [fetchData, dispatch]);
 
-    // Compute split lists
-    const suggestions = useMemo(() =>
-        matchingCandidates.filter(c => !c.is_already_mapped),
-        [matchingCandidates]);
+    // Filtering Logic
+    const suggestions = useMemo(() => {
+        return matchingCandidates.filter(c => {
+            // Already mapped check
+            if (c.is_already_mapped) return false;
+
+            // Search term check
+            if (searchTerm && !c.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+
+            // Min Score filter
+            if (activeFilters.minScore && c.match_score < parseInt(activeFilters.minScore, 10)) return false;
+
+            // Experience range filter
+            const expValue = parseInt(String(c.year_of_experience || '0'), 10);
+            if (activeFilters.experience.min && expValue < parseInt(activeFilters.experience.min, 10)) return false;
+            if (activeFilters.experience.max && expValue > parseInt(activeFilters.experience.max, 10)) return false;
+
+            return true;
+        });
+    }, [matchingCandidates, searchTerm, activeFilters]);
 
     const mapped = useMemo(() =>
         matchingCandidates.filter(c => c.is_already_mapped),
@@ -82,6 +103,28 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
         const start = page * rowsPerPage;
         return suggestions.slice(start, start + rowsPerPage);
     }, [suggestions, page, rowsPerPage]);
+
+    const activeFilterCount = useMemo(() => {
+        let count = 0;
+        if (activeFilters.minScore) count++;
+        if (activeFilters.experience.min || activeFilters.experience.max) count++;
+        return count;
+    }, [activeFilters]);
+
+    // Handlers
+    const handleSearchChange = (val: string) => {
+        setSearchTerm(val);
+        setPage(0);
+    };
+
+    const handleFilterChange = (key: string, value: any) => {
+        setActiveFilters(prev => ({ ...prev, [key]: value }));
+    };
+
+    const handleClearFilters = () => {
+        setActiveFilters(INITIAL_FILTERS);
+        setIsFilterDrawerOpen(false);
+    };
 
     const handleOpenMapDialog = (candidate: CandidateMatchResult) => {
         setSelectedCandidate(candidate);
@@ -183,6 +226,11 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                     }}
                     onMapClick={handleOpenMapDialog}
                     getScoreColor={getScoreColor}
+                    searchTerm={searchTerm}
+                    onSearchChange={handleSearchChange}
+                    onRefresh={fetchData}
+                    onFilterOpen={() => setIsFilterDrawerOpen(true)}
+                    activeFilterCount={activeFilterCount}
                 />
             </Grid>
 
@@ -209,6 +257,17 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                 onNotesChange={setMappingNotes}
                 submitting={submitting}
                 getScoreColor={getScoreColor}
+            />
+
+            {/* Filter Drawer */}
+            <FilterDrawer
+                open={isFilterDrawerOpen}
+                onClose={() => setIsFilterDrawerOpen(false)}
+                fields={CANDIDATE_MAPPING_FILTER_FIELDS}
+                activeFilters={activeFilters}
+                onFilterChange={handleFilterChange}
+                onClearFilters={handleClearFilters}
+                onApplyFilters={() => setIsFilterDrawerOpen(false)}
             />
 
             {/* Bulk Email Dialog Integration */}

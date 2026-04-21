@@ -28,6 +28,12 @@ interface SuggestionsTableProps {
     onRowsPerPageChange: (newRowsPerPage: number) => void;
     onMapClick: (candidate: CandidateMatchResult) => void;
     getScoreColor: (score: number) => string;
+    // New Header Props
+    searchTerm: string;
+    onSearchChange: (value: string) => void;
+    onRefresh: () => void;
+    onFilterOpen: () => void;
+    activeFilterCount: number;
 }
 
 const SuggestionsTable: React.FC<SuggestionsTableProps> = ({
@@ -40,6 +46,11 @@ const SuggestionsTable: React.FC<SuggestionsTableProps> = ({
     onRowsPerPageChange,
     onMapClick,
     getScoreColor,
+    searchTerm,
+    onSearchChange,
+    onRefresh,
+    onFilterOpen,
+    activeFilterCount,
 }) => {
     const columns: ColumnDefinition<CandidateMatchResult>[] = [
         { id: 'name', label: 'CANDIDATE', width: '25%' },
@@ -166,7 +177,12 @@ const SuggestionsTable: React.FC<SuggestionsTableProps> = ({
             onRowsPerPageChange={onRowsPerPageChange}
             renderRow={renderRow}
             emptyMessage="No suggestions available at the moment."
-            searchTerm=""
+            searchTerm={searchTerm}
+            onSearchChange={onSearchChange}
+            onRefresh={onRefresh}
+            onFilterOpen={onFilterOpen}
+            activeFilterCount={activeFilterCount}
+            searchPlaceholder="Search suggestions by name..."
         />
     );
 };
