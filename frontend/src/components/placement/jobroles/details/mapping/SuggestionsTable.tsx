@@ -10,6 +10,7 @@ import {
     TableRow,
     TableCell,
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import {
     School as SchoolIcon,
     AccessibilityNew as DisabilityIcon,
@@ -52,6 +53,7 @@ const SuggestionsTable: React.FC<SuggestionsTableProps> = ({
     onFilterOpen,
     activeFilterCount,
 }) => {
+    const navigate = useNavigate();
     const columns: ColumnDefinition<CandidateMatchResult>[] = [
         { id: 'name', label: 'CANDIDATE', width: '25%' },
         { id: 'match_score', label: 'SCORE', align: 'center', width: '10%' },
@@ -65,10 +67,17 @@ const SuggestionsTable: React.FC<SuggestionsTableProps> = ({
         <TableRow key={candidate.public_id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
             <TableCell sx={{ py: 2 }}>
                 <Stack direction="row" spacing={2} alignItems="center">
-                    <Avatar sx={{ bgcolor: getScoreColor(candidate.match_score), width: 32, height: 32, fontSize: '0.875rem', fontWeight: 700 }}>
+                    <Avatar 
+                        sx={{ bgcolor: getScoreColor(candidate.match_score), width: 32, height: 32, fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer' }}
+                        onClick={() => navigate(`/candidates/${candidate.public_id}`)}
+                    >
                         {candidate.name[0]}
                     </Avatar>
-                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#007eb9', '&:hover': { textDecoration: 'underline' }, cursor: 'pointer' }}>
+                    <Typography 
+                        variant="body2" 
+                        sx={{ fontWeight: 700, color: '#007eb9', '&:hover': { textDecoration: 'underline' }, cursor: 'pointer' }}
+                        onClick={() => navigate(`/candidates/${candidate.public_id}`)}
+                    >
                         {candidate.name}
                     </Typography>
                 </Stack>

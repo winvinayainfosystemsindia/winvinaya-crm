@@ -12,6 +12,7 @@ import {
     Checkbox,
     alpha
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import {
     TaskAlt as TaskAltIcon,
     AlternateEmail as EmailIcon,
@@ -36,6 +37,7 @@ const MappedCandidatesList: React.FC<MappedCandidatesListProps> = ({
     onEmailClick,
     getScoreColor,
 }) => {
+    const navigate = useNavigate();
     return (
         <Paper
             variant="outlined"
@@ -158,21 +160,34 @@ const MappedCandidatesList: React.FC<MappedCandidatesListProps> = ({
                                     sx={{ mr: 1, p: 0 }}
                                 />
 
-                                <Stack direction="row" spacing={1.5} sx={{ flexGrow: 1 }} alignItems="center">
+                                <Stack 
+                                    direction="row" 
+                                    spacing={1.5} 
+                                    sx={{ flexGrow: 1 }} 
+                                    alignItems="center"
+                                    onClick={(e) => {
+                                        e.stopPropagation(); // Prevent toggling selection when clicking name/avatar
+                                        navigate(`/candidates/${candidate.public_id}`);
+                                    }}
+                                >
                                     <Avatar
                                         sx={{
                                             width: 30,
                                             height: 30,
                                             bgcolor: getScoreColor(candidate.match_score),
                                             fontSize: '0.75rem',
-                                            fontWeight: 800
+                                            fontWeight: 800,
+                                            cursor: 'pointer'
                                         }}
                                     >
                                         {candidate.name[0]}
                                     </Avatar>
 
                                     <Box sx={{ flexGrow: 1 }}>
-                                        <Typography variant="body2" sx={{ fontWeight: 700, color: '#232f3e', lineHeight: 1.2 }}>
+                                        <Typography 
+                                            variant="body2" 
+                                            sx={{ fontWeight: 700, color: '#007eb9', lineHeight: 1.2, '&:hover': { textDecoration: 'underline' }, cursor: 'pointer' }}
+                                        >
                                             {candidate.name}
                                         </Typography>
                                         <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.25 }}>
