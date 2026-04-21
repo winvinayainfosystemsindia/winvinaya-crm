@@ -393,7 +393,7 @@ export const uploadDocument = createAsyncThunk(
 			documentSource
 		}: {
 			publicId: string;
-			documentType: 'resume' | 'trainer_resume' | 'disability_certificate' | '10th_certificate' | '12th_certificate' | 'degree_certificate' | 'other';
+			documentType: 'resume' | 'trainer_resume' | 'disability_certificate' | '10th_certificate' | '12th_certificate' | 'degree_certificate' | 'passport_photo' | 'other';
 			file: File;
 			description?: string;
 			documentSource?: 'candidate' | 'trainer';

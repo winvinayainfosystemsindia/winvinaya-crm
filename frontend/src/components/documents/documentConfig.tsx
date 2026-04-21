@@ -59,6 +59,12 @@ export const REQUIRED_DOCUMENTS: RequiredDocument[] = [
     icon: <IDIcon sx={{ color: '#6b7280' }} /> 
   },
   { 
+    type: 'passport_photo', 
+    label: 'Passport Size Photo', 
+    description: 'Recent Passport size photograph', 
+    icon: <IDIcon sx={{ color: '#6b7280' }} /> 
+  },
+  { 
     type: 'disability_certificate', 
     label: 'Disability Certificate', 
     description: 'Authorized Medical Certificate', 
