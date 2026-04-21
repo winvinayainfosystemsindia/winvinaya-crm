@@ -54,6 +54,11 @@ const TrainingBatchFormDialog: React.FC<TrainingBatchFormDialogProps> = ({
 }) => {
 	const dispatch = useAppDispatch();
 	const { users: allUsers, loading: usersLoading } = useAppSelector((state) => state.users);
+	const { user } = useAppSelector((state) => state.auth);
+
+	const isAdmin = user?.role === 'admin' || user?.is_superuser;
+	const isEditMode = !!initialData;
+	const isDatesReadOnly = isEditMode && !isAdmin;
 
 	const [formData, setFormData] = useState<Partial<TrainingBatch>>({
 		batch_name: '',
@@ -549,7 +554,9 @@ const TrainingBatchFormDialog: React.FC<TrainingBatchFormDialogProps> = ({
 												size="small"
 												value={formData.duration?.start_date || ''}
 												onChange={(e) => handleDurationChange('start_date', e.target.value)}
-												sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' }, bgcolor: 'white' }}
+												sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' }, bgcolor: isDatesReadOnly ? '#f2f3f3' : 'white' }}
+												InputProps={{ readOnly: isDatesReadOnly }}
+												helperText={isDatesReadOnly ? "Only administrators can modify dates after creation" : ""}
 											/>
 										</Box>
 										<Box>
@@ -560,7 +567,8 @@ const TrainingBatchFormDialog: React.FC<TrainingBatchFormDialogProps> = ({
 												size="small"
 												value={formData.duration?.end_date || ''}
 												onChange={(e) => handleDurationChange('end_date', e.target.value)}
-												sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' }, bgcolor: 'white' }}
+												sx={{ '& .MuiOutlinedInput-root': { borderRadius: '2px' }, bgcolor: isDatesReadOnly ? '#f2f3f3' : 'white' }}
+												InputProps={{ readOnly: isDatesReadOnly }}
 											/>
 										</Box>
 										<Box sx={{ p: 2, bgcolor: '#ffffff', borderRadius: '2px', border: '1px solid #eaeded', textAlign: 'center', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.05)' }}>
