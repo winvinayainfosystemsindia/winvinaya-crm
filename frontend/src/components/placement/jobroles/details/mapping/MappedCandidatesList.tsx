@@ -10,13 +10,15 @@ import {
     ListItem,
     Avatar,
     Checkbox,
-    alpha
+    alpha,
+    IconButton
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import {
     TaskAlt as TaskAltIcon,
     AlternateEmail as EmailIcon,
-    Info as InfoIcon
+    Info as InfoIcon,
+    LinkOff as UnmapIcon
 } from '@mui/icons-material';
 import { type CandidateMatchResult } from '../../../../../store/slices/placementMappingSlice';
 
@@ -27,6 +29,7 @@ interface MappedCandidatesListProps {
     onSelectAll: (checked: boolean) => void;
     onEmailClick: () => void;
     getScoreColor: (score: number) => string;
+    onUnmap: (candidate: CandidateMatchResult) => void;
 }
 
 const MappedCandidatesList: React.FC<MappedCandidatesListProps> = ({
@@ -36,6 +39,7 @@ const MappedCandidatesList: React.FC<MappedCandidatesListProps> = ({
     onSelectAll,
     onEmailClick,
     getScoreColor,
+    onUnmap,
 }) => {
     const navigate = useNavigate();
     return (
@@ -220,6 +224,24 @@ const MappedCandidatesList: React.FC<MappedCandidatesListProps> = ({
                                         </Stack>
                                     </Box>
                                 </Stack>
+
+                                <Tooltip title="Unmap candidate from this role">
+                                    <IconButton 
+                                        size="small" 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onUnmap(candidate);
+                                        }}
+                                        sx={{ 
+                                            visibility: 'hidden', 
+                                            '.MuiListItem-root:hover &': { visibility: 'visible' },
+                                            color: '#d13212',
+                                            '&:hover': { bgcolor: '#fdf3f1' }
+                                        }}
+                                    >
+                                        <UnmapIcon sx={{ fontSize: 18 }} />
+                                    </IconButton>
+                                </Tooltip>
                             </ListItem>
                         </React.Fragment>
                     ))

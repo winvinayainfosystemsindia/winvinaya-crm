@@ -10,8 +10,10 @@ import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import {
     fetchMatchesForJobRole,
     bulkMapCandidates,
+    unmapCandidate,
     clearMatches,
     clearPlacementError,
+    type CandidateMatchResult
 } from '../../../../store/slices/placementMappingSlice';
 import CandidateEmailDialog from '../../mapping/dialogs/CandidateEmailDialog';
 import useToast from '../../../../hooks/useToast';
@@ -19,6 +21,7 @@ import type { JobRole } from '../../../../models/jobRole';
 import { fetchAggregatedSkills } from '../../../../store/slices/skillSlice';
 import { sendBulkProfiles } from '../../../../store/slices/placementEmailSlice';
 import FilterDrawer from '../../../common/FilterDrawer';
+import ConfirmationDialog from '../../../common/ConfirmationDialog';
 import { CANDIDATE_MAPPING_FILTER_FIELDS, INITIAL_FILTERS, type CandidateMappingFiltersState } from './mapping/CandidateMappingFilters';
 
 // Modular Components
@@ -56,6 +59,8 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
 
     // Mapping State
     const [submitting, setSubmitting] = useState(false);
+    const [unmapConfirmOpen, setUnmapConfirmOpen] = useState(false);
+    const [candidateToUnmap, setCandidateToUnmap] = useState<CandidateMatchResult | null>(null);
 
     // Skills from Redux
     const { aggregatedSkills: allPossibleSkills } = useAppSelector(state => state.skills);
@@ -296,6 +301,31 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
         }
     };
 
+    const handleUnmapClick = (candidate: CandidateMatchResult) => {
+        setCandidateToUnmap(candidate);
+        setUnmapConfirmOpen(true);
+    };
+
+    const handleConfirmUnmap = async () => {
+        if (!candidateToUnmap) return;
+        
+        setSubmitting(true);
+        try {
+            await dispatch(unmapCandidate({ 
+                candidateId: candidateToUnmap.candidate_id, 
+                jobRoleId: jobRole.id! 
+            })).unwrap();
+            
+            toast.success(`Successfully unmapped ${candidateToUnmap.name}`);
+            setUnmapConfirmOpen(false);
+            setCandidateToUnmap(null);
+        } catch (error: any) {
+            toast.error(error || 'Failed to unmap candidate');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     const selectedCandidateNames = useMemo(() => {
         return matchingCandidates
             .filter(c => selectedMappings.includes(c.mapping_id!))
@@ -357,6 +387,7 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                     onSelectAll={handleSelectAllMappings}
                     onEmailClick={() => setEmailDialogOpen(true)}
                     getScoreColor={getScoreColor}
+                    onUnmap={handleUnmapClick}
                 />
             </Grid>
 
@@ -397,6 +428,18 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                     loading={sendingEmail}
                 />
             )}
+
+            {/* Unmap Confirmation Dialog */}
+            <ConfirmationDialog
+                open={unmapConfirmOpen}
+                title="Unmap Candidate"
+                message={`Are you sure you want to unmap ${candidateToUnmap?.name} from this job role? This will reset their placement status.`}
+                confirmLabel="Yes, Unmap"
+                onConfirm={handleConfirmUnmap}
+                onCancel={() => setUnmapConfirmOpen(false)}
+                loading={submitting}
+                severity="warning"
+            />
         </Grid>
     );
 };
