@@ -22,5 +22,10 @@ export const skillService = {
     async createSkill(skill: SkillCreate): Promise<Skill> {
         const response = await api.post<Skill>('/skills', skill);
         return response.data;
+    },
+
+    async getAggregatedSkills(): Promise<string[]> {
+        const response = await api.get<string[]>('/skills/aggregated');
+        return response.data;
     }
 };

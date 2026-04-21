@@ -39,3 +39,27 @@ class SkillService:
     async def get_skill(self, skill_id: int) -> Optional[Skill]:
         """Get skill by ID"""
         return await self.repository.get(skill_id)
+
+    async def get_aggregated_skills(self) -> List[str]:
+        """
+        Aggregate unique skills from:
+        1. Master Skill table
+        2. Candidate Screening records (JSON technical/soft skills)
+        3. Candidate Counseling records (JSON assessment skills)
+        """
+        # 1. Get skills from master table
+        master_skills = await self.repository.get_all_alphabetical(limit=1000)
+        master_skill_names = [s.name for s in master_skills]
+        
+        # 2. Get skills from screening
+        screening_skills = await self.repository.get_unique_screening_skills()
+        
+        # 3. Get skills from counseling
+        counseling_skills = await self.repository.get_unique_counseling_skills()
+        
+        # Combine and deduplicate
+        all_skills = set(master_skill_names + screening_skills + counseling_skills)
+        
+        # Clean and sort
+        cleaned_skills = [s.strip() for s in all_skills if s and s.strip()]
+        return sorted(cleaned_skills)

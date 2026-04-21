@@ -16,6 +16,7 @@ import CandidateEmailDialog from '../../mapping/dialogs/CandidateEmailDialog';
 import placementEmailService from '../../../../services/placementEmailService';
 import useToast from '../../../../hooks/useToast';
 import type { JobRole } from '../../../../models/jobRole';
+import { skillService } from '../../../../services/skillService';
 import FilterDrawer from '../../../common/FilterDrawer';
 import { CANDIDATE_MAPPING_FILTER_FIELDS, INITIAL_FILTERS, type CandidateMappingFiltersState } from './mapping/CandidateMappingFilters';
 
@@ -63,6 +64,21 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
     const [emailDialogOpen, setEmailDialogOpen] = useState(false);
     const [sendingEmail, setSendingEmail] = useState(false);
 
+    // Skills for Filter
+    const [allPossibleSkills, setAllPossibleSkills] = useState<string[]>([]);
+
+    useEffect(() => {
+        const loadSkills = async () => {
+            try {
+                const skills = await skillService.getAggregatedSkills();
+                setAllPossibleSkills(skills);
+            } catch (error) {
+                console.error('Failed to load aggregated skills', error);
+            }
+        };
+        loadSkills();
+    }, []);
+
     const fetchData = useCallback(async () => {
         dispatch(fetchMatchesForJobRole(jobRole.public_id));
     }, [jobRole.public_id, dispatch]);
@@ -86,10 +102,10 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
             // Min Score filter
             if (activeFilters.minScore && c.match_score < parseInt(activeFilters.minScore, 10)) return false;
 
-            // Skills filter (partial match in skills array)
-            if (activeFilters.skills) {
-                const searchSkill = activeFilters.skills.toLowerCase();
-                if (!c.skills?.some(s => s.toLowerCase().includes(searchSkill))) return false;
+            // Skills filter (multi-select)
+            if (activeFilters.skills.length > 0) {
+                // Check if candidate has ANY of the selected skills
+                if (!c.skills?.some(s => activeFilters.skills.includes(s))) return false;
             }
 
             // Disability multi-select filter
@@ -127,6 +143,12 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
 
         const fields = [...CANDIDATE_MAPPING_FILTER_FIELDS];
 
+        // Populate skills options
+        const skillField = fields.find(f => f.key === 'skills');
+        if (skillField) {
+            skillField.options = allPossibleSkills.map(s => ({ value: s, label: s }));
+        }
+
         if (disabilities.length > 0) {
             fields.push({
                 key: 'disability',
@@ -151,7 +173,7 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
     const activeFilterCount = useMemo(() => {
         let count = 0;
         if (activeFilters.minScore) count++;
-        if (activeFilters.skills) count++;
+        if (activeFilters.skills.length > 0) count++;
         if (activeFilters.disability.length > 0) count++;
         if (activeFilters.qualification.length > 0) count++;
         if (activeFilters.experience.min || activeFilters.experience.max) count++;

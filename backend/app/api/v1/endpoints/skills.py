@@ -24,6 +24,16 @@ async def get_skills(
     return await service.get_skills(query=query, limit=limit)
 
 
+@router.get("/aggregated", response_model=List[str])
+async def get_aggregated_skills(
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+) -> Any:
+    """Get unique skill names combined from Master data, Screening, and Counseling"""
+    service = SkillService(db)
+    return await service.get_aggregated_skills()
+
+
 @router.post("/", response_model=SkillRead, status_code=status.HTTP_201_CREATED)
 async def create_skill(
     skill_in: SkillCreate,
