@@ -78,6 +78,11 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
         matchingCandidates.filter(c => c.is_already_mapped),
         [matchingCandidates]);
 
+    const paginatedSuggestions = useMemo(() => {
+        const start = page * rowsPerPage;
+        return suggestions.slice(start, start + rowsPerPage);
+    }, [suggestions, page, rowsPerPage]);
+
     const handleOpenMapDialog = (candidate: CandidateMatchResult) => {
         setSelectedCandidate(candidate);
         setMapDialogOpen(true);
@@ -166,7 +171,7 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
             {/* Top/Left: Smart Suggestions Table */}
             <Grid size={{ xs: 12, md: 8.5 }}>
                 <SuggestionsTable
-                    candidates={suggestions}
+                    candidates={paginatedSuggestions}
                     loading={loading}
                     page={page}
                     rowsPerPage={rowsPerPage}
