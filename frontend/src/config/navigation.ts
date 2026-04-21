@@ -113,10 +113,9 @@ export const topNavigation: NavigationItem[] = [
 	{
 		label: 'Placement Management',
 		icon: PlacementIcon,
-		roles: ['admin', 'manager', 'placement'],
+		roles: ['admin'],
 		children: [
-			{ label: 'Job Roles', path: '/placement/job-roles', roles: ['admin', 'manager', 'placement'] },
-			{ label: 'Candidate Mapping', path: '/placement/candidate-mapping', roles: ['admin', 'manager', 'placement'] },
+			{ label: 'Job Roles', path: '/placement/job-roles', roles: ['admin'] },
 		],
 	},
 ];
