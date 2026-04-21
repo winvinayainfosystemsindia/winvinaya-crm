@@ -13,6 +13,11 @@ export const CANDIDATE_MAPPING_FILTER_FIELDS: FilterField[] = [
         ]
     },
     {
+        key: 'skills',
+        label: 'Candidate Skills',
+        type: 'text',
+    },
+    {
         key: 'experience',
         label: 'Years of Experience',
         type: 'range',
@@ -21,6 +26,9 @@ export const CANDIDATE_MAPPING_FILTER_FIELDS: FilterField[] = [
 
 export interface CandidateMappingFiltersState {
     minScore: string;
+    skills: string;
+    disability: string[];
+    qualification: string[];
     experience: {
         min?: string;
         max?: string;
@@ -29,6 +37,9 @@ export interface CandidateMappingFiltersState {
 
 export const INITIAL_FILTERS: CandidateMappingFiltersState = {
     minScore: '',
+    skills: '',
+    disability: [],
+    qualification: [],
     experience: {
         min: '',
         max: ''

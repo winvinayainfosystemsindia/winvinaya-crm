@@ -80,11 +80,27 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
             // Already mapped check
             if (c.is_already_mapped) return false;
 
-            // Search term check
+            // Search term check (Name)
             if (searchTerm && !c.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
 
             // Min Score filter
             if (activeFilters.minScore && c.match_score < parseInt(activeFilters.minScore, 10)) return false;
+
+            // Skills filter (partial match in skills array)
+            if (activeFilters.skills) {
+                const searchSkill = activeFilters.skills.toLowerCase();
+                if (!c.skills?.some(s => s.toLowerCase().includes(searchSkill))) return false;
+            }
+
+            // Disability multi-select filter
+            if (activeFilters.disability.length > 0) {
+                if (!c.disability || !activeFilters.disability.includes(c.disability)) return false;
+            }
+
+            // Qualification multi-select filter
+            if (activeFilters.qualification.length > 0) {
+                if (!c.qualification || !activeFilters.qualification.includes(c.qualification)) return false;
+            }
 
             // Experience range filter
             const expValue = parseInt(String(c.year_of_experience || '0'), 10);
@@ -104,9 +120,40 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
         return suggestions.slice(start, start + rowsPerPage);
     }, [suggestions, page, rowsPerPage]);
 
+    // Dynamic Filter Options
+    const dynamicFilterFields = useMemo(() => {
+        const disabilities = Array.from(new Set(matchingCandidates.map(c => c.disability).filter((d): d is string => !!d)));
+        const qualifications = Array.from(new Set(matchingCandidates.map(c => c.qualification).filter((q): q is string => !!q)));
+
+        const fields = [...CANDIDATE_MAPPING_FILTER_FIELDS];
+
+        if (disabilities.length > 0) {
+            fields.push({
+                key: 'disability',
+                label: 'Disability Type',
+                type: 'multi-select',
+                options: disabilities.map(d => ({ value: d, label: d }))
+            });
+        }
+
+        if (qualifications.length > 0) {
+            fields.push({
+                key: 'qualification',
+                label: 'Educational Qualification',
+                type: 'multi-select',
+                options: qualifications.map(q => ({ value: q, label: q }))
+            });
+        }
+
+        return fields;
+    }, [matchingCandidates]);
+
     const activeFilterCount = useMemo(() => {
         let count = 0;
         if (activeFilters.minScore) count++;
+        if (activeFilters.skills) count++;
+        if (activeFilters.disability.length > 0) count++;
+        if (activeFilters.qualification.length > 0) count++;
         if (activeFilters.experience.min || activeFilters.experience.max) count++;
         return count;
     }, [activeFilters]);
@@ -263,7 +310,7 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
             <FilterDrawer
                 open={isFilterDrawerOpen}
                 onClose={() => setIsFilterDrawerOpen(false)}
-                fields={CANDIDATE_MAPPING_FILTER_FIELDS}
+                fields={dynamicFilterFields}
                 activeFilters={activeFilters}
                 onFilterChange={handleFilterChange}
                 onClearFilters={handleClearFilters}
