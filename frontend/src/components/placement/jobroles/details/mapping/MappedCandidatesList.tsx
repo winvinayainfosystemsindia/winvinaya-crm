@@ -11,7 +11,8 @@ import {
     Avatar,
     Checkbox,
     alpha,
-    IconButton
+    IconButton,
+    useTheme
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -41,6 +42,7 @@ const MappedCandidatesList: React.FC<MappedCandidatesListProps> = ({
     getScoreColor,
     onUnmap,
 }) => {
+    const theme = useTheme();
     const navigate = useNavigate();
     return (
         <Paper
@@ -50,25 +52,25 @@ const MappedCandidatesList: React.FC<MappedCandidatesListProps> = ({
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                bgcolor: 'white',
-                border: '1px solid #d5dbdb'
+                bgcolor: theme.palette.background.paper,
+                border: `1px solid ${theme.palette.divider}`
             }}
         >
             {/* Professional Section Header */}
             <Box sx={{
                 p: 2,
-                bgcolor: '#fbfbfb',
-                borderBottom: '1px solid #d5dbdb',
+                bgcolor: theme.palette.background.default,
+                borderBottom: `1px solid ${theme.palette.divider}`,
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 minHeight: '56px'
             }}>
                 <Stack direction="row" spacing={1.25} alignItems="center">
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#1d8102', borderRadius: '4px', p: 0.5 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: theme.palette.success.main, borderRadius: '4px', p: 0.5 }}>
                         <TaskAltIcon sx={{ color: 'white', fontSize: 16 }} />
                     </Box>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#232f3e', letterSpacing: '0.02rem', textTransform: 'uppercase' }}>
+                    <Typography variant="awsSectionTitle">
                         Mapped Candidates ({mapped.length})
                     </Typography>
                 </Stack>
@@ -83,17 +85,14 @@ const MappedCandidatesList: React.FC<MappedCandidatesListProps> = ({
                                 onClick={onEmailClick}
                                 startIcon={<EmailIcon sx={{ fontSize: '16px !important' }} />}
                                 sx={{
-                                    textTransform: 'none',
-                                    fontWeight: 700,
                                     fontSize: '0.75rem',
                                     py: 0.25,
                                     px: 1.5,
-                                    borderRadius: '4px',
-                                    borderColor: '#d5dbdb',
-                                    color: '#232f3e',
-                                    bgcolor: 'white',
-                                    '&:hover': { bgcolor: '#f3faff', borderColor: '#0073bb', color: '#0073bb' },
-                                    '&.Mui-disabled': { bgcolor: '#f8f9f9', color: '#aab7b8' }
+                                    borderColor: theme.palette.divider,
+                                    color: theme.palette.text.primary,
+                                    bgcolor: theme.palette.background.paper,
+                                    '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.08), borderColor: theme.palette.primary.main, color: theme.palette.primary.main },
+                                    '&.Mui-disabled': { bgcolor: theme.palette.background.default, color: theme.palette.text.disabled }
                                 }}
                             >
                                 Send
@@ -108,8 +107,8 @@ const MappedCandidatesList: React.FC<MappedCandidatesListProps> = ({
                 <Box sx={{
                     px: 2,
                     py: 0.75,
-                    bgcolor: '#f1faff',
-                    borderBottom: '1px solid #cdecff',
+                    bgcolor: alpha(theme.palette.primary.main, 0.05),
+                    borderBottom: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between'
@@ -120,9 +119,9 @@ const MappedCandidatesList: React.FC<MappedCandidatesListProps> = ({
                             indeterminate={selectedMappings.length > 0 && selectedMappings.length < mapped.length}
                             checked={mapped.length > 0 && selectedMappings.length === mapped.length}
                             onChange={(e) => onSelectAll(e.target.checked)}
-                            sx={{ p: 0, color: '#0073bb' }}
+                            sx={{ p: 0, color: theme.palette.primary.main }}
                         />
-                        <Typography variant="caption" sx={{ fontWeight: 700, color: '#0073bb' }}>
+                        <Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
                             {selectedMappings.length > 0 ? `${selectedMappings.length} Selected` : 'Select All'}
                         </Typography>
                     </Stack>
@@ -131,7 +130,7 @@ const MappedCandidatesList: React.FC<MappedCandidatesListProps> = ({
                         <Button
                             size="small"
                             onClick={() => onSelectAll(false)} // Clear selection
-                            sx={{ textTransform: 'none', fontSize: '0.65rem', fontWeight: 700, color: '#545b64', minWidth: 'auto', p: 0 }}
+                            sx={{ fontSize: '0.65rem', fontWeight: 700, color: theme.palette.text.secondary, minWidth: 'auto', p: 0 }}
                         >
                             Clear
                         </Button>
@@ -148,10 +147,10 @@ const MappedCandidatesList: React.FC<MappedCandidatesListProps> = ({
                                 sx={{
                                     py: 1.5,
                                     px: 2,
-                                    borderBottom: '1px solid #eaeded',
+                                    borderBottom: `1px solid ${theme.palette.divider}`,
                                     transition: 'background-color 0.2s',
                                     cursor: 'pointer',
-                                    '&:hover': { bgcolor: '#fbfbfb' },
+                                    '&:hover': { bgcolor: theme.palette.background.default },
                                     '&:last-child': { borderBottom: 'none' }
                                 }}
                                 onClick={() => onToggleSelection(candidate.mapping_id!)}
@@ -190,7 +189,7 @@ const MappedCandidatesList: React.FC<MappedCandidatesListProps> = ({
                                     <Box sx={{ flexGrow: 1 }}>
                                         <Typography 
                                             variant="body2" 
-                                            sx={{ fontWeight: 700, color: '#007eb9', lineHeight: 1.2, '&:hover': { textDecoration: 'underline' }, cursor: 'pointer' }}
+                                            sx={{ fontWeight: 700, color: theme.palette.primary.main, lineHeight: 1.2, '&:hover': { textDecoration: 'underline' }, cursor: 'pointer' }}
                                         >
                                             {candidate.name}
                                         </Typography>
@@ -206,19 +205,19 @@ const MappedCandidatesList: React.FC<MappedCandidatesListProps> = ({
                                                     {candidate.match_score}%
                                                 </Typography>
                                             </Box>
-                                            <Box sx={{ bgcolor: '#f2f3f3', px: 0.75, py: 0.1, borderRadius: '2px', border: '1px solid #d5dbdb' }}>
-                                                <Typography variant="caption" sx={{ fontWeight: 700, color: '#545b64', fontSize: '0.65rem' }}>
+                                            <Box sx={{ bgcolor: theme.palette.background.default, px: 0.75, py: 0.1, borderRadius: '2px', border: `1px solid ${theme.palette.divider}` }}>
+                                                <Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.text.secondary, fontSize: '0.65rem' }}>
                                                     {candidate.year_of_experience || 'Fresher'}
                                                 </Typography>
                                             </Box>
                                             {candidate.other_mappings_count > 0 && (
-                                                <Box sx={{ bgcolor: '#eaf3ff', px: 0.75, py: 0.1, borderRadius: '2px', border: '1px solid #cce3ff' }}>
-                                                    <Typography variant="caption" sx={{ fontWeight: 800, color: '#0066cc', fontSize: '0.65rem' }}>
+                                                <Box sx={{ bgcolor: alpha(theme.palette.primary.main, 0.08), px: 0.75, py: 0.1, borderRadius: '2px', border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}` }}>
+                                                    <Typography variant="caption" sx={{ fontWeight: 800, color: theme.palette.primary.main, fontSize: '0.65rem' }}>
                                                         +{candidate.other_mappings_count}
                                                     </Typography>
                                                 </Box>
                                             )}
-                                            <Typography variant="caption" sx={{ color: '#aab7b8', fontSize: '0.65rem' }}>
+                                            <Typography variant="caption" sx={{ color: theme.palette.text.disabled, fontSize: '0.65rem' }}>
                                                 {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
                                             </Typography>
                                         </Stack>
@@ -235,8 +234,8 @@ const MappedCandidatesList: React.FC<MappedCandidatesListProps> = ({
                                         sx={{ 
                                             visibility: 'hidden', 
                                             '.MuiListItem-root:hover &': { visibility: 'visible' },
-                                            color: '#d13212',
-                                            '&:hover': { bgcolor: '#fdf3f1' }
+                                            color: theme.palette.error.main,
+                                            '&:hover': { bgcolor: alpha(theme.palette.error.main, 0.05) }
                                         }}
                                     >
                                         <UnmapIcon sx={{ fontSize: 18 }} />
@@ -247,8 +246,8 @@ const MappedCandidatesList: React.FC<MappedCandidatesListProps> = ({
                     ))
                 ) : (
                     <Box sx={{ p: 4, textAlign: 'center', mt: 4, opacity: 0.6 }}>
-                        <InfoIcon sx={{ fontSize: 32, color: '#d5dbdb', mb: 1 }} />
-                        <Typography variant="body2" color="textSecondary" sx={{ fontWeight: 500 }}>
+                        <InfoIcon sx={{ fontSize: 32, color: theme.palette.text.disabled, mb: 1 }} />
+                        <Typography variant="body2" color="textSecondary">
                             No candidates mapped yet.
                         </Typography>
                     </Box>

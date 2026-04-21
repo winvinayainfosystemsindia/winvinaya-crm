@@ -20,6 +20,8 @@ import {
     ListItemIcon,
     ListItemText,
     Collapse,
+    useTheme,
+    alpha
 } from '@mui/material';
 import {
     Close as CloseIcon,
@@ -58,6 +60,7 @@ const CandidateEmailDialog: React.FC<CandidateEmailDialogProps> = ({
     contactName,
     loading = false
 }) => {
+    const theme = useTheme();
     const [email, setEmail] = useState(contactEmail);
     const [subject, setSubject] = useState('');
     const [message, setMessage] = useState('');
@@ -147,32 +150,32 @@ const CandidateEmailDialog: React.FC<CandidateEmailDialogProps> = ({
     };
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: '12px', boxShadow: '0 24px 48px rgba(0,0,0,0.2)' } }}>
+        <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: theme.shape.borderRadius, boxShadow: theme.shadows[8] } }}>
             <DialogTitle sx={{
-                bgcolor: '#232f3e',
-                color: 'white',
+                bgcolor: theme.palette.secondary.main,
+                color: theme.palette.secondary.contrastText,
                 py: 2,
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center'
             }}>
                 <Stack direction="row" spacing={1.5} alignItems="center">
-                    {isBulk ? <GroupsIcon sx={{ color: '#ff9900' }} /> : <EmailIcon sx={{ color: '#ff9900' }} />}
-                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    {isBulk ? <GroupsIcon sx={{ color: theme.palette.primary.light }} /> : <EmailIcon sx={{ color: theme.palette.primary.light }} />}
+                    <Typography variant="h6">
                         {isBulk ? `Send ${candidateNames.length} Candidate Profiles` : 'Send Candidate Profile'}
                     </Typography>
                 </Stack>
-                <IconButton onClick={onClose} sx={{ color: 'white' }} size="small">
+                <IconButton onClick={onClose} sx={{ color: theme.palette.secondary.contrastText }} size="small">
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
 
             <DialogContent sx={{ p: 4 }}>
                 <Stack spacing={4} sx={{ mt: 1 }}>
-                    <Box sx={{ borderBottom: '1px solid #eaeded', pb: 4 }}>
+                    <Box sx={{ borderBottom: `1px solid ${theme.palette.divider}`, pb: 4 }}>
                         <Stack spacing={3}>
                             <Box>
-                                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: '#545b64', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Typography variant="awsFieldLabel" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <EmailIcon sx={{ fontSize: 16 }} /> RECIPIENT EMAIL
                                 </Typography>
                                 <TextField
@@ -186,7 +189,7 @@ const CandidateEmailDialog: React.FC<CandidateEmailDialogProps> = ({
                             </Box>
 
                             <Box>
-                                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: '#545b64', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Typography variant="awsFieldLabel" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <SubjectIcon sx={{ fontSize: 16 }} /> SUBJECT
                                 </Typography>
                                 <TextField
@@ -200,7 +203,7 @@ const CandidateEmailDialog: React.FC<CandidateEmailDialogProps> = ({
                             </Box>
 
                             <Box>
-                                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: '#545b64', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Typography variant="awsFieldLabel" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <MessageIcon sx={{ fontSize: 16 }} /> MESSAGE
                                 </Typography>
                                 <TextField
@@ -217,34 +220,34 @@ const CandidateEmailDialog: React.FC<CandidateEmailDialogProps> = ({
                     </Box>
 
                     <Box>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 2, color: '#232f3e', display: 'flex', alignItems: 'center', gap: 1, letterSpacing: '0.05rem' }}>
-                            <AttachIcon sx={{ fontSize: 18, color: '#0073bb' }} /> SELECT DOCUMENTS TO ATTACH
+                        <Typography variant="awsSectionTitle" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <AttachIcon sx={{ fontSize: 18, color: theme.palette.primary.main }} /> SELECT DOCUMENTS TO ATTACH
                         </Typography>
 
                         {fetchingDocs ? (
                             <Box sx={{ p: 4, textAlign: 'center' }}>
-                                <CircularProgress size={30} sx={{ color: '#0073bb' }} />
-                                <Typography variant="body2" sx={{ mt: 1, color: '#545b64' }}>Fetching candidate documents...</Typography>
+                                <CircularProgress size={30} sx={{ color: theme.palette.primary.main }} />
+                                <Typography variant="body2" sx={{ mt: 1, color: theme.palette.text.secondary }}>Fetching candidate documents...</Typography>
                             </Box>
                         ) : availableDocs.length > 0 ? (
-                            <List sx={{ bgcolor: '#f8f9f9', borderRadius: '8px', border: '1px solid #eaeded', p: 0 }}>
+                            <List sx={{ bgcolor: theme.palette.background.default, borderRadius: '8px', border: `1px solid ${theme.palette.divider}`, p: 0 }}>
                                 {availableDocs.map((cGroup) => (
                                     <React.Fragment key={cGroup.mapping_id}>
                                         <ListItem 
                                             disablePadding
                                             sx={{ 
-                                                borderBottom: '1px solid #eaeded',
-                                                bgcolor: 'white',
-                                                '&:hover': { bgcolor: '#f1faff' }
+                                                borderBottom: `1px solid ${theme.palette.divider}`,
+                                                bgcolor: theme.palette.background.paper,
+                                                '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.04) }
                                             }}
                                         >
                                             <ListItemButton onClick={() => handleToggleExpand(cGroup.mapping_id)}>
                                                 <ListItemIcon sx={{ minWidth: 40 }}>
-                                                    <GroupsIcon sx={{ color: '#545b64', fontSize: 20 }} />
+                                                    <GroupsIcon sx={{ color: theme.palette.text.secondary, fontSize: 20 }} />
                                                 </ListItemIcon>
                                                 <ListItemText 
                                                     primary={cGroup.candidate_name} 
-                                                    primaryTypographyProps={{ variant: 'body2', fontWeight: 700, color: '#232f3e' }}
+                                                    primaryTypographyProps={{ variant: 'body2', fontWeight: 700, color: theme.palette.text.primary }}
                                                     secondary={`${cGroup.documents.length} Available Documents`}
                                                 />
                                                 {expandedCandidates[cGroup.mapping_id] ? <ExpandLess /> : <ExpandMore />}
@@ -258,8 +261,8 @@ const CandidateEmailDialog: React.FC<CandidateEmailDialogProps> = ({
                                                         sx={{ 
                                                             pl: 6, 
                                                             py: 1, 
-                                                            bgcolor: selectedDocIds.includes(doc.id) ? '#f1faff' : 'transparent',
-                                                            borderBottom: '1px solid #f1f1f1',
+                                                            bgcolor: selectedDocIds.includes(doc.id) ? alpha(theme.palette.primary.main, 0.08) : 'transparent',
+                                                            borderBottom: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
                                                             '&:last-child': { borderBottom: 'none' }
                                                         }}
                                                     >
@@ -273,14 +276,14 @@ const CandidateEmailDialog: React.FC<CandidateEmailDialogProps> = ({
                                                             }
                                                             label={
                                                                 <Stack direction="row" spacing={1} alignItems="center">
-                                                                    <DocIcon sx={{ fontSize: 16, color: doc.type === 'resume' ? '#1d8102' : '#545b64' }} />
+                                                                    <DocIcon sx={{ fontSize: 16, color: doc.type === 'resume' ? theme.palette.success.main : theme.palette.text.secondary }} />
                                                                     <Typography variant="body2" sx={{ fontWeight: doc.type === 'resume' ? 700 : 500 }}>
                                                                         {doc.name}
                                                                     </Typography>
                                                                     {doc.type === 'resume' && (
-                                                                        <Chip label="Resume" size="small" sx={{ height: 18, fontSize: '0.65rem', fontWeight: 700, bgcolor: '#e7f4e4', color: '#1d8102' }} />
+                                                                        <Chip label="Resume" size="small" sx={{ height: 18, fontSize: '0.65rem', fontWeight: 700, bgcolor: alpha(theme.palette.success.main, 0.1), color: theme.palette.success.main }} />
                                                                     )}
-                                                                    <Typography variant="caption" sx={{ color: '#879596' }}>
+                                                                    <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
                                                                         ({formatSize(doc.size)})
                                                                     </Typography>
                                                                 </Stack>
@@ -291,7 +294,7 @@ const CandidateEmailDialog: React.FC<CandidateEmailDialogProps> = ({
                                                 ))}
                                                 {cGroup.documents.length === 0 && (
                                                     <ListItem sx={{ pl: 6, py: 2 }}>
-                                                        <Typography variant="caption" sx={{ fontStyle: 'italic', color: '#879596' }}>
+                                                        <Typography variant="caption" sx={{ fontStyle: 'italic', color: theme.palette.text.secondary }}>
                                                             No documents found for this candidate.
                                                         </Typography>
                                                     </ListItem>
@@ -302,24 +305,24 @@ const CandidateEmailDialog: React.FC<CandidateEmailDialogProps> = ({
                                 ))}
                             </List>
                         ) : (
-                            <Box sx={{ p: 4, bgcolor: '#fcf3e8', border: '1px dashed #f9d9b7', borderRadius: '8px', textAlign: 'center' }}>
-                                <Typography variant="body2" sx={{ color: '#871000', fontWeight: 600 }}>
+                            <Box sx={{ p: 4, bgcolor: alpha(theme.palette.warning.main, 0.05), border: `1px dashed ${theme.palette.warning.light}`, borderRadius: '8px', textAlign: 'center' }}>
+                                <Typography variant="body2" sx={{ color: theme.palette.warning.dark, fontWeight: 600 }}>
                                     No documents found for the selected candidates. Resumes are required for attachments.
                                 </Typography>
                             </Box>
                         )}
-                        <Typography variant="caption" sx={{ mt: 1, display: 'block', color: '#545b64', fontStyle: 'italic' }}>
+                        <Typography variant="caption" sx={{ mt: 1, display: 'block', color: theme.palette.text.secondary, fontStyle: 'italic' }}>
                             * Selected documents will be sent as email attachments.
                         </Typography>
                     </Box>
                 </Stack>
             </DialogContent>
 
-            <DialogActions sx={{ p: 3, bgcolor: '#f8f9fa', borderTop: '1px solid #e0e0e0' }}>
-                <Typography variant="caption" sx={{ flexGrow: 1, ml: 2, fontWeight: 700, color: '#0073bb' }}>
+            <DialogActions sx={{ p: 3, bgcolor: theme.palette.background.default, borderTop: `1px solid ${theme.palette.divider}` }}>
+                <Typography variant="caption" sx={{ flexGrow: 1, ml: 2, fontWeight: 700, color: theme.palette.primary.main }}>
                     {selectedDocIds.length} Total Attachments
                 </Typography>
-                <Button onClick={onClose} disabled={loading} sx={{ textTransform: 'none', fontWeight: 600, color: '#545b64' }}>
+                <Button onClick={onClose} disabled={loading} sx={{ color: theme.palette.text.secondary }}>
                     Cancel
                 </Button>
                 <Button
@@ -328,12 +331,9 @@ const CandidateEmailDialog: React.FC<CandidateEmailDialogProps> = ({
                     disabled={loading || !email.trim() || !subject.trim() || !message.trim()}
                     startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <EmailIcon />}
                     sx={{
-                        textTransform: 'none',
-                        fontWeight: 700,
-                        bgcolor: '#ec7211',
-                        borderRadius: '6px',
+                        bgcolor: theme.palette.primary.main,
                         px: 4,
-                        '&:hover': { bgcolor: '#eb5f07' }
+                        '&:hover': { bgcolor: theme.palette.primary.dark }
                     }}
                 >
                     {loading ? 'Sending...' : isBulk ? 'Send All Profiles' : 'Send Profile'}

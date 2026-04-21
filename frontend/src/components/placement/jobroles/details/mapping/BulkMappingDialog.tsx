@@ -10,7 +10,9 @@ import {
     TextField,
     Divider,
     Stack,
-    Chip
+    Chip,
+    useTheme,
+    alpha
 } from '@mui/material';
 import { GroupAdd as BulkIcon } from '@mui/icons-material';
 import type { JobRole } from '../../../../../models/jobRole';
@@ -36,6 +38,7 @@ const BulkMappingDialog: React.FC<BulkMappingDialogProps> = ({
     onNotesChange,
     submitting
 }) => {
+    const theme = useTheme();
     return (
         <Dialog 
             open={open} 
@@ -43,15 +46,15 @@ const BulkMappingDialog: React.FC<BulkMappingDialogProps> = ({
             maxWidth="sm" 
             fullWidth
             PaperProps={{
-                sx: { borderRadius: '2px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }
+                sx: { borderRadius: theme.shape.borderRadius, boxShadow: theme.shadows[4] }
             }}
         >
             <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5, pb: 1 }}>
-                <Box sx={{ display: 'flex', p: 1, bgcolor: '#f1faff', borderRadius: '4px' }}>
-                    <BulkIcon sx={{ color: '#0073bb' }} />
+                <Box sx={{ display: 'flex', p: 1, bgcolor: alpha(theme.palette.primary.main, 0.08), borderRadius: '4px' }}>
+                    <BulkIcon sx={{ color: theme.palette.primary.main }} />
                 </Box>
                 <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 800, color: '#232f3e', fontSize: '1.1rem' }}>
+                    <Typography variant="h6">
                         Bulk Map Candidates
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
@@ -64,18 +67,19 @@ const BulkMappingDialog: React.FC<BulkMappingDialogProps> = ({
 
             <DialogContent sx={{ py: 3 }}>
                 <Stack spacing={3}>
-                    <Box sx={{ p: 2, bgcolor: '#f8f9f9', border: '1px solid #eaeded', borderRadius: '4px' }}>
-                        <Typography variant="body2" sx={{ mb: 2, color: '#545b64' }}>
+                    <Box sx={{ p: 2, bgcolor: theme.palette.background.default, border: `1px solid ${theme.palette.divider}`, borderRadius: '4px' }}>
+                        <Typography variant="body2" sx={{ mb: 2, color: theme.palette.text.secondary }}>
                             You are about to map <strong>{selectedCount}</strong> candidates to:
                         </Typography>
                         <Stack direction="row" spacing={1} alignItems="center">
                             <Chip 
                                 label={jobRole.title} 
                                 size="small" 
-                                sx={{ fontWeight: 700, bgcolor: '#232f3e', color: 'white', borderRadius: '4px' }} 
+                                color="secondary"
+                                sx={{ fontWeight: 700, borderRadius: '4px' }} 
                             />
                             {jobRole.company && (
-                                <Typography variant="caption" sx={{ color: '#545b64', fontWeight: 600 }}>
+                                <Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontWeight: 600 }}>
                                     at {jobRole.company.name}
                                 </Typography>
                             )}
@@ -83,7 +87,7 @@ const BulkMappingDialog: React.FC<BulkMappingDialogProps> = ({
                     </Box>
 
                     <Box>
-                        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700, color: '#232f3e' }}>
+                        <Typography variant="awsSectionTitle" sx={{ mb: 1 }}>
                             Common Mapping Notes (Optional)
                         </Typography>
                         <TextField
@@ -96,9 +100,9 @@ const BulkMappingDialog: React.FC<BulkMappingDialogProps> = ({
                             sx={{
                                 '& .MuiOutlinedInput-root': {
                                     borderRadius: '2px',
-                                    bgcolor: '#fcfcfc',
-                                    '& fieldset': { borderColor: '#d5dbdb' },
-                                    '&.Mui-focused fieldset': { borderColor: '#ec7211' }
+                                    bgcolor: theme.palette.background.paper,
+                                    '& fieldset': { borderColor: theme.palette.divider },
+                                    '&.Mui-focused fieldset': { borderColor: theme.palette.primary.main }
                                 }
                             }}
                         />
@@ -111,11 +115,11 @@ const BulkMappingDialog: React.FC<BulkMappingDialogProps> = ({
 
             <Divider />
 
-            <DialogActions sx={{ p: 2, bgcolor: '#fbfbfb' }}>
+            <DialogActions sx={{ p: 2, bgcolor: theme.palette.background.default }}>
                 <Button 
                     onClick={onClose} 
                     disabled={submitting}
-                    sx={{ textTransform: 'none', fontWeight: 700, color: '#545b64' }}
+                    sx={{ color: theme.palette.text.secondary }}
                 >
                     Cancel
                 </Button>
@@ -125,10 +129,8 @@ const BulkMappingDialog: React.FC<BulkMappingDialogProps> = ({
                     disabled={submitting}
                     disableElevation
                     sx={{
-                        textTransform: 'none',
-                        fontWeight: 700,
-                        bgcolor: '#ec7211',
-                        '&:hover': { bgcolor: '#eb5f07' },
+                        bgcolor: theme.palette.primary.main,
+                        '&:hover': { bgcolor: theme.palette.primary.dark },
                         px: 3
                     }}
                 >

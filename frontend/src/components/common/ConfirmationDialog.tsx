@@ -8,9 +8,11 @@ import {
     Button,
     Typography,
     Box,
-    Divider
+    Divider,
+    useTheme,
+    alpha
 } from '@mui/material';
-import { Warning as WarningIcon } from '@mui/icons-material';
+import { Warning as WarningIcon, Error as ErrorIcon, Info as InfoIcon } from '@mui/icons-material';
 
 interface ConfirmationDialogProps {
     open: boolean;
@@ -35,19 +37,29 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
     loading = false,
     severity = 'info'
 }) => {
+    const theme = useTheme();
+
     const getColor = () => {
         switch (severity) {
-            case 'error': return '#d13212';
-            case 'warning': return '#ec7211';
-            default: return '#0073bb';
+            case 'error': return theme.palette.error.main;
+            case 'warning': return theme.palette.warning.main;
+            default: return theme.palette.info.main;
         }
     };
 
     const getBgColor = () => {
         switch (severity) {
-            case 'error': return '#fdf3f1';
-            case 'warning': return '#fef6ed';
-            default: return '#f1faff';
+            case 'error': return alpha(theme.palette.error.main, 0.05);
+            case 'warning': return alpha(theme.palette.warning.main, 0.05);
+            default: return alpha(theme.palette.info.main, 0.05);
+        }
+    };
+
+    const getIcon = () => {
+        switch (severity) {
+            case 'error': return <ErrorIcon sx={{ color: getColor(), fontSize: 20 }} />;
+            case 'warning': return <WarningIcon sx={{ color: getColor(), fontSize: 20 }} />;
+            default: return <InfoIcon sx={{ color: getColor(), fontSize: 20 }} />;
         }
     };
 
@@ -58,14 +70,14 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
             maxWidth="xs"
             fullWidth
             PaperProps={{
-                sx: { borderRadius: '2px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }
+                sx: { borderRadius: theme.shape.borderRadius, boxShadow: theme.shadows[8] }
             }}
         >
-            <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5, pb: 1, bgcolor: getBgColor() }}>
-                <Box sx={{ display: 'flex', p: 1, bgcolor: 'white', borderRadius: '4px', border: `1px solid ${getColor()}` }}>
-                    <WarningIcon sx={{ color: getColor(), fontSize: 20 }} />
+            <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5, pb: 1.5, bgcolor: getBgColor() }}>
+                <Box sx={{ display: 'flex', p: 1, bgcolor: theme.palette.background.paper, borderRadius: '4px', border: `1px solid ${getColor()}` }}>
+                    {getIcon()}
                 </Box>
-                <Typography variant="h6" sx={{ fontWeight: 800, color: '#232f3e', fontSize: '1rem' }}>
+                <Typography variant="h6">
                     {title}
                 </Typography>
             </DialogTitle>
@@ -73,18 +85,18 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
             <Divider />
 
             <DialogContent sx={{ py: 3 }}>
-                <DialogContentText sx={{ color: '#545b64', fontSize: '0.875rem' }}>
+                <DialogContentText sx={{ color: theme.palette.text.secondary }}>
                     {message}
                 </DialogContentText>
             </DialogContent>
 
             <Divider />
 
-            <DialogActions sx={{ p: 2, bgcolor: '#fbfbfb' }}>
+            <DialogActions sx={{ p: 2, bgcolor: theme.palette.background.default }}>
                 <Button 
                     onClick={onCancel} 
                     disabled={loading}
-                    sx={{ textTransform: 'none', fontWeight: 700, color: '#545b64' }}
+                    sx={{ color: theme.palette.text.secondary }}
                 >
                     {cancelLabel}
                 </Button>
@@ -94,12 +106,9 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
                     disabled={loading}
                     disableElevation
                     sx={{
-                        textTransform: 'none',
-                        fontWeight: 700,
                         bgcolor: getColor(),
                         '&:hover': { bgcolor: getColor() },
-                        px: 3,
-                        borderRadius: '2px'
+                        px: 3
                     }}
                 >
                     {loading ? 'Processing...' : confirmLabel}

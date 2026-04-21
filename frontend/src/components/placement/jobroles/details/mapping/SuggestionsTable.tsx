@@ -9,6 +9,8 @@ import {
     TableRow,
     TableCell,
     Checkbox,
+    useTheme,
+    alpha
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -60,6 +62,7 @@ const SuggestionsTable: React.FC<SuggestionsTableProps> = ({
     activeFilterCount,
     headerActions,
 }) => {
+    const theme = useTheme();
     const navigate = useNavigate();
     const columns: ColumnDefinition<CandidateMatchResult>[] = [
         { id: 'name', label: 'CANDIDATE', width: '30%' },
@@ -84,7 +87,7 @@ const SuggestionsTable: React.FC<SuggestionsTableProps> = ({
                         size="small"
                         checked={isSelected}
                         onChange={() => onToggleSelect(candidate.candidate_id)}
-                        sx={{ color: '#d5dbdb', '&.Mui-checked': { color: '#007eb9' } }}
+                        sx={{ color: theme.palette.divider, '&.Mui-checked': { color: theme.palette.primary.main } }}
                     />
                 </TableCell>
                 <TableCell sx={{ py: 2 }}>
@@ -97,7 +100,7 @@ const SuggestionsTable: React.FC<SuggestionsTableProps> = ({
                         </Avatar>
                         <Typography 
                             variant="body2" 
-                            sx={{ fontWeight: 700, color: '#007eb9', '&:hover': { textDecoration: 'underline' }, cursor: 'pointer' }}
+                            sx={{ fontWeight: 700, color: theme.palette.primary.main, '&:hover': { textDecoration: 'underline' }, cursor: 'pointer' }}
                             onClick={() => navigate(`/candidates/${candidate.public_id}`)}
                         >
                             {candidate.name}
@@ -144,7 +147,7 @@ const SuggestionsTable: React.FC<SuggestionsTableProps> = ({
                     </Stack>
                 </TableCell>
                 <TableCell align="center">
-                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#545b64', fontSize: '0.8125rem' }}>
+                    <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                         {candidate.year_of_experience || 'Fresher'}
                     </Typography>
                 </TableCell>
@@ -158,9 +161,9 @@ const SuggestionsTable: React.FC<SuggestionsTableProps> = ({
                                     px: 1,
                                     py: 0.25,
                                     borderRadius: '4px',
-                                    bgcolor: '#eaf3ff',
-                                    color: '#0066cc',
-                                    border: '1px solid #cce3ff',
+                                    bgcolor: alpha(theme.palette.primary.main, 0.08),
+                                    color: theme.palette.primary.main,
+                                    border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
                                     fontSize: '0.65rem',
                                     fontWeight: 700,
                                 }}
@@ -169,7 +172,7 @@ const SuggestionsTable: React.FC<SuggestionsTableProps> = ({
                             </Box>
                         </Tooltip>
                     ) : (
-                        <Typography variant="body2" sx={{ color: 'text.disabled', fontSize: '0.8125rem' }}>
+                        <Typography variant="body2" color="text.disabled">
                             None
                         </Typography>
                     )}

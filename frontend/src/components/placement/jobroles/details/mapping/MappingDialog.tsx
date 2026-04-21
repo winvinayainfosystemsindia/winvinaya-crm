@@ -13,6 +13,8 @@ import {
     DialogActions,
     Grid,
     IconButton,
+    useTheme,
+    alpha
 } from '@mui/material';
 import {
     Info as InfoIcon,
@@ -49,6 +51,7 @@ const MappingDialog: React.FC<MappingDialogProps> = ({
     submitting,
     getScoreColor,
 }) => {
+    const theme = useTheme();
     return (
         <Dialog
             open={open}
@@ -56,21 +59,21 @@ const MappingDialog: React.FC<MappingDialogProps> = ({
             maxWidth="sm"
             fullWidth
             PaperProps={{
-                sx: { borderRadius: 0 }
+                sx: { borderRadius: theme.shape.borderRadius }
             }}
         >
             <DialogTitle sx={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                bgcolor: '#232f3e',
-                color: 'white',
+                bgcolor: theme.palette.secondary.main,
+                color: theme.palette.secondary.contrastText,
                 px: 3,
                 py: 2
             }}>
                 <Stack direction="row" spacing={1.5} alignItems="center">
-                    <GroupAddIcon sx={{ color: '#ec7211' }} />
-                    <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
+                    <GroupAddIcon sx={{ color: theme.palette.primary.light }} />
+                    <Typography variant="h6">
                         Mapping Confirmation
                     </Typography>
                 </Stack>
@@ -84,8 +87,8 @@ const MappingDialog: React.FC<MappingDialogProps> = ({
                 <Box sx={{
                     mb: 4,
                     p: 3,
-                    bgcolor: '#f8f9f9',
-                    border: '1px solid #eaeded',
+                    bgcolor: theme.palette.background.default,
+                    border: `1px solid ${theme.palette.divider}`,
                     borderRadius: '4px',
                     position: 'relative'
                 }}>
@@ -93,12 +96,12 @@ const MappingDialog: React.FC<MappingDialogProps> = ({
                         {/* Left: Job Role */}
                         <Grid size={{ xs: 5 }}>
                             <Stack spacing={1} alignItems="center">
-                                <Box sx={{ p: 1, bgcolor: 'white', border: '1px solid #eaeded', borderRadius: '50%' }}>
-                                    <BusinessIcon sx={{ color: '#545b64', fontSize: 24 }} />
+                                <Box sx={{ p: 1, bgcolor: theme.palette.background.paper, border: `1px solid ${theme.palette.divider}`, borderRadius: '50%' }}>
+                                    <BusinessIcon sx={{ color: theme.palette.text.secondary, fontSize: 24 }} />
                                 </Box>
                                 <Box textAlign="center">
-                                    <Typography variant="caption" color="textSecondary" sx={{ fontWeight: 700, display: 'block' }}>JOB ROLE</Typography>
-                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#232f3e' }}>{jobRole.title}</Typography>
+                                    <Typography variant="awsFieldLabel">JOB ROLE</Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 700, color: theme.palette.text.primary }}>{jobRole.title}</Typography>
                                     <Typography variant="caption" color="textSecondary">{jobRole.company?.name}</Typography>
                                 </Box>
                             </Stack>
@@ -107,10 +110,10 @@ const MappingDialog: React.FC<MappingDialogProps> = ({
                         {/* Middle: Match Flow */}
                         <Grid size={{ xs: 2 }}>
                             <Stack alignItems="center" spacing={0.5}>
-                                <Box sx={{ color: '#ec7211' }}>
+                                <Box sx={{ color: theme.palette.primary.main }}>
                                     <TrendingUpIcon fontSize="small" />
                                 </Box>
-                                <ArrowForwardIcon sx={{ color: '#d5dbdb' }} />
+                                <ArrowForwardIcon sx={{ color: theme.palette.divider }} />
                                 <Typography variant="caption" sx={{ fontWeight: 800, color: getScoreColor(selectedCandidate?.match_score || 0) }}>
                                     {selectedCandidate?.match_score}%
                                 </Typography>
@@ -124,8 +127,8 @@ const MappingDialog: React.FC<MappingDialogProps> = ({
                                     <PersonIcon />
                                 </Avatar>
                                 <Box textAlign="center">
-                                    <Typography variant="caption" color="textSecondary" sx={{ fontWeight: 700, display: 'block' }}>CANDIDATE</Typography>
-                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#232f3e' }}>{selectedCandidate?.name}</Typography>
+                                    <Typography variant="awsFieldLabel">CANDIDATE</Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 700, color: theme.palette.text.primary }}>{selectedCandidate?.name}</Typography>
                                     <Typography variant="caption" color="textSecondary">Ready for Mapping</Typography>
                                 </Box>
                             </Stack>
@@ -133,7 +136,7 @@ const MappingDialog: React.FC<MappingDialogProps> = ({
                     </Grid>
                 </Box>
 
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e', mb: 1 }}>
+                <Typography variant="awsSectionTitle" sx={{ mb: 1 }}>
                     Mapping Notes
                 </Typography>
                 <TextField
@@ -145,33 +148,31 @@ const MappingDialog: React.FC<MappingDialogProps> = ({
                     onChange={(e) => onNotesChange(e.target.value)}
                     variant="outlined"
                     sx={{
-                        '& .MuiOutlinedInput-root': { borderRadius: 0 },
+                        '& .MuiOutlinedInput-root': { borderRadius: '2px' },
                         mb: 3
                     }}
                 />
 
                 <Box sx={{
                     p: 2,
-                    bgcolor: '#fcf3e8',
-                    border: '1px solid #f9d9b7',
+                    bgcolor: alpha(theme.palette.warning.main, 0.05),
+                    border: `1px solid ${theme.palette.warning.light}`,
                     display: 'flex',
                     gap: 1.5,
                     alignItems: 'flex-start'
                 }}>
-                    <InfoIcon sx={{ color: '#ec7211', mt: 0.25, fontSize: 20 }} />
-                    <Typography variant="caption" sx={{ color: '#663c00', lineHeight: 1.5 }}>
+                    <InfoIcon sx={{ color: theme.palette.warning.main, mt: 0.25, fontSize: 20 }} />
+                    <Typography variant="caption" sx={{ color: theme.palette.warning.dark, lineHeight: 1.5 }}>
                         <strong>Next Steps:</strong> Once confirmed, this candidate will be listed under the "Mapped Candidates" section. You can then manage their screening and interview progression in the Placement Tracking module.
                     </Typography>
                 </Box>
             </DialogContent>
 
-            <DialogActions sx={{ p: 3, borderTop: '1px solid #d5dbdb', bgcolor: '#fbfbfb' }}>
+            <DialogActions sx={{ p: 3, borderTop: `1px solid ${theme.palette.divider}`, bgcolor: theme.palette.background.default }}>
                 <Button
                     onClick={onClose}
                     sx={{
-                        color: '#545b64',
-                        textTransform: 'none',
-                        fontWeight: 700,
+                        color: theme.palette.text.secondary,
                         mr: 1
                     }}
                 >
@@ -182,14 +183,10 @@ const MappingDialog: React.FC<MappingDialogProps> = ({
                     onClick={onConfirm}
                     disabled={submitting}
                     sx={{
-                        bgcolor: '#ec7211',
-                        '&:hover': { bgcolor: '#eb5f07' },
-                        textTransform: 'none',
-                        fontWeight: 700,
-                        boxShadow: 'none',
+                        bgcolor: theme.palette.primary.main,
+                        '&:hover': { bgcolor: theme.palette.primary.dark },
                         px: 4,
-                        py: 1,
-                        borderRadius: '4px'
+                        py: 1
                     }}
                 >
                     {submitting ? <CircularProgress size={24} color="inherit" /> : 'Confirm Mapping'}

@@ -11,7 +11,9 @@ import {
 	Alert,
 	Divider,
 	Stack,
-	Chip
+	Chip,
+	useTheme,
+	alpha
 } from '@mui/material';
 import { TrendingUp as TrendingUpIcon } from '@mui/icons-material';
 
@@ -34,6 +36,7 @@ const StatusChangeDialog: React.FC<StatusChangeDialogProps> = ({
 	toStatus,
 	loading = false
 }) => {
+	const theme = useTheme();
 	const [remarks, setRemarks] = useState('');
 
 	const handleSubmit = () => {
@@ -46,9 +49,9 @@ const StatusChangeDialog: React.FC<StatusChangeDialogProps> = ({
 	const formatStatus = (s: string) => s.replace('_', ' ').toUpperCase();
 
 	return (
-		<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '8px' } }}>
-			<DialogTitle sx={{ bgcolor: '#f8f9fa', py: 2 }}>
-				<Typography variant="h6" sx={{ fontWeight: 700, color: '#232f3e' }}>
+		<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: theme.shape.borderRadius } }}>
+			<DialogTitle sx={{ bgcolor: theme.palette.background.default, py: 2 }}>
+				<Typography variant="h6">
 					Change Pipeline Stage
 				</Typography>
 			</DialogTitle>
@@ -59,20 +62,20 @@ const StatusChangeDialog: React.FC<StatusChangeDialogProps> = ({
                         You are moving <strong>{candidateName}</strong> to a new stage in the recruitment pipeline.
                     </Typography>
 					
-					<Stack direction="row" spacing={2} alignItems="center" sx={{ my: 3, p: 2, bgcolor: '#f3faff', borderRadius: '4px', border: '1px solid #cdecff' }}>
+					<Stack direction="row" spacing={2} alignItems="center" sx={{ my: 3, p: 2, bgcolor: alpha(theme.palette.primary.main, 0.05), borderRadius: '4px', border: `1px solid ${theme.palette.divider}` }}>
 						<Box sx={{ textAlign: 'center', flex: 1 }}>
-							<Typography variant="caption" color="textSecondary" sx={{ fontWeight: 700 }}>FROM</Typography>
+							<Typography variant="awsFieldLabel">FROM</Typography>
 							<Box sx={{ mt: 0.5 }}>
-								<Chip label={formatStatus(fromStatus)} size="small" sx={{ fontWeight: 800, fontSize: '0.7rem' }} />
+								<Chip label={formatStatus(fromStatus)} size="small" />
 							</Box>
 						</Box>
 						
 						<TrendingUpIcon sx={{ color: 'primary.main' }} />
 						
 						<Box sx={{ textAlign: 'center', flex: 1 }}>
-							<Typography variant="caption" color="textSecondary" sx={{ fontWeight: 700 }}>TO</Typography>
+							<Typography variant="awsFieldLabel">TO</Typography>
 							<Box sx={{ mt: 0.5 }}>
-								<Chip label={formatStatus(toStatus)} color="primary" size="small" sx={{ fontWeight: 800, fontSize: '0.7rem' }} />
+								<Chip label={formatStatus(toStatus)} color="primary" size="small" />
 							</Box>
 						</Box>
 					</Stack>
@@ -97,8 +100,8 @@ const StatusChangeDialog: React.FC<StatusChangeDialogProps> = ({
 					helperText={remarks.trim() === '' ? 'Remarks are mandatory for audit trail' : ''}
 				/>
 			</DialogContent>
-			<DialogActions sx={{ p: 3, bgcolor: '#f8f9fa' }}>
-				<Button onClick={onClose} disabled={loading} sx={{ textTransform: 'none', fontWeight: 600 }}>
+			<DialogActions sx={{ p: 3, bgcolor: theme.palette.background.default }}>
+				<Button onClick={onClose} disabled={loading} sx={{ color: theme.palette.text.secondary }}>
 					Cancel
 				</Button>
 				<Button 
@@ -106,10 +109,8 @@ const StatusChangeDialog: React.FC<StatusChangeDialogProps> = ({
 					variant="contained" 
 					disabled={loading || !remarks.trim()}
 					sx={{ 
-						textTransform: 'none', 
-						fontWeight: 700,
-						bgcolor: '#ec7211',
-						'&:hover': { bgcolor: '#eb5f07' }
+						bgcolor: theme.palette.primary.main,
+						'&:hover': { bgcolor: theme.palette.primary.dark }
 					}}
 				>
 					Confirm Change
