@@ -69,7 +69,7 @@ const Login: React.FC = () => {
 					width: 300,
 					height: 300,
 					borderRadius: '50%',
-					background: `radial-gradient(circle, ${theme.palette.accent.main}10 0%, transparent 70%)`,
+					background: `radial-gradient(circle, ${theme.palette.primary.main}10 0%, transparent 70%)`,
 					zIndex: 0,
 				}}
 			/>
@@ -105,7 +105,7 @@ const Login: React.FC = () => {
 							<Box
 								component="span"
 								sx={{
-									color: theme.palette.accent.main,
+									color: theme.palette.primary.main,
 									position: 'relative'
 								}}
 							>

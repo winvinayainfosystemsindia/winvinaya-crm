@@ -59,20 +59,20 @@ const LoginForm: React.FC<LoginFormProps> = ({ loading, error, onLogin }) => {
 					left: 0,
 					right: 0,
 					height: 4,
-					backgroundColor: theme.palette.accent.main,
+					backgroundColor: theme.palette.primary.main,
 				}
 			}}
 		>
 			<Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1.5 }}>
 				<Box
 					sx={{
-						backgroundColor: (theme) => `${theme.palette.accent.main}15`,
+						backgroundColor: (theme) => `${theme.palette.primary.main}15`,
 						p: 1,
 						borderRadius: 1,
 						display: 'flex'
 					}}
 				>
-					<LockOutlined sx={{ color: theme.palette.accent.main }} />
+					<LockOutlined sx={{ color: theme.palette.primary.main }} />
 				</Box>
 				<Typography component="h2" variant="h5" sx={{ fontWeight: 600 }}>
 					Sign in
@@ -193,7 +193,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ loading, error, onLogin }) => {
 								sx={{
 									color: theme.palette.divider,
 									'&.Mui-checked': {
-										color: theme.palette.accent.main,
+										color: theme.palette.primary.main,
 									},
 								}}
 							/>
@@ -238,9 +238,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ loading, error, onLogin }) => {
 					aria-label={loading ? "Signing in" : "Sign in"}
 					sx={{
 						py: 1.25,
-						backgroundColor: theme.palette.accent.main,
+						backgroundColor: theme.palette.primary.main,
 						'&:hover': { 
-							backgroundColor: theme.palette.accent.dark,
+							backgroundColor: theme.palette.primary.dark,
 							boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
 						},
 						'&.Mui-disabled': {
