@@ -1,5 +1,5 @@
 import React from 'react';
-import { Paper, Grid, Typography, Chip, Box, Button } from '@mui/material';
+import { Paper, Grid, Typography, Chip, Box, Button, Stack } from '@mui/material';
 import { Description as DescriptionIcon, UploadFile as UploadFileIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { SectionHeader } from './DetailedViewCommon';
@@ -31,7 +31,29 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ candidate }) => {
 										<Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
 											Type: {doc.document_type.replace('_', ' ')}
 										</Typography>
-										<Typography variant="caption" color="text.secondary">
+										<Stack direction="row" spacing={0.5} sx={{ mt: 0.75 }}>
+											<Chip
+												label={doc.document_source === 'trainer' ? 'Trainer Prepared' : 'Candidate Original'}
+												size="small"
+												sx={{
+													height: 18,
+													fontSize: '0.6rem',
+													textTransform: 'uppercase',
+													fontWeight: 700,
+													bgcolor: doc.document_source === 'trainer' ? '#ec7211' : '#007eb9',
+													color: 'white'
+												}}
+											/>
+											{doc.is_active && (
+												<Chip
+													label="Active"
+													size="small"
+													color="success"
+													sx={{ height: 18, fontSize: '0.6rem', textTransform: 'uppercase', fontWeight: 700 }}
+												/>
+											)}
+										</Stack>
+										<Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
 											{doc.file_size ? (doc.file_size / 1024 / 1024).toFixed(2) + ' MB' : 'Unknown size'}
 										</Typography>
 									</Box>

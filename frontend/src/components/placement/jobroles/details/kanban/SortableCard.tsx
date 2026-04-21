@@ -29,7 +29,7 @@ const getScoreColor = (score: number) => {
 
 interface SortableCardProps {
 	candidate: CandidateMatchResult;
-	onViewHistory: (mappingId: number, name: string) => void;
+	onViewHistory: (mappingId: number, name: string, candidatePublicId: string) => void;
 }
 
 const SortableCard: React.FC<SortableCardProps> = ({ candidate, onViewHistory }) => {
@@ -124,7 +124,7 @@ const SortableCard: React.FC<SortableCardProps> = ({ candidate, onViewHistory })
 							sx={{ color: theme.palette.primary.main }}
 							onClick={(e) => {
 								e.stopPropagation();
-								candidate.mapping_id && onViewHistory(candidate.mapping_id, candidate.name);
+								candidate.mapping_id && onViewHistory(candidate.mapping_id, candidate.name, candidate.public_id);
 							}}
 						>
 							<HistoryIcon sx={{ fontSize: 16 }} />

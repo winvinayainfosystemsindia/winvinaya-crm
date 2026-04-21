@@ -24,7 +24,9 @@ class CandidateDocumentService:
         candidate_public_id: UUID,
         document_type: str,
         file: UploadFile,
-        description: str = None
+        description: str = None,
+        document_source: str = "candidate",
+        uploaded_by_id: int = None
     ) -> CandidateDocument:
         """Upload and save document file for a candidate"""
         # Verify candidate exists
@@ -32,6 +34,13 @@ class CandidateDocumentService:
         if not candidate:
             raise HTTPException(status_code=404, detail="Candidate not found")
         
+        # Logic: If it's a resume and source is trainer, deactivate other active resumes
+        if document_type == 'resume':
+            existing_docs = await self.repository.get_by_candidate_id(candidate.id)
+            for doc in existing_docs:
+                if doc.document_type == 'resume' and doc.is_active:
+                    await self.repository.update(doc.id, {"is_active": False})
+
         # Save file to storage
         file_info = await FileStorageService.save_file(
             file=file,
@@ -49,7 +58,10 @@ class CandidateDocumentService:
             "file_path": file_info["file_path"],
             "file_size": file_info["file_size"],
             "mime_type": file_info["mime_type"],
-            "description": description
+            "description": description,
+            "document_source": document_source,
+            "is_active": True, # New upload is active by default
+            "uploaded_by_id": uploaded_by_id
         }
         
         return await self.repository.create(document_data)
@@ -68,6 +80,13 @@ class CandidateDocumentService:
         # Create document
         document_data = document_in.model_dump()
         document_data["candidate_id"] = candidate.id
+        
+        # Deactivate others if this is a resume
+        if document_data.get("document_type") == 'resume' and document_data.get("is_active"):
+            existing_docs = await self.repository.get_by_candidate_id(candidate.id)
+            for doc in existing_docs:
+                if doc.document_type == 'resume' and doc.id != document_data.get("id"):
+                    await self.repository.update(doc.id, {"is_active": False})
         
         return await self.repository.create(document_data)
     

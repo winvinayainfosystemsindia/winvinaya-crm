@@ -34,6 +34,7 @@ async def upload_candidate_document(
     document_type: str = Form(..., description="resume, disability_certificate, or other"),
     file: UploadFile = File(...),
     description: str = Form(None),
+    document_source: str = Form("candidate"),
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
     db: AsyncSession = Depends(get_db)
 ):
@@ -48,7 +49,9 @@ async def upload_candidate_document(
         candidate_public_id=public_id,
         document_type=document_type,
         file=file,
-        description=description
+        description=description,
+        document_source=document_source,
+        uploaded_by_id=current_user.id
     )
     
     # Log the upload

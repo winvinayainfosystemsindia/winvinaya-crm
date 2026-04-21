@@ -17,9 +17,16 @@ export interface RequiredDocument {
 export const REQUIRED_DOCUMENTS: RequiredDocument[] = [
   { 
     type: 'resume', 
-    label: 'Resume', 
-    description: 'Updated CV/Resume', 
+    label: 'Candidate Resume', 
+    description: 'Initial/Original CV', 
     icon: <ResumeIcon sx={{ color: '#007eb9' }} /> 
+  },
+  { 
+    type: 'trainer_resume', 
+    label: 'Trainer Resume', 
+    description: 'Optimized/Prepared CV', 
+    icon: <ResumeIcon sx={{ color: '#ec7211' }} />,
+    roles: ['trainer', 'admin', 'manager']
   },
   { 
     type: '10th_certificate', 

@@ -44,9 +44,15 @@ const DocumentCollection: React.FC = () => {
     return true;
   });
 
-  const uploadedCount = filteredRequiredDocs.filter((req: RequiredDocument) => 
-    documents.some((d: CandidateDocument) => d.document_type === req.type)
-  ).length;
+  const uploadedCount = filteredRequiredDocs.filter((req: RequiredDocument) => {
+    if (req.type === 'trainer_resume') {
+      return documents.some((d: CandidateDocument) => d.document_type === 'resume' && d.document_source === 'trainer');
+    }
+    if (req.type === 'resume') {
+      return documents.some((d: CandidateDocument) => d.document_type === 'resume' && d.document_source === 'candidate');
+    }
+    return documents.some((d: CandidateDocument) => d.document_type === req.type);
+  }).length;
 
   // Handlers
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: string) => {
@@ -54,7 +60,16 @@ const DocumentCollection: React.FC = () => {
     if (file && id) {
       setUploading(type);
       try {
-        await dispatch(uploadDocument({ publicId: id, documentType: type as any, file })).unwrap();
+        const documentSource = type === 'trainer_resume' ? 'trainer' : 'candidate';
+        // Note: For 'trainer_resume' type in UI, we still want it to be stored as 'resume' in backend but with 'trainer' source
+        const backendType = type === 'trainer_resume' ? 'resume' : type;
+        
+        await dispatch(uploadDocument({ 
+          publicId: id, 
+          documentType: backendType as any, 
+          file, 
+          documentSource 
+        })).unwrap();
       } catch (err) {
         console.error('Upload failed:', err);
       } finally {
@@ -92,7 +107,15 @@ const DocumentCollection: React.FC = () => {
     }
   };
 
-  const getDocumentForType = (type: string) => documents.find((d: CandidateDocument) => d.document_type === type);
+  const getDocumentForType = (type: string) => {
+    if (type === 'trainer_resume') {
+      return documents.find((d: CandidateDocument) => d.document_type === 'resume' && d.document_source === 'trainer');
+    }
+    if (type === 'resume') {
+      return documents.find((d: CandidateDocument) => d.document_type === 'resume' && d.document_source === 'candidate');
+    }
+    return documents.find((d: CandidateDocument) => d.document_type === type);
+  };
 
   return (
     <Box sx={{ bgcolor: '#f8fafc', minHeight: '100vh' }}>

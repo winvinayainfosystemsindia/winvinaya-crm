@@ -390,16 +390,18 @@ export const uploadDocument = createAsyncThunk(
 			documentType,
 			file,
 			description,
+			documentSource
 		}: {
 			publicId: string;
-			documentType: 'resume' | 'disability_certificate' | '10th_certificate' | '12th_certificate' | 'degree_certificate' | 'other';
+			documentType: 'resume' | 'trainer_resume' | 'disability_certificate' | '10th_certificate' | '12th_certificate' | 'degree_certificate' | 'other';
 			file: File;
 			description?: string;
+			documentSource?: 'candidate' | 'trainer';
 		},
 		{ rejectWithValue }
 	) => {
 		try {
-			const response = await documentService.upload(publicId, documentType, file, description);
+			const response = await documentService.upload(publicId, documentType, file, description, documentSource);
 			return { publicId, document: response };
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to upload document');

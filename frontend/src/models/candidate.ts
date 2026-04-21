@@ -52,6 +52,8 @@ export interface CandidateDocument {
 	file_size?: number;
 	mime_type?: string;
 	description?: string;
+	document_source: 'candidate' | 'trainer';
+	is_active: boolean;
 	created_at: string;
 	updated_at: string;
 }
@@ -63,6 +65,8 @@ export interface CandidateDocumentCreate {
 	file_size?: number;
 	mime_type?: string;
 	description?: string;
+	document_source?: 'candidate' | 'trainer';
+	is_active?: boolean;
 }
 
 // Candidate Counseling Types

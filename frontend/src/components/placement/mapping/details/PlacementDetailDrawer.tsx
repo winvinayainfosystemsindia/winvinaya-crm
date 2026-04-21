@@ -40,7 +40,8 @@ import {
 	Handshake as HandshakeIcon,
 	ThumbUp as JoinedIcon,
 	ThumbDown as RejectedIcon,
-	PersonSearch as SearchIcon
+	PersonSearch as SearchIcon,
+	Description as DescriptionIcon
 } from '@mui/icons-material';
 import placementMappingService from '../../../../services/placementMappingService';
 import useToast from '../../../../hooks/useToast';
@@ -49,11 +50,12 @@ interface Props {
 	open: boolean;
 	onClose: () => void;
 	mappingId: number;
+	candidatePublicId?: string; // New Optional prop
 	candidateName: string;
 	jobTitle: string;
 }
 
-const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTitle }: Props) => {
+const PlacementDetailDrawer = ({ open, onClose, mappingId, candidatePublicId, candidateName, jobTitle }: Props) => {
 	const toast = useToast();
 	const theme = useTheme();
 	const [tabValue, setTabValue] = useState(0);
@@ -63,10 +65,18 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 	const [offer, setOffer] = useState<any>(null);
 	const [notes, setNotes] = useState<any[]>([]);
 	const [newNote, setNewNote] = useState('');
+	const [documents, setDocuments] = useState<any[]>([]);
 
 	const fetchData = useCallback(async () => {
 		setLoading(true);
 		try {
+			// Fetch documents if candidatePublicId is available (for resume link)
+			if (candidatePublicId) {
+				const { documentService } = await import('../../../../services/candidateService');
+				const docs = await documentService.getAll(candidatePublicId);
+				setDocuments(docs);
+			}
+
 			if (tabValue === 0) {
 				const data = await placementMappingService.getPipelineHistory(mappingId);
 				setHistory(data);
@@ -194,9 +204,43 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidateName, jobTit
 						</Typography>
 					</Box>
 				</Box>
-				<IconButton onClick={onClose} sx={{ color: 'white', '&:hover': { bgcolor: alpha(theme.palette.common.white, 0.1) } }}>
-					<CloseIcon fontSize="small" />
-				</IconButton>
+				<Stack direction="row" spacing={1} alignItems="center">
+					{documents.some(d => d.document_type === 'resume' || d.document_type === 'trainer_resume') && (
+						<Button
+							size="small"
+							startIcon={<DescriptionIcon sx={{ fontSize: 16 }} />}
+							onClick={async () => {
+								// Prioritize active trainer resume, then any active resume, then first available resume
+								const activeTrainerResume = documents.find(d => d.document_type === 'trainer_resume' && d.is_active);
+								const activeResume = documents.find(d => d.document_type === 'resume' && d.is_active);
+								const fallbackResume = documents.find(d => d.document_type === 'resume' || d.document_type === 'trainer_resume');
+								
+								const targetDoc = activeTrainerResume || activeResume || fallbackResume;
+								
+								if (targetDoc) {
+									const { documentService } = await import('../../../../services/candidateService');
+									const blob = await documentService.download(targetDoc.id);
+									const url = window.URL.createObjectURL(blob);
+									window.open(url, '_blank');
+									setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+								}
+							}}
+							sx={{
+								textTransform: 'none',
+								color: 'white',
+								fontWeight: 700,
+								bgcolor: alpha(theme.palette.common.white, 0.1),
+								px: 2,
+								'&:hover': { bgcolor: alpha(theme.palette.common.white, 0.2) }
+							}}
+						>
+							Resume
+						</Button>
+					)}
+					<IconButton onClick={onClose} sx={{ color: 'white', '&:hover': { bgcolor: alpha(theme.palette.common.white, 0.1) } }}>
+						<CloseIcon fontSize="small" />
+					</IconButton>
+				</Stack>
 			</Box>
 
 			<Box sx={{ bgcolor: 'background.paper', borderBottom: `1px solid ${theme.palette.divider}`, position: 'sticky', top: 0, zIndex: 1 }}>

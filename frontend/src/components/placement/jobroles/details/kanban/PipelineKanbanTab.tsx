@@ -51,7 +51,7 @@ const PipelineKanbanTab: React.FC<PipelineKanbanTabProps> = ({ jobRolePublicId }
 	const [activeCandidate, setActiveCandidate] = useState<CandidateMatchResult | null>(null);
 	const [draggedCandidate, setDraggedCandidate] = useState<CandidateMatchResult | null>(null);
 	const [statusDialog, setStatusDialog] = useState<{ open: boolean, from: string, to: string } | null>(null);
-	const [historyDrawer, setHistoryDrawer] = useState<{ open: boolean, id: number, name: string } | null>(null);
+	const [historyDrawer, setHistoryDrawer] = useState<{ open: boolean, id: number, name: string, candidatePublicId: string } | null>(null);
 	const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
 
 	const { currentJobRole: jobRole } = useAppSelector(state => state.jobRoles);
@@ -215,7 +215,7 @@ const PipelineKanbanTab: React.FC<PipelineKanbanTabProps> = ({ jobRolePublicId }
 											<SortableCard
 												key={candidate.public_id}
 												candidate={candidate}
-												onViewHistory={(id, name) => setHistoryDrawer({ open: true, id, name })}
+												onViewHistory={(id, name, publicId) => setHistoryDrawer({ open: true, id, name, candidatePublicId: publicId })}
 											/>
 										))}
 									</SortableContext>
@@ -264,6 +264,7 @@ const PipelineKanbanTab: React.FC<PipelineKanbanTabProps> = ({ jobRolePublicId }
 					open={historyDrawer.open}
 					onClose={() => setHistoryDrawer(null)}
 					mappingId={historyDrawer.id}
+					candidatePublicId={historyDrawer.candidatePublicId}
 					candidateName={historyDrawer.name}
 					jobTitle="Candidate Lifecycle"
 				/>

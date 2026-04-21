@@ -14,6 +14,9 @@ class CandidateDocumentBase(BaseModel):
     file_size: Optional[int] = None
     mime_type: Optional[str] = None
     description: Optional[str] = None
+    document_source: str = "candidate"
+    is_active: bool = True
+    uploaded_by_id: Optional[int] = None
 
 
 class CandidateDocumentCreate(CandidateDocumentBase):

@@ -275,13 +275,17 @@ export const documentService = {
 		publicId: string,
 		documentType: string,
 		file: File,
-		description?: string
+		description?: string,
+		documentSource?: string
 	): Promise<CandidateDocument> => {
 		const formData = new FormData();
 		formData.append('document_type', documentType);
 		formData.append('file', file);
 		if (description) {
 			formData.append('description', description);
+		}
+		if (documentSource) {
+			formData.append('document_source', documentSource);
 		}
 
 		// Use multipart/form-data for file uploads.

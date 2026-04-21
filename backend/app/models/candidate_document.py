@@ -2,12 +2,13 @@ from __future__ import annotations
 """Candidate Document model for managing uploaded documents"""
 
 from typing import TYPE_CHECKING
-from sqlalchemy import String, Integer, ForeignKey
+from sqlalchemy import String, Integer, ForeignKey, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
 
 if TYPE_CHECKING:
     from app.models.candidate import Candidate
+    from app.models.user import User
 
 
 class CandidateDocument(BaseModel):
@@ -38,8 +39,30 @@ class CandidateDocument(BaseModel):
     # Optional metadata
     description: Mapped[str | None] = mapped_column(String(500), nullable=True)
     
+    # Metadata for multiple versions
+    document_source: Mapped[str] = mapped_column(
+        String(50), 
+        nullable=False, 
+        default="candidate",
+        index=True
+    ) # 'candidate', 'trainer'
+    
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, 
+        default=True, 
+        nullable=False,
+        index=True
+    )
+    
+    uploaded_by_id: Mapped[int | None] = mapped_column(
+        Integer, 
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True
+    )
+
     # Relationship
     candidate: Mapped[Candidate] = relationship("Candidate", back_populates="documents")
+    uploaded_by: Mapped[User | None] = relationship("User")
     
     def __repr__(self) -> str:
         return f"<CandidateDocument(id={self.id}, candidate_id={self.candidate_id}, type={self.document_type})>"
