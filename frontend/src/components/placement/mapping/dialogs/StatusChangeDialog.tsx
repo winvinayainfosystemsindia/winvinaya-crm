@@ -20,6 +20,8 @@ interface StatusChangeDialogProps {
 	candidateName: string;
 	fromStatus: string;
 	toStatus: string;
+	fromStatusLabel?: string;
+	toStatusLabel?: string;
 	loading?: boolean;
 }
 
@@ -30,6 +32,8 @@ const StatusChangeDialog: React.FC<StatusChangeDialogProps> = ({
 	candidateName,
 	fromStatus,
 	toStatus,
+	fromStatusLabel,
+	toStatusLabel,
 	loading = false
 }) => {
 	const theme = useTheme();
@@ -82,7 +86,7 @@ const StatusChangeDialog: React.FC<StatusChangeDialogProps> = ({
                     <Box sx={{ textAlign: 'center', flex: 1 }}>
                         <Typography variant="awsFieldLabel">FROM</Typography>
                         <Box sx={{ mt: 0.5 }}>
-                            <Chip label={formatStatus(fromStatus)} size="small" />
+                            <Chip label={fromStatusLabel || formatStatus(fromStatus)} size="small" />
                         </Box>
                     </Box>
                     
@@ -91,7 +95,7 @@ const StatusChangeDialog: React.FC<StatusChangeDialogProps> = ({
                     <Box sx={{ textAlign: 'center', flex: 1 }}>
                         <Typography variant="awsFieldLabel">TO</Typography>
                         <Box sx={{ mt: 0.5 }}>
-                            <Chip label={formatStatus(toStatus)} color="primary" size="small" />
+                            <Chip label={toStatusLabel || formatStatus(toStatus)} color="primary" size="small" />
                         </Box>
                     </Box>
                 </Stack>

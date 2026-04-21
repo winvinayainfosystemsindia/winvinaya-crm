@@ -123,7 +123,7 @@ const placementMappingSlice = createSlice({
                 const matchIndex = state.matches.findIndex(m => m.candidate_id === action.payload.candidate_id);
                 if (matchIndex !== -1) {
                     state.matches[matchIndex].is_already_mapped = true;
-                    state.matches[matchIndex].status = action.payload.status || 'applied';
+                    state.matches[matchIndex].status = action.payload.status || 'mapped';
                     state.matches[matchIndex].mapping_id = action.payload.id;
                 }
             })
@@ -146,7 +146,7 @@ const placementMappingSlice = createSlice({
                     const matchIndex = state.matches.findIndex(m => m.candidate_id === mapping.candidate_id);
                     if (matchIndex !== -1) {
                         state.matches[matchIndex].is_already_mapped = true;
-                        state.matches[matchIndex].status = mapping.status || 'applied';
+                        state.matches[matchIndex].status = mapping.status || 'mapped';
                         state.matches[matchIndex].mapping_id = mapping.id;
                     }
                 });

@@ -15,7 +15,7 @@ class PlacementMappingBase(BaseModel):
     job_role_id: int
     match_score: Optional[float] = 0.0
     notes: Optional[str] = None
-    status: PlacementStatus = PlacementStatus.APPLIED
+    status: PlacementStatus = PlacementStatus.MAPPED
     priority: Optional[str] = "medium"
     source: Optional[str] = "manual"
 

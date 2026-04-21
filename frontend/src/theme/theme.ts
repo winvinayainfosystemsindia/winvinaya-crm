@@ -133,7 +133,7 @@ const theme = createTheme({
 	},
 	spacing: 8,
 	shape: {
-		borderRadius: 6, // Softer, more modern corners
+		borderRadius: 2, // Shaper, more professional enterprise corners
 	},
 	components: {
 		MuiButton: {

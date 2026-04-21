@@ -44,6 +44,11 @@ export interface JobRole {
 		job_type?: string; // permanent, contract, full time, internship
 	};
 	other?: any;
+	pipeline_stages?: {
+		id: string;
+		label: string;
+		category: 'lead' | 'shortlisted' | 'interview' | 'offer' | 'hired' | 'rejected' | 'not_joined';
+	}[];
 	created_at: string;
 	updated_at: string;
 	company?: {

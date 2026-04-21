@@ -129,6 +129,12 @@ class JobRole(BaseModel):
         nullable=True,
     )
     
+    pipeline_stages: Mapped[list[dict] | None] = mapped_column(
+        JSON,
+        nullable=True,
+        comment='[{"id": "string", "label": "string", "category": "lead|shortlisted|interview|offer|hired|rejected|not_joined"}]'
+    )
+    
     # Relationships
     company: Mapped["Company"] = relationship(
         "Company",

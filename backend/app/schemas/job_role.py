@@ -25,6 +25,7 @@ class JobRoleBase(BaseModel):
     )
     job_details: Optional[Dict[str, Any]] = None
     other: Optional[Dict[str, Any]] = None
+    pipeline_stages: Optional[List[Dict[str, Any]]] = None
 
 
 class JobRoleCreate(JobRoleBase):
@@ -46,6 +47,7 @@ class JobRoleUpdate(BaseModel):
     requirements: Optional[Dict[str, Any]] = None
     job_details: Optional[Dict[str, Any]] = None
     other: Optional[Dict[str, Any]] = None
+    pipeline_stages: Optional[List[Dict[str, Any]]] = None
 
 
 class CompanyMinimal(BaseModel):

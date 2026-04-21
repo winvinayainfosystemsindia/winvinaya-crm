@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 class PlacementStatus(str, enum.Enum):
     """Pipeline stages for placement mapping"""
-    APPLIED = "applied"
+    MAPPED = "mapped"
     SHORTLISTED = "shortlisted"
     INTERVIEW_L1 = "interview_l1"
     INTERVIEW_L2 = "interview_l2"
@@ -83,7 +83,7 @@ class PlacementMapping(BaseModel):
     # Pipeline Data
     status: Mapped[PlacementStatus] = mapped_column(
         String(50),
-        default=PlacementStatus.APPLIED,
+        default=PlacementStatus.MAPPED,
         nullable=False,
         index=True
     )

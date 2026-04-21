@@ -7,15 +7,19 @@ import {
 	Avatar,
 	Chip,
 	IconButton,
+	Button,
 	Tooltip,
 	Divider,
-	CircularProgress
+	useTheme,
+	CircularProgress,
+	alpha
 } from '@mui/material';
 import {
 	MoreVert as MoreIcon,
 	History as HistoryIcon,
 	TrendingUp as TrendingUpIcon,
 	Schedule as ScheduleIcon,
+	Settings as SettingsIcon,
 	MoveToInbox as MoveToInboxIcon
 } from '@mui/icons-material';
 import {
@@ -43,15 +47,9 @@ import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { fetchMatchesForJobRole, updatePlacementStatus, type CandidateMatchResult } from '../../../../store/slices/placementMappingSlice';
 import StatusChangeDialog from '../../mapping/dialogs/StatusChangeDialog';
 import PlacementDetailDrawer from '../../mapping/details/PlacementDetailDrawer';
+import PipelineSettingsDialog from './PipelineSettingsDialog';
 
-const KANBAN_COLUMNS = [
-	{ id: 'sourced', title: 'Sourced/Applied', stages: ['applied'] },
-	{ id: 'shortlisted', title: 'Shortlisted', stages: ['shortlisted'] },
-	{ id: 'interviewing', title: 'Interviewing', stages: ['interview_l1', 'interview_l2', 'technical_round', 'hr_round'] },
-	{ id: 'offered', title: 'Offered', stages: ['offer_made', 'offer_accepted'] },
-	{ id: 'hired', title: 'Hired/Joined', stages: ['joined'] },
-	{ id: 'closed', title: 'Dropped/Declined', stages: ['rejected', 'dropped', 'not_joined', 'offer_rejected', 'on_hold'] }
-];
+// KANBAN_COLUMNS will now be generated dynamically from jobRole.pipeline_stages
 
 const getScoreColor = (score: number) => {
 	if (score >= 80) return '#1d8102';
@@ -65,6 +63,7 @@ interface SortableCardProps {
 }
 
 const SortableCard: React.FC<SortableCardProps> = ({ candidate, onViewHistory }) => {
+	const theme = useTheme();
 	const {
 		attributes,
 		listeners,
@@ -97,15 +96,15 @@ const SortableCard: React.FC<SortableCardProps> = ({ candidate, onViewHistory })
 			sx={{
 				p: 2,
 				mb: 1.5,
-				borderRadius: '4px',
-				border: '1px solid #d5dbdb',
-				bgcolor: 'white',
+				borderRadius: theme.shape.borderRadius,
+				border: `1px solid ${theme.palette.divider}`,
+				bgcolor: theme.palette.background.paper,
 				position: 'relative',
 				touchAction: 'none',
 				cursor: isDragging ? 'grabbing' : 'grab',
 				'&:hover': {
-					borderColor: '#ec7211',
-					boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+					borderColor: theme.palette.accent.main,
+					boxShadow: theme.shadows[2]
 				}
 			}}
 		>
@@ -122,7 +121,7 @@ const SortableCard: React.FC<SortableCardProps> = ({ candidate, onViewHistory })
 					{candidate.name[0]}
 				</Avatar>
 				<Box sx={{ flexGrow: 1 }}>
-					<Typography variant="body2" sx={{ fontWeight: 700, color: '#232f3e', lineHeight: 1.2 }}>
+					<Typography variant="body2" sx={{ fontWeight: 700, color: theme.palette.text.primary, lineHeight: 1.2 }}>
 						{candidate.name}
 					</Typography>
 					<Typography variant="caption" color="textSecondary">
@@ -152,7 +151,7 @@ const SortableCard: React.FC<SortableCardProps> = ({ candidate, onViewHistory })
 					<Tooltip title="View History/Lifecycle">
 						<IconButton
 							size="small"
-							sx={{ color: '#0066cc' }}
+							sx={{ color: theme.palette.primary.main }}
 							onClick={(e) => {
 								e.stopPropagation();
 								candidate.mapping_id && onViewHistory(candidate.mapping_id, candidate.name);
@@ -178,15 +177,31 @@ const SortableCard: React.FC<SortableCardProps> = ({ candidate, onViewHistory })
 	);
 };
 
+const getCategoryColor = (category: string, theme: any) => {
+	switch (category) {
+		case 'lead': return theme.palette.primary.main;
+		case 'shortlisted': return '#6b38fb'; // Unique violet for shortlisted
+		case 'interview': return theme.palette.accent.main;
+		case 'offer': return theme.palette.success.main;
+		case 'hired': return theme.palette.success.dark;
+		case 'rejected': return theme.palette.error.main;
+		case 'not_joined': return theme.palette.text.secondary;
+		default: return theme.palette.divider;
+	}
+};
+
 interface KanbanColumnProps {
 	id: string;
 	title: string;
+	category: string;
 	count: number;
 	children: React.ReactNode;
 }
 
-const KanbanColumn: React.FC<KanbanColumnProps> = ({ id, title, count, children }) => {
+const KanbanColumn: React.FC<KanbanColumnProps> = ({ id, title, category, count, children }) => {
+	const theme = useTheme();
 	const { setNodeRef, isOver } = useDroppable({ id });
+	const color = getCategoryColor(category, theme);
 
 	return (
 		<Box
@@ -195,25 +210,44 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({ id, title, count, children 
 				minWidth: 280,
 				width: 280,
 				flexShrink: 0,
-				bgcolor: isOver ? '#edf3f5' : '#f5f7f7',
-				borderRadius: '8px',
+				bgcolor: isOver ? alpha(theme.palette.primary.main, 0.05) : theme.palette.background.default,
+				borderRadius: theme.shape.borderRadius,
 				display: 'flex',
 				flexDirection: 'column',
 				maxHeight: '100%',
 				border: '1px solid',
-				borderColor: isOver ? '#0066cc' : '#eaeded',
-				transition: 'all 0.2s ease',
+				borderColor: isOver ? (getCategoryColor(category, theme)) : theme.palette.divider,
+				borderTop: `4px solid ${color}`,
+				transition: theme.transitions.create(['background-color', 'border-color']),
+				position: 'relative'
 			}}
 		>
-			<Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #eaeded' }}>
+			<Box sx={{
+				p: 2,
+				display: 'flex',
+				justifyContent: 'space-between',
+				alignItems: 'center',
+				borderBottom: `1px solid ${theme.palette.divider}`,
+				position: 'sticky',
+				top: 0,
+				bgcolor: isOver ? alpha(theme.palette.primary.main, 0.05) : theme.palette.background.default,
+				zIndex: 2,
+				borderRadius: `${theme.shape.borderRadius}px ${theme.shape.borderRadius}px 0 0`
+			}}>
 				<Stack direction="row" spacing={1.25} alignItems="center">
-					<Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#232f3e', textTransform: 'uppercase', fontSize: '0.7rem', letterSpacing: '0.5px' }}>
+					<Typography variant="awsFieldLabel" sx={{ m: 0, color: theme.palette.text.primary, fontSize: '0.75rem' }}>
 						{title}
 					</Typography>
 					<Chip
 						label={count}
 						size="small"
-						sx={{ height: 18, fontSize: '0.65rem', fontWeight: 700, bgcolor: 'white', border: '1px solid #d5dbdb' }}
+						sx={{
+							height: 18,
+							fontSize: '0.65rem',
+							fontWeight: 700,
+							bgcolor: theme.palette.background.paper,
+							border: `1px solid ${theme.palette.divider}`
+						}}
 					/>
 				</Stack>
 			</Box>
@@ -230,6 +264,7 @@ interface PipelineKanbanTabProps {
 }
 
 const PipelineKanbanTab: React.FC<PipelineKanbanTabProps> = ({ jobRolePublicId }) => {
+	const theme = useTheme();
 	const dispatch = useAppDispatch();
 	const { matches, loading } = useAppSelector((state) => state.placementMapping);
 	const mappedCandidates = useMemo(() => matches.filter(m => m.is_already_mapped), [matches]);
@@ -239,6 +274,26 @@ const PipelineKanbanTab: React.FC<PipelineKanbanTabProps> = ({ jobRolePublicId }
 	const [draggedCandidate, setDraggedCandidate] = useState<CandidateMatchResult | null>(null);
 	const [statusDialog, setStatusDialog] = useState<{ open: boolean, from: string, to: string } | null>(null);
 	const [historyDrawer, setHistoryDrawer] = useState<{ open: boolean, id: number, name: string } | null>(null);
+	const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+
+	const { currentJobRole: jobRole } = useAppSelector(state => state.jobRoles);
+
+	const dynamicColumns = useMemo(() => {
+		if (!jobRole?.pipeline_stages) return [];
+
+		const columns: { id: string, title: string, stages: string[], category: string }[] = [];
+
+		jobRole.pipeline_stages.forEach(stage => {
+			columns.push({
+				id: stage.id,
+				title: stage.label,
+				stages: [stage.id],
+				category: stage.category
+			});
+		});
+
+		return columns;
+	}, [jobRole?.pipeline_stages]);
 
 	const sensors = useSensors(
 		useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -253,8 +308,8 @@ const PipelineKanbanTab: React.FC<PipelineKanbanTabProps> = ({ jobRolePublicId }
 
 	const getColumnData = (stages: string[]) => {
 		return mappedCandidates.filter(c => {
-			const status = c.status || 'applied';
-			return stages.includes(status.toLowerCase());
+			const status = (c.status || 'mapped').toLowerCase();
+			return stages.includes(status);
 		});
 	};
 
@@ -277,13 +332,13 @@ const PipelineKanbanTab: React.FC<PipelineKanbanTabProps> = ({ jobRolePublicId }
 		if (!candidate) return;
 
 		// Find which column it was dropped into
-		const targetCol = KANBAN_COLUMNS.find(col =>
+		const targetCol = dynamicColumns.find(col =>
 			col.id === overId ||
 			getColumnData(col.stages).some(c => c.candidate_id.toString() === overId)
 		);
 
 		if (targetCol) {
-			const currentStatus = candidate.status?.toLowerCase() || 'applied';
+			const currentStatus = (candidate.status || 'mapped').toLowerCase();
 			const isTargetStatusSame = targetCol.stages.includes(currentStatus);
 
 			if (!isTargetStatusSame) {
@@ -291,7 +346,7 @@ const PipelineKanbanTab: React.FC<PipelineKanbanTabProps> = ({ jobRolePublicId }
 				setActiveCandidate(candidate);
 				setStatusDialog({
 					open: true,
-					from: candidate.status || 'applied',
+					from: candidate.status || 'Mapped',
 					to: toStatus
 				});
 			}
@@ -325,7 +380,36 @@ const PipelineKanbanTab: React.FC<PipelineKanbanTabProps> = ({ jobRolePublicId }
 	}
 
 	return (
-		<Box sx={{ height: 'calc(100vh - 250px)', mt: 2, p: 2, bgcolor: "white", overflowY: 'hidden' }}>
+		<Box sx={{
+			height: 'calc(100vh - 280px)',
+			mt: 2,
+			p: 2,
+			bgcolor: theme.palette.background.paper,
+			overflow: 'hidden',
+			display: 'flex',
+			flexDirection: 'column',
+			borderRadius: theme.shape.borderRadius,
+			border: `1px solid ${theme.palette.divider}`
+		}}>
+			<Box sx={{
+				mb: 2,
+				display: 'flex',
+				justifyContent: 'space-between',
+				alignItems: 'center',
+				borderBottom: `1px solid ${theme.palette.divider}`,
+				pb: 1
+			}}>
+				<Typography variant="awsSectionTitle">Recruitment Pipeline</Typography>
+				<Button
+					startIcon={<SettingsIcon />}
+					size="small"
+					onClick={() => setSettingsDialogOpen(true)}
+					sx={{ color: theme.palette.text.secondary, fontWeight: 600, fontSize: '0.75rem' }}
+				>
+					Configure Pipeline
+				</Button>
+			</Box>
+
 			<DndContext
 				sensors={sensors}
 				collisionDetection={closestCorners}
@@ -333,36 +417,50 @@ const PipelineKanbanTab: React.FC<PipelineKanbanTabProps> = ({ jobRolePublicId }
 				onDragEnd={handleDragEnd}
 			>
 				<Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', px: 1, py: 1, height: '100%', alignItems: 'flex-start' }}>
-					{KANBAN_COLUMNS.map((col) => {
+					{dynamicColumns.map((col) => {
 						const columnCandidates = getColumnData(col.stages);
-						return (
-							<KanbanColumn
-								key={col.id}
-								id={col.id}
-								title={col.title}
-								count={columnCandidates.length}
-							>
-								<SortableContext
-									id={col.id}
-									items={columnCandidates.map(c => c.candidate_id.toString())}
-									strategy={verticalListSortingStrategy}
-								>
-									{columnCandidates.map((candidate) => (
-										<SortableCard
-											key={candidate.public_id}
-											candidate={candidate}
-											onViewHistory={(id, name) => setHistoryDrawer({ open: true, id, name })}
-										/>
-									))}
-								</SortableContext>
 
-								{columnCandidates.length === 0 && (
-									<Box sx={{ py: 6, textAlign: 'center', opacity: 0.4 }}>
-										<MoveToInboxIcon sx={{ fontSize: 24, mb: 1, color: '#aab7bd' }} />
-										<Typography variant="caption" display="block">Drag here to update stage</Typography>
-									</Box>
-								)}
-							</KanbanColumn>
+						return (
+							<Box key={col.id} sx={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
+
+								<KanbanColumn
+									id={col.id}
+									title={col.title}
+									category={col.category}
+									count={columnCandidates.length}
+								>
+									<SortableContext
+										id={col.id}
+										items={columnCandidates.map(c => c.candidate_id.toString())}
+										strategy={verticalListSortingStrategy}
+									>
+										{columnCandidates.map((candidate) => (
+											<SortableCard
+												key={candidate.public_id}
+												candidate={candidate}
+												onViewHistory={(id, name) => setHistoryDrawer({ open: true, id, name })}
+											/>
+										))}
+									</SortableContext>
+
+									{columnCandidates.length === 0 && (
+										<Box sx={{
+											py: 8,
+											textAlign: 'center',
+											opacity: 0.5,
+											border: `1px dashed ${theme.palette.divider}`,
+											borderRadius: theme.shape.borderRadius,
+											m: 1,
+											bgcolor: alpha(theme.palette.background.default, 0.5)
+										}}>
+											<MoveToInboxIcon sx={{ fontSize: 28, mb: 1.5, color: theme.palette.text.secondary }} />
+											<Typography variant="caption" display="block" sx={{ fontWeight: 600, color: theme.palette.text.secondary }}>
+												Drop candidate here
+											</Typography>
+										</Box>
+									)}
+								</KanbanColumn>
+							</Box>
 						);
 					})}
 				</Box>
@@ -394,6 +492,8 @@ const PipelineKanbanTab: React.FC<PipelineKanbanTabProps> = ({ jobRolePublicId }
 					candidateName={activeCandidate.name}
 					fromStatus={statusDialog.from}
 					toStatus={statusDialog.to}
+					fromStatusLabel={jobRole?.pipeline_stages?.find(s => s.id === statusDialog.from)?.label}
+					toStatusLabel={jobRole?.pipeline_stages?.find(s => s.id === statusDialog.to)?.label}
 					loading={loading}
 				/>
 			)}
@@ -408,6 +508,12 @@ const PipelineKanbanTab: React.FC<PipelineKanbanTabProps> = ({ jobRolePublicId }
 					jobTitle="Candidate Lifecycle"
 				/>
 			)}
+
+			<PipelineSettingsDialog
+				open={settingsDialogOpen}
+				onClose={() => setSettingsDialogOpen(false)}
+				jobRole={jobRole!}
+			/>
 		</Box>
 	);
 };

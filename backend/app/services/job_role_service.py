@@ -18,9 +18,21 @@ class JobRoleService:
         self.repository = JobRoleRepository(db)
         
     async def create_job_role(self, job_role_in: JobRoleCreate, current_user: User) -> JobRole:
-        """Create a new job role"""
+        """Create a new job role with default pipeline stages"""
         job_role_data = job_role_in.model_dump()
         job_role_data["created_by_id"] = current_user.id
+        
+        # Initialize default pipeline if not provided
+        if not job_role_data.get("pipeline_stages"):
+            job_role_data["pipeline_stages"] = [
+                {"id": "mapped", "label": "Mapped", "category": "lead"},
+                {"id": "shortlisted", "label": "Shortlisted", "category": "shortlisted"},
+                {"id": "interview_l1", "label": "L1 Interview", "category": "interview"},
+                {"id": "offered", "label": "Offered", "category": "offer"},
+                {"id": "joined", "label": "Joined", "category": "hired"},
+                {"id": "rejected", "label": "Rejected", "category": "rejected"},
+                {"id": "not_joined", "label": "Not Joined", "category": "not_joined"}
+            ]
         
         job_role = await self.repository.create(job_role_data)
         # Fetch with relationships loaded
