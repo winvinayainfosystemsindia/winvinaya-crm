@@ -359,7 +359,7 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 							}} />
 						)}
 
-						{(activeStep === 1 || (activeStep === 0 && jobRole)) && (
+						{activeStep === 1 && (
 							<AIInputStep 
 								jdText={jdText}
 								setJdText={setJdText}
@@ -389,7 +389,7 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 							/>
 						)}
 
-						{activeStep === 2 && (
+						{(activeStep === 2 || (activeStep === 0 && jobRole)) && (
 							<ReviewPublishStep 
 								formData={formData}
 								handleChange={handleChange}
