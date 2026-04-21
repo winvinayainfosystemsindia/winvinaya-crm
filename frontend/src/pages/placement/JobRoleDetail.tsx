@@ -18,7 +18,7 @@ import JobRoleHeader from '../../components/placement/jobroles/details/JobRoleHe
 import JobRoleDetailsTab from '../../components/placement/jobroles/details/JobRoleDetailsTab';
 import CandidateMappingTab from '../../components/placement/jobroles/details/CandidateMappingTab';
 import JobRoleFormDialog from '../../components/placement/jobroles/forms/JobRoleFormDialog';
-import PipelineKanbanTab from '../../components/placement/jobroles/details/PipelineKanbanTab';
+import PipelineKanbanTab from '../../components/placement/jobroles/details/kanban/PipelineKanbanTab';
 
 const JobRoleDetail: React.FC = () => {
 	const { publicId } = useParams<{ publicId: string }>();

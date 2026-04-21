@@ -25,10 +25,10 @@ import {
     Close as CloseIcon,
     Info as InfoIcon
 } from '@mui/icons-material';
-import BaseDialog from '../../../common/dialogbox/BaseDialog';
-import { useAppDispatch } from '../../../../store/hooks';
-import { updateJobRole } from '../../../../store/slices/jobRoleSlice';
-import type { JobRole } from '../../../../models/jobRole';
+import BaseDialog from '../../../../common/dialogbox/BaseDialog';
+import { useAppDispatch } from '../../../../../store/hooks';
+import { updateJobRole } from '../../../../../store/slices/jobRoleSlice';
+import type { JobRole } from '../../../../../models/jobRole';
 
 interface PipelineSettingsDialogProps {
     open: boolean;
@@ -190,7 +190,7 @@ const PipelineSettingsDialog: React.FC<PipelineSettingsDialogProps> = ({ open, o
                                             </Stack>
                                         )}
                                     </Box>
-
+ 
                                     <ListItemSecondaryAction>
                                         <Stack direction="row" spacing={0.5}>
                                             <IconButton 
