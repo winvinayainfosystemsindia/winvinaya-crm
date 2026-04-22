@@ -1,7 +1,7 @@
 import {
 	Home as HomeIcon,
 	ManageAccounts as UserIcon,
-	Business as BusinessIcon,
+	// Business as BusinessIcon,
 	Group as CandidatesIcon,
 	School as SchoolIcon,
 	Assessment as AssessmentIcon,
@@ -60,19 +60,19 @@ export const topNavigation: NavigationItem[] = [
 			},
 		],
 	},
-	{
-		label: 'CRM Management',
-		icon: BusinessIcon,
-		roles: ['admin', 'manager', 'marketing', 'placement'],
-		children: [
-			// { label: 'CRM Dashboard', path: '/crm/dashboard', roles: ['admin', 'manager', 'marketing', 'placement'] },
-			{ label: 'Companies', path: '/crm/companies', roles: ['admin', 'manager', 'marketing', 'placement'] },
-			{ label: 'Contacts', path: '/crm/contacts', roles: ['admin', 'manager', 'marketing', 'placement'] },
-			// { label: 'Leads', path: '/crm/leads', roles: ['admin', 'manager', 'marketing', 'placement'] },
-			// { label: 'Deals', path: '/crm/deals', roles: ['admin', 'manager', 'marketing', 'placement'] },
-			// { label: 'Tasks', path: '/crm/tasks', roles: ['admin', 'manager', 'marketing', 'placement'] },
-		],
-	},
+	// {
+	// 	label: 'CRM Management',
+	// 	icon: BusinessIcon,
+	// 	roles: ['admin', 'manager', 'marketing', 'placement'],
+	// 	children: [
+	// 		// { label: 'CRM Dashboard', path: '/crm/dashboard', roles: ['admin', 'manager', 'marketing', 'placement'] },
+	// 		{ label: 'Companies', path: '/crm/companies', roles: ['admin', 'manager', 'marketing', 'placement'] },
+	// 		{ label: 'Contacts', path: '/crm/contacts', roles: ['admin', 'manager', 'marketing', 'placement'] },
+	// 		// { label: 'Leads', path: '/crm/leads', roles: ['admin', 'manager', 'marketing', 'placement'] },
+	// 		// { label: 'Deals', path: '/crm/deals', roles: ['admin', 'manager', 'marketing', 'placement'] },
+	// 		// { label: 'Tasks', path: '/crm/tasks', roles: ['admin', 'manager', 'marketing', 'placement'] },
+	// 	],
+	// },
 	{
 		label: 'Candidate Management',
 		icon: CandidatesIcon,
