@@ -125,6 +125,20 @@ const placementMappingService = {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
         return response.data;
+    },
+    
+    recordOfferResponse: async (offerId: number, response: 'accepted' | 'rejected' | 'pending', remarks?: string): Promise<any> => {
+        const res = await api.post(`/placement/offers/${offerId}/response`, null, {
+            params: { response, remarks }
+        });
+        return res.data;
+    },
+
+    recordJoiningStatus: async (offerId: number, status: 'joined' | 'not_joined' | 'pending', joiningDate?: string): Promise<any> => {
+        const res = await api.post(`/placement/offers/${offerId}/joining`, null, {
+            params: { status_val: status, joining_date: joiningDate }
+        });
+        return res.data;
     }
 };
 

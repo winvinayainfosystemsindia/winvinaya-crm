@@ -123,3 +123,61 @@ async def upload_offer_letter(
     )
 
     return offer
+@router.post("/{id}/response", response_model=PlacementOfferResponse)
+async def record_offer_response(
+    id: int,
+    response: str,
+    remarks: Optional[str] = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Record a candidate's response to an offer (Accepted/Rejected).
+    """
+    service = PlacementOfferService(db)
+    from app.models.placement_offer import OfferResponse
+    try:
+        resp_enum = OfferResponse(response.lower())
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid response. Must be one of: {[r.value for r in OfferResponse]}"
+        )
+    
+    updated_offer = await service.record_response(id, resp_enum, remarks)
+    if not updated_offer:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Offer not found"
+        )
+    return updated_offer
+
+
+@router.post("/{id}/joining", response_model=PlacementOfferResponse)
+async def record_joining_status(
+    id: int,
+    status_val: str,
+    joining_date: Optional[date] = None,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Record a candidate's joining status (Joined/Not Joined).
+    """
+    service = PlacementOfferService(db)
+    from app.models.placement_offer import JoiningStatus
+    try:
+        status_enum = JoiningStatus(status_val.lower())
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid joining status. Must be one of: {[s.value for s in JoiningStatus]}"
+        )
+    
+    updated_offer = await service.record_joining(id, status_enum, joining_date)
+    if not updated_offer:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Offer not found"
+        )
+    return updated_offer

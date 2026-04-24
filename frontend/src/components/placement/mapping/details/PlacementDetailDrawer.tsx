@@ -46,6 +46,7 @@ import {
 import placementMappingService from '../../../../services/placementMappingService';
 import authService from '../../../../services/authService';
 import { documentService } from '../../../../services/candidateService';
+import type { CandidateDocument } from '../../../../models/candidate';
 import useToast from '../../../../hooks/useToast';
 
 interface Props {
@@ -67,7 +68,7 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidatePublicId, ca
 	const [offer, setOffer] = useState<any>(null);
 	const [notes, setNotes] = useState<any[]>([]);
 	const [newNote, setNewNote] = useState('');
-	const [documents, setDocuments] = useState<any[]>([]);
+	const [documents, setDocuments] = useState<CandidateDocument[]>([]);
 
 	const fetchData = useCallback(async () => {
 		setLoading(true);
@@ -197,6 +198,45 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidatePublicId, ca
 		}
 	};
 
+	const handleRecordOfferResponse = async (response: 'accepted' | 'rejected') => {
+		if (!offer?.id) return;
+		try {
+			let remarks = undefined;
+			if (response === 'rejected') {
+				remarks = window.prompt('Please enter the reason for rejection:');
+				if (remarks === null) return; // Cancelled
+			}
+			await placementMappingService.recordOfferResponse(offer.id, response, remarks || undefined);
+			toast.success(`Offer ${response} successfully`);
+			fetchData();
+		} catch (error: any) {
+			toast.error(error.message || 'Failed to record response');
+		}
+	};
+
+	const handleRecordJoining = async (status: 'joined' | 'not_joined') => {
+		if (!offer?.id) return;
+		try {
+			let joiningDate = undefined;
+			if (status === 'joined') {
+				joiningDate = offer.joining_date; // Use expected as default or ask?
+			}
+			await placementMappingService.recordJoiningStatus(offer.id, status, joiningDate);
+			toast.success(`Candidate marked as ${status.replace('_', ' ')}`);
+			
+			// If joined, move pipeline to 'joined'
+			if (status === 'joined') {
+				await placementMappingService.updateStatus(mappingId, 'joined', 'Candidate joined as per offer.');
+			} else {
+				await placementMappingService.updateStatus(mappingId, 'not_joined', 'Candidate did not join.');
+			}
+			
+			fetchData();
+		} catch (error: any) {
+			toast.error(error.message || 'Failed to record joining status');
+		}
+	};
+
 	const formatTimeIST = (dateStr: string) => {
 		const date = new Date(dateStr);
 		return new Intl.DateTimeFormat('en-IN', {
@@ -245,20 +285,22 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidatePublicId, ca
 					</Box>
 				</Box>
 				<Stack direction="row" spacing={1} alignItems="center">
-					{documents.some(d => d.document_type === 'resume' || d.document_type === 'trainer_resume') && (
+					{documents && documents.length > 0 && (
 						<Button
 							size="small"
 							startIcon={<DescriptionIcon sx={{ fontSize: 16 }} />}
 							onClick={() => {
 								// Prioritize active trainer resume, then any active resume, then first available resume
-								const activeTrainerResume = documents.find(d => d.document_type === 'trainer_resume' && d.is_active);
-								const activeResume = documents.find(d => d.document_type === 'resume' && d.is_active);
-								const fallbackResume = documents.find(d => d.document_type === 'resume' || d.document_type === 'trainer_resume');
+								const activeTrainerResume = documents.find((d: CandidateDocument) => d.document_type?.toLowerCase().includes('trainer_resume') && d.is_active);
+								const activeResume = documents.find((d: CandidateDocument) => d.document_type?.toLowerCase().includes('resume') && d.is_active);
+								const fallbackResume = documents.find((d: CandidateDocument) => d.document_type?.toLowerCase().includes('resume'));
 								
 								const targetDoc = activeTrainerResume || activeResume || fallbackResume;
 								
 								if (targetDoc) {
 									handleViewDocument(targetDoc.id);
+								} else {
+									toast.info('No resume document found for this candidate.');
 								}
 							}}
 							sx={{
@@ -403,7 +445,10 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidatePublicId, ca
 																	whiteSpace: 'pre-wrap'
 																}}
 															>
-																{item.remarks}
+																{item.remarks
+																	?.replace(/\(CTC:.*Joining:.*\)/, '')
+																	?.replace(/DocumentID: \d+ \| Document: .*/, '')
+																	?.trim()}
 															</Typography>
 														</Box>
 													)}
@@ -633,7 +678,7 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidatePublicId, ca
 															startIcon={<DescriptionIcon />}
 															onClick={() => handleViewDocument(offer?.offer_letter_id, offer?.offer_letter_url)}
 															sx={{
-																mt: 2,
+																mt: 1,
 																textTransform: 'none',
 																fontWeight: 700,
 																borderColor: theme.palette.primary.main,
@@ -650,6 +695,58 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidatePublicId, ca
 													</Grid>
 												)}
 											</Grid>
+
+											<Box sx={{ mt: 4, pt: 3, borderTop: `1px dashed ${theme.palette.divider}` }}>
+												{(!offer.candidate_response || offer.candidate_response === 'pending') ? (
+													<Stack direction="row" spacing={2}>
+														<Button
+															fullWidth
+															variant="contained"
+															color="success"
+															onClick={() => handleRecordOfferResponse('accepted')}
+															sx={{ textTransform: 'none', fontWeight: 700, borderRadius: '4px' }}
+														>
+															Accept Offer
+														</Button>
+														<Button
+															fullWidth
+															variant="outlined"
+															color="error"
+															onClick={() => handleRecordOfferResponse('rejected')}
+															sx={{ textTransform: 'none', fontWeight: 700, borderRadius: '4px' }}
+														>
+															Reject Offer
+														</Button>
+													</Stack>
+												) : offer.candidate_response === 'accepted' && (!offer.joining_status || offer.joining_status === 'pending') ? (
+													<Stack direction="row" spacing={2}>
+														<Button
+															fullWidth
+															variant="contained"
+															color="primary"
+															onClick={() => handleRecordJoining('joined')}
+															sx={{ textTransform: 'none', fontWeight: 700, borderRadius: '4px' }}
+														>
+															Mark as Joined
+														</Button>
+														<Button
+															fullWidth
+															variant="outlined"
+															color="warning"
+															onClick={() => handleRecordJoining('not_joined')}
+															sx={{ textTransform: 'none', fontWeight: 700, borderRadius: '4px' }}
+														>
+															Did Not Join
+														</Button>
+													</Stack>
+												) : (
+													<Box sx={{ bgcolor: alpha(theme.palette.accent.main, 0.05), p: 2, borderRadius: '4px', textAlign: 'center' }}>
+														<Typography variant="body2" sx={{ fontWeight: 700, color: theme.palette.accent.main }}>
+															Lifecycle completed: {offer.joining_status?.toUpperCase() || offer.candidate_response?.toUpperCase()}
+														</Typography>
+													</Box>
+												)}
+											</Box>
 										</Box>
 									</Paper>
 								) : (
