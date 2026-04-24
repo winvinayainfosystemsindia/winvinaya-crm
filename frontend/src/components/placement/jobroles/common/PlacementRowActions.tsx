@@ -4,14 +4,17 @@ import {
 	MoreVert as MoreIcon,
 	Edit as EditIcon,
 	Delete as DeleteIcon,
+	Block as CloseIcon,
 } from '@mui/icons-material';
 
 interface PlacementRowActionsProps {
 	onEdit: () => void;
+	onClose?: () => void;
 	onDelete?: () => void;
+	isClosed?: boolean;
 }
 
-const PlacementRowActions: React.FC<PlacementRowActionsProps> = ({ onEdit, onDelete }) => {
+const PlacementRowActions: React.FC<PlacementRowActionsProps> = ({ onEdit, onClose, onDelete, isClosed }) => {
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const open = Boolean(anchorEl);
 
@@ -46,6 +49,12 @@ const PlacementRowActions: React.FC<PlacementRowActionsProps> = ({ onEdit, onDel
 					<ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
 					<ListItemText primary="Edit" primaryTypographyProps={{ fontSize: '0.875rem' }} />
 				</MenuItem>
+				{onClose && !isClosed && (
+					<MenuItem onClick={(e) => { e.stopPropagation(); handleClose(); onClose(); }}>
+						<ListItemIcon><CloseIcon fontSize="small" /></ListItemIcon>
+						<ListItemText primary="Mark as Closed" primaryTypographyProps={{ fontSize: '0.875rem' }} />
+					</MenuItem>
+				)}
 				{onDelete && (
 					<MenuItem onClick={(e) => { e.stopPropagation(); handleClose(); onDelete(); }} sx={{ color: '#d13212' }}>
 						<ListItemIcon><DeleteIcon fontSize="small" sx={{ color: '#d13212' }} /></ListItemIcon>

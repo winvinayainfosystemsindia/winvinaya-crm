@@ -13,11 +13,12 @@ import PlacementAvatar from '../common/PlacementAvatar';
 interface JobRoleTableRowProps {
 	jobRole: JobRole;
 	onEdit: (jobRole: JobRole) => void;
+	onClose: (jobRole: JobRole) => void;
 	onDelete: (jobRole: JobRole) => void;
 	isAdmin: boolean;
 }
 
-const JobRoleTableRow: React.FC<JobRoleTableRowProps> = ({ jobRole, onEdit, onDelete, isAdmin }) => {
+const JobRoleTableRow: React.FC<JobRoleTableRowProps> = ({ jobRole, onEdit, onClose, onDelete, isAdmin }) => {
 	const theme = useTheme();
 	const navigate = useNavigate();
 
@@ -136,7 +137,9 @@ const JobRoleTableRow: React.FC<JobRoleTableRowProps> = ({ jobRole, onEdit, onDe
 			<TableCell align="right">
 				<PlacementRowActions
 					onEdit={() => onEdit(jobRole)}
+					onClose={() => onClose(jobRole)}
 					onDelete={isAdmin && (jobRole.mappings_count || 0) === 0 ? () => onDelete(jobRole) : undefined}
+					isClosed={jobRole.status === 'closed'}
 				/>
 			</TableCell>
 		</TableRow>

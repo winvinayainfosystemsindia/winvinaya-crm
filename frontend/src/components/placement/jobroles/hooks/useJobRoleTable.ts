@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { SelectChangeEvent } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
-import { fetchJobRoles, deleteJobRole } from '../../../../store/slices/jobRoleSlice';
+import { fetchJobRoles, deleteJobRole, updateJobRoleStatus } from '../../../../store/slices/jobRoleSlice';
 import useToast from '../../../../hooks/useToast';
 import type { JobRole } from '../../../../models/jobRole';
 
@@ -21,14 +21,14 @@ export const useJobRoleTable = () => {
 
 	// Committed filters (used for API calls)
 	const [filters, setFilters] = useState({
-		status: '' as string,
+		status: 'active' as string,
 		workplace_type: [] as string[],
 		job_type: [] as string[]
 	});
 
 	// Local filters (pending selection in the drawer)
 	const [localFilters, setLocalFilters] = useState({
-		status: '' as string,
+		status: 'active' as string,
 		workplace_type: [] as string[],
 		job_type: [] as string[]
 	});
@@ -138,6 +138,16 @@ export const useJobRoleTable = () => {
 		}
 	};
 
+	const handleCloseJobRole = async (jobRole: JobRole) => {
+		try {
+			await dispatch(updateJobRoleStatus({ publicId: jobRole.public_id, status: 'closed' as any })).unwrap();
+			toast.success(`Job Role "${jobRole.title}" marked as closed`);
+			fetchJobRolesData();
+		} catch (error: any) {
+			toast.error(error || 'Failed to close job role');
+		}
+	};
+
 	const handleDeleteCancel = () => {
 		setDeleteDialogOpen(false);
 		setJobRoleToDelete(null);
@@ -168,6 +178,7 @@ export const useJobRoleTable = () => {
 		handleFilterChange,
 		applyFilters,
 		clearFilters,
+		handleCloseJobRole,
 		handleDeleteClick,
 		handleDeleteConfirm,
 		handleDeleteCancel,
