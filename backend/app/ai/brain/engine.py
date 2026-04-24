@@ -37,7 +37,7 @@ from app.ai.exceptions import (
     LLMRateLimitError,
     TaskTimeoutError,
 )
-from app.ai.planner import Planner
+from app.ai.brain.planner import Planner
 from app.ai.providers import get_llm_provider
 from app.ai.schemas import AITaskRunRequest, AITaskRunResponse, ToolCallPlan, ToolCallRequest, ToolResult
 from app.ai.task_journal import TaskJournal

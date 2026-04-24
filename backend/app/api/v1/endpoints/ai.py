@@ -24,7 +24,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status, File, Uplo
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
-from app.ai.engine import AIEngine
+from app.ai.brain.engine import AIEngine
 from app.ai.task_journal import TaskJournal, get_task_log_by_public_id, list_task_logs
 from app.ai.tool_registry import registry
 from app.schemas.ai import (

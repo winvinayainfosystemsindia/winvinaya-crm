@@ -25,6 +25,7 @@ from app.ai.exceptions import (
     NoPlanGeneratedError,
     PlanningError,
 )
+from app.ai.brain.utils import load_prompt, load_skills_reference
 from app.ai.providers import LLMProvider
 from app.ai.schemas import ToolCallPlan, ToolCallRequest, ToolResult
 from app.ai.tool_registry import ToolRegistry
@@ -34,75 +35,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# ─────────────────────────────────────────────────────────────────────────────
-# System Prompt Template
-# ─────────────────────────────────────────────────────────────────────────────
-
-SYSTEM_PROMPT_TEMPLATE = """\
-You are ARIA — the Agentic Reasoning and Intelligence Assistant for WinVinaya CRM.
-You are an expert at analyzing business tasks and orchestrating CRM operations.
-You work as a helpful CO-WORKER to the user.
-
-Your role is to:
-1. UNDERSTAND the user's task and business context carefully
-2. PLAN a precise, minimal sequence of tool calls to accomplish the goal
-3. AVOID creating duplicates — always search/check before creating
-4. CONTEXTUALIZE your plan based on the conversation history provided
-5. RETURN a valid JSON response matching the required schema exactly
-
-## Available Tools
-{tool_block}
-
-## Response Schema (MUST follow exactly):
-You MUST return only valid JSON. No explanation text outside the JSON.
-```json
-{{
-  "task_name": "<short descriptive name for this task>",
-  "reasoning": "<your step-by-step thinking about what needs to happen and why>",
-  "estimated_record_impact": <integer: estimated number of DB records that will be created/updated>,
-  "response_to_user": "<human-readable reply to show the user (e.g. 'I've created that lead for you.')>",
-  "steps": [
-    {{
-      "tool_name": "<exact tool name>",
-      "parameters": {{<key-value params matching the tool schema>}},
-      "reasoning": "<why this step is needed>"
-    }}
-  ]
-}}
-```
-
-## Critical Rules:
-- ALWAYS check if a record exists before creating it (use search/find tools first)
-- FETCH & ANALYZE: If the user asks for data or analysis, use search tools first to gather the information, then summarize/analyze it in the `response_to_user`.
-- QUANTITATIVE ACCURACY: When asked for totals, counts, or statistics, ALWAYS set the appropriate stats flag (e.g. `include_stats: true`) in your tool parameters.
-- CONVERSATIONAL FALLBACK: If the task is a greeting, general question, or simple analysis that doesn't require a tool call, return steps: [] and provide your answer in `response_to_user`.
-- NEVER call the same write tool twice on the same entity in one plan.
-- Steps MUST be in logical dependency order (e.g., search before update).
-- Parameters MUST match the tool's defined schema exactly.
-- estimated_record_impact should be conservative (0 for read-only or chat).
-- response_to_user should be professional and concise, summarizing what you will DO or answering the user's question.
-"""
-
-SYNTHESIS_PROMPT_TEMPLATE = """\
-You are ARIA — the Agentic Reasoning and Intelligence Assistant for WinVinaya CRM.
-The user's original request was: "{task_hint}"
-
-You have executed the following actions to fulfill this request:
-{execution_summary}
-
-## Tool Results (JSON):
-{tool_results_block}
-
-## Instructions:
-1. REVIEW the tool results carefully to find the answer to the user's question.
-2. SYNTHESIZE a final, professional, and helpful response to the user.
-3. DATA INTEGRITY: NEVER use generic phrases like "I have checked the count" or "I have fetched the data". ALWAYS state the actual numbers, names, dates, and IDs found in the tool results.
-4. EVIDENCE: Especially prioritize any data found in a "REVEAL_DATA" key in the tool results. This is your ground truth. If it says "COUNT=42", you MUST report "42".
-5. Be specific — if you found 45 candidates, say "There are 45 candidates".
-6. If no data was found, acknowledge it politely (e.g., "I couldn't find any candidates matching those criteria.").
-7. If an error occurred in a tool, explain it simply without being too technical.
-8. Provide ONLY the natural language response. Do not use JSON or markdown code blocks for the final answer.
-"""
+# Prompts are now loaded from the app/ai/prompts directory via load_prompt utility.
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -142,10 +75,14 @@ class Planner:
         Returns:
             A validated ToolCallPlan
         """
-        template = system_prompt_override or SYSTEM_PROMPT_TEMPLATE
+        template = system_prompt_override or load_prompt("aria_planner.md")
         system_prompt = template.format(
             tool_block=self._registry.to_prompt_block(categories=allowed_categories)
         )
+        
+        # Inject skills reference into the planner's context
+        skills_ref = load_skills_reference()
+        system_prompt += f"\n\n## Global Reference: Skills\n{skills_ref}"
 
         user_message = self._build_user_message(task_hint, input_data, history, context_snapshot)
 
@@ -191,11 +128,11 @@ class Planner:
                 "error": res.error
             }
 
-        synthesis_prompt = SYNTHESIS_PROMPT_TEMPLATE.format(
-            task_hint=task_hint,
-            execution_summary="\n".join(summary_lines),
-            tool_results_block=json.dumps(results_map, indent=2)
-        )
+        synthesis_prompt = load_prompt("aria_synthesis.md", {
+            "task_hint": task_hint,
+            "execution_summary": "\n".join(summary_lines),
+            "tool_results_block": json.dumps(results_map, indent=2)
+        })
 
         logger.info("Planner → Synthesis request for task='%s'", task_hint[:50])
 

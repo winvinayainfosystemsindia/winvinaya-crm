@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from app.ai.engine import AIEngine
+from app.ai.brain.engine import AIEngine
 from app.ai.schemas import AITaskRunRequest
 from app.models.ai_chat import AIChatSession, AIChatMessage
 from app.models.ai_task_log import AITaskTrigger
