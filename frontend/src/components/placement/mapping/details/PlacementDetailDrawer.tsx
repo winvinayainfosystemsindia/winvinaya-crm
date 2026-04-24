@@ -32,7 +32,6 @@ import {
 	Notes as NotesIcon,
 	Event as EventIcon,
 	LocationOn as LocationIcon,
-	Link as LinkIcon,
 	Work as WorkIcon,
 	Send as SendIcon,
 	TaskAlt as SuccessIcon,
@@ -56,15 +55,15 @@ interface Props {
 	candidatePublicId?: string; // New Optional prop
 	candidateName: string;
 	jobTitle: string;
+	onStatusChange?: () => void;
 }
 
-const PlacementDetailDrawer = ({ open, onClose, mappingId, candidatePublicId, candidateName, jobTitle }: Props) => {
+const PlacementDetailDrawer = ({ open, onClose, mappingId, candidatePublicId, candidateName, jobTitle, onStatusChange }: Props) => {
 	const toast = useToast();
 	const theme = useTheme();
 	const [tabValue, setTabValue] = useState(0);
 	const [loading, setLoading] = useState(false);
 	const [history, setHistory] = useState<any[]>([]);
-	const [interviews, setInterviews] = useState<any[]>([]);
 	const [offer, setOffer] = useState<any>(null);
 	const [notes, setNotes] = useState<any[]>([]);
 	const [newNote, setNewNote] = useState('');
@@ -89,12 +88,9 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidatePublicId, ca
 					console.error("Failed to fetch offer for timeline", e);
 				}
 			} else if (tabValue === 1) {
-				const data = await placementMappingService.getInterviews(mappingId);
-				setInterviews(data);
-			} else if (tabValue === 2) {
 				const data = await placementMappingService.getOffer(mappingId);
 				setOffer(data);
-			} else if (tabValue === 3) {
+			} else if (tabValue === 2) {
 				const data = await placementMappingService.getNotes(mappingId);
 				setNotes(data);
 			}
@@ -209,6 +205,7 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidatePublicId, ca
 			await placementMappingService.recordOfferResponse(offer.id, response, remarks || undefined);
 			toast.success(`Offer ${response} successfully`);
 			fetchData();
+			if (onStatusChange) onStatusChange();
 		} catch (error: any) {
 			toast.error(error.message || 'Failed to record response');
 		}
@@ -232,6 +229,7 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidatePublicId, ca
 			}
 			
 			fetchData();
+			if (onStatusChange) onStatusChange();
 		} catch (error: any) {
 			toast.error(error.message || 'Failed to record joining status');
 		}
@@ -345,7 +343,6 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidatePublicId, ca
 					}}
 				>
 					<Tab icon={<HistoryIcon sx={{ fontSize: 18 }} />} label="Timeline" iconPosition="start" />
-					<Tab icon={<ScheduleIcon sx={{ fontSize: 18 }} />} label="Interviews" iconPosition="start" />
 					<Tab icon={<OfferIcon sx={{ fontSize: 18 }} />} label="Offer" iconPosition="start" />
 					<Tab icon={<NotesIcon sx={{ fontSize: 18 }} />} label="Notes" iconPosition="start" />
 				</Tabs>
@@ -497,128 +494,6 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidatePublicId, ca
 						)}
 
 						{tabValue === 1 && (
-							<Box>
-								<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-									<Typography variant="awsSectionTitle">Interview Rounds</Typography>
-									<Button
-										variant="contained"
-										size="small"
-										startIcon={<ScheduleIcon sx={{ fontSize: 16 }} />}
-										sx={{
-											textTransform: 'none',
-											bgcolor: theme.palette.accent.main,
-											fontWeight: 700,
-											fontSize: '0.75rem',
-											borderRadius: '4px',
-											'&:hover': { bgcolor: theme.palette.accent.dark }
-										}}
-									>
-										Schedule Round
-									</Button>
-								</Stack>
-								<Stack spacing={2}>
-									{interviews.map((iv, index) => (
-										<Paper
-											key={index}
-											elevation={0}
-											sx={{
-												border: `1px solid ${theme.palette.divider}`,
-												borderRadius: '8px',
-												overflow: 'hidden',
-												bgcolor: theme.palette.background.paper
-											}}
-										>
-											<Box sx={{ display: 'flex' }}>
-												<Box sx={{
-													width: 80,
-													bgcolor: alpha(theme.palette.primary.main, 0.04),
-													display: 'flex',
-													flexDirection: 'column',
-													alignItems: 'center',
-													justifyContent: 'center',
-													p: 2,
-													borderRight: `1px solid ${theme.palette.divider}`
-												}}>
-													<Typography variant="h4" sx={{ fontWeight: 800, color: theme.palette.primary.main }}>{iv.round_number}</Typography>
-													<Typography variant="caption" sx={{ fontWeight: 800, color: theme.palette.primary.main, fontSize: '0.6rem', letterSpacing: '1px' }}>ROUND</Typography>
-												</Box>
-												<Box sx={{ p: 2.5, flexGrow: 1 }}>
-													<Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
-														<Box>
-															<Typography variant="awsFieldLabel" sx={{ mb: 0.25 }}>Round Type</Typography>
-															<Typography variant="body2" sx={{ fontWeight: 800, color: theme.palette.text.primary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-																{iv.round_type?.replace(/_/g, ' ')}
-															</Typography>
-														</Box>
-														<Chip
-															label={iv.result?.toUpperCase() || 'PENDING'}
-															size="small"
-															sx={{
-																height: 22,
-																fontSize: '0.65rem',
-																fontWeight: 800,
-																borderRadius: '4px',
-																bgcolor: iv.result === 'passed' ? alpha(theme.palette.success.main, 0.1) : iv.result === 'failed' ? alpha(theme.palette.error.main, 0.1) : alpha(theme.palette.warning.main, 0.1),
-																color: iv.result === 'passed' ? theme.palette.success.main : iv.result === 'failed' ? theme.palette.error.main : theme.palette.warning.main,
-																border: `1px solid ${alpha(iv.result === 'passed' ? theme.palette.success.main : iv.result === 'failed' ? theme.palette.error.main : theme.palette.warning.main, 0.2)}`,
-																'& .MuiChip-label': { px: 1.5 }
-															}}
-														/>
-													</Box>
-													<Grid container spacing={2}>
-														<Grid size={{ xs: 12, sm: 6 }}>
-															<Stack direction="row" spacing={1} alignItems="center">
-																<WorkIcon sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
-																<Typography variant="caption" sx={{ color: theme.palette.text.primary, fontWeight: 600 }}>
-																	{iv.interviewer_name || 'TBD'}
-																</Typography>
-															</Stack>
-														</Grid>
-														<Grid size={{ xs: 12, sm: 6 }}>
-															<Stack direction="row" spacing={1} alignItems="center">
-																<EventIcon sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
-																<Typography variant="caption" sx={{ color: theme.palette.text.primary, fontWeight: 600 }}>
-																	{iv.scheduled_at ? `${formatDateIST(iv.scheduled_at)} • ${formatTimeIST(iv.scheduled_at)}` : 'Date TBD'}
-																</Typography>
-															</Stack>
-														</Grid>
-													</Grid>
-													{iv.interview_link && (
-														<Button
-															size="small"
-															startIcon={<LinkIcon fontSize="small" />}
-															href={iv.interview_link}
-															target="_blank"
-															sx={{
-																mt: 2,
-																textTransform: 'none',
-																fontSize: '0.75rem',
-																color: theme.palette.primary.main,
-																fontWeight: 700,
-																bgcolor: alpha(theme.palette.primary.main, 0.05),
-																'&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.1) }
-															}}
-														>
-															Launch Interview
-														</Button>
-													)}
-												</Box>
-											</Box>
-										</Paper>
-									))}
-								</Stack>
-								{interviews.length === 0 && (
-									<Box sx={{ textAlign: 'center', py: 10, bgcolor: theme.palette.background.paper, borderRadius: '8px', border: `1px dashed ${theme.palette.divider}` }}>
-										<ScheduleIcon sx={{ fontSize: 40, color: theme.palette.divider, mb: 2 }} />
-										<Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontWeight: 500 }}>
-											No scheduled interviews found.
-										</Typography>
-									</Box>
-								)}
-							</Box>
-						)}
-
-						{tabValue === 2 && (
 							<Box>
 								{offer ? (
 									<Paper
@@ -773,7 +648,7 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidatePublicId, ca
 							</Box>
 						)}
 
-						{tabValue === 3 && (
+						{tabValue === 2 && (
 							<Box>
 								<Box sx={{ mb: 4 }}>
 									<Typography variant="awsFieldLabel" sx={{ mb: 1.5 }}>Add Private Observation</Typography>

@@ -5,6 +5,7 @@ from app.models.placement_mapping import PlacementMapping, PlacementStatus
 from app.models.placement_pipeline_history import PlacementPipelineHistory
 from app.repositories.placement_pipeline_history_repository import PlacementPipelineHistoryRepository
 from app.repositories.placement_mapping_repository import PlacementMappingRepository
+from app.models.placement_offer import PlacementOffer, JoiningStatus, OfferResponse
 
 
 class PlacementPipelineService:
@@ -58,6 +59,31 @@ class PlacementPipelineService:
         )
         
         self.db.add(history)
+        
+        # Synchronize with PlacementOffer if it exists
+        offer_stmt = select(PlacementOffer).where(PlacementOffer.mapping_id == mapping_id)
+        offer_result = await self.db.execute(offer_stmt)
+        offer = offer_result.scalars().first()
+        
+        if offer:
+            if to_status == 'joined':
+                offer.joining_status = JoiningStatus.JOINED
+                offer.candidate_response = OfferResponse.ACCEPTED
+                if not offer.actual_joining_date:
+                    offer.actual_joining_date = datetime.utcnow().date()
+            elif to_status == 'rejected' or to_status == 'not_joined':
+                offer.joining_status = JoiningStatus.NOT_JOINED
+                # If moving to rejected, also update response if it was pending
+                if to_status == 'rejected' and offer.candidate_response == OfferResponse.PENDING:
+                    offer.candidate_response = OfferResponse.REJECTED
+            elif to_status == 'offer_accepted':
+                offer.candidate_response = OfferResponse.ACCEPTED
+            elif to_status == 'offer_rejected':
+                offer.candidate_response = OfferResponse.REJECTED
+                offer.joining_status = JoiningStatus.NOT_JOINED
+            
+            offer.updated_at = datetime.utcnow()
+
         await self.db.commit()
         await self.db.refresh(mapping)
         return mapping

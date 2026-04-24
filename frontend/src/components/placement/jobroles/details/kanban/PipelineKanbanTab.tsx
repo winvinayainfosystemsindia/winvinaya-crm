@@ -321,6 +321,7 @@ const PipelineKanbanTab: React.FC<PipelineKanbanTabProps> = ({ jobRolePublicId }
 					candidatePublicId={historyDrawer.candidatePublicId}
 					candidateName={historyDrawer.name}
 					jobTitle="Candidate Lifecycle"
+					onStatusChange={() => dispatch(fetchMatchesForJobRole(jobRolePublicId))}
 				/>
 			)}
 
