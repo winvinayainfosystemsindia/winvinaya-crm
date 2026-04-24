@@ -6,8 +6,8 @@ from app.models.placement_note import NoteType
 
 class PlacementNoteBase(BaseModel):
     mapping_id: int
-    candidate_id: int
-    job_role_id: int
+    candidate_id: Optional[int] = None
+    job_role_id: Optional[int] = None
     note_type: NoteType = NoteType.GENERAL
     content: str
     is_pinned: bool = False

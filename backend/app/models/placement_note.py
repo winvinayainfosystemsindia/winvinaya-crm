@@ -77,5 +77,11 @@ class PlacementNote(BaseModel):
     job_role: Mapped["JobRole"] = relationship("JobRole")
     created_by: Mapped["User"] = relationship("User")
 
+    @property
+    def created_by_name(self) -> str | None:
+        if self.created_by:
+            return self.created_by.full_name or self.created_by.username
+        return None
+
     def __repr__(self) -> str:
         return f"<PlacementNote(id={self.id}, mapping_id={self.mapping_id}, type={self.note_type})>"
