@@ -3,7 +3,7 @@ import { Box, Button, useTheme } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import { useSnackbar } from 'notistack';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
-import { createJobRole, updateJobRole, fetchJobRoles } from '../../../store/slices/jobRoleSlice';
+import { createJobRole, updateJobRole } from '../../../store/slices/jobRoleSlice';
 import CRMPageHeader from '../../crm/common/CRMPageHeader';
 import type { JobRole, JobRoleCreate, JobRoleUpdate } from '../../../models/jobRole';
 
@@ -36,8 +36,8 @@ const JobRoleList: React.FC<JobRoleListProps> = ({ title = "Job Role Management"
 				enqueueSnackbar('Job Role created successfully', { variant: 'success' });
 			}
 			setDialogOpen(false);
-			// Trigger a refresh of the table data
-			dispatch(fetchJobRoles({ skip: 0, limit: 10 }));
+			// The list is already updated in the Redux store via the fulfilled actions.
+			// No need to fetch again with default params which would reset filters.
 		} catch (error: any) {
 			enqueueSnackbar(error || 'Failed to save job role', { variant: 'error' });
 		}

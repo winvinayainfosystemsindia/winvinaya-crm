@@ -21,14 +21,14 @@ export const useJobRoleTable = () => {
 
 	// Committed filters (used for API calls)
 	const [filters, setFilters] = useState({
-		status: 'active' as string,
+		status: '' as string,
 		workplace_type: [] as string[],
 		job_type: [] as string[]
 	});
 
 	// Local filters (pending selection in the drawer)
 	const [localFilters, setLocalFilters] = useState({
-		status: 'active' as string,
+		status: '' as string,
 		workplace_type: [] as string[],
 		job_type: [] as string[]
 	});
