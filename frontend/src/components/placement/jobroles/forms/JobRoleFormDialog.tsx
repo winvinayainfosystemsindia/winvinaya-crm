@@ -386,6 +386,7 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 										setJdText('');
 									}
 								}}
+								isExtracting={isExtracting}
 							/>
 						)}
 

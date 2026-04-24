@@ -1,12 +1,13 @@
 import React from 'react';
-import { 
-	Box, 
-	Typography, 
-	Paper, 
-	Divider, 
-	TextField, 
+import {
+	Box,
+	Typography,
+	Paper,
+	Divider,
+	TextField,
 	Button,
 	alpha,
+	CircularProgress,
 	useTheme
 } from '@mui/material';
 import {
@@ -23,6 +24,7 @@ interface AIInputStepProps {
 	handleDrag: (e: React.DragEvent) => void;
 	handleDrop: (e: React.DragEvent) => void;
 	handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+	isExtracting?: boolean;
 }
 
 const AIInputStep: React.FC<AIInputStepProps> = ({
@@ -33,30 +35,81 @@ const AIInputStep: React.FC<AIInputStepProps> = ({
 	dragActive,
 	handleDrag,
 	handleDrop,
-	handleFileChange
+	handleFileChange,
+	isExtracting = false
 }) => {
 	const theme = useTheme();
 
 	return (
-		<Box sx={{ p: 4 }}>
+		<Box sx={{ p: 4, position: 'relative' }}>
+			{isExtracting && (
+				<Box sx={{
+					position: 'absolute',
+					top: 0,
+					left: 0,
+					right: 0,
+					bottom: 0,
+					zIndex: 20,
+					bgcolor: alpha(theme.palette.background.paper, 0.8),
+					backdropFilter: 'blur(4px)',
+					display: 'flex',
+					flexDirection: 'column',
+					alignItems: 'center',
+					justifyContent: 'center',
+					borderRadius: '8px',
+					animation: 'fadeIn 0.3s ease-out'
+				}}>
+					<Box sx={{ mb: 3, position: 'relative', display: 'flex' }}>
+						<CircularProgress size={64} thickness={2} sx={{ color: theme.palette.primary.main }} />
+						<UploadIcon sx={{
+							position: 'absolute',
+							top: '50%',
+							left: '50%',
+							transform: 'translate(-50%, -50%)',
+							color: theme.palette.primary.main,
+							animation: 'pulse 1.5s infinite ease-in-out'
+						}} />
+					</Box>
+					<Typography variant="h6" sx={{ fontWeight: 800, mb: 1, color: 'text.primary' }}>
+						AI Architect is Analyzing...
+					</Typography>
+					<Typography variant="body2" sx={{ color: 'text.secondary', maxWidth: 300, textAlign: 'center' }}>
+						Extracting skills, qualifications, and company details to build your talent requisition.
+					</Typography>
+
+					<style>
+						{`
+							@keyframes fadeIn {
+								from { opacity: 0; }
+								to { opacity: 1; }
+							}
+							@keyframes pulse {
+								0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+								50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.7; }
+								100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+							}
+						`}
+					</style>
+				</Box>
+			)}
 			<Box sx={{ maxWidth: 800, mx: 'auto' }}>
-				<Typography 
-					variant="h6" 
-					sx={{ 
-						mb: 1, 
-						display: 'flex', 
-						alignItems: 'center', 
-						gap: 1.5, 
+				<Typography
+					variant="h6"
+					sx={{
+						mb: 1,
+						display: 'flex',
+						alignItems: 'center',
+						gap: 1.5,
 						color: 'text.primary',
-						fontWeight: 700 
+						fontWeight: 700
 					}}
 				>
-					<Box sx={{ 
-						p: 1, 
-						bgcolor: alpha(theme.palette.primary.main, 0.1), 
-						color: theme.palette.primary.main, 
-						borderRadius: '8px', 
-						display: 'flex' 
+					<Box sx={{
+						p: 1,
+						bgcolor: alpha(theme.palette.primary.main, 0.1),
+						color: theme.palette.primary.main,
+						borderRadius: '8px',
+						display: 'flex'
 					}}>
 						<UploadIcon fontSize="small" />
 					</Box>
@@ -66,13 +119,13 @@ const AIInputStep: React.FC<AIInputStepProps> = ({
 					Accelerate your workflow with AI-assisted data mapping by providing a job description.
 				</Typography>
 
-				<Paper 
-					elevation={0} 
-					sx={{ 
-						p: 4, 
-						border: `1px solid ${theme.palette.divider}`, 
-						borderRadius: '12px', 
-						bgcolor: '#fff' 
+				<Paper
+					elevation={0}
+					sx={{
+						p: 4,
+						border: `1px solid ${theme.palette.divider}`,
+						borderRadius: '12px',
+						bgcolor: '#fff'
 					}}
 				>
 					<Box
@@ -106,11 +159,11 @@ const AIInputStep: React.FC<AIInputStepProps> = ({
 								<Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
 									PDF Document Ready for Analysis
 								</Typography>
-								<Button 
-									size="small" 
-									variant="text" 
-									color="error" 
-									onClick={(e) => { e.stopPropagation(); setSelectedFile(null); }} 
+								<Button
+									size="small"
+									variant="text"
+									color="error"
+									onClick={(e) => { e.stopPropagation(); setSelectedFile(null); }}
 									sx={{ mt: 2, fontWeight: 700 }}
 								>
 									Replace Document
@@ -129,21 +182,21 @@ const AIInputStep: React.FC<AIInputStepProps> = ({
 					</Box>
 
 					<Divider sx={{ mb: 4 }}>
-						<Typography 
-							variant="caption" 
-							sx={{ 
-								color: 'text.secondary', 
-								fontWeight: 700, 
-								letterSpacing: '0.1em' 
+						<Typography
+							variant="caption"
+							sx={{
+								color: 'text.secondary',
+								fontWeight: 700,
+								letterSpacing: '0.1em'
 							}}
 						>
 							OR PASTE JOB DESCRIPTION
 						</Typography>
 					</Divider>
 
-					<Typography 
-						variant="caption" 
-						sx={{ 
+					<Typography
+						variant="caption"
+						sx={{
 							display: 'block',
 							mb: 1,
 							fontWeight: 700,

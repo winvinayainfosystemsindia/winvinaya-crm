@@ -165,9 +165,9 @@ const EnterpriseFormFooter: React.FC<EnterpriseFormFooterProps> = ({
 						) : (
 							<Button
 								variant="contained"
-								endIcon={<NavigateNext />}
+								endIcon={isSubmitting ? <CircularProgress size={16} color="inherit" /> : <NavigateNext />}
 								onClick={onNext}
-								disabled={saveDisabled}
+								disabled={isSubmitting || saveDisabled}
 								sx={{
 									textTransform: 'none',
 									fontWeight: 700,
@@ -178,10 +178,14 @@ const EnterpriseFormFooter: React.FC<EnterpriseFormFooterProps> = ({
 									'&:hover': {
 										bgcolor: theme.palette.primary.dark,
 										boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+									},
+									'&.Mui-disabled': {
+										bgcolor: alpha(theme.palette.primary.main, 0.3),
+										color: alpha('#fff', 0.8)
 									}
 								}}
 							>
-								Next Step
+								{isSubmitting ? 'Processing...' : 'Next Step'}
 							</Button>
 						)
 					)}
