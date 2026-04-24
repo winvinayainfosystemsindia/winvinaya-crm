@@ -4,6 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.placement_offer import PlacementOffer, OfferResponse, JoiningStatus
 from app.repositories.placement_offer_repository import PlacementOfferRepository
 from app.schemas.placement_offer import PlacementOfferCreate, PlacementOfferUpdate
+from app.services.candidate_document_service import CandidateDocumentService
+from uuid import UUID
 
 
 class PlacementOfferService:
@@ -52,3 +54,94 @@ class PlacementOfferService:
             actual_joining_date=joining_date if status == JoiningStatus.JOINED else None
         )
         return await self.update_offer(id, offer_update)
+
+    async def upload_offer_letter(
+        self,
+        mapping_id: int,
+        file: any, # UploadFile
+        user_id: int,
+        offered_ctc: Optional[float] = None,
+        joining_date: Optional[date] = None,
+        offered_designation: Optional[str] = None,
+        remarks: Optional[str] = None
+    ) -> PlacementOffer:
+        from sqlalchemy import select
+        from sqlalchemy.orm import selectinload
+        from app.models.placement_mapping import PlacementMapping
+        
+        # Fetch mapping with candidate and job_role loaded
+        stmt = (
+            select(PlacementMapping)
+            .where(PlacementMapping.id == mapping_id)
+            .options(
+                selectinload(PlacementMapping.candidate),
+                selectinload(PlacementMapping.job_role)
+            )
+        )
+        result = await self.db.execute(stmt)
+        mapping = result.scalars().first()
+        
+        if not mapping:
+            raise Exception("Placement mapping not found")
+
+        # 1. Upload to Candidate Documents
+        doc_service = CandidateDocumentService(self.db)
+        doc = await doc_service.upload_document(
+            candidate_public_id=mapping.candidate.public_id,
+            document_type="offer_letter",
+            file=file,
+            description=f"Offer Letter for {mapping.job_role.title}",
+            uploaded_by_id=user_id
+        )
+
+        # 2. Update/Create PlacementOffer
+        offer = await self.get_by_mapping(mapping_id)
+        if offer:
+            offer.offer_letter_url = doc.file_path
+            offer.offer_letter_id = doc.id
+            if offered_ctc: offer.offered_ctc = offered_ctc
+            if joining_date: offer.joining_date = joining_date
+            if offered_designation: offer.offered_designation = offered_designation
+            offer.updated_at = datetime.utcnow()
+        else:
+            offer = PlacementOffer(
+                mapping_id=mapping_id,
+                candidate_id=mapping.candidate_id,
+                job_role_id=mapping.job_role_id,
+                offer_letter_url=doc.file_path,
+                offer_letter_id=doc.id,
+                offered_ctc=offered_ctc,
+                joining_date=joining_date,
+                offered_designation=offered_designation,
+                offered_by_id=user_id,
+                offer_date=date.today()
+            )
+            self.db.add(offer)
+
+        await self.db.commit()
+        await self.db.refresh(offer)
+
+        # 3. Update pipeline status to offer_made
+        from app.services.placement_pipeline_service import PlacementPipelineService
+        from app.models.placement_mapping import PlacementStatus
+        
+        # Construct detailed history remark if details are provided
+        detail_parts = []
+        if offered_ctc: detail_parts.append(f"CTC: {offered_ctc} LPA")
+        if offered_designation: detail_parts.append(f"Designation: {offered_designation}")
+        if joining_date: detail_parts.append(f"Joining: {joining_date.strftime('%d-%b-%Y')}")
+        
+        detail_remark = " | ".join(detail_parts)
+        final_remarks = remarks
+        if detail_remark:
+            final_remarks = f"{remarks}\n({detail_remark})" if remarks else detail_remark
+
+        pipeline_service = PlacementPipelineService(self.db)
+        await pipeline_service.update_status(
+            mapping_id=mapping_id,
+            to_status=PlacementStatus.OFFER_MADE,
+            changed_by_id=user_id,
+            remarks=final_remarks or "Offer letter uploaded"
+        )
+
+        return offer

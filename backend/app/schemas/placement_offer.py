@@ -13,6 +13,7 @@ class PlacementOfferBase(BaseModel):
     work_location: Optional[str] = None
     joining_date: Optional[date] = None
     offer_letter_url: Optional[str] = None
+    offer_letter_id: Optional[int] = None
     offer_date: Optional[date] = None
     response_deadline: Optional[date] = None
     candidate_response: OfferResponse = OfferResponse.PENDING

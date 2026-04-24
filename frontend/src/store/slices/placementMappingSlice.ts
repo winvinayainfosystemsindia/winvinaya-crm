@@ -85,6 +85,17 @@ export const updatePlacementStatus = createAsyncThunk(
     }
 );
 
+export const uploadOfferLetter = createAsyncThunk(
+    'placementMapping/uploadOfferLetter',
+    async ({ mappingId, file, metadata }: { mappingId: number; file: File; metadata?: { offered_ctc?: number; joining_date?: string; offered_designation?: string; remarks?: string } }, { rejectWithValue }) => {
+        try {
+            return await placementMappingService.uploadOfferLetter(mappingId, file, metadata);
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.detail || 'Failed to upload offer letter');
+        }
+    }
+);
+
 const placementMappingSlice = createSlice({
     name: 'placementMapping',
     initialState,
@@ -207,6 +218,23 @@ const placementMappingSlice = createSlice({
                 }
             })
             .addCase(updatePlacementStatus.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
+            // Upload Offer Letter
+            .addCase(uploadOfferLetter.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(uploadOfferLetter.fulfilled, (state, action) => {
+                state.loading = false;
+                // Since upload also moves status to offer_made, find and update match
+                const matchIndex = state.matches.findIndex(m => m.mapping_id === action.payload.mapping_id);
+                if (matchIndex !== -1) {
+                    state.matches[matchIndex].status = 'offer_made';
+                }
+            })
+            .addCase(uploadOfferLetter.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             });

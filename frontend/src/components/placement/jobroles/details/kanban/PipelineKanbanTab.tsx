@@ -28,8 +28,9 @@ import {
 } from '@dnd-kit/sortable';
 
 import { useAppDispatch, useAppSelector } from '../../../../../store/hooks';
-import { fetchMatchesForJobRole, updatePlacementStatus, type CandidateMatchResult } from '../../../../../store/slices/placementMappingSlice';
+import { fetchMatchesForJobRole, updatePlacementStatus, uploadOfferLetter, type CandidateMatchResult } from '../../../../../store/slices/placementMappingSlice';
 import StatusChangeDialog from '../../../mapping/dialogs/StatusChangeDialog';
+import OfferLetterUploadDialog from '../../../mapping/dialogs/OfferLetterUploadDialog';
 import PlacementDetailDrawer from '../../../mapping/details/PlacementDetailDrawer';
 
 // Modular Components
@@ -51,6 +52,7 @@ const PipelineKanbanTab: React.FC<PipelineKanbanTabProps> = ({ jobRolePublicId }
 	const [activeCandidate, setActiveCandidate] = useState<CandidateMatchResult | null>(null);
 	const [draggedCandidate, setDraggedCandidate] = useState<CandidateMatchResult | null>(null);
 	const [statusDialog, setStatusDialog] = useState<{ open: boolean, from: string, to: string } | null>(null);
+	const [offerUploadDialogOpen, setOfferUploadDialogOpen] = useState(false);
 	const [historyDrawer, setHistoryDrawer] = useState<{ open: boolean, id: number, name: string, candidatePublicId: string } | null>(null);
 	const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
 
@@ -62,10 +64,16 @@ const PipelineKanbanTab: React.FC<PipelineKanbanTabProps> = ({ jobRolePublicId }
 		const columns: { id: string, title: string, stages: string[], category: string }[] = [];
 
 		jobRole.pipeline_stages.forEach(stage => {
+			const stages = [stage.id];
+			
+			// Handle status aliases (offered and offer_made are equivalent)
+			if (stage.id === 'offer_made') stages.push('offered');
+			if (stage.id === 'offered') stages.push('offer_made');
+
 			columns.push({
 				id: stage.id,
 				title: stage.label,
-				stages: [stage.id],
+				stages: stages,
 				category: stage.category
 			});
 		});
@@ -122,11 +130,46 @@ const PipelineKanbanTab: React.FC<PipelineKanbanTabProps> = ({ jobRolePublicId }
 			if (!isTargetStatusSame) {
 				const toStatus = targetCol.stages[0]; // Take the primary stage of the column
 				setActiveCandidate(candidate);
-				setStatusDialog({
-					open: true,
-					from: candidate.status || 'Mapped',
-					to: toStatus
-				});
+				
+				if (toStatus === 'offer_made' || toStatus === 'offered') {
+					setOfferUploadDialogOpen(true);
+				} else {
+					setStatusDialog({
+						open: true,
+						from: candidate.status || 'Mapped',
+						to: toStatus
+					});
+				}
+			}
+		}
+	};
+
+	const handleOfferLetterUpload = async (data: { 
+		file: File; 
+		offered_ctc?: number; 
+		joining_date?: string; 
+		offered_designation?: string; 
+		remarks?: string 
+	}) => {
+		if (activeCandidate && jobRole) {
+			try {
+				await dispatch(uploadOfferLetter({
+					mappingId: activeCandidate.mapping_id!,
+					file: data.file,
+					metadata: {
+						offered_ctc: data.offered_ctc,
+						joining_date: data.joining_date,
+						offered_designation: data.offered_designation,
+						remarks: data.remarks
+					}
+				})).unwrap();
+				
+				// Refresh data to show changes
+				dispatch(fetchMatchesForJobRole(jobRolePublicId));
+				setOfferUploadDialogOpen(false);
+				setActiveCandidate(null);
+			} catch (error) {
+				console.error("Failed to upload offer letter", error);
 			}
 		}
 	};
@@ -254,6 +297,17 @@ const PipelineKanbanTab: React.FC<PipelineKanbanTabProps> = ({ jobRolePublicId }
 					toStatus={statusDialog.to}
 					fromStatusLabel={jobRole?.pipeline_stages?.find(s => s.id === statusDialog.from)?.label}
 					toStatusLabel={jobRole?.pipeline_stages?.find(s => s.id === statusDialog.to)?.label}
+					loading={loading}
+				/>
+			)}
+
+			{/* Offer Letter Upload Dialog */}
+			{offerUploadDialogOpen && activeCandidate && (
+				<OfferLetterUploadDialog
+					open={offerUploadDialogOpen}
+					onClose={() => { setOfferUploadDialogOpen(false); setActiveCandidate(null); }}
+					onConfirm={handleOfferLetterUpload}
+					candidateName={activeCandidate.name}
 					loading={loading}
 				/>
 			)}

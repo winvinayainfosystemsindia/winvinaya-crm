@@ -80,6 +80,13 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidatePublicId, ca
 			if (tabValue === 0) {
 				const data = await placementMappingService.getPipelineHistory(mappingId);
 				setHistory(data);
+				// Also fetch offer to show in timeline if needed
+				try {
+					const offerData = await placementMappingService.getOffer(mappingId);
+					setOffer(offerData);
+				} catch (e) {
+					console.error("Failed to fetch offer for timeline", e);
+				}
 			} else if (tabValue === 1) {
 				const data = await placementMappingService.getInterviews(mappingId);
 				setInterviews(data);
@@ -155,6 +162,27 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidatePublicId, ca
 			year: 'numeric',
 			timeZone: 'Asia/Kolkata'
 		}).format(date).replace(/ /g, '-');
+	};
+
+	const handleDownloadOffer = async (documentId?: number, fallbackUrl?: string) => {
+		if (documentId) {
+			try {
+				const { documentService } = await import('../../../../services/candidateService');
+				const blob = await documentService.download(documentId);
+				const url = window.URL.createObjectURL(blob);
+				window.open(url, '_blank');
+				setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+			} catch (error) {
+				toast.error('Failed to download offer letter');
+			}
+		} else if (fallbackUrl) {
+			let fullUrl = fallbackUrl;
+			if (fallbackUrl.startsWith('uploads/')) {
+				const apiUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/$/, '');
+				fullUrl = `${apiUrl}/${fallbackUrl}`;
+			}
+			window.open(fullUrl, '_blank');
+		}
 	};
 
 	const formatTimeIST = (dateStr: string) => {
@@ -357,10 +385,37 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidatePublicId, ca
 																borderRadius: '0 4px 4px 0'
 															}
 														}}>
-															<Typography variant="body2" sx={{ fontSize: '0.8125rem', color: theme.palette.text.primary, lineHeight: 1.6, pl: 0.5 }}>
+															<Typography 
+																variant="body2" 
+																sx={{ 
+																	fontSize: '0.8125rem', 
+																	color: theme.palette.text.primary, 
+																	lineHeight: 1.6, 
+																	pl: 0.5,
+																	whiteSpace: 'pre-wrap'
+																}}
+															>
 																{item.remarks}
 															</Typography>
 														</Box>
+													)}
+
+													{(item.to_status === 'offer_made' || item.to_status === 'offered') && (offer?.offer_letter_id || offer?.offer_letter_url) && (
+														<Button
+															size="small"
+															startIcon={<DescriptionIcon sx={{ fontSize: 14 }} />}
+															onClick={() => handleDownloadOffer(offer?.offer_letter_id, offer?.offer_letter_url)}
+															sx={{
+																mt: 1.5,
+																textTransform: 'none',
+																fontWeight: 700,
+																fontSize: '0.75rem',
+																color: theme.palette.primary.main,
+																'&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.05) }
+															}}
+														>
+															View Document
+														</Button>
 													)}
 												</Box>
 											</Box>
@@ -552,6 +607,30 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidatePublicId, ca
 														</Typography>
 													</Stack>
 												</Grid>
+												{(offer.offer_letter_id || offer.offer_letter_url) && (
+													<Grid size={{ xs: 12 }}>
+														<Button
+															variant="outlined"
+															fullWidth
+															startIcon={<DescriptionIcon />}
+															onClick={() => handleDownloadOffer(offer?.offer_letter_id, offer?.offer_letter_url)}
+															sx={{
+																mt: 2,
+																textTransform: 'none',
+																fontWeight: 700,
+																borderColor: theme.palette.primary.main,
+																color: theme.palette.primary.main,
+																bgcolor: alpha(theme.palette.primary.main, 0.05),
+																'&:hover': {
+																	bgcolor: alpha(theme.palette.primary.main, 0.1),
+																	borderColor: theme.palette.primary.main
+																}
+															}}
+														>
+															View Offer Letter
+														</Button>
+													</Grid>
+												)}
 											</Grid>
 										</Box>
 									</Paper>

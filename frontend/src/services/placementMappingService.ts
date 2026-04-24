@@ -107,6 +107,24 @@ const placementMappingService = {
     bulkMapCandidates: async (bulkData: { job_role_id: number; mappings: { candidate_id: number; match_score: number }[]; notes?: string }): Promise<PlacementMapping[]> => {
         const response = await api.post('/placement/mappings/bulk', bulkData);
         return response.data;
+    },
+
+    uploadOfferLetter: async (
+        mappingId: number, 
+        file: File, 
+        metadata?: { offered_ctc?: number; joining_date?: string; offered_designation?: string; remarks?: string }
+    ): Promise<any> => {
+        const formData = new FormData();
+        formData.append('file', file);
+        if (metadata?.offered_ctc) formData.append('offered_ctc', metadata.offered_ctc.toString());
+        if (metadata?.joining_date) formData.append('joining_date', metadata.joining_date);
+        if (metadata?.offered_designation) formData.append('offered_designation', metadata.offered_designation);
+        if (metadata?.remarks) formData.append('remarks', metadata.remarks);
+
+        const response = await api.post(`/placement/offers/${mappingId}/upload-letter`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data;
     }
 };
 

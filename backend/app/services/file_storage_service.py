@@ -23,6 +23,7 @@ class FileStorageService:
         "degree_certificate": {".pdf", ".jpg", ".jpeg", ".png"},
         "pan_card": {".pdf", ".jpg", ".jpeg", ".png"},
         "aadhar_card": {".pdf", ".jpg", ".jpeg", ".png"},
+        "offer_letter": {".pdf", ".jpg", ".jpeg", ".png", ".doc", ".docx"},
         "other": {".pdf", ".doc", ".docx", ".jpg", ".jpeg", ".png", ".zip"}
     }
     

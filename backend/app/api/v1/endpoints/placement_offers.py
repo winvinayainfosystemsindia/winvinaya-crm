@@ -1,5 +1,6 @@
+from datetime import date, datetime
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db
 from app.models.user import User
@@ -91,3 +92,34 @@ async def get_candidate_offers(
     """
     service = PlacementOfferService(db)
     return await service.get_by_candidate(candidate_id)
+
+
+@router.post("/{mapping_id}/upload-letter", response_model=PlacementOfferResponse)
+async def upload_offer_letter(
+    mapping_id: int,
+    file: UploadFile = File(...),
+    offered_ctc: Optional[float] = Form(None),
+    joining_date: Optional[date] = Form(None),
+    offered_designation: Optional[str] = Form(None),
+    remarks: Optional[str] = Form(None),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Upload an offer letter for a placement mapping and update offer details.
+    Also automatically moves the status to 'offer_made'.
+    """
+    service = PlacementOfferService(db)
+    
+    # 1. Upload letter and update offer
+    offer = await service.upload_offer_letter(
+        mapping_id=mapping_id,
+        file=file,
+        user_id=current_user.id,
+        offered_ctc=offered_ctc,
+        joining_date=joining_date,
+        offered_designation=offered_designation,
+        remarks=remarks
+    )
+
+    return offer

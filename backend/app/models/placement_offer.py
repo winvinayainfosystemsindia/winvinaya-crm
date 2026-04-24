@@ -80,6 +80,12 @@ class PlacementOffer(BaseModel):
         nullable=True
     )
     
+    offer_letter_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("candidate_documents.id", ondelete="SET NULL"),
+        nullable=True
+    )
+    
     offer_date: Mapped[date | None] = mapped_column(
         Date,
         nullable=True
