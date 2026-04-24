@@ -35,10 +35,34 @@ class PlacementOfferService:
         return offer
 
     async def get_by_mapping(self, mapping_id: int) -> Optional[PlacementOffer]:
-        return await self.repository.get_by_mapping(mapping_id)
+        offer = await self.repository.get_by_mapping(mapping_id)
+        if offer and not offer.offer_letter_id and offer.offer_letter_url:
+            # Self-heal: Try to find the document ID by path
+            from sqlalchemy import select
+            from app.models.candidate_document import CandidateDocument
+            stmt = select(CandidateDocument).where(CandidateDocument.file_path == offer.offer_letter_url)
+            result = await self.db.execute(stmt)
+            doc = result.scalars().first()
+            if doc:
+                offer.offer_letter_id = doc.id
+                await self.db.commit()
+                await self.db.refresh(offer)
+        return offer
 
     async def get_by_candidate(self, candidate_id: int) -> List[PlacementOffer]:
-        return await self.repository.get_by_candidate(candidate_id)
+        offers = await self.repository.get_by_candidate(candidate_id)
+        for offer in offers:
+            if not offer.offer_letter_id and offer.offer_letter_url:
+                # Self-heal
+                from sqlalchemy import select
+                from app.models.candidate_document import CandidateDocument
+                stmt = select(CandidateDocument).where(CandidateDocument.file_path == offer.offer_letter_url)
+                result = await self.db.execute(stmt)
+                doc = result.scalars().first()
+                if doc:
+                    offer.offer_letter_id = doc.id
+                    await self.db.commit()
+        return offers
 
     async def record_response(self, id: int, response: OfferResponse, remarks: Optional[str] = None) -> Optional[PlacementOffer]:
         offer_update = PlacementOfferUpdate(
@@ -135,13 +159,17 @@ class PlacementOfferService:
         final_remarks = remarks
         if detail_remark:
             final_remarks = f"{remarks}\n({detail_remark})" if remarks else detail_remark
+        
+        # Add document info to remarks for timeline tracking
+        doc_remark = f"DocumentID: {doc.id} | Document: {doc.file_path}"
+        final_remarks = f"{final_remarks}\n{doc_remark}" if final_remarks else doc_remark
 
         pipeline_service = PlacementPipelineService(self.db)
         await pipeline_service.update_status(
             mapping_id=mapping_id,
             to_status=PlacementStatus.OFFER_MADE,
             changed_by_id=user_id,
-            remarks=final_remarks or "Offer letter uploaded"
+            remarks=final_remarks
         )
 
         return offer

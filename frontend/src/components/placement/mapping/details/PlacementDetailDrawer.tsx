@@ -44,6 +44,8 @@ import {
 	Description as DescriptionIcon
 } from '@mui/icons-material';
 import placementMappingService from '../../../../services/placementMappingService';
+import authService from '../../../../services/authService';
+import { documentService } from '../../../../services/candidateService';
 import useToast from '../../../../hooks/useToast';
 
 interface Props {
@@ -70,9 +72,7 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidatePublicId, ca
 	const fetchData = useCallback(async () => {
 		setLoading(true);
 		try {
-			// Fetch documents if candidatePublicId is available (for resume link)
 			if (candidatePublicId) {
-				const { documentService } = await import('../../../../services/candidateService');
 				const docs = await documentService.getAll(candidatePublicId);
 				setDocuments(docs);
 			}
@@ -164,24 +164,36 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidatePublicId, ca
 		}).format(date).replace(/ /g, '-');
 	};
 
-	const handleDownloadOffer = async (documentId?: number, fallbackUrl?: string) => {
-		if (documentId) {
-			try {
-				const { documentService } = await import('../../../../services/candidateService');
-				const blob = await documentService.download(documentId);
-				const url = window.URL.createObjectURL(blob);
+	const handleViewDocument = (documentId?: number, fallbackUrl?: string) => {
+		let finalId = documentId;
+		
+		// If ID is missing but URL is present, try to find the ID in the loaded documents
+		if (!finalId && fallbackUrl && documents.length > 0) {
+			const matchedDoc = documents.find(d => d.file_path === fallbackUrl || fallbackUrl.endsWith(d.file_path));
+			if (matchedDoc) {
+				finalId = matchedDoc.id;
+			}
+		}
+
+		if (finalId) {
+			const token = authService.getAccessToken();
+			const url = documentService.getPreviewUrl(finalId, token);
+			if (url) {
 				window.open(url, '_blank');
-				setTimeout(() => window.URL.revokeObjectURL(url), 1000);
-			} catch (error) {
-				toast.error('Failed to download offer letter');
+			} else {
+				toast.error('Authentication session expired. Please re-login.');
 			}
 		} else if (fallbackUrl) {
-			let fullUrl = fallbackUrl;
-			if (fallbackUrl.startsWith('uploads/')) {
-				const apiUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/$/, '');
-				fullUrl = `${apiUrl}/${fallbackUrl}`;
+			// As a last resort, if we still have no ID, try direct URL if it's absolute or has protocol
+			// but most resumes use the download endpoint.
+			if (fallbackUrl.startsWith('http')) {
+				window.open(fallbackUrl, '_blank');
+			} else {
+				// If it's a relative path and we still don't have an ID, 
+				// we might be in trouble since we removed static serving.
+				// But resumes work, so they must have IDs.
+				toast.error('Could not find secure viewing route for this document.');
 			}
-			window.open(fullUrl, '_blank');
 		}
 	};
 
@@ -237,7 +249,7 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidatePublicId, ca
 						<Button
 							size="small"
 							startIcon={<DescriptionIcon sx={{ fontSize: 16 }} />}
-							onClick={async () => {
+							onClick={() => {
 								// Prioritize active trainer resume, then any active resume, then first available resume
 								const activeTrainerResume = documents.find(d => d.document_type === 'trainer_resume' && d.is_active);
 								const activeResume = documents.find(d => d.document_type === 'resume' && d.is_active);
@@ -246,11 +258,7 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidatePublicId, ca
 								const targetDoc = activeTrainerResume || activeResume || fallbackResume;
 								
 								if (targetDoc) {
-									const { documentService } = await import('../../../../services/candidateService');
-									const blob = await documentService.download(targetDoc.id);
-									const url = window.URL.createObjectURL(blob);
-									window.open(url, '_blank');
-									setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+									handleViewDocument(targetDoc.id);
 								}
 							}}
 							sx={{
@@ -400,11 +408,21 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidatePublicId, ca
 														</Box>
 													)}
 
-													{(item.to_status === 'offer_made' || item.to_status === 'offered') && (offer?.offer_letter_id || offer?.offer_letter_url) && (
+													{(item.to_status === 'offer_made' || item.to_status === 'offered' || (item.remarks && (item.remarks.includes('uploads/') || item.remarks.includes('Document:')))) && (
 														<Button
 															size="small"
 															startIcon={<DescriptionIcon sx={{ fontSize: 14 }} />}
-															onClick={() => handleDownloadOffer(offer?.offer_letter_id, offer?.offer_letter_url)}
+															onClick={() => {
+																const idMatch = item.remarks?.match(/DocumentID: (\d+)/);
+																const docMatch = item.remarks?.match(/Document: (.*)/);
+																const idFromRemarks = idMatch ? parseInt(idMatch[1]) : undefined;
+																const urlFromRemarks = docMatch ? docMatch[1] : undefined;
+																
+																handleViewDocument(
+																	idFromRemarks || offer?.offer_letter_id, 
+																	urlFromRemarks || offer?.offer_letter_url
+																);
+															}}
 															sx={{
 																mt: 1.5,
 																textTransform: 'none',
@@ -613,7 +631,7 @@ const PlacementDetailDrawer = ({ open, onClose, mappingId, candidatePublicId, ca
 															variant="outlined"
 															fullWidth
 															startIcon={<DescriptionIcon />}
-															onClick={() => handleDownloadOffer(offer?.offer_letter_id, offer?.offer_letter_url)}
+															onClick={() => handleViewDocument(offer?.offer_letter_id, offer?.offer_letter_url)}
 															sx={{
 																mt: 2,
 																textTransform: 'none',
