@@ -170,6 +170,7 @@ const PlacementDetailDrawer = ({
 			anchor="right"
 			open={open}
 			onClose={onClose}
+			sx={{ zIndex: (theme) => theme.zIndex.drawer + 100 }}
 			PaperProps={{
 				sx: { width: { xs: '100%', sm: 550 }, border: 'none' }
 			}}
