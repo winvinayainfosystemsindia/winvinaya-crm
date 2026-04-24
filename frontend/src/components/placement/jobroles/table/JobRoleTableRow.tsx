@@ -82,7 +82,12 @@ const JobRoleTableRow: React.FC<JobRoleTableRowProps> = ({ jobRole, onEdit, onDe
 			</TableCell>
 
 			<TableCell>
-				<PlacementStatusBadge label={jobRole.status} status={jobRole.status} />
+				{(() => {
+					const isExpired = jobRole.close_date && new Date(jobRole.close_date) < new Date(new Date().setHours(0, 0, 0, 0));
+					const displayStatus = isExpired && jobRole.status === 'active' ? 'closed' : jobRole.status;
+					const displayLabel = isExpired && jobRole.status === 'active' ? 'Expired' : jobRole.status;
+					return <PlacementStatusBadge label={displayLabel} status={displayStatus} />;
+				})()}
 			</TableCell>
 
 			<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>

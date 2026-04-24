@@ -38,7 +38,21 @@ class JobRoleRepository(BaseRepository[JobRole]):
             query = query.where(self.model.is_deleted == False)
             
         if status:
-            query = query.where(self.model.status == status)
+            from datetime import date
+            if status == JobRoleStatus.ACTIVE:
+                # Active roles must have active status AND not be expired
+                query = query.where(
+                    (self.model.status == JobRoleStatus.ACTIVE) & 
+                    (or_(self.model.close_date == None, self.model.close_date >= date.today()))
+                )
+            elif status == JobRoleStatus.CLOSED:
+                # Closed roles are either explicitly closed OR expired active roles
+                query = query.where(or_(
+                    self.model.status == JobRoleStatus.CLOSED,
+                    (self.model.status == JobRoleStatus.ACTIVE) & (self.model.close_date < date.today())
+                ))
+            else:
+                query = query.where(self.model.status == status)
             
         if company_id:
             query = query.where(self.model.company_id == company_id)
@@ -91,7 +105,19 @@ class JobRoleRepository(BaseRepository[JobRole]):
             query = query.where(self.model.is_deleted == False)
             
         if status:
-            query = query.where(self.model.status == status)
+            from datetime import date
+            if status == JobRoleStatus.ACTIVE:
+                query = query.where(
+                    (self.model.status == JobRoleStatus.ACTIVE) & 
+                    (or_(self.model.close_date == None, self.model.close_date >= date.today()))
+                )
+            elif status == JobRoleStatus.CLOSED:
+                query = query.where(or_(
+                    self.model.status == JobRoleStatus.CLOSED,
+                    (self.model.status == JobRoleStatus.ACTIVE) & (self.model.close_date < date.today())
+                ))
+            else:
+                query = query.where(self.model.status == status)
             
         if company_id:
             query = query.where(self.model.company_id == company_id)

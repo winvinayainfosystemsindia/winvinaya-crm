@@ -31,7 +31,10 @@ const JobRoleStats: React.FC<JobRoleStatsProps> = ({ list, total }) => {
 			<Grid size={{ xs: 12, sm: 6, md: 3 }}>
 				<StatCard
 					title="Active Openings"
-					value={list.filter(j => j.status === JOB_ROLE_STATUS.ACTIVE).length}
+					value={list.filter(j => {
+						const isExpired = j.close_date && new Date(j.close_date) < new Date(new Date().setHours(0, 0, 0, 0));
+						return j.status === JOB_ROLE_STATUS.ACTIVE && !isExpired;
+					}).length}
 					subtitle="Accepting applications"
 					icon={<VisibilityIcon />}
 					color={theme.palette.success.main}
