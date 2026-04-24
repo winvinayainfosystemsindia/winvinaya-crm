@@ -9,7 +9,7 @@ import {
 	Alert
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { fetchJobRoleById, updateJobRole, clearCurrentJobRole } from '../../store/slices/jobRoleSlice';
+import { fetchJobRoleById, updateJobRole, updateJobRoleStatus, clearCurrentJobRole } from '../../store/slices/jobRoleSlice';
 import useToast from '../../hooks/useToast';
 import type { JobRoleUpdate } from '../../models/jobRole';
 
@@ -57,6 +57,17 @@ const JobRoleDetail: React.FC = () => {
 			setFormLoading(false);
 		}
 	};
+	
+	const handleStatusChange = async (newStatus: 'active' | 'closed') => {
+		if (!publicId) return;
+		try {
+			await dispatch(updateJobRoleStatus({ publicId, status: newStatus as any })).unwrap();
+			toast.success(`Job Role ${newStatus === 'closed' ? 'closed' : 're-opened'} successfully`);
+			dispatch(fetchJobRoleById(publicId));
+		} catch (error: any) {
+			toast.error(error || 'Failed to update status');
+		}
+	};
 
 	const handleRefresh = () => {
 		if (publicId) {
@@ -92,6 +103,7 @@ const JobRoleDetail: React.FC = () => {
 					jobRole={jobRole} 
 					onEdit={() => setEditDialogOpen(true)} 
 					onRefresh={handleRefresh} 
+					onStatusChange={handleStatusChange}
 				/>
 
 				{/* Tabs Section */}

@@ -38,6 +38,7 @@ const JobRoleTable: React.FC<JobRoleTableProps> = ({ onEditJobRole }) => {
 		applyFilters,
 		clearFilters,
 		handleCloseJobRole,
+		handleReopenJobRole,
 		handleDeleteClick,
 		handleDeleteConfirm,
 		handleDeleteCancel
@@ -94,6 +95,7 @@ const JobRoleTable: React.FC<JobRoleTableProps> = ({ onEditJobRole }) => {
 						jobRole={role}
 						onEdit={onEditJobRole}
 						onClose={handleCloseJobRole}
+						onReopen={handleReopenJobRole}
 						onDelete={handleDeleteClick}
 						isAdmin={user?.role === 'admin' || user?.role === 'manager' || user?.role === 'placement'}
 					/>

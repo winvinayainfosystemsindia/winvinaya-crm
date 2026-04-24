@@ -5,16 +5,18 @@ import {
 	Edit as EditIcon,
 	Delete as DeleteIcon,
 	Block as CloseIcon,
+	CheckCircleOutline as OpenIcon
 } from '@mui/icons-material';
 
 interface PlacementRowActionsProps {
 	onEdit: () => void;
 	onClose?: () => void;
+	onReopen?: () => void;
 	onDelete?: () => void;
 	isClosed?: boolean;
 }
 
-const PlacementRowActions: React.FC<PlacementRowActionsProps> = ({ onEdit, onClose, onDelete, isClosed }) => {
+const PlacementRowActions: React.FC<PlacementRowActionsProps> = ({ onEdit, onClose, onReopen, onDelete, isClosed }) => {
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const open = Boolean(anchorEl);
 
@@ -53,6 +55,12 @@ const PlacementRowActions: React.FC<PlacementRowActionsProps> = ({ onEdit, onClo
 					<MenuItem onClick={(e) => { e.stopPropagation(); handleClose(); onClose(); }}>
 						<ListItemIcon><CloseIcon fontSize="small" /></ListItemIcon>
 						<ListItemText primary="Mark as Closed" primaryTypographyProps={{ fontSize: '0.875rem' }} />
+					</MenuItem>
+				)}
+				{onReopen && isClosed && (
+					<MenuItem onClick={(e) => { e.stopPropagation(); handleClose(); onReopen(); }}>
+						<ListItemIcon><OpenIcon fontSize="small" /></ListItemIcon>
+						<ListItemText primary="Re-open Role" primaryTypographyProps={{ fontSize: '0.875rem' }} />
 					</MenuItem>
 				)}
 				{onDelete && (

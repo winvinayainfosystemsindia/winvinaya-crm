@@ -14,11 +14,12 @@ interface JobRoleTableRowProps {
 	jobRole: JobRole;
 	onEdit: (jobRole: JobRole) => void;
 	onClose: (jobRole: JobRole) => void;
+	onReopen: (jobRole: JobRole) => void;
 	onDelete: (jobRole: JobRole) => void;
 	isAdmin: boolean;
 }
 
-const JobRoleTableRow: React.FC<JobRoleTableRowProps> = ({ jobRole, onEdit, onClose, onDelete, isAdmin }) => {
+const JobRoleTableRow: React.FC<JobRoleTableRowProps> = ({ jobRole, onEdit, onClose, onReopen, onDelete, isAdmin }) => {
 	const theme = useTheme();
 	const navigate = useNavigate();
 
@@ -138,6 +139,7 @@ const JobRoleTableRow: React.FC<JobRoleTableRowProps> = ({ jobRole, onEdit, onCl
 				<PlacementRowActions
 					onEdit={() => onEdit(jobRole)}
 					onClose={() => onClose(jobRole)}
+					onReopen={() => onReopen(jobRole)}
 					onDelete={isAdmin && (jobRole.mappings_count || 0) === 0 ? () => onDelete(jobRole) : undefined}
 					isClosed={jobRole.status === 'closed'}
 				/>

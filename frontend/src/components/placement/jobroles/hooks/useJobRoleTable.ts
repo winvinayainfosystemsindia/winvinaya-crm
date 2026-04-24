@@ -148,6 +148,16 @@ export const useJobRoleTable = () => {
 		}
 	};
 
+	const handleReopenJobRole = async (jobRole: JobRole) => {
+		try {
+			await dispatch(updateJobRoleStatus({ publicId: jobRole.public_id, status: 'active' as any })).unwrap();
+			toast.success(`Job Role "${jobRole.title}" re-opened successfully`);
+			fetchJobRolesData();
+		} catch (error: any) {
+			toast.error(error || 'Failed to re-open job role');
+		}
+	};
+
 	const handleDeleteCancel = () => {
 		setDeleteDialogOpen(false);
 		setJobRoleToDelete(null);
@@ -179,6 +189,7 @@ export const useJobRoleTable = () => {
 		applyFilters,
 		clearFilters,
 		handleCloseJobRole,
+		handleReopenJobRole,
 		handleDeleteClick,
 		handleDeleteConfirm,
 		handleDeleteCancel,

@@ -5,7 +5,9 @@ import {
 	Edit as EditIcon,
 	Business as BusinessIcon,
 	LocationOn as LocationOnIcon,
-	Person as PersonIcon
+	Person as PersonIcon,
+	Close as CloseIcon,
+	CheckCircleOutline as OpenIcon
 } from '@mui/icons-material';
 import { IconButton } from '@mui/material';
 import PlacementStatusBadge from '../common/PlacementStatusBadge';
@@ -17,9 +19,10 @@ interface JobRoleHeaderProps {
 	jobRole: JobRole;
 	onEdit: () => void;
 	onRefresh: () => void;
+	onStatusChange?: (status: 'active' | 'closed') => void;
 }
 
-const JobRoleHeader: React.FC<JobRoleHeaderProps> = ({ jobRole, onEdit }) => {
+const JobRoleHeader: React.FC<JobRoleHeaderProps> = ({ jobRole, onEdit, onStatusChange }) => {
 	const theme = useTheme();
 	const navigate = useNavigate();
 
@@ -105,6 +108,29 @@ const JobRoleHeader: React.FC<JobRoleHeaderProps> = ({ jobRole, onEdit }) => {
 						>
 							<EditIcon fontSize="small" />
 						</IconButton>
+
+						{onStatusChange && (
+							<Button
+								size="small"
+								variant="outlined"
+								startIcon={jobRole.status === 'closed' ? <OpenIcon /> : <CloseIcon />}
+								onClick={() => onStatusChange(jobRole.status === 'closed' ? 'active' : 'closed')}
+								sx={{
+									ml: 2,
+									color: theme.palette.common.white,
+									borderColor: alpha(theme.palette.common.white, 0.3),
+									textTransform: 'none',
+									fontWeight: 700,
+									fontSize: '0.75rem',
+									'&:hover': {
+										borderColor: theme.palette.common.white,
+										bgcolor: alpha(theme.palette.common.white, 0.1)
+									}
+								}}
+							>
+								{jobRole.status === 'closed' ? 'Re-open Role' : 'Close Role'}
+							</Button>
+						)}
 					</Stack>
 				}
 				subtitle={

@@ -3,9 +3,15 @@ import {
     Box,
     CircularProgress,
     Grid,
-    Button
+    Button,
+    Alert,
+    Stack,
+    Typography
 } from '@mui/material';
-import { GroupAdd as BulkIcon } from '@mui/icons-material';
+import { 
+    GroupAdd as BulkIcon,
+    InfoOutlined as InfoIcon
+} from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import {
     fetchMatchesForJobRole,
@@ -349,6 +355,40 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
 
     return (
         <Grid container spacing={4} sx={{ mt: 1 }}>
+            {/* Closed/Expired Role Warning */}
+            {(() => {
+                const isExpired = jobRole.close_date && new Date(jobRole.close_date) < new Date(new Date().setHours(0, 0, 0, 0));
+                const isClosed = jobRole.status === 'closed' || isExpired;
+                
+                if (!isClosed) return null;
+                
+                return (
+                    <Grid size={{ xs: 12 }}>
+                        <Alert 
+                            severity="info" 
+                            variant="outlined"
+                            icon={<InfoIcon />}
+                            sx={{ 
+                                borderRadius: '4px', 
+                                bgcolor: 'rgba(0, 126, 185, 0.03)',
+                                borderColor: 'rgba(0, 126, 185, 0.2)',
+                                '& .MuiAlert-icon': { color: '#007eb9' }
+                            }}
+                        >
+                            <Stack>
+                                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#007eb9' }}>
+                                    {jobRole.status === 'closed' ? 'Job Role Closed' : 'Job Role Expired'}
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: '#545b64' }}>
+                                    This job role is currently {jobRole.status === 'closed' ? 'marked as closed' : 'past its closing date'}. 
+                                    You can still map candidates to it if needed for administrative or historical purposes.
+                                </Typography>
+                            </Stack>
+                        </Alert>
+                    </Grid>
+                );
+            })()}
+
             {/* Top/Left: Smart Suggestions Table */}
             <Grid size={{ xs: 12, md: 8.5 }}>
                 <SuggestionsTable
