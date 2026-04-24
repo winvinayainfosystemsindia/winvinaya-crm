@@ -31,7 +31,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
 from app.ai.providers import SUPPORTED_PROVIDERS, get_provider_info, get_llm_provider
-from app.ai.core.exceptions import LLMAuthError, LLMProviderError
+from app.ai.brain.exceptions import LLMAuthError, LLMProviderError
 from app.core.config import settings
 from app.models.user import User, UserRole
 from app.repositories.system_setting_repository import SystemSettingRepository

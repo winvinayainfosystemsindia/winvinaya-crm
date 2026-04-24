@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING, Any
 from sqlalchemy import select
 
 from app.models.ai_task_log import AITaskLog, AITaskStatus, AITaskTrigger
-from app.ai.core.schemas import ToolCallPlan, ToolStepLog, ToolResult
+from app.ai.brain.schemas import ToolCallPlan, ToolStepLog, ToolResult
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession

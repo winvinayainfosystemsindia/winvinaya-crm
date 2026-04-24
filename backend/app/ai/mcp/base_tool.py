@@ -9,7 +9,7 @@ to be automatically discovered and registered by the ToolRegistry.
 from __future__ import annotations
 
 from typing import Any, TYPE_CHECKING
-from app.ai.core.schemas import ToolDefinition, ToolResult
+from app.ai.brain.schemas import ToolDefinition, ToolResult
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession

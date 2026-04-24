@@ -1,7 +1,7 @@
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
-from app.ai.core.exceptions import LLMProviderError
+from app.ai.brain.exceptions import LLMProviderError
 from app.repositories.system_setting_repository import SystemSettingRepository
 from app.ai.providers.base import LLMProvider
 

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import logging
 from typing import List, Optional
-from app.ai.core.schemas import ToolDefinition
+from app.ai.brain.schemas import ToolDefinition
 from app.ai.mcp.base_tool import BaseTool
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ class ToolRegistry:
     def get(self, name: str) -> BaseTool:
         """Retrieve a tool by name."""
         if name not in self._tools:
-            from app.ai.core.exceptions import ToolNotFoundError
+            from app.ai.brain.exceptions import ToolNotFoundError
             raise ToolNotFoundError(name)
         return self._tools[name]
 

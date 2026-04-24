@@ -8,7 +8,7 @@ for domain-specific analytics.
 """
 
 from typing import Any
-from app.ai.core.schemas import ToolCallRequest, ToolResult
+from app.ai.brain.schemas import ToolCallRequest, ToolResult
 
 
 class Synthesizer:

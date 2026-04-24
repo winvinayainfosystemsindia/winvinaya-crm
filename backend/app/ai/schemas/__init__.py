@@ -6,7 +6,7 @@ Unified access to all AI schemas. Re-exports core execution models
 and API request/response models.
 """
 
-from app.ai.core.schemas import (
+from app.ai.brain.schemas import (
     ToolDefinition,
     ToolParameterSchema,
     ToolCallRequest,

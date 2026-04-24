@@ -12,7 +12,7 @@ from typing import Any, Dict, Optional
 
 from app.ai.providers import get_llm_provider
 from app.ai.prompts.loader import loader
-from app.ai.core.exceptions import LLMProviderError
+from app.ai.brain.exceptions import LLMProviderError
 from app.core.constants import DISABILITY_TYPES, QUALIFICATIONS, COMMON_SKILLS
 from app.repositories.company_repository import CompanyRepository
 from app.repositories.contact_repository import ContactRepository

@@ -13,7 +13,7 @@ from datetime import datetime, date, timedelta, timezone
 from typing import Any, TYPE_CHECKING
 
 from sqlalchemy import select, func, and_
-from app.ai.core.schemas import ToolDefinition, ToolParameterSchema, ToolResult
+from app.ai.brain.schemas import ToolDefinition, ToolParameterSchema, ToolResult
 from app.ai.mcp.base_tool import BaseTool
 from app.ai.mcp.registry import registry
 from app.models.candidate_screening import CandidateScreening

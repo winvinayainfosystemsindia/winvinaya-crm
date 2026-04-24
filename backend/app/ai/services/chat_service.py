@@ -16,12 +16,12 @@ from typing import AsyncGenerator, TYPE_CHECKING
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from app.ai.core.engine import AIEngine
-from app.ai.core.synthesizer import Synthesizer
-from app.ai.core.journal import TaskJournal
+from app.ai.brain.engine import AIEngine
+from app.ai.brain.synthesizer import Synthesizer
+from app.ai.brain.journal import TaskJournal
 from app.ai.providers import get_llm_provider
 from app.ai.mcp.registry import registry
-from app.ai.core.exceptions import LLMAuthError, LLMRateLimitError
+from app.ai.brain.exceptions import LLMAuthError, LLMRateLimitError
 from app.models.ai_chat import AIChatSession, AIChatMessage
 from app.models.ai_task_log import AITaskStatus, AITaskTrigger
 from app.repositories.system_setting_repository import SystemSettingRepository
@@ -143,8 +143,8 @@ class AIChatService:
             # Planning
             yield f"data: {json.dumps({'status': 'planning', 'message': 'Planning response...'})}\n\n"
             await journal.mark_planning()
-            from app.ai.core.planner import Planner
-            planner = Planner(provider=provider, registry=registry)
+            from app.ai.brain.planner import Planner
+            planner = Planner(provider=provider, registry=registry, db=self._db)
             
             plan = await planner.plan(
                 task_hint=schema.content,

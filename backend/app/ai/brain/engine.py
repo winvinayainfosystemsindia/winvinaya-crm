@@ -14,19 +14,19 @@ import uuid
 from datetime import timedelta
 from typing import Any, TYPE_CHECKING
 
-from app.ai.core.exceptions import (
+from app.ai.brain.exceptions import (
     AIEngineError,
     LLMAuthError,
     LLMProviderError,
     NoPlanGeneratedError,
     ToolLimitExceededError,
 )
-from app.ai.core.planner import Planner
-from app.ai.core.synthesizer import Synthesizer
+from app.ai.brain.planner import Planner
+from app.ai.brain.synthesizer import Synthesizer
 from app.ai.providers import get_llm_provider
-from app.ai.core.schemas import ToolCallPlan, ToolCallRequest, ToolResult
+from app.ai.brain.schemas import ToolCallPlan, ToolCallRequest, ToolResult
 from app.ai.schemas import AITaskRunRequest, AITaskRunResponse
-from app.ai.core.journal import TaskJournal
+from app.ai.brain.journal import TaskJournal
 from app.ai.mcp.registry import registry as global_registry
 import app.ai.mcp.tools  # Trigger tool discovery and registration
 from app.core.config import settings
@@ -137,7 +137,7 @@ class AIEngine:
         # ── 1. Planning Phase ─────────────────────────────────────────────────
         await journal.mark_planning()
 
-        planner = Planner(provider=provider, registry=self._registry)
+        planner = Planner(provider=provider, registry=self._registry, db=self._db)
 
         try:
             plan: ToolCallPlan = await planner.plan(

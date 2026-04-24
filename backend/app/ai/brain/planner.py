@@ -17,13 +17,14 @@ import logging
 import re
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
-from app.ai.core.exceptions import (
+from app.ai.brain.exceptions import (
     LLMProviderError,
     LLMResponseParseError,
     PlanningError,
 )
 from app.ai.prompts.loader import loader
-from app.ai.core.schemas import ToolCallPlan, ToolCallRequest
+from app.ai.brain.schemas import ToolCallPlan, ToolCallRequest
+from app.ai.brain.memory import BrainMemory
 
 if TYPE_CHECKING:
     from app.ai.providers import LLMProvider
@@ -37,9 +38,10 @@ class Planner:
     Converts a task description + context into a structured ToolCallPlan.
     """
 
-    def __init__(self, provider: 'LLMProvider', registry: 'ToolRegistry') -> None:
+    def __init__(self, provider: 'LLMProvider', registry: 'ToolRegistry', db: Optional['AsyncSession'] = None) -> None:
         self._provider = provider
         self._registry = registry
+        self._memory = BrainMemory(db) if db else None
 
     async def plan(
         self,
@@ -65,7 +67,12 @@ class Planner:
                 "tool_block": self._registry.to_prompt_block(categories=allowed_categories)
             })
 
-        user_message = self._build_user_message(task_hint, input_data, history, context_snapshot)
+        # Retrieval Phase — Learn from past successes
+        past_examples = []
+        if self._memory:
+            past_examples = await self._memory.get_similar_successful_tasks(task_hint)
+
+        user_message = self._build_user_message(task_hint, input_data, history, context_snapshot, past_examples)
 
         logger.info("Planner → LLM request: task='%s'", task_hint[:100])
 
@@ -92,9 +99,19 @@ class Planner:
         input_data: dict,
         history: list[dict] | None = None,
         context_snapshot: dict | None = None,
+        past_examples: list[dict] | None = None,
     ) -> str:
         parts = []
         
+        if past_examples:
+            parts.append("## Learning from Experience (Previous Successes)")
+            parts.append("The following are examples of how similar tasks were successfully executed in the past. Use them to maintain consistency.")
+            for ex in past_examples:
+                parts.append(f"- Task: {ex['task']}")
+                parts.append(f"  Execution Plan: {json.dumps(ex['plan'])}")
+                parts.append(f"  Outcome: {ex['outcome']}\n")
+            parts.append("---\n")
+
         if history:
             parts.append("## Conversation History")
             for msg in history:

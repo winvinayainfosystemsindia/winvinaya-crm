@@ -6,7 +6,7 @@ AI Engine — API Response Schemas
 import uuid
 from datetime import datetime
 from pydantic import BaseModel, Field
-from app.ai.core.schemas import ToolStepLog
+from app.ai.brain.schemas import ToolStepLog
 
 
 class AITaskRunResponse(BaseModel):
