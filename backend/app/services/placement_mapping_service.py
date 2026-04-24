@@ -90,9 +90,42 @@ class PlacementMappingService:
 
         # requirements: {"skills": [], "qualifications": [], "disability_preferred": []}
         reqs = job_role.requirements or {}
-        job_skills = set(s.lower() for s in (reqs.get("skills") or []))
-        job_quals = set(q.lower() for q in (reqs.get("qualifications") or []))
-        job_disability = set(d.lower() for d in (reqs.get("disability_preferred") or []))
+        
+        def normalize_text(obj):
+            if not obj: return []
+            if isinstance(obj, str): return [obj.strip().lower()]
+            if isinstance(obj, list): return [str(item).strip().lower() for item in obj if item]
+            return []
+
+        def normalize_qual(q_list):
+            normalized = set()
+            # Common aliases to bridge variations
+            aliases = {
+                "b.com": ["bcom", "b. com", "b com", "bachelor of commerce"],
+                "b.e": ["be", "b. e", "b e", "bachelor of engineering"],
+                "b.tech": ["btech", "b. tech", "b tech", "bachelor of technology"],
+                "m.com": ["mcom", "m. com", "m com", "master of commerce"],
+                "any graduation": ["any degree", "graduation", "any", "all", "graduation required", "any graduate"]
+            }
+            
+            for q in q_list:
+                q = q.lower().strip()
+                if not q: continue
+                normalized.add(q)
+                # Add aliases
+                for canonical, variations in aliases.items():
+                    if q == canonical or q in variations:
+                        normalized.add(canonical)
+                        for v in variations: normalized.add(v)
+            return normalized
+
+        job_skills = set(normalize_text(reqs.get("skills")))
+        job_quals = normalize_qual(normalize_text(reqs.get("qualifications")))
+        job_disability = set(normalize_text(reqs.get("disability_preferred")))
+        
+        # Check for global match keywords early
+        global_match_keywords = {"any graduation", "any degree", "graduation", "any", "all", "graduation required", "any graduate"}
+        has_global_requirement = any(kw in job_quals for kw in global_match_keywords)
 
         # Fetch only placement-ready candidates: Screened (Completed) AND Counseled (Selected)
         candidates, _ = await self.candidate_repo.get_screened(
@@ -150,18 +183,28 @@ class PlacementMappingService:
                 skill_detail = f"Matched {len(skill_hits)}/{len(job_skills)} skills: {', '.join(skill_hits)}"
 
             # 2. Qualification Match (20%)
-            candidate_quals = []
+            raw_c_quals = []
             if candidate.education_details and 'degrees' in candidate.education_details:
                 for deg in candidate.education_details['degrees']:
-                    candidate_quals.append((deg.get('name') or '').lower())
-                    candidate_quals.append((deg.get('degree') or '').lower())
+                    if isinstance(deg, dict):
+                        # Extract both degree name and major to catch variations like B.Com (Computer Science)
+                        c_deg = (deg.get('degree_name') or deg.get('degree') or deg.get('name') or '').lower().strip()
+                        c_major = (deg.get('major') or deg.get('specialization') or '').lower().strip()
+                        if c_deg: raw_c_quals.append(c_deg)
+                        if c_major: raw_c_quals.append(c_major)
             
-            qual_match = any(q in job_quals for q in candidate_quals if q)
+            # Normalize candidate qualifications using the same alias logic
+            candidate_quals = normalize_qual(raw_c_quals)
+            
+            # Match logic: True if global match OR any candidate qualification matches job requirements
+            qual_match = has_global_requirement or any(q in job_quals for q in candidate_quals if q)
+            
             qual_score = 20.0 if qual_match else 0.0
             qual_detail = "Matched qualification" if qual_match else "Qualification does not match"
-            if not job_quals:
+            
+            if not job_quals or has_global_requirement:
                 qual_score = 20.0
-                qual_detail = "Any qualification acceptable"
+                qual_detail = "Any graduation/qualification acceptable"
 
             # 3. Disability Match (20%)
             candidate_disability = ""
