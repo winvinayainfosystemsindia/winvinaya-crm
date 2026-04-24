@@ -106,18 +106,22 @@ const PlacementDetailDrawer = ({
 
 	const handleViewDocument = (docId?: number, fallbackUrl?: string) => {
 		if (docId) {
+			if (!token) {
+				toast.error('Authentication session expired. Please log in again.');
+				return;
+			}
 			try {
 				const url = getDocumentPreviewUrl(docId, token);
 				window.open(url, '_blank');
 			} catch (error) {
 				toast.error('Failed to load document');
 				if (fallbackUrl) {
-					const finalUrl = fallbackUrl.startsWith('http') ? fallbackUrl : `http://localhost:8000/${fallbackUrl}`;
+					const finalUrl = fallbackUrl.startsWith('http') ? fallbackUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/${fallbackUrl}`;
 					window.open(finalUrl, '_blank');
 				}
 			}
 		} else if (fallbackUrl) {
-			const finalUrl = fallbackUrl.startsWith('http') ? fallbackUrl : `http://localhost:8000/${fallbackUrl}`;
+			const finalUrl = fallbackUrl.startsWith('http') ? fallbackUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/${fallbackUrl}`;
 			window.open(finalUrl, '_blank');
 		}
 	};

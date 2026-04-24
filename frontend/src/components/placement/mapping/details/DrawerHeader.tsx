@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Box, Typography, IconButton, Stack, Button, alpha, useTheme } from '@mui/material';
 import {
 	Close as CloseIcon,
@@ -23,6 +23,35 @@ const DrawerHeader: React.FC<DrawerHeaderProps> = ({
 	onViewResume 
 }) => {
 	const theme = useTheme();
+
+	// Find the best resume document to display
+	const resumeDoc = useMemo(() => {
+		if (!documents || documents.length === 0) return null;
+		
+		// Priority logic for resume selection
+		return (
+			// 1. Active Trainer Resume
+			documents.find(d => 
+				(d.document_type === 'resume' || d.document_type?.toLowerCase().includes('resume')) && 
+				d.document_source === 'trainer' && 
+				d.is_active
+			) ||
+			// 2. Any Trainer Resume
+			documents.find(d => 
+				(d.document_type === 'resume' || d.document_type?.toLowerCase().includes('resume')) && 
+				d.document_source === 'trainer'
+			) ||
+			// 3. Active Candidate Resume
+			documents.find(d => 
+				(d.document_type === 'resume' || d.document_type?.toLowerCase().includes('resume')) && 
+				d.is_active
+			) ||
+			// 4. Any Candidate Resume
+			documents.find(d => 
+				(d.document_type === 'resume' || d.document_type?.toLowerCase().includes('resume'))
+			)
+		);
+	}, [documents]);
 
 	return (
 		<Box sx={{
@@ -54,18 +83,11 @@ const DrawerHeader: React.FC<DrawerHeaderProps> = ({
 				</Box>
 			</Box>
 			<Stack direction="row" spacing={1} alignItems="center">
-				{documents && documents.length > 0 && (
+				{resumeDoc && (
 					<Button
 						size="small"
 						startIcon={<DescriptionIcon sx={{ fontSize: 16 }} />}
-						onClick={() => {
-							const activeTrainerResume = documents.find(d => d.document_type?.toLowerCase().includes('trainer_resume') && d.is_active);
-							const activeResume = documents.find(d => d.document_type?.toLowerCase().includes('resume') && d.is_active);
-							const fallbackResume = documents.find(d => d.document_type?.toLowerCase().includes('resume'));
-							
-							const targetDoc = activeTrainerResume || activeResume || fallbackResume;
-							if (targetDoc) onViewResume(targetDoc.id);
-						}}
+						onClick={() => onViewResume(resumeDoc.id)}
 						sx={{
 							textTransform: 'none',
 							color: 'common.white',
