@@ -14,6 +14,7 @@ import jobRoleReducer from './slices/jobRoleSlice';
 import placementMappingReducer from './slices/placementMappingSlice';
 import skillReducer from './slices/skillSlice';
 import placementEmailReducer from './slices/placementEmailSlice';
+import placementDetailReducer from './slices/placementDetailSlice';
 
 import companyReducer from './slices/companySlice';
 import contactReducer from './slices/contactSlice';
@@ -62,6 +63,7 @@ export const store = configureStore({
 		placementMapping: placementMappingReducer,
 		skills: skillReducer,
 		placementEmail: placementEmailReducer,
+		placementDetail: placementDetailReducer,
 	},
 	middleware: (getDefaultMiddleware) =>
 		getDefaultMiddleware({

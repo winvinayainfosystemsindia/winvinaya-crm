@@ -139,6 +139,11 @@ const placementMappingService = {
             params: { status_val: status, joining_date: joiningDate }
         });
         return res.data;
+    },
+
+    addNote: async (note: { mapping_id: number; content: string }): Promise<any> => {
+        const response = await api.post('/placement/notes/', note);
+        return response.data;
     }
 };
 
