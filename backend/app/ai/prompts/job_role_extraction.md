@@ -23,12 +23,14 @@ Always prefer established tags (e.g., "React" instead of "ReactJS").
 - location: Object with { "cities": list[str], "states": list[str], "country": str }. 
     - IMPORTANT: You MUST use canonical names from the 'country-state-city' dataset.
     - If specific states aren't found in the text, you MUST infer the correct state(s) based on the cities provided (e.g., if "Bangalore" is found, set city to "Bengaluru" and state to "Karnataka").
-    - Default country to "India" if not specified.
+    - If no location is found, return { "cities": [], "states": [], "country": "India" }.
 - salary_range: Object with { "min": float|null, "max": float|null, "currency": "INR" }.
-- experience: Object with { "min": float|null, "max": float|null } in years.
+- experience: Object with { "min": float|null, "max": float|null } in years (e.g., "5+ years" -> min: 5, max: null).
 - requirements: Object with { "skills": list[str], "qualifications": list[str], "disability_preferred": list[str] }. 
-    - IMPORTANT: Ensure "skills" are single granular tags.
-    - "qualifications" and "disability_preferred" MUST match the master data lists above.
+    - IMPORTANT: "skills" MUST be granular technical tags. 
+    - Extract ALL technical skills mentioned, even if in parentheses or listed together (e.g., "Microsoft Power Automate (Cloud Flows, RPA)" should yield "Microsoft Power Automate", "Cloud Flows", and "RPA").
+    - Look for skills in "Key Responsibilities", "Technical Skills", and "Qualifications" sections.
+    - "qualifications" and "disability_preferred" MUST match the master data lists above or be high-fidelity approximations.
 - job_details: Object with { "designation": str, "workplace_type": "Onsite"|"Remote"|"Hybrid", "job_type": "Full Time"|"Part Time"|"Contract" }.
 - company_name: Name of the hiring company. If not found, return null.
 - contact_name: Name of the contact person or recruiter. If not found, return null.

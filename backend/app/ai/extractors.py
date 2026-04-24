@@ -184,16 +184,33 @@ class JobRoleExtractor:
                             # Note: B.E and B.Tech are often interchangeable but we have both
                             if "btech" in q_normalized: match = "B.Tech"
                             if "be" == q_normalized: match = "B.E"
-                        else:
-                            # Last resort: substring match
-                            for master_q in QUALIFICATIONS:
-                                mq_normalized = master_q.lower().replace(".", "").replace(" ", "")
-                                if q_normalized in mq_normalized or mq_normalized in q_normalized:
-                                    match = master_q
-                                    break
+                        # 2. Heuristic matches for common degree variations
+                        if not match:
+                            q_lower = q.lower()
+                            # Technical degree priority
+                            if any(k in q_lower for k in ["computer science", "it", "software", "engg", "engineering", "technical"]):
+                                if any(k in q_lower for k in ["bachelor", "degree", "gradu"]): match = "B.E" # Or B.Tech
+                                elif any(k in q_lower for k in ["master", "post"]): match = "M.E"
+                            elif "science" in q_lower and any(k in q_lower for k in ["bachelor", "degree"]):
+                                match = "B.Sc"
+                            elif "commerce" in q_lower and any(k in q_lower for k in ["bachelor", "degree"]):
+                                match = "B.Com"
+                            elif "arts" in q_lower and any(k in q_lower for k in ["bachelor", "degree"]):
+                                match = "B.A"
+                            elif any(k in q_lower for k in ["management", "admin", "business"]):
+                                if any(k in q_lower for k in ["bachelor", "degree"]): match = "B.B.A"
+                                elif any(k in q_lower for k in ["master", "post"]): match = "M.B.A"
+                            elif "application" in q_lower:
+                                if any(k in q_lower for k in ["bachelor", "degree"]): match = "B.C.A"
+                                elif any(k in q_lower for k in ["master", "post"]): match = "M.C.A"
+                            elif any(k in q_lower for k in ["bachelor", "degree", "graduate"]):
+                                # Default to 'Any Graduation' if it's a bachelor but not specific or other
+                                match = "Any Graduation"
+                            elif "diploma" in q_lower:
+                                match = "Diploma"
                     
                     new_quals.append(match if match else q)
-                requirements["qualifications"] = new_quals
+                requirements["qualifications"] = list(set(new_quals)) # De-duplicate
 
             # 3. Normalize Disability Types
             disabilities = requirements.get("disability_preferred", [])
@@ -202,19 +219,31 @@ class JobRoleExtractor:
                 for d in disabilities:
                     match = None
                     d_lower = d.lower()
-                    # Special cases / Common abbreviations
-                    if "loco" in d_lower:
-                        match = "Locomotor Disability"
-                    elif "blind" in d_lower:
-                        match = "Blindness"
-                    elif "hearing" in d_lower or "deaf" in d_lower:
-                        match = "Hearing Impairment (Deaf and Hard of Hearing)"
-                    elif "speech" in d_lower:
-                        match = "Speech and Language Disability"
-                    elif "intellectual" in d_lower or "id" == d_lower.strip():
-                        match = "Intellectual Disability"
-                    elif "autism" in d_lower or "asd" in d_lower:
-                        match = "Autism Spectrum Disorder"
+                    
+                    # Exact or close matches first
+                    for master_d in DISABILITY_TYPES:
+                        if d_lower == master_d.lower():
+                            match = master_d
+                            break
+                    
+                    if not match:
+                        # Heuristic/Keyword matches
+                        if "loco" in d_lower or "ortho" in d_lower:
+                            match = "Locomotor Disability"
+                        elif "blind" in d_lower or "vi" == d_lower.strip() or "visual" in d_lower:
+                            match = "Blindness" # Or Low Vision based on context, but Blindness is safer
+                        elif "hearing" in d_lower or "hi" == d_lower.strip() or "deaf" in d_lower:
+                            match = "Hearing Impairment (Deaf and Hard of Hearing)"
+                        elif "speech" in d_lower:
+                            match = "Speech and Language Disability"
+                        elif "intellectual" in d_lower or "id" == d_lower.strip():
+                            match = "Intellectual Disability"
+                        elif "autism" in d_lower or "asd" in d_lower:
+                            match = "Autism Spectrum Disorder"
+                        elif "mental" in d_lower or "psychiatric" in d_lower:
+                            match = "Mental Illness"
+                        elif "women" in d_lower:
+                            match = "Women"
                     else:
                         # Try to find a match in the master list
                         for master_d in DISABILITY_TYPES:

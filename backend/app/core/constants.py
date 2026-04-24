@@ -72,5 +72,6 @@ COMMON_SKILLS = [
     "Java", "Python", "JavaScript", "React", "Angular", "Node.js", "SQL", "NoSQL",
     "C++", "C#", ".NET", "HTML/CSS", "AWS", "Azure", "GCP", "Data Analytics",
     "Soft Skills", "Communication", "Customer Support", "BPO", "Accounting",
-    "Tally", "Excel", "Data Entry", "Project Management", "Agile", "Salesforce"
+    "Tally", "Excel", "Data Entry", "Project Management", "Agile", "Salesforce",
+    "RPA", "Power Automate"
 ]
