@@ -24,19 +24,18 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status, File, Uplo
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
-from app.ai.brain.engine import AIEngine
-from app.ai.task_journal import TaskJournal, get_task_log_by_public_id, list_task_logs
-from app.ai.tool_registry import registry
-from app.schemas.ai import (
+from app.ai.core.engine import AIEngine
+from app.ai.core.journal import TaskJournal, get_task_log_by_public_id, list_task_logs
+from app.ai.mcp.registry import registry
+from app.ai.schemas import (
     AITaskRunRequest,
     AITaskRunResponse,
     AITaskLogRead,
     AITaskLogListItem,
-    JobRoleExtractionRequest,
     JobRoleExtractionResponse,
+    ToolDefinition,
 )
-from app.ai.extractors import JobRoleExtractor
-from app.ai.schemas import ToolDefinition
+from app.ai.services.extraction_service import JobRoleExtractionService
 from app.core.config import settings
 from app.models.ai_task_log import AITaskStatus
 from app.models.user import User
@@ -72,7 +71,7 @@ async def run_task(
             detail="The AI Engine is currently disabled. Set AI_ENABLED=true in configuration.",
         )
 
-    engine = AIEngine(db=db, triggered_by_user_id=current_user.id)
+    engine = AIEngine(db=db, user=current_user)
     result = await engine.run(request)
 
     logger.info(
@@ -244,7 +243,7 @@ async def extract_job_role(
             detail="AI Engine is disabled.",
         )
 
-    extractor = JobRoleExtractor(db, current_user)
+    extractor = JobRoleExtractionService(db, current_user)
     try:
         file_bytes = None
         if file:

@@ -1,16 +1,26 @@
 """
-AI Engine — Phase 1: Foundation
-================================
+AI Engine — Modular "Brain" Architecture
+========================================
 
-Package index for the WinVinaya AI Engine.
-
-Architecture: MCP-based agentic orchestrator.
-  - engine.py       → Main orchestrator (AIEngine class)
-  - planner.py      → LLM-based task planner
-  - context_loader.py → DB context fetcher before planning
-  - task_journal.py → Structured task-step logging
-  - tool_registry.py → All available tools registry
-  - providers/      → LLM provider adapters (Gemini, OpenAI, Ollama)
-  - tools/          → Domain-specific tool implementations
-  - exceptions.py   → AI-specific exception hierarchy
+Public API facade for the WinVinaya AI Engine.
+Provides unified access to the core engine, services, and providers.
 """
+
+from app.ai.core.engine import AIEngine
+from app.ai.core.planner import Planner
+from app.ai.core.journal import TaskJournal
+from app.ai.providers import get_llm_provider, LLMProvider
+from app.ai.mcp.registry import registry
+from app.ai.mcp.base_tool import BaseTool
+from app.ai.prompts.loader import loader as prompt_loader
+
+__all__ = [
+    "AIEngine",
+    "Planner",
+    "TaskJournal",
+    "get_llm_provider",
+    "LLMProvider",
+    "registry",
+    "BaseTool",
+    "prompt_loader",
+]

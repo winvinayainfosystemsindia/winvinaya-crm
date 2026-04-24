@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
 from app.core.rate_limiter import limiter
-from app.ai.chat_service import AIChatService
+from app.ai.services.chat_service import AIChatService
 from app.models.user import User
 from app.schemas.ai_chat import (
     AIChatSessionRead,

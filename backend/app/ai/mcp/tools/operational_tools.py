@@ -13,8 +13,9 @@ from datetime import datetime, date, timedelta, timezone
 from typing import Any, TYPE_CHECKING
 
 from sqlalchemy import select, func, and_
-from app.ai.schemas import ToolDefinition, ToolParameterSchema, ToolResult
-from app.ai.tool_registry import BaseTool, registry
+from app.ai.core.schemas import ToolDefinition, ToolParameterSchema, ToolResult
+from app.ai.mcp.base_tool import BaseTool
+from app.ai.mcp.registry import registry
 from app.models.candidate_screening import CandidateScreening
 from app.models.dsr_entry import DSREntry, DSRStatus
 from app.models.training_candidate_allocation import TrainingCandidateAllocation

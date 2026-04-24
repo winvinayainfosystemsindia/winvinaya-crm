@@ -12,8 +12,9 @@ import logging
 from typing import Any, TYPE_CHECKING
 
 from sqlalchemy import select, func
-from app.ai.schemas import ToolDefinition, ToolParameterSchema, ToolResult
-from app.ai.tool_registry import BaseTool, registry
+from app.ai.core.schemas import ToolDefinition, ToolParameterSchema, ToolResult
+from app.ai.mcp.base_tool import BaseTool
+from app.ai.mcp.registry import registry
 from app.api.deps import get_current_user
 from app.models.lead import LeadSource, LeadStatus
 from app.repositories.contact_repository import ContactRepository

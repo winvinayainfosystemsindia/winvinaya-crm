@@ -31,6 +31,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
 from app.ai.providers import SUPPORTED_PROVIDERS, get_provider_info, get_llm_provider
+from app.ai.core.exceptions import LLMAuthError, LLMProviderError
 from app.core.config import settings
 from app.models.user import User, UserRole
 from app.repositories.system_setting_repository import SystemSettingRepository
@@ -191,8 +192,8 @@ async def test_connection(
     to verify the API key and connectivity.
     """
     import time
+    import time
     from app.ai.providers import PROVIDER_REGISTRY
-    from app.ai.exceptions import LLMAuthError, LLMProviderError
 
     provider_name = body.provider.lower()
 

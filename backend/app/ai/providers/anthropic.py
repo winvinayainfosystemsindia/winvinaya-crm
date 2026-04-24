@@ -2,7 +2,7 @@ import httpx
 import logging
 from typing import AsyncGenerator
 from app.core.config import settings
-from app.ai.exceptions import LLMAuthError, LLMProviderError, LLMRateLimitError
+from app.ai.core.exceptions import LLMAuthError, LLMProviderError, LLMRateLimitError
 from app.ai.providers.base import LLMProvider, LLMResponse
 
 logger = logging.getLogger(__name__)

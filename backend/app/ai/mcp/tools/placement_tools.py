@@ -10,8 +10,9 @@ from __future__ import annotations
 import logging
 from typing import Any, TYPE_CHECKING
 
-from app.ai.schemas import ToolDefinition, ToolParameterSchema, ToolResult
-from app.ai.tool_registry import BaseTool, registry
+from app.ai.core.schemas import ToolDefinition, ToolParameterSchema, ToolResult
+from app.ai.mcp.base_tool import BaseTool
+from app.ai.mcp.registry import registry
 from app.repositories.job_role_repository import JobRoleRepository
 from app.schemas.job_role import JobRoleCreate
 
