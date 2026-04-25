@@ -45,6 +45,7 @@ const ScreeningStatCard: React.FC = () => {
 					count={stats.total.toString()}
 					icon={<PeopleIcon fontSize="large" />}
 					color="#1976d2"
+					subtitle="Registered in the system"
 				/>
 			</Box>
 			<Box sx={{ flex: '1 1 200px' }}>
@@ -53,6 +54,7 @@ const ScreeningStatCard: React.FC = () => {
 					count={stats.screened?.toString() || '0'}
 					icon={<WcIcon fontSize="large" />}
 					color="#2e7d32"
+					subtitle="Assessment process completed"
 				/>
 			</Box>
 			<Box sx={{ flex: '1 1 200px' }}>
@@ -61,6 +63,7 @@ const ScreeningStatCard: React.FC = () => {
 					count={stats.screening_distribution?.['Completed']?.toString() || '0'}
 					icon={<CheckCircle fontSize="large" />}
 					color="#4caf50"
+					subtitle="Ready for next phase"
 				/>
 			</Box>
 			<Box sx={{ flex: '1 1 200px' }}>
@@ -69,6 +72,7 @@ const ScreeningStatCard: React.FC = () => {
 					count={stats.not_screened?.toString() || '0'}
 					icon={<PeopleIcon fontSize="large" />}
 					color="#ed6c02"
+					subtitle="Awaiting initial review"
 				/>
 			</Box>
 		</Box>
