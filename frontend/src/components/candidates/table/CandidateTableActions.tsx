@@ -1,20 +1,6 @@
-import React, { useState } from 'react';
-import {
-	IconButton,
-	Menu,
-	MenuItem,
-	ListItemIcon,
-	ListItemText,
-	Tooltip,
-	Typography
-} from '@mui/material';
-import {
-	MoreVert,
-	Visibility,
-	Edit,
-	Delete,
-	AssignmentInd
-} from '@mui/icons-material';
+import React from 'react';
+import { Visibility, Edit, Delete, AssignmentInd } from '@mui/icons-material';
+import { DataTableActions, type TableMenuAction } from '../../common/table';
 import type { CandidateListItem } from '../../../models/candidate';
 
 interface CandidateTableActionsProps {
@@ -34,104 +20,46 @@ const CandidateTableActions: React.FC<CandidateTableActionsProps> = ({
 	onDelete,
 	onAssign
 }) => {
-	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-	const open = Boolean(anchorEl);
-
-	const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-		setAnchorEl(event.currentTarget);
-	};
-
-	const handleClose = () => {
-		setAnchorEl(null);
-	};
-
-	const handleAction = (action: () => void) => {
-		action();
-		handleClose();
-	};
-
 	const isAdmin = userRole === 'admin';
 	const isManager = isAdmin || userRole === 'manager';
 
+	const actions: TableMenuAction<CandidateListItem>[] = [
+		{
+			label: 'View Details',
+			icon: <Visibility fontSize="small" />,
+			onClick: (item) => onView(item.public_id),
+			color: 'primary.main'
+		},
+		{
+			label: 'Edit Candidate',
+			icon: <Edit fontSize="small" />,
+			onClick: (item) => onEdit(item.public_id),
+			color: 'warning.main',
+			hidden: !isManager
+		},
+		{
+			label: 'Assign Candidate',
+			icon: <AssignmentInd fontSize="small" />,
+			onClick: (item) => onAssign(item),
+			color: 'info.main',
+			hidden: !isManager
+		},
+		{
+			label: 'Delete Candidate',
+			icon: <Delete fontSize="small" />,
+			onClick: (item) => onDelete(item),
+			color: 'error.main',
+			hidden: !isAdmin,
+			divider: false
+		}
+	];
+
 	return (
-		<>
-			<Tooltip title="Actions">
-				<IconButton
-					size="small"
-					onClick={handleClick}
-					aria-controls={open ? 'candidate-actions-menu' : undefined}
-					aria-haspopup="true"
-					aria-expanded={open ? 'true' : undefined}
-				>
-					<MoreVert fontSize="small" />
-				</IconButton>
-			</Tooltip>
-			<Menu
-				anchorEl={anchorEl}
-				id="candidate-actions-menu"
-				open={open}
-				onClose={handleClose}
-				onClick={handleClose}
-				transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-				anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-				PaperProps={{
-					elevation: 2,
-					sx: {
-						minWidth: 150,
-						border: '1px solid #d5dbdb',
-						'& .MuiMenuItem-root': {
-							px: 1.5,
-							py: 1,
-						}
-					}
-				}}
-			>
-				<MenuItem onClick={() => handleAction(() => onView(candidate.public_id))}>
-					<ListItemIcon>
-						<Visibility fontSize="small" sx={{ color: 'primary.main' }} />
-					</ListItemIcon>
-					<ListItemText>
-						<Typography variant="body2">View Details</Typography>
-					</ListItemText>
-				</MenuItem>
-
-				{isManager && (
-					<MenuItem onClick={() => handleAction(() => onEdit(candidate.public_id))}>
-						<ListItemIcon>
-							<Edit fontSize="small" sx={{ color: 'warning.main' }} />
-						</ListItemIcon>
-						<ListItemText>
-							<Typography variant="body2">Edit Candidate</Typography>
-						</ListItemText>
-					</MenuItem>
-				)}
-
-				{isManager && (
-					<MenuItem onClick={() => handleAction(() => onAssign(candidate))}>
-						<ListItemIcon>
-							<AssignmentInd fontSize="small" sx={{ color: 'info.main' }} />
-						</ListItemIcon>
-						<ListItemText>
-							<Typography variant="body2">Assign Candidate</Typography>
-						</ListItemText>
-					</MenuItem>
-				)}
-
-				{isAdmin && (
-					<MenuItem
-						onClick={() => handleAction(() => onDelete(candidate))}
-						sx={{ color: 'error.main' }}
-					>
-						<ListItemIcon>
-							<Delete fontSize="small" color="error" />
-						</ListItemIcon>
-						<ListItemText>
-							<Typography variant="body2" color="error">Delete Candidate</Typography>
-						</ListItemText>
-					</MenuItem>
-				)}
-			</Menu>
-		</>
+		<DataTableActions
+			item={candidate}
+			actions={actions}
+			menuId={`candidate-actions-${candidate.public_id}`}
+		/>
 	);
 };
 

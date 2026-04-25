@@ -1,24 +1,14 @@
 import React from 'react';
-import {
-	Paper,
-	Table,
-	TableBody,
-	TableContainer,
-	Snackbar,
-	Alert
-} from '@mui/material';
+import { Snackbar, Alert } from '@mui/material';
 import ConfirmDialog from '../../common/ConfirmDialog';
 import { useCandidateTable } from '../hooks/useCandidateTable';
 import { getCandidateFilterFields } from './CandidateFilters';
 
-// Sub-components
-import CandidateTableHeader from './CandidateTableHeader';
-import CandidateTableHead from './CandidateTableHead';
 import CandidateTableRow from './CandidateTableRow';
-import CustomTablePagination from '../../common/CustomTablePagination';
-import CandidateTableLoader from './CandidateTableLoader';
-import CandidateTableEmpty from './CandidateTableEmpty';
 import AssignCandidateDialog from '../AssignCandidateDialog';
+import { DataTable } from '../../common/table';
+import { candidateColumns } from './CandidateTableHead';
+import FilterDrawer from '../../common/FilterDrawer';
 
 interface CandidateTableProps {
 	onEditCandidate?: (candidateId: string) => void;
@@ -47,7 +37,6 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onEditCandidate, onView
 		notification,
 		fetchCandidatesData,
 		handleChangePage,
-		handleChangeRowsPerPage,
 		handleSearch,
 		handleRequestSort,
 		handleFilterOpen,
@@ -73,59 +62,45 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onEditCandidate, onView
 	const filterFields = getCandidateFilterFields(filterOptions);
 
 	return (
-		<Paper sx={{ border: '1px solid #d5dbdb', boxShadow: 'none', borderRadius: 0 }}>
-			<CandidateTableHeader
-				searchTerm={searchTerm}
-				onSearchChange={handleSearch}
-				onRefresh={fetchCandidatesData}
+		<>
+			<DataTable
+				columns={candidateColumns}
+				data={candidates}
 				loading={loading}
+				totalCount={totalCount}
+				page={page}
+				rowsPerPage={rowsPerPage}
+				onPageChange={(newPage) => handleChangePage(null, newPage)}
+				onRowsPerPageChange={setRowsPerPage}
+				searchTerm={searchTerm}
+				onSearchChange={(value) => handleSearch({ target: { value } } as React.ChangeEvent<HTMLInputElement>)}
+				onRefresh={fetchCandidatesData}
+				orderBy={orderBy as any}
+				order={order}
+				onSortRequest={handleRequestSort as any}
 				activeFilterCount={activeFilterCount}
-				filterDrawerOpen={filterDrawerOpen}
 				onFilterOpen={handleFilterOpen}
-				onFilterClose={handleFilterClose}
-				filterFields={filterFields}
-				filters={filters}
+				renderRow={(candidate) => (
+					<CandidateTableRow
+						key={candidate.public_id}
+						candidate={candidate}
+						userRole={user?.role || null}
+						onView={(id) => onViewCandidate?.(id)}
+						onEdit={(id) => onEditCandidate?.(id)}
+						onDelete={handleDeleteClick}
+						onAssign={handleAssignClick}
+					/>
+				)}
+			/>
+
+			<FilterDrawer
+				open={filterDrawerOpen}
+				onClose={handleFilterClose}
+				fields={filterFields}
+				activeFilters={filters}
 				onFilterChange={handleFilterChange}
 				onClearFilters={clearFilters}
 				onApplyFilters={applyFilters}
-			/>
-
-			<TableContainer>
-				<Table sx={{ minWidth: 650 }} aria-label="candidate table">
-					<CandidateTableHead
-						order={order}
-						orderBy={orderBy}
-						onRequestSort={handleRequestSort}
-					/>
-					<TableBody>
-						{loading ? (
-							<CandidateTableLoader rowsPerPage={rowsPerPage} />
-						) : candidates.length === 0 ? (
-							<CandidateTableEmpty />
-						) : (
-							candidates.map((candidate) => (
-								<CandidateTableRow
-									key={candidate.public_id}
-									candidate={candidate}
-									userRole={user?.role || null}
-									onView={(id) => onViewCandidate?.(id)}
-									onEdit={(id) => onEditCandidate?.(id)}
-									onDelete={handleDeleteClick}
-									onAssign={handleAssignClick}
-								/>
-							))
-						)}
-					</TableBody>
-				</Table>
-			</TableContainer>
-
-			<CustomTablePagination
-				count={totalCount}
-				page={page}
-				rowsPerPage={rowsPerPage}
-				onPageChange={handleChangePage}
-				onRowsPerPageChange={handleChangeRowsPerPage}
-				onRowsPerPageSelectChange={setRowsPerPage}
 			/>
 
 			{/* Dialogs & Notifications */}
@@ -162,7 +137,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onEditCandidate, onView
 					{notification.message}
 				</Alert>
 			</Snackbar>
-		</Paper>
+		</>
 	);
 };
 
