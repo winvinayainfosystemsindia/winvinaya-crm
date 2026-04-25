@@ -30,7 +30,7 @@ const ScreeningTableRow: React.FC<ScreeningTableRowProps> = memo(({
 		<TableRow
 			sx={{
 				'&:hover': {
-					bgcolor: '#f5f8fa',
+					bgcolor: 'action.hover',
 				},
 				'&:last-child td': {
 					borderBottom: 0
@@ -49,7 +49,7 @@ const ScreeningTableRow: React.FC<ScreeningTableRowProps> = memo(({
 					)}
 					{type === 'screened' && (
 						<Tooltip title="Verified Screening">
-							<VerifiedUser sx={{ color: '#4caf50', fontSize: 20 }} />
+							<VerifiedUser sx={{ color: 'success.main', fontSize: 20 }} />
 						</Tooltip>
 					)}
 					{isToday(parseISO(candidate.created_at)) && (
@@ -61,8 +61,8 @@ const ScreeningTableRow: React.FC<ScreeningTableRowProps> = memo(({
 								height: 20,
 								fontSize: '0.65rem',
 								fontWeight: 'bold',
-								bgcolor: '#e3f2fd',
-								color: '#1976d2'
+								bgcolor: 'rgba(0, 77, 230, 0.08)',
+								color: 'primary.main'
 							}}
 						/>
 					)}
@@ -112,15 +112,15 @@ const ScreeningTableRow: React.FC<ScreeningTableRowProps> = memo(({
 							fontWeight: 700,
 							borderRadius: 1,
 							bgcolor:
-								candidate.screening_status === 'Completed' ? '#e8f5e9' :
-									candidate.screening_status === 'Rejected' || candidate.screening_status === 'Not Connected' || candidate.screening_status === 'Not Answered' ? '#ffebee' :
-										candidate.screening_status === 'In Progress' ? '#e3f2fd' :
-											'#f5f5f5',
+								candidate.screening_status === 'Completed' ? 'rgba(16, 185, 129, 0.08)' :
+									candidate.screening_status === 'Rejected' || candidate.screening_status === 'Not Connected' || candidate.screening_status === 'Not Answered' ? 'rgba(239, 68, 68, 0.08)' :
+										candidate.screening_status === 'In Progress' ? 'rgba(0, 77, 230, 0.08)' :
+											'action.hover',
 							color:
-								candidate.screening_status === 'Completed' ? '#2e7d32' :
-									candidate.screening_status === 'Rejected' || candidate.screening_status === 'Not Connected' || candidate.screening_status === 'Not Answered' ? '#d32f2f' :
-										candidate.screening_status === 'In Progress' ? '#1976d2' :
-											'#757575',
+								candidate.screening_status === 'Completed' ? 'success.main' :
+									candidate.screening_status === 'Rejected' || candidate.screening_status === 'Not Connected' || candidate.screening_status === 'Not Answered' ? 'error.main' :
+										candidate.screening_status === 'In Progress' ? 'primary.main' :
+											'text.secondary',
 							'& .MuiChip-icon': {
 								color: 'inherit',
 								fontSize: 16
@@ -137,8 +137,8 @@ const ScreeningTableRow: React.FC<ScreeningTableRowProps> = memo(({
 						onClick={() => onAction('screen', candidate)}
 						sx={{
 							textTransform: 'none',
-							bgcolor: '#1976d2',
-							'&:hover': { bgcolor: '#115293' }
+							bgcolor: 'primary.main',
+							'&:hover': { bgcolor: 'primary.dark' }
 						}}
 					>
 						Screen

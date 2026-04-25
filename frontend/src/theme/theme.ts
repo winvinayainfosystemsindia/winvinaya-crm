@@ -102,19 +102,17 @@ const theme = createTheme({
 		},
 		awsSectionTitle: {
 			fontWeight: 700,
-			fontSize: '0.95rem',
-			color: '#0f172a',
-			textTransform: 'none', // Removed All-Caps for enterprise feel
-			letterSpacing: '0',
+			fontSize: '0.9rem',
+			color: '#1e293b', // theme.palette.text.primary
+			textTransform: 'uppercase',
+			letterSpacing: '0.05em',
 			display: 'block'
 		},
 		awsFieldLabel: {
-			fontSize: '0.8125rem',
-			marginBottom: '6px',
-			color: '#475569',
+			fontSize: '0.875rem',
+			marginBottom: '8px',
+			color: '#334155', // theme.palette.text.secondary
 			fontWeight: 600,
-			textTransform: 'uppercase', // Small caps labels are more professional
-			letterSpacing: '0.05em',
 			display: 'block'
 		},
 		navLogo: {
@@ -199,8 +197,6 @@ const theme = createTheme({
 		},
 		MuiCssBaseline: {
 			styleOverrides: {
-				html: {
-				},
 				body: {
 					"&, & *": {
 						scrollbarColor: "#d5dbdb transparent",
@@ -228,30 +224,20 @@ const theme = createTheme({
 
 // Extend the theme with custom AWS console styles
 export const awsStyles = {
-	sectionTitle: {
-		fontWeight: 700,
-		fontSize: '0.9rem',
-		color: '#232f3e',
-		textTransform: 'uppercase' as const,
-		letterSpacing: '0.05em'
-	},
+	sectionTitle: theme.typography.awsSectionTitle,
 	awsPanel: {
-		border: '1px solid #d5dbdb',
+		border: '1px solid',
+		borderColor: 'divider',
 		borderRadius: '2px',
 		p: 3,
-		bgcolor: '#ffffff',
+		bgcolor: 'background.paper',
 		boxShadow: '0 1px 1px 0 rgba(0,28,36,0.1)'
 	},
-	fieldLabel: {
-		fontSize: '0.875rem',
-		mb: 1,
-		color: '#232f3e',
-		fontWeight: 600,
-		display: 'block'
-	},
+	fieldLabel: theme.typography.awsFieldLabel,
 	helperBox: {
-		bgcolor: '#f1faff',
-		border: '1px solid #007eb9',
+		bgcolor: 'rgba(0, 126, 185, 0.05)',
+		border: '1px solid',
+		borderColor: 'info.main',
 		borderRadius: '2px',
 		p: 1.5,
 		display: 'flex',

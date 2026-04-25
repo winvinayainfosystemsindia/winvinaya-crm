@@ -10,7 +10,8 @@ import {
 	MenuItem,
 	Select,
 	Grid,
-	FormControl
+	FormControl,
+	useTheme
 } from '@mui/material';
 import {
 	DeleteOutline as DeleteIcon,
@@ -39,7 +40,8 @@ interface FamilyDetailsTabProps {
 }
 
 const FamilyDetailsTab: React.FC<FamilyDetailsTabProps> = ({ formData, onUpdateField }) => {
-	const { sectionTitle, awsPanel, fieldLabel } = awsStyles;
+	const theme = useTheme();
+	const { awsPanel } = awsStyles;
 	const familyDetails: FamilyMember[] = formData.family_details || [];
 
 	const handleAddRow = () => {
@@ -74,10 +76,10 @@ const FamilyDetailsTab: React.FC<FamilyDetailsTabProps> = ({ formData, onUpdateF
 	const inputSx = {
 		'& .MuiOutlinedInput-root': {
 			borderRadius: '2px',
-			bgcolor: '#fcfcfc',
-			'& fieldset': { borderColor: '#d5dbdb' },
-			'&:hover fieldset': { borderColor: '#879596' },
-			'&.Mui-focused fieldset': { borderColor: '#ec7211' }
+			bgcolor: 'background.paper',
+			'& fieldset': { borderColor: 'divider' },
+			'&:hover fieldset': { borderColor: theme.palette.text.secondary },
+			'&.Mui-focused fieldset': { borderColor: 'primary.main' }
 		}
 	};
 
@@ -86,14 +88,14 @@ const FamilyDetailsTab: React.FC<FamilyDetailsTabProps> = ({ formData, onUpdateF
 			{/* Economic Background Section */}
 			<Paper elevation={0} sx={awsPanel}>
 				<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
-					<Box sx={{ bgcolor: '#ec7211', p: 0.5, borderRadius: '2px', display: 'flex' }}>
-						<WalletIcon sx={{ color: '#ffffff', fontSize: 20 }} />
+					<Box sx={{ bgcolor: 'primary.main', p: 0.5, borderRadius: '2px', display: 'flex' }}>
+						<WalletIcon sx={{ color: 'common.white', fontSize: 20 }} />
 					</Box>
-					<Typography sx={sectionTitle}>Economic Background</Typography>
+					<Typography variant="awsSectionTitle">Economic Background</Typography>
 				</Stack>
 				<Grid container spacing={3}>
 					<Grid size={{ xs: 12, md: 6 }}>
-						<Typography sx={fieldLabel}>Family Annual Income (in INR)</Typography>
+						<Typography variant="awsFieldLabel">Family Annual Income (in INR)</Typography>
 						<TextField
 							fullWidth
 							size="small"
@@ -111,23 +113,22 @@ const FamilyDetailsTab: React.FC<FamilyDetailsTabProps> = ({ formData, onUpdateF
 			<Box>
 				<Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={2} sx={{ mb: 3 }}>
 					<Stack direction="row" alignItems="center" spacing={1.5}>
-						<Typography sx={sectionTitle}>Family & Dependent Details</Typography>
+						<Typography variant="awsSectionTitle">Family & Dependent Details</Typography>
 					</Stack>
 					<Button
 						variant="contained"
 						size="small"
+						color="primary"
 						startIcon={<AddIcon />}
 						onClick={handleAddRow}
 						sx={{
-							bgcolor: '#ec7211',
-							color: '#ffffff',
 							borderRadius: '2px',
 							textTransform: 'none',
 							fontWeight: 700,
 							px: 3,
 							py: 0.8,
 							boxShadow: 'none',
-							'&:hover': { bgcolor: '#eb5f07', boxShadow: 'none' }
+							'&:hover': { boxShadow: 'none' }
 						}}
 					>
 						Add Family Member
@@ -141,12 +142,13 @@ const FamilyDetailsTab: React.FC<FamilyDetailsTabProps> = ({ formData, onUpdateF
 							sx={{
 								p: 6,
 								textAlign: 'center',
-								border: '1px dashed #d5dbdb',
-								bgcolor: '#fafffe',
+								border: '1px dashed',
+								borderColor: 'divider',
+								bgcolor: 'background.default',
 								borderRadius: '2px'
 							}}
 						>
-							<Typography variant="body2" sx={{ color: '#879596', fontStyle: 'italic' }}>
+							<Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
 								No family members registered yet. Click "Add Family Member" to begin.
 							</Typography>
 						</Paper>
@@ -160,15 +162,16 @@ const FamilyDetailsTab: React.FC<FamilyDetailsTabProps> = ({ formData, onUpdateF
 									alignItems: 'center',
 									px: 3,
 									py: 1.5,
-									bgcolor: '#f8f9f9',
-									borderBottom: '1px solid #eaeded'
+									bgcolor: 'background.default',
+									borderBottom: '1px solid',
+									borderColor: 'divider'
 								}}>
 									<Stack direction="row" spacing={1.5} alignItems="center">
 										<Box sx={{
 											width: 28,
 											height: 28,
 											borderRadius: '50%',
-											bgcolor: '#ec7211',
+											bgcolor: 'primary.main',
 											color: 'white',
 											display: 'flex',
 											alignItems: 'center',
@@ -178,14 +181,14 @@ const FamilyDetailsTab: React.FC<FamilyDetailsTabProps> = ({ formData, onUpdateF
 										}}>
 											{index + 1}
 										</Box>
-										<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e' }}>
+										<Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'secondary.main' }}>
 											{member.relation || 'New Member'} {member.name ? `— ${member.name}` : ''}
 										</Typography>
 									</Stack>
 									<IconButton
 										size="small"
 										onClick={() => handleRemoveRow(index)}
-										sx={{ color: '#d91d11', '&:hover': { bgcolor: '#fdf3f2' } }}
+										sx={{ color: 'error.main', '&:hover': { bgcolor: 'error.light', opacity: 0.1 } }}
 									>
 										<DeleteIcon fontSize="small" />
 									</IconButton>
@@ -197,7 +200,7 @@ const FamilyDetailsTab: React.FC<FamilyDetailsTabProps> = ({ formData, onUpdateF
 										{/* Personal Column */}
 										<Grid size={{ xs: 12, md: 6 }}>
 											<Stack spacing={2.5}>
-												<Typography variant="caption" sx={{ fontWeight: 600, color: '#545b64', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+												<Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
 													Identity & Contact
 												</Typography>
 
@@ -244,8 +247,8 @@ const FamilyDetailsTab: React.FC<FamilyDetailsTabProps> = ({ formData, onUpdateF
 										<Grid size={{ xs: 12, md: 6 }}>
 											<Stack spacing={2.5}>
 												<Stack direction="row" spacing={1} alignItems="center">
-													<WorkIcon sx={{ color: '#545b64', fontSize: 18 }} />
-													<Typography variant="caption" sx={{ fontWeight: 600, color: '#545b64', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+													<WorkIcon sx={{ color: 'text.secondary', fontSize: 18 }} />
+													<Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
 														Professional Background
 													</Typography>
 												</Stack>

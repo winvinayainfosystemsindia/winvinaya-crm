@@ -12,6 +12,7 @@ import {
 	Chip,
 	Select,
 	MenuItem,
+	useTheme,
 } from '@mui/material';
 import {
 	CloudUpload as CloudUploadIcon,
@@ -49,7 +50,8 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 	dynamicFields,
 	candidateIsDisabled
 }) => {
-	const { sectionTitle, awsPanel, fieldLabel } = awsStyles;
+	const theme = useTheme();
+	const { awsPanel } = awsStyles;
 
 	const renderDocumentItem = (label: string, key: string) => {
 		const isUploaded = formData.documents_upload?.[key];
@@ -62,32 +64,33 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 				elevation={0}
 				sx={{
 					...awsPanel,
-					borderColor: isUploaded ? '#879596' : '#d5dbdb',
-					bgcolor: isUploaded ? '#fafffa' : '#ffffff',
+					borderColor: isUploaded ? theme.palette.text.secondary : 'divider',
+					bgcolor: isUploaded ? 'rgba(16, 185, 129, 0.04)' : 'background.paper',
 					display: 'flex',
 					flexDirection: 'column',
-					gap: 2
+					gap: 2,
+					transition: 'all 0.2s ease'
 				}}
 			>
 				<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
 					<Box>
-						<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e' }}>
-							{label} <Typography component="span" variant="caption" sx={{ color: '#545b64', fontWeight: 400 }}>(Max 10MB)</Typography>
+						<Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'secondary.main' }}>
+							{label} <Typography component="span" variant="caption" sx={{ color: 'text.secondary', fontWeight: 400 }}>(Max 10MB)</Typography>
 						</Typography>
 						{isUploaded ? (
 							<Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
-								<CheckCircleIcon sx={{ fontSize: 16, color: '#1d8102' }} />
-								<Typography variant="caption" sx={{ color: '#1d8102', fontWeight: 600 }}>
+								<CheckCircleIcon sx={{ fontSize: 16, color: 'success.main' }} />
+								<Typography variant="caption" sx={{ color: 'success.main', fontWeight: 600 }}>
 									Uploaded
 								</Typography>
-								<Typography variant="caption" sx={{ color: '#545b64' }}>
+								<Typography variant="caption" sx={{ color: 'text.secondary' }}>
 									• {fileName}
 								</Typography>
 							</Stack>
 						) : (
 							<Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
-								<ErrorIcon sx={{ fontSize: 16, color: '#545b64' }} />
-								<Typography variant="caption" sx={{ color: '#545b64' }}>
+								<ErrorIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+								<Typography variant="caption" sx={{ color: 'text.secondary' }}>
 									No document uploaded
 								</Typography>
 							</Stack>
@@ -98,13 +101,13 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 							<Chip
 								label="Verified"
 								size="small"
+								color="success"
+								variant="outlined"
 								sx={{
-									bgcolor: '#dff3d8',
-									color: '#1d8102',
 									borderRadius: '2px',
 									fontWeight: 700,
 									fontSize: '0.75rem',
-									border: '1px solid #cce8c5'
+									bgcolor: 'rgba(16, 185, 129, 0.08)'
 								}}
 							/>
 						) : (
@@ -112,19 +115,18 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 								label="Required"
 								size="small"
 								sx={{
-									bgcolor: '#f2f3f3',
-									color: '#545b64',
 									borderRadius: '2px',
 									fontWeight: 700,
 									fontSize: '0.75rem',
-									border: '1px solid #d5dbdb'
+									border: '1px solid',
+									borderColor: 'divider'
 								}}
 							/>
 						)}
 					</Box>
 				</Box>
 
-				<Divider sx={{ borderColor: '#eaeded' }} />
+				<Divider />
 
 				<Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
 					<Button
@@ -136,10 +138,10 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 						sx={{
 							textTransform: 'none',
 							fontWeight: 700,
-							color: '#545b64',
-							border: '1px solid #d5dbdb',
+							color: 'text.secondary',
+							borderColor: 'divider',
 							borderRadius: '2px',
-							'&:hover': { bgcolor: '#f2f3f3', borderColor: '#879596' }
+							'&:hover': { bgcolor: 'action.hover', borderColor: theme.palette.text.secondary }
 						}}
 					>
 						{isUploading ? 'Uploading...' : (isUploaded ? 'Replace File' : 'Choose File')}
@@ -163,10 +165,10 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 								sx={{
 									textTransform: 'none',
 									fontWeight: 700,
-									color: '#545b64',
-									border: '1px solid #d5dbdb',
+									color: 'text.secondary',
+									borderColor: 'divider',
 									borderRadius: '2px',
-									'&:hover': { bgcolor: '#f2f3f3', borderColor: '#879596' }
+									'&:hover': { bgcolor: 'action.hover', borderColor: theme.palette.text.secondary }
 								}}
 							>
 								View
@@ -179,10 +181,10 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 								sx={{
 									textTransform: 'none',
 									fontWeight: 700,
-									color: '#d91d11',
-									border: '1px solid #d5dbdb',
+									color: 'error.main',
+									borderColor: 'divider',
 									borderRadius: '2px',
-									'&:hover': { bgcolor: '#fdf3f2', borderColor: '#d91d11' }
+									'&:hover': { bgcolor: 'error.light', borderColor: 'error.main', opacity: 0.1 }
 								}}
 							>
 								Remove
@@ -198,10 +200,10 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 		<Stack spacing={4}>
 			{/* Document Verification Section */}
 			<Box>
-				<Typography sx={sectionTitle}>
+				<Typography variant="awsSectionTitle" sx={{ mb: 1 }}>
 					Document Verification
 				</Typography>
-				<Typography variant="body2" sx={{ color: '#545b64', mb: 2 }}>
+				<Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
 					Upload and verify required candidate documents. Accepted formats: PDF (Max 10MB).
 				</Typography>
 
@@ -215,7 +217,7 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 			{/* Additional Fields Section */}
 			{dynamicFields.length > 0 && (
 				<Box>
-					<Typography sx={sectionTitle}>
+					<Typography variant="awsSectionTitle" sx={{ mb: 1 }}>
 						Additional Information
 					</Typography>
 					<Paper elevation={0} sx={awsPanel}>
@@ -230,13 +232,13 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 
 			{/* Final Verdict Section */}
 			<Box>
-				<Typography sx={sectionTitle}>
+				<Typography variant="awsSectionTitle" sx={{ mb: 1 }}>
 					Final Verdict & Comments
 				</Typography>
 				<Paper elevation={0} sx={{ ...awsPanel, display: 'flex', flexDirection: 'column', gap: 3 }}>
 
 					<Box>
-						<Typography sx={fieldLabel}>
+						<Typography variant="awsFieldLabel">
 							Screening Status
 						</Typography>
 						<FormControl fullWidth size="small">
@@ -246,15 +248,15 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 								onChange={(e) => onUpdateStatus(e.target.value)}
 								sx={{
 									borderRadius: '2px',
-									bgcolor: '#fcfcfc',
+									bgcolor: 'background.paper',
 									'& .MuiOutlinedInput-notchedOutline': {
-										borderColor: '#d5dbdb'
+										borderColor: 'divider'
 									},
 									'&:hover .MuiOutlinedInput-notchedOutline': {
-										borderColor: '#879596'
+										borderColor: theme.palette.text.secondary
 									},
 									'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-										borderColor: '#ec7211'
+										borderColor: 'primary.main'
 									}
 								}}
 							>
@@ -269,7 +271,7 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 					{/* Conditional Reason Field */}
 					{(formData.status === 'In Progress' || formData.status === 'Rejected') && (
 						<Box>
-							<Typography sx={fieldLabel}>
+							<Typography variant="awsFieldLabel">
 								Reason / Details
 							</Typography>
 							<FormControl fullWidth size="small">
@@ -278,15 +280,15 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 									onChange={(e) => onUpdateOtherField('reason', e.target.value)}
 									displayEmpty
 									sx={{
-										borderRadius: 0,
+										borderRadius: '2px',
 										'& .MuiOutlinedInput-notchedOutline': {
-											borderColor: '#d5dbdb'
+											borderColor: 'divider'
 										},
 										'&:hover .MuiOutlinedInput-notchedOutline': {
-											borderColor: '#879596'
+											borderColor: theme.palette.text.secondary
 										},
 										'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-											borderColor: '#ec7211'
+											borderColor: 'primary.main'
 										}
 									}}
 								>
@@ -310,7 +312,7 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 					)}
 
 					<Box>
-						<Typography sx={fieldLabel}>
+						<Typography variant="awsFieldLabel">
 							Screening Comments
 						</Typography>
 						<TextField
@@ -323,10 +325,10 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 							onChange={(e) => onUpdateOtherField('comments', e.target.value)}
 							sx={{
 								'& .MuiOutlinedInput-root': {
-									borderRadius: 0,
-									'& fieldset': { borderColor: '#d5dbdb' },
-									'&:hover fieldset': { borderColor: '#879596' },
-									'&.Mui-focused fieldset': { borderColor: '#ec7211' }
+									borderRadius: '2px',
+									'& fieldset': { borderColor: 'divider' },
+									'&:hover fieldset': { borderColor: theme.palette.text.secondary },
+									'&.Mui-focused fieldset': { borderColor: 'primary.main' }
 								}
 							}}
 						/>

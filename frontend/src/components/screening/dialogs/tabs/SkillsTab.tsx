@@ -6,7 +6,8 @@ import {
 	Autocomplete,
 	TextField,
 	Chip,
-	Paper
+	Paper,
+	useTheme
 } from '@mui/material';
 import {
 	Build as BuildIcon,
@@ -26,7 +27,8 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 	formData,
 	onUpdateField
 }) => {
-	const { sectionTitle, awsPanel, fieldLabel } = awsStyles;
+	const theme = useTheme();
+	const { awsPanel } = awsStyles;
 	const toast = useToast();
 	const [availableSkills, setAvailableSkills] = useState<string[]>([]);
 	const [loading, setLoading] = useState(false);
@@ -101,10 +103,10 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 	const inputSx = {
 		'& .MuiOutlinedInput-root': {
 			borderRadius: '2px',
-			bgcolor: '#fcfcfc',
-			'& fieldset': { borderColor: '#d5dbdb' },
-			'&:hover fieldset': { borderColor: '#879596' },
-			'&.Mui-focused fieldset': { borderColor: '#ec7211' }
+			bgcolor: 'background.paper',
+			'& fieldset': { borderColor: 'divider' },
+			'&:hover fieldset': { borderColor: theme.palette.text.secondary },
+			'&.Mui-focused fieldset': { borderColor: 'primary.main' }
 		}
 	};
 
@@ -113,14 +115,14 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 			{/* Technical Skills Section */}
 			<Paper elevation={0} sx={awsPanel}>
 				<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
-					<Box sx={{ bgcolor: '#ec7211', p: 0.5, borderRadius: '2px', display: 'flex' }}>
-						<BuildIcon sx={{ color: '#ffffff', fontSize: 20 }} />
+					<Box sx={{ bgcolor: 'primary.main', p: 0.5, borderRadius: '2px', display: 'flex' }}>
+						<BuildIcon sx={{ color: 'common.white', fontSize: 20 }} />
 					</Box>
-					<Typography sx={sectionTitle}>Technical Skills</Typography>
+					<Typography variant="awsSectionTitle">Technical Skills</Typography>
 				</Stack>
 				
 				<Box sx={{ mb: 1 }}>
-					<Typography sx={fieldLabel}>Core Proficiencies</Typography>
+					<Typography variant="awsFieldLabel">Core Proficiencies</Typography>
 					<Autocomplete
 						multiple
 						freeSolo
@@ -135,9 +137,10 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 									size="small"
 									sx={{ 
 										borderRadius: '2px',
-										bgcolor: '#f1faff',
-										border: '1px solid #007eb9',
-										color: '#007eb9',
+										bgcolor: 'rgba(0, 126, 185, 0.08)',
+										border: '1px solid',
+										borderColor: 'info.main',
+										color: 'info.main',
 										fontWeight: 600
 									}}
 								/>
@@ -158,14 +161,14 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 			{/* Soft Skills Section */}
 			<Paper elevation={0} sx={awsPanel}>
 				<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
-					<Box sx={{ bgcolor: '#ec7211', p: 0.5, borderRadius: '2px', display: 'flex' }}>
-						<SoftSkillIcon sx={{ color: '#ffffff', fontSize: 20 }} />
+					<Box sx={{ bgcolor: 'primary.main', p: 0.5, borderRadius: '2px', display: 'flex' }}>
+						<SoftSkillIcon sx={{ color: 'common.white', fontSize: 20 }} />
 					</Box>
-					<Typography sx={sectionTitle}>Additional & Soft Skills</Typography>
+					<Typography variant="awsSectionTitle">Additional & Soft Skills</Typography>
 				</Stack>
 
 				<Box sx={{ mb: 1 }}>
-					<Typography sx={fieldLabel}>Professional Attributes</Typography>
+					<Typography variant="awsFieldLabel">Professional Attributes</Typography>
 					<Autocomplete
 						multiple
 						freeSolo
@@ -180,9 +183,10 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 									size="small"
 									sx={{ 
 										borderRadius: '2px',
-										bgcolor: '#fafffe',
-										border: '1px solid #1d8102',
-										color: '#1d8102',
+										bgcolor: 'rgba(16, 185, 129, 0.08)',
+										border: '1px solid',
+										borderColor: 'success.main',
+										color: 'success.main',
 										fontWeight: 600
 									}}
 								/>

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Box, CircularProgress, Alert } from '@mui/material';
+import { Box, CircularProgress, Alert, useTheme } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchCandidateStats } from '../../../store/slices/candidateSlice';
 import StatCard from '../../common/StatCard';
@@ -8,6 +8,7 @@ import WcIcon from '@mui/icons-material/Wc';
 import CheckCircle from '@mui/icons-material/CheckCircle';
 
 const ScreeningStatCard: React.FC = () => {
+	const theme = useTheme();
 	const dispatch = useAppDispatch();
 	// Use statsLoading specifically to avoid flicker when list refreshes
 	// @ts-ignore - statsLoading is added to slice but might not be picked up by TS immediately in editor
@@ -44,7 +45,7 @@ const ScreeningStatCard: React.FC = () => {
 					title="Total Candidates"
 					count={stats.total.toString()}
 					icon={<PeopleIcon fontSize="large" />}
-					color="#1976d2"
+					color={theme.palette.primary.main}
 					subtitle="Registered in the system"
 				/>
 			</Box>
@@ -53,7 +54,7 @@ const ScreeningStatCard: React.FC = () => {
 					title="Screened Candidates"
 					count={stats.screened?.toString() || '0'}
 					icon={<WcIcon fontSize="large" />}
-					color="#2e7d32"
+					color={theme.palette.success.main}
 					subtitle="Assessment process completed"
 				/>
 			</Box>
@@ -62,7 +63,7 @@ const ScreeningStatCard: React.FC = () => {
 					title="Selected For Counseling"
 					count={stats.screening_distribution?.['Completed']?.toString() || '0'}
 					icon={<CheckCircle fontSize="large" />}
-					color="#4caf50"
+					color={theme.palette.info.main}
 					subtitle="Ready for next phase"
 				/>
 			</Box>
@@ -71,7 +72,7 @@ const ScreeningStatCard: React.FC = () => {
 					title="Yet To Be Screened"
 					count={stats.not_screened?.toString() || '0'}
 					icon={<PeopleIcon fontSize="large" />}
-					color="#ed6c02"
+					color={theme.palette.warning.main}
 					subtitle="Awaiting initial review"
 				/>
 			</Box>
