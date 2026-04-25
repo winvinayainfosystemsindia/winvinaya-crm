@@ -29,6 +29,7 @@ import {
 import ConfirmDialog from '../../../common/ConfirmDialog';
 import type { DSREntry } from '../../../../models/dsr';
 import { DSRStatusValues } from '../../../../models/dsr';
+import useDateTime from '../../../../hooks/useDateTime';
 
 interface MySubmissionsRowProps {
 	entry: DSREntry;
@@ -118,6 +119,7 @@ export const StatusChip: React.FC<{ entry: DSREntry }> = ({ entry }) => {
 };
 
 export const MySubmissionsMobileCard: React.FC<MySubmissionsRowProps> = ({ entry, onDelete, onEdit, onView }) => {
+	const { formatDate } = useDateTime();
 	const totalHours = entry.items.reduce((sum, item) => sum + item.hours, 0);
 	const isRejected = entry.status === DSRStatusValues.DRAFT && entry.admin_notes;
 	const isDraft = entry.status === DSRStatusValues.DRAFT;
@@ -140,9 +142,7 @@ export const MySubmissionsMobileCard: React.FC<MySubmissionsRowProps> = ({ entry
 					<Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
 						<DateIcon sx={{ fontSize: 16, color: '#64748b' }} />
 						<Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#1e293b' }}>
-							{new Date(entry.report_date).toLocaleDateString('en-GB', {
-								day: '2-digit', month: 'short', year: 'numeric'
-							})}
+							{formatDate(entry.report_date)}
 						</Typography>
 					</Box>
 					<StatusChip entry={entry} />
@@ -176,6 +176,7 @@ const MySubmissionsRow: React.FC<MySubmissionsRowProps> = ({
 	onView
 }) => {
 	const theme = useTheme();
+	const { formatDate, formatDateTime } = useDateTime();
 	const totalHours = entry.items.reduce((sum, item) => sum + item.hours, 0);
 	const isRejected = entry.status === DSRStatusValues.DRAFT && entry.admin_notes;
 	const isDraft = entry.status === DSRStatusValues.DRAFT;
@@ -194,9 +195,7 @@ const MySubmissionsRow: React.FC<MySubmissionsRowProps> = ({
 		>
 			<TableCell>
 				<Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
-					{new Date(entry.report_date).toLocaleDateString('en-GB', {
-						day: '2-digit', month: 'short', year: 'numeric'
-					})}
+					{formatDate(entry.report_date)}
 				</Typography>
 			</TableCell>
 
@@ -218,11 +217,7 @@ const MySubmissionsRow: React.FC<MySubmissionsRowProps> = ({
 
 			<TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>
 				<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-					{entry.submitted_at
-						? new Date(entry.submitted_at).toLocaleString('en-GB', {
-							day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
-						})
-						: '—'}
+					{entry.submitted_at ? formatDateTime(entry.submitted_at) : '—'}
 				</Typography>
 			</TableCell>
 
@@ -250,6 +245,7 @@ interface ActionMenuProps {
 }
 
 const ActionMenu: React.FC<ActionMenuProps> = ({ entry, onView, onEdit, onDelete, isDraft, isRejected }) => {
+	const { formatDate } = useDateTime();
 	const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 	const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
 	const open = Boolean(anchorEl);
@@ -339,7 +335,7 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ entry, onView, onEdit, onDelete
 			<ConfirmDialog
 				open={deleteDialogOpen}
 				title="Delete DSR Entry"
-				message={`Are you sure you want to delete the timesheet for ${new Date(entry.report_date).toLocaleDateString()}?`}
+				message={`Are you sure you want to delete the timesheet for ${formatDate(entry.report_date)}?`}
 				onClose={() => setDeleteDialogOpen(false)}
 				onConfirm={handleDeleteConfirm}
 				confirmText="Delete"

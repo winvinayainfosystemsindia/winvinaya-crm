@@ -17,8 +17,9 @@ import type { User } from '../../../models/user';
 
 // Import modular table components
 import { DataTable, DataTableActions } from '../../common/table';
-import { useUserTableConfig, getRoleColor, formatDate } from './UserTableConfig';
+import { useUserTableConfig, getRoleColor } from './UserTableConfig';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
+import useDateTime from '../../../hooks/useDateTime';
 
 interface UserTableProps {
 	onAddUser?: () => void;
@@ -30,6 +31,7 @@ interface UserTableProps {
 const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser, onDeleteUser }) => {
 	const theme = useTheme();
 	const dispatch = useAppDispatch();
+	const { formatDate } = useDateTime();
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const isMedium = useMediaQuery(theme.breakpoints.down('md'));
 

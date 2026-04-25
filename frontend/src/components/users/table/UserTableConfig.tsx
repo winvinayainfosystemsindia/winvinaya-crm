@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { Visibility, Edit, Delete } from '@mui/icons-material';
-import { format } from 'date-fns';
 import type { ColumnDefinition, TableMenuAction } from '../../common/table';
 import type { User } from '../../../models/user';
 import type { User as AuthUser } from '../../../models/auth';
@@ -17,18 +16,6 @@ export const getRoleColor = (role: string): 'error' | 'warning' | 'info' | 'succ
 		case 'project_coordinator': return 'secondary';
 		case 'developer': return 'primary';
 		default: return 'info';
-	}
-};
-
-/**
- * Format date string for display.
- */
-export const formatDate = (dateString: string) => {
-	if (!dateString) return '-';
-	try {
-		return format(new Date(dateString), 'd MMM yyyy');
-	} catch {
-		return '-';
 	}
 };
 
