@@ -14,7 +14,7 @@ from sqlalchemy.dialects import postgresql
 revision: str = '6d14b47db469'
 down_revision: Union[str, None] = '6c0a00577ecc'
 branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = '134885e270b6'
 
 
 def upgrade() -> None:
