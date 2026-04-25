@@ -4,6 +4,7 @@ import type { User, UserCreate, UserUpdate } from '../../models/user';
 
 interface UserState {
 	users: User[];
+	assignmentUsers: User[];
 	roles: string[];
 	totalCount: number;
 	loading: boolean;
@@ -12,6 +13,7 @@ interface UserState {
 
 const initialState: UserState = {
 	users: [],
+	assignmentUsers: [],
 	roles: [],
 	totalCount: 0,
 	loading: false,
@@ -38,6 +40,27 @@ export const fetchRoles = createAsyncThunk(
 			return await userService.getRoles();
 		} catch (error: any) {
 			return rejectWithValue(error.message || 'Failed to fetch roles');
+		}
+	}
+);
+
+export const fetchAssignmentUsers = createAsyncThunk(
+	'users/fetchAssignmentUsers',
+	async (_, { rejectWithValue }) => {
+		try {
+			const [sourcingResp, managerResp] = await Promise.all([
+				userService.getAll(0, 100, 'sourcing'),
+				userService.getAll(0, 100, 'manager')
+			]);
+			
+			// Merge and sort by name
+			const mergedUsers = [...sourcingResp.items, ...managerResp.items].sort((a, b) => 
+				a.full_name.localeCompare(b.full_name)
+			);
+			
+			return mergedUsers;
+		} catch (error: any) {
+			return rejectWithValue(error.message || 'Failed to fetch assignment users');
 		}
 	}
 );
@@ -112,6 +135,18 @@ const userSlice = createSlice({
 				state.users = state.users.map(u => u.id === action.payload.id ? action.payload : u);
 			})
 			.addCase(updateUser.rejected, (state, action: PayloadAction<any>) => {
+				state.loading = false;
+				state.error = action.payload;
+			})
+			.addCase(fetchAssignmentUsers.pending, (state) => {
+				state.loading = true;
+				state.error = null;
+			})
+			.addCase(fetchAssignmentUsers.fulfilled, (state, action: PayloadAction<User[]>) => {
+				state.loading = false;
+				state.assignmentUsers = action.payload;
+			})
+			.addCase(fetchAssignmentUsers.rejected, (state, action: PayloadAction<any>) => {
 				state.loading = false;
 				state.error = action.payload;
 			});
