@@ -3,14 +3,16 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
 	Box,
 	Alert,
-	Button
+	Button,
+	Container,
+	CircularProgress
 } from '@mui/material';
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import CandidateRegistrationForm from '../../components/candidates/forms/CandidateRegistrationForm';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchCandidateById, updateCandidate, clearSelectedCandidate } from '../../store/slices/candidateSlice';
 import type { CandidateUpdate } from '../../models/candidate';
-import ModuleLayout from '../../components/common/layout/ModuleLayout';
+import PageHeader from '../../components/common/page-header';
 
 const CandidateEdit: React.FC = () => {
 	const { publicId } = useParams<{ publicId: string }>();
@@ -57,14 +59,20 @@ const CandidateEdit: React.FC = () => {
 	}
 
 	return (
-		<ModuleLayout
-			title={candidate ? `Edit Candidate: ${candidate.name}` : 'Edit Candidate'}
-			subtitle="Update candidate profile information across all sections."
-			loading={loading}
-			isEmpty={!loading && !candidate}
-		>
-			{candidate && (
-				<Box sx={{ maxWidth: 1000, mx: 'auto' }}>
+		<Container maxWidth="xl" sx={{ py: { xs: 2, sm: 4 } }}>
+			<PageHeader
+				title={candidate ? `Edit Candidate: ${candidate.name}` : 'Edit Candidate'}
+				subtitle="Update candidate profile information across all sections."
+			/>
+
+			{loading ? (
+				<Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+					<CircularProgress />
+				</Box>
+			) : !candidate ? (
+				<Alert severity="warning">Candidate not found.</Alert>
+			) : (
+				<Box sx={{ maxWidth: 1000, mx: 'auto', mt: 4 }}>
 					<CandidateRegistrationForm
 						initialData={candidate}
 						onSubmit={handleSubmit}
@@ -72,7 +80,7 @@ const CandidateEdit: React.FC = () => {
 					/>
 				</Box>
 			)}
-		</ModuleLayout>
+		</Container>
 	);
 };
 

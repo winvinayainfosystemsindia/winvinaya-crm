@@ -5,10 +5,12 @@ import {
 	Tabs,
 	Tab,
 	Alert,
-	Typography
+	Typography,
+	IconButton
 } from '@mui/material';
 import {
 	ArrowBack as ArrowBackIcon,
+	Edit as EditIcon
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
@@ -95,7 +97,31 @@ const CandidateDetail: React.FC = () => {
 
 	return (
 		<ModuleLayout
-			title={candidate?.name || 'Candidate Details'}
+			title={
+				candidate ? (
+					<Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+						<Typography variant="inherit" component="span" sx={{ fontWeight: 700 }}>
+							{candidate.name}
+						</Typography>
+						<IconButton
+							size="small"
+							onClick={() => navigate(`/candidates/edit/${candidate.public_id}`)}
+							sx={{
+								color: 'common.white',
+								bgcolor: 'rgba(255,255,255,0.1)',
+								border: '1px solid rgba(255,255,255,0.2)',
+								'&:hover': {
+									bgcolor: 'rgba(255,255,255,0.2)',
+									transform: 'scale(1.1)'
+								},
+								transition: 'all 0.2s'
+							}}
+						>
+							<EditIcon fontSize="small" />
+						</IconButton>
+					</Box>
+				) : 'Candidate Details'
+			}
 			subtitle={candidate ? (
 				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
 					<Typography variant="inherit">Candidate ID: {candidate.public_id}</Typography>
