@@ -1,5 +1,6 @@
 import React from 'react';
-import { Snackbar, Alert } from '@mui/material';
+import { Snackbar, Alert, Button } from '@mui/material';
+import { AssignmentInd } from '@mui/icons-material';
 import ConfirmDialog from '../../common/ConfirmDialog';
 import { useCandidateTable } from '../hooks/useCandidateTable';
 import { getCandidateFilterFields } from './CandidateFilters';
@@ -35,6 +36,8 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onEditCandidate, onView
 		assignDialogOpen,
 		candidateForAssignment,
 		notification,
+		selectedIds,
+		selectedCandidates,
 		fetchCandidatesData,
 		handleChangePage,
 		handleSearch,
@@ -47,8 +50,10 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onEditCandidate, onView
 		handleDeleteClick,
 		handleDeleteConfirm,
 		handleDeleteCancel,
-		handleAssignClick,
 		handleAssignCancel,
+		handleSelectAll,
+		handleSelectOne,
+		handleBulkAssignClick,
 		handleCloseNotification,
 		setRowsPerPage
 	} = useCandidateTable();
@@ -60,6 +65,19 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onEditCandidate, onView
 	);
 
 	const filterFields = getCandidateFilterFields(filterOptions);
+
+	const headerActions = selectedIds.length > 0 ? (
+		<Button
+			variant="contained"
+			color="info"
+			startIcon={<AssignmentInd />}
+			onClick={handleBulkAssignClick}
+			size="small"
+			sx={{ fontWeight: 600, textTransform: 'none' }}
+		>
+			Assign {selectedIds.length} Selected
+		</Button>
+	) : undefined;
 
 	return (
 		<>
@@ -80,6 +98,9 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onEditCandidate, onView
 				onSortRequest={handleRequestSort as any}
 				activeFilterCount={activeFilterCount}
 				onFilterOpen={handleFilterOpen}
+				numSelected={selectedIds.length}
+				onSelectAllClick={handleSelectAll}
+				headerActions={headerActions}
 				renderRow={(candidate) => (
 					<CandidateTableRow
 						key={candidate.public_id}
@@ -88,7 +109,8 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onEditCandidate, onView
 						onView={(id) => onViewCandidate?.(id)}
 						onEdit={(id) => onEditCandidate?.(id)}
 						onDelete={handleDeleteClick}
-						onAssign={handleAssignClick}
+						selected={selectedIds.includes(candidate.public_id)}
+						onSelect={handleSelectOne}
 					/>
 				)}
 			/>
@@ -119,7 +141,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onEditCandidate, onView
 				open={assignDialogOpen}
 				onClose={handleAssignCancel}
 				onSuccess={fetchCandidatesData}
-				candidate={candidateForAssignment}
+				candidates={candidateForAssignment ? [candidateForAssignment] : selectedCandidates}
 			/>
 
 			<Snackbar

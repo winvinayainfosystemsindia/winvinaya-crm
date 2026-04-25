@@ -11,6 +11,7 @@ import { Accessible } from '@mui/icons-material';
 import { format, isToday, parseISO } from 'date-fns';
 import type { CandidateListItem } from '../../../models/candidate';
 import CandidateTableActions from './CandidateTableActions';
+import { Checkbox } from '@mui/material';
 
 interface CandidateTableRowProps {
 	candidate: CandidateListItem;
@@ -18,7 +19,8 @@ interface CandidateTableRowProps {
 	onView: (id: string) => void;
 	onEdit: (id: string) => void;
 	onDelete: (candidate: CandidateListItem) => void;
-	onAssign: (candidate: CandidateListItem) => void;
+	selected: boolean;
+	onSelect: (id: string) => void;
 }
 
 const CandidateTableRow: React.FC<CandidateTableRowProps> = ({
@@ -27,7 +29,8 @@ const CandidateTableRow: React.FC<CandidateTableRowProps> = ({
 	onView,
 	onEdit,
 	onDelete,
-	onAssign
+	selected,
+	onSelect
 }) => {
 	const formatDate = (dateString: string) => {
 		try {
@@ -49,9 +52,16 @@ const CandidateTableRow: React.FC<CandidateTableRowProps> = ({
 		<TableRow
 			key={candidate.public_id}
 			onClick={() => onView(candidate.public_id)}
+			selected={selected}
 			sx={{
 				height: '60px',
 				cursor: 'pointer',
+				'&.Mui-selected': {
+					bgcolor: 'rgba(25, 118, 210, 0.04)',
+					'&:hover': {
+						bgcolor: 'rgba(25, 118, 210, 0.08)',
+					}
+				},
 				'&:hover': {
 					bgcolor: '#f5f8fa',
 				},
@@ -60,6 +70,13 @@ const CandidateTableRow: React.FC<CandidateTableRowProps> = ({
 				}
 			}}
 		>
+			<TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
+				<Checkbox
+					checked={selected}
+					onChange={() => onSelect(candidate.public_id)}
+					size="small"
+				/>
+			</TableCell>
 			<TableCell>
 				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
 					<Typography variant="body2" sx={{ fontWeight: 500 }}>
@@ -123,10 +140,8 @@ const CandidateTableRow: React.FC<CandidateTableRowProps> = ({
 				<CandidateTableActions
 					candidate={candidate}
 					userRole={userRole}
-					onView={onView}
 					onEdit={onEdit}
 					onDelete={onDelete}
-					onAssign={onAssign}
 				/>
 			</TableCell>
 		</TableRow>

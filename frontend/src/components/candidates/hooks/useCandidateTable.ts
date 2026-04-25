@@ -184,6 +184,38 @@ export const useCandidateTable = () => {
 		setNotification(prev => ({ ...prev, open: false }));
 	};
 
+	const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+	const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+		if (event.target.checked) {
+			setSelectedIds(candidates.map(c => c.public_id));
+		} else {
+			setSelectedIds([]);
+		}
+	};
+
+	const handleSelectOne = (id: string) => {
+		setSelectedIds(prev => {
+			if (prev.includes(id)) {
+				return prev.filter(item => item !== id);
+			} else {
+				return [...prev, id];
+			}
+		});
+	};
+
+	useEffect(() => {
+		setSelectedIds([]);
+	}, [candidates]);
+
+	const handleBulkAssignClick = () => {
+		if (selectedIds.length > 0) {
+			setAssignDialogOpen(true);
+		}
+	};
+
+	const selectedCandidates = candidates.filter(c => selectedIds.includes(c.public_id));
+
 	return {
 		candidates,
 		loading,
@@ -203,6 +235,8 @@ export const useCandidateTable = () => {
 		assignDialogOpen,
 		candidateForAssignment,
 		notification,
+		selectedIds,
+		selectedCandidates,
 		fetchCandidatesData,
 		handleChangePage,
 		handleChangeRowsPerPage,
@@ -218,6 +252,9 @@ export const useCandidateTable = () => {
 		handleDeleteCancel,
 		handleAssignClick,
 		handleAssignCancel,
+		handleSelectAll,
+		handleSelectOne,
+		handleBulkAssignClick,
 		handleCloseNotification,
 		setRowsPerPage // Exposed for CustomTablePagination
 	};

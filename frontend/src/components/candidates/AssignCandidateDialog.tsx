@@ -24,10 +24,10 @@ interface AssignCandidateDialogProps {
 	open: boolean;
 	onClose: () => void;
 	onSuccess?: () => void;
-	candidate: CandidateListItem | null;
+	candidates: CandidateListItem[];
 }
 
-const AssignCandidateDialog: React.FC<AssignCandidateDialogProps> = ({ open, onClose, onSuccess, candidate }) => {
+const AssignCandidateDialog: React.FC<AssignCandidateDialogProps> = ({ open, onClose, onSuccess, candidates }) => {
 	const dispatch = useAppDispatch();
 	const [users, setUsers] = useState<User[]>([]);
 	const [selectedUserId, setSelectedUserId] = useState<number | ''>('');
@@ -38,14 +38,15 @@ const AssignCandidateDialog: React.FC<AssignCandidateDialogProps> = ({ open, onC
 	useEffect(() => {
 		if (open) {
 			fetchEligibleUsers();
-			if (candidate?.assigned_to_id) {
-				setSelectedUserId(candidate.assigned_to_id);
+			// For bulk, we don't pre-select an assigned user unless it's a single candidate
+			if (candidates.length === 1 && candidates[0]?.assigned_to_id) {
+				setSelectedUserId(candidates[0].assigned_to_id);
 			} else {
 				setSelectedUserId('');
 			}
 			setError(null);
 		}
-	}, [open, candidate]);
+	}, [open, candidates]);
 
 	const fetchEligibleUsers = async () => {
 		setLoading(true);
@@ -71,19 +72,23 @@ const AssignCandidateDialog: React.FC<AssignCandidateDialogProps> = ({ open, onC
 	};
 
 	const handleSubmit = async () => {
-		if (!candidate || !selectedUserId) return;
+		if (candidates.length === 0 || !selectedUserId) return;
 
 		setSubmitting(true);
 		setError(null);
 		try {
-			await dispatch(assignCandidate({ 
-				publicId: candidate.public_id, 
-				userId: Number(selectedUserId) 
-			})).unwrap();
+			// Perform bulk assignment
+			await Promise.all(candidates.map(candidate => 
+				dispatch(assignCandidate({ 
+					publicId: candidate.public_id, 
+					userId: Number(selectedUserId) 
+				})).unwrap()
+			));
+			
 			onSuccess?.();
 			onClose();
 		} catch (err: any) {
-			setError(err || 'Failed to assign candidate');
+			setError(err || 'Failed to assign candidates');
 		} finally {
 			setSubmitting(false);
 		}
@@ -91,12 +96,16 @@ const AssignCandidateDialog: React.FC<AssignCandidateDialogProps> = ({ open, onC
 
 	return (
 		<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-			<DialogTitle>Assign Candidate</DialogTitle>
+			<DialogTitle>Assign {candidates.length > 1 ? 'Candidates' : 'Candidate'}</DialogTitle>
 			<DialogContent>
 				<Box sx={{ mt: 1 }}>
-					{candidate && (
+					{candidates.length > 0 && (
 						<Typography variant="body1" gutterBottom>
-							Assign <strong>{candidate.name}</strong> to a team member for screening.
+							{candidates.length === 1 ? (
+								<>Assign <strong>{candidates[0].name}</strong> to a team member.</>
+							) : (
+								<>Assign <strong>{candidates.length} candidates</strong> to a team member.</>
+							)}
 						</Typography>
 					)}
 
