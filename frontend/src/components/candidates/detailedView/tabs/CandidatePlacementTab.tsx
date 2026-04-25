@@ -24,6 +24,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
+import { format } from 'date-fns';
 import type { Candidate } from '../../../../models/candidate';
 import placementMappingService from '../../../../services/placementMappingService';
 import type { PlacementMapping } from '../../../../services/placementMappingService';
@@ -75,70 +76,75 @@ const CandidatePlacementTab: React.FC<CandidatePlacementTabProps> = ({ candidate
                         {mappings.map((mapping, index) => (
                             <React.Fragment key={mapping.id}>
                                 {index > 0 && <Divider />}
-                                <ListItem
-                                    sx={{
-                                        py: 2,
-                                        px: 3,
-                                        '&:hover': { bgcolor: 'action.hover' }
-                                    }}
-                                >
-                                    <ListItemIcon>
-                                        <CheckCircleIcon sx={{ color: 'success.main' }} />
-                                    </ListItemIcon>
-                                    <ListItemText
-                                        primary={
-                                            <Stack direction="row" spacing={2} alignItems="center">
-                                                <Typography variant="body1" sx={{ fontWeight: 700 }}>
-                                                    {mapping.job_role?.title || 'Job Role'}
-                                                </Typography>
-                                                <Chip
-                                                    label={`${mapping.match_score}% Match`}
-                                                    size="small"
-                                                    sx={{
-                                                        fontWeight: 700,
-                                                        bgcolor: mapping.match_score >= 70 ? alpha(theme.palette.success.main, 0.1) : alpha(theme.palette.warning.main, 0.1),
-                                                        color: mapping.match_score >= 70 ? 'success.main' : 'warning.main'
-                                                    }}
-                                                />
-                                            </Stack>
-                                        }
-                                        secondary={
-                                            <Stack direction="row" spacing={3} sx={{ mt: 0.5 }}>
-                                                <ListItemIcon sx={{ minWidth: 32 }}>
-                                                    <BusinessIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-                                                </ListItemIcon>
-                                                <ListItemText
-                                                    primary={<Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>Company</Typography>}
-                                                    secondary={<Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>{mapping.job_role?.company?.name || 'N/A'}</Typography>}
-                                                />
-                                                <Stack direction="row" spacing={0.5} alignItems="center">
-                                                    <CalendarIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-                                                    <Typography variant="caption" color="textSecondary">
-                                                        Mapped on {new Date(mapping.mapped_at).toLocaleDateString()}
+                                    <ListItem
+                                        sx={{
+                                            py: 2.5,
+                                            px: 3,
+                                            '&:hover': { bgcolor: 'action.hover' }
+                                        }}
+                                    >
+                                        <ListItemIcon sx={{ minWidth: 48 }}>
+                                            <CheckCircleIcon sx={{ color: 'success.main' }} />
+                                        </ListItemIcon>
+                                        <ListItemText
+                                            primary={
+                                                <Stack direction="row" spacing={2} alignItems="center">
+                                                    <Typography variant="body1" sx={{ fontWeight: 700 }}>
+                                                        {mapping.job_role?.title || 'Job Role'}
                                                     </Typography>
+                                                    <Chip
+                                                        label={`${mapping.match_score}% Match`}
+                                                        size="small"
+                                                        sx={{
+                                                            fontWeight: 700,
+                                                            bgcolor: mapping.match_score >= 70 ? alpha(theme.palette.success.main, 0.1) : alpha(theme.palette.warning.main, 0.1),
+                                                            color: mapping.match_score >= 70 ? 'success.main' : 'warning.main'
+                                                        }}
+                                                    />
                                                 </Stack>
+                                            }
+                                            secondary={
+                                                <Box sx={{ mt: 1 }}>
+                                                    <Typography variant="caption" color="textSecondary" sx={{ display: 'block', mb: 0.5 }}>
+                                                        Company
+                                                    </Typography>
+                                                    <Stack direction="row" spacing={1} alignItems="center">
+                                                        <BusinessIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                                                        <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                                                            {mapping.job_role?.company?.name || 'N/A'}
+                                                        </Typography>
+                                                    </Stack>
+                                                </Box>
+                                            }
+                                        />
+                                        <Stack direction="row" spacing={3} alignItems="center" sx={{ ml: 2 }}>
+                                            <Stack direction="row" spacing={1} alignItems="center">
+                                                <CalendarIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                                                <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                                                    Mapped on {format(new Date(mapping.mapped_at), 'dd-MMM-yyyy')}
+                                                </Typography>
                                             </Stack>
-                                        }
-                                    />
-                                    {mapping.job_role?.public_id && (
-                                        <Button
-                                            variant="outlined"
-                                            size="small"
-                                            endIcon={<ArrowForwardIcon />}
-                                            onClick={() => navigate(`/job-roles/${mapping.job_role_id}`)}
-                                            sx={{
-                                                textTransform: 'none',
-                                                fontWeight: 600,
-                                                borderRadius: 1,
-                                                color: 'info.main',
-                                                borderColor: 'info.main',
-                                                '&:hover': { bgcolor: alpha(theme.palette.info.main, 0.05), borderColor: 'info.dark' }
-                                            }}
-                                        >
-                                            View Role
-                                        </Button>
-                                    )}
-                                </ListItem>
+                                            {mapping.job_role?.public_id && (
+                                                <Button
+                                                    variant="outlined"
+                                                    size="small"
+                                                    endIcon={<ArrowForwardIcon />}
+                                                    onClick={() => navigate(`/job-roles/${mapping.job_role_id}`)}
+                                                    sx={{
+                                                        textTransform: 'none',
+                                                        fontWeight: 600,
+                                                        borderRadius: 1,
+                                                        px: 2,
+                                                        color: 'info.main',
+                                                        borderColor: 'info.main',
+                                                        '&:hover': { bgcolor: alpha(theme.palette.info.main, 0.05), borderColor: 'info.dark' }
+                                                    }}
+                                                >
+                                                    View Role
+                                                </Button>
+                                            )}
+                                        </Stack>
+                                    </ListItem>
                             </React.Fragment>
                         ))}
                     </List>
