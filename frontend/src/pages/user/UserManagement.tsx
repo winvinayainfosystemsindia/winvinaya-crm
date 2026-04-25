@@ -5,7 +5,9 @@ import {
 	Typography,
 	Snackbar,
 	Alert,
-	Button
+	Button,
+	useMediaQuery,
+	useTheme
 } from '@mui/material';
 import { Add } from '@mui/icons-material';
 import { useAppSelector } from '../../store/hooks';
@@ -24,6 +26,9 @@ const UserManagement: React.FC = () => {
 	const [selectedUser, setSelectedUser] = useState<User | null>(null);
 	const [userToDelete, setUserToDelete] = useState<User | null>(null);
 	const [refreshKey, setRefreshKey] = useState(0);
+
+	const theme = useTheme();
+	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
 		open: false,
 		message: '',
@@ -111,12 +116,13 @@ const UserManagement: React.FC = () => {
 				}}>
 					<Box>
 						<Typography
-							variant="h4"
+							variant={isMobile ? "h5" : "h4"}
 							component="h1"
 							sx={{
-								fontWeight: 300,
-								color: 'text.primary',
-								mb: 0.5
+								fontWeight: 500, // Aligned with theme/enterprise standards
+								color: 'text.primary', // Removed hardcoded color
+								mb: 0.5,
+								letterSpacing: '-0.02em'
 							}}
 						>
 							User Management
