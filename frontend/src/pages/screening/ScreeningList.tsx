@@ -12,9 +12,9 @@ import {
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchScreeningStats, createScreening, updateScreening, fetchCandidateById } from '../../store/slices/candidateSlice';
-import ScreeningStatCard from '../../components/profiling/stats/ScreeningStatCard';
-import ScreeningTable from '../../components/profiling/table/ScreeningTable';
-import ScreeningFormDialog from '../../components/profiling/dialogs/ScreeningFormDialog';
+import ScreeningStatCard from '../../components/screening/stats/ScreeningStatCard';
+import ScreeningTable from '../../components/screening/table/ScreeningTable';
+import ScreeningFormDialog from '../../components/screening/dialogs/ScreeningFormDialog';
 import type { CandidateListItem, CandidateScreeningCreate } from '../../models/candidate';
 
 interface TabPanelProps {
