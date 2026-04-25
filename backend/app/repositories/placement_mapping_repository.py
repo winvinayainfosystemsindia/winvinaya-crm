@@ -10,9 +10,13 @@ class PlacementMappingRepository(BaseRepository[PlacementMapping]):
     def __init__(self, db: AsyncSession):
         from app.models.job_role import JobRole
         from app.models.candidate import Candidate
+        from app.models.candidate_screening import CandidateScreening
+        from app.models.candidate_counseling import CandidateCounseling
         super().__init__(PlacementMapping, db)
         self.JobRole = JobRole
         self.Candidate = Candidate
+        self.CandidateScreening = CandidateScreening
+        self.CandidateCounseling = CandidateCounseling
 
     async def get_by_candidate_and_job_role(
         self, candidate_id: int, job_role_id: int
@@ -27,9 +31,9 @@ class PlacementMappingRepository(BaseRepository[PlacementMapping]):
             )
             .options(
                 selectinload(self.model.candidate).options(
-                    selectinload(self.Candidate.screening),
+                    selectinload(self.Candidate.screening).selectinload(self.CandidateScreening.screened_by),
                     selectinload(self.Candidate.documents),
-                    selectinload(self.Candidate.counseling)
+                    selectinload(self.Candidate.counseling).selectinload(self.CandidateCounseling.counselor)
                 ),
                 selectinload(self.model.job_role),
                 selectinload(self.model.mapped_by)
@@ -49,9 +53,9 @@ class PlacementMappingRepository(BaseRepository[PlacementMapping]):
             )
             .options(
                 selectinload(self.model.candidate).options(
-                    selectinload(self.Candidate.screening),
+                    selectinload(self.Candidate.screening).selectinload(self.CandidateScreening.screened_by),
                     selectinload(self.Candidate.documents),
-                    selectinload(self.Candidate.counseling)
+                    selectinload(self.Candidate.counseling).selectinload(self.CandidateCounseling.counselor)
                 ),
                 selectinload(self.model.job_role),
                 selectinload(self.model.mapped_by)
@@ -71,9 +75,9 @@ class PlacementMappingRepository(BaseRepository[PlacementMapping]):
             )
             .options(
                 selectinload(self.model.candidate).options(
-                    selectinload(self.Candidate.screening),
+                    selectinload(self.Candidate.screening).selectinload(self.CandidateScreening.screened_by),
                     selectinload(self.Candidate.documents),
-                    selectinload(self.Candidate.counseling)
+                    selectinload(self.Candidate.counseling).selectinload(self.CandidateCounseling.counselor)
                 ),
                 selectinload(self.model.job_role),
                 selectinload(self.model.mapped_by)
@@ -88,9 +92,9 @@ class PlacementMappingRepository(BaseRepository[PlacementMapping]):
             .where(self.model.candidate_id == candidate_id)
             .options(
                 selectinload(self.model.candidate).options(
-                    selectinload(self.Candidate.screening),
+                    selectinload(self.Candidate.screening).selectinload(self.CandidateScreening.screened_by),
                     selectinload(self.Candidate.documents),
-                    selectinload(self.Candidate.counseling)
+                    selectinload(self.Candidate.counseling).selectinload(self.CandidateCounseling.counselor)
                 ),
                 selectinload(self.model.job_role),
                 selectinload(self.model.mapped_by)
