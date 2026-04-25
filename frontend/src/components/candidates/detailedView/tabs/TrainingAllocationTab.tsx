@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-	Paper,
 	Typography,
 	Box,
 	Table,
@@ -21,10 +20,10 @@ import {
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-import { SectionHeader } from './DetailedViewCommon';
-import trainingExtensionService from '../../../services/trainingExtensionService';
-import type { Candidate } from '../../../models/candidate';
-import type { CandidateAllocation } from '../../../models/training';
+import { SectionHeader, SectionCard } from '../DetailedViewCommon';
+import trainingExtensionService from '../../../../services/trainingExtensionService';
+import type { Candidate } from '../../../../models/candidate';
+import type { CandidateAllocation } from '../../../../models/training';
 
 interface TrainingAllocationTabProps {
 	candidate: Candidate;
@@ -71,10 +70,7 @@ const TrainingAllocationTab: React.FC<TrainingAllocationTabProps> = ({ candidate
 	}
 
 	return (
-		<Paper
-			variant="outlined"
-			sx={{ p: 3, borderRadius: 0, border: '1px solid #d5dbdb', boxShadow: '0 1px 1px 0 rgba(0,28,36,0.1)' }}
-		>
+		<SectionCard>
 			<SectionHeader title="Training Batch Allocations" icon={<SchoolIcon />} />
 
 			{allocations.length > 0 ? (
@@ -216,7 +212,7 @@ const TrainingAllocationTab: React.FC<TrainingAllocationTabProps> = ({ candidate
 					</Button>
 				</Box>
 			)}
-		</Paper>
+		</SectionCard>
 	);
 };
 

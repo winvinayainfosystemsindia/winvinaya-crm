@@ -1,5 +1,5 @@
 import React from 'react';
-import { Paper, Grid, Typography, Chip, Box, Button, Stack, Divider } from '@mui/material';
+import { Grid, Typography, Chip, Box, Button, Stack, Divider } from '@mui/material';
 import {
 	CheckCircle as CheckCircleIcon,
 	Cancel as CancelIcon,
@@ -17,8 +17,8 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { InfoRow, SectionHeader } from './DetailedViewCommon';
-import type { Candidate } from '../../../models/candidate';
+import { InfoRow, SectionHeader, SectionCard } from '../DetailedViewCommon';
+import type { Candidate } from '../../../../models/candidate';
 
 interface ScreeningTabProps {
 	candidate: Candidate;
@@ -46,32 +46,24 @@ const ScreeningTab: React.FC<ScreeningTabProps> = ({ candidate }) => {
 
 	if (!screening) {
 		return (
-			<Paper
-				variant="outlined"
-				sx={{
-					p: 4,
-					borderRadius: 0,
-					border: '1px solid #d5dbdb',
-					textAlign: 'center',
-					boxShadow: '0 1px 1px 0 rgba(0,28,36,0.1)'
-				}}
-			>
+			<SectionCard sx={{ textAlign: 'center', py: 6 }}>
 				<SectionHeader title="Screening Assessment" icon={<AssignmentIndIcon />} />
-				<Box sx={{ py: 6 }}>
-					<AssignmentIndIcon sx={{ fontSize: 80, color: '#eaeded', mb: 2 }} />
-					<Typography variant="h6" color="#545b64" sx={{ mb: 1 }}>Pending Screening</Typography>
-					<Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-						The screening assessment has not been completed for this candidate.
+				<Box sx={{ mt: 4 }}>
+					<AssignmentIndIcon sx={{ fontSize: 80, color: 'divider', mb: 2, opacity: 0.5 }} />
+					<Typography variant="h6" color="text.secondary" sx={{ mb: 1, fontWeight: 700 }}>Pending Screening</Typography>
+					<Typography variant="body2" color="text.disabled" sx={{ mb: 3, maxWidth: 400, mx: 'auto' }}>
+						The screening assessment has not been completed for this candidate yet.
 					</Typography>
 					<Button
 						variant="contained"
-						sx={{ bgcolor: '#ec7211', '&:hover': { bgcolor: '#eb5f07' }, textTransform: 'none', px: 4 }}
+						color="primary"
+						sx={{ textTransform: 'none', px: 4, fontWeight: 600 }}
 						onClick={() => navigate('/candidates/screening')}
 					>
 						Submit Assessment
 					</Button>
 				</Box>
-			</Paper>
+			</SectionCard>
 		);
 	}
 
@@ -85,15 +77,7 @@ const ScreeningTab: React.FC<ScreeningTabProps> = ({ candidate }) => {
 	};
 
 	return (
-		<Paper
-			variant="outlined"
-			sx={{
-				p: 3,
-				borderRadius: 0,
-				border: '1px solid #d5dbdb',
-				boxShadow: '0 1px 1px 0 rgba(0,28,36,0.1)'
-			}}
-		>
+		<SectionCard>
 			<SectionHeader title="Screening Assessment" icon={<AssignmentIndIcon />}>
 				<Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
 					{screening.status && (
@@ -313,7 +297,7 @@ const ScreeningTab: React.FC<ScreeningTabProps> = ({ candidate }) => {
 					</Box>
 				</Grid>
 			</Grid>
-		</Paper>
+		</SectionCard>
 	);
 };
 

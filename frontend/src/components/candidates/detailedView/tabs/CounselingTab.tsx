@@ -12,8 +12,8 @@ import {
 	Work as WorkIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
-import { InfoRow, SectionHeader } from './DetailedViewCommon';
-import type { Candidate } from '../../../models/candidate';
+import { InfoRow, SectionHeader, SectionCard } from '../DetailedViewCommon';
+import type { Candidate } from '../../../../models/candidate';
 
 interface CounselingTabProps {
 	candidate: Candidate;
@@ -23,15 +23,7 @@ const CounselingTab: React.FC<CounselingTabProps> = ({ candidate }) => {
 	const { counseling } = candidate;
 
 	return (
-		<Paper
-			variant="outlined"
-			sx={{
-				p: 3,
-				borderRadius: 0,
-				border: '1px solid #d5dbdb',
-				boxShadow: '0 1px 1px 0 rgba(0,28,36,0.1)'
-			}}
-		>
+		<SectionCard>
 			<SectionHeader title="Career Counseling Details" icon={<PsychologyIcon />}>
 				{counseling ? (
 					<Chip
@@ -228,7 +220,7 @@ const CounselingTab: React.FC<CounselingTabProps> = ({ candidate }) => {
 					</Typography>
 				</Box>
 			)}
-		</Paper>
+		</SectionCard>
 	);
 };
 

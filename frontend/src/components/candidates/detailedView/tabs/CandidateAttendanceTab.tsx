@@ -24,10 +24,10 @@ import {
 	School as BatchIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
-import { SectionHeader, SectionCard } from './DetailedViewCommon';
-import trainingExtensionService from '../../../services/trainingExtensionService';
-import type { TrainingAttendance } from '../../../models/training';
-import type { Candidate } from '../../../models/candidate';
+import { SectionHeader, SectionCard } from '../DetailedViewCommon';
+import trainingExtensionService from '../../../../services/trainingExtensionService';
+import type { TrainingAttendance } from '../../../../models/training';
+import type { Candidate } from '../../../../models/candidate';
 
 interface CandidateAttendanceTabProps {
 	candidate: Candidate;

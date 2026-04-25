@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-	Paper,
 	Typography,
 	Box,
 	Table,
@@ -23,10 +22,10 @@ import {
 	School as BatchIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
-import { SectionHeader } from './DetailedViewCommon';
-import trainingExtensionService from '../../../services/trainingExtensionService';
-import type { TrainingAssignment } from '../../../models/training';
-import type { Candidate } from '../../../models/candidate';
+import { SectionHeader, SectionCard } from '../DetailedViewCommon';
+import trainingExtensionService from '../../../../services/trainingExtensionService';
+import type { TrainingAssignment } from '../../../../models/training';
+import type { Candidate } from '../../../../models/candidate';
 
 interface CandidateAssignmentTabProps {
 	candidate: Candidate;
@@ -128,10 +127,7 @@ const CandidateAssignmentTab: React.FC<CandidateAssignmentTabProps> = ({ candida
 	};
 
 	return (
-		<Paper
-			variant="outlined"
-			sx={{ p: 3, borderRadius: 0, border: '1px solid #d5dbdb', boxShadow: '0 1px 1px 0 rgba(0,28,36,0.1)' }}
-		>
+		<SectionCard>
 			<SectionHeader title="Assignment Performance" icon={<AssignmentIcon />} />
 
 			{assignments.length > 0 ? (
@@ -252,7 +248,7 @@ const CandidateAssignmentTab: React.FC<CandidateAssignmentTabProps> = ({ candida
 					</Typography>
 				</Box>
 			)}
-		</Paper>
+		</SectionCard>
 	);
 };
 

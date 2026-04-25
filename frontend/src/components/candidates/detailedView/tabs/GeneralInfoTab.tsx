@@ -14,8 +14,8 @@ import {
 	Cake as CakeIcon,
 	LocationOn as LocationIcon
 } from '@mui/icons-material';
-import { InfoRow, SectionHeader, SectionCard } from './DetailedViewCommon';
-import type { Candidate } from '../../../models/candidate';
+import { InfoRow, SectionHeader, SectionCard } from '../DetailedViewCommon';
+import type { Candidate } from '../../../../models/candidate';
 
 interface GeneralInfoTabProps {
 	candidate: Candidate;

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-	Paper,
 	Typography,
 	Box,
 	Table,
@@ -24,10 +23,10 @@ import {
 	School as BatchIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
-import { SectionHeader } from './DetailedViewCommon';
-import trainingExtensionService from '../../../services/trainingExtensionService';
-import type { TrainingMockInterview } from '../../../models/training';
-import type { Candidate } from '../../../models/candidate';
+import { SectionHeader, SectionCard } from '../DetailedViewCommon';
+import trainingExtensionService from '../../../../services/trainingExtensionService';
+import type { TrainingMockInterview } from '../../../../models/training';
+import type { Candidate } from '../../../../models/candidate';
 
 interface CandidateMockInterviewTabProps {
 	candidate: Candidate;
@@ -141,10 +140,7 @@ const CandidateMockInterviewTab: React.FC<CandidateMockInterviewTabProps> = ({ c
 	};
 
 	return (
-		<Paper
-			variant="outlined"
-			sx={{ p: 3, borderRadius: 0, border: '1px solid #d5dbdb', boxShadow: '0 1px 1px 0 rgba(0,28,36,0.1)' }}
-		>
+		<SectionCard>
 			<SectionHeader title="Mock Interview Portfolio" icon={<InterviewIcon />} />
 
 			{interviews.length > 0 ? (
@@ -268,7 +264,7 @@ const CandidateMockInterviewTab: React.FC<CandidateMockInterviewTabProps> = ({ c
 					</Typography>
 				</Box>
 			)}
-		</Paper>
+		</SectionCard>
 	);
 };
 

@@ -2,8 +2,8 @@ import React from 'react';
 import { Paper, Grid, Typography, Chip, Box, Button, Stack } from '@mui/material';
 import { Description as DescriptionIcon, UploadFile as UploadFileIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { SectionHeader } from './DetailedViewCommon';
-import type { Candidate } from '../../../models/candidate';
+import { SectionHeader, SectionCard } from '../DetailedViewCommon';
+import type { Candidate } from '../../../../models/candidate';
 
 interface DocumentsTabProps {
 	candidate: Candidate;
@@ -13,7 +13,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ candidate }) => {
 	const navigate = useNavigate();
 
 	return (
-		<Paper variant="outlined" sx={{ p: 3, borderRadius: 0, border: '1px solid #d5dbdb' }}>
+		<SectionCard>
 			<SectionHeader title="Candidate Documents">
 				<Chip label={`${candidate.documents?.length || 0} Files`} size="small" variant="outlined" />
 			</SectionHeader>
@@ -63,7 +63,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ candidate }) => {
 										onClick={async () => {
 											try {
 												// Dynamic import to avoid circular dependencies if any, though here it's fine
-												const { documentService } = await import('../../../services/candidateService');
+												const { documentService } = await import('../../../../services/candidateService');
 												const blob = await documentService.download(doc.id);
 												const url = window.URL.createObjectURL(blob);
 												window.open(url, '_blank');
@@ -92,7 +92,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ candidate }) => {
 					</Button>
 				</Box>
 			)}
-		</Paper>
+		</SectionCard>
 	);
 };
 

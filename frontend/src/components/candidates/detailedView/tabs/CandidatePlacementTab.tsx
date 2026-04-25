@@ -3,7 +3,6 @@ import {
     Box,
     Typography,
     Stack,
-    Paper,
     Divider,
     CircularProgress,
     List,
@@ -23,9 +22,10 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
-import type { Candidate } from '../../../models/candidate';
-import placementMappingService from '../../../services/placementMappingService';
-import type { PlacementMapping } from '../../../services/placementMappingService';
+import type { Candidate } from '../../../../models/candidate';
+import placementMappingService from '../../../../services/placementMappingService';
+import type { PlacementMapping } from '../../../../services/placementMappingService';
+import { SectionCard } from '../DetailedViewCommon';
 
 interface CandidatePlacementTabProps {
     candidate: Candidate;
@@ -63,10 +63,10 @@ const CandidatePlacementTab: React.FC<CandidatePlacementTabProps> = ({ candidate
     }
 
     return (
-        <Box>
+        <SectionCard>
             <Typography variant="h6" sx={{ mb: 3, fontWeight: 700 }}>Mapped Job Roles</Typography>
-            
-            <Paper variant="outlined" sx={{ borderRadius: 0 }}>
+
+            <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, overflow: 'hidden' }}>
                 {mappings.length > 0 ? (
                     <List sx={{ p: 0 }}>
                         {mappings.map((mapping, index) => (
@@ -88,14 +88,14 @@ const CandidatePlacementTab: React.FC<CandidatePlacementTabProps> = ({ candidate
                                                 <Typography variant="body1" sx={{ fontWeight: 700 }}>
                                                     {mapping.job_role?.title || 'Job Role'}
                                                 </Typography>
-                                                <Chip 
-                                                    label={`${mapping.match_score}% Match`} 
-                                                    size="small" 
-                                                    sx={{ 
-                                                        fontWeight: 700, 
+                                                <Chip
+                                                    label={`${mapping.match_score}% Match`}
+                                                    size="small"
+                                                    sx={{
+                                                        fontWeight: 700,
                                                         bgcolor: mapping.match_score >= 70 ? '#e7f4e4' : '#fff4e5',
                                                         color: mapping.match_score >= 70 ? '#1d8102' : '#eb5f07'
-                                                    }} 
+                                                    }}
                                                 />
                                             </Stack>
                                         }
@@ -142,7 +142,7 @@ const CandidatePlacementTab: React.FC<CandidatePlacementTabProps> = ({ candidate
                         </Typography>
                     </Box>
                 )}
-            </Paper>
+            </Box>
 
             {mappings.length > 0 && (
                 <Stack direction="row" spacing={1.5} sx={{ mt: 3, p: 2, bgcolor: '#f2f3f3', borderLeft: '4px solid #007eb9' }}>
@@ -155,7 +155,7 @@ const CandidatePlacementTab: React.FC<CandidatePlacementTabProps> = ({ candidate
                     </Box>
                 </Stack>
             )}
-        </Box>
+        </SectionCard>
     );
 };
 

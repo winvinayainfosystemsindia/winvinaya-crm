@@ -14,15 +14,15 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchCandidateById, clearSelectedCandidate } from '../../store/slices/candidateSlice';
 
-import GeneralInfoTab from '../../components/candidates/detailedView/GeneralInfoTab';
-import ScreeningTab from '../../components/candidates/detailedView/ScreeningTab';
-import CounselingTab from '../../components/candidates/detailedView/CounselingTab';
-import DocumentsTab from '../../components/candidates/detailedView/DocumentsTab';
-import TrainingAllocationTab from '../../components/candidates/detailedView/TrainingAllocationTab';
-import CandidateAttendanceTab from '../../components/candidates/detailedView/CandidateAttendanceTab';
-import CandidatePlacementTab from '../../components/candidates/detailedView/CandidatePlacementTab';
-// import CandidateAssignmentTab from '../../components/candidates/detailedView/CandidateAssignmentTab';
-// import CandidateMockInterviewTab from '../../components/candidates/detailedView/CandidateMockInterviewTab';
+import GeneralInfoTab from '../../components/candidates/detailedView/tabs/GeneralInfoTab';
+import ScreeningTab from '../../components/candidates/detailedView/tabs/ScreeningTab';
+import CounselingTab from '../../components/candidates/detailedView/tabs/CounselingTab';
+import DocumentsTab from '../../components/candidates/detailedView/tabs/DocumentsTab';
+import TrainingAllocationTab from '../../components/candidates/detailedView/tabs/TrainingAllocationTab';
+import CandidateAttendanceTab from '../../components/candidates/detailedView/tabs/CandidateAttendanceTab';
+import CandidatePlacementTab from '../../components/candidates/detailedView/tabs/CandidatePlacementTab';
+// import CandidateAssignmentTab from '../../components/candidates/detailedView/tabs/CandidateAssignmentTab';
+// import CandidateMockInterviewTab from '../../components/candidates/detailedView/tabs/CandidateMockInterviewTab';
 
 import ModuleLayout from '../../components/common/layout/ModuleLayout';
 
