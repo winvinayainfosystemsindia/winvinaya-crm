@@ -1,29 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
 	Dialog,
-	DialogTitle,
-	DialogContent,
-	DialogActions,
-	Button,
-	Typography,
 	Box,
-	Tabs,
-	Tab,
-	IconButton,
-	Stack,
 	CircularProgress
 } from '@mui/material';
-import {
-	Close as CloseIcon,
-	Person as PersonIcon,
-	AssignmentInd as ScreenerIcon,
-	Event as DateIcon
-} from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import useToast from '../../../hooks/useToast';
 import { uploadDocument } from '../../../store/slices/candidateSlice';
 import { fetchFields } from '../../../store/slices/settingsSlice';
 import { documentService } from '../../../services/candidateService';
+import EnterpriseForm, { type FormStep } from '../../common/form/EnterpriseForm';
 import type { CandidateScreeningCreate } from '../../../models/candidate';
 
 // Tabs
@@ -41,27 +27,6 @@ interface ScreeningFormDialogProps {
 	candidatePublicId?: string;
 	candidateGuardianDetails?: any;
 	existingDocuments?: any[];
-}
-
-interface TabPanelProps {
-	children?: React.ReactNode;
-	index: number;
-	value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-	const { children, value, index, ...other } = props;
-	return (
-		<div
-			role="tabpanel"
-			hidden={value !== index}
-			id={`screening-form-tabpanel-${index}`}
-			aria-labelledby={`screening-form-tab-${index}`}
-			{...other}
-		>
-			{value === index && <Box sx={{ pt: 3, pb: 2 }}>{children}</Box>}
-		</div>
-	);
 }
 
 const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
@@ -82,7 +47,6 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 	const currentUser = useAppSelector(state => state.auth.user);
 	const selectedCandidate = useAppSelector(state => state.candidates.selectedCandidate);
 
-	const [tabValue, setTabValue] = useState(0);
 	const [uploading, setUploading] = useState<Record<string, boolean>>({});
 	const [viewing, setViewing] = useState<Record<string, boolean>>({});
 
@@ -101,13 +65,13 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 		documents_upload: {
 			resume: false,
 			disability_certificate: false,
-			degree_certificate: false,
+			degree_qualification: false,
 			resume_filename: '',
 			disability_certificate_filename: '',
-			degree_certificate_filename: '',
+			degree_qualification_filename: '',
 			resume_id: null,
 			disability_certificate_id: null,
-			degree_certificate_id: null
+			degree_qualification_id: null
 		},
 		others: {
 			willing_for_training: true,
@@ -120,7 +84,6 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 
 	useEffect(() => {
 		if (open) {
-			setTabValue(0);
 			dispatch(fetchFields('screening'));
 
 			const docMap: Record<string, any> = {};
@@ -208,11 +171,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 				});
 			}
 		}
-	}, [initialData, open, existingDocuments, dispatch]);
-
-	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-		setTabValue(newValue);
-	};
+	}, [initialData, open, existingDocuments, dispatch, candidateGuardianDetails]);
 
 	const handleUpdateField = (section: string, field: string, value: any) => {
 		if (section === 'root') {
@@ -318,6 +277,60 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 		onClose();
 	};
 
+	const steps: FormStep[] = useMemo(() => [
+		{
+			label: 'Background & Training',
+			content: (
+				<BackgroundTrainingTab
+					formData={formData}
+					onUpdateField={handleUpdateField}
+				/>
+			)
+		},
+		{
+			label: 'Family Details',
+			content: (
+				<FamilyDetailsTab
+					formData={formData}
+					onUpdateField={handleUpdateField}
+				/>
+			)
+		},
+		{
+			label: 'Skills',
+			content: (
+				<SkillsTab
+					formData={formData}
+					onUpdateField={handleUpdateField}
+				/>
+			)
+		},
+		{
+			label: 'Documents & Remarks',
+			content: (
+				<DocumentsRemarksTab
+					formData={formData}
+					onUpdateOtherField={handleUpdateOtherField}
+					onUpdateStatus={(value) => setFormData(prev => ({ ...prev, status: value }))}
+					onFileUpload={handleFileUpload}
+					onViewFile={handleViewFile}
+					onRemoveFile={handleRemoveFile}
+					uploading={uploading}
+					viewing={viewing}
+					dynamicFields={dynamicFields}
+					candidateIsDisabled={!!selectedCandidate?.disability_details?.is_disabled}
+				/>
+			)
+		}
+	], [formData, uploading, viewing, dynamicFields, selectedCandidate]);
+
+	const screenerName = initialData?.screened_by?.full_name || currentUser?.full_name || currentUser?.username || '—';
+	const screeningDate = initialData?.updated_at
+		? new Date(initialData.updated_at).toLocaleDateString()
+		: new Date().toLocaleDateString();
+
+	const subtitle = `${candidateName || 'New Candidate'} • Screener: ${screenerName} • Date: ${screeningDate}`;
+
 	return (
 		<Dialog
 			open={open}
@@ -326,136 +339,25 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 				onClose();
 			}}
 			disableEscapeKeyDown
-			maxWidth="md"
+			maxWidth="lg"
 			fullWidth
-			PaperProps={{ sx: { borderRadius: '2px', bgcolor: '#f2f3f3' } }}
+			PaperProps={{ sx: { borderRadius: '4px', bgcolor: 'transparent', boxShadow: 'none' } }}
 		>
-			<DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: '#232f3e', color: '#ffffff', py: 2 }}>
-				<Box sx={{ flex: 1 }}>
-					<Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5, lineHeight: 1.2 }}>
-						Candidate Screening
-					</Typography>
-					<Stack direction="row" spacing={3} alignItems="center" sx={{ opacity: 0.85 }}>
-						<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-							<PersonIcon sx={{ fontSize: 16 }} />
-							<Typography variant="caption" sx={{ fontSize: '0.875rem' }}>
-								{candidateName || 'New Candidate'}
-							</Typography>
-						</Box>
-						<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-							<ScreenerIcon sx={{ fontSize: 16 }} />
-							<Typography variant="caption" sx={{ fontSize: '0.875rem' }}>
-								<Typography component="span" variant="caption" sx={{ fontWeight: 600, mr: 0.5 }}>
-									{initialData ? 'Screened By:' : 'Screener:'}
-								</Typography>
-								{initialData?.screened_by?.full_name || currentUser?.full_name || currentUser?.username || '—'}
-							</Typography>
-						</Box>
-						<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-							<DateIcon sx={{ fontSize: 16 }} />
-							<Typography variant="caption" sx={{ fontSize: '0.875rem' }}>
-								<Typography component="span" variant="caption" sx={{ fontWeight: 600, mr: 0.5 }}>Date:</Typography>
-								{initialData?.updated_at
-									? new Date(initialData.updated_at).toLocaleDateString()
-									: new Date().toLocaleDateString()}
-							</Typography>
-						</Box>
-					</Stack>
+			{loadingFields ? (
+				<Box sx={{ display: 'flex', justifyContent: 'center', p: 8, bgcolor: 'white', borderRadius: '4px' }}>
+					<CircularProgress />
 				</Box>
-				<IconButton onClick={onClose} size="small" sx={{ color: '#ffffff' }}>
-					<CloseIcon />
-				</IconButton>
-			</DialogTitle>
-
-			<Box sx={{ borderBottom: 1, borderColor: '#d5dbdb', bgcolor: '#ffffff' }}>
-				<Tabs
-					value={tabValue}
-					onChange={handleTabChange}
-					variant="fullWidth"
-					sx={{
-						'& .MuiTabs-indicator': { backgroundColor: '#ec7211', height: 3 },
-						'& .MuiTab-root': {
-							textTransform: 'none',
-							fontWeight: 700,
-							fontSize: '0.875rem',
-							color: '#545b64',
-							'&.Mui-selected': { color: '#ec7211' }
-						}
-					}}
-				>
-					<Tab label="1. Background & Training" />
-					<Tab label="2. Family Details" />
-					<Tab label="3. Skills" />
-					<Tab label="4. Documents & Remarks" />
-				</Tabs>
-			</Box>
-
-			<DialogContent sx={{ p: 0 }}>
-				<Box sx={{ p: 3 }}>
-					{loadingFields && tabValue === 2 ? (
-						<Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-							<CircularProgress size={24} sx={{ color: '#ec7211' }} />
-						</Box>
-					) : (
-						<>
-							<TabPanel value={tabValue} index={0}>
-								<BackgroundTrainingTab
-									formData={formData}
-									onUpdateField={handleUpdateField}
-								/>
-							</TabPanel>
-
-							<TabPanel value={tabValue} index={1}>
-								<FamilyDetailsTab
-									formData={formData}
-									onUpdateField={handleUpdateField}
-								/>
-							</TabPanel>
-
-							<TabPanel value={tabValue} index={2}>
-								<SkillsTab
-									formData={formData}
-									onUpdateField={handleUpdateField}
-								/>
-							</TabPanel>
-
-							<TabPanel value={tabValue} index={3}>
-								<DocumentsRemarksTab
-									formData={formData}
-									onUpdateOtherField={handleUpdateOtherField}
-									onUpdateStatus={(value) => setFormData(prev => ({ ...prev, status: value }))}
-									onFileUpload={handleFileUpload}
-									onViewFile={handleViewFile}
-									onRemoveFile={handleRemoveFile}
-									uploading={uploading}
-									viewing={viewing}
-									dynamicFields={dynamicFields}
-									candidateIsDisabled={!!selectedCandidate?.disability_details?.is_disabled}
-								/>
-							</TabPanel>
-						</>
-					)}
-				</Box>
-			</DialogContent>
-
-			<DialogActions sx={{ p: 3, borderTop: '1px solid #d5dbdb', bgcolor: '#ffffff' }}>
-				<Button onClick={onClose} sx={{ color: '#545b64', fontWeight: 700, textTransform: 'none' }}>Cancel</Button>
-				<Button
-					onClick={handleSubmit}
-					variant="contained"
-					sx={{
-						bgcolor: '#ec7211',
-						'&:hover': { bgcolor: '#eb5f07' },
-						borderRadius: '2px',
-						textTransform: 'none',
-						fontWeight: 700,
-						px: 4,
-						boxShadow: 'none'
-					}}
-				>
-					{initialData ? 'Update Screening' : 'Save Screening'}
-				</Button>
-			</DialogActions>
+			) : (
+				<EnterpriseForm
+					title="Candidate Screening"
+					subtitle={subtitle}
+					mode={initialData ? 'edit' : 'create'}
+					steps={steps}
+					onSave={handleSubmit}
+					onCancel={onClose}
+					saveButtonText={initialData ? 'Update Screening' : 'Save Screening'}
+				/>
+			)}
 		</Dialog>
 	);
 };
