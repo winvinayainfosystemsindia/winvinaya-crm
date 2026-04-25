@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     API_V1_PREFIX: str = "/api/v1"
     DEBUG: bool = False
     ENVIRONMENT: str = "development"  # development, staging, production
+    FRONTEND_URL: Optional[str] = None
     
     # Server
     HOST: str = "0.0.0.0"

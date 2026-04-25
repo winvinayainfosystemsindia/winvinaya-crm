@@ -445,6 +445,30 @@ export const downloadDocument = createAsyncThunk(
 	}
 );
 
+export const sendConsentEmail = createAsyncThunk(
+	'candidates/sendConsentEmail',
+	async ({ publicId }: { publicId: string }, { rejectWithValue }) => {
+		try {
+			const response = await screeningService.sendConsent(publicId);
+			return response;
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to send consent email');
+		}
+	}
+);
+
+export const submitConsent = createAsyncThunk(
+	'candidates/submitConsent',
+	async ({ publicId }: { publicId: string }, { rejectWithValue }) => {
+		try {
+			const response = await screeningService.submitConsent(publicId);
+			return response;
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to submit consent');
+		}
+	}
+);
+
 // ======================
 // COUNSELING OPERATIONS
 // ======================

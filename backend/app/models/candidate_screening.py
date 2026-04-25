@@ -2,9 +2,10 @@ from __future__ import annotations
 """Candidate Screening model for trainer-filled screening data"""
 
 from typing import TYPE_CHECKING
-from sqlalchemy import Integer, ForeignKey, JSON, String
+from sqlalchemy import Integer, ForeignKey, JSON, String, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
+from datetime import datetime
 
 if TYPE_CHECKING:
     from app.models.candidate import Candidate
@@ -28,6 +29,11 @@ class CandidateScreening(BaseModel):
     # Status field for screening process
     status: Mapped[str | None] = mapped_column(String(100), nullable=True)
     
+    # Consent Management
+    consent_status: Mapped[str | None] = mapped_column(String(50), nullable=True) # None, Pending, Accepted
+    consent_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    consent_ip: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
     # Screening Data (JSON fields)
     previous_training: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     documents_upload: Mapped[dict | None] = mapped_column(JSON, nullable=True)

@@ -6,6 +6,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import List, Optional, Any
 import aiosmtplib
+from datetime import datetime
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from app.core.config import settings
 
@@ -121,3 +122,19 @@ async def send_dsr_submission_email(user_name: str, report_date: str, items: Lis
         await send_email(recipient, subject, html_content)
     except Exception as e:
         logger.error(f"Error in send_dsr_submission_email: {str(e)}")
+
+
+async def send_consent_form_email(candidate_name: str, candidate_email: str, consent_url: str):
+    """Sends consent form link to candidate"""
+    try:
+        subject = "Action Required: Candidate Consent Form - WinVinaya Foundation"
+        template = jinja_env.get_template("candidate_consent.html")
+        html_content = template.render(
+            candidate_name=candidate_name,
+            consent_url=consent_url,
+            current_year=datetime.now().year
+        )
+        return await send_email(candidate_email, subject, html_content)
+    except Exception as e:
+        logger.error(f"Error in send_consent_form_email: {str(e)}")
+        return False

@@ -13,6 +13,7 @@ export interface CandidateScreening {
 		full_name?: string;
 		username: string;
 	};
+	consent_status?: string;
 	others?: {
 		willing_for_training?: boolean;
 		ready_to_relocate?: boolean;
@@ -32,6 +33,7 @@ export interface CandidateScreeningCreate {
 	skills?: Record<string, any>;
 	family_details?: any[];
 	screened_by_id?: number;
+	consent_status?: string;
 	others?: {
 		willing_for_training?: boolean;
 		ready_to_relocate?: boolean;

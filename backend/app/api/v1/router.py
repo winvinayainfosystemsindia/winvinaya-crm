@@ -8,6 +8,7 @@ from app.api.v1.endpoints import (
     candidate_documents,
     candidate_counseling,
     candidate_screening,
+    consent,
     training_batches,
     training_attendance,
     training_assignments,
@@ -108,6 +109,7 @@ router.include_router(ai_settings.router, prefix="/ai/settings", tags=["AI Engin
 router.include_router(ai_chat.router, prefix="/ai/chat", tags=["AI Engine Chat"])
 router.include_router(user_email_configuration.router, tags=["User Email Configuration"])
 router.include_router(placement_email.router, tags=["Placement Email"])
+router.include_router(consent.router, prefix="/consent", tags=["Consent"])
 
 # X0PA Integration
 router.include_router(x0pa.router)

@@ -262,6 +262,30 @@ export const screeningService = {
 	 */
 	delete: async (publicId: string): Promise<void> => {
 		await api.delete(`/candidates/${publicId}/screening`);
+	},
+
+	/**
+	 * Send consent email to candidate
+	 */
+	sendConsent: async (publicId: string): Promise<any> => {
+		const response = await api.post(`/consent/send/${publicId}`);
+		return response.data;
+	},
+
+	/**
+	 * Get consent form data (public)
+	 */
+	getConsentData: async (publicId: string): Promise<any> => {
+		const response = await api.get(`/consent/public/${publicId}`);
+		return response.data;
+	},
+
+	/**
+	 * Submit consent form (public)
+	 */
+	submitConsent: async (publicId: string): Promise<any> => {
+		const response = await api.post(`/consent/public/${publicId}/submit`);
+		return response.data;
 	}
 };
 

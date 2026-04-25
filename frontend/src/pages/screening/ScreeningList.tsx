@@ -81,6 +81,16 @@ const ScreeningList: React.FC = () => {
 		setSelectedCandidate(null);
 	};
 
+	const handleRefreshCandidate = async () => {
+		if (!selectedCandidate) return;
+		try {
+			const fullCandidate = await dispatch(fetchCandidateById({ publicId: selectedCandidate.public_id, withDetails: true })).unwrap();
+			setSelectedCandidate(fullCandidate);
+		} catch (error) {
+			showSnackbar(`Failed to refresh candidate: ${error}`, 'error');
+		}
+	};
+
 	const handleScreeningSubmit = async (screeningData: CandidateScreeningCreate) => {
 		try {
 			if (selectedCandidate.screening) {
@@ -229,6 +239,7 @@ const ScreeningList: React.FC = () => {
 					candidatePublicId={selectedCandidate?.public_id}
 					candidateGuardianDetails={selectedCandidate?.guardian_details}
 					existingDocuments={selectedCandidate?.documents}
+					onRefresh={handleRefreshCandidate}
 				/>
 
 				{/* Snackbar for notifications */}

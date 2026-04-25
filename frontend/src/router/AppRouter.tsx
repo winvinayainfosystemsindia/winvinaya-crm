@@ -22,6 +22,7 @@ import NotFoundPage from '../pages/common/NotFoundPage';
 import MaintenancePage from '../pages/common/MaintenancePage';
 import DocumentCollectionList from '../pages/documents/DocumentCollectionList';
 import DocumentCollection from '../pages/documents/DocumentCollection';
+import ConsentFormPage from '../pages/public/ConsentFormPage';
 import CandidateDetail from '../pages/Candidates/CandidateDetail';
 import CandidateEdit from '../pages/Candidates/CandidateEdit';
 import Reports from '../pages/reports/Reports';
@@ -51,6 +52,7 @@ const AppRouter: React.FC = () => {
 			{/* Public Support Pages */}
 			<Route path="/success" element={<SuccessPage />} />
 			<Route path="/maintenance" element={<MaintenancePage />} />
+			<Route path="/consent/:publicId" element={<ConsentFormPage />} />
 
 			<Route element={<ProtectedRoute />}>
 				{/* Protected Routes */}

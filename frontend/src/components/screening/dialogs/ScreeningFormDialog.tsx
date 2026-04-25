@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import useToast from '../../../hooks/useToast';
-import { uploadDocument, downloadDocument } from '../../../store/slices/candidateSlice';
+import { uploadDocument, downloadDocument, sendConsentEmail } from '../../../store/slices/candidateSlice';
 import { fetchFields } from '../../../store/slices/settingsSlice';
 import EnterpriseForm, { type FormStep } from '../../common/form/EnterpriseForm';
 import type { CandidateScreeningCreate } from '../../../models/candidate';
@@ -26,6 +26,7 @@ interface ScreeningFormDialogProps {
 	candidatePublicId?: string;
 	candidateGuardianDetails?: any;
 	existingDocuments?: any[];
+	onRefresh?: () => void;
 }
 
 const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
@@ -36,7 +37,8 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 	candidateName,
 	candidatePublicId,
 	candidateGuardianDetails,
-	existingDocuments
+	existingDocuments,
+	onRefresh
 }) => {
 	const dispatch = useAppDispatch();
 	const toast = useToast();
@@ -48,6 +50,8 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 
 	const [uploading, setUploading] = useState<Record<string, boolean>>({});
 	const [viewing, setViewing] = useState<Record<string, boolean>>({});
+	const [sendingConsent, setSendingConsent] = useState(false);
+	const [refreshing, setRefreshing] = useState(false);
 
 	const [formData, setFormData] = useState<CandidateScreeningCreate>({
 		status: 'In Progress',
@@ -81,96 +85,106 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 		}
 	});
 
+	// Initial setup when dialog opens
 	useEffect(() => {
 		if (open) {
-			dispatch(fetchFields('screening'));
-
-			const docMap: Record<string, any> = {};
-			if (existingDocuments) {
-				existingDocuments.forEach(doc => {
-					const typeKey = doc.document_type === 'degree_certificate' ? 'degree_qualification' : doc.document_type;
-					docMap[typeKey] = {
-						id: doc.id,
-						name: doc.document_name
-					};
-				});
-			}
-
-			if (initialData) {
-				setFormData({
-					status: initialData.status || 'In Progress',
-					previous_training: {
-						attended_any_training: initialData.previous_training?.attended_any_training ?? false,
-						training_details: initialData.previous_training?.training_details ?? '',
-						is_winvinaya_student: initialData.previous_training?.is_winvinaya_student ?? false
-					},
-					skills: {
-						technical_skills: initialData.skills?.technical_skills ?? [],
-						soft_skills: initialData.skills?.soft_skills ?? []
-					},
-					family_details: initialData.family_details ?? [],
-					documents_upload: {
-						resume: initialData.documents_upload?.resume || !!docMap.resume,
-						disability_certificate: initialData.documents_upload?.disability_certificate || !!docMap.disability_certificate,
-						degree_qualification: initialData.documents_upload?.degree_qualification || !!docMap.degree_qualification,
-						resume_filename: initialData.documents_upload?.resume_filename || docMap.resume?.name || '',
-						disability_certificate_filename: initialData.documents_upload?.disability_certificate_filename || docMap.disability_certificate?.name || '',
-						degree_qualification_filename: initialData.documents_upload?.degree_qualification_filename || docMap.degree_qualification?.name || '',
-						resume_id: initialData.documents_upload?.resume_id || docMap.resume?.id || null,
-						disability_certificate_id: initialData.documents_upload?.disability_certificate_id || docMap.disability_certificate?.id || null,
-						degree_qualification_id: initialData.documents_upload?.degree_qualification_id || docMap.degree_qualification?.id || null
-					},
-					others: {
-						willing_for_training: true,
-						ready_to_relocate: false,
-						source_of_info: '',
-						family_annual_income: '',
-						comments: '',
-						...(initialData.others || {})
-					}
-				});
-			} else {
-				setFormData({
-					status: 'In Progress',
-					previous_training: {
-						attended_any_training: false,
-						training_details: '',
-						is_winvinaya_student: false
-					},
-					skills: {
-						technical_skills: [],
-						soft_skills: []
-					},
-					family_details: candidateGuardianDetails ? [{
-						name: candidateGuardianDetails.parent_name || '',
-						phone: candidateGuardianDetails.parent_phone || '',
-						relation: candidateGuardianDetails.relationship || '',
-						occupation: '',
-						company_name: '',
-						position: ''
-					}] : [],
-					documents_upload: {
-						resume: !!docMap.resume,
-						disability_certificate: !!docMap.disability_certificate,
-						degree_qualification: !!docMap.degree_qualification,
-						resume_filename: docMap.resume?.name || '',
-						disability_certificate_filename: docMap.disability_certificate?.name || '',
-						degree_qualification_filename: docMap.degree_qualification?.name || '',
-						resume_id: docMap.resume?.id || null,
-						disability_certificate_id: docMap.disability_certificate?.id || null,
-						degree_qualification_id: docMap.degree_qualification?.id || null
-					},
-					others: {
-						willing_for_training: true,
-						ready_to_relocate: false,
-						source_of_info: '',
-						family_annual_income: '',
-						comments: ''
-					}
-				});
+			// Only fetch if not already loaded to avoid layout shifts/tab resets
+			if (dynamicFields.length === 0) {
+				dispatch(fetchFields('screening'));
 			}
 		}
-	}, [initialData, open, existingDocuments, dispatch, candidateGuardianDetails]);
+	}, [open, dispatch, dynamicFields.length]);
+
+	// Data initialization and updates (Refresh)
+	useEffect(() => {
+		if (!open) return;
+
+		const docMap: Record<string, any> = {};
+		if (existingDocuments) {
+			existingDocuments.forEach(doc => {
+				const typeKey = doc.document_type === 'degree_certificate' ? 'degree_qualification' : doc.document_type;
+				docMap[typeKey] = {
+					id: doc.id,
+					name: doc.document_name
+				};
+			});
+		}
+
+		if (initialData) {
+			setFormData({
+				status: initialData.status || 'In Progress',
+				consent_status: initialData.consent_status,
+				previous_training: {
+					attended_any_training: initialData.previous_training?.attended_any_training ?? false,
+					training_details: initialData.previous_training?.training_details ?? '',
+					is_winvinaya_student: initialData.previous_training?.is_winvinaya_student ?? false
+				},
+				skills: {
+					technical_skills: initialData.skills?.technical_skills ?? [],
+					soft_skills: initialData.skills?.soft_skills ?? []
+				},
+				family_details: initialData.family_details ?? [],
+				documents_upload: {
+					resume: initialData.documents_upload?.resume || !!docMap.resume,
+					disability_certificate: initialData.documents_upload?.disability_certificate || !!docMap.disability_certificate,
+					degree_qualification: initialData.documents_upload?.degree_qualification || !!docMap.degree_qualification,
+					resume_filename: initialData.documents_upload?.resume_filename || docMap.resume?.name || '',
+					disability_certificate_filename: initialData.documents_upload?.disability_certificate_filename || docMap.disability_certificate?.name || '',
+					degree_qualification_filename: initialData.documents_upload?.degree_qualification_filename || docMap.degree_qualification?.name || '',
+					resume_id: initialData.documents_upload?.resume_id || docMap.resume?.id || null,
+					disability_certificate_id: initialData.documents_upload?.disability_certificate_id || docMap.disability_certificate?.id || null,
+					degree_qualification_id: initialData.documents_upload?.degree_qualification_id || docMap.degree_qualification?.id || null
+				},
+				others: {
+					willing_for_training: true,
+					ready_to_relocate: false,
+					source_of_info: '',
+					family_annual_income: '',
+					comments: '',
+					...(initialData.others || {})
+				}
+			});
+		} else {
+			setFormData({
+				status: 'In Progress',
+				previous_training: {
+					attended_any_training: false,
+					training_details: '',
+					is_winvinaya_student: false
+				},
+				skills: {
+					technical_skills: [],
+					soft_skills: []
+				},
+				family_details: candidateGuardianDetails ? [{
+					name: candidateGuardianDetails.parent_name || '',
+					phone: candidateGuardianDetails.parent_phone || '',
+					relation: candidateGuardianDetails.relationship || '',
+					occupation: '',
+					company_name: '',
+					position: ''
+				}] : [],
+				documents_upload: {
+					resume: !!docMap.resume,
+					disability_certificate: !!docMap.disability_certificate,
+					degree_qualification: !!docMap.degree_qualification,
+					resume_filename: docMap.resume?.name || '',
+					disability_certificate_filename: docMap.disability_certificate?.name || '',
+					degree_qualification_filename: docMap.degree_qualification?.name || '',
+					resume_id: docMap.resume?.id || null,
+					disability_certificate_id: docMap.disability_certificate?.id || null,
+					degree_qualification_id: docMap.degree_qualification?.id || null
+				},
+				others: {
+					willing_for_training: true,
+					ready_to_relocate: false,
+					source_of_info: '',
+					family_annual_income: '',
+					comments: ''
+				}
+			});
+		}
+	}, [initialData, open, existingDocuments, candidateGuardianDetails]);
 
 	const handleUpdateField = (section: string, field: string, value: any) => {
 		if (section === 'root') {
@@ -271,6 +285,35 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 		}));
 	};
 
+	const handleSendConsent = async () => {
+		if (!candidatePublicId) return;
+
+		setSendingConsent(true);
+		try {
+			await dispatch(sendConsentEmail({ publicId: candidatePublicId })).unwrap();
+			toast.success('Consent form email sent to candidate');
+			// Update local state to reflect Pending status
+			setFormData(prev => ({
+				...prev,
+				consent_status: 'Pending'
+			}));
+		} catch (error: any) {
+			toast.error(error || 'Failed to send consent email');
+		} finally {
+			setSendingConsent(false);
+		}
+	};
+
+	const handleRefresh = async () => {
+		if (!onRefresh) return;
+		setRefreshing(true);
+		try {
+			await onRefresh();
+		} finally {
+			setRefreshing(false);
+		}
+	};
+
 	const handleSubmit = () => {
 		onSubmit(formData);
 		onClose();
@@ -314,14 +357,18 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 					onFileUpload={handleFileUpload}
 					onViewFile={handleViewFile}
 					onRemoveFile={handleRemoveFile}
+					onSendConsent={handleSendConsent}
 					uploading={uploading}
 					viewing={viewing}
+					sendingConsent={sendingConsent}
+					onRefresh={handleRefresh}
+					refreshing={refreshing}
 					dynamicFields={dynamicFields}
 					candidateIsDisabled={!!selectedCandidate?.disability_details?.is_disabled}
 				/>
 			)
 		}
-	], [formData, uploading, viewing, dynamicFields, selectedCandidate]);
+	], [formData, uploading, viewing, sendingConsent, refreshing, onRefresh, dynamicFields, selectedCandidate]);
 
 	const screenerName = initialData?.screened_by?.full_name || currentUser?.full_name || currentUser?.username || '—';
 	const screeningDate = initialData?.updated_at

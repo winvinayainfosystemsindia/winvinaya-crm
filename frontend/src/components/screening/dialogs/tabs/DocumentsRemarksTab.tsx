@@ -13,13 +13,17 @@ import {
 	Select,
 	MenuItem,
 	Grid,
+	IconButton,
 	useTheme,
 } from '@mui/material';
 import {
 	CloudUpload as CloudUploadIcon,
 	CheckCircle as CheckCircleIcon,
 	Visibility as ViewIcon,
-	DeleteOutline as DeleteIcon
+	DeleteOutline as DeleteIcon,
+	Gavel as GavelIcon,
+	MailOutline as MailIcon,
+	Refresh as RefreshIcon
 } from '@mui/icons-material';
 import { awsStyles } from '../../../../theme/theme';
 import DynamicFieldRenderer from '../../../common/DynamicFieldRenderer';
@@ -32,8 +36,12 @@ interface DocumentsRemarksTabProps {
 	onFileUpload: (type: string, file: File) => void;
 	onViewFile: (type: string) => void;
 	onRemoveFile: (type: string) => void;
+	onSendConsent: () => void;
+	onRefresh?: () => void;
 	uploading: Record<string, boolean>;
 	viewing: Record<string, boolean>;
+	sendingConsent: boolean;
+	refreshing?: boolean;
 	dynamicFields: DynamicField[];
 	candidateIsDisabled: boolean;
 }
@@ -45,8 +53,12 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 	onFileUpload,
 	onViewFile,
 	onRemoveFile,
+	onSendConsent,
+	onRefresh,
 	uploading,
 	viewing,
+	sendingConsent,
+	refreshing,
 	dynamicFields,
 	candidateIsDisabled
 }) => {
@@ -220,6 +232,99 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 							formData={formData.others}
 							onUpdateField={onUpdateOtherField}
 						/>
+					</Paper>
+				</Box>
+			)}
+
+			{/* Consent Management Section - Appears only when Completed */}
+			{formData.status === 'Completed' && (
+				<Box>
+					<Typography variant="awsSectionTitle" sx={{ mb: 2 }}>
+						Consent Management
+					</Typography>
+					<Paper
+						elevation={0}
+						sx={{
+							...awsPanel,
+							p: 3,
+							borderLeft: '4px solid',
+							borderLeftColor: formData.consent_status === 'Accepted' ? 'success.main' : 'primary.main',
+							bgcolor: formData.consent_status === 'Accepted' ? 'rgba(16, 185, 129, 0.03)' : 'rgba(0, 126, 185, 0.02)'
+						}}
+					>
+						<Grid container spacing={3} alignItems="center">
+							<Grid size={{ xs: 12, md: 8 }}>
+								<Stack direction="row" spacing={2} alignItems="center">
+									<Box sx={{
+										bgcolor: formData.consent_status === 'Accepted' ? 'success.main' : 'primary.main',
+										p: 1.5,
+										borderRadius: '50%',
+										display: 'flex',
+										color: 'white'
+									}}>
+										<GavelIcon />
+									</Box>
+									<Box>
+										<Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary' }}>
+											Candidate Consent Status
+										</Typography>
+										<Typography variant="body2" sx={{ color: 'text.secondary' }}>
+											{formData.consent_status === 'Accepted'
+												? 'Consent has been received and verified digitally.'
+												: formData.consent_status === 'Pending'
+													? 'Consent request email has been sent. Awaiting candidate action.'
+													: 'Send the digital consent form to the candidate for review and acceptance.'
+											}
+										</Typography>
+									</Box>
+								</Stack>
+							</Grid>
+							<Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+								<Stack direction="column" spacing={1} alignItems="flex-end">
+									<Stack direction="row" spacing={1} alignItems="center">
+										<Chip
+											label={formData.consent_status || 'Not Sent'}
+											color={formData.consent_status === 'Accepted' ? 'success' : formData.consent_status === 'Pending' ? 'info' : 'default'}
+											size="small"
+											sx={{ fontWeight: 700, borderRadius: '2px' }}
+										/>
+										<IconButton 
+											size="small" 
+											onClick={onRefresh}
+											disabled={refreshing}
+											sx={{ 
+												color: 'primary.main',
+												bgcolor: 'rgba(0, 126, 185, 0.05)',
+												'&:hover': { bgcolor: 'rgba(0, 126, 185, 0.1)' }
+											}}
+											title="Refresh Status"
+										>
+											{refreshing ? (
+												<CircularProgress size={16} color="inherit" />
+											) : (
+												<RefreshIcon sx={{ fontSize: 16 }} />
+											)}
+										</IconButton>
+									</Stack>
+									<Button
+										variant="contained"
+										size="small"
+										startIcon={sendingConsent ? <CircularProgress size={14} color="inherit" /> : <MailIcon />}
+										onClick={onSendConsent}
+										disabled={sendingConsent || formData.consent_status === 'Accepted'}
+										sx={{
+											textTransform: 'none',
+											fontWeight: 700,
+											borderRadius: '2px',
+											boxShadow: 'none',
+											'&:hover': { boxShadow: 'none' }
+										}}
+									>
+										{sendingConsent ? 'Sending...' : (formData.consent_status === 'Pending' ? 'Resend Consent' : 'Send Consent Email')}
+									</Button>
+								</Stack>
+							</Grid>
+						</Grid>
 					</Paper>
 				</Box>
 			)}
