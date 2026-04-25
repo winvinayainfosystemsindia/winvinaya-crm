@@ -99,9 +99,9 @@ class CandidateResponse(CandidateBase):
     """
     id: int
     public_id: UUID  # Secure UUID for external API
-    city: str
-    district: str
-    state: str
+    city: Optional[str] = None
+    district: Optional[str] = None
+    state: Optional[str] = None
     created_at: datetime
     updated_at: datetime
     
@@ -154,9 +154,9 @@ class CandidateListResponse(BaseModel):
     whatsapp_number: Optional[str] = None
     dob: Optional[date] = None
     pincode: str
-    city: str
-    district: str
-    state: str
+    city: Optional[str] = None
+    district: Optional[str] = None
+    state: Optional[str] = None
     created_at: datetime
     is_disabled: bool = False
     disability_type: Optional[str] = None

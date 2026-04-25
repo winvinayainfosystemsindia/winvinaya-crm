@@ -26,11 +26,14 @@ class PlacementMappingRepository(BaseRepository[PlacementMapping]):
                 )
             )
             .options(
-                selectinload(self.model.candidate).selectinload(self.Candidate.screening),
-                selectinload(self.model.candidate).selectinload(self.Candidate.documents),
-                selectinload(self.model.candidate).selectinload(self.Candidate.counseling),
+                selectinload(self.model.candidate).options(
+                    selectinload(self.Candidate.screening),
+                    selectinload(self.Candidate.documents),
+                    selectinload(self.Candidate.counseling)
+                ),
                 selectinload(self.model.job_role).selectinload(self.JobRole.company),
-                selectinload(self.model.mapped_by)
+                selectinload(self.model.mapped_by),
+                selectinload(self.model.unmapped_by)
             )
         )
         result = await self.db.execute(stmt)
@@ -46,11 +49,14 @@ class PlacementMappingRepository(BaseRepository[PlacementMapping]):
                 )
             )
             .options(
-                selectinload(self.model.candidate).selectinload(self.Candidate.screening),
-                selectinload(self.model.candidate).selectinload(self.Candidate.documents),
-                selectinload(self.model.candidate).selectinload(self.Candidate.counseling),
+                selectinload(self.model.candidate).options(
+                    selectinload(self.Candidate.screening),
+                    selectinload(self.Candidate.documents),
+                    selectinload(self.Candidate.counseling)
+                ),
                 selectinload(self.model.mapped_by),
-                selectinload(self.model.job_role).selectinload(self.JobRole.company)
+                selectinload(self.model.job_role).selectinload(self.JobRole.company),
+                selectinload(self.model.unmapped_by)
             )
         )
         result = await self.db.execute(stmt)
@@ -66,11 +72,14 @@ class PlacementMappingRepository(BaseRepository[PlacementMapping]):
                 )
             )
             .options(
-                selectinload(self.model.candidate).selectinload(self.Candidate.screening),
-                selectinload(self.model.candidate).selectinload(self.Candidate.documents),
-                selectinload(self.model.candidate).selectinload(self.Candidate.counseling),
+                selectinload(self.model.candidate).options(
+                    selectinload(self.Candidate.screening),
+                    selectinload(self.Candidate.documents),
+                    selectinload(self.Candidate.counseling)
+                ),
                 selectinload(self.model.job_role).selectinload(self.JobRole.company),
-                selectinload(self.model.mapped_by)
+                selectinload(self.model.mapped_by),
+                selectinload(self.model.unmapped_by)
             )
         )
         result = await self.db.execute(stmt)
@@ -81,11 +90,14 @@ class PlacementMappingRepository(BaseRepository[PlacementMapping]):
             select(self.model)
             .where(self.model.candidate_id == candidate_id)
             .options(
-                selectinload(self.model.candidate).selectinload(self.Candidate.screening),
-                selectinload(self.model.candidate).selectinload(self.Candidate.documents),
-                selectinload(self.model.candidate).selectinload(self.Candidate.counseling),
+                selectinload(self.model.candidate).options(
+                    selectinload(self.Candidate.screening),
+                    selectinload(self.Candidate.documents),
+                    selectinload(self.Candidate.counseling)
+                ),
                 selectinload(self.model.job_role).selectinload(self.JobRole.company),
-                selectinload(self.model.mapped_by)
+                selectinload(self.model.mapped_by),
+                selectinload(self.model.unmapped_by)
             )
         )
         result = await self.db.execute(stmt)
