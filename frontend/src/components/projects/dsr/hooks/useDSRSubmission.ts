@@ -241,7 +241,7 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 			}
 
 			// Update calendar for this specific user
-			const dateFrom = format(subDays(new Date(), 30), 'yyyy-MM-dd');
+			const dateFrom = format(subDays(new Date(), 60), 'yyyy-MM-dd');
 			const today = format(new Date(), 'yyyy-MM-dd');
 			dispatch(fetchCalendarEntries({
 				date_from: dateFrom,
@@ -258,9 +258,9 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 		dispatch(fetchPermissionRequests({ skip: 0, limit: 100, user_id: user?.id as any }));
 		dispatch(fetchActivityTypes({ skip: 0, limit: 100, onlyActive: true }));
 
-		// Fetch calendar status with month range (scoped to viewed user if present)
-		const start = format(subDays(startOfDay(new Date()), 7), 'yyyy-MM-dd'); // start with some buffer
-		const end = format(subDays(startOfDay(new Date()), -30), 'yyyy-MM-dd'); // end in 30 days
+		// Fetch calendar status with extended history (matching the 60-day UI check)
+		const start = format(subDays(startOfDay(new Date()), 60), 'yyyy-MM-dd');
+		const end = format(subDays(startOfDay(new Date()), -30), 'yyyy-MM-dd');
 		dispatch(fetchCalendarEntries({
 			date_from: start,
 			date_to: end,

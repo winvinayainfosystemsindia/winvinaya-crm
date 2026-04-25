@@ -10,6 +10,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import { useAppSelector, useAppDispatch } from '../../../../store/hooks';
 import { fetchHolidays } from '../../../../store/slices/holidaySlice';
+import { fetchCalendarEntries } from '../../../../store/slices/dsrSlice';
 import { type CompanyHoliday } from '../../../../services/holidayService';
 import { DSRStatusValues } from '../../../../models/dsr';
 import { awsStyles } from '../../../../theme/theme';
@@ -22,6 +23,7 @@ const DSRCalendarView: React.FC = () => {
 	const theme = useTheme();
 	const dispatch = useAppDispatch();
 	const { calendarEntries, calendarLeaves } = useAppSelector((state) => state.dsr);
+	const { user } = useAppSelector((state) => state.auth);
 	const { holidays, loading: holidaysLoading } = useAppSelector((state) => state.holidays);
 	const [viewDate, setViewDate] = useState(dayjs());
 
@@ -30,8 +32,16 @@ const DSRCalendarView: React.FC = () => {
 	useEffect(() => {
 		const start = viewDate.startOf('month').subtract(7, 'day').format('YYYY-MM-DD');
 		const end = viewDate.endOf('month').add(7, 'day').format('YYYY-MM-DD');
+		
 		dispatch(fetchHolidays({ date_from: start, date_to: end, limit: 100 }));
-	}, [dispatch, viewDate]);
+		
+		// Fetch calendar entries for the entire month range displayed
+		dispatch(fetchCalendarEntries({ 
+			date_from: start, 
+			date_to: end,
+			user_id: user?.id 
+		}));
+	}, [dispatch, viewDate, user?.id]);
 
 	const dateStatuses = useMemo(() => {
 		const statuses: Record<string, string> = {};
