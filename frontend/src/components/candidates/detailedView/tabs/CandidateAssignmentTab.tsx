@@ -23,7 +23,7 @@ import {
 	ExpandMore as ExpandMoreIcon,
 	School as BatchIcon
 } from '@mui/icons-material';
-import { format } from 'date-fns';
+import { useDateTime } from '../../../../hooks/useDateTime';
 import { SectionHeader, SectionCard } from '../DetailedViewCommon';
 import trainingExtensionService from '../../../../services/trainingExtensionService';
 import type { TrainingAssignment } from '../../../../models/training';
@@ -35,6 +35,7 @@ interface CandidateAssignmentTabProps {
 
 const CandidateAssignmentTab: React.FC<CandidateAssignmentTabProps> = ({ candidate }) => {
 	const theme = useTheme();
+	const { formatDate } = useDateTime();
 	const [assignments, setAssignments] = useState<TrainingAssignment[]>([]);
 	const [loading, setLoading] = useState(true);
 
@@ -231,7 +232,7 @@ const CandidateAssignmentTab: React.FC<CandidateAssignmentTabProps> = ({ candida
 															{renderRating((row.marks_obtained / row.max_marks) * 100)}
 														</TableCell>
 														<TableCell sx={{ color: 'text.secondary' }}>
-															{format(new Date(row.assignment_date), 'MMM dd, yyyy')}
+															{formatDate(row.assignment_date)}
 														</TableCell>
 													</TableRow>
 												))}

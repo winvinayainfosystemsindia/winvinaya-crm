@@ -24,7 +24,7 @@ import {
 	ExpandMore as ExpandMoreIcon,
 	School as BatchIcon
 } from '@mui/icons-material';
-import { format } from 'date-fns';
+import { useDateTime } from '../../../../hooks/useDateTime';
 import { SectionHeader, SectionCard } from '../DetailedViewCommon';
 import trainingExtensionService from '../../../../services/trainingExtensionService';
 import type { TrainingMockInterview } from '../../../../models/training';
@@ -36,6 +36,7 @@ interface CandidateMockInterviewTabProps {
 
 const CandidateMockInterviewTab: React.FC<CandidateMockInterviewTabProps> = ({ candidate }) => {
 	const theme = useTheme();
+	const { formatDate } = useDateTime();
 	const [interviews, setInterviews] = useState<TrainingMockInterview[]>([]);
 	const [loading, setLoading] = useState(true);
 
@@ -233,7 +234,7 @@ const CandidateMockInterviewTab: React.FC<CandidateMockInterviewTabProps> = ({ c
 												{records.map((row) => (
 													<TableRow key={row.id} hover>
 														<TableCell sx={{ color: 'text.primary', fontWeight: 500 }}>
-															{format(new Date(row.interview_date), 'MMM dd, yyyy')}
+															{formatDate(row.interview_date)}
 														</TableCell>
 														<TableCell sx={{ color: 'text.primary' }}>
 															{row.interviewer_name || 'Unassigned'}

@@ -11,18 +11,26 @@ import {
 	Chip,
 	CircularProgress,
 	Button,
-	Divider,
 	Stack,
 	useTheme,
-	alpha
+	alpha,
+	Avatar,
+	Grid
 } from '@mui/material';
 import {
 	School as SchoolIcon,
-	Event as DateIcon
+	AssignmentInd as AllocationIcon,
+	CheckCircle as ActiveIcon,
+	FactCheck as CompletedIcon,
+	Group as BatchIcon,
+	Layers as CategoryIcon,
+	History as DurationIcon,
+	Comment as RemarkIcon
 } from '@mui/icons-material';
-import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { useDateTime } from '../../../../hooks/useDateTime';
 import { SectionHeader, SectionCard } from '../DetailedViewCommon';
+import StatCard from '../../../common/StatCard';
 import trainingExtensionService from '../../../../services/trainingExtensionService';
 import type { Candidate } from '../../../../models/candidate';
 import type { CandidateAllocation } from '../../../../models/training';
@@ -34,6 +42,7 @@ interface TrainingAllocationTabProps {
 const TrainingAllocationTab: React.FC<TrainingAllocationTabProps> = ({ candidate }) => {
 	const navigate = useNavigate();
 	const theme = useTheme();
+	const { formatDate } = useDateTime();
 	const [allocations, setAllocations] = useState<CandidateAllocation[]>([]);
 	const [loading, setLoading] = useState(true);
 
@@ -54,167 +63,237 @@ const TrainingAllocationTab: React.FC<TrainingAllocationTabProps> = ({ candidate
 
 	const getStatusChip = (allocation: CandidateAllocation) => {
 		if (allocation.is_dropout) {
-			return <Chip label="Dropout" size="small" sx={{ bgcolor: alpha(theme.palette.error.main, 0.1), color: 'error.main', fontWeight: 700, borderRadius: '4px' }} />;
+			return (
+				<Chip 
+					label="DROPOUT" 
+					size="small" 
+					sx={{ 
+						bgcolor: alpha(theme.palette.error.main, 0.1), 
+						color: 'error.main', 
+						fontWeight: 800, 
+						fontSize: '0.65rem',
+						borderRadius: 1.5 
+					}} 
+				/>
+			);
 		}
-		// Check if batch is still running
 		const batchStatus = allocation.batch?.status;
 		if (batchStatus === 'running' || batchStatus === 'planned') {
-			return <Chip label="Active" size="small" sx={{ bgcolor: alpha(theme.palette.success.main, 0.1), color: 'success.main', fontWeight: 700, borderRadius: '4px' }} />;
+			return (
+				<Chip 
+					label="ACTIVE" 
+					size="small" 
+					sx={{ 
+						bgcolor: alpha(theme.palette.success.main, 0.1), 
+						color: 'success.main', 
+						fontWeight: 800, 
+						fontSize: '0.65rem',
+						borderRadius: 1.5 
+					}} 
+				/>
+			);
 		}
-		return <Chip label="Completed" size="small" sx={{ bgcolor: alpha(theme.palette.info.main, 0.1), color: 'info.main', fontWeight: 700, borderRadius: '4px' }} />;
+		return (
+			<Chip 
+				label="COMPLETED" 
+				size="small" 
+				sx={{ 
+					bgcolor: alpha(theme.palette.info.main, 0.1), 
+					color: 'info.main', 
+					fontWeight: 800, 
+					fontSize: '0.65rem',
+					borderRadius: 1.5 
+				}} 
+			/>
+		);
 	};
 
 	if (loading) {
 		return (
-			<Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-				<CircularProgress size={24} sx={{ color: 'primary.main' }} />
+			<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 10 }}>
+				<CircularProgress size={40} thickness={4} sx={{ color: 'primary.main' }} />
 			</Box>
 		);
 	}
 
-	return (
-		<SectionCard>
-			<SectionHeader title="Training Batch Allocations" icon={<SchoolIcon />} />
-
-			{allocations.length > 0 ? (
-				<>
-					{/* Summary Strip */}
-					<Box sx={{ display: 'flex', gap: 6, mb: 4, bgcolor: alpha(theme.palette.background.default, 0.5), p: 2.5, border: '1px solid', borderColor: 'divider', borderRadius: '2px' }}>
-						<Box>
-							<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem', display: 'block', mb: 0.5 }}>
-								Total Batches
-							</Typography>
-							<Typography variant="h5" sx={{ fontWeight: 800, color: 'text.primary' }}>{allocations.length}</Typography>
-						</Box>
-						<Divider orientation="vertical" flexItem sx={{ borderColor: 'divider' }} />
-						<Box>
-							<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem', display: 'block', mb: 0.5 }}>
-								Active
-							</Typography>
-							<Typography variant="h5" sx={{ fontWeight: 800, color: 'success.main' }}>
-								{allocations.filter(a => !a.is_dropout && (a.batch?.status === 'running' || a.batch?.status === 'planned')).length}
-							</Typography>
-						</Box>
-						<Divider orientation="vertical" flexItem sx={{ borderColor: 'divider' }} />
-						<Box>
-							<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem', display: 'block', mb: 0.5 }}>
-								Completed
-							</Typography>
-							<Typography variant="h5" sx={{ fontWeight: 800, color: 'info.main' }}>
-								{allocations.filter(a => !a.is_dropout && a.batch?.status === 'closed').length}
-							</Typography>
-						</Box>
-					</Box>
-
-					{/* Allocations Table */}
-					<TableContainer sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '2px' }}>
-						<Table size="small">
-							<TableHead sx={{ bgcolor: alpha(theme.palette.background.default, 0.5) }}>
-								<TableRow>
-									<TableCell sx={{ fontWeight: 700, color: 'text.secondary', py: 1.5 }}>BATCH NAME</TableCell>
-									<TableCell sx={{ fontWeight: 700, color: 'text.secondary', py: 1.5 }}>CATEGORY</TableCell>
-									<TableCell sx={{ fontWeight: 700, color: 'text.secondary', py: 1.5 }}>DURATION</TableCell>
-									<TableCell sx={{ fontWeight: 700, color: 'text.secondary', py: 1.5 }}>STATUS</TableCell>
-									<TableCell sx={{ fontWeight: 700, color: 'text.secondary', py: 1.5 }}>REMARK</TableCell>
-								</TableRow>
-							</TableHead>
-							<TableBody>
-								{allocations.map((allocation) => (
-									<TableRow key={allocation.id} hover>
-										<TableCell sx={{ color: 'text.primary', fontWeight: 600 }}>
-											<Button
-												variant="text"
-												sx={{
-													textTransform: 'none',
-													color: 'info.main',
-													fontWeight: 600,
-													p: 0,
-													minWidth: 'auto',
-													'&:hover': { bgcolor: 'transparent', textDecoration: 'underline' }
-												}}
-												onClick={() => navigate(`/training/batches/${allocation.batch?.public_id}`)}
-											>
-												{allocation.batch?.batch_name}
-											</Button>
-										</TableCell>
-										<TableCell sx={{ color: 'text.secondary' }}>
-											{allocation.batch?.disability_types?.join(', ') || 'N/A'}
-										</TableCell>
-										<TableCell sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
-											{allocation.batch?.start_date && (
-												<Stack direction="row" spacing={0.5} alignItems="center">
-													<DateIcon sx={{ fontSize: 16, color: 'text.disabled' }} />
-													<Typography variant="caption">
-														{format(new Date(allocation.batch.start_date), 'MMM dd, yyyy')}
-														{allocation.batch.approx_close_date && (
-															<> - {format(new Date(allocation.batch.approx_close_date), 'MMM dd, yyyy')}</>
-														)}
-													</Typography>
-												</Stack>
-											)}
-										</TableCell>
-										<TableCell>{getStatusChip(allocation)}</TableCell>
-										<TableCell sx={{ color: 'text.secondary', fontStyle: allocation.dropout_remark ? 'normal' : 'italic', maxWidth: 200 }}>
-											{allocation.dropout_remark || 'No remarks'}
-										</TableCell>
-									</TableRow>
-								))}
-							</TableBody>
-						</Table>
-					</TableContainer>
-
-					{/* Action Buttons */}
-					<Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-						<Button
-							variant="outlined"
-							sx={{
-								color: 'text.primary',
-								borderColor: 'divider',
-								textTransform: 'none',
-								'&:hover': { borderColor: 'text.secondary', bgcolor: 'action.hover' }
-							}}
-							onClick={() => navigate('/training/batches')}
-						>
-							View All Batches
-						</Button>
-						<Button
-							variant="contained"
-							sx={{
-								bgcolor: '#ec7211',
-								'&:hover': { bgcolor: '#eb5f07' },
-								textTransform: 'none',
-								fontWeight: 700,
-								boxShadow: 'none'
-							}}
-							onClick={() => navigate('/training/allocation')}
-						>
-							Manage Allocation
-						</Button>
-					</Box>
-				</>
-			) : (
-				<Box sx={{ textAlign: 'center', py: 8, bgcolor: alpha(theme.palette.background.default, 0.5), border: '1px dashed', borderColor: 'divider', borderRadius: '2px' }}>
-					<SchoolIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
-					<Typography variant="h6" sx={{ color: 'text.secondary', fontWeight: 600 }}>No Training Allocations</Typography>
-					<Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-						{candidate.name} has not been allocated to any training batch yet.
+	if (allocations.length === 0) {
+		return (
+			<SectionCard sx={{ textAlign: 'center', py: 10, bgcolor: alpha(theme.palette.background.default, 0.4), borderRadius: 4 }}>
+				<Box sx={{ maxWidth: 450, mx: 'auto' }}>
+					<Avatar sx={{ 
+						width: 100, 
+						height: 100, 
+						bgcolor: alpha(theme.palette.primary.main, 0.05), 
+						color: 'primary.main',
+						mx: 'auto',
+						mb: 3
+					}}>
+						<SchoolIcon sx={{ fontSize: 50 }} />
+					</Avatar>
+					<Typography variant="h5" sx={{ fontWeight: 800, mb: 1.5 }}>No Training Allocations</Typography>
+					<Typography variant="body2" color="text.secondary" sx={{ mb: 4, lineHeight: 1.6 }}>
+						This candidate has not been assigned to any training modules yet. 
+						Allocating them to a batch will enable attendance tracking and performance monitoring.
 					</Typography>
 					<Button
 						variant="contained"
-						color="primary"
-						sx={{
-							textTransform: 'none',
+						size="large"
+						startIcon={<AllocationIcon />}
+						sx={{ 
+							borderRadius: 2, 
+							px: 4, 
+							py: 1.5,
 							fontWeight: 700,
-							px: 4,
-							boxShadow: 'none'
+							boxShadow: theme.shadows[4]
 						}}
 						onClick={() => navigate('/training/allocation')}
 					>
 						Allocate to Batch
 					</Button>
 				</Box>
-			)}
-		</SectionCard>
+			</SectionCard>
+		);
+	}
+
+	const activeCount = allocations.filter(a => !a.is_dropout && (a.batch?.status === 'running' || a.batch?.status === 'planned')).length;
+	const completedCount = allocations.filter(a => !a.is_dropout && a.batch?.status === 'closed').length;
+
+	return (
+		<Stack spacing={4}>
+			{/* Summary KPI Cards */}
+			<Grid container spacing={3}>
+				<Grid size={{ xs: 12, md: 4 }}>
+					<StatCard 
+						title="Total Batches" 
+						value={allocations.length} 
+						icon={<BatchIcon />} 
+						color={theme.palette.primary.main} 
+						subtitle="Lifetime training enrollment"
+					/>
+				</Grid>
+				<Grid size={{ xs: 12, md: 4 }}>
+					<StatCard 
+						title="Active Tracks" 
+						value={activeCount} 
+						icon={<ActiveIcon />} 
+						color={theme.palette.success.main} 
+						subtitle="Currently ongoing training"
+					/>
+				</Grid>
+				<Grid size={{ xs: 12, md: 4 }}>
+					<StatCard 
+						title="Completed" 
+						value={completedCount} 
+						icon={<CompletedIcon />} 
+						color={theme.palette.info.main} 
+						subtitle="Successfully finished courses"
+					/>
+				</Grid>
+			</Grid>
+
+			<SectionCard>
+				<SectionHeader title="Detailed Allocation History" icon={<AllocationIcon />} />
+				
+				<TableContainer component={Box} sx={{ mt: 2 }}>
+					<Table sx={{ minWidth: 650 }}>
+						<TableHead>
+							<TableRow>
+								<TableCell sx={{ fontWeight: 800, color: 'text.secondary', py: 2 }}>BATCH & DISABILITY TYPE</TableCell>
+								<TableCell sx={{ fontWeight: 800, color: 'text.secondary', py: 2 }}>TIMELINE</TableCell>
+								<TableCell sx={{ fontWeight: 800, color: 'text.secondary', py: 2 }}>STATUS</TableCell>
+								<TableCell sx={{ fontWeight: 800, color: 'text.secondary', py: 2 }}>SESSION REMARKS</TableCell>
+							</TableRow>
+						</TableHead>
+						<TableBody>
+							{allocations.map((allocation) => (
+								<TableRow 
+									key={allocation.id} 
+									sx={{ 
+										'&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.02) },
+										transition: 'background-color 0.2s'
+									}}
+								>
+									<TableCell>
+										<Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+											<Typography 
+												variant="subtitle2" 
+												sx={{ 
+													fontWeight: 700, 
+													color: 'primary.main', 
+													cursor: 'pointer',
+													'&:hover': { textDecoration: 'underline' }
+												}}
+												onClick={() => navigate(`/training/batches/${allocation.batch?.public_id}`)}
+											>
+												{allocation.batch?.batch_name}
+											</Typography>
+											<Stack direction="row" spacing={1} alignItems="center">
+												<CategoryIcon sx={{ fontSize: 14, color: 'text.disabled' }} />
+												<Typography variant="caption" color="text.secondary">
+													{allocation.batch?.disability_types?.join(', ') || 'General'}
+												</Typography>
+											</Stack>
+										</Box>
+									</TableCell>
+									<TableCell>
+										<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+											<DurationIcon sx={{ fontSize: 16, color: 'text.disabled' }} />
+											<Typography variant="body2" sx={{ fontWeight: 500 }}>
+												{allocation.batch?.start_date ? formatDate(allocation.batch.start_date) : '-'}
+												<Box component="span" sx={{ mx: 0.5, color: 'text.disabled' }}>→</Box>
+												{allocation.batch?.approx_close_date ? formatDate(allocation.batch.approx_close_date) : 'Present'}
+											</Typography>
+										</Box>
+									</TableCell>
+									<TableCell>
+										{getStatusChip(allocation)}
+									</TableCell>
+									<TableCell>
+										<Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+											<RemarkIcon sx={{ fontSize: 16, color: 'text.disabled', mt: 0.3 }} />
+											<Typography 
+												variant="body2" 
+												sx={{ 
+													color: allocation.dropout_remark ? 'text.primary' : 'text.disabled',
+													fontStyle: allocation.dropout_remark ? 'normal' : 'italic',
+													maxWidth: 250,
+													lineHeight: 1.4
+												}}
+											>
+												{allocation.dropout_remark || 'No session notes provided'}
+											</Typography>
+										</Box>
+									</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
+				</TableContainer>
+
+				<Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+					<Button
+						variant="outlined"
+						sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+						onClick={() => navigate('/training/batches')}
+					>
+						Browse All Batches
+					</Button>
+					<Button
+						variant="contained"
+						sx={{ 
+							borderRadius: 2, 
+							textTransform: 'none', 
+							fontWeight: 700,
+							bgcolor: alpha(theme.palette.primary.main, 0.9),
+							'&:hover': { bgcolor: theme.palette.primary.main }
+						}}
+						onClick={() => navigate('/training/allocation')}
+					>
+						Manage Allocations
+					</Button>
+				</Box>
+			</SectionCard>
+		</Stack>
 	);
 };
 
