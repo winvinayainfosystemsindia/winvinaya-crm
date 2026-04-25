@@ -96,56 +96,73 @@ const CandidateDetail: React.FC = () => {
 	);
 
 	return (
-		<ModuleLayout
-			title={
-				candidate ? (
-					<Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
-						<Typography variant="inherit" component="span" sx={{ fontWeight: 700 }}>
-							{candidate.name}
-						</Typography>
-						<IconButton
-							size="small"
-							onClick={() => navigate(`/candidates/edit/${candidate.public_id}`)}
-							sx={{
-								color: 'common.white',
-								bgcolor: 'rgba(255,255,255,0.1)',
-								border: '1px solid rgba(255,255,255,0.2)',
-								'&:hover': {
-									bgcolor: 'rgba(255,255,255,0.2)',
-									transform: 'scale(1.1)'
-								},
-								transition: 'all 0.2s'
-							}}
-						>
-							<EditIcon fontSize="small" />
-						</IconButton>
+		<Box>
+			<Box sx={{ px: { xs: 2, sm: 4, md: 5 }, py: 1.5, bgcolor: 'background.default' }}>
+				<Button
+					variant="text"
+					startIcon={<ArrowBackIcon />}
+					onClick={() => navigate('/candidates')}
+					sx={{ 
+						textTransform: 'none', 
+						fontWeight: 700, 
+						color: 'text.secondary',
+						'&:hover': { color: 'primary.main', bgcolor: 'transparent' }
+					}}
+				>
+					Back to Candidates
+				</Button>
+			</Box>
+			<ModuleLayout
+				title={
+					candidate ? (
+						<Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+							<Typography variant="inherit" component="span" sx={{ fontWeight: 700 }}>
+								{candidate.name}
+							</Typography>
+							<IconButton
+								size="small"
+								onClick={() => navigate(`/candidates/edit/${candidate.public_id}`)}
+								sx={{
+									color: 'common.white',
+									bgcolor: 'rgba(255,255,255,0.1)',
+									border: '1px solid rgba(255,255,255,0.2)',
+									'&:hover': {
+										bgcolor: 'rgba(255,255,255,0.2)',
+										transform: 'scale(1.1)'
+									},
+									transition: 'all 0.2s'
+								}}
+							>
+								<EditIcon fontSize="small" />
+							</IconButton>
+						</Box>
+					) : 'Candidate Details'
+				}
+				subtitle={candidate ? (
+					<Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+						<Typography variant="inherit">Candidate ID: {candidate.public_id}</Typography>
+						<Typography variant="inherit">Registered on {new Date(candidate.created_at).toLocaleDateString()}</Typography>
 					</Box>
-				) : 'Candidate Details'
-			}
-			subtitle={candidate ? (
-				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
-					<Typography variant="inherit">Candidate ID: {candidate.public_id}</Typography>
-					<Typography variant="inherit">Registered on {new Date(candidate.created_at).toLocaleDateString()}</Typography>
-				</Box>
-			) : 'View the candidate details and manage their status'}
-			headerChildren={headerChildren}
-			loading={loading}
-			isEmpty={!loading && !candidate}
-			emptyTitle="Candidate Not Found"
-			emptyMessage="We couldn't find the candidate you're looking for. It may have been deleted or the ID is incorrect."
-		>
-			{candidate && (
-				<Box sx={{ py: 1 }}>
-					{tabValue === 0 && <GeneralInfoTab candidate={candidate} />}
-					{tabValue === 1 && <ScreeningTab candidate={candidate} />}
-					{tabValue === 2 && <CounselingTab candidate={candidate} />}
-					{tabValue === 3 && <DocumentsTab candidate={candidate} />}
-					{tabValue === 4 && <TrainingAllocationTab candidate={candidate} />}
-					{tabValue === 5 && <CandidateAttendanceTab candidate={candidate} />}
-					{tabValue === 6 && <CandidatePlacementTab candidate={candidate} />}
-				</Box>
-			)}
-		</ModuleLayout>
+				) : 'View the candidate details and manage their status'}
+				headerChildren={headerChildren}
+				loading={loading}
+				isEmpty={!loading && !candidate}
+				emptyTitle="Candidate Not Found"
+				emptyMessage="We couldn't find the candidate you're looking for. It may have been deleted or the ID is incorrect."
+			>
+				{candidate && (
+					<Box sx={{ py: 1 }}>
+						{tabValue === 0 && <GeneralInfoTab candidate={candidate} />}
+						{tabValue === 1 && <ScreeningTab candidate={candidate} />}
+						{tabValue === 2 && <CounselingTab candidate={candidate} />}
+						{tabValue === 3 && <DocumentsTab candidate={candidate} />}
+						{tabValue === 4 && <TrainingAllocationTab candidate={candidate} />}
+						{tabValue === 5 && <CandidateAttendanceTab candidate={candidate} />}
+						{tabValue === 6 && <CandidatePlacementTab candidate={candidate} />}
+					</Box>
+				)}
+			</ModuleLayout>
+		</Box>
 	);
 };
 

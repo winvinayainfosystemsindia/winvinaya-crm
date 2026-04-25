@@ -47,9 +47,6 @@ const CandidateList: React.FC = () => {
 		got_job: 0
 	};
 
-	const handleEditCandidate = (id: string) => {
-		navigate(`/candidates/edit/${id}`);
-	};
 
 	const handleViewCandidate = (id: string) => {
 		navigate(`/candidates/${id}`);
@@ -65,7 +62,6 @@ const CandidateList: React.FC = () => {
 			<Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
 				<CandidateStatCards stats={stats || defaultStats} />
 				<CandidateTable
-					onEditCandidate={handleEditCandidate}
 					onViewCandidate={handleViewCandidate}
 				/>
 			</Box>

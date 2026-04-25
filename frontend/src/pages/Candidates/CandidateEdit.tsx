@@ -59,28 +59,45 @@ const CandidateEdit: React.FC = () => {
 	}
 
 	return (
-		<Container maxWidth="xl" sx={{ py: { xs: 2, sm: 4 } }}>
-			<PageHeader
-				title={candidate ? `Edit Candidate: ${candidate.name}` : 'Edit Candidate'}
-				subtitle="Update candidate profile information across all sections."
-			/>
+		<Box>
+			<Box sx={{ px: { xs: 2, sm: 4, md: 5 }, py: 1.5, bgcolor: 'background.default' }}>
+				<Button
+					variant="text"
+					startIcon={<ArrowBackIcon />}
+					onClick={() => navigate('/candidates/list')}
+					sx={{
+						textTransform: 'none',
+						fontWeight: 700,
+						color: 'text.secondary',
+						'&:hover': { color: 'primary.main', bgcolor: 'transparent' }
+					}}
+				>
+					Back to Candidates
+				</Button>
+			</Box>
+			<Container maxWidth="xl" sx={{ py: { xs: 2, sm: 4 } }}>
+				<PageHeader
+					title={candidate ? `Edit Candidate: ${candidate.name}` : 'Edit Candidate'}
+					subtitle="Update candidate profile information across all sections."
+				/>
 
-			{loading ? (
-				<Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-					<CircularProgress />
-				</Box>
-			) : !candidate ? (
-				<Alert severity="warning">Candidate not found.</Alert>
-			) : (
-				<Box sx={{ maxWidth: 1000, mx: 'auto', mt: 4 }}>
-					<CandidateRegistrationForm
-						initialData={candidate}
-						onSubmit={handleSubmit}
-						onCancel={handleCancel}
-					/>
-				</Box>
-			)}
-		</Container>
+				{loading ? (
+					<Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+						<CircularProgress />
+					</Box>
+				) : !candidate ? (
+					<Alert severity="warning">Candidate not found.</Alert>
+				) : (
+					<Box sx={{ maxWidth: 1000, mx: 'auto', mt: 4 }}>
+						<CandidateRegistrationForm
+							initialData={candidate}
+							onSubmit={handleSubmit}
+							onCancel={handleCancel}
+						/>
+					</Box>
+				)}
+			</Container>
+		</Box>
 	);
 };
 

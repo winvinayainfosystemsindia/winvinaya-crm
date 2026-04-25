@@ -1,32 +1,22 @@
 import React from 'react';
-import { Edit, Delete } from '@mui/icons-material';
+import { Delete } from '@mui/icons-material';
 import { DataTableActions, type TableMenuAction } from '../../common/table';
 import type { CandidateListItem } from '../../../models/candidate';
 
 interface CandidateTableActionsProps {
 	candidate: CandidateListItem;
 	userRole: string | null;
-	onEdit: (id: string) => void;
 	onDelete: (candidate: CandidateListItem) => void;
 }
 
 const CandidateTableActions: React.FC<CandidateTableActionsProps> = ({
 	candidate,
 	userRole,
-	onEdit,
 	onDelete
 }) => {
 	const isAdmin = userRole === 'admin';
-	const isManager = isAdmin || userRole === 'manager';
 
 	const actions: TableMenuAction<CandidateListItem>[] = [
-		{
-			label: 'Edit Candidate',
-			icon: <Edit fontSize="small" />,
-			onClick: (item) => onEdit(item.public_id),
-			color: 'warning.main',
-			hidden: !isManager
-		},
 		{
 			label: 'Delete Candidate',
 			icon: <Delete fontSize="small" />,

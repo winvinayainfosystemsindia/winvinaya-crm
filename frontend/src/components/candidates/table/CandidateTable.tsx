@@ -12,11 +12,10 @@ import { candidateColumns } from './CandidateTableHead';
 import FilterDrawer from '../../common/FilterDrawer';
 
 interface CandidateTableProps {
-	onEditCandidate?: (candidateId: string) => void;
 	onViewCandidate?: (candidateId: string) => void;
 }
 
-const CandidateTable: React.FC<CandidateTableProps> = ({ onEditCandidate, onViewCandidate }) => {
+const CandidateTable: React.FC<CandidateTableProps> = ({ onViewCandidate }) => {
 	const {
 		candidates,
 		loading,
@@ -107,7 +106,6 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onEditCandidate, onView
 						candidate={candidate}
 						userRole={user?.role || null}
 						onView={(id) => onViewCandidate?.(id)}
-						onEdit={(id) => onEditCandidate?.(id)}
 						onDelete={handleDeleteClick}
 						selected={selectedIds.includes(candidate.public_id)}
 						onSelect={handleSelectOne}

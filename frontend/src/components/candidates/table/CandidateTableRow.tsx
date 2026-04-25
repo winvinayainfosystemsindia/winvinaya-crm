@@ -17,7 +17,6 @@ interface CandidateTableRowProps {
 	candidate: CandidateListItem;
 	userRole: string | null;
 	onView: (id: string) => void;
-	onEdit: (id: string) => void;
 	onDelete: (candidate: CandidateListItem) => void;
 	selected: boolean;
 	onSelect: (id: string) => void;
@@ -27,7 +26,6 @@ const CandidateTableRow: React.FC<CandidateTableRowProps> = ({
 	candidate,
 	userRole,
 	onView,
-	onEdit,
 	onDelete,
 	selected,
 	onSelect
@@ -140,7 +138,6 @@ const CandidateTableRow: React.FC<CandidateTableRowProps> = ({
 				<CandidateTableActions
 					candidate={candidate}
 					userRole={userRole}
-					onEdit={onEdit}
 					onDelete={onDelete}
 				/>
 			</TableCell>
