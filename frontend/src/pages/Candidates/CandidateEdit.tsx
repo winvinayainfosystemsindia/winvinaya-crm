@@ -56,28 +56,10 @@ const CandidateEdit: React.FC = () => {
 		);
 	}
 
-	const headerExtra = (
-		<Button
-			variant="outlined"
-			startIcon={<ArrowBackIcon />}
-			onClick={() => navigate(-1)}
-			sx={{
-				color: 'white',
-				borderColor: 'rgba(255,255,255,0.3)',
-				textTransform: 'none',
-				fontWeight: 600,
-				'&:hover': { borderColor: 'white', bgcolor: 'rgba(255,255,255,0.1)' }
-			}}
-		>
-			Back
-		</Button>
-	);
-
 	return (
 		<ModuleLayout
 			title={candidate ? `Edit Candidate: ${candidate.name}` : 'Edit Candidate'}
 			subtitle="Update candidate profile information across all sections."
-			headerExtra={headerExtra}
 			loading={loading}
 			isEmpty={!loading && !candidate}
 		>

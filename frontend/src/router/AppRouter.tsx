@@ -69,8 +69,8 @@ const AppRouter: React.FC = () => {
 						<Route path="counseling" element={<CounselingList />} />
 						<Route path="documents" element={<DocumentCollectionList />} />
 						<Route path="documents/:id" element={<DocumentCollection />} />
-						<Route path=":publicId" element={<CandidateDetail />} />
 						<Route path="edit/:publicId" element={<CandidateEdit />} />
+						<Route path=":publicId" element={<CandidateDetail />} />
 					</Route>
 
 					<Route path="training">

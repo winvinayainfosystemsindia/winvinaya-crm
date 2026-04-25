@@ -136,7 +136,7 @@ const CandidateTableRow: React.FC<CandidateTableRowProps> = ({
 					{formatDate(candidate.created_at)}
 				</Typography>
 			</TableCell>
-			<TableCell align="right">
+			<TableCell align="right" onClick={(e) => e.stopPropagation()}>
 				<CandidateTableActions
 					candidate={candidate}
 					userRole={userRole}
