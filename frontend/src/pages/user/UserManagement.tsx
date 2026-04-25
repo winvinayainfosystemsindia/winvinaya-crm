@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import { Box, Container } from '@mui/material';
+import { Box, Container, Button } from '@mui/material';
+import { Add as AddIcon } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { deleteUser } from '../../store/slices/userSlice';
 import useToast from '../../hooks/useToast';
 import type { User } from '../../models/user';
 
+// Common Components
+import PageHeader from '../../components/common/page-header';
+
 // Restructured User Components
 import {
-	UserManagementHeader,
 	UserManagementStats,
 	UserManagementTable,
 	UserManagementModals
@@ -16,7 +19,7 @@ import {
 /**
  * User Management Module
  * Comprehensive dashboard for managing system users, roles, and statistics.
- * Components have been organized into subdirectories for enterprise-scale maintainability.
+ * Uses the standardized PageHeader common component.
  */
 const UserManagement: React.FC = () => {
 	const dispatch = useAppDispatch();
@@ -27,10 +30,10 @@ const UserManagement: React.FC = () => {
 	const [openDialog, setOpenDialog] = useState(false);
 	const [dialogMode, setDialogMode] = useState<'add' | 'edit' | 'view'>('add');
 	const [selectedUser, setSelectedUser] = useState<User | null>(null);
-	
+
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [userToDelete, setUserToDelete] = useState<User | null>(null);
-	
+
 	const [refreshKey, setRefreshKey] = useState(0);
 
 	// --- Handlers: Dialogs & Actions ---
@@ -90,18 +93,39 @@ const UserManagement: React.FC = () => {
 	// --- Utilities ---
 	const refreshData = () => setRefreshKey(prev => prev + 1);
 
+	// Header Action
+	const headerAction = currentUser?.role === 'admin' ? (
+		<Button
+			variant="contained"
+			startIcon={<AddIcon />}
+			onClick={handleAddUser}
+			sx={{
+				textTransform: 'none',
+				fontWeight: 600,
+				px: 3,
+				py: 1,
+				borderRadius: 3,
+				boxShadow: 'none',
+				'&:hover': { boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }
+			}}
+		>
+			Add User
+		</Button>
+	) : undefined;
+
 	return (
 		<Box component="main" sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
 			<Container maxWidth="xl" sx={{ py: { xs: 2, sm: 4 } }}>
-				
-				<UserManagementHeader 
-					currentUserRole={currentUser?.role} 
-					onAddUser={handleAddUser} 
+
+				<PageHeader
+					title="User Management"
+					subtitle="Manage system users, roles, and permissions"
+					action={headerAction}
 				/>
 
 				<UserManagementStats refreshKey={refreshKey} />
 
-				<UserManagementTable 
+				<UserManagementTable
 					refreshKey={refreshKey}
 					onAddUser={handleAddUser}
 					onEditUser={handleEditUser}
@@ -109,7 +133,7 @@ const UserManagement: React.FC = () => {
 					onDeleteUser={handleDeleteClick}
 				/>
 
-				<UserManagementModals 
+				<UserManagementModals
 					openDialog={openDialog}
 					dialogMode={dialogMode}
 					selectedUser={selectedUser}

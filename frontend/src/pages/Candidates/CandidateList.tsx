@@ -1,18 +1,21 @@
 import React, { useEffect } from 'react';
-import { Typography, Box, useMediaQuery, useTheme, Container } from '@mui/material';
+import { Box, Container } from '@mui/material';
 import CandidateStatCards from '../../components/candidates/stats/CandidateStatCards';
 import CandidateTable from '../../components/candidates/table/CandidateTable';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchCandidateStats } from '../../store/slices/candidateSlice';
+import PageHeader from '../../components/common/page-header';
 
+/**
+ * Candidate List Module
+ * Standardized dashboard for managing candidate registrations and status.
+ */
 const CandidateList: React.FC = () => {
 	const navigate = useNavigate();
 	const dispatch = useAppDispatch();
-	const theme = useTheme();
 
 	const { stats } = useAppSelector((state) => state.candidates);
-	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
 	useEffect(() => {
 		dispatch(fetchCandidateStats());
@@ -54,23 +57,10 @@ const CandidateList: React.FC = () => {
 
 	return (
 		<Container maxWidth="xl" sx={{ py: { xs: 2, sm: 4 } }}>
-			<Box sx={{ mb: 4 }}>
-				<Typography
-					variant={isMobile ? "h5" : "h4"}
-					component="h1"
-					sx={{
-						fontWeight: 500, // Aligned with theme/enterprise standards
-						color: 'text.primary', // Removed hardcoded color
-						mb: 0.5,
-						letterSpacing: '-0.02em'
-					}}
-				>
-					Candidate List
-				</Typography>
-				<Typography variant="body2" color="text.secondary">
-					Manage candidate registrations, profiles, and status
-				</Typography>
-			</Box>
+			<PageHeader 
+				title="Candidate List"
+				subtitle="Manage candidate registrations, profiles, and status"
+			/>
 			
 			<Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
 				<CandidateStatCards stats={stats || defaultStats} />
