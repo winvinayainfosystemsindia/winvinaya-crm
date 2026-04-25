@@ -67,10 +67,12 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
             if (countryCode === 'IN' && formData.pincode.length === 6) {
                 setIsValidatingPin(true);
                 try {
-                    // We call availability check with what we have
+                    // Only send email/phone if they look valid to avoid backend 422 errors
+                    const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
+                    
                     const response = await candidateService.checkAvailability({
-                        email: formData.email || 'temp@val.com', // Dummy if not filled yet
-                        phone: formData.phone || '+910000000000',
+                        email: isEmailValid ? formData.email : undefined,
+                        phone: formData.phone.length > 5 ? formData.phone : undefined,
                         pincode: formData.pincode,
                         exclude_public_id
                     });

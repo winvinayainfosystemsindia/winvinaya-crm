@@ -215,8 +215,8 @@ export const candidateService = {
 	 * Check if email/phone are available and validate pincode
 	 */
 	checkAvailability: async (params: { 
-		email: string; 
-		phone: string; 
+		email?: string; 
+		phone?: string; 
 		pincode: string; 
 		country_code?: string;
 		city?: string;
