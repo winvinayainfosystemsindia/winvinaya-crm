@@ -242,6 +242,7 @@ export interface CandidateCheck {
 	city?: string;
 	district?: string;
 	state?: string;
+	exclude_public_id?: string;
 }
 
 export interface CandidateUpdate {

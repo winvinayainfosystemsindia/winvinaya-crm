@@ -74,7 +74,8 @@ async def check_candidate_availability(
         check_in.email, 
         check_in.phone, 
         check_in.pincode,
-        country_code=check_in.country_code
+        country_code=check_in.country_code,
+        exclude_public_id=check_in.exclude_public_id
     )
     return {"status": "available", "address": address_details}
 

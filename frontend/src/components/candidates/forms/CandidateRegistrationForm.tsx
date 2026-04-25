@@ -211,7 +211,7 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
 
         if (isValid) {
             // Early backend validation for Step 0 (Personal Info)
-            if (activeStep === 0 && !isEditMode) {
+            if (activeStep === 0) {
                 setIsSubmitting(true);
                 setSubmitError(null);
                 try {
@@ -221,7 +221,8 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
                         pincode: formData.pincode,
                         city: formData.city,
                         district: formData.district,
-                        state: formData.state
+                        state: formData.state,
+                        exclude_public_id: (initialData as any)?.public_id
                     });
 
                     // Auto-fill address if returned, or handle fallback
@@ -433,6 +434,7 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
             formData,
             onChange: handleFormDataChange,
             errors: fieldErrors,
+            exclude_public_id: (initialData as any)?.public_id
         };
 
         switch (step) {

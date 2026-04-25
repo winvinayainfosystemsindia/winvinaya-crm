@@ -222,6 +222,7 @@ export const candidateService = {
 		city?: string;
 		district?: string;
 		state?: string;
+		exclude_public_id?: string;
 	}): Promise<{ status: string; address: any }> => {
 		const response = await api.post('/candidates/check-availability', params);
 		return response.data;

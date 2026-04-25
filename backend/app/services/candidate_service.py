@@ -21,21 +21,25 @@ class CandidateService:
         self.db = db
         self.repository = CandidateRepository(db)
 
-    async def validate_personal_info(self, email: str, phone: str, pincode: str, country_code: str = "IN") -> dict:
+    async def validate_personal_info(self, email: str, phone: str, pincode: str, country_code: str = "IN", exclude_public_id: Optional[UUID] = None) -> dict:
         """Validate email, phone availability and pincode existence"""
         # Check existing email
-        if email and await self.repository.get_by_email(email):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
-            )
+        existing_email = await self.repository.get_by_email(email)
+        if email and existing_email:
+            if not exclude_public_id or existing_email.public_id != exclude_public_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Email already registered"
+                )
         
         # Check existing phone
-        if phone and await self.repository.get_by_phone(phone):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Phone number already registered"
-            )
+        existing_phone = await self.repository.get_by_phone(phone)
+        if phone and existing_phone:
+            if not exclude_public_id or existing_phone.public_id != exclude_public_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Phone number already registered"
+                )
 
         # Fetch address details from pincode - gracefully handle invalid ones
         try:

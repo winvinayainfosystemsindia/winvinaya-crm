@@ -71,6 +71,7 @@ class CandidateCheck(BaseModel):
     district: Optional[str] = None
     state: Optional[str] = None
     country_code: str = "IN"
+    exclude_public_id: Optional[UUID] = None
 
 
 class CandidateUpdate(BaseModel):

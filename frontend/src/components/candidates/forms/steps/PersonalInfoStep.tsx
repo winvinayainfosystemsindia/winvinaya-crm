@@ -47,12 +47,14 @@ interface PersonalInfoStepProps {
     formData: CandidateCreate;
     onChange: (data: Partial<CandidateCreate>) => void;
     errors?: Record<string, string>;
+    exclude_public_id?: string;
 }
 
 const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     formData,
     onChange,
     errors = {},
+    exclude_public_id,
 }) => {
     const theme = useTheme();
     const [isPincodeValid, setIsPincodeValid] = useState<boolean | null>(null);
@@ -69,7 +71,8 @@ const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                     const response = await candidateService.checkAvailability({
                         email: formData.email || 'temp@val.com', // Dummy if not filled yet
                         phone: formData.phone || '+910000000000',
-                        pincode: formData.pincode
+                        pincode: formData.pincode,
+                        exclude_public_id
                     });
 
                     if (response.address && Object.keys(response.address).length > 0) {
