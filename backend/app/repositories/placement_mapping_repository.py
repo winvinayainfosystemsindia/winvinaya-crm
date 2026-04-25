@@ -31,9 +31,8 @@ class PlacementMappingRepository(BaseRepository[PlacementMapping]):
                     selectinload(self.Candidate.documents),
                     selectinload(self.Candidate.counseling)
                 ),
-                selectinload(self.model.job_role).selectinload(self.JobRole.company),
-                selectinload(self.model.mapped_by),
-                selectinload(self.model.unmapped_by)
+                selectinload(self.model.job_role),
+                selectinload(self.model.mapped_by)
             )
         )
         result = await self.db.execute(stmt)
@@ -54,9 +53,8 @@ class PlacementMappingRepository(BaseRepository[PlacementMapping]):
                     selectinload(self.Candidate.documents),
                     selectinload(self.Candidate.counseling)
                 ),
-                selectinload(self.model.mapped_by),
-                selectinload(self.model.job_role).selectinload(self.JobRole.company),
-                selectinload(self.model.unmapped_by)
+                selectinload(self.model.job_role),
+                selectinload(self.model.mapped_by)
             )
         )
         result = await self.db.execute(stmt)
@@ -77,9 +75,8 @@ class PlacementMappingRepository(BaseRepository[PlacementMapping]):
                     selectinload(self.Candidate.documents),
                     selectinload(self.Candidate.counseling)
                 ),
-                selectinload(self.model.job_role).selectinload(self.JobRole.company),
-                selectinload(self.model.mapped_by),
-                selectinload(self.model.unmapped_by)
+                selectinload(self.model.job_role),
+                selectinload(self.model.mapped_by)
             )
         )
         result = await self.db.execute(stmt)
@@ -95,9 +92,8 @@ class PlacementMappingRepository(BaseRepository[PlacementMapping]):
                     selectinload(self.Candidate.documents),
                     selectinload(self.Candidate.counseling)
                 ),
-                selectinload(self.model.job_role).selectinload(self.JobRole.company),
-                selectinload(self.model.mapped_by),
-                selectinload(self.model.unmapped_by)
+                selectinload(self.model.job_role),
+                selectinload(self.model.mapped_by)
             )
         )
         result = await self.db.execute(stmt)
