@@ -12,14 +12,14 @@ import {
 	Chip,
 	Select,
 	MenuItem,
+	Grid,
 	useTheme,
 } from '@mui/material';
 import {
 	CloudUpload as CloudUploadIcon,
 	CheckCircle as CheckCircleIcon,
 	Visibility as ViewIcon,
-	DeleteOutline as DeleteIcon,
-	ErrorOutline as ErrorIcon
+	DeleteOutline as DeleteIcon
 } from '@mui/icons-material';
 import { awsStyles } from '../../../../theme/theme';
 import DynamicFieldRenderer from '../../../common/DynamicFieldRenderer';
@@ -53,6 +53,16 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 	const theme = useTheme();
 	const { awsPanel } = awsStyles;
 
+	const textFieldSx = {
+		'& .MuiOutlinedInput-root': {
+			borderRadius: '2px',
+			bgcolor: 'background.paper',
+			'& fieldset': { borderColor: 'divider' },
+			'&:hover fieldset': { borderColor: theme.palette.text.secondary },
+			'&.Mui-focused fieldset': { borderColor: 'primary.main' }
+		}
+	};
+
 	const renderDocumentItem = (label: string, key: string) => {
 		const isUploaded = formData.documents_upload?.[key];
 		const fileName = (formData.documents_upload as any)?.[`${key}_filename`];
@@ -64,90 +74,78 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 				elevation={0}
 				sx={{
 					...awsPanel,
-					borderColor: isUploaded ? theme.palette.text.secondary : 'divider',
-					bgcolor: isUploaded ? 'rgba(16, 185, 129, 0.04)' : 'background.paper',
+					borderColor: isUploaded ? 'success.main' : 'divider',
+					bgcolor: isUploaded ? 'rgba(16, 185, 129, 0.03)' : 'background.paper',
 					display: 'flex',
 					flexDirection: 'column',
 					gap: 2,
-					transition: 'all 0.2s ease'
+					transition: 'all 0.2s ease',
+					position: 'relative',
+					'&:hover': {
+						borderColor: isUploaded ? 'success.main' : 'primary.main',
+						boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+					}
 				}}
 			>
 				<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-					<Box>
-						<Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'secondary.main' }}>
-							{label} <Typography component="span" variant="caption" sx={{ color: 'text.secondary', fontWeight: 400 }}>(Max 10MB)</Typography>
-						</Typography>
-						{isUploaded ? (
-							<Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
-								<CheckCircleIcon sx={{ fontSize: 16, color: 'success.main' }} />
-								<Typography variant="caption" sx={{ color: 'success.main', fontWeight: 600 }}>
-									Uploaded
-								</Typography>
-								<Typography variant="caption" sx={{ color: 'text.secondary' }}>
-									• {fileName}
-								</Typography>
-							</Stack>
-						) : (
-							<Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
-								<ErrorIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-								<Typography variant="caption" sx={{ color: 'text.secondary' }}>
-									No document uploaded
-								</Typography>
-							</Stack>
-						)}
-					</Box>
+					<Stack direction="row" spacing={2} alignItems="center">
+						<Box sx={{
+							bgcolor: isUploaded ? 'success.main' : 'rgba(0,0,0,0.04)',
+							p: 1,
+							borderRadius: '4px',
+							display: 'flex'
+						}}>
+							{isUploaded ? <CheckCircleIcon sx={{ color: 'white', fontSize: 20 }} /> : <CloudUploadIcon sx={{ color: 'text.secondary', fontSize: 20 }} />}
+						</Box>
+						<Box>
+							<Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary' }}>
+								{label}
+							</Typography>
+							<Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
+								{isUploaded ? fileName : 'Supported format: PDF (Max 10MB)'}
+							</Typography>
+						</Box>
+					</Stack>
 					<Box>
 						{isUploaded ? (
 							<Chip
-								label="Verified"
+								label="Uploaded"
 								size="small"
 								color="success"
-								variant="outlined"
-								sx={{
-									borderRadius: '2px',
-									fontWeight: 700,
-									fontSize: '0.75rem',
-									bgcolor: 'rgba(16, 185, 129, 0.08)'
-								}}
+								sx={{ borderRadius: '2px', fontWeight: 700, fontSize: '0.7rem' }}
 							/>
 						) : (
 							<Chip
-								label="Required"
+								label="Pending"
 								size="small"
-								sx={{
-									borderRadius: '2px',
-									fontWeight: 700,
-									fontSize: '0.75rem',
-									border: '1px solid',
-									borderColor: 'divider'
-								}}
+								sx={{ borderRadius: '2px', fontWeight: 700, fontSize: '0.7rem', bgcolor: 'rgba(0,0,0,0.06)' }}
 							/>
 						)}
 					</Box>
 				</Box>
 
-				<Divider />
+				<Divider sx={{ borderStyle: 'dashed' }} />
 
-				<Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+				<Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
 					<Button
 						component="label"
-						variant="outlined"
+						variant="contained"
 						size="small"
 						disabled={isUploading}
-						startIcon={isUploading ? <CircularProgress size={16} /> : <CloudUploadIcon />}
+						startIcon={isUploading ? <CircularProgress size={14} color="inherit" /> : <CloudUploadIcon />}
 						sx={{
 							textTransform: 'none',
 							fontWeight: 700,
-							color: 'text.secondary',
-							borderColor: 'divider',
 							borderRadius: '2px',
-							'&:hover': { bgcolor: 'action.hover', borderColor: theme.palette.text.secondary }
+							boxShadow: 'none',
+							'&:hover': { boxShadow: 'none' }
 						}}
 					>
-						{isUploading ? 'Uploading...' : (isUploaded ? 'Replace File' : 'Choose File')}
+						{isUploading ? 'Uploading...' : (isUploaded ? 'Update' : 'Upload')}
 						<input
 							type="file"
 							hidden
+							accept="application/pdf"
 							onChange={(e) => {
 								if (e.target.files?.[0]) onFileUpload(key, e.target.files[0]);
 							}}
@@ -159,16 +157,15 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 							<Button
 								variant="outlined"
 								size="small"
-								startIcon={isViewing ? <CircularProgress size={16} /> : <ViewIcon />}
+								startIcon={isViewing ? <CircularProgress size={14} /> : <ViewIcon />}
 								onClick={() => onViewFile(key)}
 								disabled={isViewing}
 								sx={{
 									textTransform: 'none',
 									fontWeight: 700,
-									color: 'text.secondary',
-									borderColor: 'divider',
 									borderRadius: '2px',
-									'&:hover': { bgcolor: 'action.hover', borderColor: theme.palette.text.secondary }
+									borderColor: 'divider',
+									color: 'text.primary'
 								}}
 							>
 								View
@@ -181,10 +178,11 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 								sx={{
 									textTransform: 'none',
 									fontWeight: 700,
-									color: 'error.main',
-									borderColor: 'divider',
 									borderRadius: '2px',
-									'&:hover': { bgcolor: 'error.light', borderColor: 'error.main', opacity: 0.1 }
+									borderColor: 'divider',
+									color: 'error.main',
+									ml: 'auto',
+									'&:hover': { borderColor: 'error.main', bgcolor: 'rgba(239, 68, 68, 0.04)' }
 								}}
 							>
 								Remove
@@ -200,24 +198,20 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 		<Stack spacing={4}>
 			{/* Document Verification Section */}
 			<Box>
-				<Typography variant="awsSectionTitle" sx={{ mb: 1 }}>
+				<Typography variant="awsSectionTitle" sx={{ mb: 2 }}>
 					Document Verification
 				</Typography>
-				<Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-					Upload and verify required candidate documents. Accepted formats: PDF (Max 10MB).
-				</Typography>
-
-				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-					{renderDocumentItem('Resume', 'resume')}
+				<Stack spacing={2}>
+					{renderDocumentItem('Candidate Resume', 'resume')}
 					{candidateIsDisabled && renderDocumentItem('Disability Certificate', 'disability_certificate')}
-					{renderDocumentItem('Degree / Education Certificate', 'degree_certificate')}
-				</Box>
+					{renderDocumentItem('Education Certificate', 'degree_qualification')}
+				</Stack>
 			</Box>
 
 			{/* Additional Fields Section */}
 			{dynamicFields.length > 0 && (
 				<Box>
-					<Typography variant="awsSectionTitle" sx={{ mb: 1 }}>
+					<Typography variant="awsSectionTitle" sx={{ mb: 2 }}>
 						Additional Information
 					</Typography>
 					<Paper elevation={0} sx={awsPanel}>
@@ -232,107 +226,81 @@ const DocumentsRemarksTab: React.FC<DocumentsRemarksTabProps> = ({
 
 			{/* Final Verdict Section */}
 			<Box>
-				<Typography variant="awsSectionTitle" sx={{ mb: 1 }}>
+				<Typography variant="awsSectionTitle" sx={{ mb: 2 }}>
 					Final Verdict & Comments
 				</Typography>
-				<Paper elevation={0} sx={{ ...awsPanel, display: 'flex', flexDirection: 'column', gap: 3 }}>
-
-					<Box>
-						<Typography variant="awsFieldLabel">
-							Screening Status
-						</Typography>
-						<FormControl fullWidth size="small">
-							<Select
-								id="screening-status"
-								value={formData.status || 'In Progress'}
-								onChange={(e) => onUpdateStatus(e.target.value)}
-								sx={{
-									borderRadius: '2px',
-									bgcolor: 'background.paper',
-									'& .MuiOutlinedInput-notchedOutline': {
-										borderColor: 'divider'
-									},
-									'&:hover .MuiOutlinedInput-notchedOutline': {
-										borderColor: theme.palette.text.secondary
-									},
-									'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-										borderColor: 'primary.main'
-									}
-								}}
-							>
-								<MenuItem value="Completed">Completed</MenuItem>
-								<MenuItem value="In Progress">In Progress</MenuItem>
-								<MenuItem value="Rejected">Rejected</MenuItem>
-							</Select>
-						</FormControl>
-					</Box>
-
-
-					{/* Conditional Reason Field */}
-					{(formData.status === 'In Progress' || formData.status === 'Rejected') && (
-						<Box>
-							<Typography variant="awsFieldLabel">
-								Reason / Details
-							</Typography>
+				<Paper elevation={0} sx={{ ...awsPanel, p: 3 }}>
+					<Grid container spacing={3}>
+						<Grid size={{ xs: 12, md: 6 }}>
+							<Typography variant="awsFieldLabel">Screening Status</Typography>
 							<FormControl fullWidth size="small">
 								<Select
-									value={formData.others?.reason || ''}
-									onChange={(e) => onUpdateOtherField('reason', e.target.value)}
-									displayEmpty
+									id="screening-status"
+									value={formData.status || 'In Progress'}
+									onChange={(e) => onUpdateStatus(e.target.value)}
 									sx={{
 										borderRadius: '2px',
-										'& .MuiOutlinedInput-notchedOutline': {
-											borderColor: 'divider'
-										},
-										'&:hover .MuiOutlinedInput-notchedOutline': {
-											borderColor: theme.palette.text.secondary
-										},
-										'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-											borderColor: 'primary.main'
-										}
+										bgcolor: 'background.paper',
+										'& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
+										'&:hover .MuiOutlinedInput-notchedOutline': { borderColor: theme.palette.text.secondary },
+										'&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' }
 									}}
 								>
-									<MenuItem value="">
-										<em>Select Reason</em>
-									</MenuItem>
-									{formData.status === 'In Progress' ? [
-										<MenuItem key="follow-up" value="Follow-up Required">Follow-up Required</MenuItem>,
-										<MenuItem key="assess-sent" value="Assessment Sent">Assessment Sent</MenuItem>,
-										<MenuItem key="assess-comp" value="Assessment Completed">Assessment Completed</MenuItem>
-									] : [
-										<MenuItem key="no-resp" value="No Response">No Response</MenuItem>,
-										<MenuItem key="not-int" value="Not Interested">Not Interested</MenuItem>,
-										<MenuItem key="domain" value="Domain Specific">Domain Specific</MenuItem>,
-										<MenuItem key="studying" value="Studying">Studying</MenuItem>,
-										<MenuItem key="working" value="Working">Working</MenuItem>
-									]}
+									<MenuItem value="Completed">Completed</MenuItem>
+									<MenuItem value="In Progress">In Progress</MenuItem>
+									<MenuItem value="Rejected">Rejected</MenuItem>
 								</Select>
 							</FormControl>
-						</Box>
-					)}
+						</Grid>
 
-					<Box>
-						<Typography variant="awsFieldLabel">
-							Screening Comments
-						</Typography>
-						<TextField
-							placeholder="Add detailed observations, strengths, and areas for improvement..."
-							fullWidth
-							multiline
-							minRows={3}
-							size="small"
-							value={formData.others?.comments}
-							onChange={(e) => onUpdateOtherField('comments', e.target.value)}
-							sx={{
-								'& .MuiOutlinedInput-root': {
-									borderRadius: '2px',
-									'& fieldset': { borderColor: 'divider' },
-									'&:hover fieldset': { borderColor: theme.palette.text.secondary },
-									'&.Mui-focused fieldset': { borderColor: 'primary.main' }
-								}
-							}}
-						/>
-					</Box>
+						<Grid size={{ xs: 12, md: 6 }}>
+							{(formData.status === 'In Progress' || formData.status === 'Rejected') && (
+								<Box>
+									<Typography variant="awsFieldLabel">Reason / Classification</Typography>
+									<FormControl fullWidth size="small">
+										<Select
+											value={formData.others?.reason || ''}
+											onChange={(e) => onUpdateOtherField('reason', e.target.value)}
+											displayEmpty
+											sx={{
+												borderRadius: '2px',
+												'& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
+												'&:hover .MuiOutlinedInput-notchedOutline': { borderColor: theme.palette.text.secondary },
+												'&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' }
+											}}
+										>
+											<MenuItem value="" disabled><em>Select Reason</em></MenuItem>
+											{formData.status === 'In Progress' ? [
+												<MenuItem key="follow-up" value="Follow-up Required">Follow-up Required</MenuItem>,
+												<MenuItem key="assess-sent" value="Assessment Sent">Assessment Sent</MenuItem>,
+												<MenuItem key="assess-comp" value="Assessment Completed">Assessment Completed</MenuItem>
+											] : [
+												<MenuItem key="no-resp" value="No Response">No Response</MenuItem>,
+												<MenuItem key="not-int" value="Not Interested">Not Interested</MenuItem>,
+												<MenuItem key="domain" value="Domain Specific">Domain Specific</MenuItem>,
+												<MenuItem key="studying" value="Studying">Studying</MenuItem>,
+												<MenuItem key="working" value="Working">Working</MenuItem>
+											]}
+										</Select>
+									</FormControl>
+								</Box>
+							)}
+						</Grid>
+
+						<Grid size={{ xs: 12 }}>
+							<Typography variant="awsFieldLabel">Detailed Screening Comments</Typography>
+							<TextField
+								placeholder="Enter observations, specific feedback, and next steps..."
+								fullWidth
+								multiline
+								minRows={4}
+								size="small"
+								value={formData.others?.comments}
+								onChange={(e) => onUpdateOtherField('comments', e.target.value)}
+								sx={textFieldSx}
+							/>
+						</Grid>
+					</Grid>
 				</Paper>
 			</Box>
 		</Stack>

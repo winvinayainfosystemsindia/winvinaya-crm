@@ -16,7 +16,6 @@ import {
 import {
 	DeleteOutline as DeleteIcon,
 	Add as AddIcon,
-	Work as WorkIcon,
 	AccountBalanceWallet as WalletIcon
 } from '@mui/icons-material';
 import { awsStyles } from '../../../../theme/theme';
@@ -73,7 +72,7 @@ const FamilyDetailsTab: React.FC<FamilyDetailsTabProps> = ({ formData, onUpdateF
 		onUpdateField('root', 'family_details', updatedDetails);
 	};
 
-	const inputSx = {
+	const textFieldSx = {
 		'& .MuiOutlinedInput-root': {
 			borderRadius: '2px',
 			bgcolor: 'background.paper',
@@ -93,6 +92,7 @@ const FamilyDetailsTab: React.FC<FamilyDetailsTabProps> = ({ formData, onUpdateF
 					</Box>
 					<Typography variant="awsSectionTitle">Economic Background</Typography>
 				</Stack>
+
 				<Grid container spacing={3}>
 					<Grid size={{ xs: 12, md: 6 }}>
 						<Typography variant="awsFieldLabel">Family Annual Income (in INR)</Typography>
@@ -103,7 +103,7 @@ const FamilyDetailsTab: React.FC<FamilyDetailsTabProps> = ({ formData, onUpdateF
 							placeholder="Enter total annual income"
 							value={formData.others?.family_annual_income || ''}
 							onChange={(e) => onUpdateField('others', 'family_annual_income', e.target.value)}
-							sx={inputSx}
+							sx={textFieldSx}
 						/>
 					</Grid>
 				</Grid>
@@ -111,24 +111,20 @@ const FamilyDetailsTab: React.FC<FamilyDetailsTabProps> = ({ formData, onUpdateF
 
 			{/* Family Members Section */}
 			<Box>
-				<Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={2} sx={{ mb: 3 }}>
-					<Stack direction="row" alignItems="center" spacing={1.5}>
-						<Typography variant="awsSectionTitle">Family & Dependent Details</Typography>
-					</Stack>
+				<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+					<Typography variant="awsSectionTitle">Family & Dependent Details</Typography>
 					<Button
 						variant="contained"
 						size="small"
-						color="primary"
 						startIcon={<AddIcon />}
 						onClick={handleAddRow}
 						sx={{
 							borderRadius: '2px',
 							textTransform: 'none',
 							fontWeight: 700,
-							px: 3,
-							py: 0.8,
+							px: 2.5,
 							boxShadow: 'none',
-							'&:hover': { boxShadow: 'none' }
+							'&:hover': { boxShadow: 'none', bgcolor: 'primary.dark' }
 						}}
 					>
 						Add Family Member
@@ -145,11 +141,14 @@ const FamilyDetailsTab: React.FC<FamilyDetailsTabProps> = ({ formData, onUpdateF
 								border: '1px dashed',
 								borderColor: 'divider',
 								bgcolor: 'background.default',
-								borderRadius: '2px'
+								borderRadius: '4px'
 							}}
 						>
-							<Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
-								No family members registered yet. Click "Add Family Member" to begin.
+							<Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+								No family members have been added yet.
+							</Typography>
+							<Typography variant="caption" sx={{ color: 'text.disabled' }}>
+								Standard enterprise practice requires documenting core dependents for placement eligibility.
 							</Typography>
 						</Paper>
 					) : (
@@ -162,7 +161,7 @@ const FamilyDetailsTab: React.FC<FamilyDetailsTabProps> = ({ formData, onUpdateF
 									alignItems: 'center',
 									px: 3,
 									py: 1.5,
-									bgcolor: 'background.default',
+									bgcolor: 'rgba(0, 0, 0, 0.02)',
 									borderBottom: '1px solid',
 									borderColor: 'divider'
 								}}>
@@ -170,8 +169,8 @@ const FamilyDetailsTab: React.FC<FamilyDetailsTabProps> = ({ formData, onUpdateF
 										<Box sx={{
 											width: 28,
 											height: 28,
-											borderRadius: '50%',
-											bgcolor: 'primary.main',
+											borderRadius: '4px',
+											bgcolor: 'secondary.main',
 											color: 'white',
 											display: 'flex',
 											alignItems: 'center',
@@ -181,8 +180,8 @@ const FamilyDetailsTab: React.FC<FamilyDetailsTabProps> = ({ formData, onUpdateF
 										}}>
 											{index + 1}
 										</Box>
-										<Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'secondary.main' }}>
-											{member.relation || 'New Member'} {member.name ? `— ${member.name}` : ''}
+										<Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary' }}>
+											{member.relation || 'Member'} Details
 										</Typography>
 									</Stack>
 									<IconButton
@@ -200,28 +199,35 @@ const FamilyDetailsTab: React.FC<FamilyDetailsTabProps> = ({ formData, onUpdateF
 										{/* Personal Column */}
 										<Grid size={{ xs: 12, md: 6 }}>
 											<Stack spacing={2.5}>
-												<Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-													Identity & Contact
-												</Typography>
+												<Box>
+													<Typography variant="awsFieldLabel">Full Name</Typography>
+													<TextField
+														fullWidth
+														size="small"
+														placeholder="Enter member's name"
+														value={member.name}
+														onChange={(e) => handleChange(index, 'name', e.target.value)}
+														sx={textFieldSx}
+													/>
+												</Box>
 
-												<TextField
-													fullWidth
-													label="Full Name"
-													size="small"
-													placeholder="Enter member's name"
-													value={member.name}
-													onChange={(e) => handleChange(index, 'name', e.target.value)}
-													sx={inputSx}
-												/>
 												<Grid container spacing={2}>
 													<Grid size={{ xs: 12, sm: 6 }}>
-														<FormControl fullWidth size="small" sx={inputSx}>
+														<Typography variant="awsFieldLabel">Relationship</Typography>
+														<FormControl fullWidth size="small">
 															<Select
 																value={member.relation}
 																onChange={(e) => handleChange(index, 'relation', e.target.value)}
 																displayEmpty
-																renderValue={(selected) => selected || <Typography variant="body2" color="text.secondary">Relationship</Typography>}
+																sx={{
+																	borderRadius: '2px',
+																	bgcolor: 'background.paper',
+																	'& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
+																	'&:hover .MuiOutlinedInput-notchedOutline': { borderColor: theme.palette.text.secondary },
+																	'&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' }
+																}}
 															>
+																<MenuItem value="" disabled><em>Select</em></MenuItem>
 																{RELATION_OPTIONS.map(opt => (
 																	<MenuItem key={opt} value={opt}>{opt}</MenuItem>
 																))}
@@ -229,6 +235,7 @@ const FamilyDetailsTab: React.FC<FamilyDetailsTabProps> = ({ formData, onUpdateF
 														</FormControl>
 													</Grid>
 													<Grid size={{ xs: 12, sm: 6 }}>
+														<Typography variant="awsFieldLabel">Contact Number</Typography>
 														<TextField
 															fullWidth
 															placeholder="10-digit mobile"
@@ -236,7 +243,7 @@ const FamilyDetailsTab: React.FC<FamilyDetailsTabProps> = ({ formData, onUpdateF
 															value={member.phone}
 															onChange={(e) => handleChange(index, 'phone', e.target.value)}
 															error={member.phone !== '' && member.phone.length !== 10}
-															sx={inputSx}
+															sx={textFieldSx}
 														/>
 													</Grid>
 												</Grid>
@@ -246,39 +253,42 @@ const FamilyDetailsTab: React.FC<FamilyDetailsTabProps> = ({ formData, onUpdateF
 										{/* Professional Column */}
 										<Grid size={{ xs: 12, md: 6 }}>
 											<Stack spacing={2.5}>
-												<Stack direction="row" spacing={1} alignItems="center">
-													<WorkIcon sx={{ color: 'text.secondary', fontSize: 18 }} />
-													<Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-														Professional Background
-													</Typography>
-												</Stack>
-
-												<TextField
-													fullWidth
-													label="Occupation"
-													size="small"
-													placeholder="e.g. Farmer, Salaried"
-													value={member.occupation}
-													onChange={(e) => handleChange(index, 'occupation', e.target.value)}
-													sx={inputSx}
-												/>
-												<TextField
-													fullWidth
-													label="Organization / Company"
-													size="small"
-													value={member.company_name}
-													onChange={(e) => handleChange(index, 'company_name', e.target.value)}
-													sx={inputSx}
-												/>
-												<TextField
-													fullWidth
-													label="Current Position"
-													size="small"
-													placeholder="e.g. Lead, Clerk, Manager"
-													value={member.position}
-													onChange={(e) => handleChange(index, 'position', e.target.value)}
-													sx={inputSx}
-												/>
+												<Box>
+													<Typography variant="awsFieldLabel">Occupation</Typography>
+													<TextField
+														fullWidth
+														size="small"
+														placeholder="e.g. Salaried, Self-employed"
+														value={member.occupation}
+														onChange={(e) => handleChange(index, 'occupation', e.target.value)}
+														sx={textFieldSx}
+													/>
+												</Box>
+												<Box>
+													<Typography variant="awsFieldLabel">Organization & Position</Typography>
+													<Grid container spacing={2}>
+														<Grid size={{ xs: 12, sm: 6 }}>
+															<TextField
+																fullWidth
+																placeholder="Company name"
+																size="small"
+																value={member.company_name}
+																onChange={(e) => handleChange(index, 'company_name', e.target.value)}
+																sx={textFieldSx}
+															/>
+														</Grid>
+														<Grid size={{ xs: 12, sm: 6 }}>
+															<TextField
+																fullWidth
+																placeholder="Job title"
+																size="small"
+																value={member.position}
+																onChange={(e) => handleChange(index, 'position', e.target.value)}
+																sx={textFieldSx}
+															/>
+														</Grid>
+													</Grid>
+												</Box>
 											</Stack>
 										</Grid>
 									</Grid>

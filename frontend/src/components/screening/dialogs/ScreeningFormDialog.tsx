@@ -6,9 +6,8 @@ import {
 } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import useToast from '../../../hooks/useToast';
-import { uploadDocument } from '../../../store/slices/candidateSlice';
+import { uploadDocument, downloadDocument } from '../../../store/slices/candidateSlice';
 import { fetchFields } from '../../../store/slices/settingsSlice';
-import { documentService } from '../../../services/candidateService';
 import EnterpriseForm, { type FormStep } from '../../common/form/EnterpriseForm';
 import type { CandidateScreeningCreate } from '../../../models/candidate';
 
@@ -250,11 +249,11 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 
 		setViewing(prev => ({ ...prev, [type]: true }));
 		try {
-			const blob = await documentService.download(docId);
-			const url = URL.createObjectURL(blob);
+			const blob = await dispatch(downloadDocument({ documentId: docId })).unwrap();
+			const url = URL.createObjectURL(blob as any);
 			window.open(url, '_blank');
-		} catch (error) {
-			console.error('Failed to download file for preview:', error);
+		} catch (error: any) {
+			toast.error(error || 'Failed to download file for preview');
 		} finally {
 			setViewing(prev => ({ ...prev, [type]: false }));
 		}

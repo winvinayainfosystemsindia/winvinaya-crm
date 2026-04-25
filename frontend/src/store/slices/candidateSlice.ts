@@ -433,6 +433,18 @@ export const deleteDocument = createAsyncThunk(
 	}
 );
 
+export const downloadDocument = createAsyncThunk(
+	'candidates/downloadDocument',
+	async ({ documentId }: { documentId: number }, { rejectWithValue }) => {
+		try {
+			const response = await documentService.download(documentId);
+			return response;
+		} catch (error: any) {
+			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to download document');
+		}
+	}
+);
+
 // ======================
 // COUNSELING OPERATIONS
 // ======================

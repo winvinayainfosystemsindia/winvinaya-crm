@@ -24,6 +24,17 @@ export const fetchAggregatedSkills = createAsyncThunk(
     }
 );
 
+export const createSkill = createAsyncThunk(
+    'skills/create',
+    async (skillData: { name: string; is_verified?: boolean }, { rejectWithValue }) => {
+        try {
+            return await skillService.createSkill(skillData);
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.detail || 'Failed to create skill');
+        }
+    }
+);
+
 const skillSlice = createSlice({
     name: 'skills',
     initialState,
@@ -34,6 +45,7 @@ const skillSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
+            // Fetch Aggregated Skills
             .addCase(fetchAggregatedSkills.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -43,6 +55,22 @@ const skillSlice = createSlice({
                 state.aggregatedSkills = action.payload;
             })
             .addCase(fetchAggregatedSkills.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
+            // Create Skill
+            .addCase(createSkill.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(createSkill.fulfilled, (state, action: PayloadAction<any>) => {
+                state.loading = false;
+                if (!state.aggregatedSkills.includes(action.payload.name)) {
+                    state.aggregatedSkills.push(action.payload.name);
+                    state.aggregatedSkills.sort();
+                }
+            })
+            .addCase(createSkill.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             });
