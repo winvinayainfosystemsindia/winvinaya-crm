@@ -11,14 +11,14 @@ import {
 import { WhatsApp as WhatsAppIcon } from '@mui/icons-material';
 import { alpha } from '@mui/material/styles';
 
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { fetchUsers as fetchUsersThunk, fetchRoles } from '../../store/slices/userSlice';
-import type { User } from '../../models/user';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import { fetchUsers as fetchUsersThunk, fetchRoles } from '../../../store/slices/userSlice';
+import type { User } from '../../../models/user';
 
 // Import modular table components
-import { DataTable, DataTableActions } from '../common/table';
+import { DataTable, DataTableActions } from '../../common/table';
 import { useUserTableConfig, getRoleColor, formatDate } from './UserTableConfig';
-import FilterDrawer, { type FilterField } from '../common/FilterDrawer';
+import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
 
 interface UserTableProps {
 	onAddUser?: () => void;

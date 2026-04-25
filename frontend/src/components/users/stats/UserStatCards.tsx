@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Link, Popover, useTheme, Stack, Tooltip, Skeleton } from '@mui/material';
+import { Box, Link, Popover, useTheme, Typography, Stack, Tooltip, Skeleton } from '@mui/material';
 import { People, SupervisorAccount, CheckCircle, Block, InfoOutlined } from '@mui/icons-material';
-import api from '../../services/api';
-import StatCard from '../common/StatCard';
+import api from '../../../services/api';
+import StatCard from '../../common/StatCard';
 
 interface UserStats {
 	total: number;
@@ -62,7 +62,6 @@ const UserStatCards: React.FC = () => {
 				mb: 3 
 			}}
 		>
-			{/* Total Users Card */}
 			<StatCard
 				title="Total Users"
 				count={loading ? skeleton : stats?.total}
@@ -71,7 +70,6 @@ const UserStatCards: React.FC = () => {
 				subtitle="Total registered in the system"
 			/>
 
-			{/* Active Users Card */}
 			<StatCard
 				title="Active Users"
 				count={loading ? skeleton : stats?.active}
@@ -80,7 +78,6 @@ const UserStatCards: React.FC = () => {
 				subtitle="Currently active accounts"
 			/>
 
-			{/* Inactive Users Card */}
 			<StatCard
 				title="Inactive Users"
 				count={loading ? skeleton : stats?.inactive}
@@ -89,7 +86,6 @@ const UserStatCards: React.FC = () => {
 				subtitle="Disabled or pending access"
 			/>
 
-			{/* System Roles Card */}
 			<StatCard
 				title="System Roles"
 				count={loading ? skeleton : stats?.roles_count}
@@ -142,7 +138,7 @@ const UserStatCards: React.FC = () => {
 					</Typography>
 					<Stack spacing={1}>
 						{stats && Object.entries(stats.by_role)
-							.sort((a, b) => b[1] - a[1]) // Sort by count descending
+							.sort((a, b) => b[1] - a[1])
 							.map(([role, count]) => (
 								<Box key={role} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 									<Typography variant="body2" color="textSecondary">

@@ -1,10 +1,9 @@
 import { useMemo } from 'react';
 import { Visibility, Edit, Delete } from '@mui/icons-material';
 import { format } from 'date-fns';
-import type { ColumnDefinition, TableMenuAction } from '../common/table';
-import type { User } from '../../models/user';
-
-import type { User as AuthUser } from '../../models/auth';
+import type { ColumnDefinition, TableMenuAction } from '../../common/table';
+import type { User } from '../../../models/user';
+import type { User as AuthUser } from '../../../models/auth';
 
 /**
  * Returns the theme color for a specific user role.
