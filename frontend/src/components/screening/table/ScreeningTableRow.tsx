@@ -9,7 +9,8 @@ import {
 	Button
 } from '@mui/material';
 import { Edit, Accessible, VerifiedUser, CheckCircle, Cancel, WatchLater, HelpOutline } from '@mui/icons-material';
-import { format, isToday, parseISO } from 'date-fns';
+import { isToday, parseISO } from 'date-fns';
+import { useDateTime } from '../../../hooks/useDateTime';
 import type { CandidateListItem } from '../../../models/candidate';
 
 interface ScreeningTableRowProps {
@@ -23,13 +24,7 @@ const ScreeningTableRow: React.FC<ScreeningTableRowProps> = memo(({
 	type,
 	onAction
 }) => {
-	const formatDate = (dateString: string) => {
-		try {
-			return format(new Date(dateString), 'd MMM yyyy');
-		} catch {
-			return '-';
-		}
-	};
+	const { formatDate } = useDateTime();
 
 	return (
 		<TableRow
