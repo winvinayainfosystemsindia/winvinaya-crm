@@ -1,18 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import {
 	Box,
-	Typography,
 	Button,
 	Tabs,
 	Tab,
-	Stack,
-	Container,
-	CircularProgress,
-	Alert, useTheme, useMediaQuery
+	Alert,
+	Typography
 } from '@mui/material';
 import {
 	ArrowBack as ArrowBackIcon,
-	Refresh as RefreshIcon
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
@@ -28,6 +24,7 @@ import CandidatePlacementTab from '../../components/candidates/detailedView/Cand
 // import CandidateAssignmentTab from '../../components/candidates/detailedView/CandidateAssignmentTab';
 // import CandidateMockInterviewTab from '../../components/candidates/detailedView/CandidateMockInterviewTab';
 
+import ModuleLayout from '../../components/common/layout/ModuleLayout';
 
 const CandidateDetail: React.FC = () => {
 	const { publicId } = useParams<{ publicId: string }>();
@@ -35,9 +32,6 @@ const CandidateDetail: React.FC = () => {
 	const dispatch = useAppDispatch();
 	const { selectedCandidate: candidate, loading, error } = useAppSelector((state) => state.candidates);
 	const [tabValue, setTabValue] = useState(0);
-	const theme = useTheme();
-	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
 
 	useEffect(() => {
 		if (publicId) {
@@ -52,14 +46,6 @@ const CandidateDetail: React.FC = () => {
 		setTabValue(newValue);
 	};
 
-	if (loading) {
-		return (
-			<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
-				<CircularProgress size={40} thickness={4} sx={{ color: '#ec7211' }} />
-			</Box>
-		);
-	}
-
 	if (error) {
 		return (
 			<Box sx={{ p: 4 }}>
@@ -73,84 +59,57 @@ const CandidateDetail: React.FC = () => {
 		);
 	}
 
-	if (!candidate) return null;
+	const headerChildren = (
+		<Tabs
+			value={tabValue}
+			onChange={handleTabChange}
+			variant="scrollable"
+			scrollButtons="auto"
+			sx={{
+				'& .MuiTab-root': {
+					textTransform: 'none',
+					fontWeight: 600,
+					minWidth: 120,
+					color: 'rgba(255,255,255,0.7)',
+					fontSize: '0.95rem',
+					'&.Mui-selected': {
+						color: 'white'
+					}
+				},
+				'& .MuiTabs-indicator': {
+					bgcolor: 'primary.main',
+					height: 3,
+					borderRadius: '3px 3px 0 0'
+				}
+			}}
+		>
+			<Tab label="General Information" id="tab-0" />
+			<Tab label="Screening" id="tab-1" />
+			<Tab label="Counseling" id="tab-2" />
+			<Tab label="Documents" id="tab-3" />
+			<Tab label="Allocation" id="tab-4" />
+			<Tab label="Attendance" id="tab-5" />
+			<Tab label="Placement" id="tab-6" />
+		</Tabs>
+	);
 
 	return (
-		<Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
-			<Container maxWidth="xl" sx={{ py: { xs: 2, sm: 3 }, px: { xs: 1, sm: 2, md: 3 } }}>
-				<Box sx={{ mb: 3 }}>
-					<Typography
-						variant={isMobile ? "h5" : "h4"}
-						component="h1"
-						sx={{
-							fontWeight: 300,
-							color: 'text.primary',
-							mb: 0.5
-						}}
-					>
-						Candidate Details
-					</Typography>
-					<Typography variant="body2" color="text.secondary">
-						View the candidate details and manage their status
-					</Typography>
+		<ModuleLayout
+			title={candidate?.name || 'Candidate Details'}
+			subtitle={candidate ? (
+				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+					<Typography variant="inherit">Candidate ID: {candidate.public_id}</Typography>
+					<Typography variant="inherit">Registered on {new Date(candidate.created_at).toLocaleDateString()}</Typography>
 				</Box>
-				{/* AWS Style Header */}
-				<Box sx={{ bgcolor: '#232f3e', color: 'white', px: 3, py: 2 }}>
-					<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-						<Box>
-							<Typography variant="h4" sx={{ fontWeight: 500, fontSize: '1.75rem', mb: 0.5 }}>
-								{candidate.name}
-							</Typography>
-						</Box>
-						<Stack direction="row" spacing={1.5}>
-							<Button
-								variant="outlined"
-								startIcon={<RefreshIcon />}
-								onClick={() => dispatch(fetchCandidateById({ publicId: publicId!, withDetails: true }))}
-								sx={{
-									color: 'white',
-									borderColor: '#aab7b8',
-									textTransform: 'none',
-									'&:hover': { borderColor: 'white', bgcolor: 'rgba(255,255,255,0.1)' }
-								}}
-							>
-								Refresh
-							</Button>
-						</Stack>
-					</Box>
-				</Box>
-
-				{/* Tabs Section */}
-				<Box sx={{ borderBottom: 1, borderColor: '#d5dbdb', bgcolor: 'white' }}>
-					<Tabs
-						value={tabValue}
-						onChange={handleTabChange}
-						sx={{
-							px: 3,
-							'& .MuiTab-root': {
-								textTransform: 'none',
-								fontWeight: 500,
-								minWidth: 120,
-								color: '#545b64',
-								'&.Mui-selected': { color: '#ec7211' }
-							},
-							'& .MuiTabs-indicator': { bgcolor: '#ec7211' }
-						}}
-					>
-						<Tab label="General information" id="tab-0" />
-						<Tab label="Screening" id="tab-1" />
-						<Tab label="Counseling" id="tab-2" />
-						<Tab label="Documents" id="tab-3" />
-						<Tab label="Allocation" id="tab-4" />
-						<Tab label="Attendance" id="tab-5" />
-						<Tab label="Placement" id="tab-6" />
-						{/* <Tab label="Assignments" id="tab-6" /> */}
-						{/* <Tab label="Mock Interviews" id="tab-7" /> */}
-					</Tabs>
-				</Box>
-
-				{/* Tab Content */}
-				<Box sx={{ py: 2 }}>
+			) : 'View the candidate details and manage their status'}
+			headerChildren={headerChildren}
+			loading={loading}
+			isEmpty={!loading && !candidate}
+			emptyTitle="Candidate Not Found"
+			emptyMessage="We couldn't find the candidate you're looking for. It may have been deleted or the ID is incorrect."
+		>
+			{candidate && (
+				<Box sx={{ py: 1 }}>
 					{tabValue === 0 && <GeneralInfoTab candidate={candidate} />}
 					{tabValue === 1 && <ScreeningTab candidate={candidate} />}
 					{tabValue === 2 && <CounselingTab candidate={candidate} />}
@@ -158,12 +117,9 @@ const CandidateDetail: React.FC = () => {
 					{tabValue === 4 && <TrainingAllocationTab candidate={candidate} />}
 					{tabValue === 5 && <CandidateAttendanceTab candidate={candidate} />}
 					{tabValue === 6 && <CandidatePlacementTab candidate={candidate} />}
-					{/* {tabValue === 6 && <CandidateAssignmentTab candidate={candidate} />}
-					{tabValue === 7 && <CandidateMockInterviewTab candidate={candidate} />} */}
 				</Box>
-
-			</Container>
-		</Box>
+			)}
+		</ModuleLayout>
 	);
 };
 

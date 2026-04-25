@@ -3,8 +3,8 @@ import { Box, Container, Paper, Typography, CircularProgress, alpha, useTheme } 
 import ModuleHeader from '../header';
 
 interface ModuleLayoutProps {
-	title: string;
-	subtitle?: string;
+	title: React.ReactNode;
+	subtitle?: React.ReactNode;
 	headerExtra?: React.ReactNode;
 	headerChildren?: React.ReactNode;
 	children: React.ReactNode;
@@ -32,17 +32,17 @@ const ModuleLayout: React.FC<ModuleLayoutProps> = ({
 	const theme = useTheme();
 
 	return (
-		<Box 
-			sx={{ 
-				bgcolor: 'background.default', 
-				minHeight: '100vh', 
-				display: 'flex', 
+		<Box
+			sx={{
+				bgcolor: 'background.default',
+				minHeight: '100vh',
+				display: 'flex',
 				flexDirection: 'column',
 			}}
 		>
-			<ModuleHeader 
-				title={title} 
-				subtitle={subtitle} 
+			<ModuleHeader
+				title={title}
+				subtitle={subtitle}
 				extra={headerExtra}
 			>
 				{headerChildren}
@@ -50,11 +50,11 @@ const ModuleLayout: React.FC<ModuleLayoutProps> = ({
 
 			<Container maxWidth="xl" sx={{ py: { xs: 3, sm: 4 }, flexGrow: 1 }}>
 				{isEmpty ? (
-					<Paper 
-						elevation={0} 
-						sx={{ 
-							p: { xs: 6, sm: 12 }, 
-							textAlign: 'center', 
+					<Paper
+						elevation={0}
+						sx={{
+							p: { xs: 6, sm: 12 },
+							textAlign: 'center',
 							border: '1px solid',
 							borderColor: alpha(theme.palette.divider, 0.6),
 							borderRadius: 3,
@@ -72,14 +72,14 @@ const ModuleLayout: React.FC<ModuleLayoutProps> = ({
 						{loading ? (
 							<CircularProgress size={56} thickness={2} sx={{ color: 'primary.main', mb: 2 }} />
 						) : (
-							<Box 
-								sx={{ 
-									width: 80, 
-									height: 80, 
-									bgcolor: alpha(theme.palette.primary.main, 0.05), 
-									borderRadius: '24px', 
-									display: 'flex', 
-									alignItems: 'center', 
+							<Box
+								sx={{
+									width: 80,
+									height: 80,
+									bgcolor: alpha(theme.palette.primary.main, 0.05),
+									borderRadius: '24px',
+									display: 'flex',
+									alignItems: 'center',
 									justifyContent: 'center',
 									mb: 2,
 									transform: 'rotate(10deg)',
@@ -94,12 +94,12 @@ const ModuleLayout: React.FC<ModuleLayoutProps> = ({
 							<Typography variant="h5" sx={{ fontWeight: 800, color: 'text.primary', mb: 1, letterSpacing: '-0.01em' }}>
 								{emptyTitle}
 							</Typography>
-							<Typography 
-								variant="body1" 
-								color="text.secondary" 
-								sx={{ 
-									maxWidth: 450, 
-									mx: 'auto', 
+							<Typography
+								variant="body1"
+								color="text.secondary"
+								sx={{
+									maxWidth: 450,
+									mx: 'auto',
 									lineHeight: 1.6,
 									fontWeight: 450
 								}}
@@ -109,8 +109,8 @@ const ModuleLayout: React.FC<ModuleLayoutProps> = ({
 						</Box>
 					</Paper>
 				) : (
-					<Box 
-						sx={{ 
+					<Box
+						sx={{
 							animation: 'contentEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
 							'@keyframes contentEntrance': {
 								from: { opacity: 0, transform: 'translateY(20px)' },

@@ -1,11 +1,8 @@
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-	Container,
 	Box,
-	Typography,
 	Alert,
-	CircularProgress,
 	Button
 } from '@mui/material';
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
@@ -13,6 +10,7 @@ import CandidateRegistrationForm from '../../components/candidates/forms/Candida
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchCandidateById, updateCandidate, clearSelectedCandidate } from '../../store/slices/candidateSlice';
 import type { CandidateUpdate } from '../../models/candidate';
+import ModuleLayout from '../../components/common/layout/ModuleLayout';
 
 const CandidateEdit: React.FC = () => {
 	const { publicId } = useParams<{ publicId: string }>();
@@ -33,15 +31,11 @@ const CandidateEdit: React.FC = () => {
 		if (!publicId) return;
 
 		try {
-			// Map the form data to CandidateUpdate type
-			// Note: CandidateRegistrationForm uses CandidateCreate which is a superset of CandidateUpdate
 			await dispatch(updateCandidate({ publicId, data: data as CandidateUpdate })).unwrap();
-
-			// Navigate back to history or list
 			navigate('/candidates/list');
 		} catch (error: any) {
 			console.error('Error updating candidate:', error);
-			throw error; // Re-throw to be handled by the form
+			throw error;
 		}
 	};
 
@@ -49,51 +43,54 @@ const CandidateEdit: React.FC = () => {
 		navigate(-1);
 	};
 
-	if (loading) {
-		return (
-			<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
-				<CircularProgress size={40} thickness={4} />
-			</Box>
-		);
-	}
-
 	if (error) {
 		return (
-			<Container maxWidth="lg" sx={{ py: 4 }}>
-				<Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
-				<Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/candidates/list')}>
+			<Box sx={{ p: 4 }}>
+				<Alert severity="error" variant="outlined" sx={{ borderRadius: 0, borderLeft: '4px solid #d91d11' }}>
+					{error}
+				</Alert>
+				<Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/candidates/list')} sx={{ mt: 2 }}>
 					Back to Candidates
 				</Button>
-			</Container>
+			</Box>
 		);
 	}
 
-	if (!candidate) return null;
+	const headerExtra = (
+		<Button
+			variant="outlined"
+			startIcon={<ArrowBackIcon />}
+			onClick={() => navigate(-1)}
+			sx={{
+				color: 'white',
+				borderColor: 'rgba(255,255,255,0.3)',
+				textTransform: 'none',
+				fontWeight: 600,
+				'&:hover': { borderColor: 'white', bgcolor: 'rgba(255,255,255,0.1)' }
+			}}
+		>
+			Back
+		</Button>
+	);
 
 	return (
-		<Container maxWidth="lg" sx={{ py: 4 }}>
-			<Box sx={{ mb: 4 }}>
-				<Button
-					startIcon={<ArrowBackIcon />}
-					onClick={() => navigate(-1)}
-					sx={{ mb: 2, textTransform: 'none' }}
-				>
-					Back
-				</Button>
-				<Typography variant="h4" component="h1" sx={{ fontWeight: 500 }}>
-					Edit Candidate: {candidate.name}
-				</Typography>
-				<Typography variant="body1" color="text.secondary">
-					Update candidate profile information across all sections.
-				</Typography>
-			</Box>
-
-			<CandidateRegistrationForm
-				initialData={candidate}
-				onSubmit={handleSubmit}
-				onCancel={handleCancel}
-			/>
-		</Container>
+		<ModuleLayout
+			title={candidate ? `Edit Candidate: ${candidate.name}` : 'Edit Candidate'}
+			subtitle="Update candidate profile information across all sections."
+			headerExtra={headerExtra}
+			loading={loading}
+			isEmpty={!loading && !candidate}
+		>
+			{candidate && (
+				<Box sx={{ maxWidth: 1000, mx: 'auto' }}>
+					<CandidateRegistrationForm
+						initialData={candidate}
+						onSubmit={handleSubmit}
+						onCancel={handleCancel}
+					/>
+				</Box>
+			)}
+		</ModuleLayout>
 	);
 };
 

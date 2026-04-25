@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, Paper, Box, Typography } from '@mui/material';
+import { Grid, Box, Typography, useTheme, alpha } from '@mui/material';
 import {
 	Person as PersonIcon,
 	AccessibilityNew as AccessibilityIcon,
@@ -14,7 +14,7 @@ import {
 	Cake as CakeIcon,
 	LocationOn as LocationIcon
 } from '@mui/icons-material';
-import { InfoRow, SectionHeader } from './DetailedViewCommon';
+import { InfoRow, SectionHeader, SectionCard } from './DetailedViewCommon';
 import type { Candidate } from '../../../models/candidate';
 
 interface GeneralInfoTabProps {
@@ -22,6 +22,8 @@ interface GeneralInfoTabProps {
 }
 
 const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({ candidate }) => {
+	const theme = useTheme();
+
 	const getGenderIcon = (gender: string) => {
 		const g = gender?.toLowerCase();
 		if (g === 'male') return <MaleIcon sx={{ fontSize: 16 }} />;
@@ -32,15 +34,7 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({ candidate }) => {
 	return (
 		<Grid container spacing={3}>
 			<Grid size={{ xs: 12, md: 8 }}>
-				<Paper
-					variant="outlined"
-					sx={{
-						p: 3,
-						borderRadius: 0,
-						border: '1px solid #d5dbdb',
-						boxShadow: '0 1px 1px 0 rgba(0,28,36,0.1)'
-					}}
-				>
+				<SectionCard>
 					<SectionHeader title="Basic Details" icon={<PersonIcon />} />
 					<Grid container spacing={3}>
 						<Grid size={{ xs: 12, sm: 6 }}>
@@ -79,8 +73,10 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({ candidate }) => {
 										<Box sx={{
 											p: 2,
 											mb: index < (candidate.education_details?.degrees?.length || 0) - 1 ? 2 : 0,
-											bgcolor: '#f8f9f9',
-											border: '1px solid #eaeded'
+											bgcolor: alpha(theme.palette.background.default, 0.5),
+											border: '1px solid',
+											borderColor: 'divider',
+											borderRadius: 1.5
 										}}>
 											<Grid container spacing={2}>
 												<Grid size={{ xs: 12, sm: 6 }}>
@@ -100,40 +96,23 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({ candidate }) => {
 								))}
 							</Grid>
 						) : (
-							<Typography variant="body2" sx={{ color: '#545b64', fontStyle: 'italic' }}>
+							<Typography variant="body2" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>
 								No education details provided
 							</Typography>
 						)}
 					</Box>
-				</Paper>
+				</SectionCard>
 			</Grid>
 
 			<Grid size={{ xs: 12, md: 4 }}>
-				<Paper
-					variant="outlined"
-					sx={{
-						p: 3,
-						borderRadius: 0,
-						border: '1px solid #d5dbdb',
-						mb: 3,
-						boxShadow: '0 1px 1px 0 rgba(0,28,36,0.1)'
-					}}
-				>
+				<SectionCard sx={{ mb: 3 }}>
 					<SectionHeader title="Guardian Details" icon={<FamilyIcon />} />
 					<InfoRow label="Parent/Guardian Name" value={candidate.guardian_details?.parent_name} />
 					<InfoRow label="Relationship" value={candidate.guardian_details?.relationship} />
 					<InfoRow label="Contact Number" value={candidate.guardian_details?.parent_phone} icon={<PhoneIcon sx={{ fontSize: 16 }} />} />
-				</Paper>
+				</SectionCard>
 
-				<Paper
-					variant="outlined"
-					sx={{
-						p: 3,
-						borderRadius: 0,
-						border: '1px solid #d5dbdb',
-						boxShadow: '0 1px 1px 0 rgba(0,28,36,0.1)'
-					}}
-				>
+				<SectionCard>
 					<SectionHeader title="Experience Overview" icon={<SchoolIcon />} />
 					<InfoRow label="Experience Status" value={candidate.work_experience?.is_experienced ? 'Experienced' : 'Fresher'} />
 					{candidate.work_experience?.is_experienced && (
@@ -142,7 +121,7 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({ candidate }) => {
 							<InfoRow label="Currently Employed" value={candidate.work_experience?.currently_employed ? 'Yes' : 'No'} />
 						</>
 					)}
-				</Paper>
+				</SectionCard>
 			</Grid>
 		</Grid>
 	);
