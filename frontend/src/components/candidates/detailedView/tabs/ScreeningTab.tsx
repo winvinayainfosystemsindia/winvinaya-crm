@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, Typography, Chip, Box, Button, Stack, Divider } from '@mui/material';
+import { Grid, Typography, Chip, Box, Button, Stack, Divider, useTheme, alpha } from '@mui/material';
 import {
 	CheckCircle as CheckCircleIcon,
 	Cancel as CancelIcon,
@@ -29,11 +29,11 @@ const BooleanStatus: React.FC<{ value: boolean | string | undefined }> = ({ valu
 	return (
 		<Stack direction="row" spacing={1} alignItems="center">
 			{isTrue ? (
-				<CheckCircleIcon sx={{ color: '#2e7d32', fontSize: 18 }} />
+				<CheckCircleIcon sx={{ color: 'success.main', fontSize: 18 }} />
 			) : (
-				<CancelIcon sx={{ color: '#d32f2f', fontSize: 18 }} />
+				<CancelIcon sx={{ color: 'error.main', fontSize: 18 }} />
 			)}
-			<Typography variant="body2" sx={{ fontWeight: 500, color: isTrue ? '#2e7d32' : '#d32f2f' }}>
+			<Typography variant="body2" sx={{ fontWeight: 500, color: isTrue ? 'success.main' : 'error.main' }}>
 				{isTrue ? 'Verified / Yes' : 'Pending / No'}
 			</Typography>
 		</Stack>
@@ -41,6 +41,7 @@ const BooleanStatus: React.FC<{ value: boolean | string | undefined }> = ({ valu
 };
 
 const ScreeningTab: React.FC<ScreeningTabProps> = ({ candidate }) => {
+	const theme = useTheme();
 	const navigate = useNavigate();
 	const { screening } = candidate;
 
@@ -95,12 +96,12 @@ const ScreeningTab: React.FC<ScreeningTabProps> = ({ candidate }) => {
 								fontWeight: 700,
 								borderRadius: 1,
 								bgcolor:
-									screening.status === 'Completed' ? '#2e7d32' :
-										screening.status === 'Not Connected' || screening.status === 'Not Answered' ? '#d32f2f' :
-											screening.status === 'In Progress' ? '#1976d2' :
-												screening.status === 'Follow-up Required' ? '#ed6c02' :
-													'#757575',
-								color: '#ffffff',
+									screening.status === 'Completed' ? 'success.main' :
+										screening.status === 'Not Connected' || screening.status === 'Not Answered' ? 'error.main' :
+											screening.status === 'In Progress' ? 'primary.main' :
+												screening.status === 'Follow-up Required' ? 'warning.main' :
+													'text.disabled',
+								color: 'common.white',
 								'& .MuiChip-icon': {
 									color: 'inherit',
 									fontSize: 16
@@ -116,8 +117,8 @@ const ScreeningTab: React.FC<ScreeningTabProps> = ({ candidate }) => {
 					{/* Screening Metadata */}
 					<Box sx={{ mb: 4 }}>
 						<Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5 }}>
-							<VerifiedIcon sx={{ fontSize: 20, mr: 1, color: '#545b64' }} />
-							<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e' }}>
+							<VerifiedIcon sx={{ fontSize: 20, mr: 1, color: 'text.secondary' }} />
+							<Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary' }}>
 								Screening Metadata
 							</Typography>
 						</Box>
@@ -145,8 +146,8 @@ const ScreeningTab: React.FC<ScreeningTabProps> = ({ candidate }) => {
 					{/* Skills section */}
 					<Box sx={{ mb: 4 }}>
 						<Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5 }}>
-							<TrainingIcon sx={{ fontSize: 20, mr: 1, color: '#545b64' }} />
-							<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e' }}>
+							<TrainingIcon sx={{ fontSize: 20, mr: 1, color: 'text.secondary' }} />
+							<Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary' }}>
 								Skills & Experience Profile
 							</Typography>
 						</Box>
@@ -165,7 +166,7 @@ const ScreeningTab: React.FC<ScreeningTabProps> = ({ candidate }) => {
 
 							<Divider sx={{ my: 3, borderStyle: 'dashed' }} />
 
-							<Typography variant="caption" sx={{ color: '#545b64', fontWeight: 600, textTransform: 'uppercase', mb: 1.5, display: 'block' }}>
+							<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase', mb: 1.5, display: 'block' }}>
 								Technical Competencies
 							</Typography>
 							<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 3 }}>
@@ -178,7 +179,7 @@ const ScreeningTab: React.FC<ScreeningTabProps> = ({ candidate }) => {
 								)}
 							</Stack>
 
-							<Typography variant="caption" sx={{ color: '#545b64', fontWeight: 600, textTransform: 'uppercase', mb: 1.5, display: 'block' }}>
+							<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase', mb: 1.5, display: 'block' }}>
 								Interpersonal Skills
 							</Typography>
 							<Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
@@ -198,8 +199,8 @@ const ScreeningTab: React.FC<ScreeningTabProps> = ({ candidate }) => {
 					{/* Documentation section */}
 					<Box sx={{ mb: 4 }}>
 						<Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5 }}>
-							<VerifiedIcon sx={{ fontSize: 20, mr: 1, color: '#545b64' }} />
-							<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e' }}>
+							<VerifiedIcon sx={{ fontSize: 20, mr: 1, color: 'text.secondary' }} />
+							<Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary' }}>
 								Documentation Status
 							</Typography>
 						</Box>
@@ -224,8 +225,8 @@ const ScreeningTab: React.FC<ScreeningTabProps> = ({ candidate }) => {
 					{/* Logistics & Financials Section */}
 					<Box sx={{ mb: 4 }}>
 						<Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5 }}>
-							<PaidIcon sx={{ fontSize: 20, mr: 1, color: '#545b64' }} />
-							<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e' }}>
+							<PaidIcon sx={{ fontSize: 20, mr: 1, color: 'text.secondary' }} />
+							<Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary' }}>
 								Logistics & Financials
 							</Typography>
 						</Box>
@@ -258,16 +259,16 @@ const ScreeningTab: React.FC<ScreeningTabProps> = ({ candidate }) => {
 					{/* Detailed Family Members Section */}
 					<Box>
 						<Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5 }}>
-							<FamilyIcon sx={{ fontSize: 20, mr: 1, color: '#545b64' }} />
-							<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e' }}>
+							<FamilyIcon sx={{ fontSize: 20, mr: 1, color: 'text.secondary' }} />
+							<Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary' }}>
 								Family Members Details
 							</Typography>
 						</Box>
 						<Box sx={{ pl: 1 }}>
 							{(screening.family_details?.length ?? 0) > 0 ? (
 								screening.family_details?.map((family: any, idx: number) => (
-									<Box key={idx} sx={{ mb: 2, p: 1.5, bgcolor: '#f8f9fa', border: '1px solid #eaeded', borderRadius: 1 }}>
-										<Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: '#ec7211' }}>
+									<Box key={idx} sx={{ mb: 2, p: 1.5, bgcolor: alpha(theme.palette.background.default, 0.5), border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+										<Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: 'primary.main' }}>
 											{family.relation}: {family.name}
 										</Typography>
 										<Grid container spacing={2}>

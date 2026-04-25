@@ -15,7 +15,9 @@ import {
 	Stack,
 	Accordion,
 	AccordionSummary,
-	AccordionDetails
+	AccordionDetails,
+	useTheme,
+	alpha
 } from '@mui/material';
 import {
 	RecordVoiceOver as InterviewIcon,
@@ -33,6 +35,7 @@ interface CandidateMockInterviewTabProps {
 }
 
 const CandidateMockInterviewTab: React.FC<CandidateMockInterviewTabProps> = ({ candidate }) => {
+	const theme = useTheme();
 	const [interviews, setInterviews] = useState<TrainingMockInterview[]>([]);
 	const [loading, setLoading] = useState(true);
 
@@ -95,7 +98,7 @@ const CandidateMockInterviewTab: React.FC<CandidateMockInterviewTabProps> = ({ c
 	if (loading) {
 		return (
 			<Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-				<CircularProgress size={24} sx={{ color: '#ec7211' }} />
+				<CircularProgress size={24} sx={{ color: 'primary.main' }} />
 			</Box>
 		);
 	}
@@ -103,19 +106,19 @@ const CandidateMockInterviewTab: React.FC<CandidateMockInterviewTabProps> = ({ c
 	const getStatusChip = (status: string) => {
 		switch (status) {
 			case 'cleared':
-				return <Chip label="Cleared" size="small" sx={{ bgcolor: '#ebf5e0', color: '#318400', fontWeight: 700, borderRadius: '4px' }} />;
+				return <Chip label="Cleared" size="small" sx={{ bgcolor: alpha(theme.palette.success.main, 0.1), color: 'success.main', fontWeight: 700, borderRadius: '4px' }} />;
 			case 're-test':
-				return <Chip label="Re-test" size="small" sx={{ bgcolor: '#fff4e5', color: '#663c00', fontWeight: 700, borderRadius: '4px' }} />;
+				return <Chip label="Re-test" size="small" sx={{ bgcolor: alpha(theme.palette.warning.main, 0.1), color: 'warning.dark', fontWeight: 700, borderRadius: '4px' }} />;
 			case 'absent':
-				return <Chip label="Absent" size="small" sx={{ bgcolor: '#f2f3f3', color: '#545b64', fontWeight: 700, borderRadius: '4px' }} />;
+				return <Chip label="Absent" size="small" sx={{ bgcolor: alpha(theme.palette.background.default, 0.5), color: 'text.secondary', fontWeight: 700, borderRadius: '4px' }} />;
 			default:
-				return <Chip label={status.toUpperCase()} size="small" sx={{ bgcolor: '#e7f4f9', color: '#005b82', fontWeight: 700, borderRadius: '4px' }} />;
+				return <Chip label={status.toUpperCase()} size="small" sx={{ bgcolor: alpha(theme.palette.info.main, 0.1), color: 'info.main', fontWeight: 700, borderRadius: '4px' }} />;
 		}
 	};
 
 	const renderRating = (rating: number | undefined, status: string) => {
 		if (status === 'absent' || rating === undefined || rating === null) {
-			return <Typography variant="caption" sx={{ color: '#aab7b8', fontStyle: 'italic' }}>N/A</Typography>;
+			return <Typography variant="caption" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>N/A</Typography>;
 		}
 
 		return (
@@ -127,12 +130,12 @@ const CandidateMockInterviewTab: React.FC<CandidateMockInterviewTabProps> = ({ c
 						sx={{
 							height: 4,
 							borderRadius: 2,
-							bgcolor: '#eaeded',
-							'& .MuiLinearProgress-bar': { bgcolor: rating >= 7 ? '#318400' : rating >= 4 ? '#ec7211' : '#d91d11' }
+							bgcolor: 'divider',
+							'& .MuiLinearProgress-bar': { bgcolor: rating >= 7 ? 'success.main' : rating >= 4 ? 'warning.main' : 'error.main' }
 						}}
 					/>
 				</Box>
-				<Typography variant="body2" sx={{ fontWeight: 700, color: '#232f3e' }}>
+				<Typography variant="body2" sx={{ fontWeight: 700, color: 'text.primary' }}>
 					{rating}
 				</Typography>
 			</Box>
@@ -146,31 +149,31 @@ const CandidateMockInterviewTab: React.FC<CandidateMockInterviewTabProps> = ({ c
 			{interviews.length > 0 ? (
 				<>
 					{/* Overall Summary Strip */}
-					<Box sx={{ display: 'flex', gap: 6, mb: 4, bgcolor: '#f8f9fa', p: 2.5, border: '1px solid #eaeded', borderRadius: '2px' }}>
+					<Box sx={{ display: 'flex', gap: 6, mb: 4, bgcolor: alpha(theme.palette.background.default, 0.5), p: 2.5, border: '1px solid', borderColor: 'divider', borderRadius: '2px' }}>
 						<Box>
-							<Typography variant="caption" sx={{ color: '#545b64', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem', display: 'block', mb: 0.5 }}>
+							<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem', display: 'block', mb: 0.5 }}>
 								Total Sessions
 							</Typography>
-							<Typography variant="h5" sx={{ fontWeight: 800, color: '#232f3e' }}>{interviews.length}</Typography>
+							<Typography variant="h5" sx={{ fontWeight: 800, color: 'text.primary' }}>{interviews.length}</Typography>
 						</Box>
-						<Divider orientation="vertical" flexItem sx={{ borderColor: '#eaeded' }} />
+						<Divider orientation="vertical" flexItem sx={{ borderColor: 'divider' }} />
 						<Box>
-							<Typography variant="caption" sx={{ color: '#545b64', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem', display: 'block', mb: 0.5 }}>
+							<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem', display: 'block', mb: 0.5 }}>
 								Cleared
 							</Typography>
-							<Typography variant="h5" sx={{ fontWeight: 800, color: '#318400' }}>{overallStats.cleared}</Typography>
+							<Typography variant="h5" sx={{ fontWeight: 800, color: 'success.main' }}>{overallStats.cleared}</Typography>
 						</Box>
-						<Divider orientation="vertical" flexItem sx={{ borderColor: '#eaeded' }} />
+						<Divider orientation="vertical" flexItem sx={{ borderColor: 'divider' }} />
 						<Box>
-							<Typography variant="caption" sx={{ color: '#545b64', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem', display: 'block', mb: 0.5 }}>
+							<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem', display: 'block', mb: 0.5 }}>
 								Overall Avg Rating
 							</Typography>
-							<Typography variant="h5" sx={{ fontWeight: 800, color: '#007eb9' }}>{overallStats.avgRating}/10</Typography>
+							<Typography variant="h5" sx={{ fontWeight: 800, color: 'info.main' }}>{overallStats.avgRating}/10</Typography>
 						</Box>
 					</Box>
 
 					{/* Mock Interviews by Batch */}
-					<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e', mb: 2 }}>
+					<Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary', mb: 2 }}>
 						Mock Interviews by Training Batch
 					</Typography>
 
@@ -182,33 +185,34 @@ const CandidateMockInterviewTab: React.FC<CandidateMockInterviewTabProps> = ({ c
 								defaultExpanded={index === 0}
 								sx={{
 									mb: 2,
-									border: '1px solid #eaeded',
+									border: '1px solid',
+									borderColor: 'divider',
 									'&:before': { display: 'none' },
 									boxShadow: 'none'
 								}}
 							>
 								<AccordionSummary
 									expandIcon={<ExpandMoreIcon />}
-									sx={{ bgcolor: '#fafafa', '&:hover': { bgcolor: '#f5f5f5' } }}
+									sx={{ bgcolor: alpha(theme.palette.background.default, 0.3), '&:hover': { bgcolor: alpha(theme.palette.background.default, 0.6) } }}
 								>
 									<Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-										<BatchIcon sx={{ color: '#ec7211', fontSize: 20 }} />
+										<BatchIcon sx={{ color: 'primary.main', fontSize: 20 }} />
 										<Box sx={{ flexGrow: 1 }}>
-											<Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#232f3e' }}>
+											<Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary' }}>
 												{batch.batch_name}
 											</Typography>
-											<Typography variant="caption" sx={{ color: '#545b64' }}>
+											<Typography variant="caption" sx={{ color: 'text.secondary' }}>
 												{records.length} sessions • {batchStats.cleared} cleared • Avg rating: {batchStats.avgRating}/10
 											</Typography>
 										</Box>
 										<Box sx={{ display: 'flex', gap: 3, mr: 2 }}>
 											<Box>
-												<Typography variant="caption" sx={{ color: '#545b64', display: 'block' }}>Cleared</Typography>
-												<Typography variant="body2" sx={{ fontWeight: 700, color: '#318400' }}>{batchStats.cleared}</Typography>
+												<Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>Cleared</Typography>
+												<Typography variant="body2" sx={{ fontWeight: 700, color: 'success.main' }}>{batchStats.cleared}</Typography>
 											</Box>
 											<Box>
-												<Typography variant="caption" sx={{ color: '#545b64', display: 'block' }}>Avg Rating</Typography>
-												<Typography variant="body2" sx={{ fontWeight: 700, color: '#007eb9' }}>{batchStats.avgRating}</Typography>
+												<Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>Avg Rating</Typography>
+												<Typography variant="body2" sx={{ fontWeight: 700, color: 'info.main' }}>{batchStats.avgRating}</Typography>
 											</Box>
 										</Box>
 									</Box>
@@ -216,29 +220,29 @@ const CandidateMockInterviewTab: React.FC<CandidateMockInterviewTabProps> = ({ c
 								<AccordionDetails sx={{ p: 0 }}>
 									<TableContainer>
 										<Table size="small">
-											<TableHead sx={{ bgcolor: '#f8f9fa' }}>
+											<TableHead sx={{ bgcolor: alpha(theme.palette.background.default, 0.5) }}>
 												<TableRow>
-													<TableCell sx={{ fontWeight: 700, color: '#545b64', py: 1.5 }}>DATE</TableCell>
-													<TableCell sx={{ fontWeight: 700, color: '#545b64', py: 1.5 }}>INTERVIEWER</TableCell>
-													<TableCell sx={{ fontWeight: 700, color: '#545b64', py: 1.5 }}>STATUS</TableCell>
-													<TableCell sx={{ fontWeight: 700, color: '#545b64', py: 1.5 }}>SCORE</TableCell>
-													<TableCell sx={{ fontWeight: 700, color: '#545b64', py: 1.5 }}>FEEDBACK</TableCell>
+													<TableCell sx={{ fontWeight: 700, color: 'text.secondary', py: 1.5 }}>DATE</TableCell>
+													<TableCell sx={{ fontWeight: 700, color: 'text.secondary', py: 1.5 }}>INTERVIEWER</TableCell>
+													<TableCell sx={{ fontWeight: 700, color: 'text.secondary', py: 1.5 }}>STATUS</TableCell>
+													<TableCell sx={{ fontWeight: 700, color: 'text.secondary', py: 1.5 }}>SCORE</TableCell>
+													<TableCell sx={{ fontWeight: 700, color: 'text.secondary', py: 1.5 }}>FEEDBACK</TableCell>
 												</TableRow>
 											</TableHead>
 											<TableBody>
 												{records.map((row) => (
 													<TableRow key={row.id} hover>
-														<TableCell sx={{ color: '#232f3e', fontWeight: 500 }}>
+														<TableCell sx={{ color: 'text.primary', fontWeight: 500 }}>
 															{format(new Date(row.interview_date), 'MMM dd, yyyy')}
 														</TableCell>
-														<TableCell sx={{ color: '#232f3e' }}>
+														<TableCell sx={{ color: 'text.primary' }}>
 															{row.interviewer_name || 'Unassigned'}
 														</TableCell>
 														<TableCell>{getStatusChip(row.status)}</TableCell>
 														<TableCell sx={{ minWidth: 100 }}>
 															{renderRating(row.overall_rating ?? undefined, row.status)}
 														</TableCell>
-														<TableCell sx={{ color: '#545b64', maxWidth: 300 }}>
+														<TableCell sx={{ color: 'text.secondary', maxWidth: 300 }}>
 															<Stack direction="row" alignItems="center" spacing={1}>
 																<Typography variant="body2" noWrap>
 																	{row.feedback || 'No feedback provided'}
@@ -256,9 +260,9 @@ const CandidateMockInterviewTab: React.FC<CandidateMockInterviewTabProps> = ({ c
 					})}
 				</>
 			) : (
-				<Box sx={{ textAlign: 'center', py: 8, bgcolor: '#f8f9fa', border: '1px dashed #eaeded', borderRadius: '2px' }}>
-					<InterviewIcon sx={{ fontSize: 48, color: '#aab7b8', mb: 2 }} />
-					<Typography variant="h6" sx={{ color: '#545b64', fontWeight: 600 }}>No Mock Interviews Recorded</Typography>
+				<Box sx={{ textAlign: 'center', py: 8, bgcolor: alpha(theme.palette.background.default, 0.5), border: '1px dashed', borderColor: 'divider', borderRadius: '2px' }}>
+					<InterviewIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
+					<Typography variant="h6" sx={{ color: 'text.secondary', fontWeight: 600 }}>No Mock Interviews Recorded</Typography>
 					<Typography variant="body2" color="text.secondary">
 						Once the candidate begins their mock interview sessions, the feedback and ratings will be aggregated here.
 					</Typography>

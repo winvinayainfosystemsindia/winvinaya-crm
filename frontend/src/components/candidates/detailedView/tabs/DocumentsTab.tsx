@@ -21,7 +21,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ candidate }) => {
 				<Grid container spacing={2}>
 					{candidate.documents.map((doc) => (
 						<Grid size={{ xs: 12, sm: 6, md: 4 }} key={doc.id}>
-							<Paper variant="outlined" sx={{ p: 2, position: 'relative', '&:hover': { bgcolor: '#f8f9fa' } }}>
+							<Paper variant="outlined" sx={{ p: 2, position: 'relative', '&:hover': { bgcolor: 'action.hover' } }}>
 								<Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
 									<DescriptionIcon color="action" />
 									<Box sx={{ minWidth: 0, flex: 1 }}>
@@ -40,8 +40,8 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ candidate }) => {
 													fontSize: '0.6rem',
 													textTransform: 'uppercase',
 													fontWeight: 700,
-													bgcolor: doc.document_source === 'trainer' ? '#ec7211' : '#007eb9',
-													color: 'white'
+													bgcolor: doc.document_source === 'trainer' ? 'primary.main' : 'info.main',
+													color: 'common.white'
 												}}
 											/>
 											{doc.is_active && (
@@ -85,7 +85,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ candidate }) => {
 				</Grid>
 			) : (
 				<Box sx={{ textAlign: 'center', py: 5 }}>
-					<UploadFileIcon sx={{ fontSize: 60, color: '#d5dbdb', mb: 2 }} />
+					<UploadFileIcon sx={{ fontSize: 60, color: 'divider', mb: 2 }} />
 					<Typography color="text.secondary">No documents have been collected yet.</Typography>
 					<Button variant="outlined" sx={{ mt: 2, textTransform: 'none' }} onClick={() => navigate(`/candidates/documents/${candidate.public_id}`)}>
 						Collect Documents

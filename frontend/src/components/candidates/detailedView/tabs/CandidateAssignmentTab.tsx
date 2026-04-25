@@ -13,7 +13,9 @@ import {
 	Divider,
 	Accordion,
 	AccordionSummary,
-	AccordionDetails
+	AccordionDetails,
+	useTheme,
+	alpha
 } from '@mui/material';
 import {
 	Assignment as AssignmentIcon,
@@ -32,6 +34,7 @@ interface CandidateAssignmentTabProps {
 }
 
 const CandidateAssignmentTab: React.FC<CandidateAssignmentTabProps> = ({ candidate }) => {
+	const theme = useTheme();
 	const [assignments, setAssignments] = useState<TrainingAssignment[]>([]);
 	const [loading, setLoading] = useState(true);
 
@@ -95,15 +98,15 @@ const CandidateAssignmentTab: React.FC<CandidateAssignmentTabProps> = ({ candida
 	if (loading) {
 		return (
 			<Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-				<CircularProgress size={24} sx={{ color: '#ec7211' }} />
+				<CircularProgress size={24} sx={{ color: 'primary.main' }} />
 			</Box>
 		);
 	}
 
 	const renderRating = (percentage: number) => {
-		let color = '#318400'; // Green
-		if (percentage < 40) color = '#d91d11'; // Red
-		else if (percentage < 70) color = '#ec7211'; // Orange
+		let color = 'success.main';
+		if (percentage < 40) color = 'error.main';
+		else if (percentage < 70) color = 'warning.main';
 
 		return (
 			<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -114,12 +117,12 @@ const CandidateAssignmentTab: React.FC<CandidateAssignmentTabProps> = ({ candida
 						sx={{
 							height: 6,
 							borderRadius: 3,
-							bgcolor: '#eaeded',
+							bgcolor: 'divider',
 							'& .MuiLinearProgress-bar': { bgcolor: color }
 						}}
 					/>
 				</Box>
-				<Typography variant="body2" sx={{ fontWeight: 700, color: '#232f3e', width: '40px' }}>
+				<Typography variant="body2" sx={{ fontWeight: 700, color: 'text.primary', width: '40px' }}>
 					{percentage.toFixed(0)}%
 				</Typography>
 			</Box>
@@ -133,20 +136,20 @@ const CandidateAssignmentTab: React.FC<CandidateAssignmentTabProps> = ({ candida
 			{assignments.length > 0 ? (
 				<>
 					{/* Overall Summary Strip */}
-					<Box sx={{ display: 'flex', gap: 6, mb: 4, bgcolor: '#f8f9fa', p: 2.5, border: '1px solid #eaeded', borderRadius: '2px' }}>
+					<Box sx={{ display: 'flex', gap: 6, mb: 4, bgcolor: alpha(theme.palette.background.default, 0.5), p: 2.5, border: '1px solid', borderColor: 'divider', borderRadius: '2px' }}>
 						<Box>
-							<Typography variant="caption" sx={{ color: '#545b64', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem', display: 'block', mb: 0.5 }}>
+							<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem', display: 'block', mb: 0.5 }}>
 								Total Assignments
 							</Typography>
-							<Typography variant="h5" sx={{ fontWeight: 800, color: '#232f3e' }}>{overallStats.total}</Typography>
+							<Typography variant="h5" sx={{ fontWeight: 800, color: 'text.primary' }}>{overallStats.total}</Typography>
 						</Box>
-						<Divider orientation="vertical" flexItem sx={{ borderColor: '#eaeded' }} />
+						<Divider orientation="vertical" flexItem sx={{ borderColor: 'divider' }} />
 						<Box flexGrow={1} maxWidth={400}>
-							<Typography variant="caption" sx={{ color: '#545b64', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem', display: 'block', mb: 0.5 }}>
+							<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem', display: 'block', mb: 0.5 }}>
 								Overall Average Proficiency
 							</Typography>
 							<Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-								<Typography variant="h5" sx={{ fontWeight: 800, color: '#232f3e' }}>{overallStats.avgPercentage}%</Typography>
+								<Typography variant="h5" sx={{ fontWeight: 800, color: 'text.primary' }}>{overallStats.avgPercentage}%</Typography>
 								<Box sx={{ flexGrow: 1 }}>
 									<LinearProgress
 										variant="determinate"
@@ -154,8 +157,8 @@ const CandidateAssignmentTab: React.FC<CandidateAssignmentTabProps> = ({ candida
 										sx={{
 											height: 8,
 											borderRadius: 4,
-											bgcolor: '#eaeded',
-											'& .MuiLinearProgress-bar': { bgcolor: '#007eb9' }
+											bgcolor: 'divider',
+											'& .MuiLinearProgress-bar': { bgcolor: 'info.main' }
 										}}
 									/>
 								</Box>
@@ -164,7 +167,7 @@ const CandidateAssignmentTab: React.FC<CandidateAssignmentTabProps> = ({ candida
 					</Box>
 
 					{/* Assignments by Batch */}
-					<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#232f3e', mb: 2 }}>
+					<Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'text.primary', mb: 2 }}>
 						Assignments by Training Batch
 					</Typography>
 
@@ -176,49 +179,50 @@ const CandidateAssignmentTab: React.FC<CandidateAssignmentTabProps> = ({ candida
 								defaultExpanded={index === 0}
 								sx={{
 									mb: 2,
-									border: '1px solid #eaeded',
+									border: '1px solid',
+									borderColor: 'divider',
 									'&:before': { display: 'none' },
 									boxShadow: 'none'
 								}}
 							>
 								<AccordionSummary
 									expandIcon={<ExpandMoreIcon />}
-									sx={{ bgcolor: '#fafafa', '&:hover': { bgcolor: '#f5f5f5' } }}
+									sx={{ bgcolor: alpha(theme.palette.background.default, 0.3), '&:hover': { bgcolor: alpha(theme.palette.background.default, 0.6) } }}
 								>
 									<Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-										<BatchIcon sx={{ color: '#ec7211', fontSize: 20 }} />
+										<BatchIcon sx={{ color: 'primary.main', fontSize: 20 }} />
 										<Box sx={{ flexGrow: 1 }}>
-											<Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#232f3e' }}>
+											<Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary' }}>
 												{batch.batch_name}
 											</Typography>
-											<Typography variant="caption" sx={{ color: '#545b64' }}>
+											<Typography variant="caption" sx={{ color: 'text.secondary' }}>
 												{records.length} assignments • {batchStats.avgPercentage}% average
 											</Typography>
 										</Box>
 										<Box sx={{ mr: 2 }}>
-											<Typography variant="caption" sx={{ color: '#545b64', display: 'block' }}>Batch Average</Typography>
-											<Typography variant="body2" sx={{ fontWeight: 700, color: '#007eb9' }}>{batchStats.avgPercentage}%</Typography>
+											<Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>Batch Average</Typography>
+											<Typography variant="body2" sx={{ fontWeight: 700, color: 'info.main' }}>{batchStats.avgPercentage}%</Typography>
 										</Box>
 									</Box>
 								</AccordionSummary>
 								<AccordionDetails sx={{ p: 0 }}>
 									<TableContainer>
 										<Table size="small">
-											<TableHead sx={{ bgcolor: '#f8f9fa' }}>
+											<TableHead sx={{ bgcolor: alpha(theme.palette.background.default, 0.5) }}>
 												<TableRow>
-													<TableCell sx={{ fontWeight: 700, color: '#545b64', py: 1.5 }}>ASSIGNMENT NAME</TableCell>
-													<TableCell sx={{ fontWeight: 700, color: '#545b64', py: 1.5 }}>MARKS</TableCell>
-													<TableCell sx={{ fontWeight: 700, color: '#545b64', py: 1.5 }}>PROFICIENCY</TableCell>
-													<TableCell sx={{ fontWeight: 700, color: '#545b64', py: 1.5 }}>DATE</TableCell>
+													<TableCell sx={{ fontWeight: 700, color: 'text.secondary', py: 1.5 }}>ASSIGNMENT NAME</TableCell>
+													<TableCell sx={{ fontWeight: 700, color: 'text.secondary', py: 1.5 }}>MARKS</TableCell>
+													<TableCell sx={{ fontWeight: 700, color: 'text.secondary', py: 1.5 }}>PROFICIENCY</TableCell>
+													<TableCell sx={{ fontWeight: 700, color: 'text.secondary', py: 1.5 }}>DATE</TableCell>
 												</TableRow>
 											</TableHead>
 											<TableBody>
 												{records.map((row) => (
 													<TableRow key={row.id} hover>
-														<TableCell sx={{ color: '#232f3e', fontWeight: 600 }}>
+														<TableCell sx={{ color: 'text.primary', fontWeight: 600 }}>
 															{row.assignment_name}
 														</TableCell>
-														<TableCell sx={{ color: '#232f3e' }}>
+														<TableCell sx={{ color: 'text.primary' }}>
 															<Typography variant="body2" sx={{ fontWeight: 500 }}>
 																{row.marks_obtained} <Box component="span" sx={{ color: 'text.secondary', fontWeight: 400 }}>/ {row.max_marks}</Box>
 															</Typography>
@@ -226,7 +230,7 @@ const CandidateAssignmentTab: React.FC<CandidateAssignmentTabProps> = ({ candida
 														<TableCell sx={{ width: '200px' }}>
 															{renderRating((row.marks_obtained / row.max_marks) * 100)}
 														</TableCell>
-														<TableCell sx={{ color: '#545b64' }}>
+														<TableCell sx={{ color: 'text.secondary' }}>
 															{format(new Date(row.assignment_date), 'MMM dd, yyyy')}
 														</TableCell>
 													</TableRow>
@@ -240,9 +244,9 @@ const CandidateAssignmentTab: React.FC<CandidateAssignmentTabProps> = ({ candida
 					})}
 				</>
 			) : (
-				<Box sx={{ textAlign: 'center', py: 8, bgcolor: '#f8f9fa', border: '1px dashed #eaeded', borderRadius: '2px' }}>
-					<PendingIcon sx={{ fontSize: 48, color: '#aab7b8', mb: 2 }} />
-					<Typography variant="h6" sx={{ color: '#545b64', fontWeight: 600 }}>No Assignment Records Found</Typography>
+				<Box sx={{ textAlign: 'center', py: 8, bgcolor: alpha(theme.palette.background.default, 0.5), border: '1px dashed', borderColor: 'divider', borderRadius: '2px' }}>
+					<PendingIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
+					<Typography variant="h6" sx={{ color: 'text.secondary', fontWeight: 600 }}>No Assignment Records Found</Typography>
 					<Typography variant="body2" color="text.secondary">
 						Detailed performance metrics will appear here once the candidate completes their first training assignment.
 					</Typography>

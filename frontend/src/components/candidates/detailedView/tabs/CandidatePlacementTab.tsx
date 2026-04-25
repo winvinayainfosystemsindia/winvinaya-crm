@@ -10,7 +10,9 @@ import {
     ListItemText,
     ListItemIcon,
     Chip,
-    Button
+    Button,
+    useTheme,
+    alpha
 } from '@mui/material';
 import {
     Business as BusinessIcon,
@@ -33,6 +35,7 @@ interface CandidatePlacementTabProps {
 
 const CandidatePlacementTab: React.FC<CandidatePlacementTabProps> = ({ candidate }) => {
     const navigate = useNavigate();
+    const theme = useTheme();
     const { enqueueSnackbar } = useSnackbar();
     const [mappings, setMappings] = useState<PlacementMapping[]>([]);
     const [loading, setLoading] = useState(true);
@@ -57,7 +60,7 @@ const CandidatePlacementTab: React.FC<CandidatePlacementTabProps> = ({ candidate
     if (loading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-                <CircularProgress sx={{ color: '#ec7211' }} />
+                <CircularProgress sx={{ color: 'primary.main' }} />
             </Box>
         );
     }
@@ -76,11 +79,11 @@ const CandidatePlacementTab: React.FC<CandidatePlacementTabProps> = ({ candidate
                                     sx={{
                                         py: 2,
                                         px: 3,
-                                        '&:hover': { bgcolor: '#fbfbfb' }
+                                        '&:hover': { bgcolor: 'action.hover' }
                                     }}
                                 >
                                     <ListItemIcon>
-                                        <CheckCircleIcon sx={{ color: '#1d8102' }} />
+                                        <CheckCircleIcon sx={{ color: 'success.main' }} />
                                     </ListItemIcon>
                                     <ListItemText
                                         primary={
@@ -93,20 +96,21 @@ const CandidatePlacementTab: React.FC<CandidatePlacementTabProps> = ({ candidate
                                                     size="small"
                                                     sx={{
                                                         fontWeight: 700,
-                                                        bgcolor: mapping.match_score >= 70 ? '#e7f4e4' : '#fff4e5',
-                                                        color: mapping.match_score >= 70 ? '#1d8102' : '#eb5f07'
+                                                        bgcolor: mapping.match_score >= 70 ? alpha(theme.palette.success.main, 0.1) : alpha(theme.palette.warning.main, 0.1),
+                                                        color: mapping.match_score >= 70 ? 'success.main' : 'warning.main'
                                                     }}
                                                 />
                                             </Stack>
                                         }
                                         secondary={
                                             <Stack direction="row" spacing={3} sx={{ mt: 0.5 }}>
-                                                <Stack direction="row" spacing={0.5} alignItems="center">
-                                                    <BusinessIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-                                                    <Typography variant="caption" color="textSecondary">
-                                                        {mapping.job_role?.company?.name || 'N/A'}
-                                                    </Typography>
-                                                </Stack>
+                                                <ListItemIcon sx={{ minWidth: 32 }}>
+                                                    <BusinessIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                                                </ListItemIcon>
+                                                <ListItemText
+                                                    primary={<Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>Company</Typography>}
+                                                    secondary={<Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>{mapping.job_role?.company?.name || 'N/A'}</Typography>}
+                                                />
                                                 <Stack direction="row" spacing={0.5} alignItems="center">
                                                     <CalendarIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
                                                     <Typography variant="caption" color="textSecondary">
@@ -118,11 +122,18 @@ const CandidatePlacementTab: React.FC<CandidatePlacementTabProps> = ({ candidate
                                     />
                                     {mapping.job_role?.public_id && (
                                         <Button
-                                            variant="text"
+                                            variant="outlined"
                                             size="small"
                                             endIcon={<ArrowForwardIcon />}
-                                            onClick={() => navigate(`/placement/job-roles/${mapping.job_role?.public_id}`)}
-                                            sx={{ textTransform: 'none', fontWeight: 600, color: '#007eb9' }}
+                                            onClick={() => navigate(`/job-roles/${mapping.job_role_id}`)}
+                                            sx={{
+                                                textTransform: 'none',
+                                                fontWeight: 600,
+                                                borderRadius: 1,
+                                                color: 'info.main',
+                                                borderColor: 'info.main',
+                                                '&:hover': { bgcolor: alpha(theme.palette.info.main, 0.05), borderColor: 'info.dark' }
+                                            }}
                                         >
                                             View Role
                                         </Button>
@@ -133,8 +144,8 @@ const CandidatePlacementTab: React.FC<CandidatePlacementTabProps> = ({ candidate
                     </List>
                 ) : (
                     <Box sx={{ p: 6, textAlign: 'center' }}>
-                        <WorkIcon sx={{ color: '#d5dbdb', fontSize: 48, mb: 2 }} />
-                        <Typography variant="body1" sx={{ fontWeight: 600, color: '#545b64' }}>
+                        <WorkIcon sx={{ color: 'action.disabled', fontSize: 48, mb: 2 }} />
+                        <Typography variant="body1" sx={{ fontWeight: 600, color: 'text.secondary' }}>
                             No active mappings
                         </Typography>
                         <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
