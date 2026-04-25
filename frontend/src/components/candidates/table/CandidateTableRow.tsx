@@ -48,8 +48,10 @@ const CandidateTableRow: React.FC<CandidateTableRowProps> = ({
 	return (
 		<TableRow
 			key={candidate.public_id}
+			onClick={() => onView(candidate.public_id)}
 			sx={{
 				height: '60px',
+				cursor: 'pointer',
 				'&:hover': {
 					bgcolor: '#f5f8fa',
 				},

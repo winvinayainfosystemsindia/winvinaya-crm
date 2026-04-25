@@ -1,5 +1,5 @@
 import React from 'react';
-import { Visibility, Edit, Delete, AssignmentInd } from '@mui/icons-material';
+import { Edit, Delete, AssignmentInd } from '@mui/icons-material';
 import { DataTableActions, type TableMenuAction } from '../../common/table';
 import type { CandidateListItem } from '../../../models/candidate';
 
@@ -15,7 +15,6 @@ interface CandidateTableActionsProps {
 const CandidateTableActions: React.FC<CandidateTableActionsProps> = ({
 	candidate,
 	userRole,
-	onView,
 	onEdit,
 	onDelete,
 	onAssign
@@ -24,12 +23,6 @@ const CandidateTableActions: React.FC<CandidateTableActionsProps> = ({
 	const isManager = isAdmin || userRole === 'manager';
 
 	const actions: TableMenuAction<CandidateListItem>[] = [
-		{
-			label: 'View Details',
-			icon: <Visibility fontSize="small" />,
-			onClick: (item) => onView(item.public_id),
-			color: 'primary.main'
-		},
 		{
 			label: 'Edit Candidate',
 			icon: <Edit fontSize="small" />,
