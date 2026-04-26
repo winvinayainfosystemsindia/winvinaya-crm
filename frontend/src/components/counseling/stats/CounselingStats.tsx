@@ -1,10 +1,11 @@
 import React from 'react';
-import { Box } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 import StatCard from '../../common/StatCard';
 import { Assignment, PendingActions, CheckCircle, Cancel } from '@mui/icons-material';
 import { useAppSelector } from '../../../store/hooks';
 
 const CounselingStats: React.FC = () => {
+	const theme = useTheme();
 	const { stats } = useAppSelector((state) => state.candidates);
 
 	if (!stats) return null;
@@ -24,7 +25,8 @@ const CounselingStats: React.FC = () => {
 						title="Screened Completed"
 						count={screenedCompleted.toString()}
 						icon={<Assignment fontSize="large" />}
-						color="#1976d2"
+						color={theme.palette.info.main}
+						subtitle="Qualified for counseling"
 					/>
 				</Box>
 				<Box sx={{ flex: '1 1 250px' }}>
@@ -32,7 +34,8 @@ const CounselingStats: React.FC = () => {
 						title="Selected"
 						count={selected.toString()}
 						icon={<CheckCircle fontSize="large" />}
-						color="#2e7d32"
+						color={theme.palette.success.main}
+						subtitle="Ready for training batches"
 					/>
 				</Box>
 				<Box sx={{ flex: '1 1 250px' }}>
@@ -40,7 +43,8 @@ const CounselingStats: React.FC = () => {
 						title="Yet To Be Counseled"
 						count={yetToBeCounseled.toString()}
 						icon={<PendingActions fontSize="large" />}
-						color="#ed6c02"
+						color={theme.palette.warning.main}
+						subtitle="Awaiting counselor review"
 					/>
 				</Box>
 				<Box sx={{ flex: '1 1 250px' }}>
@@ -48,7 +52,8 @@ const CounselingStats: React.FC = () => {
 						title="Rejected"
 						count={rejected.toString()}
 						icon={<Cancel fontSize="large" />}
-						color="#d32f2f"
+						color={theme.palette.error.main}
+						subtitle="Not suitable for current batches"
 					/>
 				</Box>
 			</Box>
