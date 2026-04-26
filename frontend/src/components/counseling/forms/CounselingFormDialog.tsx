@@ -1,28 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
 	Dialog,
-	DialogTitle,
-	DialogContent,
-	DialogActions,
-	Button,
-	Typography,
 	Box,
-	Stack,
-	IconButton,
-	Tabs,
-	Tab,
-	CircularProgress,
-	Divider
+	CircularProgress
 } from '@mui/material';
-import {
-	Close as CloseIcon,
-	Person as PersonIcon,
-	AssignmentInd as CounselorIcon,
-	Event as DateIcon
-} from '@mui/icons-material';
 import { useAppSelector, useAppDispatch } from '../../../store/hooks';
 import { fetchFields } from '../../../store/slices/settingsSlice';
 import type { CandidateCounselingCreate, WorkExperience } from '../../../models/candidate';
+
+// Common Form Components
+import EnterpriseForm, { type FormStep } from '../../common/form/EnterpriseForm';
 
 // Tabs
 import SkillAssessmentTab from './tabs/SkillAssessmentTab';
@@ -45,27 +32,6 @@ interface CounselingFormDialogProps {
 	candidateWorkExperience?: WorkExperience;
 }
 
-interface TabPanelProps {
-	children?: React.ReactNode;
-	index: number;
-	value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-	const { children, value, index, ...other } = props;
-	return (
-		<div
-			role="tabpanel"
-			hidden={value !== index}
-			id={`counseling-form-tabpanel-${index}`}
-			aria-labelledby={`counseling-form-tab-${index}`}
-			{...other}
-		>
-			{value === index && <Box sx={{ pt: 3, pb: 2 }}>{children}</Box>}
-		</div>
-	);
-}
-
 const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 	open,
 	onClose,
@@ -78,9 +44,6 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 	const user = useAppSelector((state) => state.auth.user);
 	const dynamicFields = useAppSelector(state => state.settings.fields.counseling || []);
 	const loadingFields = useAppSelector(state => state.settings.loading);
-	const userRole = user?.role || '';
-	const isManagerOrAdmin = userRole === 'admin' || userRole === 'manager' || userRole === 'sourcing';
-	const [tabValue, setTabValue] = useState(0);
 	const [batchTags, setBatchTags] = useState<string[]>([]);
 	const [showErrors, setShowErrors] = useState(false);
 
@@ -112,59 +75,47 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 				}
 			};
 			fetchBatchTags();
+			dispatch(fetchFields('counseling'));
 
-			// Defer state updates to avoid synchronous setState inside effect warning
-			const initForm = () => {
-				setTabValue(0);
-				dispatch(fetchFields('counseling'));
-
-				if (initialData) {
-					// Get assigned_to and remarks from others if not at root
-					const othersValues = initialData.others || {};
-					setFormData({
-						...initialData,
-						skills: initialData.skills || [],
-						questions: initialData.questions || [],
-						others: initialData.others || {},
-						workexperience: initialData.workexperience || [],
-						counseling_date: initialData.counseling_date ? initialData.counseling_date.split('T')[0] : new Date().toISOString().split('T')[0],
-						status: initialData.status || 'pending',
-						suitable_job_roles: initialData.suitable_job_roles || [],
-						assigned_to: Array.isArray(initialData.assigned_to) ? initialData.assigned_to : 
-									(initialData.assigned_to ? [initialData.assigned_to] : 
-									(Array.isArray(othersValues.assigned_to) ? othersValues.assigned_to : 
-									(othersValues.assigned_to ? [othersValues.assigned_to] : []))),
-						remarks: initialData.remarks || othersValues.remarks || ''
-					});
-				} else {
-					const defaultQuestions = PREDEFINED_QUESTIONS.map(q => ({
-						question: q,
-						answer: ''
-					}));
-					setFormData({
-						skills: [],
-						feedback: '',
-						questions: defaultQuestions,
-						status: 'pending',
-						counselor_name: user ? (user.full_name || user.username) : '',
-						counseling_date: new Date().toISOString().split('T')[0],
-						others: {},
-						workexperience: [],
-						suitable_job_roles: [],
-						assigned_to: [],
-						remarks: ''
-					});
-				}
-			};
-
-			const timer = setTimeout(initForm, 0);
-			return () => clearTimeout(timer);
+			if (initialData) {
+				const othersValues = initialData.others || {};
+				setFormData({
+					...initialData,
+					skills: initialData.skills || [],
+					questions: initialData.questions || [],
+					others: initialData.others || {},
+					workexperience: initialData.workexperience || [],
+					counseling_date: initialData.counseling_date ? initialData.counseling_date.split('T')[0] : new Date().toISOString().split('T')[0],
+					status: initialData.status || 'pending',
+					suitable_job_roles: initialData.suitable_job_roles || [],
+					assigned_to: Array.isArray(initialData.assigned_to) ? initialData.assigned_to : 
+								(initialData.assigned_to ? [initialData.assigned_to] : 
+								(Array.isArray(othersValues.assigned_to) ? othersValues.assigned_to : 
+								(othersValues.assigned_to ? [othersValues.assigned_to] : []))),
+					remarks: initialData.remarks || othersValues.remarks || ''
+				});
+			} else {
+				const defaultQuestions = PREDEFINED_QUESTIONS.map(q => ({
+					question: q,
+					answer: ''
+				}));
+				setFormData({
+					skills: [],
+					feedback: '',
+					questions: defaultQuestions,
+					status: 'pending',
+					counselor_name: user ? (user.full_name || user.username) : '',
+					counseling_date: new Date().toISOString().split('T')[0],
+					others: {},
+					workexperience: [],
+					suitable_job_roles: [],
+					assigned_to: [],
+					remarks: ''
+				});
+			}
+			setShowErrors(false);
 		}
 	}, [initialData, open, user, dispatch]);
-
-	const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-		setTabValue(newValue);
-	};
 
 	const handleChange = (field: string, value: unknown) => {
 		setFormData((prev) => ({ ...prev, [field]: value }));
@@ -235,10 +186,12 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 	};
 
 	const handleSubmit = () => {
+		const userRole = user?.role || '';
+		const isManagerOrAdmin = userRole === 'admin' || userRole === 'manager' || userRole === 'sourcing';
+		
 		// Validation for Assignment/Remarks (Manager/Admin Only)
 		if (isManagerOrAdmin && (!formData.assigned_to || formData.assigned_to.length === 0) && !formData.remarks) {
 			setShowErrors(true);
-			setTabValue(3); // Switch to Counseling Info tab
 			return;
 		}
 
@@ -250,6 +203,66 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 		onClose();
 	};
 
+	const steps: FormStep[] = useMemo(() => [
+		{
+			label: 'Skill Assessment',
+			content: (
+				<SkillAssessmentTab
+					formData={formData}
+					onAddSkill={handleAddSkill}
+					onRemoveSkill={handleRemoveSkill}
+					onSkillChange={handleSkillChange}
+				/>
+			)
+		},
+		{
+			label: 'Work Experience',
+			content: (
+				<WorkExperienceTab
+					formData={formData}
+					onAddWorkExp={handleAddWorkExp}
+					onRemoveWorkExp={handleRemoveWorkExp}
+					onWorkExpChange={handleUpdateWorkExpField}
+					candidateWorkExperience={candidateWorkExperience}
+				/>
+			)
+		},
+		{
+			label: 'Interview & Feedback',
+			content: (
+				<InterviewFeedbackTab
+					formData={formData}
+					onAddQuestion={handleAddQuestion}
+					onRemoveQuestion={handleRemoveQuestion}
+					onQuestionChange={handleQuestionChange}
+					onFeedbackChange={(val) => handleChange('feedback', val)}
+					onJobRolesChange={(roles) => handleChange('suitable_job_roles', roles)}
+				/>
+			)
+		},
+		{
+			label: 'Counseling Info',
+			content: (
+				<CounselingInfoTab
+					formData={formData}
+					onFieldChange={handleChange}
+					onUpdateOtherField={handleUpdateOtherField}
+					dynamicFields={dynamicFields}
+					batchTags={batchTags}
+					userRole={user?.role}
+					showErrors={showErrors}
+				/>
+			)
+		}
+	], [formData, dynamicFields, batchTags, user, showErrors]);
+
+	const counselorName = initialData?.counselor_name || user?.full_name || user?.username || '—';
+	const dateString = formData.counseling_date
+		? new Date(formData.counseling_date).toLocaleDateString()
+		: new Date().toLocaleDateString();
+
+	const subtitle = `${candidateName || 'New Candidate'} • Counselor: ${counselorName} • Date: ${dateString}`;
+
 	return (
 		<Dialog
 			open={open}
@@ -258,165 +271,25 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 				onClose();
 			}}
 			disableEscapeKeyDown
-			maxWidth="md"
+			maxWidth="lg"
 			fullWidth
-			scroll="paper"
-			PaperProps={{
-				sx: {
-					borderRadius: 0,
-					boxShadow: 'none',
-					border: '1px solid #d5dbdb'
-				}
-			}}
+			PaperProps={{ sx: { borderRadius: '4px', bgcolor: 'transparent', boxShadow: 'none' } }}
 		>
-			<DialogTitle sx={{ bgcolor: '#232f3e', color: '#ffffff', py: 2 }}>
-				<Stack direction="row" justifyContent="space-between" alignItems="center">
-					<Box sx={{ flex: 1 }}>
-						<Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5, lineHeight: 1.2 }}>
-							{initialData ? 'Edit Candidate Counseling' : 'New Candidate Counseling'}
-						</Typography>
-						<Stack direction="row" spacing={3} alignItems="center" sx={{ opacity: 0.85 }}>
-							<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-								<PersonIcon sx={{ fontSize: 16 }} />
-								<Typography variant="caption" sx={{ fontSize: '0.875rem' }}>
-									{candidateName || 'New Candidate'}
-								</Typography>
-							</Box>
-							{formData.counselor_name && (
-								<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-									<CounselorIcon sx={{ fontSize: 16 }} />
-									<Typography variant="caption" sx={{ fontSize: '0.875rem' }}>
-										<Typography component="span" variant="caption" sx={{ fontWeight: 600, mr: 0.5 }}>
-											{initialData ? 'Counseled By:' : 'Counselor:'}
-										</Typography>
-										{formData.counselor_name}
-									</Typography>
-								</Box>
-							)}
-							<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-								<DateIcon sx={{ fontSize: 16 }} />
-								<Typography variant="caption" sx={{ fontSize: '0.875rem' }}>
-									<Typography component="span" variant="caption" sx={{ fontWeight: 600, mr: 0.5 }}>Date:</Typography>
-									{formData.counseling_date
-										? new Date(formData.counseling_date).toLocaleDateString()
-										: new Date().toLocaleDateString()}
-								</Typography>
-							</Box>
-						</Stack>
-					</Box>
-					<IconButton onClick={onClose} sx={{ color: '#ffffff' }}>
-						<CloseIcon />
-					</IconButton>
-				</Stack>
-			</DialogTitle>
-
-			<Box sx={{ borderBottom: 1, borderColor: '#d5dbdb', bgcolor: '#ffffff' }}>
-				<Tabs
-					value={tabValue}
-					onChange={handleTabChange}
-					variant="fullWidth"
-					sx={{
-						px: 2,
-						'& .MuiTabs-indicator': { backgroundColor: '#ec7211', height: 3 },
-						'& .MuiTab-root': {
-							textTransform: 'none',
-							fontWeight: 700,
-							fontSize: '0.875rem',
-							color: '#545b64',
-							'&.Mui-selected': { color: '#ec7211' }
-						}
-					}}
-				>
-					<Tab label="1. Skill Assessment" />
-					<Tab label="2. Work Experience" />
-					<Tab label="3. Interview & Feedback" />
-					<Tab label="4. Counseling Info" />
-				</Tabs>
-			</Box>
-
-			<DialogContent sx={{ p: 0, bgcolor: '#f2f3f3' }}>
-
-				<Box sx={{ px: 4, py: 2 }}>
-					{loadingFields && tabValue === 2 ? (
-						<Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-							<CircularProgress size={24} sx={{ color: '#ec7211' }} />
-						</Box>
-					) : (
-						<>
-							<TabPanel value={tabValue} index={0}>
-								<SkillAssessmentTab
-									formData={formData}
-									onAddSkill={handleAddSkill}
-									onRemoveSkill={handleRemoveSkill}
-									onSkillChange={handleSkillChange}
-								/>
-							</TabPanel>
-
-							<TabPanel value={tabValue} index={1}>
-								<WorkExperienceTab
-									formData={formData}
-									onAddWorkExp={handleAddWorkExp}
-									onRemoveWorkExp={handleRemoveWorkExp}
-									onWorkExpChange={handleUpdateWorkExpField}
-									candidateWorkExperience={candidateWorkExperience}
-								/>
-							</TabPanel>
-
-							<TabPanel value={tabValue} index={2}>
-								<InterviewFeedbackTab
-									formData={formData}
-									onAddQuestion={handleAddQuestion}
-									onRemoveQuestion={handleRemoveQuestion}
-									onQuestionChange={handleQuestionChange}
-									onFeedbackChange={(val) => handleChange('feedback', val)}
-									onJobRolesChange={(roles) => handleChange('suitable_job_roles', roles)}
-								/>
-							</TabPanel>
-
-							<TabPanel value={tabValue} index={3}>
-								<CounselingInfoTab
-									formData={formData}
-									onFieldChange={handleChange}
-									onUpdateOtherField={handleUpdateOtherField}
-									dynamicFields={dynamicFields}
-									batchTags={batchTags}
-									userRole={user?.role}
-									showErrors={showErrors}
-								/>
-							</TabPanel>
-						</>
-					)}
+			{loadingFields ? (
+				<Box sx={{ display: 'flex', justifyContent: 'center', p: 8, bgcolor: 'white', borderRadius: '4px' }}>
+					<CircularProgress />
 				</Box>
-			</DialogContent>
-
-			<Divider sx={{ borderColor: '#d5dbdb' }} />
-			<DialogActions sx={{ p: 3, bgcolor: '#ffffff' }}>
-				<Button
-					onClick={onClose}
-					variant="text"
-					sx={{ color: '#545b64', fontWeight: 700, px: 3, textTransform: 'none' }}
-				>
-					Cancel
-				</Button>
-				<Button
-					onClick={handleSubmit}
-					variant="contained"
-					sx={{
-						bgcolor: '#ec7211',
-						color: '#ffffff',
-						px: 4,
-						py: 1,
-						fontWeight: 700,
-						borderRadius: '2px',
-						textTransform: 'none',
-						border: '1px solid #ec7211',
-						'&:hover': { bgcolor: '#eb5f07', borderColor: '#eb5f07' },
-						boxShadow: 'none'
-					}}
-				>
-					{initialData ? 'Update Counseling' : 'Save Counseling'}
-				</Button>
-			</DialogActions>
+			) : (
+				<EnterpriseForm
+					title="Candidate Counseling"
+					subtitle={subtitle}
+					mode={initialData ? 'edit' : 'create'}
+					steps={steps}
+					onSave={handleSubmit}
+					onCancel={onClose}
+					saveButtonText={initialData ? 'Update Counseling' : 'Save Counseling'}
+				/>
+			)}
 		</Dialog>
 	);
 };
