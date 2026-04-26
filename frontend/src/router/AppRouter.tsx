@@ -20,8 +20,8 @@ import WeeklyTrainingPlanPage from '../pages/training/WeeklyTrainingPlanPage';
 import SuccessPage from '../pages/common/SuccessPage';
 import NotFoundPage from '../pages/common/NotFoundPage';
 import MaintenancePage from '../pages/common/MaintenancePage';
-import DocumentCollectionList from '../pages/documents/DocumentCollectionList';
-import DocumentCollection from '../pages/documents/DocumentCollection';
+import DocumentList from '../pages/documents/DocumentList';
+import DocumentDetail from '../pages/documents/DocumentDetail';
 import ConsentFormPage from '../pages/public/ConsentFormPage';
 import CandidateDetail from '../pages/Candidates/CandidateDetail';
 import CandidateEdit from '../pages/Candidates/CandidateEdit';
@@ -69,8 +69,8 @@ const AppRouter: React.FC = () => {
 						<Route path="list" element={<CandidateList />} />
 						<Route path="screening" element={<ScreeningList />} />
 						<Route path="counseling" element={<CounselingList />} />
-						<Route path="documents" element={<DocumentCollectionList />} />
-						<Route path="documents/:id" element={<DocumentCollection />} />
+						<Route path="documents" element={<DocumentList />} />
+						<Route path="documents/:id" element={<DocumentDetail />} />
 						<Route path="edit/:publicId" element={<CandidateEdit />} />
 						<Route path=":publicId" element={<CandidateDetail />} />
 					</Route>
