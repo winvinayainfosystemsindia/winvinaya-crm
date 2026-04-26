@@ -31,7 +31,7 @@ import CRMTable from '../common/CRMTable';
 import CRMStatusBadge from '../common/CRMStatusBadge';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
 import ConfirmDialog from '../../common/ConfirmDialog';
-import StatCard from '../../common/StatCard';
+import StatCard from '../../common/stats/StatCard';
 import CRMRowActions from '../common/CRMRowActions';
 import type { Lead } from '../../../models/lead';
 import { useSnackbar } from 'notistack';

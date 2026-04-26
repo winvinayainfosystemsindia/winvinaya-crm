@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Box, useTheme } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchCandidateStats } from '../../../store/slices/candidateSlice';
-import StatCard from '../../common/StatCard';
+import StatCard from '../../common/stats/StatCard';
 import {
 	Description as FilesIcon,
 	CheckCircle as CompleteIcon,

@@ -2,7 +2,7 @@ import React, { useEffect, memo } from 'react';
 import { Box, Typography, Divider, Grid, Stack } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { fetchTrainingStats } from '../../../../store/slices/trainingSlice';
-import StatCard from '../../../common/StatCard';
+import StatCard from '../../../common/stats/StatCard';
 import {
 	BatchPrediction,
 	Group,

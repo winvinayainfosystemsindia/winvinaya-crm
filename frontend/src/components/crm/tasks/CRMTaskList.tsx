@@ -33,7 +33,7 @@ import CRMTable from '../common/CRMTable';
 import CRMTaskFormDialog from './CRMTaskFormDialog';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
 import ConfirmDialog from '../../common/ConfirmDialog';
-import StatCard from '../../common/StatCard';
+import StatCard from '../../common/stats/StatCard';
 import CRMRowActions from '../common/CRMRowActions';
 import type { CRMTask } from '../../../models/crmTask';
 import { useSnackbar } from 'notistack';

@@ -18,7 +18,7 @@ import {
 	MonetizationOn as DealIcon,
 	Info as InfoIcon
 } from '@mui/icons-material';
-import StatCard from '../../../common/StatCard';
+import StatCard from '../../../common/stats/StatCard';
 import type { Company } from '../../../../models/company';
 
 interface OverviewTabProps {

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Box, Link, Popover, useTheme, Typography, Stack, Tooltip, Skeleton } from '@mui/material';
 import { People, SupervisorAccount, CheckCircle, Block, InfoOutlined } from '@mui/icons-material';
 import api from '../../../services/api';
-import StatCard from '../../common/StatCard';
+import StatCard from '../../common/stats/StatCard';
 
 interface UserStats {
 	total: number;

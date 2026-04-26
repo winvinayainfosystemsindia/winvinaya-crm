@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, useTheme } from '@mui/material';
-import StatCard from '../../common/StatCard';
+import StatCard from '../../common/stats/StatCard';
 import { Assignment, PendingActions, CheckCircle, Cancel } from '@mui/icons-material';
 import { useAppSelector } from '../../../store/hooks';
 

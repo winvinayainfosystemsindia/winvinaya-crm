@@ -3,7 +3,7 @@ import { Box, Typography } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 import StatusDay from './StatusDay';
-import StatCard from '../../../common/StatCard';
+import StatCard from '../../../common/stats/StatCard';
 
 interface ReportingHeaderProps {
 	reportDate: string;

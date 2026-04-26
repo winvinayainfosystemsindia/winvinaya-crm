@@ -21,7 +21,7 @@ import {
 	Badge as TrainerIcon,
 	Info as InfoIcon
 } from '@mui/icons-material';
-import StatCard from '../../../common/StatCard';
+import StatCard from '../../../common/stats/StatCard';
 
 interface WeeklyPlanStatsProps {
 	hoursBreakdown: {

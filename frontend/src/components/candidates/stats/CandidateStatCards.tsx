@@ -22,7 +22,7 @@ const StatSparkLine = ({ color, data }: { color: string, data: number[] }) => (
 	</Box>
 );
 
-import StatCard from '../../common/StatCard';
+import StatCard from '../../common/stats/StatCard';
 
 const CandidateStatCards: React.FC<CandidateStatCardsProps> = ({ stats }) => {
 	const theme = useTheme();

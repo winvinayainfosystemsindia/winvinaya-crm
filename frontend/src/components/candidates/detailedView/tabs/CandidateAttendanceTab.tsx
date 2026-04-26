@@ -32,7 +32,7 @@ import {
 } from '@mui/icons-material';
 import { useDateTime } from '../../../../hooks/useDateTime';
 import { SectionHeader, SectionCard } from '../DetailedViewCommon';
-import StatCard from '../../../common/StatCard';
+import StatCard from '../../../common/stats/StatCard';
 import trainingExtensionService from '../../../../services/trainingExtensionService';
 import type { TrainingAttendance } from '../../../../models/training';
 import type { Candidate } from '../../../../models/candidate';

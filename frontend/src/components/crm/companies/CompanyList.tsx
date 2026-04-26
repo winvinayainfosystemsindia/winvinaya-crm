@@ -28,7 +28,7 @@ import CRMStatusBadge from '../common/CRMStatusBadge';
 import CompanyFormDialog from './CompanyFormDialog';
 import ConfirmDialog from '../../common/ConfirmDialog';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
-import StatCard from '../../common/StatCard';
+import StatCard from '../../common/stats/StatCard';
 import CRMRowActions from '../common/CRMRowActions';
 import CRMAvatar from '../common/CRMAvatar';
 import type { CompanyCreate, CompanyUpdate, Company } from '../../../models/company';

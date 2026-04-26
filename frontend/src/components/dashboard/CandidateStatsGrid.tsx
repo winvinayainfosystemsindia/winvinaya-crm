@@ -4,7 +4,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import SchoolIcon from '@mui/icons-material/School';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import StatCard from '../common/StatCard';
+import StatCard from '../common/stats/StatCard';
 
 interface CandidateStatsGridProps {
 	stats: {

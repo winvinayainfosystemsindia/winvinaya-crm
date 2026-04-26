@@ -6,7 +6,7 @@ import {
 	Visibility as VisibilityIcon,
 	Groups as VacancyIcon,
 } from '@mui/icons-material';
-import StatCard from '../../../common/StatCard';
+import StatCard from '../../../common/stats/StatCard';
 import { JOB_ROLE_STATUS } from '../../../../models/jobRole';
 
 interface JobRoleStatsProps {

@@ -6,7 +6,7 @@ import {
 	DoneAll as CompletedIcon,
 	EventNote as PlannedIcon
 } from '@mui/icons-material';
-import StatCard from '../../../common/StatCard';
+import StatCard from '../../../common/stats/StatCard';
 import dsrActivityService from '../../../../services/dsrActivityService';
 import { DSRActivityStatusValues } from '../../../../models/dsr';
 

@@ -6,7 +6,7 @@ import {
 	ListAlt as ActivityIcon,
 	DoneAll as CompletedIcon
 } from '@mui/icons-material';
-import StatCard from '../../../common/StatCard';
+import StatCard from '../../../common/stats/StatCard';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { fetchProjectManagementStats } from '../../../../store/slices/dsrSlice';
 
