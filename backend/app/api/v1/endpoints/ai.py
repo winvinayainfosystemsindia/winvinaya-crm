@@ -33,9 +33,14 @@ from app.ai.schemas import (
     AITaskLogRead,
     AITaskLogListItem,
     JobRoleExtractionResponse,
+    CandidateExtractionResponse,
     ToolDefinition,
 )
-from app.ai.services.extraction_service import JobRoleExtractionService
+from app.ai.services.extraction_service import (
+    JobRoleExtractionService, 
+    CandidateExtractionService,
+    SkillRecommendationService
+)
 from app.core.config import settings
 from app.models.ai_task_log import AITaskStatus
 from app.models.user import User
@@ -256,3 +261,74 @@ async def extract_job_role(
     except Exception as e:
         logger.exception("JD extraction failed")
         raise HTTPException(status_code=500, detail="AI extraction failed unexpectedly.")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# POST /ai/extract/candidate — Parse Resume
+# ─────────────────────────────────────────────────────────────────────────────
+
+@router.post(
+    "/extract/candidate",
+    response_model=CandidateExtractionResponse,
+    summary="Extract Candidate details from Resume",
+    description=(
+        "Uses the AI Engine to parse unstructured resume text or PDF into "
+        "structured Candidate fields, including skills and training history."
+    ),
+)
+async def extract_candidate(
+    resume_text: Optional[str] = Form(None),
+    file: Optional[UploadFile] = File(None),
+    document_id: Optional[int] = Form(None),
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+) -> CandidateExtractionResponse:
+    if not settings.AI_ENABLED:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="AI Engine is disabled.",
+        )
+
+    extractor = CandidateExtractionService(db, current_user)
+    try:
+        file_bytes = None
+        if file:
+            file_bytes = await file.read()
+            
+        result = await extractor.extract_from_source(
+            resume_text=resume_text, 
+            pdf_file=file_bytes,
+            document_id=document_id
+        )
+        return CandidateExtractionResponse(**result)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("Candidate extraction failed")
+        raise HTTPException(status_code=500, detail="AI extraction failed unexpectedly.")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GET /ai/recommendations/skills — Smart Tagging
+# ─────────────────────────────────────────────────────────────────────────────
+
+@router.get(
+    "/recommendations/skills",
+    response_model=list[str],
+    summary="Get skill recommendations (Smart Tagging)",
+    description=(
+        "Compares current candidate skills with high-demand skills from "
+        "active Job Roles to identify gaps and suggest valuable tags."
+    ),
+)
+async def get_skill_recommendations(
+    skills: list[str] = Query([]),
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+) -> list[str]:
+    service = SkillRecommendationService(db, current_user)
+    try:
+        return await service.get_recommendations(skills)
+    except Exception as e:
+        logger.exception("Skill recommendation failed")
+        raise HTTPException(status_code=500, detail="Failed to generate skill recommendations.")

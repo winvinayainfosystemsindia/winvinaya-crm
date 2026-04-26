@@ -72,6 +72,28 @@ export const fetchAITasks = createAsyncThunk(
   }
 );
 
+export const extractCandidateData = createAsyncThunk(
+  'ai/extractCandidate',
+  async ({ resumeText, file, documentId }: { resumeText?: string; file?: File; documentId?: number }, { rejectWithValue }) => {
+    try {
+      return await aiService.extractCandidate(resumeText, file, documentId);
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.detail || 'AI Extraction failed');
+    }
+  }
+);
+
+export const getSkillRecommendations = createAsyncThunk(
+  'ai/getSkillRecommendations',
+  async (skills: string[], { rejectWithValue }) => {
+    try {
+      return await aiService.getSkillRecommendations(skills);
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.detail || 'Failed to fetch recommendations');
+    }
+  }
+);
+
 // ── Slice ────────────────────────────────────────────────────────────────────
 
 const aiSlice = createSlice({

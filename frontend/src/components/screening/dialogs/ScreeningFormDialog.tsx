@@ -8,9 +8,12 @@ import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import useToast from '../../../hooks/useToast';
 import { uploadDocument, downloadDocument, sendConsentEmail } from '../../../store/slices/candidateSlice';
 import { fetchFields } from '../../../store/slices/settingsSlice';
+import { extractCandidateData } from '../../../store/slices/aiSlice';
 import EnterpriseForm, { type FormStep } from '../../common/form/EnterpriseForm';
 import type { CandidateScreeningCreate } from '../../../models/candidate';
 import { useDateTime } from '../../../hooks/useDateTime';
+import { Button, Tooltip, alpha, useTheme } from '@mui/material';
+import { AutoAwesome as MagicIcon } from '@mui/icons-material';
 
 // Tabs
 import BackgroundTrainingTab from './tabs/BackgroundTrainingTab';
@@ -42,6 +45,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 	onRefresh
 }) => {
 	const dispatch = useAppDispatch();
+	const theme = useTheme();
 	const toast = useToast();
 	const { formatDate } = useDateTime();
 	const dynamicFields = useAppSelector(state => state.settings.fields.screening) || [];
@@ -54,6 +58,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 	const [viewing, setViewing] = useState<Record<string, boolean>>({});
 	const [sendingConsent, setSendingConsent] = useState(false);
 	const [refreshing, setRefreshing] = useState(false);
+	const [extracting, setExtracting] = useState(false);
 
 	const [formData, setFormData] = useState<CandidateScreeningCreate>({
 		status: 'In Progress',
@@ -316,6 +321,39 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 		}
 	};
 
+	const handleMagicFill = async () => {
+		const resumeId = formData.documents_upload?.resume_id;
+		if (!resumeId) {
+			toast.info('Please upload a resume first to use Magic Fill.');
+			return;
+		}
+
+		setExtracting(true);
+		try {
+			const result = await dispatch(extractCandidateData({ documentId: resumeId })).unwrap();
+			const aiData = result.data;
+
+			setFormData(prev => ({
+				...prev,
+				skills: {
+					technical_skills: Array.from(new Set([...(prev.skills?.technical_skills || []), ...(aiData.skills?.technical_skills || [])])),
+					soft_skills: Array.from(new Set([...(prev.skills?.soft_skills || []), ...(aiData.skills?.soft_skills || [])])),
+				},
+				previous_training: {
+					attended_any_training: aiData.training_history?.attended_any_training || prev.previous_training?.attended_any_training || false,
+					training_details: aiData.training_history?.details || prev.previous_training?.training_details || '',
+					is_winvinaya_student: prev.previous_training?.is_winvinaya_student || false
+				}
+			}));
+
+			toast.success('Magic Fill completed! AI extracted skills and training history.');
+		} catch (error: any) {
+			toast.error(error || 'AI Extraction failed. Please try again or fill manually.');
+		} finally {
+			setExtracting(false);
+		}
+	};
+
 	const handleSubmit = () => {
 		onSubmit(formData);
 		onClose();
@@ -402,6 +440,39 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 					onSave={handleSubmit}
 					onCancel={onClose}
 					saveButtonText={initialData ? 'Update Screening' : 'Save Screening'}
+					headerActions={
+						<Tooltip title="AI Magic Fill: Populate form from Resume" arrow>
+							<span>
+								<Button
+									variant="text"
+									size="small"
+									startIcon={<MagicIcon sx={{ fontSize: '1rem !important' }} />}
+									onClick={handleMagicFill}
+									disabled={extracting || !formData.documents_upload?.resume_id}
+									sx={{
+										color: theme.palette.primary.main,
+										fontWeight: 800,
+										fontSize: '0.65rem',
+										py: 0,
+										minHeight: 24,
+										borderRadius: '4px',
+										textTransform: 'uppercase',
+										letterSpacing: '0.05em',
+										bgcolor: alpha(theme.palette.primary.main, 0.05),
+										'&:hover': {
+											bgcolor: alpha(theme.palette.primary.main, 0.1),
+										},
+										'&.Mui-disabled': {
+											color: alpha(theme.palette.text.disabled, 0.4),
+											bgcolor: alpha(theme.palette.text.disabled, 0.05),
+										}
+									}}
+								>
+									{extracting ? 'Extracting...' : 'Magic Fill'}
+								</Button>
+							</span>
+						</Tooltip>
+					}
 				/>
 			)}
 		</Dialog>

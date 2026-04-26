@@ -181,3 +181,187 @@ class JobRoleExtractionService:
                         suggestions["contact_name"] = f"{contacts[0].first_name} {contacts[0].last_name}"
 
         return suggestions
+
+
+class CandidateExtractionService:
+    """
+    Service for extracting Candidate details from Resumes.
+    """
+
+    def __init__(self, db, user):
+        self._db = db
+        self._user = user
+
+    async def extract_from_source(
+        self, 
+        resume_text: str = None, 
+        pdf_file: bytes = None,
+        document_id: int = None
+    ) -> Dict[str, Any]:
+        """
+        Extracts structured candidate data from text, PDF bytes, or a document ID.
+        """
+        # 1. Prepare source text
+        source_text = resume_text or ""
+        
+        # If document_id is provided, fetch it from DB
+        if document_id:
+            from app.repositories.candidate_document_repository import CandidateDocumentRepository
+            import os
+            
+            repo = CandidateDocumentRepository(self._db)
+            doc = await repo.get(document_id)
+            if not doc:
+                raise ValueError(f"Document {document_id} not found.")
+            
+            # Read file from filesystem
+            if os.path.exists(doc.file_path):
+                with open(doc.file_path, "rb") as f:
+                    pdf_file = f.read()
+            else:
+                logger.error(f"File not found at path: {doc.file_path}")
+
+        if pdf_file:
+            import io
+            import PyPDF2
+            try:
+                reader = PyPDF2.PdfReader(io.BytesIO(pdf_file))
+                pdf_text = ""
+                for page in reader.pages:
+                    pdf_text += page.extract_text() + "\n"
+                source_text = (resume_text + "\n" + pdf_text) if resume_text else pdf_text
+            except Exception as e:
+                logger.error(f"Failed to extract text from PDF: {str(e)}")
+
+        if not source_text.strip():
+            raise ValueError("No text provided for extraction.")
+
+        # 2. Render Prompt using Jinja2
+        system_prompt = loader.render("extraction/candidate_extraction.md", {
+            "DISABILITY_TYPES": DISABILITY_TYPES,
+            "QUALIFICATIONS": QUALIFICATIONS,
+            "COMMON_SKILLS": COMMON_SKILLS
+        })
+
+        # 3. Call LLM
+        provider = await get_llm_provider(self._db)
+        response = await provider.complete(
+            system_prompt=system_prompt,
+            user_message=f"Analyze this Resume and extract the fields:\n\n{source_text}",
+            temperature=0.1
+        )
+
+        # 4. Parse & Clean
+        try:
+            extracted_data = self._parse_json(response.content)
+            extracted_data = await self._post_process(extracted_data)
+        except Exception as e:
+            logger.error(f"Failed to parse extraction response: {str(e)}")
+            raise ValueError("AI failed to return valid structured data. Please try again.")
+
+        return {
+            "data": extracted_data,
+            "raw_content": response.content
+        }
+
+    def _parse_json(self, content: str) -> Dict[str, Any]:
+        """Robustly extracts JSON from LLM response."""
+        import re
+        content = content.strip()
+        json_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', content, re.DOTALL)
+        if json_match:
+            return json.loads(json_match.group(1).strip())
+        
+        first_brace = content.find('{')
+        last_brace = content.rfind('}')
+        if first_brace != -1 and last_brace != -1:
+            return json.loads(content[first_brace:last_brace+1])
+            
+        return json.loads(content)
+
+    async def _post_process(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Ensures all extracted skills exist in the DB."""
+        skills = data.get("skills", {})
+        tech_skills = skills.get("technical_skills", [])
+        soft_skills = skills.get("soft_skills", [])
+        
+        if tech_skills or soft_skills:
+            skill_repo = SkillRepository(self._db)
+            
+            # Sync Technical Skills
+            final_tech = []
+            for sname in tech_skills:
+                if not sname or not isinstance(sname, str): continue
+                existing = await skill_repo.get_by_name(sname.strip())
+                if existing:
+                    final_tech.append(existing.name)
+                else:
+                    try:
+                        new_skill = await skill_repo.create({"name": sname.strip()})
+                        await self._db.commit()
+                        final_tech.append(new_skill.name)
+                    except Exception:
+                        await self._db.rollback()
+                        final_tech.append(sname)
+            
+            # Sync Soft Skills
+            final_soft = []
+            for sname in soft_skills:
+                if not sname or not isinstance(sname, str): continue
+                existing = await skill_repo.get_by_name(sname.strip())
+                if existing:
+                    final_soft.append(existing.name)
+                else:
+                    try:
+                        new_skill = await skill_repo.create({"name": sname.strip()})
+                        await self._db.commit()
+                        final_soft.append(new_skill.name)
+                    except Exception:
+                        await self._db.rollback()
+                        final_soft.append(sname)
+
+            data["skills"]["technical_skills"] = list(set(final_tech))
+            data["skills"]["soft_skills"] = list(set(final_soft))
+            
+        return data
+
+
+class SkillRecommendationService:
+    """
+    Service for identifying skill gaps and recommending tags.
+    """
+
+    def __init__(self, db, user):
+        self._db = db
+        self._user = user
+
+    async def get_recommendations(self, candidate_skills: list[str]) -> list[str]:
+        """
+        Suggests high-demand skills the candidate might be missing.
+        """
+        from app.repositories.job_role_repository import JobRoleRepository
+        from app.models.job_role import JobRoleStatus
+        from collections import Counter
+
+        # 1. Fetch active job roles to see what's in demand
+        jr_repo = JobRoleRepository(self._db)
+        active_roles = await jr_repo.get_multi_with_filters(status=JobRoleStatus.ACTIVE, limit=50)
+        
+        # 2. Aggregate skills from these roles
+        demand_skills = []
+        for role in active_roles:
+            reqs = role.requirements or {}
+            skills = reqs.get("skills", [])
+            demand_skills.extend([s.lower().strip() for s in skills if isinstance(s, str)])
+        
+        if not demand_skills:
+            return []
+
+        # 3. Get most frequent skills
+        common_demand = [s for s, count in Counter(demand_skills).most_common(20)]
+        
+        # 4. Filter out skills the candidate already has
+        candidate_skills_lower = [s.lower().strip() for s in candidate_skills]
+        recommendations = [s.title() for s in common_demand if s not in candidate_skills_lower]
+        
+        return recommendations[:10]  # Return top 10 suggestions

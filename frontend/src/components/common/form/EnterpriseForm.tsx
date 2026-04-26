@@ -14,6 +14,7 @@ interface EnterpriseFormProps {
 	saveButtonText?: string;
 	error?: string | null;
 	onDelete?: () => void;
+	headerActions?: React.ReactNode;
 }
 
 /**
@@ -31,7 +32,8 @@ const EnterpriseForm: React.FC<EnterpriseFormProps> = ({
 	isSubmitting = false,
 	saveButtonText,
 	error,
-	onDelete
+	onDelete,
+	headerActions
 }) => {
 	const theme = useTheme();
 	const [activeStep, setActiveStep] = useState(0);
@@ -81,6 +83,7 @@ const EnterpriseForm: React.FC<EnterpriseFormProps> = ({
 				steps={steps}
 				onStepClick={handleStepClick}
 				onClose={onCancel}
+				headerActions={headerActions}
 			/>
 
 			<Box sx={{

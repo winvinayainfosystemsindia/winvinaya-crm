@@ -23,6 +23,7 @@ from app.ai.schemas.responses import (
     AITaskLogRead,
     AITaskLogListItem,
     JobRoleExtractionResponse,
+    CandidateExtractionResponse,
 )
 
 __all__ = [
@@ -38,4 +39,5 @@ __all__ = [
     "AITaskLogRead",
     "AITaskLogListItem",
     "JobRoleExtractionResponse",
+    "CandidateExtractionResponse",
 ]

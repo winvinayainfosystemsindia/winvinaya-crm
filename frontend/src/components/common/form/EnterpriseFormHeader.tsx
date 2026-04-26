@@ -28,6 +28,7 @@ interface EnterpriseFormHeaderProps {
 	steps: FormStep[];
 	onStepClick?: (step: number) => void;
 	onClose?: () => void;
+	headerActions?: React.ReactNode;
 }
 
 /**
@@ -81,7 +82,8 @@ const EnterpriseFormHeader: React.FC<EnterpriseFormHeaderProps> = ({
 	activeStep,
 	steps,
 	onStepClick,
-	onClose
+	onClose,
+	headerActions
 }) => {
 	const theme = useTheme();
 	const progress = ((activeStep + 1) / steps.length) * 100;
@@ -148,18 +150,19 @@ const EnterpriseFormHeader: React.FC<EnterpriseFormHeaderProps> = ({
 						)}
 					</Box>
 					{onClose && (
-						<IconButton
-							onClick={onClose}
-							size="small"
-							sx={{
-								color: theme.palette.text.secondary,
-								mt: -0.5,
-								mr: -0.5,
-								'&:hover': { color: theme.palette.error.main, bgcolor: alpha(theme.palette.error.main, 0.05) }
-							}}
-						>
-							<CloseIcon fontSize="small" />
-						</IconButton>
+						<Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: -0.5, mr: -0.5 }}>
+							{headerActions}
+							<IconButton
+								onClick={onClose}
+								size="small"
+								sx={{
+									color: theme.palette.text.secondary,
+									'&:hover': { color: theme.palette.error.main, bgcolor: alpha(theme.palette.error.main, 0.05) }
+								}}
+							>
+								<CloseIcon fontSize="small" />
+							</IconButton>
+						</Box>
 					)}
 				</Box>
 

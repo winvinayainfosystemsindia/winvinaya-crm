@@ -79,3 +79,9 @@ class JobRoleExtractionResponse(BaseModel):
     data: dict
     suggestions: dict
     raw_content: str | None = None
+
+
+class CandidateExtractionResponse(BaseModel):
+    """Result of Candidate/Resume extraction."""
+    data: dict
+    raw_content: str | None = None

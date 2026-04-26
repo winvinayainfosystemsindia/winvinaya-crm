@@ -71,6 +71,32 @@ export const aiService = {
     });
     return res.data;
   },
+
+  /** Extract Candidate details from Resume text or PDF file */
+  async extractCandidate(resumeText?: string, file?: File, documentId?: number): Promise<{
+    data: any;
+    raw_content: string | null;
+  }> {
+    const formData = new FormData();
+    if (resumeText) formData.append('resume_text', resumeText);
+    if (file) formData.append('file', file);
+    if (documentId) formData.append('document_id', documentId.toString());
+
+    const res = await api.post(`${BASE}/extract/candidate`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return res.data;
+  },
+
+  /** Get high-demand skill recommendations based on current profile */
+  async getSkillRecommendations(skills: string[]): Promise<string[]> {
+    const params = new URLSearchParams();
+    skills.forEach(s => params.append('skills', s));
+    const res = await api.get(`${BASE}/recommendations/skills`, { params });
+    return res.data;
+  },
 };
 
 export default aiService;
