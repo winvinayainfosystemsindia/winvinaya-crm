@@ -5,12 +5,15 @@ import {
 	TextField,
 	Autocomplete,
 	CircularProgress,
-	Chip
+	Chip,
+	useTheme,
+	alpha,
+	Stack
 } from '@mui/material';
 import { Info as InfoIcon } from '@mui/icons-material';
-import { x0paService } from '../../services/x0paService';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchX0PAJobs } from '../../store/slices/x0paSlice';
 import type { X0PAJob } from '../../services/x0paService';
-import { awsStyles } from '../../theme/theme';
 
 const PAGE_SIZE = 50;
 
@@ -23,70 +26,44 @@ interface JobRoleSearchProps {
 /**
  * JobRoleSearch - Standalone component for professional job role selection.
  * Supports server-side search through the entire X0PA database with lazy loading.
- * - Typing searches X0PA's full dataset via the `searchKey` param.
- * - Scrolling to the bottom of the dropdown loads the next page of results.
+ * Integrated with x0paSlice for store-based state management.
  */
 const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 	value,
 	onChange,
 	placeholder = "Search by job name or company ID..."
 }) => {
-	const { fieldLabel } = awsStyles;
-
+	const theme = useTheme();
+	const dispatch = useAppDispatch();
 	const [inputValue, setInputValue] = useState('');
-	const [jobs, setJobs] = useState<X0PAJob[]>([]);
-	const [loading, setLoading] = useState(false);
-	const [hasMore, setHasMore] = useState(true);
-	const [offset, setOffset] = useState(0);
+	const { jobs, loading } = useAppSelector((state) => state.x0pa);
+	
 	const currentSearch = useRef('');
 	const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-	const fetchJobs = useCallback(async (searchKey: string, newOffset: number, append: boolean) => {
-		setLoading(true);
-		try {
-			const result = await x0paService.getJobs({
-				searchKey: searchKey || undefined,
-				limit: PAGE_SIZE,
-				offset: newOffset,
-			});
-			const fetched = result.jobs || [];
-			setJobs(prev => append ? [...prev, ...fetched] : fetched);
-			setHasMore(fetched.length === PAGE_SIZE);
-			setOffset(newOffset + fetched.length);
-		} catch (e) {
-			// silently fail
-		} finally {
-			setLoading(false);
-		}
-	}, []);
+	const loadJobs = useCallback((searchKey: string, offset: number) => {
+		dispatch(fetchX0PAJobs({
+			searchKey: searchKey || undefined,
+			limit: PAGE_SIZE,
+			offset: offset,
+		}));
+	}, [dispatch]);
 
 	// Debounced search when input changes
 	useEffect(() => {
 		if (debounceTimer.current) clearTimeout(debounceTimer.current);
 		debounceTimer.current = setTimeout(() => {
 			currentSearch.current = inputValue;
-			setOffset(0);
-			setHasMore(true);
-			fetchJobs(inputValue, 0, false);
+			loadJobs(inputValue, 0);
 		}, 400);
 		return () => {
 			if (debounceTimer.current) clearTimeout(debounceTimer.current);
 		};
-	}, [inputValue, fetchJobs]);
-
-	// Load more when user scrolls to bottom of dropdown
-	const handleListboxScroll = useCallback((event: React.UIEvent<HTMLUListElement>) => {
-		const el = event.currentTarget;
-		const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 60;
-		if (nearBottom && !loading && hasMore) {
-			fetchJobs(currentSearch.current, offset, true);
-		}
-	}, [loading, hasMore, offset, fetchJobs]);
+	}, [inputValue, loadJobs]);
 
 	const formatJobRole = (job: X0PAJob | any) => {
 		if (typeof job === 'string') return job;
 		if (!job) return '';
-		// If it's a custom role (no company or status), just return the name
 		if (!job.companyId && !job.statusName) return job.jobName || job.jobId || '';
 		return `${job.jobName} - ${job.companyId} (${job.statusName})`;
 	};
@@ -94,7 +71,6 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 	const parseJobRole = (role: string) => {
 		if (!role) return { jobId: '', jobName: '', companyId: '', statusName: '' } as X0PAJob;
 
-		// Try to parse back from format: Name - Company (Status)
 		if (role.includes(' - ') && role.includes(' (')) {
 			const parts = role.split(' (');
 			const main = parts[0] || '';
@@ -105,32 +81,35 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 			return { jobId: role, jobName: name, companyId: company, statusName: status } as X0PAJob;
 		}
 
-		// Else it's a custom role
 		return { jobId: role, jobName: role, companyId: '', statusName: '' } as X0PAJob;
 	};
 
 	return (
 		<Box>
-			<Typography sx={fieldLabel}>Suitable X0PA Job Roles / Suggested Job Roles</Typography>
+			<Typography variant="awsFieldLabel">Suitable X0PA Job Roles / Suggested Job Roles</Typography>
 			<Box sx={{
 				display: 'flex',
 				gap: 1.5,
-				p: 1.5,
-				bgcolor: '#f1faff',
-				border: '1px solid #007eb9',
-				borderRadius: '2px',
+				p: 2,
+				bgcolor: alpha(theme.palette.info.main, 0.05),
+				border: '1px solid',
+				borderColor: 'info.main',
+				borderRadius: 0.5,
 				mt: 1.5,
-				mb: 1.5,
+				mb: 2,
 				alignItems: 'flex-start'
 			}}>
-				<InfoIcon sx={{ color: '#007eb9', mt: 0.25, fontSize: 20 }} />
-				<Typography variant="body2" sx={{ color: '#007eb9', fontWeight: 400, fontSize: '0.8125rem', lineHeight: 1.5 }}>
-					<strong>Instructions:</strong><br />
-					• If the job role is not found, type your recommendation and press <strong>Enter</strong>.<br />
-					• Please enter only one role at a time and avoid using commas.<br />
-					• Avoid mentioning specific skills in the role name (e.g., use "Full Stack Developer" instead of "Full Stack (React, Node.js)").
-				</Typography>
+				<InfoIcon sx={{ color: 'info.main', mt: 0.25, fontSize: 20 }} />
+				<Box>
+					<Typography variant="subtitle2" sx={{ color: 'info.main', fontWeight: 700, mb: 0.5 }}>Matching Instructions</Typography>
+					<Typography variant="caption" sx={{ color: 'info.main', lineHeight: 1.6, display: 'block' }}>
+						• Type to search the global X0PA registry.<br />
+						• Press <strong>Enter</strong> to add a custom recommendation if not found.<br />
+						• Use formal designations (e.g., "Software Architect" instead of "Lead Dev").
+					</Typography>
+				</Box>
 			</Box>
+
 			<Autocomplete
 				multiple
 				freeSolo
@@ -153,41 +132,38 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 					onChange(roles);
 					setInputValue('');
 				}}
-				ListboxProps={{
-					onScroll: handleListboxScroll as any,
-					style: { maxHeight: 320 }
-				}}
 				renderOption={(props, option) => {
 					const { key, ...optionProps } = props;
+					const isActive = option.statusName?.toLowerCase() === 'active';
 					return (
 						<li {...optionProps} key={key}>
-						<Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center', py: 0.5 }}>
-							<Box sx={{ display: 'flex', flexDirection: 'column' }}>
-								<Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#232f3e' }}>
-									{option.jobName}
-								</Typography>
-								<Typography sx={{ fontSize: '0.75rem', color: '#545b64' }}>
-									Job ID: {option.jobId} {option.companyId ? `| Company: ${option.companyId}` : ''}
-								</Typography>
+							<Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center', py: 0.5 }}>
+								<Stack spacing={0.25}>
+									<Typography variant="body2" sx={{ fontWeight: 700 }}>
+										{option.jobName}
+									</Typography>
+									<Typography variant="caption" color="text.secondary">
+										ID: {option.jobId} {option.companyId ? `| Org: ${option.companyId}` : ''}
+									</Typography>
+								</Stack>
+								<Chip
+									label={option.statusName}
+									size="small"
+									sx={{
+										fontSize: '0.65rem',
+										fontWeight: 700,
+										height: 18,
+										borderRadius: 0.25,
+										bgcolor: isActive ? alpha(theme.palette.success.main, 0.1) : 'action.hover',
+										color: isActive ? 'success.main' : 'text.secondary',
+										border: '1px solid',
+										borderColor: isActive ? 'success.main' : 'divider'
+									}}
+								/>
 							</Box>
-							<Chip
-								label={option.statusName}
-								size="small"
-								sx={{
-									fontSize: '0.65rem',
-									fontWeight: 700,
-									height: 20,
-									borderRadius: '2px',
-									bgcolor: option.statusName?.toLowerCase() === 'active' ? '#e7f4e4' : '#f2f3f3',
-									color: option.statusName?.toLowerCase() === 'active' ? '#1d8102' : '#545b64',
-									border: '1px solid',
-									borderColor: option.statusName?.toLowerCase() === 'active' ? '#1d8102' : '#d5dbdb'
-								}}
-							/>
-						</Box>
-					</li>
-				);
-			}}
+						</li>
+					);
+				}}
 				renderInput={(params) => (
 					<TextField
 						{...params}
@@ -196,11 +172,11 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 						fullWidth
 						sx={{
 							'& .MuiOutlinedInput-root': {
-								borderRadius: '2px',
-								bgcolor: '#fcfcfc',
-								'& fieldset': { borderColor: '#d5dbdb' },
-								'&:hover fieldset': { borderColor: '#879596' },
-								'&.Mui-focused fieldset': { borderColor: '#ec7211' }
+								borderRadius: 0.5,
+								bgcolor: 'background.paper',
+								'& fieldset': { borderColor: 'divider' },
+								'&:hover fieldset': { borderColor: 'text.secondary' },
+								'&.Mui-focused fieldset': { borderColor: 'primary.main' }
 							}
 						}}
 						InputProps={{
@@ -215,7 +191,7 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 					/>
 				)}
 				renderTags={(tagValue, getTagProps) =>
-					tagValue.map((option: X0PAJob | string, index: number) => {
+					tagValue.map((option, index: number) => {
 						const roleObj = typeof option === 'string' ? parseJobRole(option) : option;
 						const isActive = roleObj.statusName?.toLowerCase() === 'active';
 
@@ -224,61 +200,45 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 								{...getTagProps({ index })}
 								key={index}
 								label={
-									<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-										<Typography sx={{ fontSize: '0.75rem', fontWeight: 600 }}>
+									<Stack direction="row" spacing={1} alignItems="center">
+										<Typography variant="caption" sx={{ fontWeight: 700 }}>
 											{roleObj.jobName}
 										</Typography>
 										{roleObj.statusName && (
 											<Box
 												sx={{
-													px: 0.75,
+													px: 0.5,
 													py: 0.1,
-													bgcolor: isActive ? '#1d8102' : '#545b64',
-													color: '#ffffff',
-													borderRadius: '2px',
-													fontSize: '0.65rem',
-													fontWeight: 700,
+													bgcolor: isActive ? 'success.main' : 'text.disabled',
+													color: 'common.white',
+													borderRadius: 0.25,
+													fontSize: '0.6rem',
+													fontWeight: 900,
 													textTransform: 'uppercase'
 												}}
 											>
 												{roleObj.statusName}
 											</Box>
 										)}
-									</Box>
+									</Stack>
 								}
 								sx={{
-									borderRadius: '2px',
-									bgcolor: '#ffffff',
-									color: '#232f3e',
-									border: '1px solid #d5dbdb',
+									borderRadius: 0.5,
+									bgcolor: 'background.paper',
+									border: '1px solid',
+									borderColor: 'divider',
 									height: 28,
 									'& .MuiChip-deleteIcon': {
-										color: '#545b64',
-										'&:hover': { color: '#d91d11' }
+										color: 'text.secondary',
+										fontSize: 18,
+										'&:hover': { color: 'error.main' }
 									}
 								}}
 							/>
 						);
 					})
 				}
-				sx={{
-					'& .MuiAutocomplete-listbox': {
-						p: 1,
-						'& .MuiAutocomplete-option': {
-							borderRadius: '2px',
-							'&[aria-selected="true"]': { bgcolor: '#f1faff' },
-							'&:hover': { bgcolor: '#f2f3f3' }
-						}
-					}
-				}}
 			/>
-			{!loading && hasMore && jobs.length > 0 && (
-				<Typography sx={{ fontSize: '0.72rem', color: '#879596', mt: 0.5, textAlign: 'right' }}>
-					Scroll down in the dropdown to load more results
-				</Typography>
-			)}
-
-
 		</Box>
 	);
 };

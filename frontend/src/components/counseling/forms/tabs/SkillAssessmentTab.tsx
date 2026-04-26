@@ -14,11 +14,20 @@ import {
 	IconButton,
 	Paper,
 	useTheme,
-	alpha
+	alpha,
+	Chip,
+	LinearProgress
 } from '@mui/material';
-import { Add as AddIcon, DeleteOutline as DeleteIcon, Psychology as SkillIcon } from '@mui/icons-material';
-import type { CandidateCounselingCreate } from '../../../../models/candidate';
-import { skillService } from '../../../../services/skillService';
+import { 
+	Add as AddIcon, 
+	DeleteOutline as DeleteIcon, 
+	Psychology as SkillIcon,
+	EmojiEvents as ProficiencyIcon,
+	CheckCircleOutline as VerifiedIcon
+} from '@mui/icons-material';
+import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
+import { fetchAggregatedSkills, createSkill } from '../../../../store/slices/skillSlice';
+import type { CandidateCounselingCreate, CounselingSkill } from '../../../../models/candidate';
 import ConfirmDialog from '../../../common/ConfirmDialog';
 import useToast from '../../../../hooks/useToast';
 
@@ -36,9 +45,10 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 	onSkillChange
 }) => {
 	const theme = useTheme();
+	const dispatch = useAppDispatch();
 	const toast = useToast();
-	const [availableSkills, setAvailableSkills] = useState<string[]>([]);
-	const [loading, setLoading] = useState(false);
+	
+	const { aggregatedSkills, loading: storeLoading } = useAppSelector((state) => state.skills);
 
 	// New skill addition state
 	const [confirmAddSkillDialogOpen, setConfirmAddSkillDialogOpen] = useState(false);
@@ -46,25 +56,16 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 	const [pendingIndex, setPendingIndex] = useState<number | null>(null);
 
 	useEffect(() => {
-		const loadSkills = async () => {
-			setLoading(true);
-			try {
-				const skills = await skillService.getSkills();
-				setAvailableSkills(skills.map(s => s.name));
-			} catch (error) {
-				console.error('Failed to load skills:', error);
-			} finally {
-				setLoading(false);
-			}
-		};
-		loadSkills();
-	}, []);
+		if (aggregatedSkills.length === 0) {
+			dispatch(fetchAggregatedSkills());
+		}
+	}, [dispatch, aggregatedSkills.length]);
 
 	const handleNameChange = (index: number, val: string | null) => {
 		const skillName = (val || '').trim();
 		
 		if (skillName !== '') {
-			const skillExists = availableSkills.some(s => s.toLowerCase() === skillName.toLowerCase());
+			const skillExists = aggregatedSkills.some(s => s.toLowerCase() === skillName.toLowerCase());
 			
 			if (!skillExists) {
 				setNewSkillName(skillName);
@@ -80,25 +81,32 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 	const handleConfirmAddSkill = async () => {
 		if (!newSkillName || pendingIndex === null) return;
 		
-		setLoading(true);
 		try {
-			await skillService.createSkill({ name: newSkillName, is_verified: false });
-			
-			// Update local available skills
-			setAvailableSkills(prev => [...prev, newSkillName]);
-			
-			// Update form with the new skill name
+			await dispatch(createSkill({ name: newSkillName, is_verified: false })).unwrap();
 			onSkillChange(pendingIndex, 'name', newSkillName);
-			
 			toast.success(`Skill "${newSkillName}" added to master database`);
 			setConfirmAddSkillDialogOpen(false);
 		} catch (error) {
-			console.error('Failed to create skill:', error);
 			toast.error('Failed to add skill to database');
 		} finally {
-			setLoading(false);
 			setNewSkillName('');
 			setPendingIndex(null);
+		}
+	};
+
+	const getProficiencyColor = (level: CounselingSkill['level']) => {
+		switch (level) {
+			case 'Advanced': return 'success.main';
+			case 'Intermediate': return 'info.main';
+			default: return 'warning.main';
+		}
+	};
+
+	const getProficiencyValue = (level: CounselingSkill['level']) => {
+		switch (level) {
+			case 'Advanced': return 100;
+			case 'Intermediate': return 65;
+			default: return 35;
 		}
 	};
 
@@ -114,13 +122,14 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 
 	return (
 		<Stack spacing={4}>
+			{/* Outcome Header & Summary Card */}
 			<Paper elevation={0} variant="outlined" sx={{ p: 3, borderRadius: 0.5 }}>
 				<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
 					<Stack direction="row" alignItems="center" spacing={1.5}>
 						<Box sx={{ bgcolor: 'primary.main', p: 0.5, borderRadius: 0.5, display: 'flex' }}>
 							<SkillIcon sx={{ color: 'common.white', fontSize: 20 }} />
 						</Box>
-						<Typography variant="awsSectionTitle">Candidate Skills Assessment</Typography>
+						<Typography variant="awsSectionTitle">Competency Outcome Matrix</Typography>
 					</Stack>
 					<Button
 						variant="contained"
@@ -134,84 +143,167 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 							'&:hover': { boxShadow: 'none', bgcolor: 'primary.dark' }
 						}}
 					>
-						Add Skill
+						Record Competency
 					</Button>
+				</Box>
+
+				<Box sx={{ bgcolor: alpha(theme.palette.primary.main, 0.04), p: 2, borderRadius: 0.5, mb: 3 }}>
+					<Stack direction="row" spacing={2} alignItems="center">
+						<VerifiedIcon sx={{ color: 'primary.main' }} />
+						<Box>
+							<Typography variant="subtitle2" sx={{ color: 'primary.main', fontWeight: 700 }}>Outcome Goal</Typography>
+							<Typography variant="caption" color="text.secondary">
+								Assess at least 3 core competencies to determine placement readiness and training gaps.
+							</Typography>
+						</Box>
+					</Stack>
 				</Box>
 
 				<Divider sx={{ mb: 4 }} />
 
 				{formData.skills && formData.skills.length > 0 ? (
-					<Stack spacing={3}>
+					<Stack spacing={4}>
 						{formData.skills.map((skill, index: number) => (
-							<Grid container spacing={2} key={index} alignItems="flex-end">
-								<Grid size={{ xs: 12, md: 6 }}>
-									<Box>
-										<Typography variant="awsFieldLabel">Skill Name</Typography>
-										<Autocomplete
-											freeSolo
-											options={availableSkills}
-											value={skill.name}
-											onChange={(_e, val) => handleNameChange(index, val)}
-											renderInput={(params) => (
-												<TextField
-													{...params}
-													placeholder="Enter or select a skill"
-													size="small"
-													fullWidth
-													required
-													sx={inputSx}
-												/>
-											)}
-										/>
-									</Box>
-								</Grid>
-								<Grid size={{ xs: 10, md: 5 }}>
-									<Box>
-										<Typography variant="awsFieldLabel">Proficiency Level</Typography>
-										<FormControl fullWidth size="small">
-											<Select
-												value={skill.level}
-												onChange={(e) => onSkillChange(index, 'level', e.target.value as string)}
-												sx={{
-													borderRadius: 0.5,
-													bgcolor: 'background.paper',
-													'& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
-													'&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'text.secondary' },
-													'&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' }
+							<Paper 
+								key={index} 
+								elevation={0} 
+								variant="outlined"
+								sx={{ 
+									p: 3, 
+									borderRadius: 0.5, 
+									position: 'relative',
+									'&:hover': { borderColor: 'primary.main' }
+								}}
+							>
+								<IconButton 
+									size="small"
+									onClick={() => onRemoveSkill(index)}
+									sx={{ 
+										position: 'absolute', 
+										top: 8, 
+										right: 8,
+										color: 'error.main',
+										'&:hover': { bgcolor: alpha(theme.palette.error.main, 0.08) }
+									}}
+								>
+									<DeleteIcon fontSize="small" />
+								</IconButton>
+
+								<Grid container spacing={4}>
+									<Grid size={{ xs: 12, md: 6 }}>
+										<Box>
+											<Typography variant="awsFieldLabel">Competency / Skill</Typography>
+											<Autocomplete
+												freeSolo
+												options={aggregatedSkills}
+												value={skill.name}
+												onChange={(_e, val) => handleNameChange(index, val)}
+												renderInput={(params) => (
+													<TextField
+														{...params}
+														placeholder="e.g. Technical Support, Data Entry"
+														size="small"
+														fullWidth
+														required
+														sx={inputSx}
+													/>
+												)}
+											/>
+										</Box>
+									</Grid>
+									<Grid size={{ xs: 12, md: 6 }}>
+										<Box>
+											<Typography variant="awsFieldLabel">Proficiency Outcome</Typography>
+											<FormControl fullWidth size="small">
+												<Select
+													value={skill.level}
+													onChange={(e) => onSkillChange(index, 'level', e.target.value as any)}
+													sx={{
+														borderRadius: 0.5,
+														bgcolor: 'background.paper',
+														'& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
+														'&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'text.secondary' },
+														'&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' }
+													}}
+													renderValue={(selected) => (
+														<Stack direction="row" spacing={1} alignItems="center">
+															<Chip 
+																label={selected} 
+																size="small" 
+																sx={{ 
+																	bgcolor: alpha(theme.palette[getProficiencyColor(selected) === 'success.main' ? 'success' : getProficiencyColor(selected) === 'info.main' ? 'info' : 'warning'].main, 0.1),
+																	color: getProficiencyColor(selected),
+																	fontWeight: 700,
+																	borderRadius: 0.5
+																}} 
+															/>
+														</Stack>
+													)}
+												>
+													<MenuItem value="Beginner">
+														<Stack sx={{ py: 0.5 }}>
+															<Typography variant="body2" sx={{ fontWeight: 600 }}>Beginner</Typography>
+															<Typography variant="caption" color="text.secondary">Fundamental understanding; needs guidance.</Typography>
+														</Stack>
+													</MenuItem>
+													<MenuItem value="Intermediate">
+														<Stack sx={{ py: 0.5 }}>
+															<Typography variant="body2" sx={{ fontWeight: 600 }}>Intermediate</Typography>
+															<Typography variant="caption" color="text.secondary">Practical application; independent for common tasks.</Typography>
+														</Stack>
+													</MenuItem>
+													<MenuItem value="Advanced">
+														<Stack sx={{ py: 0.5 }}>
+															<Typography variant="body2" sx={{ fontWeight: 600 }}>Advanced</Typography>
+															<Typography variant="caption" color="text.secondary">In-depth expertise; can mentor others.</Typography>
+														</Stack>
+													</MenuItem>
+												</Select>
+											</FormControl>
+										</Box>
+										
+										{/* Proficiency Indicator */}
+										<Box sx={{ mt: 2 }}>
+											<Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
+												<Typography variant="caption" color="text.secondary">Outcome Rating</Typography>
+												<Typography variant="caption" sx={{ fontWeight: 700, color: getProficiencyColor(skill.level) }}>
+													{getProficiencyValue(skill.level)}%
+												</Typography>
+											</Stack>
+											<LinearProgress 
+												variant="determinate" 
+												value={getProficiencyValue(skill.level)} 
+												sx={{ 
+													height: 4, 
+													borderRadius: 2,
+													bgcolor: alpha(theme.palette.divider, 0.5),
+													'& .MuiLinearProgress-bar': {
+														bgcolor: getProficiencyColor(skill.level),
+														borderRadius: 2
+													}
 												}}
-											>
-												<MenuItem value="Beginner">Beginner</MenuItem>
-												<MenuItem value="Intermediate">Intermediate</MenuItem>
-												<MenuItem value="Advanced">Advanced</MenuItem>
-											</Select>
-										</FormControl>
-									</Box>
+											/>
+										</Box>
+									</Grid>
 								</Grid>
-								<Grid size={{ xs: 2, md: 1 }} sx={{ pb: 0.5 }}>
-									<IconButton 
-										onClick={() => onRemoveSkill(index)}
-										sx={{ 
-											color: 'error.main',
-											'&:hover': { bgcolor: alpha(theme.palette.error.main, 0.08) }
-										}}
-									>
-										<DeleteIcon />
-									</IconButton>
-								</Grid>
-							</Grid>
+							</Paper>
 						))}
 					</Stack>
 				) : (
 					<Box sx={{ 
-						py: 6, 
+						py: 8, 
 						textAlign: 'center', 
 						border: '1px dashed', 
 						borderColor: 'divider', 
 						borderRadius: 0.5, 
 						bgcolor: 'background.default' 
 					}}>
-						<Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-							No skills have been added yet. Click the "Add Skill" button to start the assessment.
+						<ProficiencyIcon sx={{ fontSize: 48, color: 'divider', mb: 2 }} />
+						<Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', mb: 1 }}>
+							No competencies recorded.
+						</Typography>
+						<Typography variant="caption" color="text.disabled">
+							Outcome based assessments require documenting core skills and proficiency levels.
 						</Typography>
 					</Box>
 				)}
@@ -219,16 +311,16 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 
 			<ConfirmDialog
 				open={confirmAddSkillDialogOpen}
-				title="Add to Master Data?"
-				message={`The skill "${newSkillName}" is not currently in the standardized database. Adding it will make it available as a suggestion for all users across the system.`}
-				confirmText="Yes, Add to Database"
-				cancelText="Ignore for Now"
+				title="Standardize Competency?"
+				message={`"${newSkillName}" is not in our master data registry. Adding it will standardize this competency across the enterprise.`}
+				confirmText="Yes, Standardize"
+				cancelText="Cancel"
 				onClose={() => {
 					setConfirmAddSkillDialogOpen(false);
 					if (pendingIndex !== null) onSkillChange(pendingIndex, 'name', newSkillName);
 				}}
 				onConfirm={handleConfirmAddSkill}
-				loading={loading}
+				loading={storeLoading}
 				severity="info"
 			/>
 		</Stack>

@@ -5,10 +5,9 @@ import {
 	CircularProgress
 } from '@mui/material';
 import { useAppSelector, useAppDispatch } from '../../../store/hooks';
-import { fetchFields } from '../../../store/slices/settingsSlice';
+import { fetchFields, fetchSystemSettings } from '../../../store/slices/settingsSlice';
 import type { CandidateCounselingCreate, WorkExperience } from '../../../models/candidate';
 
-// Common Form Components
 import EnterpriseForm, { type FormStep } from '../../common/form/EnterpriseForm';
 
 // Tabs
@@ -16,8 +15,6 @@ import SkillAssessmentTab from './tabs/SkillAssessmentTab';
 import WorkExperienceTab from './tabs/WorkExperienceTab';
 import InterviewFeedbackTab from './tabs/InterviewFeedbackTab';
 import CounselingInfoTab from './tabs/CounselingInfoTab';
-
-import { settingsService } from '../../../services/settingsService';
 
 const PREDEFINED_QUESTIONS = [
 	'Tell us about yourself and your background?'
@@ -42,9 +39,7 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 }) => {
 	const dispatch = useAppDispatch();
 	const user = useAppSelector((state) => state.auth.user);
-	const dynamicFields = useAppSelector(state => state.settings.fields.counseling || []);
 	const loadingFields = useAppSelector(state => state.settings.loading);
-	const [batchTags, setBatchTags] = useState<string[]>([]);
 	const [showErrors, setShowErrors] = useState(false);
 
 	const [formData, setFormData] = useState<CandidateCounselingCreate>({
@@ -63,19 +58,8 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 
 	useEffect(() => {
 		if (open) {
-			const fetchBatchTags = async () => {
-				try {
-					const settings = await settingsService.getSystemSettings();
-					const tagSetting = settings.find(s => s.key === 'TRAINING_BATCH_TAGS');
-					if (tagSetting) {
-						setBatchTags(tagSetting.value.split(',').map(tag => tag.trim()).filter(Boolean));
-					}
-				} catch (error) {
-					console.error('Failed to fetch batch tags', error);
-				}
-			};
-			fetchBatchTags();
 			dispatch(fetchFields('counseling'));
+			dispatch(fetchSystemSettings());
 
 			if (initialData) {
 				const othersValues = initialData.others || {};
@@ -247,14 +231,11 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 					formData={formData}
 					onFieldChange={handleChange}
 					onUpdateOtherField={handleUpdateOtherField}
-					dynamicFields={dynamicFields}
-					batchTags={batchTags}
-					userRole={user?.role}
 					showErrors={showErrors}
 				/>
 			)
 		}
-	], [formData, dynamicFields, batchTags, user, showErrors]);
+	], [formData, user, showErrors]);
 
 	const counselorName = initialData?.counselor_name || user?.full_name || user?.username || '—';
 	const dateString = formData.counseling_date
