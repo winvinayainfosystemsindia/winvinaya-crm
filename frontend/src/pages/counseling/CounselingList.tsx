@@ -31,7 +31,7 @@ const CounselingList: React.FC = () => {
 				subtitle="Assess and counsel profiled candidates for placement readiness"
 			/>
 
-			<Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+			<Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
 				{/* Stats Cards */}
 				<CounselingStats />
 

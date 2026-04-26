@@ -18,44 +18,42 @@ const CounselingStats: React.FC = () => {
 	const yetToBeCounseled = Math.max(0, screenedCompleted - totalCounseled);
 
 	return (
-		<Box sx={{ mb: 3 }}>
-			<Box sx={{ display: 'flex', gap: 3, mb: 3, flexWrap: 'wrap' }}>
-				<Box sx={{ flex: '1 1 250px' }}>
-					<StatCard
-						title="Screened Completed"
-						count={screenedCompleted.toString()}
-						icon={<Assignment fontSize="large" />}
-						color={theme.palette.info.main}
-						subtitle="Qualified for counseling"
-					/>
-				</Box>
-				<Box sx={{ flex: '1 1 250px' }}>
-					<StatCard
-						title="Selected"
-						count={selected.toString()}
-						icon={<CheckCircle fontSize="large" />}
-						color={theme.palette.success.main}
-						subtitle="Ready for training batches"
-					/>
-				</Box>
-				<Box sx={{ flex: '1 1 250px' }}>
-					<StatCard
-						title="Yet To Be Counseled"
-						count={yetToBeCounseled.toString()}
-						icon={<PendingActions fontSize="large" />}
-						color={theme.palette.warning.main}
-						subtitle="Awaiting counselor review"
-					/>
-				</Box>
-				<Box sx={{ flex: '1 1 250px' }}>
-					<StatCard
-						title="Rejected"
-						count={rejected.toString()}
-						icon={<Cancel fontSize="large" />}
-						color={theme.palette.error.main}
-						subtitle="Not suitable for current batches"
-					/>
-				</Box>
+		<Box sx={{ display: 'flex', gap: 3, mb: 3, flexWrap: 'wrap' }}>
+			<Box sx={{ flex: '1 1 250px' }}>
+				<StatCard
+					title="Screened Completed"
+					count={screenedCompleted.toString()}
+					icon={<Assignment fontSize="large" />}
+					color={theme.palette.info.main}
+					subtitle="Qualified for counseling"
+				/>
+			</Box>
+			<Box sx={{ flex: '1 1 250px' }}>
+				<StatCard
+					title="Selected"
+					count={selected.toString()}
+					icon={<CheckCircle fontSize="large" />}
+					color={theme.palette.success.main}
+					subtitle="Ready for training batches"
+				/>
+			</Box>
+			<Box sx={{ flex: '1 1 250px' }}>
+				<StatCard
+					title="Yet To Be Counseled"
+					count={yetToBeCounseled.toString()}
+					icon={<PendingActions fontSize="large" />}
+					color={theme.palette.warning.main}
+					subtitle="Awaiting counselor review"
+				/>
+			</Box>
+			<Box sx={{ flex: '1 1 250px' }}>
+				<StatCard
+					title="Rejected"
+					count={rejected.toString()}
+					icon={<Cancel fontSize="large" />}
+					color={theme.palette.error.main}
+					subtitle="Not suitable for current batches"
+				/>
 			</Box>
 		</Box>
 	);

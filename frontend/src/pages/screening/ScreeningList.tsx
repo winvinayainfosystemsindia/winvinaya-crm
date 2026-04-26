@@ -31,7 +31,7 @@ const ScreeningList: React.FC = () => {
 				subtitle="Manage candidate screening and assessment details"
 			/>
 
-			<Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+			<Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
 				{/* Stats Cards */}
 				<ScreeningStatCard />
 
