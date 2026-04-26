@@ -15,7 +15,7 @@ import {
 	Tooltip
 } from '@mui/material';
 import { Visibility, SettingsBackupRestore as RevokeIcon } from '@mui/icons-material';
-import CustomTablePagination from '../../../common/CustomTablePagination';
+import CustomTablePagination from '../../../common/table/CustomTablePagination';
 import {
 	Dialog,
 	DialogTitle,

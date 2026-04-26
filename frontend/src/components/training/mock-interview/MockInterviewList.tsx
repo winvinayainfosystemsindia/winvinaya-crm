@@ -20,7 +20,7 @@ import { useMockInterviewList } from './useMockInterviewList';
 import MockInterviewTableHeader from './MockInterviewTableHeader';
 import MockInterviewTableRow from './MockInterviewTableRow';
 import MockInterviewForm from './MockInterviewForm';
-import CustomTablePagination from '../../common/CustomTablePagination';
+import CustomTablePagination from '../../common/table/CustomTablePagination';
 
 interface MockInterviewListProps {
 	batchId: number;

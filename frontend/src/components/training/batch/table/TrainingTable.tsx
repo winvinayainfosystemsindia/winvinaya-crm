@@ -18,7 +18,7 @@ import type { TrainingBatch } from '../../../../models/training';
 import type { FilterField } from '../../../common/FilterDrawer';
 import FilterDrawer from '../../../common/FilterDrawer';
 import ConfirmDialog from '../../../common/ConfirmDialog';
-import CustomTablePagination from '../../../common/CustomTablePagination';
+import CustomTablePagination from '../../../common/table/CustomTablePagination';
 import { getBatchFilterFields } from '../BatchFilters';
 
 // Specialized Components

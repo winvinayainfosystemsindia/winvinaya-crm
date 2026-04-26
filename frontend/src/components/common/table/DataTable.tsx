@@ -6,7 +6,7 @@ import {
 	TableContainer,
 	useTheme
 } from '@mui/material';
-import CustomTablePagination from '../CustomTablePagination';
+import CustomTablePagination from './CustomTablePagination';
 import DataTableHeader from './DataTableHeader';
 import DataTableHead from './DataTableHead';
 import DataTableEmpty from './DataTableEmpty';

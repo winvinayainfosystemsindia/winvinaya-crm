@@ -20,7 +20,7 @@ import {
 	TextField
 } from '@mui/material';
 import { Delete as DeleteIcon, Add as AddIcon, CloudUpload as UploadIcon, Edit as EditIcon } from '@mui/icons-material';
-import CustomTablePagination from '../../../common/CustomTablePagination';
+import CustomTablePagination from '../../../common/table/CustomTablePagination';
 import DSRAdminTableHeader from './DSRAdminTableHeader';
 import ExcelImportModal from '../../../common/ExcelImportModal';
 import ConfirmDialog from '../../../common/ConfirmDialog';

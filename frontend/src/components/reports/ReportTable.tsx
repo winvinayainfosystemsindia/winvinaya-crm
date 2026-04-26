@@ -16,7 +16,7 @@ import {
 	Stack
 } from '@mui/material';
 import { format } from 'date-fns';
-import CustomTablePagination from '../common/CustomTablePagination';
+import CustomTablePagination from '../common/table/CustomTablePagination';
 
 interface Column {
 	id: string;

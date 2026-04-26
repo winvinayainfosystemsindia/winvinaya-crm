@@ -11,7 +11,7 @@ import {
 	Skeleton,
 	TableSortLabel
 } from '@mui/material';
-import CustomTablePagination from '../../common/CustomTablePagination';
+import CustomTablePagination from '../../common/table/CustomTablePagination';
 
 interface Column<T = any> {
 	id: string;
