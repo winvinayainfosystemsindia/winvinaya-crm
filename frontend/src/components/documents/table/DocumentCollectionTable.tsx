@@ -27,7 +27,7 @@ interface DocumentCollectionTableProps {
 const DocumentCollectionTable: React.FC<DocumentCollectionTableProps> = ({ type }) => {
 	const theme = useTheme();
 	const navigate = useNavigate();
-	
+
 	const {
 		candidates,
 		loading,
@@ -74,29 +74,29 @@ const DocumentCollectionTable: React.FC<DocumentCollectionTableProps> = ({ type 
 		return (
 			<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
 				{collected.map(d => (
-					<Chip 
-						key={d} 
-						label={d} 
-						size="small" 
-						color="success" 
-						variant="outlined" 
-						sx={{ height: 18, fontSize: '0.6rem', borderRadius: 0.5, fontWeight: 700 }} 
+					<Chip
+						key={d}
+						label={d}
+						size="small"
+						color="success"
+						variant="outlined"
+						sx={{ height: 18, fontSize: '0.6rem', borderRadius: 0.5, fontWeight: 700 }}
 					/>
 				))}
 				{pending.map(d => (
-					<Chip 
-						key={d} 
-						label={d} 
-						size="small" 
-						variant="outlined" 
-						sx={{ 
-							height: 18, 
-							fontSize: '0.6rem', 
+					<Chip
+						key={d}
+						label={d}
+						size="small"
+						variant="outlined"
+						sx={{
+							height: 18,
+							fontSize: '0.6rem',
 							borderRadius: 0.5,
-							color: 'text.secondary', 
+							color: 'text.secondary',
 							borderColor: 'divider',
 							bgcolor: alpha(theme.palette.text.secondary, 0.04)
-						}} 
+						}}
 					/>
 				))}
 			</Box>
@@ -144,7 +144,6 @@ const DocumentCollectionTable: React.FC<DocumentCollectionTableProps> = ({ type 
 					onClick={() => navigate(`/candidates/documents/${candidate.public_id}`)}
 					sx={{
 						textTransform: 'none',
-						borderRadius: 0.5,
 						fontWeight: 700,
 						boxShadow: 'none',
 						'&:hover': { boxShadow: 'none' }
