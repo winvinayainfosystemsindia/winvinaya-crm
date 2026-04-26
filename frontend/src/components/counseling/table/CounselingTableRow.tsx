@@ -7,6 +7,8 @@ import {
 	Tooltip,
 	Chip,
 	Button,
+	useTheme,
+	alpha
 } from '@mui/material';
 import { format } from 'date-fns';
 import {
@@ -32,11 +34,13 @@ const CounselingTableRow: React.FC<CounselingTableRowProps> = ({
 	type,
 	onAction,
 }) => {
+	const theme = useTheme();
+
 	return (
 		<TableRow
 			sx={{
 				'&:hover': {
-					bgcolor: '#f5f8fa',
+					bgcolor: 'action.hover',
 				},
 				'&:last-child td': {
 					borderBottom: 0
@@ -54,7 +58,7 @@ const CounselingTableRow: React.FC<CounselingTableRowProps> = ({
 						</Tooltip>
 					)}
 					<Tooltip title="Verified Profile">
-						<VerifiedUser sx={{ color: '#4caf50', fontSize: 20 }} />
+						<VerifiedUser sx={{ color: 'success.main', fontSize: 20 }} />
 					</Tooltip>
 				</Box>
 			</TableCell>
@@ -97,15 +101,15 @@ const CounselingTableRow: React.FC<CounselingTableRowProps> = ({
 							fontWeight: 700,
 							borderRadius: 1,
 							bgcolor:
-								candidate.counseling_status === 'selected' ? '#e8f5e9' :
-									candidate.counseling_status === 'rejected' ? '#ffebee' :
-										candidate.counseling_status === 'pending' ? '#fff3e0' :
-											'#f5f5f5',
+								candidate.counseling_status === 'selected' ? alpha(theme.palette.success.main, 0.08) :
+									candidate.counseling_status === 'rejected' ? alpha(theme.palette.error.main, 0.08) :
+										candidate.counseling_status === 'pending' ? alpha(theme.palette.warning.main, 0.08) :
+											'action.hover',
 							color:
-								candidate.counseling_status === 'selected' ? '#2e7d32' :
-									candidate.counseling_status === 'rejected' ? '#d32f2f' :
-										candidate.counseling_status === 'pending' ? '#ed6c02' :
-											'#757575',
+								candidate.counseling_status === 'selected' ? 'success.main' :
+									candidate.counseling_status === 'rejected' ? 'error.main' :
+										candidate.counseling_status === 'pending' ? 'warning.main' :
+											'text.secondary',
 							'& .MuiChip-icon': {
 								color: 'inherit',
 								fontSize: 16
@@ -140,8 +144,8 @@ const CounselingTableRow: React.FC<CounselingTableRowProps> = ({
 						onClick={() => onAction('counsel', candidate)}
 						sx={{
 							textTransform: 'none',
-							bgcolor: '#1976d2',
-							'&:hover': { bgcolor: '#115293' }
+							bgcolor: 'primary.main',
+							'&:hover': { bgcolor: 'primary.dark' }
 						}}
 					>
 						Counsel

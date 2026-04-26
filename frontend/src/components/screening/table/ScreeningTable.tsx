@@ -60,7 +60,7 @@ const ScreeningTable: React.FC<ScreeningTableProps> = ({ type, status, onAction,
 				totalCount={totalCount}
 				page={page}
 				rowsPerPage={rowsPerPage}
-				onPageChange={(newPage) => handleChangePage(null, newPage)}
+				onPageChange={handleChangePage}
 				onRowsPerPageChange={setRowsPerPage}
 				searchTerm={searchTerm}
 				onSearchChange={(value) => handleSearch({ target: { value } } as React.ChangeEvent<HTMLInputElement>)}

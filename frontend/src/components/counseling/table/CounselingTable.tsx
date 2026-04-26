@@ -1,20 +1,8 @@
 import React, { useMemo } from 'react';
-import {
-	Paper,
-	Table,
-	TableBody,
-	TableCell,
-	TableContainer,
-	TableHead,
-	TableRow,
-	TableSortLabel,
-	Typography,
-} from '@mui/material';
+import { DataTable, type ColumnDefinition } from '../../common/table';
 import FilterDrawer from '../../common/FilterDrawer';
-import CustomTablePagination from '../../common/CustomTablePagination';
 import { useCounselingTable } from '../hooks/useCounselingTable';
 import { getCounselingFilterFields } from '../CounselingFilters';
-import CounselingTableHeader from './CounselingTableHeader';
 import CounselingTableRow from './CounselingTableRow';
 import type { CandidateListItem } from '../../../models/candidate';
 
@@ -39,7 +27,6 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 		filterOptions,
 		fetchCandidatesData,
 		handleChangePage,
-		handleChangeRowsPerPage,
 		handleSearch,
 		handleRequestSort,
 		handleFilterOpen,
@@ -61,35 +48,54 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 		}
 	}, 0), [filterFields, filters]);
 
-	// Define table headers dynamically based on type
-	const headers = useMemo(() => {
-		const cols = [
-			{ id: 'name', label: 'Name', hideOnMobile: false },
+	// Define columns for DataTable
+	const columns: ColumnDefinition<CandidateListItem>[] = useMemo(() => {
+		const cols: ColumnDefinition<CandidateListItem>[] = [
+			{ id: 'name', label: 'Name', sortable: true },
 			{ id: 'phone', label: 'Phone', hideOnMobile: true },
-			{ id: 'city', label: 'Location', hideOnMobile: true },
-			{ id: 'education_level', label: 'Education', hideOnMobile: true },
-			{ id: 'disability_type', label: 'Disability', hideOnMobile: true },
+			{ id: 'city', label: 'Location', sortable: true, hideOnMobile: true },
+			{ id: 'education_level', label: 'Education', sortable: true, hideOnMobile: true },
+			{ id: 'disability_type', label: 'Disability', sortable: true, hideOnMobile: true },
 		];
+
 		if (type !== 'not_counseled') {
-			cols.push({ id: 'counseling_status', label: 'Status', hideOnMobile: false });
-			cols.push(
-				{ id: 'assigned_to', label: 'Assigned to', hideOnMobile: true },
-				{ id: 'counselor_name', label: 'Counselor', hideOnMobile: true },
-				{ id: 'counseling_date', label: 'Date', hideOnMobile: true }
-			);
+			cols.push({ id: 'counseling_status', label: 'Status', sortable: true });
+			cols.push({ id: 'assigned_to' as any, label: 'Assigned to', hideOnMobile: true });
+			cols.push({ id: 'counselor_name' as any, label: 'Counselor', sortable: true, hideOnMobile: true });
+			cols.push({ id: 'counseling_date' as any, label: 'Date', sortable: true, hideOnMobile: true });
 		}
+
+		cols.push({ id: 'actions', label: 'Actions', align: 'right' });
 		return cols;
 	}, [type]);
 
 	return (
-		<Paper sx={{ border: '1px solid #d5dbdb', boxShadow: 'none', borderRadius: '8px', overflow: 'hidden' }}>
-			<CounselingTableHeader
+		<>
+			<DataTable
+				columns={columns}
+				data={candidates}
+				loading={loading}
+				totalCount={totalCount}
+				page={page}
+				rowsPerPage={rowsPerPage}
+				onPageChange={handleChangePage}
+				onRowsPerPageChange={handleRowsPerPageSelectChange}
 				searchTerm={searchTerm}
-				onSearchChange={handleSearch}
+				onSearchChange={(val) => handleSearch({ target: { value: val } } as React.ChangeEvent<HTMLInputElement>)}
 				onRefresh={fetchCandidatesData}
+				orderBy={orderBy as any}
+				order={order}
+				onSortRequest={handleRequestSort as any}
 				activeFilterCount={activeFilterCount}
-				filterDrawerOpen={filterDrawerOpen}
 				onFilterOpen={handleFilterOpen}
+				renderRow={(candidate) => (
+					<CounselingTableRow
+						key={candidate.public_id}
+						candidate={candidate}
+						type={type}
+						onAction={onAction}
+					/>
+				)}
 			/>
 
 			<FilterDrawer
@@ -101,73 +107,7 @@ const CounselingTable: React.FC<CounselingTableProps> = ({ type, onAction, refre
 				onClearFilters={clearFilters}
 				onApplyFilters={applyFilters}
 			/>
-
-			<TableContainer>
-				<Table sx={{ minWidth: 650 }} aria-label="counseling table">
-					<TableHead>
-						<TableRow sx={{ bgcolor: '#fafafa' }}>
-							{headers.map((headCell) => (
-								<TableCell
-									key={headCell.id}
-									sortDirection={orderBy === headCell.id ? order : false}
-									sx={{
-										fontWeight: 'bold',
-										color: 'text.secondary',
-										fontSize: '0.875rem',
-										borderBottom: '2px solid #d5dbdb',
-										display: headCell.hideOnMobile ? { xs: 'none', md: 'table-cell' } : 'table-cell'
-									}}
-								>
-									<TableSortLabel
-										active={orderBy === headCell.id}
-										direction={orderBy === headCell.id ? order : 'asc'}
-										onClick={() => handleRequestSort(headCell.id as keyof CandidateListItem)}
-									>
-										{headCell.label}
-									</TableSortLabel>
-								</TableCell>
-							))}
-							<TableCell align="right" sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem', borderBottom: '2px solid #d5dbdb' }}>
-								Actions
-							</TableCell>
-						</TableRow>
-					</TableHead>
-					<TableBody>
-						{loading ? (
-							<TableRow>
-								<TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-									<Typography color="text.secondary">Loading...</Typography>
-								</TableCell>
-							</TableRow>
-						) : candidates.length === 0 ? (
-							<TableRow>
-								<TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-									<Typography color="text.secondary">No candidates found</Typography>
-								</TableCell>
-							</TableRow>
-						) : (
-							candidates.map((candidate) => (
-								<CounselingTableRow
-									key={candidate.public_id}
-									candidate={candidate}
-									type={type}
-									onAction={onAction}
-								/>
-							))
-						)}
-					</TableBody>
-				</Table>
-			</TableContainer>
-
-			<CustomTablePagination
-				count={totalCount}
-				page={page}
-				rowsPerPage={rowsPerPage}
-				onPageChange={handleChangePage}
-				onRowsPerPageChange={handleChangeRowsPerPage}
-				onRowsPerPageSelectChange={handleRowsPerPageSelectChange}
-			/>
-		</Paper>
+		</>
 	);
 };
 

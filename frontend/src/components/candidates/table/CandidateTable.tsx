@@ -87,7 +87,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onViewCandidate }) => {
 				totalCount={totalCount}
 				page={page}
 				rowsPerPage={rowsPerPage}
-				onPageChange={(newPage) => handleChangePage(null, newPage)}
+				onPageChange={handleChangePage}
 				onRowsPerPageChange={setRowsPerPage}
 				searchTerm={searchTerm}
 				onSearchChange={(value) => handleSearch({ target: { value } } as React.ChangeEvent<HTMLInputElement>)}

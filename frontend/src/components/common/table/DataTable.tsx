@@ -23,7 +23,7 @@ export interface DataTableProps<T> extends DataTableHeaderProps {
 	totalCount: number;
 	page: number;
 	rowsPerPage: number;
-	onPageChange: (newPage: number) => void;
+	onPageChange: (event: unknown, newPage: number) => void;
 	onRowsPerPageChange: (newRowsPerPage: number) => void;
 	orderBy?: keyof T;
 	order?: 'asc' | 'desc';
@@ -121,7 +121,7 @@ const DataTable = <T,>({
 				count={totalCount}
 				page={page}
 				rowsPerPage={rowsPerPage}
-				onPageChange={(_e, p) => onPageChange(p)}
+				onPageChange={onPageChange}
 				onRowsPerPageChange={(e) => onRowsPerPageChange(parseInt(e.target.value, 10))}
 				onRowsPerPageSelectChange={onRowsPerPageChange}
 			/>
