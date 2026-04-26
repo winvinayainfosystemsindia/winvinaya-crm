@@ -15,6 +15,7 @@ import SkillAssessmentTab from './tabs/SkillAssessmentTab';
 import WorkExperienceTab from './tabs/WorkExperienceTab';
 import InterviewFeedbackTab from './tabs/InterviewFeedbackTab';
 import CounselingInfoTab from './tabs/CounselingInfoTab';
+import { useDateTime } from '../../../hooks/useDateTime';
 
 const PREDEFINED_QUESTIONS = [
 	'Tell us about yourself and your background?'
@@ -41,6 +42,7 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 	const user = useAppSelector((state) => state.auth.user);
 	const loadingFields = useAppSelector(state => state.settings.loading);
 	const [showErrors, setShowErrors] = useState(false);
+	const { formatDate } = useDateTime();
 
 	const [formData, setFormData] = useState<CandidateCounselingCreate>({
 		skills: [],
@@ -238,9 +240,7 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 	], [formData, user, showErrors]);
 
 	const counselorName = initialData?.counselor_name || user?.full_name || user?.username || '—';
-	const dateString = formData.counseling_date
-		? new Date(formData.counseling_date).toLocaleDateString()
-		: new Date().toLocaleDateString();
+	const dateString = formatDate(formData.counseling_date || new Date());
 
 	const subtitle = `${candidateName || 'New Candidate'} • Counselor: ${counselorName} • Date: ${dateString}`;
 

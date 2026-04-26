@@ -10,6 +10,7 @@ import { uploadDocument, downloadDocument, sendConsentEmail } from '../../../sto
 import { fetchFields } from '../../../store/slices/settingsSlice';
 import EnterpriseForm, { type FormStep } from '../../common/form/EnterpriseForm';
 import type { CandidateScreeningCreate } from '../../../models/candidate';
+import { useDateTime } from '../../../hooks/useDateTime';
 
 // Tabs
 import BackgroundTrainingTab from './tabs/BackgroundTrainingTab';
@@ -42,6 +43,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 }) => {
 	const dispatch = useAppDispatch();
 	const toast = useToast();
+	const { formatDate } = useDateTime();
 	const dynamicFields = useAppSelector(state => state.settings.fields.screening) || [];
 	const loadingFields = useAppSelector(state => state.settings.loading);
 
@@ -371,9 +373,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 	], [formData, uploading, viewing, sendingConsent, refreshing, onRefresh, dynamicFields, selectedCandidate]);
 
 	const screenerName = initialData?.screened_by?.full_name || currentUser?.full_name || currentUser?.username || '—';
-	const screeningDate = initialData?.updated_at
-		? new Date(initialData.updated_at).toLocaleDateString()
-		: new Date().toLocaleDateString();
+	const screeningDate = formatDate(initialData?.updated_at || new Date());
 
 	const subtitle = `${candidateName || 'New Candidate'} • Screener: ${screenerName} • Date: ${screeningDate}`;
 
