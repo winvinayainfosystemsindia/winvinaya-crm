@@ -8,10 +8,11 @@ import {
 	TextField,
 	IconButton,
 	Paper,
-	Tooltip
+	Tooltip,
+	useTheme,
+	alpha
 } from '@mui/material';
-import { Add as AddIcon, DeleteOutline as DeleteIcon, InfoOutlined as InfoIcon, AssignmentOutlined as InterviewIcon, StarOutline as FeedbackIcon } from '@mui/icons-material';
-import { awsStyles } from '../../../../theme/theme';
+import { Add as AddIcon, DeleteOutline as DeleteIcon, AssignmentOutlined as InterviewIcon, StarOutline as FeedbackIcon } from '@mui/icons-material';
 import JobRoleSearch from '../../../common/JobRoleSearch';
 import type { CandidateCounselingCreate } from '../../../../models/candidate';
 
@@ -32,15 +33,15 @@ const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 	onFeedbackChange,
 	onJobRolesChange
 }) => {
-	const { awsPanel, helperBox } = awsStyles;
+	const theme = useTheme();
 
 	const inputSx = {
 		'& .MuiOutlinedInput-root': {
-			borderRadius: '2px',
-			bgcolor: 'action.hover',
+			borderRadius: 0.5,
+			bgcolor: 'background.paper',
 			'& fieldset': { borderColor: 'divider' },
 			'&:hover fieldset': { borderColor: 'text.secondary' },
-			'&.Mui-focused fieldset': { borderColor: 'accent.main' },
+			'&.Mui-focused fieldset': { borderColor: 'primary.main' },
 			'& textarea': { resize: 'vertical' }
 		}
 	};
@@ -48,108 +49,111 @@ const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 	return (
 		<Stack spacing={4}>
 			{/* Interview Questions Section */}
-			<Paper elevation={0} sx={awsPanel}>
+			<Paper elevation={0} variant="outlined" sx={{ p: 3, borderRadius: 0.5 }}>
 				<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
 					<Stack direction="row" alignItems="center" spacing={1.5}>
-						<Box sx={{ bgcolor: 'accent.main', p: 0.5, borderRadius: '2px', display: 'flex' }}>
-							<InterviewIcon sx={{ color: '#ffffff', fontSize: 20 }} />
+						<Box sx={{ bgcolor: 'primary.main', p: 0.5, borderRadius: 0.5, display: 'flex' }}>
+							<InterviewIcon sx={{ color: 'common.white', fontSize: 20 }} />
 						</Box>
 						<Typography variant="awsSectionTitle">Interview Assessment Questions</Typography>
 					</Stack>
 					<Button
-						variant="outlined"
+						variant="contained"
 						size="small"
 						startIcon={<AddIcon />}
 						onClick={onAddQuestion}
 						sx={{
-							borderRadius: '2px',
+							borderRadius: 0.5,
 							textTransform: 'none',
-							fontWeight: 700,
-							borderColor: 'divider',
-							color: 'text.secondary',
-							'&:hover': { bgcolor: 'action.hover', borderColor: 'text.secondary' }
+							boxShadow: 'none',
+							'&:hover': { boxShadow: 'none', bgcolor: 'primary.dark' }
 						}}
 					>
-						Add Custom Question
+						Add Question
 					</Button>
 				</Box>
 
-				<Box sx={helperBox}>
-					<InfoIcon sx={{ color: 'info.main', mt: 0.25, fontSize: 20 }} />
-					<Typography variant="body2" sx={{ color: 'info.main', fontWeight: 500 }}>
-						Guidance: Ask domain-specific questions or assign technical tasks to gauge the skill levels mentioned by the candidate.
-					</Typography>
-				</Box>
-
-				<Divider sx={{ mb: 4, borderColor: 'divider' }} />
+				<Divider sx={{ mb: 4 }} />
 
 				<Stack spacing={4}>
 					{formData.questions?.map((q, index: number) => (
-						<Box
+						<Paper
 							key={index}
+							elevation={0}
+							variant="outlined"
 							sx={{
-								p: 3,
-								border: '1px solid',
-								borderColor: 'divider',
-								borderRadius: '2px',
-								bgcolor: 'action.hover',
-								'&:hover': { borderColor: 'text.secondary', bgcolor: 'background.paper' }
+								borderRadius: 0.5,
+								bgcolor: 'background.paper',
+								overflow: 'hidden'
 							}}
 						>
-							<Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, alignItems: 'flex-start' }}>
-								<Box sx={{ width: '100%', mr: 2 }}>
-									<Typography variant="awsFieldLabel" sx={{ color: 'accent.main', mb: 0.5 }}>Question #{index + 1}</Typography>
-									<TextField
-										variant="standard"
-										fullWidth
-										placeholder="Type your question here..."
-										value={q.question}
-										onChange={(e) => onQuestionChange(index, 'question', e.target.value)}
-										InputProps={{
-											disableUnderline: true,
-											sx: {
-												fontSize: '0.9rem',
-												p: 1,
-												bgcolor: 'background.paper',
-												border: '1px solid',
-												borderColor: 'divider',
-												borderRadius: '2px'
-											}
-										}}
-									/>
-								</Box>
+							<Box sx={{
+								display: 'flex',
+								justifyContent: 'space-between',
+								alignItems: 'center',
+								px: 3,
+								py: 1.5,
+								bgcolor: 'action.hover',
+								borderBottom: '1px solid',
+								borderColor: 'divider'
+							}}>
+								<Typography variant="subtitle2" color="primary.main" sx={{ textTransform: 'uppercase' }}>
+									Question #{index + 1}
+								</Typography>
 								<Tooltip title="Remove Question">
 									<IconButton
 										size="small"
 										onClick={() => onRemoveQuestion(index)}
 										sx={{
 											color: 'error.main',
-											'&:hover': { bgcolor: 'error.light', opacity: 0.1 }
+											'&:hover': { bgcolor: alpha(theme.palette.error.main, 0.08) }
 										}}
 									>
-										<DeleteIcon />
+										<DeleteIcon fontSize="small" />
 									</IconButton>
 								</Tooltip>
 							</Box>
-							<Box>
-								<Typography variant="awsFieldLabel">Candidate Response</Typography>
-								<TextField
-									multiline
-									rows={2}
-									fullWidth
-									size="small"
-									variant="outlined"
-									value={q.answer}
-									onChange={(e) => onQuestionChange(index, 'answer', e.target.value)}
-									placeholder="Document the candidate's answer and your observations..."
-									sx={inputSx}
-								/>
+							<Box sx={{ p: 3 }}>
+								<Stack spacing={3}>
+									<Box>
+										<Typography variant="awsFieldLabel">Question Description</Typography>
+										<TextField
+											fullWidth
+											placeholder="Type your question here..."
+											size="small"
+											value={q.question}
+											onChange={(e) => onQuestionChange(index, 'question', e.target.value)}
+											sx={inputSx}
+										/>
+									</Box>
+									<Box>
+										<Typography variant="awsFieldLabel">Candidate Response</Typography>
+										<TextField
+											multiline
+											rows={2}
+											fullWidth
+											size="small"
+											variant="outlined"
+											value={q.answer}
+											onChange={(e) => onQuestionChange(index, 'answer', e.target.value)}
+											placeholder="Document the candidate's answer and your observations..."
+											sx={inputSx}
+										/>
+									</Box>
+								</Stack>
 							</Box>
-						</Box>
+						</Paper>
 					))}
 					{(!formData.questions || formData.questions.length === 0) && (
-						<Box sx={{ py: 6, textAlign: 'center', border: '1px dashed', borderColor: 'divider', borderRadius: '2px' }}>
-							<Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+						<Box sx={{ 
+							py: 6, 
+							textAlign: 'center', 
+							border: '1px dashed', 
+							borderColor: 'divider', 
+							borderRadius: 0.5, 
+							bgcolor: 'background.default' 
+						}}>
+							<Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
 								No custom interview questions added yet.
 							</Typography>
 						</Box>
@@ -158,15 +162,15 @@ const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 			</Paper>
 
 			{/* Performance Feedback Section */}
-			<Paper elevation={0} sx={awsPanel}>
+			<Paper elevation={0} variant="outlined" sx={{ p: 3, borderRadius: 0.5 }}>
 				<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
-					<Box sx={{ bgcolor: 'accent.main', p: 0.5, borderRadius: '2px', display: 'flex' }}>
-						<FeedbackIcon sx={{ color: '#ffffff', fontSize: 20 }} />
+					<Box sx={{ bgcolor: 'primary.main', p: 0.5, borderRadius: 0.5, display: 'flex' }}>
+						<FeedbackIcon sx={{ color: 'common.white', fontSize: 20 }} />
 					</Box>
 					<Typography variant="awsSectionTitle">Training & Placement Recommendations</Typography>
 				</Stack>
 
-				<Divider sx={{ mb: 4, borderColor: 'divider' }} />
+				<Divider sx={{ mb: 4 }} />
 
 				<Stack spacing={4}>
 					{/* Integrated Job Search Component */}
@@ -175,16 +179,10 @@ const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 						onChange={onJobRolesChange}
 					/>
 
-					<Divider sx={{ mb: 4, borderColor: 'divider' }} />
+					<Divider sx={{ mb: 2 }} />
 
 					<Box>
 						<Typography variant="awsFieldLabel">Overall Feedback & Recommended Next Steps</Typography>
-						<Box sx={helperBox}>
-							<InfoIcon sx={{ color: 'info.main', mt: 0.25, fontSize: 20 }} />
-							<Typography variant="body2" sx={{ color: 'info.main', fontWeight: 400, fontSize: '0.8125rem' }}>
-								<Typography component="span" variant="inherit" sx={{ fontWeight: 700 }}>Evaluation Guidance:</Typography> Provide a consolidated summary of the candidate's domain expertise, communication abilities, and cultural fit. Use these insights to justify the recommended training path or highlight specific placement opportunities.
-							</Typography>
-						</Box>
 						<TextField
 							multiline
 							rows={4}

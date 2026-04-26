@@ -12,10 +12,11 @@ import {
 	Select,
 	MenuItem,
 	IconButton,
-	Paper
+	Paper,
+	useTheme,
+	alpha
 } from '@mui/material';
-import { Add as AddIcon, DeleteOutline as DeleteIcon, InfoOutlined as InfoIcon } from '@mui/icons-material';
-import { awsStyles } from '../../../../theme/theme';
+import { Add as AddIcon, DeleteOutline as DeleteIcon, Psychology as SkillIcon } from '@mui/icons-material';
 import type { CandidateCounselingCreate } from '../../../../models/candidate';
 import { skillService } from '../../../../services/skillService';
 import ConfirmDialog from '../../../common/ConfirmDialog';
@@ -34,7 +35,7 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 	onRemoveSkill,
 	onSkillChange
 }) => {
-	const { awsPanel, helperBox } = awsStyles;
+	const theme = useTheme();
 	const toast = useToast();
 	const [availableSkills, setAvailableSkills] = useState<string[]>([]);
 	const [loading, setLoading] = useState(false);
@@ -103,113 +104,118 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 
 	const inputSx = {
 		'& .MuiOutlinedInput-root': {
-			borderRadius: '2px',
-			bgcolor: 'action.hover',
+			borderRadius: 0.5,
+			bgcolor: 'background.paper',
 			'& fieldset': { borderColor: 'divider' },
 			'&:hover fieldset': { borderColor: 'text.secondary' },
-			'&.Mui-focused fieldset': { borderColor: 'accent.main' }
+			'&.Mui-focused fieldset': { borderColor: 'primary.main' }
 		}
 	};
 
 	return (
-		<Paper elevation={0} sx={awsPanel}>
-			<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-				<Typography variant="awsSectionTitle">Candidate Skills Assessment</Typography>
-				<Button
-					variant="outlined"
-					size="small"
-					startIcon={<AddIcon />}
-					onClick={onAddSkill}
-					sx={{
-						borderRadius: '2px',
-						textTransform: 'none',
-						fontWeight: 700,
-						borderColor: 'divider',
-						color: 'text.secondary',
-						'&:hover': { bgcolor: 'action.hover', borderColor: 'text.secondary' }
-					}}
-				>
-					Add Skill
-				</Button>
-			</Box>
-
-			<Box sx={helperBox}>
-				<InfoIcon sx={{ color: 'info.main', mt: 0.25, fontSize: 20 }} />
-				<Typography variant="body2" sx={{ color: 'info.main', fontWeight: 500 }}>
-					Assessment Tip: Please list at least three key skills to provide a comprehensive profile of the candidate's capabilities.
-				</Typography>
-			</Box>
-
-			<Divider sx={{ mb: 4, borderColor: 'divider' }} />
-
-			{formData.skills && formData.skills.length > 0 ? (
-				<Stack spacing={3}>
-					{formData.skills.map((skill, index: number) => (
-						<Grid container spacing={2} key={index} alignItems="flex-end">
-							<Grid size={{ xs: 12, md: 6 }}>
-								<Box>
-									<Typography variant="awsFieldLabel">Skill Name</Typography>
-									<Autocomplete
-										freeSolo
-										options={availableSkills}
-										value={skill.name}
-										onChange={(_e, val) => handleNameChange(index, val)}
-										renderInput={(params) => (
-											<TextField
-												{...params}
-												placeholder="Enter or select a skill"
-												size="small"
-												fullWidth
-												required
-												sx={inputSx}
-											/>
-										)}
-									/>
-								</Box>
-							</Grid>
-							<Grid size={{ xs: 10, md: 5 }}>
-								<Box>
-									<Typography variant="awsFieldLabel">Proficiency Level</Typography>
-									<FormControl fullWidth size="small">
-										<Select
-											value={skill.level}
-											onChange={(e) => onSkillChange(index, 'level', e.target.value as string)}
-											sx={{
-												borderRadius: '2px',
-												bgcolor: 'action.hover',
-												'& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
-												'&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'text.secondary' },
-												'&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'accent.main' }
-											}}
-										>
-											<MenuItem value="Beginner">Beginner</MenuItem>
-											<MenuItem value="Intermediate">Intermediate</MenuItem>
-											<MenuItem value="Advanced">Advanced</MenuItem>
-										</Select>
-									</FormControl>
-								</Box>
-							</Grid>
-							<Grid size={{ xs: 2, md: 1 }} sx={{ pb: 0.5 }}>
-								<IconButton 
-									onClick={() => onRemoveSkill(index)}
-									sx={{ 
-										color: 'error.main',
-										'&:hover': { bgcolor: 'error.light', opacity: 0.1 }
-									}}
-								>
-									<DeleteIcon />
-								</IconButton>
-							</Grid>
-						</Grid>
-					))}
-				</Stack>
-			) : (
-				<Box sx={{ py: 4, textAlign: 'center', border: '1px dashed', borderColor: 'divider', borderRadius: '2px' }}>
-					<Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
-						No skills have been added yet. Click the "Add Skill" button to start the assessment.
-					</Typography>
+		<Stack spacing={4}>
+			<Paper elevation={0} variant="outlined" sx={{ p: 3, borderRadius: 0.5 }}>
+				<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+					<Stack direction="row" alignItems="center" spacing={1.5}>
+						<Box sx={{ bgcolor: 'primary.main', p: 0.5, borderRadius: 0.5, display: 'flex' }}>
+							<SkillIcon sx={{ color: 'common.white', fontSize: 20 }} />
+						</Box>
+						<Typography variant="awsSectionTitle">Candidate Skills Assessment</Typography>
+					</Stack>
+					<Button
+						variant="contained"
+						size="small"
+						startIcon={<AddIcon />}
+						onClick={onAddSkill}
+						sx={{
+							borderRadius: 0.5,
+							textTransform: 'none',
+							boxShadow: 'none',
+							'&:hover': { boxShadow: 'none', bgcolor: 'primary.dark' }
+						}}
+					>
+						Add Skill
+					</Button>
 				</Box>
-			)}
+
+				<Divider sx={{ mb: 4 }} />
+
+				{formData.skills && formData.skills.length > 0 ? (
+					<Stack spacing={3}>
+						{formData.skills.map((skill, index: number) => (
+							<Grid container spacing={2} key={index} alignItems="flex-end">
+								<Grid size={{ xs: 12, md: 6 }}>
+									<Box>
+										<Typography variant="awsFieldLabel">Skill Name</Typography>
+										<Autocomplete
+											freeSolo
+											options={availableSkills}
+											value={skill.name}
+											onChange={(_e, val) => handleNameChange(index, val)}
+											renderInput={(params) => (
+												<TextField
+													{...params}
+													placeholder="Enter or select a skill"
+													size="small"
+													fullWidth
+													required
+													sx={inputSx}
+												/>
+											)}
+										/>
+									</Box>
+								</Grid>
+								<Grid size={{ xs: 10, md: 5 }}>
+									<Box>
+										<Typography variant="awsFieldLabel">Proficiency Level</Typography>
+										<FormControl fullWidth size="small">
+											<Select
+												value={skill.level}
+												onChange={(e) => onSkillChange(index, 'level', e.target.value as string)}
+												sx={{
+													borderRadius: 0.5,
+													bgcolor: 'background.paper',
+													'& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
+													'&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'text.secondary' },
+													'&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' }
+												}}
+											>
+												<MenuItem value="Beginner">Beginner</MenuItem>
+												<MenuItem value="Intermediate">Intermediate</MenuItem>
+												<MenuItem value="Advanced">Advanced</MenuItem>
+											</Select>
+										</FormControl>
+									</Box>
+								</Grid>
+								<Grid size={{ xs: 2, md: 1 }} sx={{ pb: 0.5 }}>
+									<IconButton 
+										onClick={() => onRemoveSkill(index)}
+										sx={{ 
+											color: 'error.main',
+											'&:hover': { bgcolor: alpha(theme.palette.error.main, 0.08) }
+										}}
+									>
+										<DeleteIcon />
+									</IconButton>
+								</Grid>
+							</Grid>
+						))}
+					</Stack>
+				) : (
+					<Box sx={{ 
+						py: 6, 
+						textAlign: 'center', 
+						border: '1px dashed', 
+						borderColor: 'divider', 
+						borderRadius: 0.5, 
+						bgcolor: 'background.default' 
+					}}>
+						<Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+							No skills have been added yet. Click the "Add Skill" button to start the assessment.
+						</Typography>
+					</Box>
+				)}
+			</Paper>
 
 			<ConfirmDialog
 				open={confirmAddSkillDialogOpen}
@@ -225,7 +231,7 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 				loading={loading}
 				severity="info"
 			/>
-		</Paper>
+		</Stack>
 	);
 };
 

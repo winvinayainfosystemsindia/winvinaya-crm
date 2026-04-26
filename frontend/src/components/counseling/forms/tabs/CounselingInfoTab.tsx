@@ -13,12 +13,10 @@ import {
 	Chip
 } from '@mui/material';
 import {
-	InfoOutlined as InfoIcon,
 	AssignmentIndOutlined as StatusIcon,
 	LabelOutlined as TagIcon,
 	CommentOutlined as RemarkIcon
 } from '@mui/icons-material';
-import { awsStyles } from '../../../../theme/theme';
 import DynamicFieldRenderer from '../../../common/DynamicFieldRenderer';
 import type { DynamicField } from '../../../../services/settingsService';
 
@@ -43,28 +41,30 @@ const CounselingInfoTab: React.FC<CounselingInfoTabProps> = ({
 	userRole,
 	showErrors = false
 }) => {
-	const { awsPanel, helperBox } = awsStyles;
 	const isManagerOrAdmin = userRole === 'admin' || userRole === 'manager' || userRole === 'sourcing';
+
+	const inputSx = {
+		'& .MuiOutlinedInput-root': {
+			borderRadius: 0.5,
+			bgcolor: 'background.paper',
+			'& fieldset': { borderColor: 'divider' },
+			'&:hover fieldset': { borderColor: 'text.secondary' },
+			'&.Mui-focused fieldset': { borderColor: 'primary.main' }
+		}
+	};
 
 	return (
 		<Stack spacing={4}>
 			{/* Core Status Section */}
-			<Paper elevation={0} sx={awsPanel}>
+			<Paper elevation={0} variant="outlined" sx={{ p: 3, borderRadius: 0.5 }}>
 				<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
-					<Box sx={{ bgcolor: 'accent.main', p: 0.5, borderRadius: '2px', display: 'flex' }}>
-						<StatusIcon sx={{ color: '#ffffff', fontSize: 20 }} />
+					<Box sx={{ bgcolor: 'primary.main', p: 0.5, borderRadius: 0.5, display: 'flex' }}>
+						<StatusIcon sx={{ color: 'common.white', fontSize: 20 }} />
 					</Box>
 					<Typography variant="awsSectionTitle">Core Counseling Status</Typography>
 				</Stack>
 
-				<Box sx={helperBox}>
-					<InfoIcon sx={{ color: 'info.main', mt: 0.25, fontSize: 20 }} />
-					<Typography variant="body2" sx={{ color: 'info.main', fontWeight: 500 }}>
-						The counseling status reflects the current alignment of the candidate's skills with available training or job opportunities.
-					</Typography>
-				</Box>
-
-				<Divider sx={{ mb: 4, borderColor: 'divider' }} />
+				<Divider sx={{ mb: 4 }} />
 
 				<Grid container spacing={3}>
 					<Grid size={{ xs: 12, md: 6 }}>
@@ -75,11 +75,11 @@ const CounselingInfoTab: React.FC<CounselingInfoTabProps> = ({
 									value={formData.status || 'pending'}
 									onChange={(e) => onFieldChange('status', e.target.value)}
 									sx={{
-										borderRadius: '2px',
-										bgcolor: 'action.hover',
+										borderRadius: 0.5,
+										bgcolor: 'background.paper',
 										'& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
 										'&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'text.secondary' },
-										'&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'accent.main' }
+										'&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' }
 									}}
 								>
 									<MenuItem value="pending">In Progress</MenuItem>
@@ -94,20 +94,22 @@ const CounselingInfoTab: React.FC<CounselingInfoTabProps> = ({
 
 			{/* Assignment & Remarks Section (Manager/Admin Only) */}
 			{isManagerOrAdmin && (
-				<Paper elevation={0} sx={awsPanel}>
+				<Paper elevation={0} variant="outlined" sx={{ p: 3, borderRadius: 0.5 }}>
 					<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
-						<Box sx={{ bgcolor: 'accent.main', p: 0.5, borderRadius: '2px', display: 'flex' }}>
-							<RemarkIcon sx={{ color: '#ffffff', fontSize: 20 }} />
+						<Box sx={{ bgcolor: 'primary.main', p: 0.5, borderRadius: 0.5, display: 'flex' }}>
+							<RemarkIcon sx={{ color: 'common.white', fontSize: 20 }} />
 						</Box>
 						<Typography variant="awsSectionTitle">Assignment & Instructions</Typography>
 					</Stack>
+
+					<Divider sx={{ mb: 4 }} />
 
 					<Grid container spacing={4}>
 						<Grid size={{ xs: 12, md: 6 }}>
 							<Box>
 								<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-									<TagIcon sx={{ fontSize: 16, color: 'accent.main' }} />
-									<Typography variant="awsFieldLabel">Assigned to</Typography>
+									<TagIcon sx={{ fontSize: 16, color: 'primary.main' }} />
+									<Typography variant="awsFieldLabel" sx={{ mb: 0 }}>Assigned to</Typography>
 								</Stack>
 								<FormControl fullWidth size="small">
 									<Select
@@ -122,28 +124,28 @@ const CounselingInfoTab: React.FC<CounselingInfoTabProps> = ({
 											return (
 												<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
 													{(selected as string[]).map((value) => (
-														<Chip
-															key={value}
-															label={value}
-															size="small"
-															sx={{
-																bgcolor: 'accent.main',
-																color: '#ffffff',
+														<Chip 
+															key={value} 
+															label={value} 
+															size="small" 
+															sx={{ 
+																bgcolor: 'primary.main', 
+																color: 'common.white',
 																height: 20,
 																fontSize: '0.75rem',
-																borderRadius: '2px'
-															}}
+																borderRadius: 0.5
+															}} 
 														/>
 													))}
 												</Box>
 											);
 										}}
 										sx={{
-											borderRadius: '2px',
-											bgcolor: 'action.hover',
+											borderRadius: 0.5,
+											bgcolor: 'background.paper',
 											'& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
 											'&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'text.secondary' },
-											'&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'accent.main' }
+											'&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' }
 										}}
 									>
 										{batchTags.map(tag => (
@@ -158,8 +160,8 @@ const CounselingInfoTab: React.FC<CounselingInfoTabProps> = ({
 							<Grid size={{ xs: 12, md: 6 }}>
 								<Box>
 									<Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-										<RemarkIcon sx={{ fontSize: 16, color: 'accent.main' }} />
-										<Typography variant="awsFieldLabel">Remarks / Instruction</Typography>
+										<RemarkIcon sx={{ fontSize: 16, color: 'primary.main' }} />
+										<Typography variant="awsFieldLabel" sx={{ mb: 0 }}>Remarks / Instruction</Typography>
 									</Stack>
 									<TextField
 										fullWidth
@@ -171,15 +173,7 @@ const CounselingInfoTab: React.FC<CounselingInfoTabProps> = ({
 										placeholder="Enter remarks or instructions for the candidate..."
 										error={showErrors && !formData.remarks}
 										helperText={(showErrors && !formData.remarks) ? "Please type the remark or instruction if not assigned" : ""}
-										sx={{
-											'& .MuiInputBase-root': {
-												borderRadius: '2px',
-												bgcolor: 'action.hover',
-											},
-											'& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
-											'&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'text.secondary' },
-											'&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'accent.main' }
-										}}
+										sx={inputSx}
 									/>
 								</Box>
 							</Grid>
@@ -189,7 +183,7 @@ const CounselingInfoTab: React.FC<CounselingInfoTabProps> = ({
 			)}
 
 			{/* Dynamic Additional Details */}
-			<Paper elevation={0} sx={awsPanel}>
+			<Paper elevation={0} variant="outlined" sx={{ p: 3, borderRadius: 0.5 }}>
 				<DynamicFieldRenderer
 					fields={dynamicFields}
 					formData={formData.others}
