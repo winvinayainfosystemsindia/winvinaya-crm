@@ -1,228 +1,51 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import {
-	Box,
-	Container,
-	Typography,
-	Tabs,
-	Tab,
-	Snackbar,
-	Alert,
-	useTheme,
-	useMediaQuery
-} from '@mui/material';
-import CounselingTable from '../../components/counseling/table/CounselingTable';
-import CounselingFormDialog from '../../components/counseling/forms/CounselingFormDialog';
+import React from 'react';
+import { Container, Box } from '@mui/material';
 import CounselingStats from '../../components/counseling/stats/CounselingStats';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { createCounseling, updateCounseling, fetchCandidateById, fetchCandidateStats } from '../../store/slices/candidateSlice';
-import type { CandidateListItem, CandidateCounselingCreate } from '../../models/candidate';
+import CounselingFormDialog from '../../components/counseling/forms/CounselingFormDialog';
+import PageHeader from '../../components/common/page-header';
+import CounselingTabs from '../../components/counseling/tabs/CounselingTabs';
+import { useCounselingPage } from '../../components/counseling/hooks/useCounselingPage';
 
-interface TabPanelProps {
-	children?: React.ReactNode;
-	index: number;
-	value: number;
-}
-
-const TabPanel = React.memo((props: TabPanelProps) => {
-	const { children, value, index, ...other } = props;
-	return (
-		<div
-			role="tabpanel"
-			hidden={value !== index}
-			id={`counseling-tabpanel-${index}`}
-			aria-labelledby={`counseling-tab-${index}`}
-			{...other}
-		>
-			{value === index && <Box sx={{ py: 3 }}>{children}</Box>}
-		</div>
-	);
-});
-
+/**
+ * Candidate Counseling Module
+ * Standardized dashboard for managing candidate assessment and placement details.
+ */
 const CounselingList: React.FC = () => {
-	const dispatch = useAppDispatch();
-	const { stats } = useAppSelector((state) => state.candidates);
-	const theme = useTheme();
-	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-	const [tabValue, setTabValue] = useState(0);
-	const [dialogOpen, setDialogOpen] = useState(false);
-	const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
-	const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
-		open: false,
-		message: '',
-		severity: 'success'
-	});
-	const [refreshKey, setRefreshKey] = useState(0);
-	const [initialFormData, setInitialFormData] = useState<CandidateCounselingCreate | undefined>(undefined);
-
-	// Fetch stats on mount and refresh
-	useEffect(() => {
-		dispatch(fetchCandidateStats());
-	}, [dispatch, refreshKey]);
-
-	const handleTabChange = useCallback((_event: React.SyntheticEvent, newValue: number) => {
-		setTabValue(newValue);
-	}, []);
-
-	const showSnackbar = useCallback((message: string, severity: 'success' | 'error') => {
-		setSnackbar({ open: true, message, severity });
-	}, []);
-
-	const handleAction = useCallback(async (action: 'counsel' | 'edit', candidate: CandidateListItem) => {
-		try {
-			// Fetch full candidate details to get existing counseling/work experience data
-			const resultAction = await dispatch(fetchCandidateById({ publicId: candidate.public_id, withDetails: true }));
-
-			if (fetchCandidateById.fulfilled.match(resultAction)) {
-				const fullCandidate = resultAction.payload;
-				setSelectedCandidate(fullCandidate);
-
-				if (action === 'counsel') {
-					setInitialFormData(undefined); // Reset form
-				} else if (action === 'edit' && fullCandidate.counseling) {
-					setInitialFormData({
-						...fullCandidate.counseling
-					} as CandidateCounselingCreate);
-				} else {
-					setInitialFormData(undefined);
-				}
-				setDialogOpen(true);
-			} else {
-				showSnackbar('Failed to fetch candidate details', 'error');
-			}
-		} catch (error) {
-			showSnackbar('An error occurred while fetching details', 'error');
-		}
-	}, [dispatch, showSnackbar]);
-
-	const handleDialogClose = useCallback(() => {
-		setDialogOpen(false);
-		setSelectedCandidate(null);
-		setInitialFormData(undefined);
-	}, []);
-
-	const handleFormSubmit = useCallback(async (data: CandidateCounselingCreate) => {
-		try {
-			if (selectedCandidate.counseling) {
-				// Update via Redux
-				await dispatch(updateCounseling({
-					publicId: selectedCandidate.public_id,
-					counseling: data
-				})).unwrap();
-				showSnackbar('Counseling updated successfully', 'success');
-			} else {
-				// Create via Redux
-				await dispatch(createCounseling({
-					publicId: selectedCandidate.public_id,
-					counseling: data
-				})).unwrap();
-				showSnackbar('Counseling record created successfully', 'success');
-			}
-			setRefreshKey(prev => prev + 1); // Trigger table refresh
-		} catch (error: any) {
-			console.error("Counseling submit error", error);
-			showSnackbar(error || 'Failed to save counseling record', 'error');
-		}
-	}, [dispatch, selectedCandidate, showSnackbar]);
-
-	// Helper to get count for a status safely
-	const getCount = useCallback((status: string) => {
-		if (!stats?.counseling_distribution) return 0;
-		return stats.counseling_distribution[status] || 0;
-	}, [stats]);
-
-	const renderTabLabel = (label: string, count: number) => (
-		<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-			{label}
-			<Box
-				component="span"
-				sx={{
-					bgcolor: '#e0e0e0',
-					color: '#424242',
-					px: 0.8,
-					py: 0.2,
-					borderRadius: '12px',
-					fontSize: '0.75rem',
-					fontWeight: 600
-				}}
-			>
-				{count}
-			</Box>
-		</Box>
-	);
-
-	const tabsConfig = useMemo(() => [
-		{ label: "Not Counseled", count: (stats?.screening_distribution?.['Completed'] || 0) - (getCount('selected') + getCount('rejected') + getCount('pending')), type: 'not_counseled' },
-		{ label: "In Progress", count: getCount('pending'), type: 'pending' },
-		{ label: "Selected", count: getCount('selected'), type: 'selected' },
-		{ label: "Rejected", count: getCount('rejected'), type: 'rejected' },
-	], [stats, getCount]);
+	const {
+		stats,
+		tabValue,
+		dialogOpen,
+		selectedCandidate,
+		refreshKey,
+		initialFormData,
+		handleTabChange,
+		handleAction,
+		handleDialogClose,
+		handleFormSubmit
+	} = useCounselingPage();
 
 	return (
-		<Box sx={{ bgcolor: '#f5f5f5', minHeight: '100vh', py: isMobile ? 2 : 3 }}>
-			<Container maxWidth="xl" sx={{ px: isMobile ? 1 : { sm: 2, md: 3 } }}>
-				{/* Page Header */}
-				<Box sx={{ mb: 4 }}>
-					<Typography
-						variant={isMobile ? "h5" : "h4"}
-						component="h1"
-						sx={{
-							fontWeight: 300,
-							color: '#232f3e',
-							mb: 0.5
-						}}
-					>
-						Candidate Counseling
-					</Typography>
-					<Typography variant="body2" color="text.secondary">
-						Assess and counsel profiled candidates
-					</Typography>
-				</Box>
+		<Container maxWidth="xl" sx={{ py: { xs: 2, sm: 4 } }}>
+			<PageHeader
+				title="Candidate Counseling"
+				subtitle="Assess and counsel profiled candidates for placement readiness"
+			/>
 
-				{/* Stats Section */}
+			<Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+				{/* Stats Cards */}
 				<CounselingStats />
 
-				{/* Tab Navigation */}
-				<Box
-					sx={{
-						bgcolor: '#ffffff',
-						border: '1px solid #e0e0e0',
-						borderRadius: '8px 8px 0 0',
-						mt: 3
-					}}
-				>
-					<Tabs
-						value={tabValue}
-						onChange={handleTabChange}
-						textColor="primary"
-						indicatorColor="primary"
-						variant="scrollable"
-						scrollButtons="auto"
-						allowScrollButtonsMobile
-						sx={{ px: 2 }}
-					>
-						{tabsConfig.map((tab) => (
-							<Tab
-								key={tab.type}
-								label={renderTabLabel(tab.label, tab.count)}
-								sx={{ textTransform: 'none', fontWeight: 500 }}
-							/>
-						))}
-					</Tabs>
-				</Box>
+				{/* Tab Section */}
+				<CounselingTabs
+					tabValue={tabValue}
+					handleTabChange={handleTabChange}
+					stats={stats}
+					handleAction={handleAction}
+					refreshKey={refreshKey}
+				/>
+			</Box>
 
-				{/* Tab Panels */}
-				{tabsConfig.map((tab, index) => (
-					<TabPanel key={tab.type} value={tabValue} index={index}>
-						<CounselingTable
-							type={tab.type as any}
-							onAction={handleAction}
-							refreshKey={refreshKey}
-						/>
-					</TabPanel>
-				))}
-			</Container>
-
-			{/* Form Dialog */}
+			{/* Counseling Form Dialog */}
 			<CounselingFormDialog
 				open={dialogOpen}
 				onClose={handleDialogClose}
@@ -231,24 +54,7 @@ const CounselingList: React.FC = () => {
 				candidateName={selectedCandidate?.name}
 				candidateWorkExperience={selectedCandidate?.work_experience}
 			/>
-
-			{/* Snackbar */}
-			<Snackbar
-				open={snackbar.open}
-				autoHideDuration={6000}
-				onClose={() => setSnackbar({ ...snackbar, open: false })}
-				anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-			>
-				<Alert
-					onClose={() => setSnackbar({ ...snackbar, open: false })}
-					severity={snackbar.severity}
-					variant="filled"
-					sx={{ width: '100%' }}
-				>
-					{snackbar.message}
-				</Alert>
-			</Snackbar>
-		</Box>
+		</Container>
 	);
 };
 
