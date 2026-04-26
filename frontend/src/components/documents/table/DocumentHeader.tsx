@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography, Avatar, Stack, IconButton, useTheme, useMediaQuery } from '@mui/material';
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
-import type { Candidate } from '../../models/candidate';
+import type { Candidate } from '../../../models/candidate';
 
 interface DocumentHeaderProps {
   candidate: Candidate | null;

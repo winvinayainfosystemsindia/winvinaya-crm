@@ -12,13 +12,13 @@ import {
 } from '../../store/slices/candidateSlice';
 import authService from '../../services/authService';
 import { documentService } from '../../services/candidateService';
-import { REQUIRED_DOCUMENTS, type RequiredDocument } from '../../components/documents/documentConfig';
+import { REQUIRED_DOCUMENTS, type RequiredDocument } from '../../components/documents/table/documentConfig';
 import type { CandidateDocument } from '../../models/candidate';
 
 // Modular Components
-import DocumentHeader from '../../components/documents/DocumentHeader';
-import DocumentProgressBar from '../../components/documents/DocumentProgressBar';
-import DocumentCard from '../../components/documents/DocumentCard';
+import DocumentHeader from '../../components/documents/table/DocumentHeader';
+import DocumentProgressBar from '../../components/documents/progress/DocumentProgressBar';
+import DocumentCard from '../../components/documents/table/DocumentCard';
 
 const DocumentCollection: React.FC = () => {
   const { id } = useParams<{ id: string }>();

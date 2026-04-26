@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { Box, useTheme } from '@mui/material';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { fetchCandidateStats } from '../../store/slices/candidateSlice';
-import StatCard from '../common/StatCard';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import { fetchCandidateStats } from '../../../store/slices/candidateSlice';
+import StatCard from '../../common/StatCard';
 import {
 	Description as FilesIcon,
 	CheckCircle as CompleteIcon,
@@ -17,18 +17,15 @@ import {
 const DocumentStats: React.FC = () => {
 	const theme = useTheme();
 	const dispatch = useAppDispatch();
-	// Use statsLoading specifically to avoid flicker when list refreshes
 	// @ts-ignore - statsLoading is available in candidateSlice
 	const { stats, statsLoading } = useAppSelector((state) => state.candidates);
 
 	useEffect(() => {
-		// Only fetch if stats are missing to allow the refresh logic in parent to handle updates
 		if (!stats) {
 			dispatch(fetchCandidateStats());
 		}
 	}, [dispatch, stats]);
 
-	// If no stats are available yet, render an empty height-stabilized box to prevent layout shift
 	if (!stats) {
 		return <Box sx={{ height: 120 }} />;
 	}

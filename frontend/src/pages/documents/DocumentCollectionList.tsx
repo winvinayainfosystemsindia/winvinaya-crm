@@ -1,20 +1,22 @@
 import React, { useState } from 'react';
 import {
 	Box,
-	Paper,
-	Typography,
 	Tabs,
 	Tab,
 	useTheme,
-	useMediaQuery
+	Container
 } from '@mui/material';
 import { useAppSelector } from '../../store/hooks';
-import DocumentStats from '../../components/documents/DocumentStats';
-import DocumentCollectionTable from '../../components/documents/DocumentCollectionTable';
+import DocumentStats from '../../components/documents/stats/DocumentStats';
+import DocumentCollectionTable from '../../components/documents/table/DocumentCollectionTable';
+import PageHeader from '../../components/common/page-header';
 
+/**
+ * DocumentCollectionList - Central hub for tracking candidate documentation compliance.
+ * Optimized for administrative oversight of the placement-ready funnel.
+ */
 const DocumentCollectionList: React.FC = () => {
 	const theme = useTheme();
-	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const [tabValue, setTabValue] = useState(0); // 0 = Not Collected, 1 = Pending, 2 = Collected
 	const { stats } = useAppSelector((state) => state.candidates);
 
@@ -24,15 +26,16 @@ const DocumentCollectionList: React.FC = () => {
 
 	const renderTabLabel = (label: string, count: number) => (
 		<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-			<Typography variant="body2" sx={{ fontWeight: 500 }}>{label}</Typography>
+			{label}
 			<Box sx={{
-				bgcolor: '#eee',
+				bgcolor: theme.palette.mode === 'dark' ? 'action.selected' : 'grey.200',
+				color: 'text.primary',
 				px: 0.8,
 				py: 0.2,
-				borderRadius: '10px',
-				fontSize: '0.7rem',
-				color: '#555',
-				minWidth: '20px',
+				borderRadius: '12px',
+				fontSize: '0.75rem',
+				fontWeight: 600,
+				minWidth: '24px',
 				textAlign: 'center'
 			}}>
 				{count}
@@ -41,33 +44,56 @@ const DocumentCollectionList: React.FC = () => {
 	);
 
 	return (
-		<Box sx={{ p: isMobile ? 2 : 3 }}>
-			<Box sx={{ mb: 4 }}>
-				<Typography variant="h4" component="h1" sx={{ fontWeight: 300, color: '#232f3e', mb: 0.5 }}>
-					Document Collection
-				</Typography>
-				<Typography variant="body2" color="text.secondary">
-					Manage and track document collection for selected candidates
-				</Typography>
+		<Container maxWidth="xl" sx={{ py: { xs: 2, sm: 4 } }}>
+			<PageHeader
+				title="Document Collection"
+				subtitle="Manage and track document compliance for placement-ready candidates"
+			/>
+
+			<Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+				{/* Stats Cards */}
+				<DocumentStats />
+
+				{/* Tab Section */}
+				<Box>
+					<Box
+						sx={{
+							bgcolor: 'background.paper',
+							border: '1px solid',
+							borderColor: 'divider',
+							borderRadius: '8px 8px 0 0'
+						}}
+					>
+						<Tabs 
+							value={tabValue} 
+							onChange={handleTabChange} 
+							variant="scrollable"
+							scrollButtons="auto"
+							allowScrollButtonsMobile
+							sx={{ 
+								px: 2,
+								'& .MuiTab-root': {
+									textTransform: 'none',
+									fontSize: '0.95rem',
+									fontWeight: 500,
+									minHeight: 48
+								}
+							}}
+						>
+							<Tab label={renderTabLabel("Not Collected", stats?.candidates_not_submitted || 0)} />
+							<Tab label={renderTabLabel("Pending Collection", stats?.candidates_partially_submitted || 0)} />
+							<Tab label={renderTabLabel("Collection Completed", stats?.candidates_fully_submitted || 0)} />
+						</Tabs>
+					</Box>
+
+					<Box sx={{ mt: 3 }}>
+						{tabValue === 0 && <DocumentCollectionTable type="not_collected" />}
+						{tabValue === 1 && <DocumentCollectionTable type="pending" />}
+						{tabValue === 2 && <DocumentCollectionTable type="collected" />}
+					</Box>
+				</Box>
 			</Box>
-
-			<DocumentStats />
-
-			{/* Tabs */}
-			<Paper sx={{ mb: 0, borderRadius: '4px 4px 0 0', borderBottom: '1px solid #e0e0e0' }} elevation={0}>
-				<Tabs value={tabValue} onChange={handleTabChange} indicatorColor="primary" textColor="primary">
-					<Tab label={renderTabLabel("Not Collected", stats?.candidates_not_submitted || 0)} sx={{ textTransform: 'none' }} />
-					<Tab label={renderTabLabel("Pending Collection", stats?.candidates_partially_submitted || 0)} sx={{ textTransform: 'none' }} />
-					<Tab label={renderTabLabel("Collection Completed", stats?.candidates_fully_submitted || 0)} sx={{ textTransform: 'none' }} />
-				</Tabs>
-			</Paper>
-
-			<Box sx={{ mt: 3 }}>
-				{tabValue === 0 && <DocumentCollectionTable type="not_collected" />}
-				{tabValue === 1 && <DocumentCollectionTable type="pending" />}
-				{tabValue === 2 && <DocumentCollectionTable type="collected" />}
-			</Box>
-		</Box>
+		</Container>
 	);
 };
 

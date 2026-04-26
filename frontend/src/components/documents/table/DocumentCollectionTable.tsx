@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
 	Box,
 	Paper,
@@ -15,79 +15,44 @@ import {
 	useTheme,
 	Tooltip,
 	Chip,
-	TableSortLabel
+	TableSortLabel,
+	alpha
 } from '@mui/material';
 import { Search, CloudUpload as UploadIcon, Accessible, VerifiedUser } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { fetchScreenedCandidates } from '../../store/slices/candidateSlice';
-import type { CandidateListItem } from '../../models/candidate';
-import CustomTablePagination from '../common/CustomTablePagination';
+import type { CandidateListItem } from '../../../models/candidate';
+import CustomTablePagination from '../../common/CustomTablePagination';
+import { useDocumentPage } from '../hooks/useDocumentPage';
 
 interface DocumentCollectionTableProps {
 	type: 'not_collected' | 'pending' | 'collected';
 }
 
+/**
+ * DocumentCollectionTable - Standardized data table for document collection workflows.
+ * Optimized for high-throughput tracking of candidate documentation status.
+ */
 const DocumentCollectionTable: React.FC<DocumentCollectionTableProps> = ({ type }) => {
 	const theme = useTheme();
 	const navigate = useNavigate();
-	const dispatch = useAppDispatch();
-	const { list: candidates, loading, total: totalCount } = useAppSelector((state) => state.candidates);
+	
+	const {
+		candidates,
+		loading,
+		totalCount,
+		searchTerm,
+		page,
+		rowsPerPage,
+		order,
+		orderBy,
+		handleSearch,
+		handleChangePage,
+		handleChangeRowsPerPage,
+		handleRequestSort,
+		setRowsPerPage
+	} = useDocumentPage(type);
 
-	const [searchTerm, setSearchTerm] = useState('');
-	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(5);
-	const [order, setOrder] = useState<'asc' | 'desc'>('desc');
-	const [orderBy, setOrderBy] = useState<keyof CandidateListItem>('created_at');
-
-	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-
-	const fetchCandidatesData = async () => {
-		dispatch(fetchScreenedCandidates({
-			skip: page * rowsPerPage,
-			limit: rowsPerPage,
-			counselingStatus: 'selected',
-			search: debouncedSearchTerm,
-			documentStatus: type,
-			sortBy: orderBy,
-			sortOrder: order
-		}));
-	};
-
-	useEffect(() => {
-		fetchCandidatesData();
-	}, [page, rowsPerPage, type, debouncedSearchTerm, order, orderBy]);
-
-	const handleChangePage = (_event: unknown, newPage: number) => {
-		setPage(newPage);
-	};
-
-	const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-		setRowsPerPage(parseInt(event.target.value, 10));
-		setPage(0);
-	};
-
-	const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-		setSearchTerm(event.target.value);
-		setPage(0);
-	};
-
-	const handleRequestSort = (property: keyof CandidateListItem) => {
-		const isAsc = orderBy === property && order === 'asc';
-		setOrder(isAsc ? 'desc' : 'asc');
-		setOrderBy(property);
-	};
-
-	// Debounce search term
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			setDebouncedSearchTerm(searchTerm);
-		}, 500);
-
-		return () => clearTimeout(timer);
-	}, [searchTerm]);
-
-	// Helper to render document status chips
+	// Helper to render document status chips with theme alignment
 	const renderStatusChips = (candidate: CandidateListItem) => {
 		const docs = candidate.documents_uploaded || [];
 		const collected: string[] = [];
@@ -104,21 +69,39 @@ const DocumentCollectionTable: React.FC<DocumentCollectionTableProps> = ({ type 
 		if (docs.includes('aadhar_card')) collected.push('Aadhar'); else pending.push('Aadhar');
 
 		return (
-			<Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-				<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-					{collected.map(d => (
-						<Chip key={d} label={d} size="small" color="success" variant="outlined" sx={{ height: 18, fontSize: '0.6rem' }} />
-					))}
-					{pending.map(d => (
-						<Chip key={d} label={d} size="small" variant="outlined" sx={{ height: 18, fontSize: '0.6rem', color: 'text.secondary', borderColor: '#e0e0e0' }} />
-					))}
-				</Box>
+			<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+				{collected.map(d => (
+					<Chip 
+						key={d} 
+						label={d} 
+						size="small" 
+						color="success" 
+						variant="outlined" 
+						sx={{ height: 18, fontSize: '0.6rem', borderRadius: 0.5, fontWeight: 700 }} 
+					/>
+				))}
+				{pending.map(d => (
+					<Chip 
+						key={d} 
+						label={d} 
+						size="small" 
+						variant="outlined" 
+						sx={{ 
+							height: 18, 
+							fontSize: '0.6rem', 
+							borderRadius: 0.5,
+							color: 'text.secondary', 
+							borderColor: 'divider',
+							bgcolor: alpha(theme.palette.text.secondary, 0.04)
+						}} 
+					/>
+				))}
 			</Box>
 		);
 	};
 
 	return (
-		<Paper sx={{ border: '1px solid #d5dbdb', boxShadow: 'none', borderRadius: '8px', overflow: 'hidden' }}>
+		<Paper elevation={0} variant="outlined" sx={{ borderRadius: 0.5, overflow: 'hidden' }}>
 			{/* Header with Search */}
 			<Box sx={{
 				p: 2,
@@ -126,25 +109,21 @@ const DocumentCollectionTable: React.FC<DocumentCollectionTableProps> = ({ type 
 				flexDirection: { xs: 'column', sm: 'row' },
 				justifyContent: 'space-between',
 				alignItems: { xs: 'stretch', sm: 'center' },
-				borderBottom: '1px solid #d5dbdb',
-				bgcolor: '#fafafa'
+				borderBottom: '1px solid',
+				borderColor: 'divider',
+				bgcolor: alpha(theme.palette.primary.main, 0.02)
 			}}>
 				<TextField
-					placeholder={`Search ${type.replace('_', ' ')} candidates...`}
+					placeholder={`Search candidates by name or email...`}
 					value={searchTerm}
 					onChange={handleSearch}
 					size="small"
-					fullWidth={true}
+					fullWidth
 					sx={{
 						maxWidth: { xs: '100%', sm: '350px' },
 						'& .MuiOutlinedInput-root': {
-							bgcolor: 'white',
-							'& fieldset': {
-								borderColor: '#d5dbdb',
-							},
-							'&:hover fieldset': {
-								borderColor: theme.palette.primary.main,
-							},
+							bgcolor: 'background.paper',
+							borderRadius: 0.5
 						}
 					}}
 					InputProps={{
@@ -160,50 +139,54 @@ const DocumentCollectionTable: React.FC<DocumentCollectionTableProps> = ({ type 
 			<TableContainer>
 				<Table sx={{ minWidth: 650 }}>
 					<TableHead>
-						<TableRow sx={{ bgcolor: '#fafafa' }}>
-							<TableCell sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem' }}>
+						<TableRow sx={{ bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
+							<TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase' }}>
 								<TableSortLabel
 									active={orderBy === 'name'}
 									direction={orderBy === 'name' ? order : 'asc'}
 									onClick={() => handleRequestSort('name')}
 								>
-									Candidate
+									Candidate Identity
 								</TableSortLabel>
 							</TableCell>
-							<TableCell sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem', display: { xs: 'none', md: 'table-cell' } }}>
-								Contact
+							<TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase', display: { xs: 'none', md: 'table-cell' } }}>
+								Contact Details
 							</TableCell>
-							<TableCell sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem', display: { xs: 'none', md: 'table-cell' } }}>
+							<TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase', display: { xs: 'none', md: 'table-cell' } }}>
 								Location
 							</TableCell>
-							<TableCell sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem' }}>
-								Documents
+							<TableCell sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase' }}>
+								Document Status
 							</TableCell>
-							<TableCell align="right" sx={{ fontWeight: 'bold', color: 'text.secondary', fontSize: '0.875rem' }}>
-								Actions
+							<TableCell align="right" sx={{ fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem', textTransform: 'uppercase' }}>
+								Workflow Action
 							</TableCell>
 						</TableRow>
 					</TableHead>
 					<TableBody>
 						{loading ? (
 							<TableRow>
-								<TableCell colSpan={5} align="center" sx={{ py: 4 }}>
-									<Typography color="text.secondary">Loading...</Typography>
+								<TableCell colSpan={5} align="center" sx={{ py: 6 }}>
+									<Box sx={{ opacity: 0.5 }}>
+										<Typography variant="body2">Synchronizing candidate data...</Typography>
+									</Box>
 								</TableCell>
 							</TableRow>
 						) : candidates.length === 0 ? (
 							<TableRow>
-								<TableCell colSpan={5} align="center" sx={{ py: 4 }}>
-									<Typography color="text.secondary">No candidates found with {type.replace('_', ' ')} documents.</Typography>
+								<TableCell colSpan={5} align="center" sx={{ py: 6 }}>
+									<Typography variant="body2" color="text.secondary">
+										No candidates found in the "{type.replace('_', ' ')}" collection.
+									</Typography>
 								</TableCell>
 							</TableRow>
 						) : (
 							candidates.map((candidate) => (
-								<TableRow key={candidate.public_id} sx={{ '&:hover': { bgcolor: '#f5f8fa' } }}>
+								<TableRow key={candidate.public_id} hover>
 									<TableCell>
 										<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
 											<Box>
-												<Typography variant="body2" sx={{ fontWeight: 500 }}>
+												<Typography variant="body2" sx={{ fontWeight: 600 }}>
 													{candidate.name}
 												</Typography>
 												<Typography variant="caption" color="text.secondary">
@@ -212,11 +195,11 @@ const DocumentCollectionTable: React.FC<DocumentCollectionTableProps> = ({ type 
 											</Box>
 											{candidate.is_disabled && (
 												<Tooltip title="Person with Disability">
-													<Accessible color="primary" fontSize="small" />
+													<Accessible color="primary" sx={{ fontSize: 16 }} />
 												</Tooltip>
 											)}
 											<Tooltip title="Verified Profile">
-												<VerifiedUser sx={{ color: '#4caf50', fontSize: 20 }} />
+												<VerifiedUser sx={{ color: 'success.main', fontSize: 16 }} />
 											</Tooltip>
 										</Box>
 									</TableCell>
@@ -239,8 +222,10 @@ const DocumentCollectionTable: React.FC<DocumentCollectionTableProps> = ({ type 
 											onClick={() => navigate(`/candidates/documents/${candidate.public_id}`)}
 											sx={{
 												textTransform: 'none',
-												bgcolor: '#1976d2',
-												'&:hover': { bgcolor: '#115293' }
+												borderRadius: 0.5,
+												fontWeight: 700,
+												boxShadow: 'none',
+												'&:hover': { boxShadow: 'none' }
 											}}
 										>
 											Collect

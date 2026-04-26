@@ -5,7 +5,7 @@ import {
   Visibility as PreviewIcon,
   Delete as DeleteIcon
 } from '@mui/icons-material';
-import type { CandidateDocument } from '../../models/candidate';
+import type { CandidateDocument } from '../../../models/candidate';
 
 interface FileStatusBoxProps {
   document: CandidateDocument;

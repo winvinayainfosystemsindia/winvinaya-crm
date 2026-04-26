@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardActions, Box, Typography, Chip, Button, CircularProgress, alpha, useTheme } from '@mui/material';
 import { CheckCircle as CheckCircleIcon, CloudUpload as UploadIcon, FileDownload as MetaIcon } from '@mui/icons-material';
 import type { RequiredDocument } from './documentConfig';
-import type { CandidateDocument } from '../../models/candidate';
+import type { CandidateDocument } from '../../../models/candidate';
 import FileStatusBox from './FileStatusBox';
 
 interface DocumentCardProps {
