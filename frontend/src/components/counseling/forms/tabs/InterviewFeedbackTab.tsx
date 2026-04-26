@@ -7,7 +7,8 @@ import {
 	Stack,
 	TextField,
 	IconButton,
-	Paper
+	Paper,
+	Tooltip
 } from '@mui/material';
 import { Add as AddIcon, DeleteOutline as DeleteIcon, InfoOutlined as InfoIcon, AssignmentOutlined as InterviewIcon, StarOutline as FeedbackIcon } from '@mui/icons-material';
 import { awsStyles } from '../../../../theme/theme';
@@ -31,15 +32,15 @@ const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 	onFeedbackChange,
 	onJobRolesChange
 }) => {
-	const { sectionTitle, awsPanel, fieldLabel, helperBox } = awsStyles;
+	const { awsPanel, helperBox } = awsStyles;
 
 	const inputSx = {
 		'& .MuiOutlinedInput-root': {
 			borderRadius: '2px',
-			bgcolor: '#fcfcfc',
-			'& fieldset': { borderColor: '#d5dbdb' },
-			'&:hover fieldset': { borderColor: '#879596' },
-			'&.Mui-focused fieldset': { borderColor: '#ec7211' },
+			bgcolor: 'action.hover',
+			'& fieldset': { borderColor: 'divider' },
+			'&:hover fieldset': { borderColor: 'text.secondary' },
+			'&.Mui-focused fieldset': { borderColor: 'accent.main' },
 			'& textarea': { resize: 'vertical' }
 		}
 	};
@@ -50,10 +51,10 @@ const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 			<Paper elevation={0} sx={awsPanel}>
 				<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
 					<Stack direction="row" alignItems="center" spacing={1.5}>
-						<Box sx={{ bgcolor: '#ec7211', p: 0.5, borderRadius: '2px', display: 'flex' }}>
+						<Box sx={{ bgcolor: 'accent.main', p: 0.5, borderRadius: '2px', display: 'flex' }}>
 							<InterviewIcon sx={{ color: '#ffffff', fontSize: 20 }} />
 						</Box>
-						<Typography sx={sectionTitle}>Interview Assessment Questions</Typography>
+						<Typography variant="awsSectionTitle">Interview Assessment Questions</Typography>
 					</Stack>
 					<Button
 						variant="outlined"
@@ -64,9 +65,9 @@ const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 							borderRadius: '2px',
 							textTransform: 'none',
 							fontWeight: 700,
-							borderColor: '#d5dbdb',
-							color: '#545b64',
-							'&:hover': { bgcolor: '#f2f3f3', borderColor: '#879596' }
+							borderColor: 'divider',
+							color: 'text.secondary',
+							'&:hover': { bgcolor: 'action.hover', borderColor: 'text.secondary' }
 						}}
 					>
 						Add Custom Question
@@ -74,13 +75,13 @@ const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 				</Box>
 
 				<Box sx={helperBox}>
-					<InfoIcon sx={{ color: '#007eb9', mt: 0.25, fontSize: 20 }} />
-					<Typography variant="body2" sx={{ color: '#007eb9', fontWeight: 500 }}>
+					<InfoIcon sx={{ color: 'info.main', mt: 0.25, fontSize: 20 }} />
+					<Typography variant="body2" sx={{ color: 'info.main', fontWeight: 500 }}>
 						Guidance: Ask domain-specific questions or assign technical tasks to gauge the skill levels mentioned by the candidate.
 					</Typography>
 				</Box>
 
-				<Divider sx={{ mb: 4, borderColor: '#eaeded' }} />
+				<Divider sx={{ mb: 4, borderColor: 'divider' }} />
 
 				<Stack spacing={4}>
 					{formData.questions?.map((q, index: number) => (
@@ -88,15 +89,16 @@ const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 							key={index}
 							sx={{
 								p: 3,
-								border: '1px solid #eaeded',
+								border: '1px solid',
+								borderColor: 'divider',
 								borderRadius: '2px',
-								bgcolor: '#fcfcfc',
-								'&:hover': { borderColor: '#d5dbdb', bgcolor: '#ffffff' }
+								bgcolor: 'action.hover',
+								'&:hover': { borderColor: 'text.secondary', bgcolor: 'background.paper' }
 							}}
 						>
 							<Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, alignItems: 'flex-start' }}>
 								<Box sx={{ width: '100%', mr: 2 }}>
-									<Typography sx={{ ...fieldLabel, color: '#ec7211', mb: 0.5 }}>Question #{index + 1}</Typography>
+									<Typography variant="awsFieldLabel" sx={{ color: 'accent.main', mb: 0.5 }}>Question #{index + 1}</Typography>
 									<TextField
 										variant="standard"
 										fullWidth
@@ -108,8 +110,9 @@ const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 											sx: {
 												fontSize: '0.9rem',
 												p: 1,
-												bgcolor: '#ffffff',
-												border: '1px solid #d5dbdb',
+												bgcolor: 'background.paper',
+												border: '1px solid',
+												borderColor: 'divider',
 												borderRadius: '2px'
 											}
 										}}
@@ -120,8 +123,8 @@ const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 										size="small"
 										onClick={() => onRemoveQuestion(index)}
 										sx={{
-											color: '#d91d11',
-											'&:hover': { bgcolor: '#fdf3f2' }
+											color: 'error.main',
+											'&:hover': { bgcolor: 'error.light', opacity: 0.1 }
 										}}
 									>
 										<DeleteIcon />
@@ -129,7 +132,7 @@ const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 								</Tooltip>
 							</Box>
 							<Box>
-								<Typography sx={fieldLabel}>Candidate Response</Typography>
+								<Typography variant="awsFieldLabel">Candidate Response</Typography>
 								<TextField
 									multiline
 									rows={2}
@@ -145,8 +148,8 @@ const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 						</Box>
 					))}
 					{(!formData.questions || formData.questions.length === 0) && (
-						<Box sx={{ py: 6, textAlign: 'center', border: '1px dashed #d5dbdb', borderRadius: '2px' }}>
-							<Typography variant="body2" sx={{ color: '#545b64', fontStyle: 'italic' }}>
+						<Box sx={{ py: 6, textAlign: 'center', border: '1px dashed', borderColor: 'divider', borderRadius: '2px' }}>
+							<Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
 								No custom interview questions added yet.
 							</Typography>
 						</Box>
@@ -157,13 +160,13 @@ const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 			{/* Performance Feedback Section */}
 			<Paper elevation={0} sx={awsPanel}>
 				<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
-					<Box sx={{ bgcolor: '#ec7211', p: 0.5, borderRadius: '2px', display: 'flex' }}>
+					<Box sx={{ bgcolor: 'accent.main', p: 0.5, borderRadius: '2px', display: 'flex' }}>
 						<FeedbackIcon sx={{ color: '#ffffff', fontSize: 20 }} />
 					</Box>
-					<Typography sx={sectionTitle}>Training & Placement Recommendations</Typography>
+					<Typography variant="awsSectionTitle">Training & Placement Recommendations</Typography>
 				</Stack>
 
-				<Divider sx={{ mb: 4, borderColor: '#eaeded' }} />
+				<Divider sx={{ mb: 4, borderColor: 'divider' }} />
 
 				<Stack spacing={4}>
 					{/* Integrated Job Search Component */}
@@ -172,14 +175,14 @@ const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 						onChange={onJobRolesChange}
 					/>
 
-					<Divider sx={{ mb: 4, borderColor: '#eaeded' }} />
+					<Divider sx={{ mb: 4, borderColor: 'divider' }} />
 
 					<Box>
-						<Typography sx={fieldLabel}>Overall Feedback & Recommended Next Steps</Typography>
+						<Typography variant="awsFieldLabel">Overall Feedback & Recommended Next Steps</Typography>
 						<Box sx={helperBox}>
-							<InfoIcon sx={{ color: '#007eb9', mt: 0.25, fontSize: 20 }} />
-							<Typography variant="body2" sx={{ color: '#007eb9', fontWeight: 400, fontSize: '0.8125rem' }}>
-								<strong>Evaluation Guidance:</strong> Provide a consolidated summary of the candidate's domain expertise, communication abilities, and cultural fit. Use these insights to justify the recommended training path or highlight specific placement opportunities.
+							<InfoIcon sx={{ color: 'info.main', mt: 0.25, fontSize: 20 }} />
+							<Typography variant="body2" sx={{ color: 'info.main', fontWeight: 400, fontSize: '0.8125rem' }}>
+								<Typography component="span" variant="inherit" sx={{ fontWeight: 700 }}>Evaluation Guidance:</Typography> Provide a consolidated summary of the candidate's domain expertise, communication abilities, and cultural fit. Use these insights to justify the recommended training path or highlight specific placement opportunities.
 							</Typography>
 						</Box>
 						<TextField
@@ -198,8 +201,5 @@ const InterviewFeedbackTab: React.FC<InterviewFeedbackTabProps> = ({
 		</Stack>
 	);
 };
-
-// Tooltip import was missing from MUI material in previous edits
-import { Tooltip } from '@mui/material';
 
 export default InterviewFeedbackTab;

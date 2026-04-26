@@ -84,7 +84,7 @@ const ProjectTable: React.FC<ProjectTableProps> = ({
 				totalCount={totalCount}
 				page={page}
 				rowsPerPage={rowsPerPage}
-				onPageChange={(p) => handlePageChange(null, p)}
+				onPageChange={handlePageChange}
 				onRowsPerPageChange={handleRowsChange}
 				searchTerm={searchTerm}
 				onSearchChange={(value) => handleSearch({ target: { value } } as any)}

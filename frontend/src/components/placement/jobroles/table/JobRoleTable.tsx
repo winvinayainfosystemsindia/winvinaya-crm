@@ -77,7 +77,7 @@ const JobRoleTable: React.FC<JobRoleTableProps> = ({ onEditJobRole }) => {
 				totalCount={totalCount}
 				page={page}
 				rowsPerPage={rowsPerPage}
-				onPageChange={(p) => handleChangePage(null, p)}
+				onPageChange={handleChangePage}
 				onRowsPerPageChange={(rows) => handleChangeRowsPerPage({ target: { value: rows.toString() } } as any)}
 				searchTerm={searchTerm}
 				onSearchChange={(v) => handleSearch({ target: { value: v } } as any)}

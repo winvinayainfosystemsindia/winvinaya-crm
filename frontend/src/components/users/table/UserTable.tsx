@@ -232,7 +232,7 @@ const UserTable: React.FC<UserTableProps> = ({ onAddUser, onEditUser, onViewUser
 				totalCount={totalCount}
 				page={page}
 				rowsPerPage={rowsPerPage}
-				onPageChange={setPage}
+				onPageChange={(_e, p) => setPage(p)}
 				onRowsPerPageChange={setRowsPerPage}
 				searchTerm={searchTerm}
 				onSearchChange={(val) => { setSearchTerm(val); setPage(0); }}

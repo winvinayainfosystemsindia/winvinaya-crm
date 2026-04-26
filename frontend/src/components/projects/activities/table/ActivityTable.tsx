@@ -347,7 +347,7 @@ const ActivityTable: React.FC<ActivityTableProps> = ({
 				totalCount={totalCount}
 				page={page}
 				rowsPerPage={rowsPerPage}
-				onPageChange={(val) => handlePageChange(null, val)}
+				onPageChange={handlePageChange}
 				onRowsPerPageChange={(val) => handleRowsPerPageChange({ target: { value: val.toString() } } as any)}
 				searchTerm={searchTerm}
 				onSearchChange={(val) => handleSearch({ target: { value: val } } as any)}

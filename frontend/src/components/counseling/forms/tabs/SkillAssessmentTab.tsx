@@ -34,7 +34,7 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 	onRemoveSkill,
 	onSkillChange
 }) => {
-	const { sectionTitle, awsPanel, fieldLabel, helperBox } = awsStyles;
+	const { awsPanel, helperBox } = awsStyles;
 	const toast = useToast();
 	const [availableSkills, setAvailableSkills] = useState<string[]>([]);
 	const [loading, setLoading] = useState(false);
@@ -104,17 +104,17 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 	const inputSx = {
 		'& .MuiOutlinedInput-root': {
 			borderRadius: '2px',
-			bgcolor: '#fcfcfc',
-			'& fieldset': { borderColor: '#d5dbdb' },
-			'&:hover fieldset': { borderColor: '#879596' },
-			'&.Mui-focused fieldset': { borderColor: '#ec7211' }
+			bgcolor: 'action.hover',
+			'& fieldset': { borderColor: 'divider' },
+			'&:hover fieldset': { borderColor: 'text.secondary' },
+			'&.Mui-focused fieldset': { borderColor: 'accent.main' }
 		}
 	};
 
 	return (
 		<Paper elevation={0} sx={awsPanel}>
 			<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-				<Typography sx={sectionTitle}>Candidate Skills Assessment</Typography>
+				<Typography variant="awsSectionTitle">Candidate Skills Assessment</Typography>
 				<Button
 					variant="outlined"
 					size="small"
@@ -124,9 +124,9 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 						borderRadius: '2px',
 						textTransform: 'none',
 						fontWeight: 700,
-						borderColor: '#d5dbdb',
-						color: '#545b64',
-						'&:hover': { bgcolor: '#f2f3f3', borderColor: '#879596' }
+						borderColor: 'divider',
+						color: 'text.secondary',
+						'&:hover': { bgcolor: 'action.hover', borderColor: 'text.secondary' }
 					}}
 				>
 					Add Skill
@@ -134,13 +134,13 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 			</Box>
 
 			<Box sx={helperBox}>
-				<InfoIcon sx={{ color: '#007eb9', mt: 0.25, fontSize: 20 }} />
-				<Typography variant="body2" sx={{ color: '#007eb9', fontWeight: 500 }}>
+				<InfoIcon sx={{ color: 'info.main', mt: 0.25, fontSize: 20 }} />
+				<Typography variant="body2" sx={{ color: 'info.main', fontWeight: 500 }}>
 					Assessment Tip: Please list at least three key skills to provide a comprehensive profile of the candidate's capabilities.
 				</Typography>
 			</Box>
 
-			<Divider sx={{ mb: 4, borderColor: '#eaeded' }} />
+			<Divider sx={{ mb: 4, borderColor: 'divider' }} />
 
 			{formData.skills && formData.skills.length > 0 ? (
 				<Stack spacing={3}>
@@ -148,7 +148,7 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 						<Grid container spacing={2} key={index} alignItems="flex-end">
 							<Grid size={{ xs: 12, md: 6 }}>
 								<Box>
-									<Typography sx={fieldLabel}>Skill Name</Typography>
+									<Typography variant="awsFieldLabel">Skill Name</Typography>
 									<Autocomplete
 										freeSolo
 										options={availableSkills}
@@ -162,12 +162,6 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 												fullWidth
 												required
 												sx={inputSx}
-												onKeyDown={(e) => {
-													if (e.key === 'Enter') {
-														// Enter triggers onChange/onInputChange but we want to ensure
-														// the value is captured correctly
-													}
-												}}
 											/>
 										)}
 									/>
@@ -175,17 +169,17 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 							</Grid>
 							<Grid size={{ xs: 10, md: 5 }}>
 								<Box>
-									<Typography sx={fieldLabel}>Proficiency Level</Typography>
+									<Typography variant="awsFieldLabel">Proficiency Level</Typography>
 									<FormControl fullWidth size="small">
 										<Select
 											value={skill.level}
 											onChange={(e) => onSkillChange(index, 'level', e.target.value as string)}
 											sx={{
 												borderRadius: '2px',
-												bgcolor: '#fcfcfc',
-												'& .MuiOutlinedInput-notchedOutline': { borderColor: '#d5dbdb' },
-												'&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#879596' },
-												'&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#ec7211' }
+												bgcolor: 'action.hover',
+												'& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
+												'&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'text.secondary' },
+												'&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'accent.main' }
 											}}
 										>
 											<MenuItem value="Beginner">Beginner</MenuItem>
@@ -199,8 +193,8 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 								<IconButton 
 									onClick={() => onRemoveSkill(index)}
 									sx={{ 
-										color: '#d91d11',
-										'&:hover': { bgcolor: '#fdf3f2' }
+										color: 'error.main',
+										'&:hover': { bgcolor: 'error.light', opacity: 0.1 }
 									}}
 								>
 									<DeleteIcon />
@@ -210,8 +204,8 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 					))}
 				</Stack>
 			) : (
-				<Box sx={{ py: 4, textAlign: 'center', border: '1px dashed #d5dbdb', borderRadius: '2px' }}>
-					<Typography variant="body2" sx={{ color: '#545b64', fontStyle: 'italic' }}>
+				<Box sx={{ py: 4, textAlign: 'center', border: '1px dashed', borderColor: 'divider', borderRadius: '2px' }}>
+					<Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
 						No skills have been added yet. Click the "Add Skill" button to start the assessment.
 					</Typography>
 				</Box>

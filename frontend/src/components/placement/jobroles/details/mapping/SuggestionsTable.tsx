@@ -191,7 +191,7 @@ const SuggestionsTable: React.FC<SuggestionsTableProps> = ({
             rowsPerPage={rowsPerPage}
             numSelected={selectedIds.length}
             onSelectAllClick={onSelectAll}
-            onPageChange={onPageChange}
+            onPageChange={(_e, p) => onPageChange(p)}
             onRowsPerPageChange={onRowsPerPageChange}
             renderRow={renderRow}
             emptyMessage="No suggestions available at the moment."

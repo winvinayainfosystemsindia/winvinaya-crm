@@ -92,7 +92,7 @@ const MySubmissionsTable: React.FC<MySubmissionsTableProps> = ({
 			totalCount={total}
 			page={page}
 			rowsPerPage={rowsPerPage}
-			onPageChange={onPageChange}
+			onPageChange={(_e, p) => onPageChange(p)}
 			onRowsPerPageChange={onRowsPerPageChange}
 			searchTerm={searchTerm}
 			onSearchChange={onSearchChange}
