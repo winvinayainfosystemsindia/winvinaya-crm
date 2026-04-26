@@ -1,74 +1,91 @@
 import React, { useEffect } from 'react';
-import { Box, CircularProgress, Alert } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchCandidateStats } from '../../store/slices/candidateSlice';
 import StatCard from '../common/StatCard';
-import DescriptionIcon from '@mui/icons-material/Description';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import PendingActionsIcon from '@mui/icons-material/PendingActions';
+import {
+	Description as FilesIcon,
+	CheckCircle as CompleteIcon,
+	PendingActions as PartialIcon,
+	FolderOff as NoneIcon
+} from '@mui/icons-material';
 
+/**
+ * DocumentStats - Specialized dashboard for document collection metrics.
+ * Visualizes the compliance funnel from "Initial Contact" to "Full Documentation".
+ */
 const DocumentStats: React.FC = () => {
+	const theme = useTheme();
 	const dispatch = useAppDispatch();
-	const { stats, loading, error } = useAppSelector((state) => state.candidates);
+	// Use statsLoading specifically to avoid flicker when list refreshes
+	// @ts-ignore - statsLoading is available in candidateSlice
+	const { stats, statsLoading } = useAppSelector((state) => state.candidates);
 
 	useEffect(() => {
-		dispatch(fetchCandidateStats());
-	}, [dispatch]);
+		// Only fetch if stats are missing to allow the refresh logic in parent to handle updates
+		if (!stats) {
+			dispatch(fetchCandidateStats());
+		}
+	}, [dispatch, stats]);
 
-	if (loading) {
-		return (
-			<Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-				<CircularProgress size={24} />
-			</Box>
-		);
-	}
-
-	if (error) {
-		return (
-			<Alert severity="error" sx={{ mb: 3 }}>
-				{error}
-			</Alert>
-		);
-	}
-
+	// If no stats are available yet, render an empty height-stabilized box to prevent layout shift
 	if (!stats) {
-		return null;
+		return <Box sx={{ height: 120 }} />;
 	}
+
+	const statItems = [
+		{
+			title: "Files Collected",
+			count: stats.files_collected?.toString() || '0',
+			subtitle: `Target: ${stats.files_to_collect || 0} docs`,
+			icon: <FilesIcon fontSize="large" />,
+			color: theme.palette.info.main
+		},
+		{
+			title: "Compliance Full",
+			count: stats.candidates_fully_submitted?.toString() || '0',
+			subtitle: "All mandatory docs verified",
+			icon: <CompleteIcon fontSize="large" />,
+			color: theme.palette.success.main
+		},
+		{
+			title: "Compliance Partial",
+			count: stats.candidates_partially_submitted?.toString() || '0',
+			subtitle: "Awaiting pending docs",
+			icon: <PartialIcon fontSize="large" />,
+			color: theme.palette.warning.main
+		},
+		{
+			title: "Zero Documentation",
+			count: stats.candidates_not_submitted?.toString() || '0',
+			subtitle: "Initial collection pending",
+			icon: <NoneIcon fontSize="large" />,
+			color: theme.palette.error.main
+		}
+	];
 
 	return (
-		<Box sx={{ mb: 4 }}>
-			<Box sx={{ display: 'grid', gap: 3, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(4, 1fr)' } }}>
-				<StatCard
-					title="Files Collected"
-					count={stats.files_collected?.toString() || '0'}
-					subtitle={`Yet to collect: ${(stats.files_to_collect || 0) - (stats.files_collected || 0)}`}
-					icon={<DescriptionIcon fontSize="large" />}
-					color="#1976d2"
-				/>
-				<StatCard
-					title="Fully Submitted"
-					count={stats.candidates_fully_submitted?.toString() || '0'}
-					subtitle="Candidates with all docs"
-					icon={<CheckCircleIcon fontSize="large" />}
-					color="#2e7d32"
-				/>
-				<StatCard
-					title="Partially Submitted"
-					count={stats.candidates_partially_submitted?.toString() || '0'}
-					subtitle="Candidates with some docs"
-					icon={<PendingActionsIcon fontSize="large" />}
-					color="#ed6c02"
-				/>
-				<StatCard
-					title="Not Submitted"
-					count={stats.candidates_not_submitted?.toString() || '0'}
-					subtitle="Candidates with 0 docs"
-					icon={<DescriptionIcon fontSize="large" />}
-					color="#d32f2f"
-				/>
-			</Box>
+		<Box sx={{ 
+			display: 'flex', 
+			gap: 3, 
+			mb: 3, 
+			flexWrap: 'wrap',
+			opacity: statsLoading ? 0.6 : 1,
+			transition: 'opacity 0.2s ease-in-out'
+		}}>
+			{statItems.map((item, index) => (
+				<Box key={index} sx={{ flex: '1 1 200px' }}>
+					<StatCard
+						title={item.title}
+						count={item.count}
+						icon={item.icon}
+						color={item.color}
+						subtitle={item.subtitle}
+					/>
+				</Box>
+			))}
 		</Box>
 	);
 };
 
-export default DocumentStats;
+export default React.memo(DocumentStats);
