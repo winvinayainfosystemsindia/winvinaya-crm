@@ -1,10 +1,11 @@
 import React from 'react';
 import { Grid, useTheme } from '@mui/material';
+import { useAppSelector } from '../../../../store/hooks';
 import {
 	Work as JobIcon,
-	Business as BusinessIcon,
 	Visibility as VisibilityIcon,
 	Groups as VacancyIcon,
+	CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
 import StatCard from '../../../common/stats/StatCard';
 import { JOB_ROLE_STATUS } from '../../../../models/jobRole';
@@ -16,6 +17,7 @@ interface JobRoleStatsProps {
 
 const JobRoleStats: React.FC<JobRoleStatsProps> = ({ list, total }) => {
 	const theme = useTheme();
+	const { stats } = useAppSelector((state) => state.candidates);
 
 	return (
 		<Grid container spacing={3} sx={{ mb: 4 }}>
@@ -51,10 +53,10 @@ const JobRoleStats: React.FC<JobRoleStatsProps> = ({ list, total }) => {
 			</Grid>
 			<Grid size={{ xs: 12, sm: 6, md: 3 }}>
 				<StatCard
-					title="Partner Companies"
-					value={new Set(list.map(j => j.company_id)).size}
-					subtitle="Unique organization partners"
-					icon={<BusinessIcon />}
+					title="Placed Candidates"
+					value={(stats?.got_job || 0).toLocaleString()}
+					subtitle="Successfully placed"
+					icon={<CheckCircleIcon />}
 					color={theme.palette.secondary.main}
 				/>
 			</Grid>
