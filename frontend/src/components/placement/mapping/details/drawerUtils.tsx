@@ -18,14 +18,24 @@ export const getDocumentPreviewUrl = (documentId: number, token: string | null):
 	return `${apiUrl}/api/v1/candidates/documents/${documentId}/download?token=${token}&disposition=inline`;
 };
 
+// Matches any dynamic interview round: interview_l1, interview_l2, interview_l10, etc.
+const INTERVIEW_ROUND_RE = /^interview_l\d+$/;
+
 export const getStatusConfig = (status: string, theme: Theme) => {
 	const statusKey = status.toLowerCase();
 
+	// Dynamic interview round — resolve before static lookup
+	if (INTERVIEW_ROUND_RE.test(statusKey)) {
+		return {
+			color: theme.palette.accent.main,
+			icon: <ScheduleIcon sx={{ fontSize: 14 }} />,
+		};
+	}
+
 	const colors: Record<string, string> = {
 		applied: theme.palette.info.main,
+		mapped: theme.palette.info.main,
 		shortlisted: theme.palette.success.main,
-		interview_l1: theme.palette.accent.main,
-		interview_l2: theme.palette.accent.main,
 		technical_round: theme.palette.accent.main,
 		hr_round: theme.palette.accent.main,
 		offer_made: theme.palette.warning.main,
@@ -41,9 +51,8 @@ export const getStatusConfig = (status: string, theme: Theme) => {
 
 	const icons: Record<string, React.ReactNode> = {
 		applied: <SearchIcon sx={{ fontSize: 14 }} />,
+		mapped: <SearchIcon sx={{ fontSize: 14 }} />,
 		shortlisted: <SuccessIcon sx={{ fontSize: 14 }} />,
-		interview_l1: <ScheduleIcon sx={{ fontSize: 14 }} />,
-		interview_l2: <ScheduleIcon sx={{ fontSize: 14 }} />,
 		technical_round: <EventIcon sx={{ fontSize: 14 }} />,
 		hr_round: <HandshakeIcon sx={{ fontSize: 14 }} />,
 		offer_made: <OfferIcon sx={{ fontSize: 14 }} />,
@@ -58,8 +67,8 @@ export const getStatusConfig = (status: string, theme: Theme) => {
 	};
 
 	return {
-		color: colors[statusKey] || theme.palette.text.secondary,
-		icon: icons[statusKey] || <InProgressIcon sx={{ fontSize: 14 }} />
+		color: colors[statusKey] ?? theme.palette.text.secondary,
+		icon: icons[statusKey] ?? <InProgressIcon sx={{ fontSize: 14 }} />,
 	};
 };
 

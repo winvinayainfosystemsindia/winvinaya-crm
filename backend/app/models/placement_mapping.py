@@ -16,15 +16,24 @@ if TYPE_CHECKING:
 
 
 class PlacementStatus(str, enum.Enum):
-    """Pipeline stages for placement mapping"""
+    """Pipeline stages for placement mapping.
+
+    Interview rounds L1–L5 are defined statically here.
+    The API accepts any 'interview_lN' pattern (N >= 1) dynamically,
+    so companies with more than 5 rounds will also work without code changes.
+    The DB column is String(50), not a native PG enum, so no migration is needed.
+    """
     MAPPED = "mapped"
     SHORTLISTED = "shortlisted"
     INTERVIEW_L1 = "interview_l1"
     INTERVIEW_L2 = "interview_l2"
+    INTERVIEW_L3 = "interview_l3"
+    INTERVIEW_L4 = "interview_l4"
+    INTERVIEW_L5 = "interview_l5"
     TECHNICAL_ROUND = "technical_round"
     HR_ROUND = "hr_round"
     OFFER_MADE = "offer_made"
-    OFFERED = "offered" # Legacy alias for offer_made
+    OFFERED = "offered"  # Legacy alias for offer_made
     OFFER_ACCEPTED = "offer_accepted"
     OFFER_REJECTED = "offer_rejected"
     JOINED = "joined"

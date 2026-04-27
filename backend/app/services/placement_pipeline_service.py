@@ -15,10 +15,10 @@ class PlacementPipelineService:
         self.mapping_repo = PlacementMappingRepository(db)
 
     async def update_status(
-        self, 
-        mapping_id: int, 
-        to_status: PlacementStatus, 
-        changed_by_id: int, 
+        self,
+        mapping_id: int,
+        to_status: str,  # Accepts PlacementStatus values AND dynamic 'interview_lN' strings
+        changed_by_id: int,
         remarks: Optional[str] = None
     ) -> Optional[PlacementMapping]:
         from sqlalchemy import select
