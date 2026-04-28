@@ -26,7 +26,7 @@ interface CompanyTableProps {
 	onRefresh: () => void;
 	// Row actions
 	isAdmin: boolean;
-	onView: (company: Company) => void;
+	onRowClick: (company: Company) => void;
 	onEdit: (company: Company) => void;
 	onDelete: (company: Company) => void;
 }
@@ -58,7 +58,7 @@ const CompanyTable: React.FC<CompanyTableProps> = ({
 	activeFilterCount,
 	onRefresh,
 	isAdmin,
-	onView,
+	onRowClick,
 	onEdit,
 	onDelete,
 }) => {
@@ -87,10 +87,9 @@ const CompanyTable: React.FC<CompanyTableProps> = ({
 					key={company.public_id}
 					company={company}
 					isAdmin={isAdmin}
-					onView={onView}
 					onEdit={onEdit}
 					onDelete={onDelete}
-					onClick={onView}
+					onClick={onRowClick}
 				/>
 			)}
 		/>

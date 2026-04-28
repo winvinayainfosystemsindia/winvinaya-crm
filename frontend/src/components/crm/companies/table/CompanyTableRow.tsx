@@ -9,7 +9,6 @@ import type { Company } from '../../../../models/company';
 interface CompanyTableRowProps {
 	company: Company;
 	isAdmin: boolean;
-	onView: (company: Company) => void;
 	onEdit: (company: Company) => void;
 	onDelete?: (company: Company) => void;
 	onClick: (company: Company) => void;
@@ -18,7 +17,6 @@ interface CompanyTableRowProps {
 const CompanyTableRow: React.FC<CompanyTableRowProps> = memo(({
 	company,
 	isAdmin,
-	onView,
 	onEdit,
 	onDelete,
 	onClick,
@@ -98,7 +96,6 @@ const CompanyTableRow: React.FC<CompanyTableRowProps> = memo(({
 			<TableCell align="right" onClick={(e) => e.stopPropagation()}>
 				<CRMRowActions
 					row={company}
-					onView={() => onView(company)}
 					onEdit={() => onEdit(company)}
 					onDelete={isAdmin && onDelete ? () => onDelete(company) : undefined}
 				/>

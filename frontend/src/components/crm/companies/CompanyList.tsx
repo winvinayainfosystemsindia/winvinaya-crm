@@ -197,7 +197,7 @@ const CompanyList: React.FC<CompanyListProps> = ({ onAddClick }) => {
 					activeFilterCount={activeFilterCount}
 					onRefresh={handleRefresh}
 					isAdmin={isAdmin}
-					onView={(company) => navigate(`/crm/companies/${company.public_id}`)}
+					onRowClick={(company) => navigate(`/crm/companies/${company.public_id}`)}
 					onEdit={handleOpenEdit}
 					onDelete={handleDeleteClick}
 				/>
