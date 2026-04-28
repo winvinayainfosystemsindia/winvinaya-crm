@@ -1,31 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import {
-	Box,
-	Button,
-	TextField,
-	InputAdornment,
-	Stack,
-	IconButton,
-	Tooltip
-} from '@mui/material';
+import { Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import {
-	Add as AddIcon,
-	Search as SearchIcon,
-	FilterList as FilterIcon,
-	Refresh as RefreshIcon
-} from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchCompanies, fetchCompanyStats, createCompany, updateCompany, deleteCompany } from '../../../store/slices/companySlice';
 import CRMPageHeader from '../common/CRMPageHeader';
-import CRMTable from '../common/CRMTable';
-import CRMStatusBadge from '../common/CRMStatusBadge';
 import CompanyFormDialog from './CompanyFormDialog';
 import ConfirmDialog from '../../common/ConfirmDialog';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
 import CompanyStats from './stats/CompanyStats';
-import CRMRowActions from '../common/CRMRowActions';
-import CRMAvatar from '../common/CRMAvatar';
+import CompanyTable from './table/CompanyTable';
 import type { CompanyCreate, CompanyUpdate, Company } from '../../../models/company';
 import { useSnackbar } from 'notistack';
 
@@ -34,7 +17,7 @@ interface CompanyListProps {
 	subtitle?: string;
 }
 
-const CompanyList: React.FC<CompanyListProps> = ({ title = "Companies", subtitle }) => {
+const CompanyList: React.FC<CompanyListProps> = ({ title = 'Companies', subtitle }) => {
 	const navigate = useNavigate();
 	const dispatch = useAppDispatch();
 	const { enqueueSnackbar } = useSnackbar();
@@ -67,8 +50,8 @@ const CompanyList: React.FC<CompanyListProps> = ({ title = "Companies", subtitle
 		dispatch(fetchCompanyStats());
 	}, [dispatch, page, rowsPerPage, search, sortBy, sortOrder, activeFilters]);
 
-	const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		setSearch(event.target.value);
+	const handleSearchChange = (value: string) => {
+		setSearch(value);
 		setPage(0);
 	};
 
@@ -133,10 +116,10 @@ const CompanyList: React.FC<CompanyListProps> = ({ title = "Companies", subtitle
 		}
 	};
 
-	const handleSort = (columnId: string) => {
+	const handleSort = (columnId: keyof Company) => {
 		const isAsc = sortBy === columnId && sortOrder === 'asc';
 		setSortOrder(isAsc ? 'desc' : 'asc');
-		setSortBy(columnId);
+		setSortBy(String(columnId));
 		setPage(0);
 	};
 
@@ -154,6 +137,8 @@ const CompanyList: React.FC<CompanyListProps> = ({ title = "Companies", subtitle
 		setFilterDrawerOpen(false);
 		setPage(0);
 	};
+
+	const activeFilterCount = Object.keys(activeFilters).filter(k => !!activeFilters[k]).length;
 
 	const filterFields: FilterField[] = [
 		{
@@ -184,133 +169,38 @@ const CompanyList: React.FC<CompanyListProps> = ({ title = "Companies", subtitle
 		}
 	];
 
-	const columns = [
-		{
-			id: 'name',
-			label: 'Company Name',
-			minWidth: 200,
-			sortable: true,
-			format: (value: string) => (
-				<Stack direction="row" spacing={1.5} alignItems="center">
-					<CRMAvatar name={value} size={28} />
-					<Box sx={{ fontWeight: 700, color: '#007eb9' }}>{value}</Box>
-				</Stack>
-			)
-		},
-		{ id: 'status', label: 'Status', minWidth: 120, sortable: true, format: (value: string) => <CRMStatusBadge label={value} status={value} type="company" /> },
-		{ id: 'industry', label: 'Industry', minWidth: 150, sortable: true },
-		{ id: 'website', label: 'Website', minWidth: 180, format: (value: string) => value ? <a href={value.startsWith('http') ? value : `https://${value}`} target="_blank" rel="noopener noreferrer" style={{ color: '#007eb9', textDecoration: 'none' }}>{value}</a> : '-' },
-		{ id: 'email', label: 'Email', minWidth: 200 },
-		{ id: 'created_at', label: 'Created On', minWidth: 130, sortable: true, format: (value: string) => new Date(value).toLocaleDateString() },
-		{
-			id: 'actions',
-			label: 'Actions',
-			minWidth: 100,
-			align: 'right' as const,
-			format: (_: any, row: Company) => (
-				<CRMRowActions
-					row={row}
-					onView={() => navigate(`/crm/companies/${row.public_id}`)}
-					onEdit={() => handleOpenEdit(row)}
-					onDelete={isAdmin ? () => handleDeleteClick(row) : undefined}
-				/>
-			)
-		}
-	];
-
-
-
-	const actions = (
-		<>
-			<Button
-				variant="outlined"
-				startIcon={<RefreshIcon />}
-				onClick={handleRefresh}
-				sx={{ color: '#545b64', borderColor: '#d5dbdb', textTransform: 'none', fontWeight: 700 }}
-			>
-				Refresh
-			</Button>
-			<Button
-				variant="contained"
-				color="primary"
-				startIcon={<AddIcon />}
-				onClick={handleOpenAdd}
-				sx={{
-					px: 3,
-					bgcolor: '#ec7211',
-					'&:hover': { bgcolor: '#eb5f07' },
-					textTransform: 'none',
-					fontWeight: 600,
-					boxShadow: 'none'
-				}}
-			>
-				Add Company
-			</Button>
-		</>
-	);
-
 	return (
 		<>
 			<CRMPageHeader
 				title={title}
 				subtitle={subtitle}
-				actions={actions}
 			/>
 
 			<Box sx={{ mt: 3 }}>
 				<CompanyStats list={list} stats={stats} />
 
-				<Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-					<TextField
-						size="small"
-						placeholder="Search companies..."
-						value={search}
-						onChange={handleSearchChange}
-						sx={{ width: 320, bgcolor: 'white' }}
-						InputProps={{
-							startAdornment: (
-								<InputAdornment position="start">
-									<SearchIcon fontSize="small" sx={{ color: '#545b64' }} />
-								</InputAdornment>
-							),
-						}}
-					/>
-
-					<Tooltip title="Filter">
-						<IconButton
-							onClick={() => setFilterDrawerOpen(true)}
-							sx={{
-								border: '1px solid #d5dbdb',
-								borderRadius: '2px',
-								bgcolor: activeFilters.status || activeFilters.industry ? '#f5f8fa' : 'white'
-							}}
-						>
-							<FilterIcon fontSize="small" sx={{ color: activeFilters.status || activeFilters.industry ? '#ec7211' : '#545b64' }} />
-						</IconButton>
-					</Tooltip>
-				</Box>
-
-				<CRMTable
-					columns={columns}
-					rows={list}
+				<CompanyTable
+					list={list}
 					total={total}
+					loading={loading}
 					page={page}
 					rowsPerPage={rowsPerPage}
 					onPageChange={(_, newPage) => setPage(newPage)}
-					onRowsPerPageChange={(e) => {
-						setRowsPerPage(parseInt(e.target.value, 10));
-						setPage(0);
-					}}
-					onRowsPerPageSelectChange={(rows) => {
-						setRowsPerPage(rows);
-						setPage(0);
-					}}
-					orderBy={sortBy}
-					order={sortOrder}
+					onRowsPerPageChange={(rows) => { setRowsPerPage(rows); setPage(0); }}
+					sortBy={sortBy}
+					sortOrder={sortOrder}
 					onSort={handleSort}
-					loading={loading}
-					emptyMessage="No companies found. Start by adding your first company."
-					onRowClick={(row) => navigate(`/crm/companies/${row.public_id}`)}
+					search={search}
+					onSearchChange={handleSearchChange}
+					onFilterOpen={() => setFilterDrawerOpen(true)}
+					activeFilterCount={activeFilterCount}
+					onRefresh={handleRefresh}
+					onCreateClick={handleOpenAdd}
+					canCreate={true}
+					isAdmin={isAdmin}
+					onView={(company) => navigate(`/crm/companies/${company.public_id}`)}
+					onEdit={handleOpenEdit}
+					onDelete={handleDeleteClick}
 				/>
 
 				<CompanyFormDialog
