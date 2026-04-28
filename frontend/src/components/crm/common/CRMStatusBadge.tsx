@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
+import { useTheme, alpha } from '@mui/material/styles';
 
 export type BadgeType = 'lead' | 'deal' | 'task' | 'company' | 'generic';
 
@@ -9,73 +10,84 @@ interface CRMStatusBadgeProps {
 	type?: BadgeType;
 }
 
-const getStatusStyles = (status: string, type: BadgeType) => {
+type StatusTone = 'success' | 'info' | 'warning' | 'error' | 'default';
+
+const getStatusTone = (status: string, type: BadgeType): StatusTone => {
 	const s = status.toLowerCase();
 
-	// Default colors (AWS style)
-	const colors: Record<string, { bg: string; text: string; border: string }> = {
-		// Success / Positive
-		positive: { bg: '#f1faff', text: '#007eb9', border: '#007eb9' },
-		success: { bg: '#edfaef', text: '#1d8102', border: '#1d8102' },
-		// Warning / Neutral
-		warning: { bg: '#fff9e6', text: '#8d6605', border: '#ff9900' },
-		// Error / Negative
-		negative: { bg: '#fdf3f1', text: '#d13212', border: '#d13212' },
-		// Default / Gray
-		default: { bg: '#f2f3f3', text: '#545b64', border: '#545b64' },
-	};
-
 	if (type === 'lead') {
-		if (['qualified', 'converted'].includes(s)) return colors.success;
-		if (['contacted', 'negatiation', 'proposal_sent'].includes(s)) return colors.positive;
-		if (['new', 'nurturing'].includes(s)) return colors.warning;
-		if (['lost'].includes(s)) return colors.negative;
+		if (['qualified', 'converted'].includes(s)) return 'success';
+		if (['contacted', 'negotiation', 'proposal_sent'].includes(s)) return 'info';
+		if (['new', 'nurturing'].includes(s)) return 'warning';
+		if (['lost'].includes(s)) return 'error';
 	}
 
 	if (type === 'deal') {
-		if (['closed_won'].includes(s)) return colors.success;
-		if (['proposal', 'negotiation', 'discovery', 'qualification'].includes(s)) return colors.positive;
-		if (['on_hold'].includes(s)) return colors.warning;
-		if (['closed_lost'].includes(s)) return colors.negative;
+		if (['closed_won'].includes(s)) return 'success';
+		if (['proposal', 'negotiation', 'discovery', 'qualification'].includes(s)) return 'info';
+		if (['on_hold'].includes(s)) return 'warning';
+		if (['closed_lost'].includes(s)) return 'error';
 	}
 
 	if (type === 'task') {
-		if (['completed'].includes(s)) return colors.success;
-		if (['in_progress'].includes(s)) return colors.positive;
-		if (['pending', 'deferred'].includes(s)) return colors.warning;
-		if (['cancelled'].includes(s)) return colors.negative;
+		if (['completed'].includes(s)) return 'success';
+		if (['in_progress'].includes(s)) return 'info';
+		if (['pending', 'deferred'].includes(s)) return 'warning';
+		if (['cancelled'].includes(s)) return 'error';
 	}
 
-	if (['active', 'client', 'partner'].includes(s)) return colors.success;
-	if (['prospect'].includes(s)) return colors.positive;
-	if (['inactive'].includes(s)) return colors.negative;
+	// Company & generic
+	if (['active', 'client', 'customer', 'partner'].includes(s)) return 'success';
+	if (['prospect'].includes(s)) return 'info';
+	if (['inactive'].includes(s)) return 'error';
 
-	return colors.default;
+	return 'default';
 };
 
 const CRMStatusBadge: React.FC<CRMStatusBadgeProps> = ({ label, status, type = 'generic' }) => {
-	const styles = getStatusStyles(status, type);
+	const theme = useTheme();
+	const tone = getStatusTone(status, type);
+
+	const paletteColor = {
+		success: theme.palette.success.main,
+		info:    theme.palette.primary.main,
+		warning: theme.palette.warning.main,
+		error:   theme.palette.error.main,
+		default: theme.palette.text.disabled,
+	}[tone];
 
 	return (
 		<Box
 			sx={{
 				display: 'inline-flex',
 				alignItems: 'center',
-				px: 1.5,
-				py: 0.25,
-				borderRadius: '12px',
-				bgcolor: styles.bg,
-				border: `1px solid ${styles.border}`,
-				color: styles.text,
+				gap: 0.75,
+				px: 1.25,
+				py: 0.4,
+				borderRadius: '6px',
+				bgcolor: alpha(paletteColor, 0.1),
+				border: `1px solid ${alpha(paletteColor, 0.25)}`,
 			}}
 		>
+			{/* Status dot */}
+			<Box
+				sx={{
+					width: 6,
+					height: 6,
+					borderRadius: '50%',
+					bgcolor: paletteColor,
+					flexShrink: 0,
+				}}
+			/>
 			<Typography
 				variant="caption"
 				sx={{
-					fontWeight: 700,
-					textTransform: 'uppercase',
-					fontSize: '0.65rem',
-					letterSpacing: '0.04em'
+					fontWeight: 600,
+					textTransform: 'capitalize',
+					fontSize: '0.72rem',
+					letterSpacing: '0.02em',
+					color: paletteColor,
+					lineHeight: 1,
 				}}
 			>
 				{label}

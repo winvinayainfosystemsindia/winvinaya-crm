@@ -10,7 +10,7 @@ import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
 import CompanyStats from './stats/CompanyStats';
 import CompanyTable from './table/CompanyTable';
 import type { CompanyCreate, CompanyUpdate, Company } from '../../../models/company';
-import { useSnackbar } from 'notistack';
+import useToast from '../../../hooks/useToast';
 
 interface CompanyListProps {
 	onAddClick?: (trigger: () => void) => void;
@@ -19,7 +19,7 @@ interface CompanyListProps {
 const CompanyList: React.FC<CompanyListProps> = ({ onAddClick }) => {
 	const navigate = useNavigate();
 	const dispatch = useAppDispatch();
-	const { enqueueSnackbar } = useSnackbar();
+	const toast = useToast();
 	const { list, total, loading, stats } = useAppSelector((state) => state.companies);
 	const { user } = useAppSelector((state) => state.auth);
 	const isAdmin = user?.role === 'admin';
@@ -87,15 +87,15 @@ const CompanyList: React.FC<CompanyListProps> = ({ onAddClick }) => {
 		try {
 			if (selectedCompany) {
 				await dispatch(updateCompany({ publicId: selectedCompany.public_id, company: data as CompanyUpdate })).unwrap();
-				enqueueSnackbar('Company updated successfully', { variant: 'success' });
+				toast.success('Company updated successfully');
 			} else {
 				await dispatch(createCompany(data as CompanyCreate)).unwrap();
-				enqueueSnackbar('Company created successfully', { variant: 'success' });
+				toast.success('Company created successfully');
 			}
 			setDialogOpen(false);
 			handleRefresh();
 		} catch (error: any) {
-			enqueueSnackbar(error || 'Failed to save company', { variant: 'error' });
+			toast.error(error || 'Failed to save company');
 		} finally {
 			setFormLoading(false);
 		}
@@ -111,11 +111,11 @@ const CompanyList: React.FC<CompanyListProps> = ({ onAddClick }) => {
 		setDeleting(true);
 		try {
 			await dispatch(deleteCompany(selectedCompany.public_id)).unwrap();
-			enqueueSnackbar('Company deleted successfully', { variant: 'success' });
+			toast.success('Company deleted successfully');
 			setDeleteDialogOpen(false);
 			handleRefresh();
 		} catch (error: any) {
-			enqueueSnackbar(error || 'Failed to delete company', { variant: 'error' });
+			toast.error(error || 'Failed to delete company');
 		} finally {
 			setDeleting(false);
 		}

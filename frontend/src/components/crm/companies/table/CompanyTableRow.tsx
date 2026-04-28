@@ -1,8 +1,9 @@
-import React from 'react';
-import { TableRow, TableCell, Stack, Box } from '@mui/material';
+import React, { memo } from 'react';
+import { TableRow, TableCell, Stack, Typography, Link } from '@mui/material';
 import CRMAvatar from '../../common/CRMAvatar';
 import CRMStatusBadge from '../../common/CRMStatusBadge';
 import CRMRowActions from '../../common/CRMRowActions';
+import { useDateTime } from '../../../../hooks/useDateTime';
 import type { Company } from '../../../../models/company';
 
 interface CompanyTableRowProps {
@@ -14,7 +15,7 @@ interface CompanyTableRowProps {
 	onClick: (company: Company) => void;
 }
 
-const CompanyTableRow: React.FC<CompanyTableRowProps> = ({
+const CompanyTableRow: React.FC<CompanyTableRowProps> = memo(({
 	company,
 	isAdmin,
 	onView,
@@ -22,67 +23,79 @@ const CompanyTableRow: React.FC<CompanyTableRowProps> = ({
 	onDelete,
 	onClick,
 }) => {
-	const cellSx = {
-		fontSize: '0.875rem',
-		color: '#16191f',
-		borderBottom: '1px solid #eaeded',
-		padding: '10px 16px',
-	};
+	const { formatDate } = useDateTime();
 
 	return (
 		<TableRow
 			hover
 			tabIndex={-1}
-			key={company.public_id}
 			onClick={() => onClick(company)}
 			sx={{
 				cursor: 'pointer',
-				'&:hover': { bgcolor: '#f5f8fa !important' },
+				'&:hover': { bgcolor: 'action.hover' },
+				'&:last-child td': { borderBottom: 0 },
 			}}
 		>
 			{/* Company Name */}
-			<TableCell sx={cellSx}>
+			<TableCell>
 				<Stack direction="row" spacing={1.5} alignItems="center">
 					<CRMAvatar name={company.name} size={28} />
-					<Box sx={{ fontWeight: 700, color: '#007eb9' }}>{company.name}</Box>
+					<Typography
+						variant="body2"
+						sx={{ fontWeight: 600, color: 'primary.main' }}
+					>
+						{company.name}
+					</Typography>
 				</Stack>
 			</TableCell>
 
 			{/* Status */}
-			<TableCell sx={cellSx}>
+			<TableCell>
 				<CRMStatusBadge label={company.status} status={company.status} type="company" />
 			</TableCell>
 
 			{/* Industry */}
-			<TableCell sx={cellSx}>{company.industry ?? '—'}</TableCell>
+			<TableCell>
+				<Typography variant="body2" color="text.secondary">
+					{company.industry ?? '—'}
+				</Typography>
+			</TableCell>
 
 			{/* Website */}
-			<TableCell sx={cellSx}>
+			<TableCell>
 				{company.website ? (
-					<a
+					<Link
 						href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
 						target="_blank"
 						rel="noopener noreferrer"
-						style={{ color: '#007eb9', textDecoration: 'none' }}
+						variant="body2"
+						color="primary"
+						underline="hover"
 						onClick={(e) => e.stopPropagation()}
 					>
 						{company.website}
-					</a>
+					</Link>
 				) : (
-					'—'
+					<Typography variant="body2" color="text.disabled">—</Typography>
 				)}
 			</TableCell>
 
 			{/* Email */}
-			<TableCell sx={cellSx}>{company.email ?? '—'}</TableCell>
+			<TableCell>
+				<Typography variant="body2" color="text.secondary">
+					{company.email ?? '—'}
+				</Typography>
+			</TableCell>
 
 			{/* Created On */}
-			<TableCell sx={cellSx}>
-				{new Date(company.created_at).toLocaleDateString()}
+			<TableCell>
+				<Typography variant="body2" color="text.secondary">
+					{formatDate(company.created_at)}
+				</Typography>
 			</TableCell>
 
 			{/* Actions */}
-			<TableCell sx={{ ...cellSx, textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
+			<TableCell align="right" onClick={(e) => e.stopPropagation()}>
 				<CRMRowActions
 					row={company}
 					onView={() => onView(company)}
@@ -92,6 +105,8 @@ const CompanyTableRow: React.FC<CompanyTableRowProps> = ({
 			</TableCell>
 		</TableRow>
 	);
-};
+});
+
+CompanyTableRow.displayName = 'CompanyTableRow';
 
 export default CompanyTableRow;
