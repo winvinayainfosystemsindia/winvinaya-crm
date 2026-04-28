@@ -1,65 +1,61 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Box, Grid } from '@mui/material';
 import {
-	Box,
-	Button,
-	TextField,
-	InputAdornment,
-	Stack,
-	IconButton,
-	Tooltip,
-	LinearProgress,
-	Typography,
-	Chip,
-	Container,
-	Grid
-} from '@mui/material';
-import {
-	Add as AddIcon,
-	Search as SearchIcon,
-	FilterList as FilterIcon,
-	Refresh as RefreshIcon,
-	FilterCenterFocus as LeadIcon,
-	Person as PersonIcon,
-	WhatsApp as WhatsAppIcon
+	Stars as LeadIcon,
+	TrendingUp as ConversionIcon,
+	Assessment as ScoreIcon,
+	History as RecentIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
-import { fetchLeads, fetchLeadStats, createLead, updateLead, deleteLead } from '../../../store/slices/leadSlice';
-import CRMPageHeader from '../common/CRMPageHeader';
+import { fetchLeads, createLead, updateLead, deleteLead } from '../../../store/slices/leadSlice';
+import { fetchCompanies } from '../../../store/slices/companySlice';
+import { fetchContacts } from '../../../store/slices/contactSlice';
+import { DataTable, type ColumnDefinition } from '../../common/table';
+import LeadTableRow from './table/LeadTableRow';
 import LeadFormDialog from './LeadFormDialog';
-import CRMTable from '../common/CRMTable';
-import CRMStatusBadge from '../common/CRMStatusBadge';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
 import ConfirmDialog from '../../common/ConfirmDialog';
 import StatCard from '../../common/stats/StatCard';
-import CRMRowActions from '../common/CRMRowActions';
-import type { Lead } from '../../../models/lead';
-import { useSnackbar } from 'notistack';
+import type { Lead, LeadCreate, LeadUpdate } from '../../../models/lead';
+import useToast from '../../../hooks/useToast';
 
-const LeadList: React.FC = () => {
+interface LeadListProps {
+	onAddClick?: (trigger: () => void) => void;
+}
+
+const COLUMNS: ColumnDefinition<Lead>[] = [
+	{ id: 'title',           label: 'Lead Title', sortable: true,  width: 250 },
+	{ id: 'lead_status',     label: 'Status',     sortable: true,  width: 130 },
+	{ id: 'company',         label: 'Entity',     sortable: false, width: 200 },
+	{ id: 'estimated_value', label: 'Value',      sortable: true,  width: 140 },
+	{ id: 'lead_source',     label: 'Source',     sortable: true,  width: 130 },
+	{ id: 'created_at',      label: 'Added On',   sortable: true,  width: 130 },
+	{ id: 'actions',         label: 'Actions',    sortable: false, width: 100, align: 'right' },
+];
+
+const LeadList: React.FC<LeadListProps> = ({ onAddClick }) => {
 	const navigate = useNavigate();
 	const dispatch = useAppDispatch();
-	const { enqueueSnackbar } = useSnackbar();
-	const { list, total, stats, loading } = useAppSelector((state) => state.leads);
-	const { user: currentUser } = useAppSelector((state) => state.auth);
-
-	const isManager = currentUser?.role === 'manager' || currentUser?.role === 'admin' || currentUser?.role === 'sales_manager';
-	const isAdmin = currentUser?.role === 'admin';
+	const toast = useToast();
+	const { list, total, loading, stats } = useAppSelector((state) => state.leads);
+	const { user } = useAppSelector((state) => state.auth);
+	const isAdmin = user?.role === 'admin';
 
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [search, setSearch] = useState('');
-	const [sortBy, setSortBy] = useState('lead_score');
+	const [sortBy, setSortBy] = useState('created_at');
 	const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 	const [activeFilters, setActiveFilters] = useState<Record<string, any>>({});
 	const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 	const [dialogOpen, setDialogOpen] = useState(false);
-	const [selectedLeadForEdit, setSelectedLeadForEdit] = useState<Lead | null>(null);
+	const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+	const [formLoading, setFormLoading] = useState(false);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-	const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
 	const [deleting, setDeleting] = useState(false);
 
-	useEffect(() => {
+	const handleRefresh = useCallback(() => {
 		dispatch(fetchLeads({
 			skip: page * rowsPerPage,
 			limit: rowsPerPage,
@@ -68,105 +64,71 @@ const LeadList: React.FC = () => {
 			sortOrder,
 			...activeFilters
 		}));
-		dispatch(fetchLeadStats());
 	}, [dispatch, page, rowsPerPage, search, sortBy, sortOrder, activeFilters]);
 
-	const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		setSearch(event.target.value);
-		setPage(0);
-	};
+	useEffect(() => {
+		handleRefresh();
+		// Fetch companies and contacts for the form
+		dispatch(fetchCompanies({ limit: 1000 }));
+		dispatch(fetchContacts({ limit: 1000 }));
+	}, [handleRefresh, dispatch]);
 
-	const handleRefresh = () => {
-		dispatch(fetchLeads({
-			skip: page * rowsPerPage,
-			limit: rowsPerPage,
-			search: search || undefined,
-			sortBy,
-			sortOrder,
-			...activeFilters
-		}));
-		dispatch(fetchLeadStats());
-	};
+	useEffect(() => {
+		if (onAddClick) {
+			onAddClick(() => {
+				setSelectedLead(null);
+				setDialogOpen(true);
+			});
+		}
+	}, [onAddClick]);
 
-	const handleAddLead = () => {
-		setSelectedLeadForEdit(null);
+	const handleOpenEdit = (lead: Lead) => {
+		setSelectedLead(lead);
 		setDialogOpen(true);
 	};
 
-	const handleEditLead = (lead: Lead) => {
-		setSelectedLeadForEdit(lead);
-		setDialogOpen(true);
-	};
-
-	const handleDialogSubmit = async (data: any) => {
+	const handleFormSubmit = async (data: LeadCreate | LeadUpdate) => {
+		setFormLoading(true);
 		try {
-			if (selectedLeadForEdit) {
-				await dispatch(updateLead({ publicId: selectedLeadForEdit.public_id, lead: data })).unwrap();
-				enqueueSnackbar('Lead updated successfully', { variant: 'success' });
+			if (selectedLead) {
+				await dispatch(updateLead({ publicId: selectedLead.public_id, lead: data as LeadUpdate })).unwrap();
+				toast.success('Lead updated successfully');
 			} else {
-				await dispatch(createLead(data)).unwrap();
-				enqueueSnackbar('Lead created successfully', { variant: 'success' });
+				await dispatch(createLead(data as LeadCreate)).unwrap();
+				toast.success('Lead created successfully');
 			}
 			setDialogOpen(false);
 			handleRefresh();
 		} catch (error: any) {
-			enqueueSnackbar(error || 'Failed to save lead', { variant: 'error' });
+			toast.error(error || 'Failed to save lead');
+		} finally {
+			setFormLoading(false);
 		}
 	};
 
 	const handleDeleteClick = (lead: Lead) => {
-		setLeadToDelete(lead);
+		setSelectedLead(lead);
 		setDeleteDialogOpen(true);
 	};
 
-	const handleConfirmDelete = async () => {
-		if (leadToDelete) {
-			setDeleting(true);
-			try {
-				await dispatch(deleteLead(leadToDelete.public_id)).unwrap();
-				enqueueSnackbar('Lead deleted successfully', { variant: 'success' });
-				setDeleteDialogOpen(false);
-				setLeadToDelete(null);
-				handleRefresh();
-			} catch (error: any) {
-				enqueueSnackbar(error || 'Failed to delete lead', { variant: 'error' });
-			} finally {
-				setDeleting(false);
-			}
+	const handleDeleteConfirm = async () => {
+		if (!selectedLead) return;
+		setDeleting(true);
+		try {
+			await dispatch(deleteLead(selectedLead.public_id)).unwrap();
+			toast.success('Lead deleted successfully');
+			setDeleteDialogOpen(false);
+			handleRefresh();
+		} catch (error: any) {
+			toast.error(error || 'Failed to delete lead');
+		} finally {
+			setDeleting(false);
 		}
-	};
-
-	const getScoreColor = (score: number) => {
-		if (score >= 70) return '#1d8102';
-		if (score >= 40) return '#ff9900';
-		return '#d13212';
-	};
-
-	const handleSort = (columnId: string) => {
-		const isAsc = sortBy === columnId && sortOrder === 'asc';
-		setSortOrder(isAsc ? 'desc' : 'asc');
-		setSortBy(columnId);
-		setPage(0);
-	};
-
-	const handleFilterChange = (key: string, value: any) => {
-		setActiveFilters(prev => ({ ...prev, [key]: value }));
-	};
-
-	const handleApplyFilters = () => {
-		setFilterDrawerOpen(false);
-		setPage(0);
-	};
-
-	const handleClearFilters = () => {
-		setActiveFilters({});
-		setFilterDrawerOpen(false);
-		setPage(0);
 	};
 
 	const filterFields: FilterField[] = [
 		{
-			key: 'status',
+			key: 'lead_status',
 			label: 'Status',
 			type: 'single-select',
 			options: [
@@ -174,300 +136,105 @@ const LeadList: React.FC = () => {
 				{ value: 'contacted', label: 'Contacted' },
 				{ value: 'qualified', label: 'Qualified' },
 				{ value: 'unqualified', label: 'Unqualified' },
-				{ value: 'converted', label: 'Converted' },
 				{ value: 'lost', label: 'Lost' }
 			]
 		},
 		{
-			key: 'source',
+			key: 'lead_source',
 			label: 'Source',
 			type: 'single-select',
 			options: [
 				{ value: 'website', label: 'Website' },
 				{ value: 'referral', label: 'Referral' },
+				{ value: 'campaign', label: 'Campaign' },
+				{ value: 'event', label: 'Event' },
 				{ value: 'cold_call', label: 'Cold Call' },
 				{ value: 'social_media', label: 'Social Media' },
-				{ value: 'event', label: 'Event' },
-				{ value: 'whatsapp', label: '💬 WhatsApp' },
-				{ value: 'other', label: 'Other' }
+				{ value: 'partner', label: 'Partner' }
 			]
 		}
 	];
 
-	const columns = [
-		{
-			id: 'title',
-			label: 'Lead Title',
-			minWidth: 220,
-			sortable: true,
-			format: (value: string, row: Lead) => (
-				<Stack direction="row" spacing={1.5} alignItems="center">
-					<LeadIcon sx={{ color: '#545b64', fontSize: 20 }} />
-					<Box>
-						<Box sx={{ fontWeight: 700, color: '#007eb9' }}>{value}</Box>
-						<Box sx={{ fontSize: '0.75rem', color: '#545b64' }}>{row.company?.name || 'Individual'}</Box>
-					</Box>
-				</Stack>
-			)
-		},
-		{
-			id: 'lead_status',
-			label: 'Status',
-			minWidth: 120,
-			sortable: true,
-			format: (value: string) => (
-				<CRMStatusBadge label={value} status={value} type="lead" />
-			)
-		},
-		{
-			id: 'lead_score',
-			label: 'Score',
-			minWidth: 120,
-			sortable: true,
-			format: (value: number) => (
-				<Box sx={{ width: '100%' }}>
-					<Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
-						<Typography variant="caption" sx={{ fontWeight: 700, color: getScoreColor(value) }}>
-							{value}%
-						</Typography>
-					</Stack>
-					<LinearProgress
-						variant="determinate"
-						value={value}
-						sx={{
-							height: 4,
-							borderRadius: 2,
-							bgcolor: '#f2f3f3',
-							'& .MuiLinearProgress-bar': {
-								bgcolor: getScoreColor(value)
-							}
-						}}
-					/>
-				</Box>
-			)
-		},
-		{
-			id: 'assigned_user',
-			label: 'Owner',
-			minWidth: 150,
-			format: (value: any) => (
-				<Stack direction="row" spacing={1} alignItems="center">
-					<PersonIcon sx={{ fontSize: 16, color: '#aab7b7' }} />
-					<Typography variant="body2">{value?.full_name || 'Unassigned'}</Typography>
-				</Stack>
-			)
-		},
-		{
-			id: 'estimated_value',
-			label: 'Est. Value',
-			minWidth: 140,
-			sortable: true,
-			format: (value: number, row: Lead) => value ? `${row.currency} ${value.toLocaleString()}` : '-'
-		},
-		{
-			id: 'lead_source',
-			label: 'Source',
-			minWidth: 130,
-			format: (value: string) => {
-				if (value === 'whatsapp') {
-					return (
-						<Chip
-							icon={<WhatsAppIcon sx={{ fontSize: '14px !important', color: '#fff !important' }} />}
-							label="WhatsApp"
-							size="small"
-							sx={{
-								bgcolor: '#25D366',
-								color: '#fff',
-								fontWeight: 700,
-								fontSize: '0.7rem',
-								height: 20,
-								'& .MuiChip-label': { px: 0.75 },
-							}}
-						/>
-					);
-				}
-				return (
-					<Chip
-						label={value ? value.replace(/_/g, ' ') : '—'}
-						size="small"
-						variant="outlined"
-						sx={{ fontSize: '0.7rem', height: 20, textTransform: 'capitalize', '& .MuiChip-label': { px: 0.75 } }}
-					/>
-				);
-			}
-		},
-		{
-			id: 'actions',
-			label: 'Actions',
-			minWidth: 100,
-			align: 'right' as const,
-			format: (_: any, row: Lead) => (
-				<CRMRowActions
-					row={row}
-					onView={() => navigate(`/crm/leads/${row.public_id}`)}
-					onEdit={() => handleEditLead(row)}
-					onDelete={isAdmin ? () => handleDeleteClick(row) : undefined}
-				/>
-			)
-		}
-	];
-
-	const actions = (
-		<>
-			<Button
-				variant="outlined"
-				startIcon={<RefreshIcon />}
-				onClick={handleRefresh}
-				sx={{ color: '#545b64', borderColor: '#d5dbdb' }}
-			>
-				Refresh
-			</Button>
-			{isManager && (
-				<Button
-					variant="contained"
-					color="primary"
-					startIcon={<AddIcon />}
-					onClick={handleAddLead}
-					sx={{
-						px: 3,
-						bgcolor: '#ec7211',
-						'&:hover': { bgcolor: '#eb5f07' },
-						textTransform: 'none',
-						fontWeight: 600,
-						boxShadow: 'none'
-					}}
-				>
-					Add Lead
-				</Button>
-			)}
-		</>
-	);
-
 	return (
-		<Box sx={{ bgcolor: '#f2f3f3', minHeight: '100vh', pb: 6 }}>
-			<CRMPageHeader
-				title="Leads"
-				actions={actions}
+		<Box>
+			<Grid container spacing={3} sx={{ mb: 4 }}>
+				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
+					<StatCard title="Total Leads" value={total} icon={<LeadIcon />} color="#007eb9" />
+				</Grid>
+				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
+					<StatCard title="Conversion Rate" value={`${stats?.conversion_rate || 0}%`} icon={<ConversionIcon />} color="#1d8102" />
+				</Grid>
+				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
+					<StatCard title="Avg Lead Score" value={stats?.average_score?.toFixed(1) || 0} icon={<ScoreIcon />} color="#ff9900" />
+				</Grid>
+				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
+					<StatCard title="Leads this week" value={stats?.this_week || 0} icon={<RecentIcon />} color="#ec7211" />
+				</Grid>
+			</Grid>
+
+			<DataTable<Lead>
+				columns={COLUMNS}
+				data={list}
+				totalCount={total}
+				loading={loading}
+				page={page}
+				rowsPerPage={rowsPerPage}
+				onPageChange={(_, p) => setPage(p)}
+				onRowsPerPageChange={(r) => { setRowsPerPage(r); setPage(0); }}
+				orderBy={sortBy as keyof Lead}
+				order={sortOrder}
+				onSortRequest={(p) => {
+					const isAsc = sortBy === p && sortOrder === 'asc';
+					setSortOrder(isAsc ? 'desc' : 'asc');
+					setSortBy(p as string);
+					setPage(0);
+				}}
+				searchTerm={search}
+				onSearchChange={(v) => { setSearch(v); setPage(0); }}
+				searchPlaceholder="Search leads..."
+				onFilterOpen={() => setFilterDrawerOpen(true)}
+				activeFilterCount={Object.keys(activeFilters).length}
+				onRefresh={handleRefresh}
+				renderRow={(lead) => (
+					<LeadTableRow
+						key={lead.public_id}
+						lead={lead}
+						isAdmin={isAdmin}
+						onEdit={handleOpenEdit}
+						onDelete={handleDeleteClick}
+						onClick={(l) => navigate(`/crm/leads/${l.public_id}`)}
+					/>
+				)}
 			/>
 
-			<Container maxWidth="xl" sx={{ mt: 3 }}>
-				<Grid container spacing={3} sx={{ mb: 4 }}>
-					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-						<StatCard
-							title="Total Active Leads"
-							value={stats?.total || 0}
-							icon={<LeadIcon />}
-							color="#007eb9"
-						/>
-					</Grid>
-					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-						<StatCard
-							title="Qualified Leads"
-							value={stats?.by_status?.qualified || 0}
-							icon={<PersonIcon />}
-							color="#1d8102"
-						/>
-					</Grid>
-					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-						<StatCard
-							title="Avg. Score"
-							value={`${stats?.average_score?.toFixed(1) || 0}%`}
-							icon={<SearchIcon />}
-							color="#ec7211"
-						/>
-					</Grid>
-					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-						<StatCard
-							title="Conversion Rate"
-							value={`${stats?.conversion_rate || 0}%`}
-							icon={<RefreshIcon />}
-							color="#ff9900"
-						/>
-					</Grid>
-				</Grid>
+			<LeadFormDialog
+				open={dialogOpen}
+				onClose={() => setDialogOpen(false)}
+				onSubmit={handleFormSubmit}
+				lead={selectedLead}
+				loading={formLoading}
+			/>
 
-				<Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-					<TextField
-						size="small"
-						placeholder="Search leads..."
-						value={search}
-						onChange={handleSearchChange}
-						sx={{ width: 320, bgcolor: 'white' }}
-						InputProps={{
-							startAdornment: (
-								<InputAdornment position="start">
-									<SearchIcon fontSize="small" sx={{ color: '#545b64' }} />
-								</InputAdornment>
-							),
-						}}
-					/>
+			<FilterDrawer
+				open={filterDrawerOpen}
+				onClose={() => setFilterDrawerOpen(false)}
+				fields={filterFields}
+				activeFilters={activeFilters}
+				onFilterChange={(k, v) => setActiveFilters(prev => ({ ...prev, [k]: v }))}
+				onClearFilters={() => { setActiveFilters({}); setFilterDrawerOpen(false); setPage(0); }}
+				onApplyFilters={() => { setFilterDrawerOpen(false); setPage(0); }}
+			/>
 
-					<Tooltip title="Filter">
-						<IconButton
-							onClick={() => setFilterDrawerOpen(true)}
-							sx={{
-								border: '1px solid #d5dbdb',
-								borderRadius: '2px',
-								bgcolor: activeFilters.status || activeFilters.source ? '#f5f8fa' : 'white'
-							}}
-						>
-							<FilterIcon fontSize="small" sx={{ color: activeFilters.status || activeFilters.source ? '#ec7211' : '#545b64' }} />
-						</IconButton>
-					</Tooltip>
-				</Box>
-
-				<CRMTable
-					columns={columns}
-					rows={list}
-					total={total}
-					page={page}
-					rowsPerPage={rowsPerPage}
-					onPageChange={(_, newPage) => setPage(newPage)}
-					onRowsPerPageChange={(e) => {
-						setRowsPerPage(parseInt(e.target.value, 10));
-						setPage(0);
-					}}
-					onRowsPerPageSelectChange={(rows) => {
-						setRowsPerPage(rows);
-						setPage(0);
-					}}
-					orderBy={sortBy}
-					order={sortOrder}
-					onSort={handleSort}
-					loading={loading}
-					emptyMessage="No leads found. Start by adding a new lead."
-					onRowClick={(row) => navigate(`/crm/leads/${row.public_id}`)}
-				/>
-
-				<LeadFormDialog
-					open={dialogOpen}
-					onClose={() => setDialogOpen(false)}
-					onSubmit={handleDialogSubmit}
-					lead={selectedLeadForEdit}
-					loading={loading}
-				/>
-
-				<FilterDrawer
-					open={filterDrawerOpen}
-					onClose={() => setFilterDrawerOpen(false)}
-					fields={filterFields}
-					activeFilters={activeFilters}
-					onFilterChange={handleFilterChange}
-					onClearFilters={handleClearFilters}
-					onApplyFilters={handleApplyFilters}
-				/>
-
-				<ConfirmDialog
-					open={deleteDialogOpen}
-					title="Delete Lead"
-					message={`Are you sure you want to delete lead "${leadToDelete?.title}"? This action cannot be undone.`}
-					confirmText="Delete"
-					onClose={() => setDeleteDialogOpen(false)}
-					onConfirm={handleConfirmDelete}
-					loading={deleting}
-					severity="error"
-				/>
-			</Container>
+			<ConfirmDialog
+				open={deleteDialogOpen}
+				title="Delete Lead"
+				message={`Are you sure you want to delete lead "${selectedLead?.title}"? This action cannot be undone.`}
+				confirmText="Delete"
+				onClose={() => setDeleteDialogOpen(false)}
+				onConfirm={handleDeleteConfirm}
+				loading={deleting}
+				severity="error"
+			/>
 		</Box>
 	);
 };

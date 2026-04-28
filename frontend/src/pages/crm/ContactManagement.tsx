@@ -1,20 +1,47 @@
-import { Box, Container, useTheme, useMediaQuery } from '@mui/material';
+import React, { useRef, useCallback } from 'react';
+import { Box, Container, Button } from '@mui/material';
+import { Add as AddIcon } from '@mui/icons-material';
+import PageHeader from '../../components/common/page-header';
 import ContactList from '../../components/crm/contacts/ContactList';
+import { useAppSelector } from '../../store/hooks';
 
 const ContactManagement: React.FC = () => {
-	const theme = useTheme();
-	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+	const { user } = useAppSelector((state) => state.auth);
+	const isAdmin = user?.role === 'admin';
+	
+	// Bridge for "Add Contact" action
+	const addContactTrigger = useRef<(() => void) | null>(null);
+
+	const handleAddClick = useCallback(() => {
+		if (addContactTrigger.current) {
+			addContactTrigger.current();
+		}
+	}, []);
 
 	return (
-		<Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: isMobile ? 2 : 3 }}>
-			<Container maxWidth="xl" sx={{ px: isMobile ? 1 : { sm: 2, md: 3 } }}>
-				<ContactList
+		<Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: 3 }}>
+			<Container maxWidth="xl">
+				<PageHeader
 					title="Contact Management"
 					subtitle="Manage individual stakeholder profiles and professional relationships"
+					action={
+						isAdmin ? (
+							<Button
+								variant="contained"
+								color="primary"
+								startIcon={<AddIcon />}
+								onClick={handleAddClick}
+							>
+								Add Contact
+							</Button>
+						) : undefined
+					}
 				/>
+				
+				<ContactList onAddClick={(trigger) => { addContactTrigger.current = trigger; }} />
 			</Container>
 		</Box>
-	)
+	);
 };
 
 export default ContactManagement;
