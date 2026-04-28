@@ -6,19 +6,14 @@ import {
 	InputAdornment,
 	Stack,
 	IconButton,
-	Tooltip,
-	Grid
+	Tooltip
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import {
 	Add as AddIcon,
 	Search as SearchIcon,
 	FilterList as FilterIcon,
-	Refresh as RefreshIcon,
-	Business as BusinessIcon,
-	Category as IndustryIcon,
-	Groups as TeamIcon,
-	Assessment as StatsIcon
+	Refresh as RefreshIcon
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchCompanies, fetchCompanyStats, createCompany, updateCompany, deleteCompany } from '../../../store/slices/companySlice';
@@ -28,7 +23,7 @@ import CRMStatusBadge from '../common/CRMStatusBadge';
 import CompanyFormDialog from './CompanyFormDialog';
 import ConfirmDialog from '../../common/ConfirmDialog';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
-import StatCard from '../../common/stats/StatCard';
+import CompanyStats from './stats/CompanyStats';
 import CRMRowActions from '../common/CRMRowActions';
 import CRMAvatar from '../common/CRMAvatar';
 import type { CompanyCreate, CompanyUpdate, Company } from '../../../models/company';
@@ -43,7 +38,7 @@ const CompanyList: React.FC<CompanyListProps> = ({ title = "Companies", subtitle
 	const navigate = useNavigate();
 	const dispatch = useAppDispatch();
 	const { enqueueSnackbar } = useSnackbar();
-	const { list, total, loading } = useAppSelector((state) => state.companies);
+	const { list, total, loading, stats } = useAppSelector((state) => state.companies);
 	const { user } = useAppSelector((state) => state.auth);
 	const isAdmin = user?.role === 'admin';
 
@@ -263,40 +258,7 @@ const CompanyList: React.FC<CompanyListProps> = ({ title = "Companies", subtitle
 			/>
 
 			<Box sx={{ mt: 3 }}>
-				<Grid container spacing={3} sx={{ mb: 4 }}>
-					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-						<StatCard
-							title="Total Companies"
-							value={list.length}
-							icon={<BusinessIcon />}
-							color="#007eb9"
-						/>
-					</Grid>
-					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-						<StatCard
-							title="Active Clients"
-							value={list.filter(c => c.status === 'active' || c.status === 'customer').length}
-							icon={<TeamIcon />}
-							color="#1d8102"
-						/>
-					</Grid>
-					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-						<StatCard
-							title="Prospects"
-							value={list.filter(c => c.status === 'prospect').length}
-							icon={<StatsIcon />}
-							color="#ec7211"
-						/>
-					</Grid>
-					<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-						<StatCard
-							title="Industries"
-							value={new Set(list.map(c => c.industry).filter(Boolean)).size}
-							icon={<IndustryIcon />}
-							color="#ff9900"
-						/>
-					</Grid>
-				</Grid>
+				<CompanyStats list={list} stats={stats} />
 
 				<Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 					<TextField
