@@ -34,7 +34,7 @@ import ContactManagement from '../pages/crm/ContactManagement';
 import LeadManagement from '../pages/crm/LeadManagement';
 import DealManagement from '../pages/crm/DealManagement';
 import TaskManagement from '../pages/crm/TaskManagement';
-import CRMDashboard from '../pages/crm/CRMDashboard';
+
 import ProjectManagement from '../pages/projects/ProjectManagement';
 import ActivityPlanning from '../pages/projects/ActivityPlanning';
 import DSRDashboard from '../pages/projects/DSRDashboard';
@@ -87,8 +87,7 @@ const AppRouter: React.FC = () => {
 					</Route>
 
 					<Route path="crm">
-						<Route index element={<CRMDashboard />} />
-						<Route path="dashboard" element={<CRMDashboard />} />
+						<Route index element={<Navigate to="companies" replace />} />
 						<Route path="companies" element={<CompanyManagement />} />
 						<Route path="companies/:publicId" element={<CompanyDetail />} />
 						<Route path="contacts" element={<ContactManagement />} />
