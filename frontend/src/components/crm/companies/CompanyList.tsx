@@ -3,7 +3,7 @@ import { Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchCompanies, fetchCompanyStats, createCompany, updateCompany, deleteCompany } from '../../../store/slices/companySlice';
-import CRMPageHeader from '../common/CRMPageHeader';
+
 import CompanyFormDialog from './form/CompanyFormDialog';
 import ConfirmDialog from '../../common/ConfirmDialog';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
@@ -13,11 +13,10 @@ import type { CompanyCreate, CompanyUpdate, Company } from '../../../models/comp
 import { useSnackbar } from 'notistack';
 
 interface CompanyListProps {
-	title?: string;
-	subtitle?: string;
+	onAddClick?: (trigger: () => void) => void;
 }
 
-const CompanyList: React.FC<CompanyListProps> = ({ title = 'Companies', subtitle }) => {
+const CompanyList: React.FC<CompanyListProps> = ({ onAddClick }) => {
 	const navigate = useNavigate();
 	const dispatch = useAppDispatch();
 	const { enqueueSnackbar } = useSnackbar();
@@ -71,6 +70,12 @@ const CompanyList: React.FC<CompanyListProps> = ({ title = 'Companies', subtitle
 		setSelectedCompany(null);
 		setDialogOpen(true);
 	};
+
+	// Expose the add trigger to the parent (for PageHeader action button)
+	useEffect(() => {
+		if (onAddClick) onAddClick(handleOpenAdd);
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [onAddClick]);
 
 	const handleOpenEdit = (company: Company) => {
 		setSelectedCompany(company);
@@ -171,10 +176,6 @@ const CompanyList: React.FC<CompanyListProps> = ({ title = 'Companies', subtitle
 
 	return (
 		<>
-			<CRMPageHeader
-				title={title}
-				subtitle={subtitle}
-			/>
 
 			<Box sx={{ mt: 3 }}>
 				<CompanyStats list={list} stats={stats} />
@@ -195,8 +196,6 @@ const CompanyList: React.FC<CompanyListProps> = ({ title = 'Companies', subtitle
 					onFilterOpen={() => setFilterDrawerOpen(true)}
 					activeFilterCount={activeFilterCount}
 					onRefresh={handleRefresh}
-					onCreateClick={handleOpenAdd}
-					canCreate={true}
 					isAdmin={isAdmin}
 					onView={(company) => navigate(`/crm/companies/${company.public_id}`)}
 					onEdit={handleOpenEdit}
