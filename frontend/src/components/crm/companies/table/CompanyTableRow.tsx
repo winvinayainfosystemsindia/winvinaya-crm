@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import { TableRow, TableCell, Stack, Typography, Link } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import EnterpriseAvatar from '../../../common/avatar/Avatar';
-import CRMStatusBadge from '../../common/CRMStatusBadge';
+import StatusBadge from '../../../common/badge/StatusBadge';
 import DataTableActions, { type TableMenuAction } from '../../../common/table/DataTableActions';
 import { useDateTime } from '../../../../hooks/useDateTime';
 import type { Company } from '../../../../models/company';
@@ -65,7 +65,7 @@ const CompanyTableRow: React.FC<CompanyTableRowProps> = memo(({
 
 			{/* Status */}
 			<TableCell>
-				<CRMStatusBadge label={company.status} status={company.status} type="company" />
+				<StatusBadge label={company.status} status={company.status} type="company" />
 			</TableCell>
 
 			{/* Industry */}

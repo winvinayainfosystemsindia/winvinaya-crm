@@ -6,7 +6,7 @@ import {
 	Edit as EditIcon,
 	Delete as DeleteIcon
 } from '@mui/icons-material';
-import CRMStatusBadge from '../../common/CRMStatusBadge';
+import StatusBadge from '../../../common/badge/StatusBadge';
 import DataTableActions, { type TableMenuAction } from '../../../common/table/DataTableActions';
 import { useDateTime } from '../../../../hooks/useDateTime';
 import type { CRMTask } from '../../../../models/crmTask';
@@ -81,7 +81,7 @@ const TaskTableRow: React.FC<TaskTableRowProps> = memo(({
 
 			{/* Status */}
 			<TableCell>
-				<CRMStatusBadge
+				<StatusBadge
 					label={task.status.replace(/_/g, ' ')}
 					status={task.status}
 					type="task"

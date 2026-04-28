@@ -16,7 +16,7 @@ import {
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchCompanyById, updateCompany } from '../../store/slices/companySlice';
-import CRMStatusBadge from '../../components/crm/common/CRMStatusBadge';
+import StatusBadge from '../../components/common/badge/StatusBadge';
 import CompanyFormDialog from '../../components/crm/companies/form/CompanyFormDialog';
 import { useSnackbar } from 'notistack';
 import type { CompanyUpdate } from '../../models/company';
@@ -109,7 +109,7 @@ const CompanyDetail: React.FC = () => {
 			id: 'is_primary',
 			label: 'Primary',
 			minWidth: 100,
-			format: (val: boolean) => val ? <CRMStatusBadge label="Primary" status="active" /> : '-'
+			format: (val: boolean) => val ? <StatusBadge label="Primary" status="active" /> : '-'
 		}
 	];
 
@@ -128,7 +128,7 @@ const CompanyDetail: React.FC = () => {
 			id: 'lead_status',
 			label: 'Status',
 			minWidth: 120,
-			format: (val: string) => <CRMStatusBadge label={val} status={val} type="lead" />
+			format: (val: string) => <StatusBadge label={val} status={val} type="lead" />
 		},
 		{
 			id: 'lead_score',
@@ -209,7 +209,7 @@ const CompanyDetail: React.FC = () => {
 			id: 'deal_stage',
 			label: 'Stage',
 			minWidth: 150,
-			format: (val: string) => <CRMStatusBadge label={val} status={val} type="deal" />
+			format: (val: string) => <StatusBadge label={val} status={val} type="deal" />
 		},
 		{
 			id: 'assigned_user',
@@ -270,7 +270,7 @@ const CompanyDetail: React.FC = () => {
 			id: 'task_type',
 			label: 'Type',
 			minWidth: 100,
-			format: (val: string) => <CRMStatusBadge label={val} status={val} type="task" />
+			format: (val: string) => <StatusBadge label={val} status={val} type="task" />
 		},
 		{
 			id: 'priority',
@@ -297,7 +297,7 @@ const CompanyDetail: React.FC = () => {
 			id: 'status',
 			label: 'Status',
 			minWidth: 120,
-			format: (val: string) => <CRMStatusBadge label={val} status={val} type="task" />
+			format: (val: string) => <StatusBadge label={val} status={val} type="task" />
 		},
 		{
 			id: 'assigned_user',

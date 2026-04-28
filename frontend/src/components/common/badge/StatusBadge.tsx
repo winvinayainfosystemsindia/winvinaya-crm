@@ -4,7 +4,7 @@ import { useTheme, alpha } from '@mui/material/styles';
 
 export type BadgeType = 'lead' | 'deal' | 'task' | 'company' | 'generic';
 
-interface CRMStatusBadgeProps {
+interface StatusBadgeProps {
 	label: string;
 	status: string;
 	type?: BadgeType;
@@ -44,7 +44,7 @@ const getStatusTone = (status: string, type: BadgeType): StatusTone => {
 	return 'default';
 };
 
-const CRMStatusBadge: React.FC<CRMStatusBadgeProps> = ({ label, status, type = 'generic' }) => {
+const StatusBadge: React.FC<StatusBadgeProps> = ({ label, status, type = 'generic' }) => {
 	const theme = useTheme();
 	const tone = getStatusTone(status, type);
 
@@ -96,4 +96,4 @@ const CRMStatusBadge: React.FC<CRMStatusBadgeProps> = ({ label, status, type = '
 	);
 };
 
-export default CRMStatusBadge;
+export default StatusBadge;

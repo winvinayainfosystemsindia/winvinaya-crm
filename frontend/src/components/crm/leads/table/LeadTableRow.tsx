@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { TableRow, TableCell, Typography, Box } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import CRMStatusBadge from '../../common/CRMStatusBadge';
+import StatusBadge from '../../../common/badge/StatusBadge';
 import DataTableActions, { type TableMenuAction } from '../../../common/table/DataTableActions';
 import { useDateTime } from '../../../../hooks/useDateTime';
 import type { Lead } from '../../../../models/lead';
@@ -68,7 +68,7 @@ const LeadTableRow: React.FC<LeadTableRowProps> = memo(({
 
 			{/* Status */}
 			<TableCell>
-				<CRMStatusBadge
+				<StatusBadge
 					label={lead.lead_status.replace(/_/g, ' ')}
 					status={lead.lead_status}
 					type="lead"

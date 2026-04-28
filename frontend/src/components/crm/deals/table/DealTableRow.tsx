@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { TableRow, TableCell, Stack, Typography, Box, LinearProgress } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import CRMStatusBadge from '../../common/CRMStatusBadge';
+import StatusBadge from '../../../common/badge/StatusBadge';
 import DataTableActions, { type TableMenuAction } from '../../../common/table/DataTableActions';
 import { useDateTime } from '../../../../hooks/useDateTime';
 import type { Deal } from '../../../../models/deal';
@@ -66,7 +66,7 @@ const DealTableRow: React.FC<DealTableRowProps> = memo(({
 
 			{/* Stage */}
 			<TableCell>
-				<CRMStatusBadge
+				<StatusBadge
 					label={deal.deal_stage.replace(/_/g, ' ')}
 					status={deal.deal_stage}
 					type="deal"
