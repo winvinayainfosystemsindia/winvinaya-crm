@@ -38,7 +38,7 @@ const DealList: React.FC<DealListProps> = ({ onAddClick }) => {
 	const navigate = useNavigate();
 	const dispatch = useAppDispatch();
 	const toast = useToast();
-	const { list, total, loading, pipelineSummary } = useAppSelector((state) => state.deals);
+	const { list, total, loading, pipeline } = useAppSelector((state) => state.deals);
 	const { user } = useAppSelector((state) => state.auth);
 	const isAdmin = user?.role === 'admin';
 
@@ -156,28 +156,13 @@ const DealList: React.FC<DealListProps> = ({ onAddClick }) => {
 		<Box>
 			<Grid container spacing={3} sx={{ mb: 4 }}>
 				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-					<StatCard 
-						title="Pipeline Value" 
-						value={`INR ${(pipelineSummary?.total_value || 0).toLocaleString()}`} 
-						icon={<ValueIcon />} 
-						color="#007eb9" 
-					/>
+					<StatCard title="Pipeline Value" value={`INR ${(pipeline?.total_value || 0).toLocaleString()}`} icon={<ValueIcon />} color="#007eb9" />
 				</Grid>
 				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-					<StatCard 
-						title="Active Deals" 
-						value={pipelineSummary?.total_count || 0} 
-						icon={<PipelineIcon />} 
-						color="#1d8102" 
-					/>
+					<StatCard title="Active Deals" value={pipeline?.total_count || 0} icon={<PipelineIcon />} color="#1d8102" />
 				</Grid>
 				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
-					<StatCard 
-						title="Closed Won" 
-						value={pipelineSummary?.stages?.['closed_won']?.count || 0} 
-						icon={<CountIcon />} 
-						color="#ff9900" 
-					/>
+					<StatCard title="Closed Won" value={pipeline?.stages?.['closed_won']?.count || 0} icon={<CountIcon />} color="#ff9900" />
 				</Grid>
 				<Grid size={{ xs: 12, sm: 6, md: 3 }}>
 					<StatCard 

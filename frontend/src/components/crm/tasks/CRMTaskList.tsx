@@ -6,7 +6,6 @@ import {
 	CheckCircle as CompletedIcon,
 	Warning as UrgentIcon
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchCRMTasks, createCRMTask, updateCRMTask, deleteCRMTask } from '../../../store/slices/crmTaskSlice';
 import { DataTable, type ColumnDefinition } from '../../common/table';
@@ -27,13 +26,12 @@ const COLUMNS: ColumnDefinition<CRMTask>[] = [
 	{ id: 'status',       label: 'Status',     sortable: true,  width: 130 },
 	{ id: 'priority',     label: 'Priority',   sortable: true,  width: 120 },
 	{ id: 'due_date',     label: 'Due Date',   sortable: true,  width: 140 },
-	{ id: 'related_to',   label: 'Related To', sortable: false, width: 180 },
+	{ id: 'related_to_type', label: 'Related To', sortable: false, width: 180 },
 	{ id: 'assigned_to',  label: 'Assigned',   sortable: false, width: 150 },
 	{ id: 'actions',      label: 'Actions',    sortable: false, width: 100, align: 'right' },
 ];
 
 const CRMTaskList: React.FC<CRMTaskListProps> = ({ onAddClick }) => {
-	const navigate = useNavigate();
 	const dispatch = useAppDispatch();
 	const toast = useToast();
 	const { list, total, loading } = useAppSelector((state) => state.crmTasks);

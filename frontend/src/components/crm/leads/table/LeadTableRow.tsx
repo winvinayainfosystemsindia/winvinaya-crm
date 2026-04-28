@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { TableRow, TableCell, Stack, Typography, Box } from '@mui/material';
+import { TableRow, TableCell, Typography, Box } from '@mui/material';
 import CRMStatusBadge from '../../common/CRMStatusBadge';
 import CRMRowActions from '../../common/CRMRowActions';
 import { useDateTime } from '../../../../hooks/useDateTime';
