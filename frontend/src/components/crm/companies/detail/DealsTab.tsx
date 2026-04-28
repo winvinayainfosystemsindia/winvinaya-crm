@@ -1,12 +1,7 @@
 import React from 'react';
-import {
-	Box,
-	Typography,
-	Button,
-	Paper
-} from '@mui/material';
+import { TableRow, TableCell, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import CRMTable from '../../common/CRMTable';
+import DataTable from '../../../common/table/DataTable';
 import type { Company } from '../../../../models/company';
 
 interface DealsTabProps {
@@ -18,31 +13,34 @@ const DealsTab: React.FC<DealsTabProps> = ({ company, columns }) => {
 	const navigate = useNavigate();
 
 	return (
-		<Paper sx={{ borderRadius: '2px', boxShadow: '0 1px 1px 0 rgba(0,28,36,0.3), 1px 1px 1px 0 rgba(0,28,36,0.15), -1px 1px 1px 0 rgba(0,28,36,0.15)' }}>
-			<Box sx={{ p: 3, borderBottom: '1px solid #eaeded', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-				<Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#232f3e' }}>
+		<DataTable
+			columns={columns}
+			data={company.deals || []}
+			totalCount={company.deals?.length || 0}
+			page={0}
+			rowsPerPage={100}
+			onPageChange={() => { }}
+			onRowsPerPageChange={() => { }}
+			searchTerm=""
+			onCreateClick={() => navigate('/crm/deals')}
+			createButtonText="New Deal Opportunity"
+			canCreate={true}
+			emptyMessage="No deals associated with this company."
+			headerActions={
+				<Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'text.primary' }}>
 					Deals ({company.deals?.length || 0})
 				</Typography>
-				<Button
-					variant="contained"
-					sx={{ bgcolor: '#1d8102', color: 'white', '&:hover': { bgcolor: '#1a7202' }, textTransform: 'none', fontWeight: 800 }}
-					onClick={() => navigate('/crm/deals')}
-				>
-					New Deal Opportunity
-				</Button>
-			</Box>
-			<CRMTable
-				columns={columns}
-				rows={company.deals || []}
-				total={company.deals?.length || 0}
-				page={0}
-				rowsPerPage={100}
-				onPageChange={() => { }}
-				onRowsPerPageChange={() => { }}
-				onRowsPerPageSelectChange={() => { }}
-				emptyMessage="No deals associated with this company."
-			/>
-		</Paper>
+			}
+			renderRow={(row: any) => (
+				<TableRow key={row.id || row.public_id}>
+					{columns.map((col: any) => (
+						<TableCell key={col.id} align={col.align}>
+							{col.format ? col.format(row[col.id], row) : (row[col.id] || '—')}
+						</TableCell>
+					))}
+				</TableRow>
+			)}
+		/>
 	);
 };
 

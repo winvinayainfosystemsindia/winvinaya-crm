@@ -1,15 +1,10 @@
 import React from 'react';
-import {
-	Box,
-	Typography,
-	Button,
-	Paper
-} from '@mui/material';
+import { Box, TableRow, TableCell, Typography } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { createCRMTask, updateCRMTask } from '../../../../store/slices/crmTaskSlice';
 import { fetchCompanyById } from '../../../../store/slices/companySlice';
-import CRMTable from '../../common/CRMTable';
+import DataTable from '../../../common/table/DataTable';
 import CRMTaskFormDialog from '../../tasks/CRMTaskFormDialog';
 import type { Company } from '../../../../models/company';
 import type { CRMTask } from '../../../../models/crmTask';
@@ -60,32 +55,38 @@ const TasksTab: React.FC<TasksTabProps> = ({ company, columns }) => {
 
 	return (
 		<Box>
-			<Paper sx={{ borderRadius: '2px', boxShadow: '0 1px 1px 0 rgba(0,28,36,0.3), 1px 1px 1px 0 rgba(0,28,36,0.15), -1px 1px 1px 0 rgba(0,28,36,0.15)' }}>
-				<Box sx={{ p: 3, borderBottom: '1px solid #eaeded', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-					<Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#232f3e' }}>
+			<DataTable
+				columns={columns}
+				data={company.tasks || []}
+				totalCount={company.tasks?.length || 0}
+				page={0}
+				rowsPerPage={100}
+				onPageChange={() => { }}
+				onRowsPerPageChange={() => { }}
+				searchTerm=""
+				onCreateClick={handleAddTask}
+				createButtonText="Add New Task"
+				canCreate={true}
+				emptyMessage="No tasks associated with this company."
+				headerActions={
+					<Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'text.primary' }}>
 						Tasks ({company.tasks?.length || 0})
 					</Typography>
-					<Button
-						variant="contained"
-						sx={{ bgcolor: '#007eb9', color: 'white', '&:hover': { bgcolor: '#006a9e' }, textTransform: 'none', fontWeight: 800 }}
-						onClick={handleAddTask}
+				}
+				renderRow={(row: any) => (
+					<TableRow 
+						key={row.id || row.public_id}
+						onClick={() => handleEditTask(row)}
+						sx={{ cursor: 'pointer' }}
 					>
-						Add New Task
-					</Button>
-				</Box>
-				<CRMTable
-					columns={columns}
-					rows={company.tasks || []}
-					total={company.tasks?.length || 0}
-					page={0}
-					rowsPerPage={100}
-					onPageChange={() => { }}
-					onRowsPerPageChange={() => { }}
-					onRowsPerPageSelectChange={() => { }}
-					emptyMessage="No tasks associated with this company."
-					onRowClick={handleEditTask}
-				/>
-			</Paper>
+						{columns.map((col: any) => (
+							<TableCell key={col.id} align={col.align}>
+								{col.format ? col.format(row[col.id], row) : (row[col.id] || '—')}
+							</TableCell>
+						))}
+					</TableRow>
+				)}
+			/>
 
 			<CRMTaskFormDialog
 				open={dialogOpen}
