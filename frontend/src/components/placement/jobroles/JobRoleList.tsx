@@ -4,7 +4,7 @@ import { Add as AddIcon } from '@mui/icons-material';
 import { useSnackbar } from 'notistack';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { createJobRole, updateJobRole } from '../../../store/slices/jobRoleSlice';
-import CRMPageHeader from '../../crm/common/CRMPageHeader';
+import PageHeader from '../../common/page-header';
 import type { JobRole, JobRoleCreate, JobRoleUpdate } from '../../../models/jobRole';
 
 // Modular Components
@@ -55,10 +55,10 @@ const JobRoleList: React.FC<JobRoleListProps> = ({ title = "Job Role Management"
 
 	return (
 		<>
-			<CRMPageHeader
+			<PageHeader
 				title={title}
 				subtitle={subtitle}
-				actions={
+				action={
 					<Button
 						variant="contained"
 						color="primary"
