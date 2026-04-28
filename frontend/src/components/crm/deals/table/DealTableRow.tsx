@@ -1,7 +1,8 @@
 import React, { memo } from 'react';
 import { TableRow, TableCell, Stack, Typography, Box, LinearProgress } from '@mui/material';
+import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import CRMStatusBadge from '../../common/CRMStatusBadge';
-import CRMRowActions from '../../common/CRMRowActions';
+import DataTableActions, { type TableMenuAction } from '../../../common/table/DataTableActions';
 import { useDateTime } from '../../../../hooks/useDateTime';
 import type { Deal } from '../../../../models/deal';
 
@@ -21,6 +22,21 @@ const DealTableRow: React.FC<DealTableRowProps> = memo(({
 	onClick,
 }) => {
 	const { formatDate } = useDateTime();
+
+	const actions: TableMenuAction<Deal>[] = [
+		{
+			label: 'Edit',
+			icon: <EditIcon fontSize="small" />,
+			onClick: (item) => onEdit(item)
+		},
+		{
+			label: 'Delete',
+			icon: <DeleteIcon fontSize="small" />,
+			onClick: (item) => onDelete?.(item),
+			color: 'error.main',
+			hidden: !isAdmin || !onDelete
+		}
+	];
 
 	return (
 		<TableRow
@@ -109,10 +125,9 @@ const DealTableRow: React.FC<DealTableRowProps> = memo(({
 
 			{/* Actions */}
 			<TableCell align="right" onClick={(e) => e.stopPropagation()}>
-				<CRMRowActions
-					row={deal}
-					onEdit={() => onEdit(deal)}
-					onDelete={isAdmin && onDelete ? () => onDelete(deal) : undefined}
+				<DataTableActions
+					item={deal}
+					actions={actions}
 				/>
 			</TableCell>
 		</TableRow>

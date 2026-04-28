@@ -3,9 +3,11 @@ import { TableRow, TableCell, Stack, Typography, Box, Chip } from '@mui/material
 import {
 	Schedule as DueIcon,
 	Flag as PriorityIcon,
+	Edit as EditIcon,
+	Delete as DeleteIcon
 } from '@mui/icons-material';
 import CRMStatusBadge from '../../common/CRMStatusBadge';
-import CRMRowActions from '../../common/CRMRowActions';
+import DataTableActions, { type TableMenuAction } from '../../../common/table/DataTableActions';
 import { useDateTime } from '../../../../hooks/useDateTime';
 import type { CRMTask } from '../../../../models/crmTask';
 
@@ -35,6 +37,21 @@ const TaskTableRow: React.FC<TaskTableRowProps> = memo(({
 	onClick,
 }) => {
 	const { formatDate } = useDateTime();
+
+	const actions: TableMenuAction<CRMTask>[] = [
+		{
+			label: 'Edit',
+			icon: <EditIcon fontSize="small" />,
+			onClick: (item) => onEdit(item)
+		},
+		{
+			label: 'Delete',
+			icon: <DeleteIcon fontSize="small" />,
+			onClick: (item) => onDelete?.(item),
+			color: 'error.main',
+			hidden: !isAdmin || !onDelete
+		}
+	];
 
 	return (
 		<TableRow
@@ -121,10 +138,9 @@ const TaskTableRow: React.FC<TaskTableRowProps> = memo(({
 
 			{/* Actions */}
 			<TableCell align="right" onClick={(e) => e.stopPropagation()}>
-				<CRMRowActions
-					row={task}
-					onEdit={() => onEdit(task)}
-					onDelete={isAdmin && onDelete ? () => onDelete(task) : undefined}
+				<DataTableActions
+					item={task}
+					actions={actions}
 				/>
 			</TableCell>
 		</TableRow>

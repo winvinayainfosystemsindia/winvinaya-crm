@@ -5,9 +5,11 @@ import {
 	Phone as PhoneIcon,
 	Star as StarIcon,
 	WhatsApp as WhatsAppIcon,
+	Edit as EditIcon,
+	Delete as DeleteIcon
 } from '@mui/icons-material';
 import EnterpriseAvatar from '../../../common/avatar/Avatar';
-import CRMRowActions from '../../common/CRMRowActions';
+import DataTableActions, { type TableMenuAction } from '../../../common/table/DataTableActions';
 import { useDateTime } from '../../../../hooks/useDateTime';
 import type { Contact } from '../../../../models/contact';
 
@@ -27,6 +29,21 @@ const ContactTableRow: React.FC<ContactTableRowProps> = memo(({
 	onClick,
 }) => {
 	const { formatDate } = useDateTime();
+
+	const actions: TableMenuAction<Contact>[] = [
+		{
+			label: 'Edit',
+			icon: <EditIcon fontSize="small" />,
+			onClick: (item) => onEdit(item)
+		},
+		{
+			label: 'Delete',
+			icon: <DeleteIcon fontSize="small" />,
+			onClick: (item) => onDelete?.(item),
+			color: 'error.main',
+			hidden: !isAdmin || !onDelete
+		}
+	];
 
 	return (
 		<TableRow
@@ -160,10 +177,9 @@ const ContactTableRow: React.FC<ContactTableRowProps> = memo(({
 
 			{/* Actions */}
 			<TableCell align="right" onClick={(e) => e.stopPropagation()}>
-				<CRMRowActions
-					row={contact}
-					onEdit={() => onEdit(contact)}
-					onDelete={isAdmin && onDelete ? () => onDelete(contact) : undefined}
+				<DataTableActions
+					item={contact}
+					actions={actions}
 				/>
 			</TableCell>
 		</TableRow>

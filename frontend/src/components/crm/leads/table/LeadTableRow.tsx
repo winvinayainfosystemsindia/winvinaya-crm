@@ -1,7 +1,8 @@
 import React, { memo } from 'react';
 import { TableRow, TableCell, Typography, Box } from '@mui/material';
+import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import CRMStatusBadge from '../../common/CRMStatusBadge';
-import CRMRowActions from '../../common/CRMRowActions';
+import DataTableActions, { type TableMenuAction } from '../../../common/table/DataTableActions';
 import { useDateTime } from '../../../../hooks/useDateTime';
 import type { Lead } from '../../../../models/lead';
 
@@ -21,6 +22,21 @@ const LeadTableRow: React.FC<LeadTableRowProps> = memo(({
 	onClick,
 }) => {
 	const { formatDate } = useDateTime();
+
+	const actions: TableMenuAction<Lead>[] = [
+		{
+			label: 'Edit',
+			icon: <EditIcon fontSize="small" />,
+			onClick: (item) => onEdit(item)
+		},
+		{
+			label: 'Delete',
+			icon: <DeleteIcon fontSize="small" />,
+			onClick: (item) => onDelete?.(item),
+			color: 'error.main',
+			hidden: !isAdmin || !onDelete
+		}
+	];
 
 	return (
 		<TableRow
@@ -96,10 +112,9 @@ const LeadTableRow: React.FC<LeadTableRowProps> = memo(({
 
 			{/* Actions */}
 			<TableCell align="right" onClick={(e) => e.stopPropagation()}>
-				<CRMRowActions
-					row={lead}
-					onEdit={() => onEdit(lead)}
-					onDelete={isAdmin && onDelete ? () => onDelete(lead) : undefined}
+				<DataTableActions
+					item={lead}
+					actions={actions}
 				/>
 			</TableCell>
 		</TableRow>
