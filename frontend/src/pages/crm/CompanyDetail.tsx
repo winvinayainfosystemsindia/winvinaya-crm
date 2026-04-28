@@ -17,7 +17,7 @@ import {
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchCompanyById, updateCompany } from '../../store/slices/companySlice';
 import CRMStatusBadge from '../../components/crm/common/CRMStatusBadge';
-import CompanyFormDialog from '../../components/crm/companies/CompanyFormDialog';
+import CompanyFormDialog from '../../components/crm/companies/form/CompanyFormDialog';
 import { useSnackbar } from 'notistack';
 import type { CompanyUpdate } from '../../models/company';
 

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchCompanies, fetchCompanyStats, createCompany, updateCompany, deleteCompany } from '../../../store/slices/companySlice';
 import CRMPageHeader from '../common/CRMPageHeader';
-import CompanyFormDialog from './CompanyFormDialog';
+import CompanyFormDialog from './form/CompanyFormDialog';
 import ConfirmDialog from '../../common/ConfirmDialog';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
 import CompanyStats from './stats/CompanyStats';
