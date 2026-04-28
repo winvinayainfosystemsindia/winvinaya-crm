@@ -17,7 +17,7 @@ interface BasicInfoTabProps {
 }
 
 const BasicInfoTab: React.FC<BasicInfoTabProps> = ({ formData, onChange }) => {
-	const inputSx = { '& .MuiOutlinedInput-root': { borderRadius: '2px' } };
+	const inputSx = { '& .MuiOutlinedInput-root': { borderRadius: 1 } };
 
 	return (
 		<Grid container spacing={3}>
@@ -43,7 +43,7 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({ formData, onChange }) => {
 						value={formData.status ?? 'prospect'}
 						label="Status"
 						onChange={(e) => onChange('status', e.target.value)}
-						sx={{ borderRadius: '2px' }}
+						sx={{ borderRadius: 1 }}
 					>
 						{COMPANY_STATUSES.map((s: { value: string; label: string }) => (
 							<MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>
@@ -74,7 +74,7 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({ formData, onChange }) => {
 						value={formData.company_size ?? 'micro'}
 						label="Company Size"
 						onChange={(e) => onChange('company_size', e.target.value)}
-						sx={{ borderRadius: '2px' }}
+						sx={{ borderRadius: 1 }}
 					>
 						{COMPANY_SIZES.map((s: { value: string; label: string }) => (
 							<MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>

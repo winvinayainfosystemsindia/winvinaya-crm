@@ -104,7 +104,7 @@ const CompanyFormDialog: React.FC<CompanyFormDialogProps> = ({
 			disableEscapeKeyDown
 			maxWidth="md"
 			fullWidth
-			PaperProps={{ sx: { borderRadius: '4px', bgcolor: 'transparent', boxShadow: 'none' } }}
+			PaperProps={{ sx: { borderRadius: 1, bgcolor: 'transparent', boxShadow: 'none' } }}
 		>
 			<EnterpriseForm
 				title={company ? 'Edit Company' : 'Create Company'}

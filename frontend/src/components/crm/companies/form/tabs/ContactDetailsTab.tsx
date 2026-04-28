@@ -8,7 +8,7 @@ interface ContactDetailsTabProps {
 }
 
 const ContactDetailsTab: React.FC<ContactDetailsTabProps> = ({ formData, onChange }) => {
-	const inputSx = { '& .MuiOutlinedInput-root': { borderRadius: '2px' } };
+	const inputSx = { '& .MuiOutlinedInput-root': { borderRadius: 1 } };
 
 	return (
 		<Grid container spacing={3}>

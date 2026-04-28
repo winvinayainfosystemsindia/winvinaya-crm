@@ -9,7 +9,7 @@ interface AddressTabProps {
 }
 
 const AddressTab: React.FC<AddressTabProps> = ({ formData, onChange }) => {
-	const inputSx = { '& .MuiOutlinedInput-root': { borderRadius: '2px' } };
+	const inputSx = { '& .MuiOutlinedInput-root': { borderRadius: 1 } };
 
 	const countries = useMemo(() => Country.getAllCountries(), []);
 
