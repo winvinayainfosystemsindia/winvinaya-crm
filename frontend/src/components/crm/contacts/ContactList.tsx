@@ -36,7 +36,7 @@ import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
 import ConfirmDialog from '../../common/ConfirmDialog';
 import StatCard from '../../common/stats/StatCard';
 import CRMRowActions from '../common/CRMRowActions';
-import CRMAvatar from '../common/CRMAvatar';
+import EnterpriseAvatar from '../../common/avatar/Avatar';
 import type { Contact, ContactCreate, ContactUpdate } from '../../../models/contact';
 import { useSnackbar } from 'notistack';
 
@@ -196,7 +196,7 @@ const ContactList: React.FC<ContactListProps> = ({ title = "Contacts", subtitle 
 			sortable: true,
 			format: (_: any, row: Contact) => (
 				<Stack direction="row" spacing={1.5} alignItems="center">
-					<CRMAvatar name={`${row.first_name} ${row.last_name}`} size={32} />
+					<EnterpriseAvatar name={`${row.first_name} ${row.last_name}`} size={32} />
 					<Box>
 						<Stack direction="row" spacing={0.5} alignItems="center">
 							<Box sx={{ fontWeight: 700, color: '#007eb9' }}>{row.first_name} {row.last_name}</Box>

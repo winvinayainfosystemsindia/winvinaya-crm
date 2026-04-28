@@ -21,7 +21,7 @@ import {
 	Groups as TeamIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import CRMAvatar from '../../common/CRMAvatar';
+import EnterpriseAvatar from '../../../common/avatar/Avatar';
 import type { Company } from '../../../../models/company';
 
 interface CompanyDetailHeaderProps {
@@ -56,7 +56,7 @@ const CompanyDetailHeader: React.FC<CompanyDetailHeaderProps> = ({ company, onEd
 				<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
 					<Box>
 						<Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 1 }}>
-							<CRMAvatar name={company.name} size={48} variant="rounded" />
+							<EnterpriseAvatar name={company.name} size={48} variant="rounded" />
 							<Box>
 								<Stack direction="row" spacing={1.5} alignItems="center">
 									<Typography variant="h4" sx={{ fontWeight: 300, letterSpacing: '-0.02em', fontSize: isMobile ? '1.5rem' : '2rem' }}>

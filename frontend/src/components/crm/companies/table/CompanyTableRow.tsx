@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { TableRow, TableCell, Stack, Typography, Link } from '@mui/material';
-import CRMAvatar from '../../common/CRMAvatar';
+import EnterpriseAvatar from '../../../common/avatar/Avatar';
 import CRMStatusBadge from '../../common/CRMStatusBadge';
 import CRMRowActions from '../../common/CRMRowActions';
 import { useDateTime } from '../../../../hooks/useDateTime';
@@ -37,7 +37,7 @@ const CompanyTableRow: React.FC<CompanyTableRowProps> = memo(({
 			{/* Company Name */}
 			<TableCell>
 				<Stack direction="row" spacing={1.5} alignItems="center">
-					<CRMAvatar name={company.name} size={28} />
+					<EnterpriseAvatar name={company.name} size={28} />
 					<Typography
 						variant="body2"
 						sx={{ fontWeight: 600, color: 'primary.main' }}
