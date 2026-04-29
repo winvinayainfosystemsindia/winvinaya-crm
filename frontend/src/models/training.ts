@@ -68,8 +68,11 @@ export interface TrainingStats {
 	running: number;
 	completed: number;
 	planned: number;
+	total_selected: number;
 	in_training: number;
 	completed_training: number;
+	completed_candidates: number;
+	moved_to_placement: number;
 	ready_for_training: number;
 	dropped_out: number;
 	women: number;

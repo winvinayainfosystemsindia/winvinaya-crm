@@ -229,14 +229,13 @@ class TrainingBatchService:
         return await self.repository.update(batch.id, update_data)
 
     async def get_stats(self) -> dict:
-        """Get training batch and candidate statistics with accurate counts"""
-        from sqlalchemy import func, select, or_, and_, exists
+        """Get balanced training statistics where candidates are counted in non-overlapping buckets"""
+        from sqlalchemy import func, select, and_, distinct
         from app.models.training_candidate_allocation import TrainingCandidateAllocation
         from app.models.candidate import Candidate
         from app.models.candidate_counseling import CandidateCounseling
         
         # 1. Batch Statistics
-        # Base query for all non-deleted batches
         batch_query = select(self.repository.model).where(self.repository.model.is_deleted == False)
         result = await self.db.execute(batch_query)
         batches = result.scalars().all()
@@ -248,62 +247,79 @@ class TrainingBatchService:
             "completed": sum(1 for b in batches if b.status == "closed"),
         }
         
-        # 2. Candidate Statistics
+        # 2. Candidate Statistics - Hierarchical and Non-Overlapping
         
-        # Candidates currently in training: in active batches (planned, running, extended) and NOT dropped out
+        # Step A: Total Selected Candidates
+        total_selected_query = select(func.count(Candidate.id)).join(
+            CandidateCounseling, Candidate.id == CandidateCounseling.candidate_id
+        ).where(
+            and_(
+                Candidate.is_deleted == False,
+                func.lower(CandidateCounseling.status) == "selected"
+            )
+        )
+        total_selected = (await self.db.execute(total_selected_query)).scalar() or 0
+
+        # Step B: Identify Candidates in each category (Non-overlapping)
+        # Priority 1: Currently in Training (Active batches)
         active_batch_ids = [b.id for b in batches if b.status in ['planned', 'running', 'extended']]
-        
+        in_training_ids = set()
         if active_batch_ids:
-            in_training_query = select(func.count(TrainingCandidateAllocation.id)).where(
+            it_query = select(distinct(TrainingCandidateAllocation.candidate_id)).where(
                 and_(
                     TrainingCandidateAllocation.batch_id.in_(active_batch_ids),
                     TrainingCandidateAllocation.is_deleted == False,
                     TrainingCandidateAllocation.is_dropout == False
                 )
             )
-            in_training_count = (await self.db.execute(in_training_query)).scalar() or 0
-        else:
-            in_training_count = 0
-        
-        # Fetch all non-deleted allocations to count completed and dropped out
-        # This is more robust than dialect-specific JSON queries for small-to-medium datasets
-        alloc_query = select(
-            TrainingCandidateAllocation.status, 
-            TrainingCandidateAllocation.is_dropout
-        ).where(TrainingCandidateAllocation.is_deleted == False)
-        
-        alloc_result = await self.db.execute(alloc_query)
-        allocations = alloc_result.all()
-        
-        completed_count = sum(1 for a in allocations if a.status == 'completed')
-        dropped_count = sum(1 for a in allocations if a.is_dropout)
-        
-        # Ready for Training candidates: 
-        # - Not deleted
-        # - Counseling status is 'selected'
-        # - NOT allocated to ANY batch (including completed or dropped out)
-        
-        # Subquery for all allocations (past or present)
-        allocated_subquery = select(TrainingCandidateAllocation.candidate_id).where(
-            TrainingCandidateAllocation.is_deleted == False
-        )
-        
-        ready_query = select(func.count(Candidate.id)).join(
-            CandidateCounseling, Candidate.id == CandidateCounseling.candidate_id
-        ).where(
+            in_training_ids = set((await self.db.execute(it_query)).scalars().all())
+
+        # Priority 2: Moved to Placement (Not in training, but has moved_to_placement status)
+        moved_query = select(distinct(TrainingCandidateAllocation.candidate_id)).where(
             and_(
-                Candidate.is_deleted == False,
-                func.lower(CandidateCounseling.status) == "selected",
-                ~Candidate.id.in_(allocated_subquery)
+                TrainingCandidateAllocation.status == 'moved_to_placement',
+                TrainingCandidateAllocation.is_deleted == False,
+                ~TrainingCandidateAllocation.candidate_id.in_(in_training_ids) if in_training_ids else True
             )
         )
-        ready_count = (await self.db.execute(ready_query)).scalar() or 0
-        
+        moved_ids = set((await self.db.execute(moved_query)).scalars().all())
+
+        # Priority 3: Completed (Not in training/moved, but has completed status)
+        excluded_ids = in_training_ids | moved_ids
+        completed_query = select(distinct(TrainingCandidateAllocation.candidate_id)).where(
+            and_(
+                TrainingCandidateAllocation.status == 'completed',
+                TrainingCandidateAllocation.is_deleted == False,
+                ~TrainingCandidateAllocation.candidate_id.in_(excluded_ids) if excluded_ids else True
+            )
+        )
+        completed_ids = set((await self.db.execute(completed_query)).scalars().all())
+
+        # Priority 4: Dropped Out (Not in any of the above, but marked as dropout)
+        excluded_ids = excluded_ids | completed_ids
+        dropped_query = select(distinct(TrainingCandidateAllocation.candidate_id)).where(
+            and_(
+                TrainingCandidateAllocation.is_dropout == True,
+                TrainingCandidateAllocation.is_deleted == False,
+                ~TrainingCandidateAllocation.candidate_id.in_(excluded_ids) if excluded_ids else True
+            )
+        )
+        dropped_ids = set((await self.db.execute(dropped_query)).scalars().all())
+
+        # Priority 5: Ready (Selected but not in any of the above)
+        # We calculate this as: Total Selected - (In Training + Moved + Completed + Dropped)
+        # This ensures the sum is always equal to total_selected
+        ever_allocated_count = len(in_training_ids | moved_ids | completed_ids | dropped_ids)
+        ready_count = max(0, total_selected - ever_allocated_count)
+
         return {
             **batch_stats,
-            "in_training": in_training_count,
-            "completed_training": completed_count,
+            "total_selected": total_selected,
+            "in_training": len(in_training_ids),
+            "moved_to_placement": len(moved_ids),
+            "completed_candidates": len(completed_ids),
+            "completed_training": len(moved_ids | completed_ids), # Traditional 'Graduates' count
+            "dropped_out": len(dropped_ids),
             "ready_for_training": ready_count,
-            "dropped_out": dropped_count,
             "women": sum(1 for b in batches if b.disability_types and "Women" in b.disability_types)
         }

@@ -12,14 +12,17 @@ import {
 	CancelOutlined
 } from '@mui/icons-material';
 
-const StatItem = ({ label, value, color }: { label: string, value: number | string, color: string }) => (
-	<Box sx={{ textAlign: 'center', flex: 1 }}>
-		<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, display: 'block', mb: 0.2 }}>
-			{label}
-		</Typography>
-		<Typography variant="body2" sx={{ color: color, fontWeight: 700, fontSize: '0.9rem' }}>
-			{value}
-		</Typography>
+const StatItem = ({ label, value, color, icon, align = 'center' }: { label: string, value: number | string, color: string, icon?: React.ReactNode, align?: 'center' | 'left' }) => (
+	<Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: align === 'center' ? 'center' : 'flex-start', gap: icon ? 1 : 0 }}>
+		{icon && React.cloneElement(icon as React.ReactElement<any>, { sx: { fontSize: 16, color } })}
+		<Box sx={{ textAlign: align }}>
+			<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, display: 'block', mb: align === 'center' ? 0.2 : 0 }}>
+				{label}
+			</Typography>
+			<Typography variant="body2" sx={{ color: color, fontWeight: 700, fontSize: '0.9rem' }}>
+				{value}
+			</Typography>
+		</Box>
 	</Box>
 );
 
@@ -38,7 +41,7 @@ const TrainingStats: React.FC = memo(() => {
 			{/* Card 1: Batch Overview */}
 			<Grid size={{ xs: 12, md: 6, lg: 3 }}>
 				<StatCard
-					title="Batches"
+					title="Batches Overview"
 					value={stats.total ?? 0}
 					icon={<BatchPrediction fontSize="small" />}
 					color="#1976d2"
@@ -46,59 +49,62 @@ const TrainingStats: React.FC = memo(() => {
 				>
 					<Divider sx={{ my: 1, opacity: 0.6 }} />
 					<Stack direction="row" spacing={1} divider={<Divider orientation="vertical" flexItem sx={{ height: 16, my: 'auto' }} />}>
-						<StatItem label="Running" value={stats.running} color="#2e7d32" />
-						<StatItem label="Planned" value={stats.planned} color="#ed6c02" />
-						<StatItem label="Closed" value={stats.completed} color="#757575" />
+						<StatItem label="Running" value={stats.running ?? 0} color="#2e7d32" />
+						<StatItem label="Planned" value={stats.planned ?? 0} color="#ed6c02" />
+						<StatItem label="Closed" value={stats.completed ?? 0} color="#757575" />
 					</Stack>
 				</StatCard>
 			</Grid>
 
-			{/* Card 2: Candidates in Training */}
-			<Grid size={{ xs: 12, md: 3, lg: 3 }}>
+			{/* Card 2: Candidates Pipeline */}
+			<Grid size={{ xs: 12, md: 6, lg: 4 }}>
 				<StatCard
-					title="Currently Training"
-					value={stats.in_training ?? 0}
+					title="Total Selected Candidates"
+					value={stats.total_selected ?? 0}
 					icon={<Group />}
 					color="#2e7d32"
-					sx={{ minHeight: 140, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
-				/>
-			</Grid>
-
-			{/* Card 3: Total Graduates */}
-			<Grid size={{ xs: 12, md: 3, lg: 3 }}>
-				<StatCard
-					title="Total Graduates"
-					value={stats.completed_training ?? 0}
-					icon={<CheckCircleOutline />}
-					color="#00897b"
-					sx={{ minHeight: 140, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
-				/>
-			</Grid>
-
-			{/* Card 4: Candidates Pipeline */}
-			<Grid size={{ xs: 12, md: 6, lg: 3 }}>
-				<StatCard
-					title="Pipeline"
-					icon={<TrendingUp fontSize="small" />}
-					color="#ed6c02"
 					sx={{ minHeight: 140 }}
 				>
 					<Divider sx={{ my: 1, opacity: 0.6 }} />
 					<Stack direction="row" spacing={1} divider={<Divider orientation="vertical" flexItem sx={{ height: 16, my: 'auto' }} />}>
-						<Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-							<PersonAdd sx={{ fontSize: 16, color: '#2e7d32' }} />
-							<Box sx={{ textAlign: 'left' }}>
-								<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, display: 'block' }}>Ready</Typography>
-								<Typography variant="body2" sx={{ fontWeight: 700, color: '#2e7d32' }}>{stats.ready_for_training}</Typography>
-							</Box>
-						</Box>
-						<Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-							<CancelOutlined sx={{ fontSize: 16, color: '#d32f2f' }} />
-							<Box sx={{ textAlign: 'left' }}>
-								<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, display: 'block' }}>Dropped</Typography>
-								<Typography variant="body2" sx={{ fontWeight: 700, color: '#d32f2f' }}>{stats.dropped_out}</Typography>
-							</Box>
-						</Box>
+						<StatItem 
+							label="In Training" 
+							value={stats.in_training ?? 0} 
+							color="#1976d2" 
+							icon={<TrendingUp />} 
+							align="left"
+						/>
+						<StatItem 
+							label="Ready" 
+							value={stats.ready_for_training ?? 0} 
+							color="#ed6c02" 
+							icon={<PersonAdd />} 
+							align="left"
+						/>
+					</Stack>
+				</StatCard>
+			</Grid>
+
+			{/* Card 3: Training Outcomes */}
+			<Grid size={{ xs: 12, md: 12, lg: 5 }}>
+				<StatCard
+					title="Training Outcomes"
+					value={stats.completed_training ?? 0}
+					icon={<CheckCircleOutline />}
+					color="#00897b"
+					sx={{ minHeight: 140 }}
+				>
+					<Divider sx={{ my: 1, opacity: 0.6 }} />
+					<Stack direction="row" spacing={1} divider={<Divider orientation="vertical" flexItem sx={{ height: 16, my: 'auto' }} />}>
+						<StatItem label="Completed" value={stats.completed_candidates ?? 0} color="#2e7d32" />
+						<StatItem label="Placement" value={stats.moved_to_placement ?? 0} color="#1565c0" />
+						<StatItem 
+							label="Dropped" 
+							value={stats.dropped_out ?? 0} 
+							color="#d32f2f" 
+							icon={<CancelOutlined />} 
+							align="left"
+						/>
 					</Stack>
 				</StatCard>
 			</Grid>
