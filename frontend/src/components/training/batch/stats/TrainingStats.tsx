@@ -79,7 +79,6 @@ const TrainingStats: React.FC = memo(() => {
 			<Grid size={{ xs: 12, md: 6, lg: 3 }}>
 				<StatCard
 					title="Pipeline"
-					value={stats.ready_for_training + stats.dropped_out}
 					icon={<TrendingUp fontSize="small" />}
 					color="#ed6c02"
 					sx={{ minHeight: 140 }}
