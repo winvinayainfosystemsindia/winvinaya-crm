@@ -281,17 +281,11 @@ class TrainingBatchService:
         # Ready for Training candidates: 
         # - Not deleted
         # - Counseling status is 'selected'
-        # - NOT in any active training batch (planned, running, extended)
+        # - NOT allocated to ANY batch (including completed or dropped out)
         
-        # Subquery for active allocations
-        active_alloc_subquery = select(TrainingCandidateAllocation.candidate_id).join(
-            TrainingBatch, TrainingCandidateAllocation.batch_id == TrainingBatch.id
-        ).where(
-            and_(
-                TrainingCandidateAllocation.is_deleted == False,
-                TrainingCandidateAllocation.is_dropout == False,
-                TrainingBatch.status.in_(['planned', 'running', 'extended'])
-            )
+        # Subquery for all allocations (past or present)
+        allocated_subquery = select(TrainingCandidateAllocation.candidate_id).where(
+            TrainingCandidateAllocation.is_deleted == False
         )
         
         ready_query = select(func.count(Candidate.id)).join(
@@ -300,7 +294,7 @@ class TrainingBatchService:
             and_(
                 Candidate.is_deleted == False,
                 func.lower(CandidateCounseling.status) == "selected",
-                ~Candidate.id.in_(active_alloc_subquery)
+                ~Candidate.id.in_(allocated_subquery)
             )
         )
         ready_count = (await self.db.execute(ready_query)).scalar() or 0
