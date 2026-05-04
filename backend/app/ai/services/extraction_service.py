@@ -51,7 +51,10 @@ class JobRoleExtractionService:
         if not source_text.strip():
             raise ValueError("No text provided for extraction.")
 
-        # 2. Render Prompt using Jinja2
+        # 2. Prepare & Truncate source text
+        source_text = self._truncate_source_text(source_text)
+
+        # 3. Render Prompt using Jinja2
         # Note: 'skills_ref' is automatically injected by the loader
         system_prompt = loader.render("extraction/job_role_extraction.md", {
             "DISABILITY_TYPES": DISABILITY_TYPES,
@@ -182,6 +185,17 @@ class JobRoleExtractionService:
 
         return suggestions
 
+    def _truncate_source_text(self, text: str, max_chars: int = 8000) -> str:
+        """
+        Truncates source text to stay within LLM provider limits (e.g. Groq TPM).
+        15,000 chars is roughly 4,000 tokens.
+        """
+        if len(text) <= max_chars:
+            return text
+        
+        logger.warning(f"Source text truncated from {len(text)} to {max_chars} characters.")
+        return text[:max_chars] + "\n... [TRUNCATED DUE TO SIZE] ..."
+
 
 class CandidateExtractionService:
     """
@@ -236,7 +250,10 @@ class CandidateExtractionService:
         if not source_text.strip():
             raise ValueError("No text provided for extraction.")
 
-        # 2. Render Prompt using Jinja2
+        # 2. Prepare & Truncate source text
+        source_text = self._truncate_source_text(source_text)
+
+        # 3. Render Prompt using Jinja2
         system_prompt = loader.render("extraction/candidate_extraction.md", {
             "DISABILITY_TYPES": DISABILITY_TYPES,
             "QUALIFICATIONS": QUALIFICATIONS,
@@ -324,6 +341,17 @@ class CandidateExtractionService:
             data["skills"]["soft_skills"] = list(set(final_soft))
             
         return data
+
+    def _truncate_source_text(self, text: str, max_chars: int = 8000) -> str:
+        """
+        Truncates source text to stay within LLM provider limits (e.g. Groq TPM).
+        15,000 chars is roughly 4,000 tokens.
+        """
+        if len(text) <= max_chars:
+            return text
+        
+        logger.warning(f"Source text truncated from {len(text)} to {max_chars} characters.")
+        return text[:max_chars] + "\n... [TRUNCATED DUE TO SIZE] ..."
 
 
 class SkillRecommendationService:

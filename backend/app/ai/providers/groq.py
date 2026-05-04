@@ -39,7 +39,17 @@ class GroqProvider(LLMProvider):
         }
         async with httpx.AsyncClient(timeout=60.0) as client:
             resp = await client.post(self.BASE_URL, json=payload, headers=headers)
+            if resp.status_code == 429:
+                raise LLMRateLimitError(provider="groq")
+                
             if not resp.is_success:
+                # Also check for rate limit in the JSON body just in case
+                try:
+                    error_data = resp.json()
+                    if error_data.get("error", {}).get("code") == "rate_limit_exceeded":
+                        raise LLMRateLimitError(provider="groq")
+                except:
+                    pass
                 raise LLMProviderError(f"Groq error: {resp.text}", provider="groq")
             data = resp.json()
             content = data["choices"][0]["message"]["content"]

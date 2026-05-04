@@ -48,9 +48,17 @@ async def get_llm_provider(db: AsyncSession, override: str | None = None) -> LLM
     stored_key = await repo.get_by_key(key_field)
     api_key = stored_key.value.strip() if stored_key and stored_key.value else None
     
-    # Fetch model override if it exists
-    stored_model = await repo.get_by_key("AI_MODEL_OVERRIDE")
-    model_override = stored_model.value if stored_model and stored_model.value else None
+    # Fetch model override
+    # 1. Try provider-specific override first (e.g. AI_MODEL_GROQ_OVERRIDE)
+    provider_override_key = f"AI_MODEL_{provider_name.upper()}_OVERRIDE"
+    stored_provider_model = await repo.get_by_key(provider_override_key)
+    
+    if stored_provider_model and stored_provider_model.value:
+        model_override = stored_provider_model.value
+    else:
+        # 2. Fallback to global override (legacy / for convenience)
+        stored_global_model = await repo.get_by_key("AI_MODEL_OVERRIDE")
+        model_override = stored_global_model.value if stored_global_model and stored_global_model.value else None
     
     return provider_class(api_key=api_key, model=model_override)
 
