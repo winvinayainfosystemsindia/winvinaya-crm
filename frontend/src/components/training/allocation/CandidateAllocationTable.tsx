@@ -1,32 +1,17 @@
-import React, { memo } from 'react';
+import React, { memo, useMemo, useState, useEffect } from 'react';
 import {
 	Box,
-	Paper,
-	Table,
-	TableBody,
-	TableCell,
-	TableContainer,
-	TableHead,
-	TableRow,
-	Typography,
-	CircularProgress,
 	FormControl,
 	Select,
 	MenuItem,
-	TextField,
-	InputAdornment,
-	Button,
-	Stack
+	useTheme,
+	Typography
 } from '@mui/material';
-import {
-	Search as SearchIcon,
-	People as PeopleIcon,
-	PersonAdd as PersonAddIcon
-} from '@mui/icons-material';
-import { useState } from 'react';
 import type { CandidateAllocation } from '../../../models/training';
 import CandidateAllocationTableRow from './CandidateAllocationTableRow';
 import DropoutReasonDialog from '../../common/DropoutReasonDialog';
+import DataTable from '../../common/table/DataTable';
+import type { ColumnDefinition } from '../../common/table/DataTable';
 
 const ALLOCATION_STATUSES = [
 	'in_training',
@@ -35,13 +20,13 @@ const ALLOCATION_STATUSES = [
 	'moved_to_placement'
 ];
 
-const getAllocationStatusColor = (status: string) => {
+const getAllocationStatusColor = (theme: any, status: string) => {
 	switch (status?.toLowerCase()) {
-		case 'completed': return '#2e7d32';
-		case 'dropped_out': return '#d32f2f';
-		case 'moved_to_placement': return '#00a3bf';
-		case 'in_training': return '#0288d1';
-		default: return '#fb8c00'; // allocated or others
+		case 'completed': return theme.palette.success.main;
+		case 'dropped_out': return theme.palette.error.main;
+		case 'moved_to_placement': return theme.palette.secondary.main;
+		case 'in_training': return theme.palette.primary.main;
+		default: return theme.palette.warning.main;
 	}
 };
 
@@ -70,7 +55,10 @@ const CandidateAllocationTable: React.FC<CandidateAllocationTableProps> = memo((
 	onMove,
 	onAddClick
 }) => {
+	const theme = useTheme();
 	const [dropoutDialog, setDropoutDialog] = useState<{ open: boolean, publicId: string, name: string } | null>(null);
+	const [page, setPage] = useState(0);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 
 	const handleStatusChangeInternal = (publicId: string, status: string) => {
 		if (status === 'dropped_out') {
@@ -92,125 +80,90 @@ const CandidateAllocationTable: React.FC<CandidateAllocationTableProps> = memo((
 		}
 	};
 
+	const columns: ColumnDefinition<CandidateAllocation>[] = useMemo(() => [
+		{ id: 'name' as any, label: 'Candidate Name' },
+		{ id: 'gender' as any, label: 'Gender' },
+		{ id: 'disability' as any, label: 'Disability' },
+		{ id: 'qualification' as any, label: 'Qualification' },
+		{ id: 'contact' as any, label: 'Contact Info' },
+		{ id: 'status' as any, label: 'Status' },
+		{ id: 'actions' as any, label: 'Actions', align: 'right' }
+	], []);
+
+	// Local pagination slicing
+	const paginatedAllocations = useMemo(() => {
+		return allocations.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+	}, [allocations, page, rowsPerPage]);
+
+	// Reset page when allocations change (due to search/filter)
+	useEffect(() => {
+		setPage(0);
+	}, [allocations.length]);
+
 	return (
 		<Box>
-			{/* Command Bar */}
-			<Paper
-				elevation={0}
-				sx={{
-					p: 2,
-					mb: 3,
-					bgcolor: 'white',
-					border: '1px solid #d5dbdb',
-					borderRadius: '2px',
-					display: 'flex',
-					justifyContent: 'space-between',
-					alignItems: 'center',
-					flexWrap: 'wrap',
-					gap: 2
+			<DataTable
+				columns={columns}
+				data={paginatedAllocations}
+				loading={loading}
+				totalCount={allocations.length}
+				page={page}
+				rowsPerPage={rowsPerPage}
+				onPageChange={(_, newPage) => setPage(newPage)}
+				onRowsPerPageChange={(newRows) => {
+					setRowsPerPage(newRows);
+					setPage(0);
 				}}
-			>
-				<Box sx={{ display: 'flex', gap: 2, flexGrow: 1, maxWidth: 800 }}>
-					<TextField
-						placeholder="Search candidates by name, email or ID..."
-						size="small"
-						value={searchQuery}
-						onChange={(e) => onSearchChange(e.target.value)}
-						sx={{ flexGrow: 1, bgcolor: '#fbfbfb' }}
-						InputProps={{
-							startAdornment: (
-								<InputAdornment position="start">
-									<SearchIcon fontSize="small" sx={{ color: '#545b64' }} />
-								</InputAdornment>
-							),
-							sx: { borderRadius: '2px', height: 36, fontSize: '0.875rem' }
-						}}
+				searchTerm={searchQuery}
+				onSearchChange={onSearchChange}
+				searchPlaceholder="Search candidates..."
+				canCreate={true}
+				onCreateClick={onAddClick}
+				createButtonText="Enroll Candidate"
+				headerActions={
+					<Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+						<FormControl size="small" sx={{ minWidth: 200 }}>
+							<Select
+								value={filterDropout}
+								onChange={(e) => onFilterChange(e.target.value as any)}
+								sx={{ 
+									bgcolor: 'background.default', 
+									borderRadius: 1.5, 
+									height: 40, 
+									fontSize: '0.875rem',
+									fontWeight: 600,
+									'&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
+									'&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderWidth: '2px' }
+								}}
+							>
+								<MenuItem value="all" sx={{ fontWeight: 600 }}>All Candidates</MenuItem>
+								<MenuItem value={false as any} sx={{ fontWeight: 600 }}>Active Only</MenuItem>
+								<MenuItem value={true as any} sx={{ fontWeight: 600 }}>Dropouts Only</MenuItem>
+							</Select>
+						</FormControl>
+						<Box sx={{ textAlign: 'left', ml: 1 }}>
+							<Typography variant="caption" sx={{ fontWeight: 800, color: 'text.disabled', display: 'block', textTransform: 'uppercase', letterSpacing: '0.1em', mb: -0.5 }}>
+								Total
+							</Typography>
+							<Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'primary.main' }}>
+								{allocations.length}
+							</Typography>
+						</Box>
+					</Box>
+				}
+				renderRow={(allocation) => (
+					<CandidateAllocationTableRow
+						key={allocation.public_id}
+						allocation={allocation}
+						updatingStatusId={updatingStatusId}
+						onStatusChange={handleStatusChangeInternal}
+						onMove={onMove}
+						getAllocationStatusColor={(status) => getAllocationStatusColor(theme, status)}
+						ALLOCATION_STATUSES={ALLOCATION_STATUSES}
 					/>
-					<FormControl size="small" sx={{ minWidth: 180 }}>
-						<Select
-							value={filterDropout}
-							onChange={(e) => onFilterChange(e.target.value as any)}
-							sx={{ bgcolor: '#fbfbfb', borderRadius: '2px', height: 36, fontSize: '0.875rem' }}
-						>
-							<MenuItem value="all">Filter: All Candidates</MenuItem>
-							<MenuItem value={false as any}>Filter: Active Only</MenuItem>
-							<MenuItem value={true as any}>Filter: Dropouts Only</MenuItem>
-						</Select>
-					</FormControl>
-				</Box>
-
-				<Stack direction="row" spacing={2} alignItems="center">
-					<Typography variant="body2" sx={{ fontWeight: 700, color: '#545b64', mr: 1 }}>
-						{allocations.length} {allocations.length === 1 ? 'candidate' : 'candidates'}
-					</Typography>
-					<Button
-						variant="contained"
-						startIcon={<PersonAddIcon />}
-						onClick={onAddClick}
-						sx={{
-							bgcolor: '#ec7211',
-							color: '#ffffff',
-							textTransform: 'none',
-							fontWeight: 700,
-							px: 3,
-							'&:hover': { bgcolor: '#eb5f07' },
-							boxShadow: 'none',
-							borderRadius: '2px',
-							height: 36
-						}}
-					>
-						Enroll Candidate
-					</Button>
-				</Stack>
-			</Paper>
-
-			<TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #d5dbdb', borderRadius: '2px' }}>
-				<Table>
-					<TableHead>
-						<TableRow sx={{ bgcolor: '#f8f9fa' }}>
-							<TableCell sx={{ fontWeight: 700, py: 1.5, color: '#545b64', fontSize: '0.75rem', textTransform: 'uppercase' }}>Candidate Name</TableCell>
-							<TableCell sx={{ fontWeight: 700, color: '#545b64', fontSize: '0.75rem', textTransform: 'uppercase' }}>Gender</TableCell>
-							<TableCell sx={{ fontWeight: 700, color: '#545b64', fontSize: '0.75rem', textTransform: 'uppercase' }}>Disability</TableCell>
-							<TableCell sx={{ fontWeight: 700, color: '#545b64', fontSize: '0.75rem', textTransform: 'uppercase' }}>Qualification</TableCell>
-							<TableCell sx={{ fontWeight: 700, color: '#545b64', fontSize: '0.75rem', textTransform: 'uppercase' }}>Contact Info</TableCell>
-							<TableCell sx={{ fontWeight: 700, color: '#545b64', fontSize: '0.75rem', textTransform: 'uppercase' }}>Status</TableCell>
-							<TableCell align="right" sx={{ fontWeight: 700, color: '#545b64', fontSize: '0.75rem', textTransform: 'uppercase' }}>Actions</TableCell>
-						</TableRow>
-					</TableHead>
-					<TableBody>
-						{loading ? (
-							<TableRow>
-								<TableCell colSpan={5} align="center" sx={{ py: 8 }}>
-									<CircularProgress size={32} thickness={4} />
-									<Typography sx={{ mt: 2 }} variant="body2" color="text.secondary">Loading candidate data...</Typography>
-								</TableCell>
-							</TableRow>
-						) : allocations.length === 0 ? (
-							<TableRow>
-								<TableCell colSpan={5} align="center" sx={{ py: 10 }}>
-									<Box sx={{ opacity: 0.5 }}>
-										<PeopleIcon sx={{ fontSize: 48, mb: 1, color: '#d5dbdb' }} />
-										<Typography variant="h6" sx={{ fontWeight: 600, color: '#232f3e' }}>No candidates found</Typography>
-										<Typography variant="body2">Try adjusting your search or filters, or enroll a new candidate.</Typography>
-									</Box>
-								</TableCell>
-							</TableRow>
-						) : (
-							allocations.map((allocation) => (
-								<CandidateAllocationTableRow
-									key={allocation.public_id}
-									allocation={allocation}
-									updatingStatusId={updatingStatusId}
-									onStatusChange={handleStatusChangeInternal}
-									onMove={onMove}
-									getAllocationStatusColor={getAllocationStatusColor}
-									ALLOCATION_STATUSES={ALLOCATION_STATUSES}
-								/>
-							))
-						)}
-					</TableBody>
-				</Table>
-			</TableContainer>
+				)}
+				emptyMessage="No candidates found in this batch matching your criteria."
+			/>
 
 			{dropoutDialog && (
 				<DropoutReasonDialog

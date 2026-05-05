@@ -8,7 +8,7 @@ import {
 import AllocateCandidateDialog from '../../components/training/form/AllocateCandidateDialog';
 import MoveCandidateDialog from '../../components/training/form/MoveCandidateDialog';
 import CandidateAllocationTable from '../../components/training/allocation/CandidateAllocationTable';
-import { useSnackbar } from 'notistack';
+import useToast from '../../hooks/useToast';
 import TrainingModuleLayout from '../../components/training/layout/TrainingModuleLayout';
 import type { TrainingBatch, CandidateAllocation as CandidateAllocationModel } from '../../models/training';
 
@@ -19,7 +19,7 @@ interface AllocationManagerProps {
 
 const AllocationManager: React.FC<AllocationManagerProps> = ({ selectedBatch, allocations }) => {
 	const dispatch = useAppDispatch();
-	const { enqueueSnackbar } = useSnackbar();
+	const toast = useToast();
 	const { loading } = useAppSelector((state) => state.training);
 
 	const [dialogOpen, setDialogOpen] = useState(false);
@@ -49,9 +49,9 @@ const AllocationManager: React.FC<AllocationManagerProps> = ({ selectedBatch, al
 			} else {
 				await dispatch(updateAllocationStatus({ publicId, status: newStatus })).unwrap();
 			}
-			enqueueSnackbar('Status updated successfully', { variant: 'success' });
+			toast.success('Status updated successfully');
 		} catch (error: any) {
-			enqueueSnackbar(error || 'Failed to update status', { variant: 'error' });
+			toast.error(error || 'Failed to update status');
 		} finally {
 			setUpdatingStatus(null);
 		}

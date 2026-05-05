@@ -10,7 +10,9 @@ import {
 	Tooltip,
 	IconButton,
 	Avatar,
-	Stack
+	Stack,
+	useTheme,
+	alpha
 } from '@mui/material';
 import {
 	MailOutline as MailIcon,
@@ -36,6 +38,7 @@ const CandidateAllocationTableRow: React.FC<CandidateAllocationTableRowProps> = 
 	getAllocationStatusColor,
 	ALLOCATION_STATUSES
 }) => {
+	const theme = useTheme();
 	const isDropout = allocation.is_dropout || allocation.status === 'dropped_out';
 	// Handle backward compatibility if status comes as object
 	const statusStr = typeof allocation.status === 'string' ? allocation.status : (allocation.status as any)?.current;
@@ -56,31 +59,34 @@ const CandidateAllocationTableRow: React.FC<CandidateAllocationTableRowProps> = 
 		<TableRow
 			hover
 			sx={{
-				'&:hover': { bgcolor: '#fbfbfb' },
-				transition: 'background-color 0.2s ease',
-				'& td': { py: 1.5, borderBottom: '1px solid #eaeded' }
+				'&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.02) },
+				transition: 'background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+				'& td': { py: 1.5, borderBottom: '1px solid', borderColor: alpha(theme.palette.divider, 0.5) }
 			}}
 		>
 			<TableCell>
 				<Stack direction="row" spacing={2} alignItems="center">
 					<Avatar
 						sx={{
-							width: 32,
-							height: 32,
-							fontSize: '0.75rem',
+							width: 36,
+							height: 36,
+							fontSize: '0.875rem',
 							fontWeight: 700,
-							bgcolor: isDropout ? '#eaeced' : '#007eb9',
-							color: 'white'
+							bgcolor: isDropout ? alpha(theme.palette.text.disabled, 0.1) : alpha(theme.palette.primary.main, 0.08),
+							color: isDropout ? 'text.disabled' : 'primary.main',
+							border: '1px solid',
+							borderColor: isDropout ? alpha(theme.palette.text.disabled, 0.2) : alpha(theme.palette.primary.main, 0.15),
+							boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
 						}}
 					>
 						{allocation.candidate?.name?.[0] || 'C'}
 					</Avatar>
 					<Box>
-						<Typography sx={{ fontWeight: 600, fontSize: '0.875rem', color: isDropout ? '#879196' : '#232f3e' }}>
+						<Typography sx={{ fontWeight: 700, fontSize: '0.875rem', color: isDropout ? 'text.disabled' : 'text.primary', mb: 0 }}>
 							{allocation.candidate?.name}
 						</Typography>
 						{isDropout && (
-							<Typography variant="caption" sx={{ fontWeight: 700, color: '#d13212', fontSize: '0.65rem', letterSpacing: '0.02em' }}>
+							<Typography variant="caption" sx={{ fontWeight: 800, color: 'error.main', fontSize: '0.6rem', letterSpacing: '0.05em', textTransform: 'uppercase', bgcolor: alpha(theme.palette.error.main, 0.08), px: 0.75, py: 0.1, borderRadius: 0.5 }}>
 								DROPOUT
 							</Typography>
 						)}
@@ -88,29 +94,29 @@ const CandidateAllocationTableRow: React.FC<CandidateAllocationTableRowProps> = 
 				</Stack>
 			</TableCell>
 			<TableCell>
-				<Typography variant="body2" sx={{ color: '#545b64', fontSize: '0.8125rem' }}>
+				<Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500, textTransform: 'capitalize', fontSize: '0.8125rem' }}>
 					{allocation.candidate?.gender || '-'}
 				</Typography>
 			</TableCell>
 			<TableCell>
-				<Typography variant="body2" sx={{ color: '#545b64', fontSize: '0.8125rem' }}>
+				<Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500, fontSize: '0.8125rem' }}>
 					{allocation.candidate?.disability_details?.disability_type || allocation.candidate?.disability_details?.type || '-'}
 				</Typography>
 			</TableCell>
 			<TableCell>
-				<Typography variant="body2" sx={{ color: '#545b64', fontSize: '0.8125rem' }}>
+				<Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500, fontSize: '0.8125rem' }}>
 					{allocation.candidate?.education_details?.degrees?.[0]?.degree_name || '-'}
 				</Typography>
 			</TableCell>
 			<TableCell>
 				<Stack spacing={0.5}>
 					<Stack direction="row" spacing={1} alignItems="center">
-						<MailIcon sx={{ fontSize: 14, color: '#879196' }} />
-						<Typography variant="body2" sx={{ color: '#545b64', fontSize: '0.8125rem' }}>{allocation.candidate?.email}</Typography>
+						<MailIcon sx={{ fontSize: 14, color: 'text.disabled', opacity: 0.8 }} />
+						<Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.75rem', fontWeight: 500 }}>{allocation.candidate?.email}</Typography>
 					</Stack>
 					<Stack direction="row" spacing={1} alignItems="center">
-						<PhoneIcon sx={{ fontSize: 14, color: '#879196' }} />
-						<Typography variant="caption" sx={{ color: '#879196' }}>{allocation.candidate?.phone}</Typography>
+						<PhoneIcon sx={{ fontSize: 14, color: 'text.disabled', opacity: 0.8 }} />
+						<Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 600, fontSize: '0.7rem' }}>{allocation.candidate?.phone}</Typography>
 					</Stack>
 				</Stack>
 			</TableCell>
@@ -123,35 +129,41 @@ const CandidateAllocationTableRow: React.FC<CandidateAllocationTableRowProps> = 
 						variant="outlined"
 						sx={{
 							height: 28,
-							fontSize: '0.75rem',
-							fontWeight: 700,
-							bgcolor: 'white',
+							fontSize: '0.65rem',
+							fontWeight: 800,
+							bgcolor: alpha(getAllocationStatusColor(currentStatus), 0.05),
+							borderRadius: 1,
 							'& .MuiSelect-select': {
 								py: 0,
 								display: 'flex',
 								alignItems: 'center',
-								gap: 1
+								gap: 1.5,
+								color: getAllocationStatusColor(currentStatus),
+								textTransform: 'uppercase',
+								letterSpacing: '0.05em'
 							},
 							'& fieldset': {
-								borderColor: '#d5dbdb',
-								borderRadius: '14px'
+								borderColor: alpha(getAllocationStatusColor(currentStatus), 0.2),
 							},
-							'&:hover fieldset': { borderColor: '#879196 !important' }
+							'&:hover fieldset': { 
+								borderColor: `${getAllocationStatusColor(currentStatus)} !important`,
+							}
 						}}
 						renderValue={(selected) => (
 							<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
 								<Box sx={{
-									width: 8,
-									height: 8,
+									width: 6,
+									height: 6,
 									borderRadius: '50%',
-									bgcolor: getAllocationStatusColor(selected as string)
+									bgcolor: getAllocationStatusColor(selected as string),
+									boxShadow: `0 0 0 2px ${alpha(getAllocationStatusColor(selected as string), 0.2)}`
 								}} />
 								{getDisplayStatus(selected as string)}
 							</Box>
 						)}
 					>
 						{ALLOCATION_STATUSES.map(s => (
-							<MenuItem key={s} value={s} sx={{ fontSize: '0.75rem', fontWeight: 600 }}>
+							<MenuItem key={s} value={s} sx={{ fontSize: '0.75rem', fontWeight: 700, py: 1 }}>
 								<Box component="span" sx={{
 									display: 'inline-block',
 									width: 8,
@@ -175,29 +187,33 @@ const CandidateAllocationTableRow: React.FC<CandidateAllocationTableRowProps> = 
 								overflow: 'hidden',
 								textOverflow: 'ellipsis',
 								whiteSpace: 'nowrap',
-								color: '#d13212',
-								fontWeight: 500,
+								color: 'error.main',
+								fontWeight: 600,
 								mt: 0.5,
-								fontSize: '0.65rem'
+								fontSize: '0.6rem'
 							}}
 						>
-							Reason: {allocation.dropout_remark}
+							REASON: {allocation.dropout_remark}
 						</Typography>
 					</Tooltip>
 				)}
 			</TableCell>
 			<TableCell align="right">
-				<Stack direction="row" spacing={1} justifyContent="flex-end">
+				<Stack direction="row" spacing={0.5} justifyContent="flex-end">
 					<Tooltip title="Move to different batch">
 						<IconButton
 							size="small"
 							onClick={() => onMove(allocation)}
 							sx={{
-								color: '#545b64',
-								'&:hover': { bgcolor: '#eaeded', color: '#007eb9' }
+								color: 'text.secondary',
+								transition: 'all 0.2s',
+								'&:hover': { 
+									color: 'primary.main',
+									bgcolor: alpha(theme.palette.primary.main, 0.08)
+								}
 							}}
 						>
-							<MoveIcon fontSize="small" />
+							<MoveIcon sx={{ fontSize: 18 }} />
 						</IconButton>
 					</Tooltip>
 				</Stack>
