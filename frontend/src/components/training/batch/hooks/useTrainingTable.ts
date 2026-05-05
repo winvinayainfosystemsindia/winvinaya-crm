@@ -33,10 +33,6 @@ export const useTrainingTable = () => {
 		setPage(newPage);
 	}, []);
 
-	const handleChangeRowsPerPage = useCallback((newRowsPerPage: number) => {
-		setRowsPerPage(newRowsPerPage);
-		setPage(0);
-	}, []);
 
 	const handleRowsPerPageSelectChange = useCallback((rows: number) => {
 		setRowsPerPage(rows);
@@ -72,7 +68,6 @@ export const useTrainingTable = () => {
 		setFilterDrawerOpen,
 		handleSearch,
 		handleChangePage,
-		handleChangeRowsPerPage,
 		handleRequestSort,
 		handleFilterChange,
 		clearFilters,

@@ -5,7 +5,9 @@ import {
 	Typography,
 	Chip,
 	Box,
-	Tooltip
+	Tooltip,
+	alpha,
+	useTheme
 } from '@mui/material';
 import { format, isValid } from 'date-fns';
 import type { TrainingBatch } from '../../../../models/training';
@@ -28,8 +30,10 @@ const TrainingTableRow: React.FC<TrainingTableRowProps> = memo(({
 	onExtend,
 	onDelete
 }) => {
+	const theme = useTheme();
+
 	return (
-		<TableRow sx={{ '&:hover': { bgcolor: '#f5f8fa' } }}>
+		<TableRow sx={{ '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.04) } }}>
 			<TableCell>
 				<Typography
 					variant="body2"
@@ -40,7 +44,20 @@ const TrainingTableRow: React.FC<TrainingTableRowProps> = memo(({
 			</TableCell>
 			<TableCell>
 				{batch.disability_types?.map((type, idx) => (
-					<Chip key={idx} label={type} size="small" variant="outlined" sx={{ mr: 0.5, mb: 0.5, bgcolor: '#f1f8e9' }} />
+					<Chip 
+						key={idx} 
+						label={type} 
+						size="small" 
+						variant="outlined" 
+						sx={{ 
+							mr: 0.5, 
+							mb: 0.5, 
+							bgcolor: alpha(theme.palette.success.main, 0.05),
+							borderColor: alpha(theme.palette.success.main, 0.2),
+							color: theme.palette.success.dark,
+							fontWeight: 600
+						}} 
+					/>
 				)) || '-'}
 			</TableCell>
 			<TableCell>
@@ -49,11 +66,13 @@ const TrainingTableRow: React.FC<TrainingTableRowProps> = memo(({
 						label={batch.other.tag}
 						size="small"
 						sx={{
-							bgcolor: '#f1faff',
-							color: '#007eb9',
-							border: '1px solid #007eb9',
-							fontWeight: 600,
-							borderRadius: '4px'
+							bgcolor: alpha(theme.palette.primary.main, 0.05),
+							color: theme.palette.primary.main,
+							border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+							fontWeight: 700,
+							borderRadius: '4px',
+							fontSize: '0.65rem',
+							textTransform: 'uppercase'
 						}}
 					/>
 				) : (
@@ -70,9 +89,10 @@ const TrainingTableRow: React.FC<TrainingTableRowProps> = memo(({
 						size="small"
 						variant="outlined"
 						sx={{
-							bgcolor: batch.training_mode === 'Online' ? '#e3f2fd' :
-								batch.training_mode === 'Offline' ? '#fff3e0' : '#f3e5f5',
-							borderColor: 'rgba(0,0,0,0.1)'
+							bgcolor: batch.training_mode === 'Online' ? alpha(theme.palette.info.main, 0.08) :
+								batch.training_mode === 'Offline' ? alpha(theme.palette.warning.main, 0.08) : alpha(theme.palette.secondary.main, 0.08),
+							borderColor: alpha(theme.palette.divider, 0.1),
+							fontWeight: 600
 						}}
 					/>
 				) : '-'}
@@ -91,7 +111,8 @@ const TrainingTableRow: React.FC<TrainingTableRowProps> = memo(({
 								sx={{
 									mr: 0.5,
 									mb: 0.5,
-									bgcolor: trainer ? '#e3f2fd' : '#f5f5f5'
+									bgcolor: trainer ? alpha(theme.palette.primary.main, 0.05) : alpha(theme.palette.action.hover, 0.5),
+									fontWeight: 500
 								}}
 							/>
 						</Tooltip>
@@ -124,11 +145,11 @@ const TrainingTableRow: React.FC<TrainingTableRowProps> = memo(({
 							{batch.extensions?.map((ext, i) => {
 								const extDate = new Date(ext.new_close_date);
 								return (
-									<Box key={i} sx={{ mb: i === (batch.extensions?.length || 0) - 1 ? 0 : 1, borderLeft: '2px solid #ec7211', pl: 1 }}>
-										<Typography variant="caption" sx={{ display: 'block', fontWeight: 600 }}>
+									<Box key={i} sx={{ mb: i === (batch.extensions?.length || 0) - 1 ? 0 : 1, borderLeft: `2px solid ${theme.palette.accent.main}`, pl: 1 }}>
+										<Typography variant="caption" sx={{ display: 'block', fontWeight: 700, color: theme.palette.accent.main }}>
 											{isValid(extDate) ? format(extDate, 'dd MMM yyyy') : ext.new_close_date} ({ext.extension_days >= 0 ? '+' : ''}{ext.extension_days}d)
 										</Typography>
-										<Typography variant="caption" sx={{ fontStyle: 'italic' }}>
+										<Typography variant="caption" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
 											{ext.reason || 'No reason provided'}
 										</Typography>
 									</Box>
