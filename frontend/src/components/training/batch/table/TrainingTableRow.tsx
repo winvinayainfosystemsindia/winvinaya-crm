@@ -33,9 +33,9 @@ const TrainingTableRow: React.FC<TrainingTableRowProps> = memo(({
 	const theme = useTheme();
 
 	return (
-		<TableRow 
+		<TableRow
 			onClick={() => canEdit && onEdit(batch)}
-			sx={{ 
+			sx={{
 				'&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.04) },
 				cursor: canEdit ? 'pointer' : 'default'
 			}}
@@ -50,19 +50,19 @@ const TrainingTableRow: React.FC<TrainingTableRowProps> = memo(({
 			</TableCell>
 			<TableCell>
 				{batch.disability_types?.map((type, idx) => (
-					<Chip 
-						key={idx} 
-						label={type} 
-						size="small" 
-						variant="outlined" 
-						sx={{ 
-							mr: 0.5, 
-							mb: 0.5, 
+					<Chip
+						key={idx}
+						label={type}
+						size="small"
+						variant="outlined"
+						sx={{
+							mr: 0.5,
+							mb: 0.5,
 							bgcolor: alpha(theme.palette.success.main, 0.05),
 							borderColor: alpha(theme.palette.success.main, 0.2),
 							color: theme.palette.success.dark,
 							fontWeight: 600
-						}} 
+						}}
 					/>
 				)) || '-'}
 			</TableCell>

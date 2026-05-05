@@ -1,5 +1,5 @@
 import React, { useEffect, memo } from 'react';
-import { Box, Typography, Divider, Grid, Stack } from '@mui/material';
+import { Box, Typography, Divider, Grid, Stack, useTheme } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { fetchTrainingStats } from '../../../../store/slices/trainingSlice';
 import StatCard from '../../../common/stats/StatCard';
@@ -26,32 +26,37 @@ const StatItem = ({ label, value, color, icon, align = 'center' }: { label: stri
 	</Box>
 );
 
-const TrainingStats: React.FC = memo(() => {
+interface TrainingStatsProps {
+	refreshKey?: number;
+}
+
+const TrainingStats: React.FC<TrainingStatsProps> = memo(({ refreshKey }) => {
+	const theme = useTheme();
 	const dispatch = useAppDispatch();
 	const { stats } = useAppSelector((state) => state.training);
 
 	useEffect(() => {
 		dispatch(fetchTrainingStats());
-	}, [dispatch]);
+	}, [dispatch, refreshKey]);
 
 	if (!stats) return null;
 
 	return (
-		<Grid container spacing={3} sx={{ mb: 3 }}>
+		<Grid container spacing={3} sx={{ mb: 4 }}>
 			{/* Card 1: Batch Overview */}
 			<Grid size={{ xs: 12, md: 6, lg: 3 }}>
 				<StatCard
 					title="Batches Overview"
 					value={stats.total ?? 0}
 					icon={<BatchPrediction fontSize="small" />}
-					color="#1976d2"
+					color={theme.palette.primary.main}
 					sx={{ minHeight: 140 }}
 				>
-					<Divider sx={{ my: 1, opacity: 0.6 }} />
+					<Divider sx={{ my: 1.5, opacity: 0.4 }} />
 					<Stack direction="row" spacing={1} divider={<Divider orientation="vertical" flexItem sx={{ height: 16, my: 'auto' }} />}>
-						<StatItem label="Running" value={stats.running ?? 0} color="#2e7d32" />
-						<StatItem label="Planned" value={stats.planned ?? 0} color="#ed6c02" />
-						<StatItem label="Closed" value={stats.completed ?? 0} color="#757575" />
+						<StatItem label="Running" value={stats.running ?? 0} color={theme.palette.success.main} />
+						<StatItem label="Planned" value={stats.planned ?? 0} color={theme.palette.warning.main} />
+						<StatItem label="Closed" value={stats.completed ?? 0} color={theme.palette.text.disabled} />
 					</Stack>
 				</StatCard>
 			</Grid>
@@ -61,23 +66,23 @@ const TrainingStats: React.FC = memo(() => {
 				<StatCard
 					title="Total Selected Candidates"
 					value={stats.total_selected ?? 0}
-					icon={<Group />}
-					color="#2e7d32"
+					icon={<Group fontSize="small" />}
+					color={theme.palette.success.dark}
 					sx={{ minHeight: 140 }}
 				>
-					<Divider sx={{ my: 1, opacity: 0.6 }} />
+					<Divider sx={{ my: 1.5, opacity: 0.4 }} />
 					<Stack direction="row" spacing={1} divider={<Divider orientation="vertical" flexItem sx={{ height: 16, my: 'auto' }} />}>
 						<StatItem 
 							label="In Training" 
 							value={stats.in_training ?? 0} 
-							color="#1976d2" 
+							color={theme.palette.primary.main} 
 							icon={<TrendingUp />} 
 							align="left"
 						/>
 						<StatItem 
 							label="Ready" 
 							value={stats.ready_for_training ?? 0} 
-							color="#ed6c02" 
+							color={theme.palette.warning.main} 
 							icon={<PersonAdd />} 
 							align="left"
 						/>
@@ -90,18 +95,18 @@ const TrainingStats: React.FC = memo(() => {
 				<StatCard
 					title="Training Outcomes"
 					value={stats.completed_training ?? 0}
-					icon={<CheckCircleOutline />}
-					color="#00897b"
+					icon={<CheckCircleOutline fontSize="small" />}
+					color={theme.palette.secondary.main}
 					sx={{ minHeight: 140 }}
 				>
-					<Divider sx={{ my: 1, opacity: 0.6 }} />
+					<Divider sx={{ my: 1.5, opacity: 0.4 }} />
 					<Stack direction="row" spacing={1} divider={<Divider orientation="vertical" flexItem sx={{ height: 16, my: 'auto' }} />}>
-						<StatItem label="Completed" value={stats.completed_candidates ?? 0} color="#2e7d32" />
-						<StatItem label="Placement" value={stats.moved_to_placement ?? 0} color="#1565c0" />
+						<StatItem label="Completed" value={stats.completed_candidates ?? 0} color={theme.palette.success.main} />
+						<StatItem label="Placement" value={stats.moved_to_placement ?? 0} color={theme.palette.info.main} />
 						<StatItem 
 							label="Dropped" 
 							value={stats.dropped_out ?? 0} 
-							color="#d32f2f" 
+							color={theme.palette.error.main} 
 							icon={<CancelOutlined />} 
 							align="left"
 						/>

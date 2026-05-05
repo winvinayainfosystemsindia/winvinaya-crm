@@ -10,8 +10,6 @@ import { getBatchFilterFields } from '../BatchFilters';
 
 // Specialized Components
 import TrainingTableRow from './TrainingTableRow';
-import TrainingBatchFormDialog from '../form/TrainingBatchFormDialog';
-import ExtendBatchDialog from '../dialogs/ExtendBatchDialog';
 
 // Hooks
 import { useTrainingTable } from '../hooks/useTrainingTable';
@@ -19,9 +17,17 @@ import { useTrainingActions } from '../hooks/useTrainingActions';
 
 interface TrainingTableProps {
 	refreshKey?: number;
+	onEdit: (batch: TrainingBatch) => void;
+	onExtend: (batch: TrainingBatch) => void;
+	onRefresh?: () => void;
 }
 
-const TrainingTable: React.FC<TrainingTableProps> = ({ refreshKey }) => {
+const TrainingTable: React.FC<TrainingTableProps> = ({
+	refreshKey,
+	onEdit,
+	onExtend,
+	onRefresh
+}) => {
 	const dispatch = useAppDispatch();
 	const { batches, loading, total: totalCount } = useAppSelector((state) => state.training);
 	const user = useAppSelector((state) => state.auth.user);
@@ -49,17 +55,11 @@ const TrainingTable: React.FC<TrainingTableProps> = ({ refreshKey }) => {
 		setPage
 	} = useTrainingTable();
 
-	// Actions Hook
-	const {
-		handleFormSubmit,
-		handleExtendConfirm,
-		handleDeleteConfirm
-	} = useTrainingActions();
+	// Actions Hook for Deletion
+	const { handleDeleteConfirm } = useTrainingActions();
 
-	// Local UI State for Dialogs
+	// Local UI State for Deletion
 	const [selectedBatch, setSelectedBatch] = useState<TrainingBatch | undefined>(undefined);
-	const [formDialogOpen, setFormDialogOpen] = useState(false);
-	const [extendDialogOpen, setExtendDialogOpen] = useState(false);
 	const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
 
@@ -81,67 +81,42 @@ const TrainingTable: React.FC<TrainingTableProps> = ({ refreshKey }) => {
 		fetchBatchesData();
 	}, [fetchBatchesData, refreshKey]);
 
-	// Action Handlers
-	const handleCreateClick = useCallback(() => {
-		setSelectedBatch(undefined);
-		setFormDialogOpen(true);
-	}, []);
-
-	const handleEditClick = useCallback((batch: TrainingBatch) => {
-		setSelectedBatch(batch);
-		setFormDialogOpen(true);
-	}, []);
-
-	const handleExtendClick = useCallback((batch: TrainingBatch) => {
-		setSelectedBatch(batch);
-		setExtendDialogOpen(true);
-	}, []);
-
 	const handleDeleteClick = useCallback((batch: TrainingBatch) => {
 		setSelectedBatch(batch);
 		setDeleteConfirmOpen(true);
 	}, []);
 
-	const onFormSubmit = async (data: Partial<TrainingBatch>) => {
-		const success = await handleFormSubmit(data, selectedBatch);
-		if (success) setFormDialogOpen(false);
-	};
-
-	const onExtendBatch = async (newDate: string, reason: string) => {
-		if (selectedBatch) {
-			const success = await handleExtendConfirm(selectedBatch, newDate, reason);
-			if (success) setExtendDialogOpen(false);
-		}
-	};
-
 	const onDeleteBatch = async () => {
-		if (selectedBatch) {
-			setIsDeleting(true);
-			try {
-				const success = await handleDeleteConfirm(selectedBatch);
-				if (success) setDeleteConfirmOpen(false);
-			} finally {
-				setIsDeleting(false);
-			}
+		if (!selectedBatch) return;
+		setIsDeleting(true);
+		try {
+			await handleDeleteConfirm(selectedBatch);
+			fetchBatchesData();
+			onRefresh?.();
+		} finally {
+			setIsDeleting(false);
+			setDeleteConfirmOpen(false);
+			setSelectedBatch(undefined);
 		}
 	};
-
-	const filterFields: FilterField[] = useMemo(() => getBatchFilterFields(), []);
 
 	const columns: ColumnDefinition<TrainingBatch>[] = useMemo(() => [
 		{ id: 'batch_name', label: 'Batch Name', sortable: true },
 		{ id: 'disability_types' as any, label: 'Category', sortable: false },
 		{ id: 'tag' as any, label: 'Tag', sortable: false },
-		{ id: 'domain' as any, label: 'Domain', sortable: false },
-		{ id: 'training_mode' as any, label: 'Mode', sortable: false },
-		{ id: 'courses' as any, label: 'Courses', sortable: false },
-		{ id: 'duration' as any, label: 'Duration', sortable: false },
-		{ id: 'total_extension_days' as any, label: 'Ext. Days', sortable: false },
-		{ id: 'status', label: 'Status', sortable: false },
-		{ id: 'actions', label: 'Actions', sortable: false, align: 'right' },
+		{ id: 'domain' as any, label: 'Domain', sortable: true },
+		{ id: 'training_mode' as any, label: 'Mode', sortable: true },
+		{ id: 'courses' as any, label: 'Curriculum & Trainers', sortable: false },
+		{ id: 'duration' as any, label: 'Timeline', sortable: true },
+		{ id: 'total_extension_days' as any, label: 'Modifications', sortable: false },
+		{ id: 'status', label: 'Status', sortable: true },
+		{ id: 'actions', label: 'Actions', sortable: false, align: 'right' }
 	], []);
 
-	const activeFilterCount = (filters.status ? 1 : 0) + filters.disability_types.length;
+	const filterFields: FilterField[] = useMemo(() => getBatchFilterFields(), []);
+	const activeFilterCount = Object.values(filters).filter(v =>
+		Array.isArray(v) ? v.length > 0 : !!v
+	).length;
 
 	return (
 		<>
@@ -163,17 +138,15 @@ const TrainingTable: React.FC<TrainingTableProps> = ({ refreshKey }) => {
 				onRefresh={fetchBatchesData}
 				onFilterOpen={() => setFilterDrawerOpen(true)}
 				activeFilterCount={activeFilterCount}
-				onCreateClick={handleCreateClick}
-				canCreate={canManage}
-				createButtonText="Create Batch"
+				canCreate={false} // Managed by PageHeader in TrainingBatchList
 				renderRow={(batch) => (
 					<TrainingTableRow
 						key={batch.public_id}
 						batch={batch}
 						isAdmin={!!isAdmin}
 						canEdit={!!canManage}
-						onEdit={handleEditClick}
-						onExtend={handleExtendClick}
+						onEdit={onEdit}
+						onExtend={onExtend}
 						onDelete={handleDeleteClick}
 					/>
 				)}
@@ -198,21 +171,6 @@ const TrainingTable: React.FC<TrainingTableProps> = ({ refreshKey }) => {
 				confirmLabel="Delete"
 				severity="error"
 				loading={isDeleting}
-			/>
-
-			<TrainingBatchFormDialog
-				open={formDialogOpen}
-				onClose={() => setFormDialogOpen(false)}
-				onSubmit={onFormSubmit}
-				initialData={selectedBatch}
-			/>
-
-			<ExtendBatchDialog
-				open={extendDialogOpen}
-				onClose={() => setExtendDialogOpen(false)}
-				onConfirm={onExtendBatch}
-				currentCloseDate={selectedBatch?.approx_close_date || selectedBatch?.duration?.end_date || ''}
-				batchName={selectedBatch?.batch_name || ''}
 			/>
 		</>
 	);
