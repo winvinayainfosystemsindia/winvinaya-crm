@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Box, Tabs, Tab } from '@mui/material';
+import { Box, Tabs, Tab, useTheme, alpha } from '@mui/material';
 import { format } from 'date-fns';
 import { toPng } from 'html-to-image';
 import { saveAs } from 'file-saver';
@@ -15,7 +15,7 @@ import { ConfirmationDialog } from '../../components/common/dialogbox';
 import BatchEventDialog from '../../components/training/plan/dialogs/BatchEventDialog';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { syncBatchWithProject } from '../../store/slices/trainingPlanSlice';
-import { useSnackbar } from 'notistack';
+import useToast from '../../hooks/useToast';
 
 interface WeeklyPlanManagerProps {
 	selectedBatch: TrainingBatch;
@@ -23,7 +23,7 @@ interface WeeklyPlanManagerProps {
 
 const WeeklyPlanManager: React.FC<WeeklyPlanManagerProps> = ({ selectedBatch }) => {
 	const dispatch = useAppDispatch();
-	const { enqueueSnackbar } = useSnackbar();
+	const toast = useToast();
 	const { loading: sliceLoading } = useAppSelector(state => state.trainingPlan);
 	const {
 		weekDays,
@@ -76,6 +76,7 @@ const WeeklyPlanManager: React.FC<WeeklyPlanManagerProps> = ({ selectedBatch }) 
 	const tableRef = useRef<HTMLDivElement>(null);
 	const [isExporting, setIsExporting] = useState(false);
 
+	const theme = useTheme();
 	const handleExportPNG = async () => {
 		if (tableRef.current) {
 			setIsExporting(true);
@@ -83,15 +84,15 @@ const WeeklyPlanManager: React.FC<WeeklyPlanManagerProps> = ({ selectedBatch }) 
 			await new Promise(resolve => setTimeout(resolve, 100));
 			try {
 				const dataUrl = await toPng(tableRef.current, {
-					backgroundColor: '#ffffff',
+					backgroundColor: theme.palette.background.paper,
 					style: {
-						padding: '20px'
+						padding: '24px'
 					}
 				});
 				const fileName = `weekly-plan-${selectedBatch.batch_name}-${format(weekStart, 'yyyy-MM-dd')}.png`;
 				saveAs(dataUrl, fileName);
 			} catch (error) {
-				console.error('Failed to export PNG', error);
+				toast.error('Failed to export PNG');
 			} finally {
 				setIsExporting(false);
 			}
@@ -101,18 +102,41 @@ const WeeklyPlanManager: React.FC<WeeklyPlanManagerProps> = ({ selectedBatch }) 
 	const handleSync = async () => {
 		try {
 			await dispatch(syncBatchWithProject(selectedBatch.public_id)).unwrap();
-			enqueueSnackbar('Batch synchronized with project successfully', { variant: 'success' });
+			toast.success('Batch synchronized with project successfully');
 		} catch (err: any) {
-			enqueueSnackbar(err || 'Failed to sync batch', { variant: 'error' });
+			toast.error(err || 'Failed to sync batch');
 		}
 	};
 
 	return (
 		<Box>
-			<Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-				<Tabs value={activeTab} onChange={(_e, newValue) => setActiveTab(newValue)}>
+			<Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 4, bgcolor: 'background.paper', borderRadius: '8px 8px 0 0' }}>
+				<Tabs 
+					value={activeTab} 
+					onChange={(_e, newValue) => setActiveTab(newValue)}
+					indicatorColor="primary"
+					textColor="primary"
+					sx={{
+						'& .MuiTab-root': {
+							fontWeight: 700,
+							textTransform: 'none',
+							fontSize: '0.95rem',
+							minHeight: 56,
+							px: 4,
+							color: 'text.secondary',
+							transition: 'all 0.2s',
+							'&.Mui-selected': {
+								color: 'primary.main',
+							},
+							'&:hover': {
+								color: 'primary.main',
+								bgcolor: alpha(theme.palette.primary.main, 0.04),
+							}
+						},
+					}}
+				>
 					<Tab label="Weekly Schedule" />
-					<Tab label="Overall Stats" />
+					<Tab label="Performance Insights" />
 				</Tabs>
 			</Box>
 

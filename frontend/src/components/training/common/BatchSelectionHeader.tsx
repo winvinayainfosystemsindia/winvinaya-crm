@@ -3,8 +3,11 @@ import {
 	Box,
 	Typography,
 	Autocomplete,
-	TextField
+	TextField,
+	useTheme,
+	alpha
 } from '@mui/material';
+import { ExpandMore as ExpandIcon } from '@mui/icons-material';
 import type { TrainingBatch } from '../../../models/training';
 
 interface BatchSelectionHeaderProps {
@@ -18,17 +21,19 @@ const BatchSelectionHeader: React.FC<BatchSelectionHeaderProps> = memo(({
 	selectedBatch,
 	onBatchChange,
 }) => {
+	const theme = useTheme();
+
 	return (
-		<Box sx={{ width: '100%', maxWidth: 320 }}>
+		<Box sx={{ width: '100%', maxWidth: 340 }}>
 			<Typography
 				variant="caption"
 				sx={{
 					fontWeight: 800,
-					color: '#aab7bd',
+					color: alpha(theme.palette.common.white, 0.5),
 					display: 'block',
 					mb: 0.75,
 					textTransform: 'uppercase',
-					letterSpacing: '0.05em',
+					letterSpacing: '0.1em',
 					fontSize: '0.65rem'
 				}}
 			>
@@ -40,6 +45,7 @@ const BatchSelectionHeader: React.FC<BatchSelectionHeaderProps> = memo(({
 				value={selectedBatch}
 				onChange={(_e, newValue) => onBatchChange(newValue)}
 				size="small"
+				popupIcon={<ExpandIcon sx={{ fontSize: 20 }} />}
 				renderInput={(params) => (
 					<TextField
 						{...params}
@@ -47,30 +53,30 @@ const BatchSelectionHeader: React.FC<BatchSelectionHeaderProps> = memo(({
 						variant="outlined"
 						sx={{
 							'& .MuiOutlinedInput-root': {
-								color: 'white',
+								color: 'common.white',
 								fontSize: '0.875rem',
-								fontWeight: 500,
-								bgcolor: 'rgba(255, 255, 255, 0.05)',
-								borderRadius: '2px',
-								transition: 'all 0.2s ease',
-								height: 36,
+								fontWeight: 600,
+								bgcolor: alpha(theme.palette.common.white, 0.05),
+								borderRadius: 2,
+								transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+								height: 40,
 								'& fieldset': {
-									borderColor: 'rgba(255, 255, 255, 0.2)',
+									borderColor: alpha(theme.palette.common.white, 0.15),
 									borderWidth: '1px'
 								},
 								'&:hover fieldset': {
-									borderColor: 'rgba(255, 255, 255, 0.4)'
+									borderColor: alpha(theme.palette.common.white, 0.3)
 								},
 								'&.Mui-focused fieldset': {
-									borderColor: '#ff9900',
-									borderWidth: '1px'
+									borderColor: theme.palette.primary.main,
+									borderWidth: '1.5px'
 								},
 							},
 							'& .MuiAutocomplete-input': {
 								py: 0
 							},
 							'& .MuiInputBase-input::placeholder': {
-								color: 'rgba(255, 255, 255, 0.4)',
+								color: alpha(theme.palette.common.white, 0.4),
 								opacity: 1
 							}
 						}}
@@ -78,8 +84,14 @@ const BatchSelectionHeader: React.FC<BatchSelectionHeaderProps> = memo(({
 				)}
 				sx={{
 					width: '100%',
-					'& .MuiAutocomplete-popupIndicator': { color: 'rgba(255, 255, 255, 0.6)' },
-					'& .MuiAutocomplete-clearIndicator': { color: 'rgba(255, 255, 255, 0.6)' }
+					'& .MuiAutocomplete-popupIndicator': { 
+						color: alpha(theme.palette.common.white, 0.6),
+						'&:hover': { bgcolor: alpha(theme.palette.common.white, 0.05) }
+					},
+					'& .MuiAutocomplete-clearIndicator': { 
+						color: alpha(theme.palette.common.white, 0.6),
+						'&:hover': { bgcolor: alpha(theme.palette.common.white, 0.05) }
+					}
 				}}
 			/>
 		</Box>
