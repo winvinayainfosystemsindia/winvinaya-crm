@@ -17,12 +17,14 @@ class FileStorageService:
     # Allowed file types and max sizes
     ALLOWED_EXTENSIONS = {
         "resume": {".pdf", ".doc", ".docx"},
+        "trainer_resume": {".pdf", ".doc", ".docx"},
         "disability_certificate": {".pdf", ".jpg", ".jpeg", ".png"},
         "10th_certificate": {".pdf", ".jpg", ".jpeg", ".png"},
         "12th_certificate": {".pdf", ".jpg", ".jpeg", ".png"},
         "degree_certificate": {".pdf", ".jpg", ".jpeg", ".png"},
         "pan_card": {".pdf", ".jpg", ".jpeg", ".png"},
         "aadhar_card": {".pdf", ".jpg", ".jpeg", ".png"},
+        "passport_photo": {".jpg", ".jpeg", ".png"},
         "offer_letter": {".pdf", ".jpg", ".jpeg", ".png", ".doc", ".docx"},
         "other": {".pdf", ".doc", ".docx", ".jpg", ".jpeg", ".png", ".zip"}
     }

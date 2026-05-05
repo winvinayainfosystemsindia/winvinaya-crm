@@ -8,7 +8,7 @@ from pydantic import BaseModel
 # Document Schemas
 
 class CandidateDocumentBase(BaseModel):
-    document_type: str  # 'resume', 'disability_certificate', '10th_certificate', '12th_certificate', 'degree_certificate', 'pan_card', 'aadhar_card', 'other'
+    document_type: str  # 'resume', 'trainer_resume', 'disability_certificate', '10th_certificate', '12th_certificate', 'degree_certificate', 'pan_card', 'aadhar_card', 'passport_photo', 'other'
     document_name: str
     file_path: str
     file_size: Optional[int] = None

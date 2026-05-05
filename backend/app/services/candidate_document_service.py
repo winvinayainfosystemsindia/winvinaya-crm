@@ -35,10 +35,10 @@ class CandidateDocumentService:
             raise HTTPException(status_code=404, detail="Candidate not found")
         
         # Logic: If it's a resume and source is trainer, deactivate other active resumes
-        if document_type == 'resume':
+        if document_type in ['resume', 'trainer_resume']:
             existing_docs = await self.repository.get_by_candidate_id(candidate.id)
             for doc in existing_docs:
-                if doc.document_type == 'resume' and doc.is_active:
+                if doc.document_type in ['resume', 'trainer_resume'] and doc.is_active:
                     await self.repository.update(doc.id, {"is_active": False})
 
         # Save file to storage
@@ -82,10 +82,10 @@ class CandidateDocumentService:
         document_data["candidate_id"] = candidate.id
         
         # Deactivate others if this is a resume
-        if document_data.get("document_type") == 'resume' and document_data.get("is_active"):
+        if document_data.get("document_type") in ['resume', 'trainer_resume'] and document_data.get("is_active"):
             existing_docs = await self.repository.get_by_candidate_id(candidate.id)
             for doc in existing_docs:
-                if doc.document_type == 'resume' and doc.id != document_data.get("id"):
+                if doc.document_type in ['resume', 'trainer_resume'] and doc.id != document_data.get("id"):
                     await self.repository.update(doc.id, {"is_active": False})
         
         return await self.repository.create(document_data)
