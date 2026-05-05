@@ -1,5 +1,5 @@
 import React from 'react';
-import { TableCell, Box, Typography, Button } from '@mui/material';
+import { TableCell, Box, Typography, Button, useTheme, alpha } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import PlanEntryCard from './PlanEntryCard';
 import type { TrainingBatchPlan } from '../../../../../models/training';
@@ -29,19 +29,22 @@ const PlanTableCell: React.FC<PlanTableCellProps> = ({
 	onOpenDialog,
 	onMenuOpen
 }) => {
+	const theme = useTheme();
+
 	return (
 		<TableCell
 			key={`${dateStr}-${periodIdx}`}
 			sx={{
 				verticalAlign: 'top',
-				p: 1,
+				p: 1.5,
 				position: 'relative',
-				minHeight: 80,
+				minHeight: 100,
 				borderRight: '1px solid',
 				borderRightColor: 'divider',
-				bgcolor: holiday ? (holiday.event_type === 'holiday' ? '#fff5f5' : '#f0f7ff') : 'inherit',
+				bgcolor: holiday ? (holiday.event_type === 'holiday' ? alpha(theme.palette.error.main, 0.04) : alpha(theme.palette.primary.main, 0.04)) : 'inherit',
+				transition: 'background-color 0.2s',
 				'&:hover': {
-					bgcolor: holiday ? (holiday.event_type === 'holiday' ? '#ffebeb' : '#e6f2ff') : 'action.hover',
+					bgcolor: holiday ? (holiday.event_type === 'holiday' ? alpha(theme.palette.error.main, 0.08) : alpha(theme.palette.primary.main, 0.08)) : 'action.hover',
 					'& .add-btn': { opacity: 1 }
 				}
 			}}
@@ -53,9 +56,10 @@ const PlanTableCell: React.FC<PlanTableCellProps> = ({
 					alignItems: 'center',
 					justifyContent: 'center',
 					height: '100%',
-					opacity: 0.6
+					opacity: 0.8,
+					minHeight: 60
 				}}>
-					<Typography variant="caption" fontWeight="bold" color={holiday.event_type === 'holiday' ? 'error.main' : 'primary.main'} align="center">
+					<Typography variant="caption" sx={{ fontWeight: 800, color: holiday.event_type === 'holiday' ? 'error.main' : 'primary.main', align: 'center', textTransform: 'uppercase', letterSpacing: 0.5 }}>
 						{holiday.title}
 					</Typography>
 				</Box>
@@ -75,16 +79,28 @@ const PlanTableCell: React.FC<PlanTableCellProps> = ({
 					onClick={() => onOpenDialog(day)}
 					sx={{
 						height: '100%',
-						minHeight: 60,
-						opacity: 0.6,
+						minHeight: 70,
+						opacity: 0,
 						borderStyle: 'dashed',
-						borderColor: 'divider',
-						'&:hover': { opacity: 1, borderStyle: 'solid' },
+						borderColor: 'primary.light',
+						borderRadius: 2,
+						bgcolor: 'transparent',
+						color: 'primary.main',
+						transition: 'all 0.2s',
+						'&:hover': { 
+							opacity: 1, 
+							borderStyle: 'solid',
+							bgcolor: alpha(theme.palette.primary.main, 0.05),
+							borderColor: 'primary.main',
+							color: 'primary.main'
+						},
 					}}
 				>
 					Add Activity
 				</Button>
-			) : null}
+			) : (
+				<Box sx={{ minHeight: 70 }} />
+			)}
 		</TableCell>
 	);
 };

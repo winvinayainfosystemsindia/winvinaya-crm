@@ -41,24 +41,24 @@ const WeeklyPlanHeader: React.FC<WeeklyPlanHeaderProps> = ({
 	loading = false
 }) => {
 	return (
-		<Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-			<Stack direction="row" spacing={2} alignItems="center">
+		<Stack direction="row" justifyContent="space-between" alignItems="center" mb={4}>
+			<Stack direction="row" spacing={1.5} alignItems="center">
 				{!isExporting && (
-					<IconButton onClick={handlePrevWeek} size="small" disabled={!canGoPrev}>
+					<IconButton onClick={handlePrevWeek} size="small" disabled={!canGoPrev} sx={{ border: '1px solid', borderColor: 'divider' }}>
 						<ChevronLeftIcon />
 					</IconButton>
 				)}
-				<Box textAlign="center" minWidth={200}>
-					<Typography variant="overline" color="text.secondary" sx={{ display: 'block', lineHeight: 1 }}>
+				<Box textAlign="center" minWidth={220} sx={{ px: 2 }}>
+					<Typography variant="overline" color="text.secondary" sx={{ display: 'block', fontWeight: 700, letterSpacing: 2, mb: -0.5 }}>
 						WEEK {weekNumber}
 					</Typography>
-					<Typography variant="h6">
+					<Typography variant="h6" sx={{ fontWeight: 700 }}>
 						{format(weekStart, 'MMM d')} - {format(weekDays[weekDays.length - 1], 'MMM d, yyyy')}
 					</Typography>
 				</Box>
 				{!isExporting && (
 					<>
-						<IconButton onClick={handleNextWeek} size="small" disabled={!canGoNext}>
+						<IconButton onClick={handleNextWeek} size="small" disabled={!canGoNext} sx={{ border: '1px solid', borderColor: 'divider' }}>
 							<ChevronRightIcon />
 						</IconButton>
 						<Button
@@ -66,6 +66,7 @@ const WeeklyPlanHeader: React.FC<WeeklyPlanHeaderProps> = ({
 							size="small"
 							onClick={() => setCurrentDate(minDate)}
 							disabled={isSameDay(currentDate, minDate)}
+							sx={{ ml: 2 }}
 						>
 							Batch Start
 						</Button>
@@ -77,7 +78,7 @@ const WeeklyPlanHeader: React.FC<WeeklyPlanHeaderProps> = ({
 								onClick={handleCopyPreviousWeek}
 								color="primary"
 							>
-								Copy Previous Week
+								Copy Previous
 							</Button>
 						)}
 						{canEdit && onSync && (
@@ -89,7 +90,7 @@ const WeeklyPlanHeader: React.FC<WeeklyPlanHeaderProps> = ({
 								color="secondary"
 								disabled={loading}
 							>
-								{loading ? 'Syncing...' : 'Sync with Project'}
+								{loading ? 'Syncing...' : 'Sync Project'}
 							</Button>
 						)}
 						<Button
@@ -97,7 +98,7 @@ const WeeklyPlanHeader: React.FC<WeeklyPlanHeaderProps> = ({
 							size="small"
 							startIcon={<DownloadIcon />}
 							onClick={onExportPNG}
-							sx={{ bgcolor: 'success.main', '&:hover': { bgcolor: 'success.dark' } }}
+							color="success"
 						>
 							Export PNG
 						</Button>
@@ -106,7 +107,16 @@ const WeeklyPlanHeader: React.FC<WeeklyPlanHeaderProps> = ({
 			</Stack>
 
 			{!canEdit && !isExporting && (
-				<Alert severity="info" variant="outlined" sx={{ py: 0 }}>
+				<Alert 
+					severity="info" 
+					variant="outlined" 
+					sx={{ 
+						py: 0, 
+						borderRadius: 2,
+						bgcolor: 'background.paper',
+						fontWeight: 600
+					}}
+				>
 					View Only Mode
 				</Alert>
 			)}

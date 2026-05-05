@@ -76,17 +76,17 @@ const WeeklyPlanTable: React.FC<WeeklyPlanTableProps> = ({
 	};
 
 	return (
-		<div ref={tableRef} style={{ background: '#fff' }}>
+		<Box ref={tableRef} sx={{ bgcolor: 'background.paper', borderRadius: 2, overflow: 'hidden' }}>
 			{isExporting && (
-				<Box sx={{ p: 3, textAlign: 'center', borderBottom: '2px solid #232f3e', mb: 2 }}>
-					<Typography variant="h4" fontWeight="800" sx={{ color: '#232f3e', mb: 1, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+				<Box sx={{ p: 4, textAlign: 'center', borderBottom: '3px solid', borderColor: 'secondary.light', mb: 3, bgcolor: 'background.paper' }}>
+					<Typography variant="h4" sx={{ color: 'secondary.light', fontWeight: 800, mb: 1.5, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
 						{batchName || 'Weekly Lesson Plan'}
 					</Typography>
 					<Stack direction="row" spacing={3} justifyContent="center" alignItems="center">
-						<Box sx={{ bgcolor: '#232f3e', color: 'white', px: 2, py: 0.5, borderRadius: 1, fontWeight: 700 }}>
+						<Box sx={{ bgcolor: 'secondary.light', color: 'common.white', px: 2.5, py: 0.8, borderRadius: 1.5, fontWeight: 800, fontSize: '0.9rem', boxShadow: 2 }}>
 							WEEK {weekNumber}
 						</Box>
-						<Typography variant="h6" sx={{ color: '#545b64', fontWeight: 600 }}>
+						<Typography variant="h6" sx={{ color: 'text.secondary', fontWeight: 600 }}>
 							{weekStart && weekDays.length > 0 ? (
 								`${format(weekStart, 'MMM d, yyyy')} - ${format(weekDays[weekDays.length - 1], 'MMM d, yyyy')}`
 							) : ''}
@@ -94,11 +94,13 @@ const WeeklyPlanTable: React.FC<WeeklyPlanTableProps> = ({
 					</Stack>
 				</Box>
 			)}
-			<TableContainer component={Paper} elevation={0} variant="outlined">
+			<TableContainer component={Paper} elevation={0} variant="outlined" sx={{ borderRadius: isExporting ? 0 : 2, borderColor: 'divider' }}>
 				<Table sx={{ minWidth: 800 }}>
-					<TableHead>
+					<TableHead sx={{ bgcolor: 'action.hover' }}>
 						<TableRow>
-							<TableCell width={100} align="center">Time</TableCell>
+							<TableCell width={100} align="center" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: 1 }}>
+								Period
+							</TableCell>
 							{weekDays.map((day) => (
 								<PlanTableHeader
 									key={day.toISOString()}
@@ -118,10 +120,10 @@ const WeeklyPlanTable: React.FC<WeeklyPlanTableProps> = ({
 					</TableHead>
 					<TableBody>
 						{Array.from({ length: maxPeriods }).map((_, periodIdx) => (
-							<TableRow key={`period-${periodIdx}`}>
-								<TableCell align="center">
-									<Typography variant="subtitle2" fontWeight="bold">
-										Period {periodIdx + 1}
+							<TableRow key={`period-${periodIdx}`} sx={{ '&:hover': { bgcolor: 'action.hover' } }}>
+								<TableCell align="center" sx={{ borderRight: '1px solid', borderColor: 'divider', bgcolor: 'action.hover' }}>
+									<Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'primary.main' }}>
+										{periodIdx + 1}
 									</Typography>
 								</TableCell>
 								{weekDays.map((day) => {
@@ -157,7 +159,7 @@ const WeeklyPlanTable: React.FC<WeeklyPlanTableProps> = ({
 				onDelete={handleDeleteEntry}
 				selectedEntry={selectedMenuEntry}
 			/>
-		</div >
+		</Box >
 	);
 };
 
