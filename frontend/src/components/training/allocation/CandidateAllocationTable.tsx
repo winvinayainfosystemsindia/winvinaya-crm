@@ -4,8 +4,7 @@ import {
 	FormControl,
 	Select,
 	MenuItem,
-	useTheme,
-	Typography
+	useTheme
 } from '@mui/material';
 import type { CandidateAllocation } from '../../../models/training';
 import CandidateAllocationTableRow from './CandidateAllocationTableRow';
@@ -126,10 +125,10 @@ const CandidateAllocationTable: React.FC<CandidateAllocationTableProps> = memo((
 							<Select
 								value={filterDropout}
 								onChange={(e) => onFilterChange(e.target.value as any)}
-								sx={{ 
-									bgcolor: 'background.default', 
-									borderRadius: 1.5, 
-									height: 40, 
+								sx={{
+									bgcolor: 'background.default',
+									borderRadius: 1.5,
+									height: 40,
 									fontSize: '0.875rem',
 									fontWeight: 600,
 									'&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
@@ -141,14 +140,6 @@ const CandidateAllocationTable: React.FC<CandidateAllocationTableProps> = memo((
 								<MenuItem value={true as any} sx={{ fontWeight: 600 }}>Dropouts Only</MenuItem>
 							</Select>
 						</FormControl>
-						<Box sx={{ textAlign: 'left', ml: 1 }}>
-							<Typography variant="caption" sx={{ fontWeight: 800, color: 'text.disabled', display: 'block', textTransform: 'uppercase', letterSpacing: '0.1em', mb: -0.5 }}>
-								Total
-							</Typography>
-							<Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'primary.main' }}>
-								{allocations.length}
-							</Typography>
-						</Box>
 					</Box>
 				}
 				renderRow={(allocation) => (

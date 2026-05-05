@@ -22,6 +22,7 @@ export interface ConfirmationDialogProps extends Omit<BaseDialogProps, 'children
 	onConfirm: () => void | Promise<void>;
 	severity?: DialogSeverity;
 	icon?: ReactNode;
+	children?: ReactNode;
 }
 
 export interface ImportDialogProps extends Omit<BaseDialogProps, 'children' | 'actions' | 'title'> {

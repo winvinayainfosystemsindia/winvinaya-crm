@@ -1,13 +1,10 @@
 import React from 'react';
 import {
-	Dialog,
-	DialogTitle,
-	DialogContent,
-	DialogActions,
-	Button,
-	Typography,
-	TextField
+	TextField,
+	useTheme,
+	alpha
 } from '@mui/material';
+import ConfirmationDialog from '../../common/dialogbox/ConfirmationDialog';
 
 interface DropoutDialogProps {
 	open: boolean;
@@ -26,46 +23,47 @@ const DropoutDialog: React.FC<DropoutDialogProps> = ({
 	onRemarkChange,
 	submitting
 }) => {
+	const theme = useTheme();
+
 	return (
-		<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-			<DialogTitle sx={{ fontWeight: 600 }}>Mark as Dropout</DialogTitle>
-			<DialogContent>
-				<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-					Please provide a reason for the candidate dropping out. This action will update their active status in the training batch.
-				</Typography>
-				<TextField
-					fullWidth
-					multiline
-					rows={4}
-					placeholder="Reason for dropping out (e.g., medical reasons, joined other job...)"
-					value={remark}
-					onChange={(e) => onRemarkChange(e.target.value)}
-					sx={{
-						'& .MuiOutlinedInput-root': {
-							borderRadius: '4px'
-						}
-					}}
-				/>
-			</DialogContent>
-			<DialogActions sx={{ p: 2, px: 3 }}>
-				<Button onClick={onClose} disabled={submitting} sx={{ textTransform: 'none' }}>
-					Cancel
-				</Button>
-				<Button
-					variant="contained"
-					color="error"
-					onClick={onConfirm}
-					disabled={!remark.trim() || submitting}
-					sx={{
-						textTransform: 'none',
-						minWidth: 120,
-						fontWeight: 600
-					}}
-				>
-					{submitting ? 'Updating...' : 'Confirm Dropout'}
-				</Button>
-			</DialogActions>
-		</Dialog>
+		<ConfirmationDialog
+			open={open}
+			onClose={onClose}
+			onConfirm={onConfirm}
+			title="Mark as Dropout"
+			message="Please provide a reason for the candidate dropping out. This action will update their active status in the training batch."
+			confirmLabel={submitting ? 'Updating...' : 'Confirm Dropout'}
+			cancelLabel="Cancel"
+			severity="error"
+			loading={submitting}
+			maxWidth="sm"
+		>
+			<TextField
+				fullWidth
+				multiline
+				rows={4}
+				placeholder="Reason for dropping out (e.g., medical reasons, joined other job...)"
+				value={remark}
+				onChange={(e) => onRemarkChange(e.target.value)}
+				autoFocus
+				sx={{
+					mt: 2,
+					'& .MuiOutlinedInput-root': {
+						borderRadius: 2,
+						bgcolor: alpha(theme.palette.background.default, 0.5),
+						'& fieldset': {
+							borderColor: alpha(theme.palette.divider, 0.8),
+						},
+						'&:hover fieldset': {
+							borderColor: theme.palette.error.main,
+						},
+						'&.Mui-focused fieldset': {
+							borderColor: theme.palette.error.main,
+						},
+					}
+				}}
+			/>
+		</ConfirmationDialog>
 	);
 };
 

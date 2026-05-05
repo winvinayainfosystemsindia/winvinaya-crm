@@ -21,7 +21,8 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
 	severity = 'warning',
 	loading = false,
 	maxWidth = 'xs',
-	icon
+	icon,
+	children
 }) => {
 	const theme = useTheme();
 
@@ -111,6 +112,11 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
 				<Typography variant="body1" sx={{ color: 'text.primary', fontWeight: 500, lineHeight: 1.6 }}>
 					{message}
 				</Typography>
+				{children && (
+					<Box sx={{ width: '100%', mt: 1 }}>
+						{children}
+					</Box>
+				)}
 			</Box>
 		</BaseDialog>
 	);

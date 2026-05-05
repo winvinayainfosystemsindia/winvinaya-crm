@@ -1,31 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
-	Dialog,
-	DialogTitle,
-	DialogContent,
-	DialogActions,
 	Button,
-	IconButton,
-	Box,
-	Typography,
-	TextField,
-	InputAdornment,
-	Table,
-	TableBody,
-	TableCell,
-	TableContainer,
-	TableHead,
-	TableRow,
 	Checkbox,
-	Paper,
 	CircularProgress,
-	Alert,
-	Chip
+	useTheme,
+	alpha,
+	TableRow,
+	TableCell,
+	Typography
 } from '@mui/material';
-import { Close as CloseIcon, Search as SearchIcon } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
-import { fetchEligibleCandidates, allocateCandidate, fetchAllocations } from '../../../store/slices/trainingSlice';
-import { useSnackbar } from 'notistack';
+import { fetchEligibleCandidates, allocateCandidate } from '../../../store/slices/trainingSlice';
+import useToast from '../../../hooks/useToast';
+import BaseDialog from '../../common/dialogbox/BaseDialog';
+import DataTable from '../../common/table/DataTable';
+import type { ColumnDefinition } from '../../common/table/DataTable';
+
+interface EligibleCandidate {
+	public_id: string;
+	name: string;
+	email: string;
+	phone: string;
+	disability_type?: string;
+}
 
 interface AllocateCandidateDialogProps {
 	open: boolean;
@@ -42,20 +39,33 @@ const AllocateCandidateDialog: React.FC<AllocateCandidateDialogProps> = ({
 	batchPublicId,
 	batchName
 }) => {
+	const theme = useTheme();
 	const dispatch = useAppDispatch();
-	const { enqueueSnackbar } = useSnackbar();
+	const toast = useToast();
 	const { eligibleCandidates, loading } = useAppSelector((state) => state.training);
 
 	const [searchTerm, setSearchTerm] = useState('');
-	const [selectedCandidates, setSelectedCandidates] = useState<string[]>([]);
+	const [selectedIds, setSelectedIds] = useState<string[]>([]);
 	const [submitting, setSubmitting] = useState(false);
+	
+	// Local pagination state
+	const [page, setPage] = useState(0);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 
 	useEffect(() => {
 		if (open) {
 			dispatch(fetchEligibleCandidates(batchPublicId));
-			setSelectedCandidates([]);
+			setSelectedIds([]);
+			setPage(0);
 		}
 	}, [open, batchPublicId, dispatch]);
+
+	const columns: ColumnDefinition<EligibleCandidate>[] = useMemo(() => [
+		{ id: 'name' as any, label: 'Candidate Name' },
+		{ id: 'email' as any, label: 'Email' },
+		{ id: 'phone' as any, label: 'Phone' },
+		{ id: 'disability' as any, label: 'Disability' }
+	], []);
 
 	const filteredCandidates = eligibleCandidates.filter(c =>
 		c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -63,192 +73,140 @@ const AllocateCandidateDialog: React.FC<AllocateCandidateDialogProps> = ({
 		c.phone.includes(searchTerm)
 	);
 
-	const handleToggleSelect = (publicId: string) => {
-		setSelectedCandidates(prev =>
-			prev.includes(publicId)
-				? prev.filter(id => id !== publicId)
-				: [...prev, publicId]
+	const paginatedCandidates = useMemo(() => {
+		return filteredCandidates.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+	}, [filteredCandidates, page, rowsPerPage]);
+
+	const handleToggleSelect = (id: string) => {
+		setSelectedIds(prev =>
+			prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
 		);
 	};
 
 	const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
 		if (event.target.checked) {
-			setSelectedCandidates(filteredCandidates.map(c => c.public_id));
+			setSelectedIds(filteredCandidates.map(c => c.public_id));
 		} else {
-			setSelectedCandidates([]);
+			setSelectedIds([]);
 		}
 	};
 
 	const handleSubmit = async () => {
-		if (selectedCandidates.length === 0) return;
+		if (selectedIds.length === 0) return;
 
 		setSubmitting(true);
 		try {
-			for (const candidatePublicId of selectedCandidates) {
-				await dispatch(allocateCandidate({
-					batchId: batchId,
-					candidateId: 0, // Not used when public IDs are provided
-					candidatePublicId,
-					batchPublicId
-				})).unwrap();
+			for (const candidatePublicId of selectedIds) {
+				const candidate = eligibleCandidates.find(c => c.public_id === candidatePublicId);
+				if (candidate) {
+					await dispatch(allocateCandidate({
+						batchId,
+						candidateId: 0,
+						batchPublicId,
+						candidatePublicId: candidate.public_id
+					})).unwrap();
+				}
 			}
 
-			enqueueSnackbar(`Successfully allocated ${selectedCandidates.length} candidate(s)`, { variant: 'success' });
-
-			// Explicitly refresh the allocations list
-			if (batchPublicId) {
-				await dispatch(fetchAllocations({ batchPublicId })).unwrap();
-			}
-
-			// Also refresh eligible candidates
-			dispatch(fetchEligibleCandidates());
-
-			// Reset selection and close
-			setSelectedCandidates([]);
+			toast.success(`Successfully enrolled ${selectedIds.length} candidate(s)`);
 			onClose();
 		} catch (error: any) {
-			enqueueSnackbar(error || 'Failed to allocate candidates', { variant: 'error' });
+			toast.error(error || 'Failed to enroll candidates');
 		} finally {
 			setSubmitting(false);
 		}
 	};
 
+	const dialogActions = (
+		<>
+			<Button 
+				onClick={onClose} 
+				disabled={submitting}
+				sx={{ textTransform: 'none', fontWeight: 600 }}
+			>
+				Cancel
+			</Button>
+			<Button
+				variant="contained"
+				onClick={handleSubmit}
+				disabled={selectedIds.length === 0 || submitting}
+				sx={{
+					bgcolor: 'primary.main',
+					'&:hover': { bgcolor: 'primary.dark' },
+					textTransform: 'none',
+					fontWeight: 700,
+					px: 4,
+					borderRadius: 1.5,
+					boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.2)}`
+				}}
+			>
+				{submitting ? <CircularProgress size={20} color="inherit" /> : `Enroll ${selectedIds.length} Candidate(s)`}
+			</Button>
+		</>
+	);
+
 	return (
-		<Dialog
+		<BaseDialog
 			open={open}
 			onClose={onClose}
+			title="Enroll Candidates"
+			subtitle={`Select eligible candidates to add to the batch: ${batchName}`}
 			maxWidth="md"
-			fullWidth
-			PaperProps={{
-				sx: { borderRadius: '4px' }
-			}}
+			actions={dialogActions}
+			loading={submitting}
 		>
-			<DialogTitle sx={{
-				bgcolor: '#232f3e',
-				color: 'white',
-				py: 1.5,
-				display: 'flex',
-				justifyContent: 'space-between',
-				alignItems: 'center'
-			}}>
-				<Typography variant="h6" sx={{ fontSize: '1.1rem', fontWeight: 500 }}>
-					Allocate Candidates to {batchName}
-				</Typography>
-				<IconButton onClick={onClose} size="small" sx={{ color: 'white' }}>
-					<CloseIcon />
-				</IconButton>
-			</DialogTitle>
-
-			<DialogContent sx={{ p: 3 }}>
-				<Box sx={{ mb: 3, mt: 1 }}>
-					<TextField
-						fullWidth
-						size="small"
-						placeholder="Search candidates by name, email or phone..."
-						value={searchTerm}
-						onChange={(e) => setSearchTerm(e.target.value)}
-						InputProps={{
-							startAdornment: (
-								<InputAdornment position="start">
-									<SearchIcon />
-								</InputAdornment>
-							),
+			<DataTable
+				columns={columns}
+				data={paginatedCandidates}
+				loading={loading}
+				totalCount={filteredCandidates.length}
+				page={page}
+				rowsPerPage={rowsPerPage}
+				onPageChange={(_, newPage) => setPage(newPage)}
+				onRowsPerPageChange={(newRows) => {
+					setRowsPerPage(newRows);
+					setPage(0);
+				}}
+				searchTerm={searchTerm}
+				onSearchChange={(val) => {
+					setSearchTerm(val);
+					setPage(0);
+				}}
+				searchPlaceholder="Search candidates by name, email or phone..."
+				numSelected={selectedIds.length}
+				onSelectAllClick={handleSelectAll}
+				renderRow={(candidate) => (
+					<TableRow
+						key={candidate.public_id}
+						hover
+						selected={selectedIds.includes(candidate.public_id)}
+						onClick={() => handleToggleSelect(candidate.public_id)}
+						sx={{ 
+							cursor: 'pointer',
+							'&.Mui-selected': { bgcolor: alpha(theme.palette.primary.main, 0.05) },
+							'&.Mui-selected:hover': { bgcolor: alpha(theme.palette.primary.main, 0.08) }
 						}}
-						sx={{ bgcolor: 'white' }}
-					/>
-				</Box>
-
-				{loading ? (
-					<Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-						<CircularProgress size={32} />
-					</Box>
-				) : filteredCandidates.length === 0 ? (
-					<Alert severity="info" sx={{ borderRadius: '2px' }}>
-						No eligible candidates found. Candidates must be "Selected" in counseling and not already in an active training batch.
-					</Alert>
-				) : (
-					<TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #e0e0e0', maxHeight: 400 }}>
-						<Table stickyHeader size="small">
-							<TableHead>
-								<TableRow>
-									<TableCell padding="checkbox" sx={{ bgcolor: '#f8f9fa' }}>
-										<Checkbox
-											indeterminate={selectedCandidates.length > 0 && selectedCandidates.length < filteredCandidates.length}
-											checked={filteredCandidates.length > 0 && selectedCandidates.length === filteredCandidates.length}
-											onChange={handleSelectAll}
-											size="small"
-										/>
-									</TableCell>
-									<TableCell sx={{ bgcolor: '#f8f9fa', fontWeight: 600 }}>Name</TableCell>
-									<TableCell sx={{ bgcolor: '#f8f9fa', fontWeight: 600 }}>Disability</TableCell>
-									<TableCell sx={{ bgcolor: '#f8f9fa', fontWeight: 600 }}>Contact Info</TableCell>
-								</TableRow>
-							</TableHead>
-							<TableBody>
-								{filteredCandidates.map((candidate) => (
-									<TableRow
-										key={candidate.public_id}
-										hover
-										selected={selectedCandidates.includes(candidate.public_id)}
-										onClick={() => handleToggleSelect(candidate.public_id)}
-										sx={{ cursor: 'pointer' }}
-									>
-										<TableCell padding="checkbox">
-											<Checkbox
-												checked={selectedCandidates.includes(candidate.public_id)}
-												size="small"
-											/>
-										</TableCell>
-										<TableCell>{candidate.name}</TableCell>
-										<TableCell>
-											<Chip
-												label={candidate.disability_type || 'N/A'}
-												size="small"
-												variant="outlined"
-												sx={{ borderRadius: '2px', fontWeight: 500 }}
-											/>
-										</TableCell>
-										<TableCell>
-											<Typography variant="body2">{candidate.email}</Typography>
-											<Typography variant="caption" color="text.secondary">{candidate.phone}</Typography>
-										</TableCell>
-									</TableRow>
-								))}
-							</TableBody>
-						</Table>
-					</TableContainer>
+					>
+						<TableCell padding="checkbox">
+							<Checkbox
+								checked={selectedIds.includes(candidate.public_id)}
+								size="small"
+								sx={{ color: 'primary.main' }}
+							/>
+						</TableCell>
+						<TableCell sx={{ fontWeight: 600 }}>{candidate.name}</TableCell>
+						<TableCell sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>{candidate.email}</TableCell>
+						<TableCell sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>{candidate.phone}</TableCell>
+						<TableCell>
+							<Typography variant="caption" sx={{ fontWeight: 600, color: 'primary.main', bgcolor: alpha(theme.palette.primary.main, 0.05), px: 1, py: 0.2, borderRadius: 0.5 }}>
+								{candidate.disability_type || 'General'}
+							</Typography>
+						</TableCell>
+					</TableRow>
 				)}
-
-				{selectedCandidates.length > 0 && (
-					<Box sx={{ mt: 2 }}>
-						<Typography variant="body2" color="text.secondary">
-							{selectedCandidates.length} candidate{selectedCandidates.length > 1 ? 's' : ''} selected
-						</Typography>
-					</Box>
-				)}
-			</DialogContent>
-
-			<DialogActions sx={{ p: 2, borderTop: '1px solid #e0e0e0' }}>
-				<Button onClick={onClose} disabled={submitting}>
-					Cancel
-				</Button>
-				<Button
-					variant="contained"
-					onClick={handleSubmit}
-					disabled={selectedCandidates.length === 0 || submitting}
-					sx={{
-						bgcolor: '#ff9900',
-						'&:hover': { bgcolor: '#ec7211' },
-						textTransform: 'none',
-						px: 3,
-						boxShadow: 'none',
-						borderRadius: '2px'
-					}}
-				>
-					{submitting ? <CircularProgress size={20} color="inherit" /> : 'Add to Batch'}
-				</Button>
-			</DialogActions>
-		</Dialog>
+				emptyMessage="No eligible candidates found."
+			/>
+		</BaseDialog>
 	);
 };
 
