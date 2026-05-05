@@ -11,7 +11,6 @@ import {
 } from '@mui/material';
 import {
 	MoreVert,
-	Edit,
 	Delete,
 	EventRepeat
 } from '@mui/icons-material';
@@ -21,7 +20,6 @@ interface TrainingTableActionsProps {
 	batch: TrainingBatch;
 	isAdmin: boolean;
 	canEdit: boolean;
-	onEdit: (batch: TrainingBatch) => void;
 	onExtend: (batch: TrainingBatch) => void;
 	onDelete: (batch: TrainingBatch) => void;
 }
@@ -30,7 +28,6 @@ const TrainingTableActions: React.FC<TrainingTableActionsProps> = ({
 	batch,
 	isAdmin,
 	canEdit,
-	onEdit,
 	onExtend,
 	onDelete
 }) => {
@@ -95,17 +92,6 @@ const TrainingTableActions: React.FC<TrainingTableActionsProps> = ({
 						</ListItemText>
 					</MenuItem>
 				)}
-				{canEdit && (
-					<MenuItem onClick={() => handleAction(() => onEdit(batch))}>
-						<ListItemIcon>
-							<Edit fontSize="small" sx={{ color: 'warning.main' }} />
-						</ListItemIcon>
-						<ListItemText>
-							<Typography variant="body2">Edit Batch</Typography>
-						</ListItemText>
-					</MenuItem>
-				)}
-
 				{isAdmin && (
 					<MenuItem
 						onClick={() => handleAction(() => onDelete(batch))}

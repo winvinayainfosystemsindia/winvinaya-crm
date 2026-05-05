@@ -184,7 +184,14 @@ const EnterpriseFormHeader: React.FC<EnterpriseFormHeaderProps> = ({
 				>
 					{steps.map((step, index) => (
 						<Step key={step.label} onClick={() => onStepClick?.(index)} sx={{ cursor: onStepClick ? 'pointer' : 'default' }}>
-							<StepLabel StepIconComponent={ConsoleStepIcon}>
+							<StepLabel 
+								StepIconComponent={ConsoleStepIcon}
+								optional={step.description && (
+									<Typography variant="caption" sx={{ fontSize: '0.65rem', display: { xs: 'none', md: 'block' }, opacity: 0.8 }}>
+										{step.description}
+									</Typography>
+								)}
+							>
 								{step.label}
 							</StepLabel>
 						</Step>

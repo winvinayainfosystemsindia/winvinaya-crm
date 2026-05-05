@@ -33,7 +33,13 @@ const TrainingTableRow: React.FC<TrainingTableRowProps> = memo(({
 	const theme = useTheme();
 
 	return (
-		<TableRow sx={{ '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.04) } }}>
+		<TableRow 
+			onClick={() => canEdit && onEdit(batch)}
+			sx={{ 
+				'&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.04) },
+				cursor: canEdit ? 'pointer' : 'default'
+			}}
+		>
 			<TableCell>
 				<Typography
 					variant="body2"
@@ -182,12 +188,11 @@ const TrainingTableRow: React.FC<TrainingTableRowProps> = memo(({
 					}
 				/>
 			</TableCell>
-			<TableCell align="right">
+			<TableCell align="right" onClick={(e) => e.stopPropagation()}>
 				<TrainingTableActions
 					batch={batch}
 					isAdmin={isAdmin}
 					canEdit={canEdit}
-					onEdit={onEdit}
 					onExtend={onExtend}
 					onDelete={onDelete}
 				/>

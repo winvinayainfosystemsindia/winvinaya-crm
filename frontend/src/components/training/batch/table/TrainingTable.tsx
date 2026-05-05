@@ -10,7 +10,7 @@ import { getBatchFilterFields } from '../BatchFilters';
 
 // Specialized Components
 import TrainingTableRow from './TrainingTableRow';
-import TrainingBatchFormDialog from '../dialogs/TrainingBatchFormDialog';
+import TrainingBatchFormDialog from '../form/TrainingBatchFormDialog';
 import ExtendBatchDialog from '../dialogs/ExtendBatchDialog';
 
 // Hooks
