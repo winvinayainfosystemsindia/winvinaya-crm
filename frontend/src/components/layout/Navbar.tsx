@@ -48,8 +48,8 @@ const Navbar: React.FC = () => {
 	};
 
 	return (
-		<AppBar position="fixed" component="nav" aria-label="Main Navigation" sx={{ 
-			zIndex: (theme) => theme.zIndex.drawer + 1, 
+		<AppBar position="fixed" component="nav" aria-label="Main Navigation" sx={{
+			zIndex: (theme) => theme.zIndex.drawer + 1,
 			backgroundColor: 'secondary.main',
 			borderBottom: `1px solid ${alpha(theme.palette.common.white, 0.05)}`,
 			boxShadow: 'none'
@@ -65,7 +65,7 @@ const Navbar: React.FC = () => {
 					<MenuIcon aria-hidden="true" />
 				</IconButton>
 				<Typography variant="navLogo" noWrap component="div" sx={{ display: { xs: 'none', md: 'block' }, mr: 2 }}>
-					WinVinaya Console
+					WinVinaya MIS
 				</Typography>
 
 				<GlobalSearch />
