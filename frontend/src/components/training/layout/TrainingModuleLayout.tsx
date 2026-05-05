@@ -2,15 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
 	Box,
-	Container,
 	Typography,
-	useTheme,
-	useMediaQuery,
 	Paper,
 	Stack,
 	Divider,
 	Chip,
-	CircularProgress,
 } from '@mui/material';
 import {
 	Schedule as ScheduleIcon,
@@ -22,6 +18,7 @@ import {
 } from '../../../store/slices/trainingSlice';
 import type { TrainingBatch } from '../../../models/training';
 import BatchSelectionHeader from '../common/BatchSelectionHeader';
+import ModuleLayout from '../../common/layout/ModuleLayout';
 
 interface TrainingModuleLayoutProps {
 	title: string;
@@ -34,8 +31,6 @@ const TrainingModuleLayout: React.FC<TrainingModuleLayoutProps> = ({
 	subtitle,
 	children
 }) => {
-	const theme = useTheme();
-	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const dispatch = useAppDispatch();
 	const [searchParams, setSearchParams] = useSearchParams();
 
@@ -54,12 +49,8 @@ const TrainingModuleLayout: React.FC<TrainingModuleLayoutProps> = ({
 			if (batch) {
 				setSelectedBatch(batch);
 			} else {
-				// If batch not found in list (maybe old link), clear the param
 				setSearchParams({});
 			}
-		} else if (batches.length > 0 && !batchPublicId && !selectedBatch) {
-			// Optional: auto-select first batch if none selected? 
-			// For now, let's keep it empty as per original UI logic
 		}
 	}, [batches, batchPublicId]);
 
@@ -88,106 +79,81 @@ const TrainingModuleLayout: React.FC<TrainingModuleLayoutProps> = ({
 	};
 
 	return (
-		<Box sx={{ bgcolor: '#f2f3f3', minHeight: '100vh' }}>
-			{/* Professional AWS Service Header */}
-			<Box sx={{ bgcolor: '#232f3e', color: 'white', pt: 2, pb: 4, mb: 0 }}>
-				<Container maxWidth="xl">
-					<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
-						<Box>
-							<Typography variant="h4" sx={{ fontWeight: 300, mb: 0.5, letterSpacing: '-0.02em', fontSize: isMobile ? '1.5rem' : '2rem' }}>
-								{title}
-							</Typography>
-							<Typography variant="body2" sx={{ color: '#aab7bd', maxWidth: 600 }}>
-								{subtitle}
-							</Typography>
-						</Box>
-						<Box sx={{ minWidth: 320 }}>
-							<BatchSelectionHeader
-								batches={batches}
-								selectedBatch={selectedBatch}
-								onBatchChange={handleBatchChange}
-							/>
-						</Box>
-					</Box>
-
-					{selectedBatch && (
-						<Paper
-							elevation={0}
-							sx={{
-								bgcolor: 'rgba(255, 255, 255, 0.05)',
-								borderRadius: '2px',
-								p: 2,
-								border: '1px solid rgba(255, 255, 255, 0.1)',
-								display: 'flex',
-								flexWrap: 'wrap',
-								gap: 4
-							}}
-						>
-							<Box>
-								<Typography variant="caption" sx={{ color: '#aab7bd', display: 'block', mb: 0.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-									Active Batch
-								</Typography>
-								<Typography variant="body2" sx={{ fontWeight: 600, color: 'white' }}>{selectedBatch.batch_name}</Typography>
-							</Box>
-							<Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-							<Box>
-								<Typography variant="caption" sx={{ color: '#aab7bd', display: 'block', mb: 0.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-									Status
-								</Typography>
-								<Chip
-									label={selectedBatch.status.toUpperCase()}
-									size="small"
-									sx={{
-										height: 20,
-										fontSize: '0.65rem',
-										fontWeight: 900,
-										bgcolor: getStatusColor(selectedBatch.status),
-										color: 'white',
-										borderRadius: '2px'
-									}}
-								/>
-							</Box>
-							<Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-							<Box>
-								<Typography variant="caption" sx={{ color: '#aab7bd', display: 'block', mb: 0.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-									Schedule
-								</Typography>
-								<Stack direction="row" spacing={1} alignItems="center">
-									<ScheduleIcon sx={{ fontSize: 14, color: '#aab7bd' }} />
-									<Typography variant="body2" sx={{ color: 'white' }}>{selectedBatch.duration?.weeks} Weeks</Typography>
-								</Stack>
-							</Box>
-							<Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-							<Box>
-								<Typography variant="caption" sx={{ color: '#aab7bd', display: 'block', mb: 0.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-									Enrollment
-								</Typography>
-								<Typography variant="body2" sx={{ fontWeight: 600, color: 'white' }}>{allocations.length} Candidates</Typography>
-							</Box>
-						</Paper>
-					)}
-				</Container>
-			</Box>
-
-			<Container maxWidth="xl" sx={{ py: 4 }}>
-				{!selectedBatch ? (
-					<Paper elevation={0} sx={{ p: 10, textAlign: 'center', border: '1px solid #d5dbdb', borderRadius: '2px' }}>
-						<CircularProgress sx={{ mb: 3, color: '#d5dbdb' }} />
-						<Typography variant="h5" sx={{ fontWeight: 700, color: '#232f3e' }} gutterBottom>
-							No Training Batch Selected
-						</Typography>
-						<Typography color="text.secondary" sx={{ maxWidth: 500, mx: 'auto' }}>
-							Please select an active training batch from the header console to begin.
-						</Typography>
-					</Paper>
-				) : (
+		<ModuleLayout
+			title={title}
+			subtitle={subtitle}
+			loading={loading && batches.length === 0}
+			isEmpty={!selectedBatch && !loading}
+			emptyTitle="No Training Batch Selected"
+			emptyMessage="Please select an active training batch from the header console to begin."
+			headerExtra={
+				<BatchSelectionHeader
+					batches={batches}
+					selectedBatch={selectedBatch}
+					onBatchChange={handleBatchChange}
+				/>
+			}
+			headerChildren={selectedBatch && (
+				<Paper
+					elevation={0}
+					sx={{
+						bgcolor: 'rgba(255, 255, 255, 0.05)',
+						borderRadius: '8px',
+						p: 2,
+						border: '1px solid rgba(255, 255, 255, 0.1)',
+						display: 'flex',
+						flexWrap: 'wrap',
+						gap: 4
+					}}
+				>
 					<Box>
-						{children({ selectedBatch, allocations, loading })}
+						<Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', display: 'block', mb: 0.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+							Active Batch
+						</Typography>
+						<Typography variant="body2" sx={{ fontWeight: 600, color: 'white' }}>{selectedBatch.batch_name}</Typography>
 					</Box>
-				)}
-			</Container>
-		</Box>
+					<Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+					<Box>
+						<Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', display: 'block', mb: 0.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+							Status
+						</Typography>
+						<Chip
+							label={selectedBatch.status.toUpperCase()}
+							size="small"
+							sx={{
+								height: 20,
+								fontSize: '0.65rem',
+								fontWeight: 900,
+								bgcolor: getStatusColor(selectedBatch.status),
+								color: 'white',
+								borderRadius: '4px'
+							}}
+						/>
+					</Box>
+					<Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+					<Box>
+						<Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', display: 'block', mb: 0.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+							Schedule
+						</Typography>
+						<Stack direction="row" spacing={1} alignItems="center">
+							<ScheduleIcon sx={{ fontSize: 14, color: 'rgba(255, 255, 255, 0.6)' }} />
+							<Typography variant="body2" sx={{ color: 'white' }}>{selectedBatch.duration?.weeks} Weeks</Typography>
+						</Stack>
+					</Box>
+					<Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(255, 255, 255, 0.1)' }} />
+					<Box>
+						<Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', display: 'block', mb: 0.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+							Enrollment
+						</Typography>
+						<Typography variant="body2" sx={{ fontWeight: 600, color: 'white' }}>{allocations.length} Candidates</Typography>
+					</Box>
+				</Paper>
+			)}
+		>
+			{selectedBatch && children({ selectedBatch, allocations, loading })}
+		</ModuleLayout>
 	);
 };
+
 
 export default TrainingModuleLayout;

@@ -11,7 +11,7 @@ import WeeklyPlanTable from '../../components/training/plan/table/WeeklyPlanTabl
 import PlanEntryDialog from '../../components/training/plan/dialogs/PlanEntryDialog';
 import WeeklyPlanStats from '../../components/training/plan/stats/WeeklyPlanStats';
 
-import ConfirmDialog from '../../components/common/ConfirmDialog';
+import { ConfirmationDialog } from '../../components/common/dialogbox';
 import BatchEventDialog from '../../components/training/plan/dialogs/BatchEventDialog';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { syncBatchWithProject } from '../../store/slices/trainingPlanSlice';
@@ -188,7 +188,7 @@ const WeeklyPlanManager: React.FC<WeeklyPlanManagerProps> = ({ selectedBatch }) 
 				selectedDate={eventTargetDate || new Date()}
 			/>
 
-			<ConfirmDialog
+			<ConfirmationDialog
 				open={confirmDialog.open}
 				title={confirmDialog.title}
 				message={confirmDialog.message}
@@ -196,7 +196,7 @@ const WeeklyPlanManager: React.FC<WeeklyPlanManagerProps> = ({ selectedBatch }) 
 				onClose={() => setConfirmDialog({ ...confirmDialog, open: false })}
 				loading={confirmDialog.loading}
 				severity="error"
-				confirmText="Delete"
+				confirmLabel="Delete"
 			/>
 		</Box>
 	);
