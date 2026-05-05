@@ -24,6 +24,9 @@ export const useDocumentDetail = (id?: string) => {
 	const { token } = useAppSelector((state) => state.auth);
 	
 	const [uploading, setUploading] = useState<string | null>(null);
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [deletingDocumentId, setDeletingDocumentId] = useState<number | null>(null);
+	const [isDeleting, setIsDeleting] = useState(false);
 
 	const fetchInitialData = useCallback(() => {
 		if (id) {
@@ -74,14 +77,29 @@ export const useDocumentDetail = (id?: string) => {
 		}
 	};
 
-	const handleDelete = async (documentId: number) => {
-		if (window.confirm('Are you sure you want to delete this document?') && id) {
+	const handleDelete = (documentId: number) => {
+		setDeletingDocumentId(documentId);
+		setDeleteDialogOpen(true);
+	};
+
+	const confirmDelete = async () => {
+		if (deletingDocumentId && id) {
+			setIsDeleting(true);
 			try {
-				await dispatch(deleteDocument({ publicId: id, documentId })).unwrap();
+				await dispatch(deleteDocument({ publicId: id, documentId: deletingDocumentId })).unwrap();
+				setDeleteDialogOpen(false);
+				setDeletingDocumentId(null);
 			} catch (err) {
 				console.error('Delete failed:', err);
+			} finally {
+				setIsDeleting(false);
 			}
 		}
+	};
+
+	const cancelDelete = () => {
+		setDeleteDialogOpen(false);
+		setDeletingDocumentId(null);
 	};
 
 	/**
@@ -128,6 +146,10 @@ export const useDocumentDetail = (id?: string) => {
 		uploadedCount,
 		handleFileUpload,
 		handleDelete,
+		confirmDelete,
+		cancelDelete,
+		deleteDialogOpen,
+		isDeleting,
 		handlePreview,
 		handleDownload,
 		getDocumentForType

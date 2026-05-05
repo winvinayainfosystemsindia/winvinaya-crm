@@ -11,6 +11,7 @@ import DocumentHeader from '../../components/documents/forms/DocumentHeader';
 import DocumentProgressBar from '../../components/documents/progress/DocumentProgressBar';
 import DocumentCard from '../../components/documents/forms/DocumentCard';
 import { useDocumentDetail } from '../../components/documents/hooks/useDocumentDetail';
+import ConfirmationDialog from '../../components/common/dialogbox/ConfirmationDialog';
 
 /**
  * DocumentDetail - High-fidelity page for individual candidate document collection.
@@ -21,7 +22,6 @@ const DocumentDetail: React.FC = () => {
 	const navigate = useNavigate();
 	const theme = useTheme();
 	const dispatch = useDispatch<AppDispatch>();
-
 	const {
 		candidate,
 		error,
@@ -30,6 +30,10 @@ const DocumentDetail: React.FC = () => {
 		uploadedCount,
 		handleFileUpload,
 		handleDelete,
+		confirmDelete,
+		cancelDelete,
+		deleteDialogOpen,
+		isDeleting,
 		handlePreview,
 		handleDownload,
 		getDocumentForType
@@ -82,6 +86,17 @@ const DocumentDetail: React.FC = () => {
 					</Grid>
 				</Box>
 			</Container>
+
+			<ConfirmationDialog
+				open={deleteDialogOpen}
+				onClose={cancelDelete}
+				onConfirm={confirmDelete}
+				title="Confirm Deletion"
+				message="Are you sure you want to delete this document? This action cannot be undone."
+				confirmLabel="Delete"
+				severity="error"
+				loading={isDeleting}
+			/>
 		</Box>
 	);
 };
