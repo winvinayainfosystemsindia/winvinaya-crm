@@ -86,7 +86,7 @@ const MockInterviewFormSkills: React.FC<MockInterviewFormSkillsProps> = memo(({
 								borderColor: 'divider',
 								'&:hover': {
 									borderColor: alpha(theme.palette.success.main, 0.2),
-									boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+									boxShadow: theme.shadows[2]
 								}
 							}}
 						>

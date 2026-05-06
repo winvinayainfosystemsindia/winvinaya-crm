@@ -18,17 +18,17 @@ const MockInterviewStats: React.FC<MockInterviewStatsProps> = ({ stats }) => {
 		<Paper
 			elevation={0}
 			sx={{
-				p: 2.5,
+				p: 3,
 				mb: 4,
 				border: '1px solid',
 				borderColor: 'divider',
-				borderRadius: 2,
+				borderRadius: 3,
 				bgcolor: 'background.paper',
 				display: 'flex',
 				alignItems: 'center',
 				gap: { xs: 3, md: 6 },
 				flexWrap: 'wrap',
-				boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+				boxShadow: theme.shadows[1]
 			}}
 		>
 			<Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>

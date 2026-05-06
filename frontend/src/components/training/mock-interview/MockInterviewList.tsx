@@ -102,23 +102,23 @@ const MockInterviewList: React.FC<MockInterviewListProps> = ({ batchId, allocati
 			<Card 
 				elevation={0}
 				sx={{ 
-					borderRadius: 2, 
+					borderRadius: 3, 
 					overflow: 'hidden',
 					border: '1px solid',
 					borderColor: 'divider',
-					boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
+					boxShadow: theme.shadows[1]
 				}}
 			>
 				<TableContainer>
 					<Table sx={{ minWidth: 800 }} size="small">
 						<TableHead sx={{ bgcolor: alpha(theme.palette.action.disabledBackground, 0.05) }}>
 							<TableRow>
-								<TableCell sx={{ fontWeight: 800, color: 'text.secondary', py: 2, textTransform: 'uppercase', fontSize: '0.75rem' }}>DATE</TableCell>
-								<TableCell sx={{ fontWeight: 800, color: 'text.secondary', py: 2, textTransform: 'uppercase', fontSize: '0.75rem' }}>CANDIDATE</TableCell>
-								<TableCell sx={{ fontWeight: 800, color: 'text.secondary', py: 2, textTransform: 'uppercase', fontSize: '0.75rem' }}>INTERVIEWER</TableCell>
-								<TableCell sx={{ fontWeight: 800, color: 'text.secondary', py: 2, textTransform: 'uppercase', fontSize: '0.75rem' }}>STATUS</TableCell>
-								<TableCell sx={{ fontWeight: 800, color: 'text.secondary', py: 2, textTransform: 'uppercase', fontSize: '0.75rem' }}>OVERALL RATING</TableCell>
-								<TableCell align="right" sx={{ fontWeight: 800, color: 'text.secondary', py: 2, textTransform: 'uppercase', fontSize: '0.75rem' }}>ACTIONS</TableCell>
+								<TableCell sx={{ py: 2 }}><Typography variant="overline" sx={{ fontWeight: 800, color: 'text.secondary' }}>DATE</Typography></TableCell>
+								<TableCell sx={{ py: 2 }}><Typography variant="overline" sx={{ fontWeight: 800, color: 'text.secondary' }}>CANDIDATE</Typography></TableCell>
+								<TableCell sx={{ py: 2 }}><Typography variant="overline" sx={{ fontWeight: 800, color: 'text.secondary' }}>INTERVIEWER</Typography></TableCell>
+								<TableCell sx={{ py: 2 }}><Typography variant="overline" sx={{ fontWeight: 800, color: 'text.secondary' }}>STATUS</Typography></TableCell>
+								<TableCell sx={{ py: 2 }}><Typography variant="overline" sx={{ fontWeight: 800, color: 'text.secondary' }}>OVERALL RATING</Typography></TableCell>
+								<TableCell align="right" sx={{ py: 2 }}><Typography variant="overline" sx={{ fontWeight: 800, color: 'text.secondary' }}>ACTIONS</Typography></TableCell>
 							</TableRow>
 						</TableHead>
 						<TableBody>

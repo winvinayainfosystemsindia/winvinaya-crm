@@ -83,7 +83,7 @@ const MockInterviewFormQuestions: React.FC<MockInterviewFormQuestionsProps> = me
 							borderColor: 'divider',
 							'&:hover': {
 								borderColor: alpha(theme.palette.primary.main, 0.2),
-								boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+								boxShadow: theme.shadows[2]
 							}
 						}}
 					>

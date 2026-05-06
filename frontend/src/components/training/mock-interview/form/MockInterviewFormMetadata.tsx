@@ -162,7 +162,7 @@ const MockInterviewFormMetadata: React.FC<MockInterviewFormMetadataProps> = memo
 							'& .MuiSlider-thumb': {
 								width: 24,
 								height: 24,
-								backgroundColor: '#fff',
+								backgroundColor: theme.palette.background.paper,
 								border: '2px solid currentColor',
 								'&:hover, &.Mui-focusVisible': {
 									boxShadow: `0px 0px 0px 8px ${alpha(scoreColor, 0.16)}`,

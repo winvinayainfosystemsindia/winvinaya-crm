@@ -9,7 +9,8 @@ import {
 	Box,
 	LinearProgress,
 	Tooltip,
-	useTheme
+	useTheme,
+	alpha
 } from '@mui/material';
 import {
 	Visibility as ViewIcon,
@@ -75,7 +76,7 @@ const MockInterviewTableRow: React.FC<MockInterviewTableRowProps> = memo(({
 							sx={{
 								height: 6,
 								borderRadius: 3,
-								backgroundColor: theme.palette.grey[200],
+								backgroundColor: alpha(theme.palette.text.primary, 0.05),
 								'& .MuiLinearProgress-bar': {
 									backgroundColor: color
 								}
