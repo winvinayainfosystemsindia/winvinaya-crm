@@ -124,9 +124,13 @@ const MockInterviewForm: React.FC<MockInterviewFormProps> = ({ open, onClose, ba
 	return (
 		<Dialog
 			open={open}
-			onClose={onClose}
+			onClose={(_, reason) => {
+				if (reason === 'backdropClick') return;
+				onClose();
+			}}
 			maxWidth="lg"
 			fullWidth
+			disableEscapeKeyDown
 			PaperProps={{
 				sx: {
 					borderRadius: 0,

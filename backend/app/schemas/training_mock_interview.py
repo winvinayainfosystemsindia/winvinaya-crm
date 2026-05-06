@@ -26,6 +26,10 @@ class TrainingMockInterviewBase(BaseModel):
     feedback: Optional[str] = None
     overall_rating: Optional[float] = Field(None, ge=0, le=10)
     status: str = "pending"
+    interview_type: Optional[str] = "internal"
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    duration_minutes: Optional[int] = 0
 
 
 class TrainingMockInterviewCreate(TrainingMockInterviewBase):
@@ -40,6 +44,10 @@ class TrainingMockInterviewUpdate(BaseModel):
     feedback: Optional[str] = None
     overall_rating: Optional[float] = Field(None, ge=0, le=10)
     status: Optional[str] = None
+    interview_type: Optional[str] = None
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    duration_minutes: Optional[int] = None
 
 
 from app.schemas.training_batch import TrainingBatchMini

@@ -48,6 +48,11 @@ class TrainingMockInterview(BaseModel):
         index=True
     ) # pending, cleared, re-test, rejected, absent
     
+    interview_type: Mapped[str | None] = mapped_column(String(20), nullable=True, default="internal")
+    start_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    end_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    duration_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True, default=0)
+    
     # Relationships
     batch: Mapped[TrainingBatch] = relationship("TrainingBatch")
     candidate: Mapped[Candidate] = relationship("Candidate")

@@ -17,6 +17,7 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 		candidate_id: undefined,
 		interviewer_name: defaultInterviewer,
 		interview_date: new Date().toISOString(),
+		interview_type: 'internal',
 		status: 'pending',
 		overall_rating: 0,
 		feedback: '',
@@ -42,6 +43,7 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 				candidate_id: currentMockInterview.candidate_id,
 				interviewer_name: currentMockInterview.interviewer_name || '',
 				interview_date: currentMockInterview.interview_date,
+				interview_type: currentMockInterview.interview_type || 'internal',
 				status: currentMockInterview.status,
 				overall_rating: currentMockInterview.overall_rating || 0,
 				feedback: currentMockInterview.feedback || '',
@@ -161,6 +163,7 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 			batch_id: batchId,
 			candidate_id: formData.candidate_id!,
 			interviewer_name: formData.interviewer_name!,
+			interview_type: formData.interview_type || 'internal',
 			status: formData.status!,
 			overall_rating: formData.overall_rating!,
 			feedback: formData.feedback!,
@@ -168,8 +171,8 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 			skills: skills.filter(s => s.skill.trim()),
 			interview_date: formData.interview_date!,
 			start_time: formData.start_time,
-			end_time: currentMockInterview ? formData.end_time : now,
-			duration_minutes: currentMockInterview ? formData.duration_minutes : finalDuration
+			end_time: currentMockInterview && !isPaused ? now : (formData.end_time || now),
+			duration_minutes: finalDuration
 		};
 
 		try {

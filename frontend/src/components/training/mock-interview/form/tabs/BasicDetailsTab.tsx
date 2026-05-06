@@ -53,7 +53,7 @@ const BasicDetailsTab: React.FC<BasicDetailsTabProps> = memo(({
 									label="Target Candidate"
 									disabled={viewMode || isEdit}
 									displayEmpty
-									sx={{ 
+									sx={{
 										bgcolor: 'background.paper',
 										borderRadius: 2
 									}}
@@ -79,7 +79,7 @@ const BasicDetailsTab: React.FC<BasicDetailsTabProps> = memo(({
 								error={!!errors.interviewer_name}
 								helperText={errors.interviewer_name}
 								InputLabelProps={{ shrink: true, sx: { fontWeight: 600 } }}
-								sx={{ 
+								sx={{
 									bgcolor: 'background.paper',
 									'& .MuiOutlinedInput-root': { borderRadius: 2 }
 								}}
@@ -88,6 +88,25 @@ const BasicDetailsTab: React.FC<BasicDetailsTabProps> = memo(({
 					</Grid>
 
 					<Grid container spacing={2}>
+						<Grid size={{ xs: 12, md: 6 }}>
+							<TextField
+								select
+								label="Interview Type"
+								value={formData.interview_type || 'internal'}
+								onChange={(e) => onChange('interview_type', e.target.value)}
+								fullWidth
+								size="small"
+								disabled={viewMode}
+								InputLabelProps={{ shrink: true, sx: { fontWeight: 600 } }}
+								sx={{ 
+									bgcolor: 'background.paper',
+									'& .MuiOutlinedInput-root': { borderRadius: 2 }
+								}}
+							>
+								<MenuItem value="internal">Internal Mock Interview</MenuItem>
+								<MenuItem value="external">External Mock Interview</MenuItem>
+							</TextField>
+						</Grid>
 						<Grid size={{ xs: 12, md: 6 }}>
 							<TextField
 								label="Interview Date"
@@ -100,33 +119,11 @@ const BasicDetailsTab: React.FC<BasicDetailsTabProps> = memo(({
 								error={!!errors.interview_date}
 								helperText={errors.interview_date}
 								InputLabelProps={{ shrink: true, sx: { fontWeight: 600 } }}
-								sx={{ 
+								sx={{
 									bgcolor: 'background.paper',
 									'& .MuiOutlinedInput-root': { borderRadius: 2 }
 								}}
 							/>
-						</Grid>
-						<Grid size={{ xs: 12, md: 6 }}>
-							<TextField
-								select
-								label="Outcome Status"
-								value={formData.status || 'pending'}
-								onChange={(e) => onChange('status', e.target.value)}
-								fullWidth
-								size="small"
-								disabled={viewMode}
-								InputLabelProps={{ shrink: true, sx: { fontWeight: 600 } }}
-								sx={{ 
-									bgcolor: 'background.paper',
-									'& .MuiOutlinedInput-root': { borderRadius: 2 }
-								}}
-							>
-								<MenuItem value="pending">Pending Review</MenuItem>
-								<MenuItem value="cleared">Cleared / Recommended</MenuItem>
-								<MenuItem value="re-test">Require Re-assessment</MenuItem>
-								<MenuItem value="rejected">Not Recommended</MenuItem>
-								<MenuItem value="absent">Absent / Not Attended</MenuItem>
-							</TextField>
 						</Grid>
 					</Grid>
 
@@ -140,7 +137,7 @@ const BasicDetailsTab: React.FC<BasicDetailsTabProps> = memo(({
 								size="small"
 								disabled
 								InputLabelProps={{ shrink: true, sx: { fontWeight: 600 } }}
-								sx={{ 
+								sx={{
 									bgcolor: alpha(theme.palette.action.disabledBackground, 0.05),
 									'& .MuiOutlinedInput-root': { borderRadius: 2 }
 								}}
@@ -154,7 +151,7 @@ const BasicDetailsTab: React.FC<BasicDetailsTabProps> = memo(({
 								size="small"
 								disabled
 								InputLabelProps={{ shrink: true, sx: { fontWeight: 600 } }}
-								sx={{ 
+								sx={{
 									bgcolor: alpha(theme.palette.action.disabledBackground, 0.05),
 									'& .MuiOutlinedInput-root': { borderRadius: 2 }
 								}}
@@ -168,7 +165,7 @@ const BasicDetailsTab: React.FC<BasicDetailsTabProps> = memo(({
 								size="small"
 								disabled
 								InputLabelProps={{ shrink: true, sx: { fontWeight: 600 } }}
-								sx={{ 
+								sx={{
 									bgcolor: alpha(theme.palette.action.disabledBackground, 0.05),
 									'& .MuiOutlinedInput-root': { borderRadius: 2 }
 								}}

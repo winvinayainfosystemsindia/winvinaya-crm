@@ -7,6 +7,7 @@ import {
 	Paper,
 	Tooltip,
 	Slider,
+	MenuItem,
 	alpha,
 	useTheme
 } from '@mui/material';
@@ -113,6 +114,40 @@ const FinalRemarksTab: React.FC<FinalRemarksTabProps> = memo(({
 						</Stack>
 					</Box>
 				</Paper>
+
+				<Box 
+					sx={{ 
+						p: 4, 
+						borderRadius: 3, 
+						bgcolor: alpha(theme.palette.primary.main, 0.02),
+						border: '1px solid',
+						borderColor: alpha(theme.palette.primary.main, 0.1)
+					}}
+				>
+					<Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 2, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'primary.main', fontSize: '0.75rem' }}>
+						Final Outcome Assessment
+					</Typography>
+					<TextField
+						select
+						label="Outcome Status"
+						value={formData.status || 'pending'}
+						onChange={(e) => onChange('status', e.target.value)}
+						fullWidth
+						size="small"
+						disabled={viewMode}
+						InputLabelProps={{ shrink: true, sx: { fontWeight: 600 } }}
+						sx={{ 
+							bgcolor: 'background.paper',
+							'& .MuiOutlinedInput-root': { borderRadius: 2 }
+						}}
+					>
+						<MenuItem value="pending">Pending Review</MenuItem>
+						<MenuItem value="cleared">Cleared / Recommended</MenuItem>
+						<MenuItem value="re-test">Require Re-assessment</MenuItem>
+						<MenuItem value="rejected">Not Recommended</MenuItem>
+						<MenuItem value="absent">Absent / Not Attended</MenuItem>
+					</TextField>
+				</Box>
 
 				<Box 
 					sx={{ 

@@ -15,11 +15,13 @@ import {
 import {
 	Visibility as ViewIcon,
 	Edit as EditIcon,
-	Delete as DeleteIcon
+	Delete as DeleteIcon,
+	MoreVert as MoreIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import type { MockInterview } from '../../../../models/MockInterview';
 import type { CandidateAllocation } from '../../../../models/training';
+import ActionMenu, { type ActionMenuItem } from '../../../common/action-menu/ActionMenu';
 
 interface MockInterviewTableRowProps {
 	interview: MockInterview;
@@ -91,6 +93,38 @@ const MockInterviewTableRow: React.FC<MockInterviewTableRowProps> = memo(({
 		);
 	};
 
+	const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+	const open = Boolean(anchorEl);
+
+	const handleOpenMenu = (event: React.MouseEvent<HTMLElement>) => {
+		setAnchorEl(event.currentTarget);
+	};
+
+	const handleCloseMenu = () => {
+		setAnchorEl(null);
+	};
+
+	const actions: ActionMenuItem[] = [
+		{
+			label: 'View Details',
+			icon: <ViewIcon fontSize="small" />,
+			onClick: () => onView(interview)
+		},
+		{
+			label: 'Edit Session',
+			icon: <EditIcon fontSize="small" />,
+			onClick: () => onEdit(interview),
+			color: 'info.main'
+		},
+		{
+			label: 'Delete',
+			icon: <DeleteIcon fontSize="small" />,
+			onClick: () => onDelete(interview.id),
+			color: 'error.main',
+			divider: true
+		}
+	];
+
 	return (
 		<TableRow hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
 			<TableCell>
@@ -127,6 +161,23 @@ const MockInterviewTableRow: React.FC<MockInterviewTableRowProps> = memo(({
 			</TableCell>
 			<TableCell>
 				<Chip
+					label={interview.interview_type || 'internal'}
+					size="small"
+					variant="outlined"
+					sx={{
+						fontWeight: 600,
+						fontSize: '0.65rem',
+						textTransform: 'uppercase',
+						borderRadius: '4px',
+						height: '20px',
+						bgcolor: interview.interview_type === 'external' ? alpha(theme.palette.secondary.main, 0.05) : alpha(theme.palette.primary.main, 0.05),
+						borderColor: interview.interview_type === 'external' ? alpha(theme.palette.secondary.main, 0.2) : alpha(theme.palette.primary.main, 0.2),
+						color: interview.interview_type === 'external' ? 'secondary.main' : 'primary.main',
+					}}
+				/>
+			</TableCell>
+			<TableCell>
+				<Chip
 					label={status.label}
 					size="small"
 					color={status.color as any}
@@ -140,6 +191,16 @@ const MockInterviewTableRow: React.FC<MockInterviewTableRowProps> = memo(({
 				/>
 			</TableCell>
 			<TableCell>
+				<Stack direction="row" spacing={0.5} alignItems="center">
+					<Typography variant="body2" fontWeight={700}>
+						{interview.duration_minutes || 0}
+					</Typography>
+					<Typography variant="caption" color="text.secondary">
+						min
+					</Typography>
+				</Stack>
+			</TableCell>
+			<TableCell>
 				{isAbsent ? (
 					<Typography variant="caption" sx={{ fontStyle: 'italic', color: 'text.disabled', fontWeight: 500 }}>
 						Score not available (Absent)
@@ -149,23 +210,15 @@ const MockInterviewTableRow: React.FC<MockInterviewTableRowProps> = memo(({
 				)}
 			</TableCell>
 			<TableCell align="right">
-				<Stack direction="row" spacing={0.5} justifyContent="flex-end">
-					<Tooltip title="View details">
-						<IconButton size="small" onClick={() => onView(interview)}>
-							<ViewIcon fontSize="small" />
-						</IconButton>
-					</Tooltip>
-					<Tooltip title="Edit session">
-						<IconButton size="small" onClick={() => onEdit(interview)}>
-							<EditIcon fontSize="small" />
-						</IconButton>
-					</Tooltip>
-					<Tooltip title="Delete">
-						<IconButton size="small" color="error" onClick={() => onDelete(interview.id)}>
-							<DeleteIcon fontSize="small" />
-						</IconButton>
-					</Tooltip>
-				</Stack>
+				<IconButton size="small" onClick={handleOpenMenu}>
+					<MoreIcon fontSize="small" />
+				</IconButton>
+				<ActionMenu
+					anchorEl={anchorEl}
+					open={open}
+					onClose={handleCloseMenu}
+					actions={actions}
+				/>
 			</TableCell>
 		</TableRow>
 	);

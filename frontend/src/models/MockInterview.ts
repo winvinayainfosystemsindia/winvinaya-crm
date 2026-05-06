@@ -20,6 +20,7 @@ export interface MockInterview {
 	feedback?: string;
 	overall_rating?: number;
 	status: 'pending' | 'cleared' | 're-test' | 'rejected' | 'absent';
+	interview_type?: 'internal' | 'external';
 	start_time?: string;
 	end_time?: string;
 	duration_minutes?: number;
@@ -32,6 +33,7 @@ export interface MockInterviewCreate {
 	candidate_id: number;
 	interviewer_name?: string;
 	interview_date: string;
+	interview_type?: 'internal' | 'external';
 	questions?: Question[];
 	skills?: Skill[];
 	feedback?: string;
@@ -45,6 +47,7 @@ export interface MockInterviewCreate {
 export interface MockInterviewUpdate {
 	interviewer_name?: string;
 	interview_date?: string;
+	interview_type?: 'internal' | 'external';
 	questions?: Question[];
 	skills?: Skill[];
 	feedback?: string;

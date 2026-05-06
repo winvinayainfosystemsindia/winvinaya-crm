@@ -94,12 +94,14 @@ const MockInterviewList: React.FC<MockInterviewListProps> = ({ batchId, allocati
 	};
 
 	const columns: ColumnDefinition<MockInterview>[] = useMemo(() => [
-		{ id: 'interview_date', label: 'DATE', width: '15%' },
-		{ id: 'candidate_id', label: 'CANDIDATE', width: '25%' },
-		{ id: 'interviewer_name', label: 'INTERVIEWER', width: '20%' },
-		{ id: 'status', label: 'STATUS', width: '15%' },
-		{ id: 'overall_rating', label: 'OVERALL RATING', width: '15%' },
-		{ id: 'actions', label: 'ACTIONS', align: 'right', width: '10%' }
+		{ id: 'interview_date', label: 'DATE', width: '12%' },
+		{ id: 'candidate_id', label: 'CANDIDATE', width: '18%' },
+		{ id: 'interviewer_name', label: 'INTERVIEWER', width: '15%' },
+		{ id: 'interview_type', label: 'TYPE', width: '10%' },
+		{ id: 'status', label: 'STATUS', width: '12%' },
+		{ id: 'duration_minutes', label: 'DUR.', width: '10%' },
+		{ id: 'overall_rating', label: 'RATING', width: '15%' },
+		{ id: 'actions', label: 'ACTIONS', align: 'right', width: '8%' }
 	], []);
 
 	const filteredCandidateName = allocations.find(a => a.candidate_id === filterCandidateId)?.candidate?.name;
