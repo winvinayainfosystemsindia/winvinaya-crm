@@ -87,7 +87,7 @@ const ModuleLayout: React.FC<ModuleLayoutProps> = ({
 									borderColor: alpha(theme.palette.primary.main, 0.1)
 								}}
 							>
-								<Typography variant="h3" sx={{ opacity: 0.2, color: 'primary.main', fontWeight: 900 }}>?</Typography>
+								<Typography variant="h3" sx={{ opacity: 0.2, color: 'primary.main', fontWeight: 700 }}>?</Typography>
 							</Box>
 						)}
 						<Box>

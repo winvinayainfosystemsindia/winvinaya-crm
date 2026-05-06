@@ -22,12 +22,12 @@ const ModuleHeader: React.FC<ModuleHeaderProps> = ({
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
 	return (
-		<Box 
-			sx={{ 
-				bgcolor: 'secondary.main', 
-				color: 'common.white', 
-				pt: { xs: 3, sm: 4 }, 
-				pb: { xs: 3, sm: 4 }, 
+		<Box
+			sx={{
+				bgcolor: 'secondary.main',
+				color: 'common.white',
+				pt: { xs: 3, sm: 4 },
+				pb: { xs: 3, sm: 4 },
 				mb: 0,
 				position: 'relative',
 				overflow: 'hidden',
@@ -41,34 +41,34 @@ const ModuleHeader: React.FC<ModuleHeaderProps> = ({
 			}}
 		>
 			{/* Decorative Accents */}
-			<Box 
-				sx={{ 
-					position: 'absolute', 
-					top: 0, 
-					right: 0, 
-					width: '35%', 
-					height: '100%', 
+			<Box
+				sx={{
+					position: 'absolute',
+					top: 0,
+					right: 0,
+					width: '35%',
+					height: '100%',
 					background: `linear-gradient(90deg, transparent, ${alpha(theme.palette.primary.main, 0.02)})`,
 					pointerEvents: 'none'
-				}} 
+				}}
 			/>
 
 			<Container maxWidth="xl" sx={{ px: { xs: 2, sm: 4, md: 5 }, position: 'relative', zIndex: 1 }}>
-				<Box 
-					sx={{ 
-						display: 'flex', 
-						flexDirection: isMobile ? 'column' : 'row', 
-						justifyContent: 'space-between', 
-						alignItems: isMobile ? 'flex-start' : 'center', 
-						gap: { xs: 3, md: 5 } 
+				<Box
+					sx={{
+						display: 'flex',
+						flexDirection: isMobile ? 'column' : 'row',
+						justifyContent: 'space-between',
+						alignItems: isMobile ? 'flex-start' : 'center',
+						gap: { xs: 3, md: 5 }
 					}}
 				>
 					<Box sx={{ flex: 1, minWidth: 0 }}>
-						<Typography 
-							variant="h4" 
-							sx={{ 
-								fontWeight: 700, 
-								mb: 0.5, 
+						<Typography
+							variant="h4"
+							sx={{
+								fontWeight: 500,
+								mb: 0.5,
 								letterSpacing: '-0.02em',
 								color: 'common.white',
 								fontSize: { xs: '1.5rem', sm: '2rem' },
@@ -82,10 +82,10 @@ const ModuleHeader: React.FC<ModuleHeaderProps> = ({
 						</Typography>
 						{subtitle && (
 							<Box sx={{ maxWidth: 650 }}>
-								<Typography 
-									variant="body2" 
-									sx={{ 
-										color: alpha(theme.palette.common.white, 0.5), 
+								<Typography
+									variant="body2"
+									sx={{
+										color: alpha(theme.palette.common.white, 0.5),
 										fontWeight: 400,
 										fontSize: { xs: '0.8rem', sm: '0.9rem' },
 										lineHeight: 1.4
@@ -98,8 +98,8 @@ const ModuleHeader: React.FC<ModuleHeaderProps> = ({
 					</Box>
 
 					{extra && (
-						<Box 
-							sx={{ 
+						<Box
+							sx={{
 								width: isMobile ? '100%' : 'auto',
 								minWidth: isMobile ? 'none' : 420, // Guaranteed width for professional input elements
 								flexShrink: 0,
@@ -128,12 +128,12 @@ const ModuleHeader: React.FC<ModuleHeaderProps> = ({
 				</Box>
 
 				{children && (
-					<Box 
-						sx={{ 
-							mt: 3, 
-							pt: 2.5, 
-							borderTop: '1px solid', 
-							borderColor: alpha(theme.palette.common.white, 0.06) 
+					<Box
+						sx={{
+							mt: 3,
+							pt: 2.5,
+							borderTop: '1px solid',
+							borderColor: alpha(theme.palette.common.white, 0.06)
 						}}
 					>
 						{children}
