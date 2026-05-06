@@ -11,11 +11,13 @@ import {
 	TableRow,
 	Tooltip,
 	IconButton,
+	useTheme,
+	alpha
 } from '@mui/material';
 import { EventBusy as HolidayIcon, DeleteForever as DeleteForeverIcon } from '@mui/icons-material';
 import { format, isWeekend } from 'date-fns';
 import type { TrainingAttendance, CandidateAllocation, TrainingBatchEvent } from '../../../../models/training';
-import { STATUS_MAP } from './AttendanceLegendBar';
+import { getStatusMap } from './AttendanceLegendBar';
 import type { ConfirmDialogState } from './ClearAttendanceDialog';
 
 interface AttendanceMatrixTableProps {
@@ -31,30 +33,66 @@ interface AttendanceMatrixTableProps {
 
 // ── Cell helpers ──────────────────────────────────────────────
 
-const HolidayCell: React.FC<{ dateStr: string; title: string }> = ({ dateStr, title }) => (
-	<TableCell key={dateStr} align="center" sx={{ bgcolor: '#fff5f5', color: '#d32f2f', p: 0 }}>
-		<Tooltip title={`Holiday: ${title}`}>
-			<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 0.5 }}>
-				<HolidayIcon sx={{ fontSize: 16 }} />
-				<Typography sx={{ fontSize: '8px', fontWeight: 700 }}>HOL</Typography>
-			</Box>
-		</Tooltip>
-	</TableCell>
-);
+const HolidayCell: React.FC<{ dateStr: string; title: string }> = ({ dateStr, title }) => {
+	const theme = useTheme();
+	return (
+		<TableCell 
+			key={dateStr} 
+			align="center" 
+			sx={{ 
+				bgcolor: alpha(theme.palette.error.main, 0.05), 
+				color: 'error.main', 
+				p: 0,
+				borderRight: '1px solid',
+				borderColor: 'divider'
+			}}
+		>
+			<Tooltip title={`Holiday: ${title}`}>
+				<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 0.5 }}>
+					<HolidayIcon sx={{ fontSize: 16 }} />
+					<Typography sx={{ fontSize: '9px', fontWeight: 800 }}>HOL</Typography>
+				</Box>
+			</Tooltip>
+		</TableCell>
+	);
+};
 
-const WeekendCell: React.FC<{ dateStr: string }> = ({ dateStr }) => (
-	<TableCell key={dateStr} align="center" sx={{ bgcolor: '#fafafa', p: 0 }}>
-		<Typography sx={{ fontSize: '10px', color: '#aab7b8', fontWeight: 700 }}>W/E</Typography>
-	</TableCell>
-);
+const WeekendCell: React.FC<{ dateStr: string }> = ({ dateStr }) => {
+	const theme = useTheme();
+	return (
+		<TableCell 
+			key={dateStr} 
+			align="center" 
+			sx={{ 
+				bgcolor: alpha(theme.palette.action.disabledBackground, 0.05), 
+				p: 0,
+				borderRight: '1px solid',
+				borderColor: 'divider'
+			}}
+		>
+			<Typography sx={{ fontSize: '10px', color: 'text.disabled', fontWeight: 800 }}>W/E</Typography>
+		</TableCell>
+	);
+};
 
 const EmptyCell: React.FC<{ dateStr: string }> = ({ dateStr }) => (
-	<TableCell key={dateStr} align="center" sx={{ p: 0 }}>
-		<Typography sx={{ color: '#d5dbdb' }}>-</Typography>
+	<TableCell 
+		key={dateStr} 
+		align="center" 
+		sx={{ 
+			p: 0,
+			borderRight: '1px solid',
+			borderColor: 'divider'
+		}}
+	>
+		<Typography sx={{ color: 'text.disabled', fontWeight: 400 }}>-</Typography>
 	</TableCell>
 );
 
 const StatusCell: React.FC<{ dateStr: string; dayRecords: TrainingAttendance[] }> = ({ dateStr, dayRecords }) => {
+	const theme = useTheme();
+	const statusMap = getStatusMap(theme);
+	
 	const statusCounts = dayRecords.reduce((acc, rec) => {
 		acc[rec.status] = (acc[rec.status] || 0) + 1;
 		return acc;
@@ -66,13 +104,21 @@ const StatusCell: React.FC<{ dateStr: string; dayRecords: TrainingAttendance[] }
 			statusCounts['present'] === total ? 'present' :
 				'half_day';
 
-	const statusInfo = STATUS_MAP[consolidated];
+	const statusInfo = (statusMap as any)[consolidated];
 	const tooltipTitle = dayRecords
 		.map(r => `${r.period?.activity_name || 'Full Day'}: ${r.status.toUpperCase()}`)
 		.join('\n');
 
 	return (
-		<TableCell key={dateStr} align="center" sx={{ p: 0 }}>
+		<TableCell 
+			key={dateStr} 
+			align="center" 
+			sx={{ 
+				p: 0,
+				borderRight: '1px solid',
+				borderColor: 'divider'
+			}}
+		>
 			<Tooltip title={tooltipTitle}>
 				<Box sx={{ color: statusInfo.color, display: 'flex', justifyContent: 'center' }}>
 					{statusInfo.icon}
@@ -93,6 +139,7 @@ const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
 	onOpenClearDialog,
 	getCandidateRecordCount,
 }) => {
+	const theme = useTheme();
 	const getHoliday = (day: Date) => {
 		const dateStr = format(day, 'yyyy-MM-dd');
 		return batchEvents.find(e => e.date === dateStr && e.event_type === 'holiday');
@@ -102,54 +149,92 @@ const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
 		<TableContainer
 			component={Paper}
 			elevation={0}
-			sx={{ border: '1px solid #eaeded', borderRadius: '4px', maxHeight: '70vh', overflow: 'auto' }}
+			sx={{ 
+				border: '1px solid',
+				borderColor: 'divider', 
+				borderRadius: 2, 
+				maxHeight: '70vh', 
+				overflow: 'auto',
+				boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
+			}}
 		>
 			<Table size="small" stickyHeader sx={{ minWidth: (days.length * 50) + 300 }}>
-
-				{/* ── Head ── */}
 				<TableHead>
 					<TableRow>
-						<TableCell sx={{ fontWeight: 700, bgcolor: '#f8f9fa', zIndex: 10, left: 0, position: 'sticky', borderRight: '1px solid #eaeded', width: 260, minWidth: 260 }}>
+						<TableCell
+							sx={{
+								fontWeight: 800,
+								bgcolor: 'background.paper',
+								zIndex: 30,
+								left: 0,
+								position: 'sticky',
+								borderRight: '1px solid',
+								borderColor: 'divider',
+								width: 260,
+								minWidth: 260,
+								fontSize: '0.75rem',
+								textTransform: 'uppercase',
+								letterSpacing: '0.05em',
+								color: 'text.secondary'
+							}}
+						>
 							Student Name
 						</TableCell>
 						{days.map(day => (
 							<TableCell
 								key={day.toISOString()}
 								align="center"
-								sx={{ fontWeight: 700, bgcolor: isWeekend(day) ? '#f2f3f3' : '#f8f9fa', minWidth: 50, p: 1 }}
+								sx={{ 
+									fontWeight: 800, 
+									bgcolor: isWeekend(day) ? alpha(theme.palette.action.disabledBackground, 0.05) : 'background.paper',
+									minWidth: 50, 
+									p: 1,
+									borderRight: '1px solid',
+									borderColor: 'divider',
+									zIndex: 10
+								}}
 							>
-								<Typography variant="caption" sx={{ display: 'block', fontWeight: 700 }}>{format(day, 'dd')}</Typography>
-								<Typography variant="caption" color="text.secondary">{format(day, 'MMM')}</Typography>
+								<Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: 'text.primary' }}>{format(day, 'dd')}</Typography>
+								<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.65rem', textTransform: 'uppercase' }}>{format(day, 'MMM')}</Typography>
 							</TableCell>
 						))}
 						{isAdmin && (
-							<TableCell sx={{ fontWeight: 700, bgcolor: '#f8f9fa', minWidth: 60, textAlign: 'center' }}>
+							<TableCell sx={{ fontWeight: 800, bgcolor: 'background.paper', minWidth: 80, textAlign: 'center', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'text.secondary', zIndex: 10 }}>
 								Actions
 							</TableCell>
 						)}
 					</TableRow>
 				</TableHead>
 
-				{/* ── Body ── */}
 				<TableBody>
 					{allocations.map(allocation => {
 						const recordCount = getCandidateRecordCount(allocation.candidate_id);
 
 						return (
-							<TableRow key={allocation.id} hover>
-
-								{/* Student name cell (sticky) */}
-								<TableCell sx={{ position: 'sticky', left: 0, bgcolor: 'white', zIndex: 2, borderRight: '1px solid #eaeded', fontWeight: 600 }}>
-									<Typography variant="body2" sx={{ fontWeight: 600 }}>{allocation.candidate?.name}</Typography>
-									<Typography variant="caption" color="text.secondary">{allocation.candidate?.email}</Typography>
+							<TableRow key={allocation.id} hover sx={{ transition: 'background-color 0.15s' }}>
+								<TableCell
+									sx={{
+										position: 'sticky',
+										left: 0,
+										bgcolor: 'background.paper',
+										zIndex: 20,
+										borderRight: '1px solid',
+										borderColor: 'divider',
+										boxShadow: '2px 0 5px -2px rgba(0,0,0,0.02)',
+										'.MuiTableRow-root:hover &': {
+											bgcolor: alpha(theme.palette.primary.main, 0.02),
+										}
+									}}
+								>
+									<Typography variant="body2" sx={{ fontWeight: 700, color: 'text.primary', lineHeight: 1.2 }}>{allocation.candidate?.name}</Typography>
+									<Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>{allocation.candidate?.email}</Typography>
 									{recordCount === 0 && (
-										<Typography variant="caption" sx={{ display: 'block', color: '#aab7b8', fontStyle: 'italic' }}>
+										<Typography variant="caption" sx={{ display: 'block', color: 'text.disabled', fontStyle: 'italic', fontSize: '0.65rem', mt: 0.5 }}>
 											No records
 										</Typography>
 									)}
 								</TableCell>
 
-								{/* Day cells */}
 								{days.map(day => {
 									const dateStr = format(day, 'yyyy-MM-dd');
 									const holiday = getHoliday(day);
@@ -165,22 +250,28 @@ const AttendanceMatrixTable: React.FC<AttendanceMatrixTableProps> = ({
 									return <StatusCell key={dateStr} dateStr={dateStr} dayRecords={dayRecords} />;
 								})}
 
-								{/* Admin actions cell */}
 								{isAdmin && (
-									<TableCell align="center" sx={{ p: 0.5 }}>
+									<TableCell align="center" sx={{ p: 0.5, borderRight: '1px solid', borderColor: 'divider' }}>
 										{recordCount > 0 ? (
 											<Tooltip title={`Clear all ${recordCount} records for ${allocation.candidate?.name}`}>
 												<IconButton
 													size="small"
-													color="error"
 													onClick={() => onOpenClearDialog(allocation)}
-													sx={{ opacity: 0.7, '&:hover': { opacity: 1, bgcolor: '#fff0f0' }, transition: 'all 0.15s' }}
+													sx={{ 
+														color: 'error.main',
+														opacity: 0.6, 
+														'&:hover': { 
+															opacity: 1, 
+															bgcolor: alpha(theme.palette.error.main, 0.08) 
+														}, 
+														transition: 'all 0.2s' 
+													}}
 												>
 													<DeleteForeverIcon fontSize="small" />
 												</IconButton>
 											</Tooltip>
 										) : (
-											<Typography variant="caption" sx={{ color: '#d5dbdb' }}>—</Typography>
+											<Typography variant="caption" sx={{ color: 'text.disabled' }}>—</Typography>
 										)}
 									</TableCell>
 								)}

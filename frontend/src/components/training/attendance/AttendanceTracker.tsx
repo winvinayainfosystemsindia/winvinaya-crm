@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
 	Box,
 	CircularProgress,
@@ -7,7 +7,9 @@ import {
 	Paper,
 	Typography,
 	Tabs,
-	Tab
+	Tab,
+	alpha,
+	useTheme
 } from '@mui/material';
 import {
 	CheckCircle as PresentIcon,
@@ -18,6 +20,8 @@ import {
 	EventAvailable as EventIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../../../store/store';
 import type { TrainingBatch, CandidateAllocation } from '../../../models/training';
 import { useAttendance } from './hooks/useAttendance';
 
@@ -33,21 +37,20 @@ interface AttendanceTrackerProps {
 	allocations: CandidateAllocation[];
 }
 
-const ATTENDANCE_STATUSES = [
-	{ value: 'present', label: 'Present', icon: <PresentIcon sx={{ color: '#007d35' }} />, color: '#007d35' },
-	{ value: 'absent', label: 'Absent', icon: <AbsentIcon sx={{ color: '#d13212' }} />, color: '#d13212' },
-	{ value: 'late', label: 'Late', icon: <LateIcon sx={{ color: '#ff9900' }} />, color: '#ff9900' },
-	{ value: 'half_day', label: 'Half Day', icon: <HalfDayIcon sx={{ color: '#007eb9' }} />, color: '#007eb9' },
-];
-
-import { useSelector } from 'react-redux';
-import type { RootState } from '../../../store/store';
-
 const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocations }) => {
+	const theme = useTheme();
 	const currentUser = useSelector((state: RootState) => state.auth.user);
 
+	// Define statuses inside to access theme
+	const ATTENDANCE_STATUSES = useMemo(() => [
+		{ value: 'present', label: 'Present', icon: <PresentIcon sx={{ color: 'success.main' }} />, color: theme.palette.success.main },
+		{ value: 'absent', label: 'Absent', icon: <AbsentIcon sx={{ color: 'error.main' }} />, color: theme.palette.error.main },
+		{ value: 'late', label: 'Late', icon: <LateIcon sx={{ color: 'warning.main' }} />, color: theme.palette.warning.main },
+		{ value: 'half_day', label: 'Half Day', icon: <HalfDayIcon sx={{ color: 'info.main' }} />, color: theme.palette.info.main },
+	], [theme]);
+
 	// Filter allocations to exclude 'allocated' status candidates as they haven't started training yet
-	const filteredAllocations = React.useMemo(() => {
+	const filteredAllocations = useMemo(() => {
 		return allocations.filter(a => a.status !== 'allocated');
 	}, [allocations]);
 
@@ -74,28 +77,37 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 		isDroppedOut
 	} = useAttendance(batch, filteredAllocations, currentUser);
 
-
-
-	if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}><CircularProgress thickness={2} size={40} /></Box>;
+	if (loading) {
+		return (
+			<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 10, gap: 2 }}>
+				<CircularProgress thickness={4} size={48} />
+				<Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600, letterSpacing: '0.05em' }}>
+					LOADING ATTENDANCE DATA...
+				</Typography>
+			</Box>
+		);
+	}
 
 	return (
 		<Box>
-			<Box sx={{ borderBottom: '1px solid #eaeded', mb: 3 }}>
+			<Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 4 }}>
 				<Tabs
 					value={activeTab}
 					onChange={(_, v) => setActiveTab(v)}
 					sx={{
-						minHeight: 40,
+						minHeight: 48,
 						'& .MuiTab-root': {
 							textTransform: 'none',
 							fontWeight: 700,
 							fontSize: '0.875rem',
-							minHeight: 40,
-							color: '#545b64',
-							px: 3,
-							'&.Mui-selected': { color: '#007eb9' }
+							minHeight: 48,
+							color: 'text.secondary',
+							px: 4,
+							transition: 'all 0.2s',
+							'&.Mui-selected': { color: 'primary.main' },
+							'&:hover': { color: 'primary.main', bgcolor: alpha(theme.palette.primary.main, 0.04) }
 						},
-						'& .MuiTabs-indicator': { bgcolor: '#007eb9', height: 3 }
+						'& .MuiTabs-indicator': { height: 3, borderRadius: '3px 3px 0 0' }
 					}}
 				>
 					<Tab label="Attendance Tool" value="tracker" />
@@ -104,9 +116,18 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 			</Box>
 
 			{activeTab === 'tracker' ? (
-				<Box sx={{ p: isDateOutOfRange ? 0 : 1 }}>
+				<Box sx={{ px: isDateOutOfRange ? 0 : 0.5 }}>
 					{isDateOutOfRange && (
-						<Alert severity="warning" sx={{ mb: 3, borderRadius: '4px' }}>
+						<Alert
+							severity="warning"
+							sx={{
+								mb: 4,
+								borderRadius: 2,
+								border: '1px solid',
+								borderColor: alpha(theme.palette.warning.main, 0.2),
+								'& .MuiAlert-message': { fontWeight: 500 }
+							}}
+						>
 							The selected date ({format(selectedDate, 'MMM dd, yyyy')}) is outside the training batch duration
 							({batch.start_date || batch.duration?.start_date} to {batch.approx_close_date || batch.duration?.end_date}).
 							Attendance tracking is restricted to the scheduled batch period.
@@ -114,12 +135,21 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 					)}
 
 					{isFutureDate && (
-						<Alert severity="error" sx={{ mb: 3, borderRadius: '4px' }}>
+						<Alert
+							severity="error"
+							sx={{
+								mb: 4,
+								borderRadius: 2,
+								border: '1px solid',
+								borderColor: alpha(theme.palette.error.main, 0.2),
+								'& .MuiAlert-message': { fontWeight: 500 }
+							}}
+						>
 							Cannot mark attendance for future dates. Please select today or a past date.
 						</Alert>
 					)}
 
-					<Grid container spacing={3}>
+					<Grid container spacing={4}>
 						<Grid size={{ xs: 12 }}>
 							<AttendanceHeader
 								selectedDate={selectedDate}
@@ -136,27 +166,31 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 
 						<Grid size={{ xs: 12, lg: 9 }}>
 							{currentEvent && (
-								<Box sx={{ mb: 3 }}>
+								<Box sx={{ mb: 4 }}>
 									<Paper
 										elevation={0}
 										sx={{
 											p: 4,
 											textAlign: 'center',
-											bgcolor: currentEvent.event_type === 'holiday' ? '#fff5f5' : '#f0f7ff',
+											bgcolor: currentEvent.event_type === 'holiday'
+												? alpha(theme.palette.error.main, 0.04)
+												: alpha(theme.palette.info.main, 0.04),
 											border: '1px solid',
-											borderColor: currentEvent.event_type === 'holiday' ? '#ffcdd2' : '#bbdefb',
-											borderRadius: '4px'
+											borderColor: currentEvent.event_type === 'holiday'
+												? alpha(theme.palette.error.main, 0.2)
+												: alpha(theme.palette.info.main, 0.2),
+											borderRadius: 2
 										}}
 									>
 										{currentEvent.event_type === 'holiday' ? (
-											<HolidayIcon sx={{ fontSize: 48, color: '#d32f2f', mb: 1 }} />
+											<HolidayIcon sx={{ fontSize: 56, color: 'error.main', mb: 2 }} />
 										) : (
-											<EventIcon sx={{ fontSize: 48, color: '#0288d1', mb: 1 }} />
+											<EventIcon sx={{ fontSize: 56, color: 'info.main', mb: 2 }} />
 										)}
-										<Typography variant="h5" sx={{ fontWeight: 700, color: '#232f3e' }}>
+										<Typography variant="h5" sx={{ fontWeight: 800, color: 'text.primary', mb: 1 }}>
 											{currentEvent.title}
 										</Typography>
-										<Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
+										<Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 600, mx: 'auto' }}>
 											{currentEvent.description || `This date has been marked as a ${currentEvent.event_type}.`}
 										</Typography>
 									</Paper>
@@ -164,7 +198,15 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 							)}
 
 							{dailyPlan.length === 0 && !currentEvent && (
-								<Alert severity="info" sx={{ mb: 3 }}>
+								<Alert
+									severity="info"
+									sx={{
+										mb: 4,
+										borderRadius: 2,
+										border: '1px solid',
+										borderColor: alpha(theme.palette.info.main, 0.2)
+									}}
+								>
 									No training plan configured for this date. You can still mark full-day attendance.
 								</Alert>
 							)}
@@ -205,8 +247,6 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 					batchEvents={batchEvents}
 				/>
 			)}
-
-
 		</Box>
 	);
 };

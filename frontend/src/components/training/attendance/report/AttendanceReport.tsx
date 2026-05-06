@@ -1,12 +1,11 @@
 import React, { useMemo, useState } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useTheme, alpha } from '@mui/material';
 import { DeleteForever as DeleteForeverIcon } from '@mui/icons-material';
 import { eachDayOfInterval, parseISO, startOfDay } from 'date-fns';
 
 import type { TrainingAttendance, CandidateAllocation, TrainingBatch, TrainingBatchEvent } from '../../../../models/training';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { deleteAttendanceByCandidate } from '../../../../store/slices/attendanceSlice';
-import { useSnackbar } from 'notistack';
 
 import AttendanceLegendBar from './AttendanceLegendBar';
 import OrphanedRecordsAlert, { type OrphanedCandidate } from './OrphanedRecordsAlert';
@@ -31,9 +30,12 @@ const EMPTY_DIALOG: ConfirmDialogState = {
 
 // ── Component ─────────────────────────────────────────────────
 
+import useToast from '../../../../hooks/useToast';
+
 const AttendanceReport: React.FC<AttendanceReportProps> = ({ attendance, allocations, batch, batchEvents }) => {
+	const theme = useTheme();
 	const dispatch = useAppDispatch();
-	const { enqueueSnackbar } = useSnackbar();
+	const { showToast } = useToast();
 	const currentUser = useAppSelector(state => state.auth.user);
 	const isAdmin = !!(currentUser?.is_superuser || currentUser?.role === 'admin');
 
@@ -116,13 +118,13 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({ attendance, allocat
 				batchId: batch.id,
 			})).unwrap();
 
-			enqueueSnackbar(
+			showToast(
 				`Cleared ${result.deleted_count} record(s) for ${confirmDialog.candidateName}`,
-				{ variant: 'success' }
+				'success'
 			);
 			setConfirmDialog(EMPTY_DIALOG);
 		} catch (err: any) {
-			enqueueSnackbar(err || 'Failed to clear attendance records', { variant: 'error' });
+			showToast(err || 'Failed to clear attendance records', 'error');
 		} finally {
 			setDeleting(false);
 		}
@@ -133,13 +135,28 @@ const AttendanceReport: React.FC<AttendanceReportProps> = ({ attendance, allocat
 	return (
 		<Box>
 			{/* Header */}
-			<Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-				<Typography variant="h6" sx={{ color: '#232f3e', fontWeight: 600 }}>
+			<Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+				<Typography variant="h6" sx={{ color: 'text.primary', fontWeight: 800, letterSpacing: '-0.01em' }}>
 					Batch Attendance History Matrix
 				</Typography>
 				{isAdmin && (
-					<Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-						<DeleteForeverIcon sx={{ fontSize: 16, color: 'error.light' }} />
+					<Typography 
+						variant="caption" 
+						color="text.secondary" 
+						sx={{ 
+							display: 'flex', 
+							alignItems: 'center', 
+							gap: 1, 
+							bgcolor: alpha(theme.palette.error.main, 0.05),
+							px: 1.5,
+							py: 0.75,
+							borderRadius: 1,
+							border: '1px solid',
+							borderColor: alpha(theme.palette.error.main, 0.1),
+							fontWeight: 600
+						}}
+					>
+						<DeleteForeverIcon sx={{ fontSize: 18, color: 'error.main' }} />
 						Click the delete icon on a row to clear all records for that candidate
 					</Typography>
 				)}

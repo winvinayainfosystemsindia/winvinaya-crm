@@ -8,8 +8,13 @@ import {
 	TableContainer,
 	TableHead,
 	TableRow,
-	Chip, FormControl, Select, MenuItem,
-	Box
+	Chip, 
+	FormControl, 
+	Select, 
+	MenuItem,
+	Box,
+	useTheme,
+	alpha
 } from '@mui/material';
 import { Block as BlockIcon } from '@mui/icons-material';
 import { format } from 'date-fns';
@@ -51,6 +56,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 	statuses,
 	currentUser,
 }) => {
+	const theme = useTheme();
 	const dateStr = format(selectedDate, 'yyyy-MM-dd');
 	const hasPeriods = dailyPlan.length > 0;
 
@@ -82,10 +88,10 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 		// Admins, Superusers and Managers can edit anything
 		if (currentUser?.is_superuser || currentUser?.role === 'admin' || currentUser?.role === 'manager') return true;
 
-		// Primary check: match by user ID (reliable, works after trainer_user_id is saved)
+		// Primary check: match by user ID
 		if (period.trainer_user_id && currentUser?.id && period.trainer_user_id === currentUser.id) return true;
 
-		// Fallback check: match by name (for entries created before trainer_user_id was linked)
+		// Fallback check: match by name
 		if (currentUser?.full_name && period.trainer && currentUser.full_name === period.trainer) return true;
 
 		// Also check trainer_user?.public_id vs currentUser?.public_id if available
@@ -95,42 +101,78 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 	};
 
 	return (
-		<TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #eaeded', borderRadius: '4px' }}>
-			<Table>
-				<TableHead sx={{ bgcolor: '#f8f9fa' }}>
+		<TableContainer 
+			component={Paper} 
+			elevation={0} 
+			sx={{ 
+				border: '1px solid',
+				borderColor: 'divider', 
+				borderRadius: 2,
+				overflow: 'auto',
+				maxHeight: 'calc(100vh - 350px)'
+			}}
+		>
+			<Table stickyHeader>
+				<TableHead>
 					<TableRow>
 						<TableCell
 							sx={{
-								fontWeight: 700,
-								borderRight: '1px solid #eaeded',
+								fontWeight: 800,
+								borderRight: '1px solid',
+								borderColor: 'divider',
 								width: 250,
 								minWidth: 250,
 								position: 'sticky',
 								left: 0,
-								bgcolor: '#f8f9fa',
-								zIndex: 10,
-								boxShadow: '2px 0 5px -2px rgba(0,0,0,0.1)'
+								bgcolor: 'background.paper',
+								zIndex: 20,
+								boxShadow: '2px 0 5px -2px rgba(0,0,0,0.05)',
+								fontSize: '0.85rem',
+								textTransform: 'uppercase',
+								letterSpacing: '0.05em',
+								color: 'text.secondary'
 							}}
 						>
 							Student Name
 						</TableCell>
 
-
 						{hasPeriods ? (
-							// Period-based columns
 							dailyPlan.map((period) => (
-								<TableCell key={period.id} align="center" sx={{ fontWeight: 700, minWidth: 150 }}>
-									<Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center' }}>
+								<TableCell 
+									key={period.id} 
+									align="center" 
+									sx={{ 
+										fontWeight: 800, 
+										minWidth: 180,
+										bgcolor: 'background.paper',
+										borderBottom: '2px solid',
+										borderColor: 'divider'
+									}}
+								>
+									<Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, alignItems: 'center' }}>
 										<Box>
-											<Typography variant="body2" sx={{ fontWeight: 700 }}>
+											<Typography variant="body2" sx={{ fontWeight: 800, color: 'text.primary', lineHeight: 1.2 }}>
 												{period.activity_name}
 											</Typography>
-											<Typography variant="caption" color="text.secondary">
+											<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, mt: 0.5, display: 'block' }}>
 												{format(new Date(`2000-01-01T${period.start_time}`), 'h:mm a')} - {format(new Date(`2000-01-01T${period.end_time}`), 'h:mm a')}
 											</Typography>
 											{period.trainer && (
-												<Typography variant="caption" display="block" sx={{ fontWeight: 600, color: 'primary.main', bgcolor: '#e3f2fd', px: 1, py: 0.5, borderRadius: '4px', mt: 0.5 }}>
-													Trainer: {period.trainer}
+												<Typography 
+													variant="caption" 
+													sx={{ 
+														fontWeight: 700, 
+														color: 'primary.main', 
+														bgcolor: alpha(theme.palette.primary.main, 0.08), 
+														px: 1, 
+														py: 0.5, 
+														borderRadius: 1, 
+														mt: 1,
+														display: 'inline-block',
+														fontSize: '0.7rem'
+													}}
+												>
+													{period.trainer}
 												</Typography>
 											)}
 										</Box>
@@ -139,8 +181,16 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 											<Chip
 												label="BREAK"
 												size="small"
-												color="error"
-												sx={{ fontWeight: 700, fontSize: '0.65rem', height: 20, borderRadius: '4px' }}
+												sx={{ 
+													fontWeight: 800, 
+													fontSize: '0.65rem', 
+													height: 20, 
+													borderRadius: 1,
+													bgcolor: alpha(theme.palette.error.main, 0.1),
+													color: 'error.main',
+													border: '1px solid',
+													borderColor: alpha(theme.palette.error.main, 0.2)
+												}}
 											/>
 										) : (
 											<FormControl size="small" sx={{ minWidth: 110 }}>
@@ -152,22 +202,32 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 													sx={{
 														fontSize: '0.7rem',
 														fontWeight: 700,
-														height: 28,
-														bgcolor: canEditPeriod(period) ? '#fff' : '#f5f5f5',
-														'& .MuiOutlinedInput-root': { borderRadius: '4px' }
+														height: 30,
+														borderRadius: 1.5,
+														bgcolor: canEditPeriod(period) ? 'background.default' : alpha(theme.palette.action.disabledBackground, 0.1),
+														'& .MuiOutlinedInput-notchedOutline': {
+															borderColor: 'divider'
+														},
+														'&:hover .MuiOutlinedInput-notchedOutline': {
+															borderColor: 'primary.main'
+														}
 													}}
 													renderValue={(selected) => {
 														if (selected === "") {
-															return <Typography variant="caption" sx={{ fontWeight: 700, fontSize: '0.7rem' }}>Mark All</Typography>;
+															return (
+																<Typography variant="caption" sx={{ fontWeight: 800, fontSize: '0.7rem', color: 'primary.main', letterSpacing: '0.02em' }}>
+																	MARK ALL
+																</Typography>
+															);
 														}
 														return selected;
 													}}
 												>
 													{statuses.map(s => (
 														<MenuItem key={s.value} value={s.value} sx={{ fontSize: '0.75rem', fontWeight: 600 }}>
-															<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+															<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
 																{React.cloneElement(s.icon as React.ReactElement<any>, {
-																	sx: { ...((s.icon as React.ReactElement<any>).props.sx || {}), fontSize: '1rem' }
+																	sx: { ...((s.icon as React.ReactElement<any>).props.sx || {}), fontSize: '1.1rem' }
 																})}
 																{s.label}
 															</Box>
@@ -180,10 +240,9 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 								</TableCell>
 							))
 						) : (
-							// Legacy full-day columns
 							<>
-								<TableCell align="center" sx={{ fontWeight: 700 }}>Attendance Status</TableCell>
-								<TableCell sx={{ fontWeight: 700 }}>Remarks</TableCell>
+								<TableCell align="center" sx={{ fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Attendance Status</TableCell>
+								<TableCell sx={{ fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Remarks</TableCell>
 							</>
 						)}
 					</TableRow>
@@ -192,32 +251,34 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 					{allocations.length === 0 ? (
 						<TableRow>
 							<TableCell colSpan={hasPeriods ? dailyPlan.length + 1 : 3} align="center" sx={{ py: 10 }}>
-								<Typography color="text.secondary">No students allocated to this batch.</Typography>
+								<Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', fontWeight: 500 }}>
+									No students allocated to this batch.
+								</Typography>
 							</TableCell>
 						</TableRow>
 					) : (
 						allocations.map(allocation => {
 							const droppedOut = isDroppedOut(allocation.candidate_id);
 
-							// For dropped out candidates, show a special row
 							if (droppedOut) {
 								return (
-									<TableRow key={allocation.id} sx={{ bgcolor: '#f5f5f5' }}>
+									<TableRow key={allocation.id} sx={{ bgcolor: alpha(theme.palette.action.disabledBackground, 0.1) }}>
 										<TableCell
 											sx={{
 												position: 'sticky',
 												left: 0,
-												bgcolor: '#f5f5f5',
+												bgcolor: alpha(theme.palette.action.disabledBackground, 0.05),
 												zIndex: 5,
-												borderRight: '1px solid #eaeded',
-												boxShadow: '2px 0 5px -2px rgba(0,0,0,0.1)'
+												borderRight: '1px solid',
+												borderColor: 'divider',
+												boxShadow: '2px 0 5px -2px rgba(0,0,0,0.02)'
 											}}
 										>
 											<Box>
-												<Typography variant="body2" sx={{ fontWeight: 600 }}>
+												<Typography variant="body2" sx={{ fontWeight: 600, color: 'text.disabled' }}>
 													{allocation.candidate?.name || 'Unknown'}
 												</Typography>
-												<Typography variant="caption" color="text.secondary">
+												<Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.75rem' }}>
 													{allocation.candidate?.email}
 												</Typography>
 											</Box>
@@ -227,10 +288,11 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 												label="Dropped Out"
 												size="small"
 												color="error"
-												icon={<BlockIcon />}
-												sx={{ fontWeight: 600 }}
+												variant="outlined"
+												icon={<BlockIcon sx={{ fontSize: '14px !important' }} />}
+												sx={{ fontWeight: 800, borderRadius: 1, textTransform: 'uppercase', fontSize: '0.65rem' }}
 											/>
-											<Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 1 }}>
+											<Typography variant="caption" display="block" sx={{ mt: 1, fontWeight: 500, color: 'text.disabled' }}>
 												Cannot mark attendance for dropped out candidates
 											</Typography>
 										</TableCell>
@@ -238,9 +300,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 								);
 							}
 
-							// Regular attendance row
 							if (hasPeriods) {
-								// Period-based row
 								return (
 									<AttendanceTableRow
 										key={allocation.id}
@@ -254,7 +314,6 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 									/>
 								);
 							} else {
-								// Legacy full-day row
 								const status = getCandidateStatus(allocation.candidate_id);
 								const remark = getCandidateRemark(allocation.candidate_id);
 

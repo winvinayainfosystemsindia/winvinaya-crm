@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
-	Dialog,
-	DialogTitle,
-	DialogContent,
-	DialogActions,
 	Button,
 	TextField,
 	Box,
 	Typography,
-	IconButton,
+	Stack,
+	Avatar,
+	Paper,
 	Chip
 } from '@mui/material';
-import { Close as CloseIcon, Notes as NotesIcon } from '@mui/icons-material';
 
 interface TrainerNotesDialogProps {
 	open: boolean;
@@ -23,6 +20,9 @@ interface TrainerNotesDialogProps {
 	currentNotes: string;
 }
 
+import { useTheme, alpha } from '@mui/material';
+import BaseDialog from '../../../common/dialogbox/BaseDialog';
+
 const TrainerNotesDialog: React.FC<TrainerNotesDialogProps> = ({
 	open,
 	onClose,
@@ -32,6 +32,7 @@ const TrainerNotesDialog: React.FC<TrainerNotesDialogProps> = ({
 	periodTime,
 	currentNotes
 }) => {
+	const theme = useTheme();
 	const [notes, setNotes] = useState(currentNotes);
 
 	// Update notes when dialog opens with new data
@@ -52,122 +53,134 @@ const TrainerNotesDialog: React.FC<TrainerNotesDialogProps> = ({
 	};
 
 	return (
-		<Dialog
+		<BaseDialog
 			open={open}
 			onClose={handleCancel}
+			title="Trainer Notes"
+			subtitle="Add observations or performance notes for this student"
 			maxWidth="sm"
-			fullWidth
-			PaperProps={{
-				sx: {
-					borderRadius: '4px',
-					boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-				}
-			}}
+			actions={
+				<>
+					<Button
+						onClick={handleCancel}
+						sx={{
+							textTransform: 'none',
+							color: 'text.secondary',
+							fontWeight: 600,
+							'&:hover': { bgcolor: alpha(theme.palette.action.active, 0.05) }
+						}}
+					>
+						Cancel
+					</Button>
+					<Button
+						onClick={handleSave}
+						variant="contained"
+						sx={{
+							bgcolor: 'primary.main',
+							'&:hover': { bgcolor: 'primary.dark' },
+							textTransform: 'none',
+							fontWeight: 700,
+							boxShadow: `0 4px 10px ${alpha(theme.palette.primary.main, 0.3)}`,
+							px: 3,
+							borderRadius: 1.5
+						}}
+					>
+						Save Notes
+					</Button>
+				</>
+			}
 		>
-			<DialogTitle sx={{
-				bgcolor: '#f8f9fa',
-				borderBottom: '1px solid #eaeded',
-				display: 'flex',
-				alignItems: 'center',
-				justifyContent: 'space-between',
-				py: 2
-			}}>
-				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-					<NotesIcon sx={{ color: '#007eb9' }} />
-					<Typography variant="h6" sx={{ fontWeight: 600, color: '#232f3e' }}>
-						Trainer Notes
-					</Typography>
-				</Box>
-				<IconButton
-					onClick={handleCancel}
-					size="small"
-					sx={{ color: '#545b64' }}
-				>
-					<CloseIcon />
-				</IconButton>
-			</DialogTitle>
-
-			<DialogContent sx={{ pt: 3, pb: 2 }}>
-				<Box sx={{ mb: 2 }}>
-					<Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-						<strong>Student:</strong> {candidateName}
-					</Typography>
-					<Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-						<Chip
-							label={periodName}
-							size="small"
-							sx={{
-								bgcolor: '#e3f2fd',
-								color: '#007eb9',
-								fontWeight: 600
-							}}
-						/>
-						<Typography variant="caption" color="text.secondary">
-							{periodTime}
+			<Box sx={{ mb: 3 }}>
+				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+					<Avatar 
+						sx={{ 
+							width: 40, 
+							height: 40, 
+							bgcolor: alpha(theme.palette.primary.main, 0.1), 
+							color: 'primary.main',
+							fontWeight: 800,
+							fontSize: '1rem',
+							border: '2px solid',
+							borderColor: alpha(theme.palette.primary.main, 0.2)
+						}}
+					>
+						{candidateName[0]?.toUpperCase()}
+					</Avatar>
+					<Box>
+						<Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'text.primary', lineHeight: 1.2 }}>
+							{candidateName}
+						</Typography>
+						<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+							Student Record
 						</Typography>
 					</Box>
 				</Box>
 
-				<TextField
-					fullWidth
-					multiline
-					rows={6}
-					label="Notes"
-					placeholder="Add observations, performance notes, or any relevant comments about this student's attendance for this period..."
-					value={notes}
-					onChange={(e) => setNotes(e.target.value)}
-					variant="outlined"
-					autoFocus
-					sx={{
-						'& .MuiOutlinedInput-root': {
-							fontSize: '0.875rem',
-							'& fieldset': {
-								borderColor: '#d5dbdb'
-							},
-							'&:hover fieldset': {
-								borderColor: '#007eb9'
-							},
-							'&.Mui-focused fieldset': {
-								borderColor: '#007eb9'
-							}
-						}
+				<Paper 
+					elevation={0} 
+					sx={{ 
+						p: 2, 
+						bgcolor: alpha(theme.palette.info.main, 0.05), 
+						border: '1px solid',
+						borderColor: alpha(theme.palette.info.main, 0.1),
+						borderRadius: 2,
+						display: 'flex',
+						alignItems: 'center',
+						justifyContent: 'space-between'
 					}}
-					helperText={`${notes.length} characters`}
-				/>
-			</DialogContent>
+				>
+					<Stack direction="row" spacing={1} alignItems="center">
+						<Chip 
+							label={periodName} 
+							size="small" 
+							sx={{ 
+								bgcolor: 'info.main', 
+								color: 'white', 
+								fontWeight: 800,
+								fontSize: '0.65rem'
+							}} 
+						/>
+						<Typography variant="body2" sx={{ fontWeight: 700, color: 'text.primary' }}>
+							Training Session
+						</Typography>
+					</Stack>
+					<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, letterSpacing: '0.02em' }}>
+						{periodTime}
+					</Typography>
+				</Paper>
+			</Box>
 
-			<DialogActions sx={{
-				px: 3,
-				py: 2,
-				bgcolor: '#f8f9fa',
-				borderTop: '1px solid #eaeded'
-			}}>
-				<Button
-					onClick={handleCancel}
-					sx={{
-						textTransform: 'none',
-						color: '#545b64',
-						fontWeight: 600
-					}}
-				>
-					Cancel
-				</Button>
-				<Button
-					onClick={handleSave}
-					variant="contained"
-					sx={{
-						bgcolor: '#007eb9',
-						'&:hover': { bgcolor: '#005a8c' },
-						textTransform: 'none',
-						fontWeight: 600,
-						boxShadow: 'none',
-						px: 3
-					}}
-				>
-					Save Notes
-				</Button>
-			</DialogActions>
-		</Dialog>
+			<Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', mb: 1, display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+				Internal Observations
+			</Typography>
+			<TextField
+				fullWidth
+				multiline
+				rows={5}
+				placeholder="Add observations, performance notes, or any relevant comments about this student's attendance for this period..."
+				value={notes}
+				onChange={(e) => setNotes(e.target.value)}
+				variant="outlined"
+				autoFocus
+				sx={{
+					'& .MuiOutlinedInput-root': {
+						fontSize: '0.875rem',
+						borderRadius: 2,
+						bgcolor: alpha(theme.palette.background.default, 0.3),
+						'& fieldset': {
+							borderColor: 'divider'
+						},
+						'&:hover fieldset': {
+							borderColor: 'primary.main'
+						},
+						'&.Mui-focused fieldset': {
+							borderWidth: '2px'
+						}
+					}
+				}}
+				helperText={`${notes.length} characters recorded`}
+			/>
+		</BaseDialog>
 	);
 };
 
