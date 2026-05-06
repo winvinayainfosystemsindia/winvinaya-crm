@@ -18,7 +18,7 @@ import { EventBusy as HolidayIcon, DeleteForever as DeleteForeverIcon } from '@m
 import { format, isWeekend } from 'date-fns';
 import type { TrainingAttendance, CandidateAllocation, TrainingBatchEvent } from '../../../../models/training';
 import { getStatusMap } from './AttendanceLegendBar';
-import type { ConfirmDialogState } from './ClearAttendanceDialog';
+import type { ConfirmDialogState } from '../dialogs/ClearAttendanceDialog';
 
 interface AttendanceMatrixTableProps {
 	days: Date[];

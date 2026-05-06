@@ -9,7 +9,7 @@ import { deleteAttendanceByCandidate } from '../../../../store/slices/attendance
 
 import AttendanceLegendBar from './AttendanceLegendBar';
 import OrphanedRecordsAlert, { type OrphanedCandidate } from './OrphanedRecordsAlert';
-import ClearAttendanceDialog, { type ConfirmDialogState } from './ClearAttendanceDialog';
+import ClearAttendanceDialog, { type ConfirmDialogState } from '../dialogs/ClearAttendanceDialog';
 import AttendanceMatrixTable from './AttendanceMatrixTable';
 
 // ── Types ─────────────────────────────────────────────────────

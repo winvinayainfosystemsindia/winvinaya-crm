@@ -3,7 +3,7 @@ import { format, parseISO, startOfDay, isWithinInterval } from 'date-fns';
 import trainingExtensionService from '../../../../services/trainingExtensionService';
 import type { TrainingBatch, CandidateAllocation, TrainingAttendance, TrainingBatchEvent, TrainingBatchPlan } from '../../../../models/training';
 import type { User } from '../../../../models/auth';
-import { useSnackbar } from 'notistack';
+import useToast from '../../../../hooks/useToast';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import {
 	fetchAttendanceByBatch,
@@ -14,7 +14,7 @@ import {
 } from '../../../../store/slices/attendanceSlice';
 
 export const useAttendance = (batch: TrainingBatch, allocations: CandidateAllocation[], user: User | null) => {
-	const { enqueueSnackbar } = useSnackbar();
+	const toast = useToast();
 	const dispatch = useAppDispatch();
 	const { attendance, loading: attendanceLoading, saving, error } = useAppSelector(state => state.attendance);
 
@@ -74,11 +74,11 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 			setBatchEvents(eventData);
 		} catch (error) {
 			console.error('Failed to fetch attendance data', error);
-			enqueueSnackbar('Failed to load attendance records', { variant: 'error' });
+			toast.error('Failed to load attendance records');
 		} finally {
 			setLoading(false);
 		}
-	}, [batch.id, dispatch, enqueueSnackbar]);
+	}, [batch.id, dispatch]);
 
 	// Fetch daily plan when date changes
 	const fetchDailyPlan = useCallback(async () => {
@@ -106,9 +106,9 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 
 	useEffect(() => {
 		if (error) {
-			enqueueSnackbar(error, { variant: 'error' });
+			toast.error(error);
 		}
-	}, [error, enqueueSnackbar]);
+	}, [error]);
 
 	const currentEvent = useMemo(() => {
 		const dateStr = format(selectedDate, 'yyyy-MM-dd');
@@ -171,27 +171,27 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		status: string
 	) => {
 		if (isDroppedOut(candidateId)) {
-			enqueueSnackbar('Cannot mark attendance for dropped out candidates', { variant: 'warning' });
+			toast.warning('Cannot mark attendance for dropped out candidates');
 			return;
 		}
 		if (isFutureDate) {
-			enqueueSnackbar('Cannot mark attendance for future dates', { variant: 'warning' });
+			toast.warning('Cannot mark attendance for future dates');
 			return;
 		}
 
 		if (!canMarkAttendance(candidateId)) {
 			const allocation = allocations.find(a => a.candidate_id === candidateId);
-			enqueueSnackbar(`Attendance can only be marked for candidates who are 'In Training'. Current status: ${allocation?.status || 'Unknown'}`, { variant: 'warning' });
+			toast.warning(`Attendance can only be marked for candidates who are 'In Training'. Current status: ${allocation?.status || 'Unknown'}`);
 			return;
 		}
 
 		if (!checkCanEditPeriod(periodId)) {
-			enqueueSnackbar('You are not authorized to mark attendance for this period', { variant: 'error' });
+			toast.error('You are not authorized to mark attendance for this period');
 			return;
 		}
 
 		updatePeriodAttendance(candidateId, periodId, { status: status as any });
-	}, [updatePeriodAttendance, isDroppedOut, isFutureDate, enqueueSnackbar, checkCanEditPeriod]);
+	}, [updatePeriodAttendance, isDroppedOut, isFutureDate, checkCanEditPeriod]);
 
 	// Handle trainer notes change
 	const handleTrainerNotesChange = useCallback((
@@ -205,32 +205,32 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 	// Handle status change (for full-day attendance)
 	const handleStatusChange = useCallback((candidateId: number, status: string) => {
 		if (isDroppedOut(candidateId)) {
-			enqueueSnackbar('Cannot mark attendance for dropped out candidates', { variant: 'warning' });
+			toast.warning('Cannot mark attendance for dropped out candidates');
 			return;
 		}
 		if (isFutureDate) {
-			enqueueSnackbar('Cannot mark attendance for future dates', { variant: 'warning' });
+			toast.warning('Cannot mark attendance for future dates');
 			return;
 		}
 
 		if (!canMarkAttendance(candidateId)) {
 			const allocation = allocations.find(a => a.candidate_id === candidateId);
-			enqueueSnackbar(`Attendance can only be marked for candidates who are 'In Training'. Current status: ${allocation?.status || 'Unknown'}`, { variant: 'warning' });
+			toast.warning(`Attendance can only be marked for candidates who are 'In Training'. Current status: ${allocation?.status || 'Unknown'}`);
 			return;
 		}
 
 		updatePeriodAttendance(candidateId, null, { status: status as any });
-	}, [updatePeriodAttendance, isDroppedOut, isFutureDate, enqueueSnackbar]);
+	}, [updatePeriodAttendance, isDroppedOut, isFutureDate]);
 
 	// Mark all candidates for a specific period as a specific status
 	const handlePeriodMarkAll = useCallback((periodId: number, status: string) => {
 		if (isFutureDate) {
-			enqueueSnackbar('Cannot mark attendance for future dates', { variant: 'warning' });
+			toast.warning('Cannot mark attendance for future dates');
 			return;
 		}
 
 		if (!checkCanEditPeriod(periodId)) {
-			enqueueSnackbar('You are not authorized to mark all for this period', { variant: 'error' });
+			toast.error('You are not authorized to mark all for this period');
 			return;
 		}
 
@@ -239,8 +239,8 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 				updatePeriodAttendance(allocation.candidate_id, periodId, { status: status as any });
 			}
 		});
-		enqueueSnackbar(`All candidates marked as ${status} for this period`, { variant: 'info' });
-	}, [allocations, updatePeriodAttendance, isDroppedOut, isFutureDate, enqueueSnackbar, checkCanEditPeriod]);
+		toast.info(`All candidates marked as ${status} for this period`);
+	}, [allocations, updatePeriodAttendance, isDroppedOut, isFutureDate, checkCanEditPeriod]);
 
 	const handleRemarkChange = useCallback((candidateId: number, remark: string) => {
 		updatePeriodAttendance(candidateId, null, { remarks: remark });
@@ -248,7 +248,7 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 
 	const handleSave = async () => {
 		if (isFutureDate) {
-			enqueueSnackbar('Cannot save attendance for future dates', { variant: 'error' });
+			toast.error('Cannot save attendance for future dates');
 			return;
 		}
 
@@ -259,29 +259,29 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 			const dailyAttendance = attendance.filter(a => a.date === dateStr);
 
 			await dispatch(updateBulkAttendance(dailyAttendance)).unwrap();
-			enqueueSnackbar('Attendance saved successfully', { variant: 'success' });
+			toast.success('Attendance saved successfully');
 			fetchData();
 		} catch (error: any) {
 			console.error('Failed to save attendance', error);
-			enqueueSnackbar(error || 'Failed to save attendance', { variant: 'error' });
+			toast.error(error || 'Failed to save attendance');
 		}
 	};
 
 	const handleUpdateSingle = async (attendanceId: number, data: Partial<TrainingAttendance>) => {
 		try {
 			await dispatch(updateAttendanceAction({ attendanceId, data })).unwrap();
-			enqueueSnackbar('Attendance updated successfully', { variant: 'success' });
+			toast.success('Attendance updated successfully');
 		} catch (error: any) {
-			enqueueSnackbar(error || 'Failed to update attendance', { variant: 'error' });
+			toast.error(error || 'Failed to update attendance');
 		}
 	};
 
 	const handleDeleteSingle = async (attendanceId: number) => {
 		try {
 			await dispatch(deleteAttendanceAction(attendanceId)).unwrap();
-			enqueueSnackbar('Attendance record deleted successfully', { variant: 'success' });
+			toast.success('Attendance record deleted successfully');
 		} catch (error: any) {
-			enqueueSnackbar(error || 'Failed to delete attendance', { variant: 'error' });
+			toast.error(error || 'Failed to delete attendance');
 		}
 	};
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Paper, Typography, Button, Tooltip } from '@mui/material';
+import { Box, Paper, Typography, Button, Tooltip, useTheme, alpha, Stack } from '@mui/material';
 import { WarningAmber as WarningIcon, DeleteForever as DeleteForeverIcon } from '@mui/icons-material';
 
 export interface OrphanedCandidate {
@@ -14,63 +14,93 @@ interface OrphanedRecordsAlertProps {
 }
 
 const OrphanedRecordsAlert: React.FC<OrphanedRecordsAlertProps> = ({ orphanedCandidates, onClear }) => {
+	const theme = useTheme();
 	if (orphanedCandidates.length === 0) return null;
 
 	return (
 		<Paper
-			variant="outlined"
-			sx={{ mb: 3, borderColor: '#ff9900', borderRadius: '8px', overflow: 'hidden' }}
+			elevation={0}
+			sx={{ 
+				mb: 4, 
+				border: '1px solid',
+				borderColor: 'warning.main', 
+				borderRadius: 2, 
+				overflow: 'hidden',
+				boxShadow: `0 4px 12px ${alpha(theme.palette.warning.main, 0.1)}`
+			}}
 		>
 			{/* Header */}
-			<Box sx={{ bgcolor: '#fff8ee', px: 2.5, py: 1.5, borderBottom: '1px solid #ffe0a0', display: 'flex', alignItems: 'center', gap: 1 }}>
-				<WarningIcon sx={{ color: '#e65100', fontSize: 20 }} />
+			<Box 
+				sx={{ 
+					bgcolor: alpha(theme.palette.warning.main, 0.05), 
+					px: 3, 
+					py: 2, 
+					borderBottom: '1px solid',
+					borderColor: alpha(theme.palette.warning.main, 0.2), 
+					display: 'flex', 
+					alignItems: 'center', 
+					gap: 2 
+				}}
+			>
+				<WarningIcon sx={{ color: 'warning.main', fontSize: 24 }} />
 				<Box>
-					<Typography variant="body2" sx={{ fontWeight: 700, color: '#b34900' }}>
-						Orphaned Attendance Records Found
+					<Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'warning.dark', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+						Orphaned Attendance Records Detected
 					</Typography>
-					<Typography variant="caption" color="text.secondary">
-						These candidates were removed from this batch but still have attendance records here. Clear them to keep data clean.
+					<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500, display: 'block', mt: 0.25 }}>
+						These candidates have been removed from the batch but retain historical attendance data.
 					</Typography>
 				</Box>
 			</Box>
 
 			{/* Candidate rows */}
-			{orphanedCandidates.map(oc => (
-				<Box
-					key={oc.candidateId}
-					sx={{
-						display: 'flex',
-						alignItems: 'center',
-						justifyContent: 'space-between',
-						px: 2.5,
-						py: 1.25,
-						borderBottom: '1px solid #fdebd0',
-						'&:last-child': { borderBottom: 'none' },
-						bgcolor: 'white',
-					}}
-				>
-					<Box>
-						<Typography variant="body2" sx={{ fontWeight: 600, color: '#232f3e' }}>
-							{oc.name}
-						</Typography>
-						<Typography variant="caption" color="text.secondary">
-							{oc.count} record{oc.count !== 1 ? 's' : ''} — no longer allocated to this batch
-						</Typography>
+			<Stack>
+				{orphanedCandidates.map(oc => (
+					<Box
+						key={oc.candidateId}
+						sx={{
+							display: 'flex',
+							alignItems: 'center',
+							justifyContent: 'space-between',
+							px: 3,
+							py: 1.5,
+							borderBottom: '1px solid',
+							borderColor: 'divider',
+							'&:last-child': { borderBottom: 'none' },
+							bgcolor: 'background.paper',
+							transition: 'background-color 0.2s',
+							'&:hover': { bgcolor: alpha(theme.palette.warning.main, 0.02) }
+						}}
+					>
+						<Box>
+							<Typography variant="body2" sx={{ fontWeight: 700, color: 'text.primary' }}>
+								{oc.name}
+							</Typography>
+							<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+								{oc.count} record{oc.count !== 1 ? 's' : ''} • No longer allocated
+							</Typography>
+						</Box>
+						<Tooltip title={`Clear all ${oc.count} records for ${oc.name}`}>
+							<Button
+								variant="outlined"
+								color="error"
+								size="small"
+								startIcon={<DeleteForeverIcon />}
+								onClick={() => onClear(oc)}
+								sx={{ 
+									textTransform: 'none', 
+									borderRadius: 1.5, 
+									fontWeight: 700,
+									borderWidth: '1.5px',
+									'&:hover': { borderWidth: '1.5px', bgcolor: alpha(theme.palette.error.main, 0.05) }
+								}}
+							>
+								Clear {oc.count} Records
+							</Button>
+						</Tooltip>
 					</Box>
-					<Tooltip title={`Clear all ${oc.count} records for ${oc.name}`}>
-						<Button
-							variant="outlined"
-							color="error"
-							size="small"
-							startIcon={<DeleteForeverIcon />}
-							onClick={() => onClear(oc)}
-							sx={{ textTransform: 'none', borderRadius: '6px', fontWeight: 600 }}
-						>
-							Clear {oc.count} Record{oc.count !== 1 ? 's' : ''}
-						</Button>
-					</Tooltip>
-				</Box>
-			))}
+				))}
+			</Stack>
 		</Paper>
 	);
 };
