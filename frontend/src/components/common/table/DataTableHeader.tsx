@@ -135,7 +135,6 @@ const DataTableHeader: React.FC<DataTableHeaderProps> = memo(({
 						startIcon={<Add />}
 						onClick={onCreateClick}
 						sx={{
-							bgcolor: theme.palette.accent.main,
 							color: 'white',
 							textTransform: 'none',
 							fontWeight: 600,
