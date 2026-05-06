@@ -88,7 +88,7 @@ const BasicDetailsTab: React.FC<BasicDetailsTabProps> = memo(({
 					</Grid>
 
 					<Grid container spacing={2}>
-						<Grid size={{ xs: 12, md: 6 }}>
+						<Grid size={{ xs: 12, md: 4 }}>
 							<TextField
 								select
 								label="Interview Type"
@@ -107,7 +107,26 @@ const BasicDetailsTab: React.FC<BasicDetailsTabProps> = memo(({
 								<MenuItem value="external">External Mock Interview</MenuItem>
 							</TextField>
 						</Grid>
-						<Grid size={{ xs: 12, md: 6 }}>
+						<Grid size={{ xs: 12, md: 4 }}>
+							<TextField
+								select
+								label="Interview Category"
+								value={formData.interview_category || 'domain'}
+								onChange={(e) => onChange('interview_category', e.target.value)}
+								fullWidth
+								size="small"
+								disabled={viewMode}
+								InputLabelProps={{ shrink: true, sx: { fontWeight: 600 } }}
+								sx={{ 
+									bgcolor: 'background.paper',
+									'& .MuiOutlinedInput-root': { borderRadius: 2 }
+								}}
+							>
+								<MenuItem value="hr">HR Mock</MenuItem>
+								<MenuItem value="domain">Domain Mock</MenuItem>
+							</TextField>
+						</Grid>
+						<Grid size={{ xs: 12, md: 4 }}>
 							<TextField
 								label="Interview Date"
 								type="date"

@@ -178,6 +178,23 @@ const MockInterviewTableRow: React.FC<MockInterviewTableRowProps> = memo(({
 			</TableCell>
 			<TableCell>
 				<Chip
+					label={interview.interview_category || 'domain'}
+					size="small"
+					variant="outlined"
+					sx={{
+						fontWeight: 600,
+						fontSize: '0.65rem',
+						textTransform: 'uppercase',
+						borderRadius: '4px',
+						height: '20px',
+						bgcolor: interview.interview_category === 'hr' ? alpha(theme.palette.warning.main, 0.05) : alpha(theme.palette.info.main, 0.05),
+						borderColor: interview.interview_category === 'hr' ? alpha(theme.palette.warning.main, 0.2) : alpha(theme.palette.info.main, 0.2),
+						color: interview.interview_category === 'hr' ? 'warning.main' : 'info.main',
+					}}
+				/>
+			</TableCell>
+			<TableCell>
+				<Chip
 					label={status.label}
 					size="small"
 					color={status.color as any}

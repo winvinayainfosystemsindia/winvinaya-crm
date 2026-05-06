@@ -27,6 +27,7 @@ class TrainingMockInterviewBase(BaseModel):
     overall_rating: Optional[float] = Field(None, ge=0, le=10)
     status: str = "pending"
     interview_type: Optional[str] = "internal"
+    interview_category: Optional[str] = "domain"
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
     duration_minutes: Optional[int] = 0
@@ -45,6 +46,7 @@ class TrainingMockInterviewUpdate(BaseModel):
     overall_rating: Optional[float] = Field(None, ge=0, le=10)
     status: Optional[str] = None
     interview_type: Optional[str] = None
+    interview_category: Optional[str] = None
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
     duration_minutes: Optional[int] = None

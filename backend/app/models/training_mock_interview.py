@@ -49,6 +49,7 @@ class TrainingMockInterview(BaseModel):
     ) # pending, cleared, re-test, rejected, absent
     
     interview_type: Mapped[str | None] = mapped_column(String(20), nullable=True, default="internal")
+    interview_category: Mapped[str | None] = mapped_column(String(20), nullable=True, default="domain")
     start_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     end_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     duration_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True, default=0)
