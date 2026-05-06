@@ -17,8 +17,8 @@ import {
 	Delete as DeleteIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
-import type { MockInterview } from '../../../models/MockInterview';
-import type { CandidateAllocation } from '../../../models/training';
+import type { MockInterview } from '../../../../models/MockInterview';
+import type { CandidateAllocation } from '../../../../models/training';
 
 interface MockInterviewTableRowProps {
 	interview: MockInterview;
@@ -106,16 +106,16 @@ const MockInterviewTableRow: React.FC<MockInterviewTableRowProps> = memo(({
 						variant="body2"
 						onClick={() => onFilterCandidate(interview.candidate_id)}
 						sx={{
-							fontWeight: 700,
-							color: '#007eb9',
+							fontWeight: 800,
+							color: 'primary.main',
 							cursor: 'pointer',
-							'&:hover': { textDecoration: 'underline' }
+							'&:hover': { textDecoration: 'underline', color: 'primary.dark' }
 						}}
 					>
 						{candidate?.name || 'Unknown Candidate'}
 					</Typography>
 				</Tooltip>
-				<Typography variant="caption" sx={{ color: '#545b64' }}>
+				<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
 					{candidate?.email || 'N/A'}
 				</Typography>
 			</TableCell>
@@ -140,7 +140,7 @@ const MockInterviewTableRow: React.FC<MockInterviewTableRowProps> = memo(({
 			</TableCell>
 			<TableCell>
 				{isAbsent ? (
-					<Typography variant="caption" sx={{ fontStyle: 'italic', color: '#879196' }}>
+					<Typography variant="caption" sx={{ fontStyle: 'italic', color: 'text.disabled', fontWeight: 500 }}>
 						Score not available (Absent)
 					</Typography>
 				) : (

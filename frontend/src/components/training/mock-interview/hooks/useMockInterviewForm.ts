@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { type AppDispatch, type RootState } from '../../../store/store';
-import { createMockInterview, updateMockInterview } from '../../../store/slices/mockInterviewSlice';
-import { type Question, type Skill, type MockInterviewCreate } from '../../../models/MockInterview';
+import { type AppDispatch, type RootState } from '../../../../store/store';
+import { createMockInterview, updateMockInterview } from '../../../../store/slices/mockInterviewSlice';
+import { type Question, type Skill, type MockInterviewCreate } from '../../../../models/MockInterview';
+import useToast from '../../../../hooks/useToast';
 
 export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 	const dispatch = useDispatch<AppDispatch>();
@@ -92,8 +93,13 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 		return Object.keys(newErrors).length === 0;
 	};
 
+	const toast = useToast();
+
 	const handleSubmit = async () => {
-		if (!validate()) return;
+		if (!validate()) {
+			toast.error('Please fix the errors in the form');
+			return;
+		}
 
 		const payload: MockInterviewCreate = {
 			batch_id: batchId,
@@ -110,12 +116,14 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 		try {
 			if (currentMockInterview) {
 				await dispatch(updateMockInterview({ id: currentMockInterview.id, data: payload })).unwrap();
+				toast.success('Mock interview updated successfully');
 			} else {
 				await dispatch(createMockInterview(payload)).unwrap();
+				toast.success('Mock interview created successfully');
 			}
 			onClose();
-		} catch (error) {
-			console.error("Failed to save mock interview:", error);
+		} catch (error: any) {
+			toast.error(error?.message || 'Failed to save mock interview');
 		}
 	};
 

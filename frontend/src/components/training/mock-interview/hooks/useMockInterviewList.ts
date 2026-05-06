@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { type AppDispatch, type RootState } from '../../../store/store';
-import { fetchMockInterviewsByBatch, deleteMockInterview, setCurrentMockInterview } from '../../../store/slices/mockInterviewSlice';
-import type { MockInterview } from '../../../models/MockInterview';
+import { type AppDispatch, type RootState } from '../../../../store/store';
+import { fetchMockInterviewsByBatch, deleteMockInterview, setCurrentMockInterview } from '../../../../store/slices/mockInterviewSlice';
+import type { MockInterview } from '../../../../models/MockInterview';
+import useToast from '../../../../hooks/useToast';
 
 export const useMockInterviewList = (batchId: number) => {
 	const dispatch = useDispatch<AppDispatch>();
@@ -52,11 +53,18 @@ export const useMockInterviewList = (batchId: number) => {
 		setIsFormOpen(true);
 	}, [dispatch]);
 
+	const toast = useToast();
+
 	const handleDelete = useCallback(async (id: number) => {
 		if (window.confirm('Are you sure you want to delete this mock interview record? This action cannot be undone.')) {
-			await dispatch(deleteMockInterview(id));
+			try {
+				await dispatch(deleteMockInterview(id)).unwrap();
+				toast.success('Mock interview record deleted successfully');
+			} catch (error: any) {
+				toast.error(error?.message || 'Failed to delete mock interview record');
+			}
 		}
-	}, [dispatch]);
+	}, [dispatch, toast]);
 
 	const filteredInterviews = useMemo(() => {
 		return mockInterviews.filter(interview => {

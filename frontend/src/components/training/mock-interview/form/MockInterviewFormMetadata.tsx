@@ -11,10 +11,12 @@ import {
 	TextField,
 	Paper,
 	Tooltip,
-	Slider
+	Slider,
+	useTheme,
+	alpha
 } from '@mui/material';
 import { HelpOutline as HelpIcon } from '@mui/icons-material';
-import { type MockInterviewCreate } from '../../../models/MockInterview';
+import { type MockInterviewCreate } from '../../../../models/MockInterview';
 
 interface MockInterviewFormMetadataProps {
 	formData: Partial<MockInterviewCreate>;
@@ -23,7 +25,6 @@ interface MockInterviewFormMetadataProps {
 	isEdit: boolean;
 	allocations: any[];
 	onChange: (field: keyof MockInterviewCreate, value: any) => void;
-	PRIMARY_BLUE: string;
 }
 
 const MockInterviewFormMetadata: React.FC<MockInterviewFormMetadataProps> = memo(({
@@ -32,25 +33,31 @@ const MockInterviewFormMetadata: React.FC<MockInterviewFormMetadataProps> = memo
 	viewMode,
 	isEdit,
 	allocations,
-	onChange,
-	PRIMARY_BLUE
+	onChange
 }) => {
+	const theme = useTheme();
+	const isAbsent = formData.status === 'absent';
+	const scoreColor = isAbsent ? theme.palette.text.disabled : theme.palette.primary.main;
+
 	return (
 		<Stack spacing={4}>
 			<Box>
-				<Typography variant="overline" sx={{ fontWeight: 700, color: '#545b64', letterSpacing: 1.2 }}>
-					Metadata
+				<Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+					Evaluation Metadata
 				</Typography>
-				<Stack spacing={3} sx={{ mt: 2 }}>
+				<Stack spacing={2.5} sx={{ mt: 3 }}>
 					<FormControl fullWidth error={!!errors.candidate_id} size="small">
-						<InputLabel shrink>Target Candidate</InputLabel>
+						<InputLabel shrink sx={{ fontWeight: 600 }}>Target Candidate</InputLabel>
 						<Select
 							value={formData.candidate_id || ''}
 							onChange={(e) => onChange('candidate_id', e.target.value)}
 							label="Target Candidate"
 							disabled={viewMode || isEdit}
 							displayEmpty
-							sx={{ bgcolor: 'white' }}
+							sx={{ 
+								bgcolor: 'background.paper',
+								borderRadius: 2
+							}}
 						>
 							<MenuItem value="" disabled>Select candidate...</MenuItem>
 							{allocations.map((a) => (
@@ -71,8 +78,11 @@ const MockInterviewFormMetadata: React.FC<MockInterviewFormMetadataProps> = memo
 						disabled={viewMode}
 						error={!!errors.interviewer_name}
 						helperText={errors.interviewer_name}
-						InputLabelProps={{ shrink: true }}
-						sx={{ bgcolor: 'white' }}
+						InputLabelProps={{ shrink: true, sx: { fontWeight: 600 } }}
+						sx={{ 
+							bgcolor: 'background.paper',
+							'& .MuiOutlinedInput-root': { borderRadius: 2 }
+						}}
 					/>
 
 					<TextField
@@ -85,8 +95,11 @@ const MockInterviewFormMetadata: React.FC<MockInterviewFormMetadataProps> = memo
 						disabled={viewMode}
 						error={!!errors.interview_date}
 						helperText={errors.interview_date}
-						InputLabelProps={{ shrink: true }}
-						sx={{ bgcolor: 'white' }}
+						InputLabelProps={{ shrink: true, sx: { fontWeight: 600 } }}
+						sx={{ 
+							bgcolor: 'background.paper',
+							'& .MuiOutlinedInput-root': { borderRadius: 2 }
+						}}
 					/>
 
 					<TextField
@@ -97,8 +110,11 @@ const MockInterviewFormMetadata: React.FC<MockInterviewFormMetadataProps> = memo
 						fullWidth
 						size="small"
 						disabled={viewMode}
-						InputLabelProps={{ shrink: true }}
-						sx={{ bgcolor: 'white' }}
+						InputLabelProps={{ shrink: true, sx: { fontWeight: 600 } }}
+						sx={{ 
+							bgcolor: 'background.paper',
+							'& .MuiOutlinedInput-root': { borderRadius: 2 }
+						}}
 					>
 						<MenuItem value="pending">Pending Review</MenuItem>
 						<MenuItem value="cleared">Cleared / Recommended</MenuItem>
@@ -109,41 +125,60 @@ const MockInterviewFormMetadata: React.FC<MockInterviewFormMetadataProps> = memo
 				</Stack>
 			</Box>
 
-			<Paper variant="outlined" sx={{ p: 3, borderRadius: '4px', bgcolor: '#f1faff', border: '1px solid #d1e9ff' }}>
+			<Paper 
+				elevation={0}
+				sx={{ 
+					p: 3, 
+					borderRadius: 3, 
+					bgcolor: alpha(scoreColor, 0.04), 
+					border: '1px solid',
+					borderColor: alpha(scoreColor, 0.12)
+				}}
+			>
 				<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-					<Typography variant="body2" sx={{ fontWeight: 700, color: formData.status === 'absent' ? '#879196' : PRIMARY_BLUE }}>
-						{formData.status === 'absent' ? 'NO SCORE (ABSENT)' : 'OVERALL SCORE'}
+					<Typography variant="caption" sx={{ fontWeight: 800, color: scoreColor, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+						{isAbsent ? 'No Score (Absent)' : 'Overall Proficiency Score'}
 					</Typography>
-					<Tooltip title={formData.status === 'absent' ? 'Candidate was absent, no proficiency score recorded' : 'Aggregated proficiency score across all assessed areas'}>
-						<HelpIcon sx={{ fontSize: 16, color: formData.status === 'absent' ? '#879196' : PRIMARY_BLUE, opacity: 0.7 }} />
+					<Tooltip title={isAbsent ? 'Candidate was absent, no proficiency score recorded' : 'Aggregated proficiency score across all assessed areas'}>
+						<HelpIcon sx={{ fontSize: 16, color: scoreColor, opacity: 0.6 }} />
 					</Tooltip>
 				</Stack>
 				<Box sx={{ textAlign: 'center' }}>
-					<Typography variant="h2" sx={{ fontWeight: 800, color: formData.status === 'absent' ? '#879196' : PRIMARY_BLUE }}>
-						{formData.status === 'absent' ? '--' : formData.overall_rating}
-						{formData.status !== 'absent' && <Typography component="span" variant="h6" color="text.secondary" sx={{ ml: 1 }}>/ 10</Typography>}
+					<Typography variant="h2" sx={{ fontWeight: 900, color: scoreColor, letterSpacing: '-0.02em' }}>
+						{isAbsent ? '--' : formData.overall_rating}
+						{!isAbsent && <Typography component="span" variant="h5" color="text.secondary" sx={{ ml: 1, fontWeight: 700, opacity: 0.5 }}>/ 10</Typography>}
 					</Typography>
 					<Slider
-						value={formData.status === 'absent' ? 0 : (formData.overall_rating || 0)}
+						value={isAbsent ? 0 : (formData.overall_rating || 0)}
 						min={0}
 						max={10}
 						step={0.5}
 						onChange={(_, v) => onChange('overall_rating', v)}
-						disabled={viewMode || formData.status === 'absent'}
+						disabled={viewMode || isAbsent}
 						sx={{
 							mt: 2,
 							width: '90%',
-							color: formData.status === 'absent' ? '#879196' : PRIMARY_BLUE,
+							color: scoreColor,
 							'& .MuiSlider-thumb': {
+								width: 24,
+								height: 24,
+								backgroundColor: '#fff',
+								border: '2px solid currentColor',
 								'&:hover, &.Mui-focusVisible': {
-									boxShadow: `0px 0px 0px 8px rgba(0, 126, 185, 0.16)`,
+									boxShadow: `0px 0px 0px 8px ${alpha(scoreColor, 0.16)}`,
 								},
-							}
+								'&.Mui-active': {
+									boxShadow: `0px 0px 0px 14px ${alpha(scoreColor, 0.16)}`,
+								},
+							},
+							'& .MuiSlider-rail': {
+								opacity: 0.32,
+							},
 						}}
 					/>
 					<Stack direction="row" justifyContent="space-between" sx={{ mt: 1, px: 1 }}>
-						<Typography variant="caption" color="text.secondary">Entry</Typography>
-						<Typography variant="caption" color="text.secondary">Expert</Typography>
+						<Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', opacity: 0.6 }}>ENTRY</Typography>
+						<Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', opacity: 0.6 }}>EXPERT</Typography>
 					</Stack>
 				</Box>
 			</Paper>

@@ -10,16 +10,16 @@ import {
 	TableRow,
 	Typography,
 	LinearProgress,
-	Divider,
-	Paper,
+	useTheme,
 	Button,
-	useTheme
+	alpha
 } from '@mui/material';
 import type { CandidateAllocation } from '../../../models/training';
-import { useMockInterviewList } from './useMockInterviewList';
-import MockInterviewTableHeader from './MockInterviewTableHeader';
-import MockInterviewTableRow from './MockInterviewTableRow';
-import MockInterviewForm from './MockInterviewForm';
+import { useMockInterviewList } from './hooks/useMockInterviewList';
+import MockInterviewTableHeader from './table/MockInterviewTableHeader';
+import MockInterviewTableRow from './table/MockInterviewTableRow';
+import MockInterviewForm from './form/MockInterviewForm';
+import MockInterviewStats from './stats/MockInterviewStats';
 import CustomTablePagination from '../../common/table/CustomTablePagination';
 
 interface MockInterviewListProps {
@@ -56,74 +56,7 @@ const MockInterviewList: React.FC<MockInterviewListProps> = ({ batchId, allocati
 
 	return (
 		<Box sx={{ width: '100%' }}>
-			{/* Mock Interview Stats Strip */}
-			<Paper
-				elevation={0}
-				sx={{
-					p: 2,
-					mb: 3,
-					border: '1px solid #d5dbdb',
-					borderRadius: '2px',
-					bgcolor: 'white',
-					display: 'flex',
-					alignItems: 'center',
-					gap: 6
-				}}
-			>
-				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-					<Box sx={{ bgcolor: '#f1faff', p: 1, borderRadius: '50%' }}>
-						<Box component="span" sx={{ display: 'block', width: 20, height: 20, bgcolor: '#007eb9', borderRadius: '4px' }} />
-					</Box>
-					<Box>
-						<Typography variant="caption" sx={{ color: '#545b64', fontWeight: 600, display: 'block', textTransform: 'uppercase', fontSize: '0.65rem' }}>Total Sessions</Typography>
-						<Typography variant="h6" sx={{ fontWeight: 800, color: '#232f3e', lineHeight: 1 }}>{stats.total}</Typography>
-					</Box>
-				</Box>
-
-				<Divider orientation="vertical" flexItem sx={{ borderColor: '#eaeded' }} />
-
-				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-					<Box sx={{ bgcolor: '#ebf5e0', p: 1, borderRadius: '50%' }}>
-						<Box component="span" sx={{ display: 'block', width: 20, height: 20, bgcolor: '#318400', borderRadius: '50%' }} />
-					</Box>
-					<Box>
-						<Typography variant="caption" sx={{ color: '#545b64', fontWeight: 600, display: 'block', textTransform: 'uppercase', fontSize: '0.65rem' }}>Cleared</Typography>
-						<Typography variant="h6" sx={{ fontWeight: 800, color: '#318400', lineHeight: 1 }}>{stats.cleared}</Typography>
-					</Box>
-				</Box>
-
-				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-					<Box sx={{ bgcolor: '#f1faff', p: 1, borderRadius: '50%' }}>
-						<Box component="span" sx={{ display: 'block', width: 20, height: 20, bgcolor: '#007eb9', borderRadius: '50%' }} />
-					</Box>
-					<Box>
-						<Typography variant="caption" sx={{ color: '#545b64', fontWeight: 600, display: 'block', textTransform: 'uppercase', fontSize: '0.65rem' }}>Candidates Attended</Typography>
-						<Typography variant="h6" sx={{ fontWeight: 800, color: '#007eb9', lineHeight: 1 }}>{stats.uniqueCandidates}</Typography>
-					</Box>
-				</Box>
-
-				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-					<Box sx={{ bgcolor: '#f2f3f3', p: 1, borderRadius: '50%' }}>
-						<Box component="span" sx={{ display: 'block', width: 20, height: 20, bgcolor: '#879196', borderRadius: '50%' }} />
-					</Box>
-					<Box>
-						<Typography variant="caption" sx={{ color: '#545b64', fontWeight: 600, display: 'block', textTransform: 'uppercase', fontSize: '0.65rem' }}>Absent</Typography>
-						<Typography variant="h6" sx={{ fontWeight: 800, color: '#879196', lineHeight: 1 }}>{stats.absent}</Typography>
-					</Box>
-				</Box>
-
-				<Divider orientation="vertical" flexItem sx={{ borderColor: '#eaeded' }} />
-
-				<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-					<Box sx={{ bgcolor: '#fff3e0', p: 1, borderRadius: '50%' }}>
-						<Box component="span" sx={{ display: 'block', width: 20, height: 20, bgcolor: '#c67200', borderRadius: '50%' }} />
-					</Box>
-					<Box>
-						<Typography variant="caption" sx={{ color: '#545b64', fontWeight: 600, display: 'block', textTransform: 'uppercase', fontSize: '0.65rem' }}>Avg Rating</Typography>
-						<Typography variant="h6" sx={{ fontWeight: 800, color: '#c67200', lineHeight: 1 }}>{stats.avgRating}/10</Typography>
-					</Box>
-				</Box>
-			</Paper>
+			<MockInterviewStats stats={stats} />
 
 			<MockInterviewTableHeader
 				searchTerm={searchTerm}
@@ -133,51 +66,80 @@ const MockInterviewList: React.FC<MockInterviewListProps> = ({ batchId, allocati
 			/>
 
 			{filterCandidateId && (
-				<Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2, bgcolor: '#f8f9fa', p: 1.5, borderRadius: '4px', border: '1px solid #eaeded' }}>
-					<Typography variant="body2" sx={{ color: '#545b64' }}>
-						Showing sessions for: <strong>{filteredCandidateName}</strong>
+				<Box 
+					sx={{ 
+						mb: 3, 
+						display: 'flex', 
+						alignItems: 'center', 
+						gap: 2, 
+						bgcolor: alpha(theme.palette.info.main, 0.05), 
+						p: 2, 
+						borderRadius: 2, 
+						border: '1px solid',
+						borderColor: alpha(theme.palette.info.main, 0.1)
+					}}
+				>
+					<Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+						Showing sessions for: <Box component="span" sx={{ fontWeight: 700, color: 'info.main' }}>{filteredCandidateName}</Box>
 					</Typography>
 					<Button
 						size="small"
 						variant="outlined"
+						color="info"
 						onClick={() => setFilterCandidateId(null)}
-						sx={{ textTransform: 'none', height: 28, fontSize: '0.75rem' }}
+						sx={{ 
+							textTransform: 'none', 
+							borderRadius: 1.5,
+							fontWeight: 700,
+							px: 2
+						}}
 					>
 						Clear Filter
 					</Button>
 				</Box>
 			)}
 
-			<Card variant="outlined" sx={{ borderRadius: 2, overflow: 'hidden' }}>
+			<Card 
+				elevation={0}
+				sx={{ 
+					borderRadius: 2, 
+					overflow: 'hidden',
+					border: '1px solid',
+					borderColor: 'divider',
+					boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
+				}}
+			>
 				<TableContainer>
-					<Table sx={{ minWidth: 800 }}>
-						<TableHead sx={{ backgroundColor: theme.palette.grey[50] }}>
+					<Table sx={{ minWidth: 800 }} size="small">
+						<TableHead sx={{ bgcolor: alpha(theme.palette.action.disabledBackground, 0.05) }}>
 							<TableRow>
-								<TableCell sx={{ fontWeight: 700, color: theme.palette.text.secondary }}>DATE</TableCell>
-								<TableCell sx={{ fontWeight: 700, color: theme.palette.text.secondary }}>CANDIDATE</TableCell>
-								<TableCell sx={{ fontWeight: 700, color: theme.palette.text.secondary }}>INTERVIEWER</TableCell>
-								<TableCell sx={{ fontWeight: 700, color: theme.palette.text.secondary }}>STATUS</TableCell>
-								<TableCell sx={{ fontWeight: 700, color: theme.palette.text.secondary }}>OVERALL RATING</TableCell>
-								<TableCell align="right" sx={{ fontWeight: 700, color: theme.palette.text.secondary }}>ACTIONS</TableCell>
+								<TableCell sx={{ fontWeight: 800, color: 'text.secondary', py: 2, textTransform: 'uppercase', fontSize: '0.75rem' }}>DATE</TableCell>
+								<TableCell sx={{ fontWeight: 800, color: 'text.secondary', py: 2, textTransform: 'uppercase', fontSize: '0.75rem' }}>CANDIDATE</TableCell>
+								<TableCell sx={{ fontWeight: 800, color: 'text.secondary', py: 2, textTransform: 'uppercase', fontSize: '0.75rem' }}>INTERVIEWER</TableCell>
+								<TableCell sx={{ fontWeight: 800, color: 'text.secondary', py: 2, textTransform: 'uppercase', fontSize: '0.75rem' }}>STATUS</TableCell>
+								<TableCell sx={{ fontWeight: 800, color: 'text.secondary', py: 2, textTransform: 'uppercase', fontSize: '0.75rem' }}>OVERALL RATING</TableCell>
+								<TableCell align="right" sx={{ fontWeight: 800, color: 'text.secondary', py: 2, textTransform: 'uppercase', fontSize: '0.75rem' }}>ACTIONS</TableCell>
 							</TableRow>
 						</TableHead>
 						<TableBody>
 							{loading && mockInterviews.length === 0 ? (
 								<TableRow>
-									<TableCell colSpan={5} align="center" sx={{ py: 8 }}>
-										<LinearProgress sx={{ width: '50%', mx: 'auto' }} />
-										<Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-											Loading mock interviews...
-										</Typography>
+									<TableCell colSpan={6} align="center" sx={{ py: 10 }}>
+										<Box sx={{ width: '50%', mx: 'auto' }}>
+											<LinearProgress sx={{ borderRadius: 1, height: 6 }} />
+											<Typography variant="body2" color="text.secondary" sx={{ mt: 2, fontWeight: 500 }}>
+												Loading mock interviews...
+											</Typography>
+										</Box>
 									</TableCell>
 								</TableRow>
 							) : mockInterviews.length === 0 ? (
 								<TableRow>
-									<TableCell colSpan={5} align="center" sx={{ py: 8 }}>
-										<Typography variant="body1" fontWeight={500} color="text.secondary">
+									<TableCell colSpan={6} align="center" sx={{ py: 10 }}>
+										<Typography variant="h6" fontWeight={800} color="text.disabled">
 											No mock interview sessions found
 										</Typography>
-										<Typography variant="body2" color="text.secondary">
+										<Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
 											Try adjusting your search or create a new session.
 										</Typography>
 									</TableCell>
