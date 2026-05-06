@@ -1,5 +1,13 @@
 import React from 'react';
-import { Box, Paper, Typography, Divider, alpha, useTheme } from '@mui/material';
+import { Grid, useTheme } from '@mui/material';
+import {
+	AssignmentOutlined as TotalIcon,
+	CheckCircleOutline as ClearedIcon,
+	PeopleOutline as CandidateIcon,
+	EventBusy as AbsentIcon,
+	StarOutline as RatingIcon
+} from '@mui/icons-material';
+import StatCard from '../../../common/stats/StatCard';
 
 interface MockInterviewStatsProps {
 	stats: {
@@ -15,141 +23,51 @@ const MockInterviewStats: React.FC<MockInterviewStatsProps> = ({ stats }) => {
 	const theme = useTheme();
 
 	return (
-		<Paper
-			elevation={0}
-			sx={{
-				p: 3,
-				mb: 4,
-				border: '1px solid',
-				borderColor: 'divider',
-				borderRadius: 3,
-				bgcolor: 'background.paper',
-				display: 'flex',
-				alignItems: 'center',
-				gap: { xs: 3, md: 6 },
-				flexWrap: 'wrap',
-				boxShadow: theme.shadows[1]
-			}}
-		>
-			<Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-				<Box 
-					sx={{ 
-						bgcolor: alpha(theme.palette.primary.main, 0.08), 
-						p: 1.25, 
-						borderRadius: '50%',
-						display: 'flex',
-						alignItems: 'center',
-						justifyContent: 'center'
-					}}
-				>
-					<Box sx={{ width: 20, height: 20, bgcolor: 'primary.main', borderRadius: '4px' }} />
-				</Box>
-				<Box>
-					<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, display: 'block', textTransform: 'uppercase', fontSize: '0.65rem', letterSpacing: '0.05em' }}>
-						Total Sessions
-					</Typography>
-					<Typography variant="h5" sx={{ fontWeight: 800, color: 'text.primary', lineHeight: 1.2 }}>
-						{stats.total}
-					</Typography>
-				</Box>
-			</Box>
-
-			<Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', md: 'block' } }} />
-
-			<Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-				<Box 
-					sx={{ 
-						bgcolor: alpha(theme.palette.success.main, 0.08), 
-						p: 1.25, 
-						borderRadius: '50%',
-						display: 'flex',
-						alignItems: 'center',
-						justifyContent: 'center'
-					}}
-				>
-					<Box sx={{ width: 20, height: 20, bgcolor: 'success.main', borderRadius: '50%' }} />
-				</Box>
-				<Box>
-					<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, display: 'block', textTransform: 'uppercase', fontSize: '0.65rem', letterSpacing: '0.05em' }}>
-						Cleared
-					</Typography>
-					<Typography variant="h5" sx={{ fontWeight: 800, color: 'success.main', lineHeight: 1.2 }}>
-						{stats.cleared}
-					</Typography>
-				</Box>
-			</Box>
-
-			<Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-				<Box 
-					sx={{ 
-						bgcolor: alpha(theme.palette.info.main, 0.08), 
-						p: 1.25, 
-						borderRadius: '50%',
-						display: 'flex',
-						alignItems: 'center',
-						justifyContent: 'center'
-					}}
-				>
-					<Box sx={{ width: 20, height: 20, bgcolor: 'info.main', borderRadius: '50%' }} />
-				</Box>
-				<Box>
-					<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, display: 'block', textTransform: 'uppercase', fontSize: '0.65rem', letterSpacing: '0.05em' }}>
-						Candidates
-					</Typography>
-					<Typography variant="h5" sx={{ fontWeight: 800, color: 'info.main', lineHeight: 1.2 }}>
-						{stats.uniqueCandidates}
-					</Typography>
-				</Box>
-			</Box>
-
-			<Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-				<Box 
-					sx={{ 
-						bgcolor: alpha(theme.palette.grey[500], 0.08), 
-						p: 1.25, 
-						borderRadius: '50%',
-						display: 'flex',
-						alignItems: 'center',
-						justifyContent: 'center'
-					}}
-				>
-					<Box sx={{ width: 20, height: 20, bgcolor: 'text.disabled', borderRadius: '50%' }} />
-				</Box>
-				<Box>
-					<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, display: 'block', textTransform: 'uppercase', fontSize: '0.65rem', letterSpacing: '0.05em' }}>
-						Absent
-					</Typography>
-					<Typography variant="h5" sx={{ fontWeight: 800, color: 'text.disabled', lineHeight: 1.2 }}>
-						{stats.absent}
-					</Typography>
-				</Box>
-			</Box>
-
-			<Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', md: 'block' } }} />
-
-			<Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-				<Box 
-					sx={{ 
-						bgcolor: alpha(theme.palette.warning.main, 0.08), 
-						p: 1.25, 
-						borderRadius: '50%',
-						display: 'flex',
-						alignItems: 'center',
-						justifyContent: 'center'
-					}}
-				>
-					<Box sx={{ width: 20, height: 20, bgcolor: 'warning.main', borderRadius: '50%' }} />
-				</Box>
-				<Box>
-					<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, display: 'block', textTransform: 'uppercase', fontSize: '0.65rem', letterSpacing: '0.05em' }}>
-						Avg Rating
-					</Typography>
-					<Typography variant="h5" sx={{ fontWeight: 800, color: 'warning.main', lineHeight: 1.2 }}>
-						{stats.avgRating}/10
-					</Typography>
-				</Box>
-			</Box>
-		</Paper>
+		<Grid container spacing={3} sx={{ mb: 4 }}>
+			<Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+				<StatCard
+					title="Total Sessions"
+					value={stats.total}
+					icon={TotalIcon}
+					color={theme.palette.primary.main}
+				/>
+			</Grid>
+			<Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+				<StatCard
+					title="Cleared"
+					value={stats.cleared}
+					icon={ClearedIcon}
+					color={theme.palette.success.main}
+					subtitle={`${((stats.cleared / (stats.total || 1)) * 100).toFixed(0)}% success rate`}
+				/>
+			</Grid>
+			<Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+				<StatCard
+					title="Candidates"
+					value={stats.uniqueCandidates}
+					icon={CandidateIcon}
+					color={theme.palette.info.main}
+				/>
+			</Grid>
+			<Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+				<StatCard
+					title="Absent"
+					value={stats.absent}
+					icon={AbsentIcon}
+					color={theme.palette.error.main}
+					subtitle={`${((stats.absent / (stats.total || 1)) * 100).toFixed(0)}% absence rate`}
+				/>
+			</Grid>
+			<Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+				<StatCard
+					title="Avg Rating"
+					value={stats.avgRating}
+					unit="/ 10"
+					icon={RatingIcon}
+					color={theme.palette.warning.main}
+				/>
+			</Grid>
+		</Grid>
 	);
 };
 

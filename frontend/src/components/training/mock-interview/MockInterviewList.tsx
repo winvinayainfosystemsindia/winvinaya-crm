@@ -1,26 +1,19 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import {
 	Box,
-	Card,
-	Table,
-	TableBody,
-	TableCell,
-	TableContainer,
-	TableHead,
-	TableRow,
 	Typography,
-	LinearProgress,
-	useTheme,
 	Button,
+	useTheme,
 	alpha
 } from '@mui/material';
 import type { CandidateAllocation } from '../../../models/training';
+import type { MockInterview } from '../../../models/MockInterview';
 import { useMockInterviewList } from './hooks/useMockInterviewList';
-import MockInterviewTableHeader from './table/MockInterviewTableHeader';
 import MockInterviewTableRow from './table/MockInterviewTableRow';
 import MockInterviewForm from './form/MockInterviewForm';
 import MockInterviewStats from './stats/MockInterviewStats';
-import CustomTablePagination from '../../common/table/CustomTablePagination';
+import DataTable, { type ColumnDefinition } from '../../common/table/DataTable';
+import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
 
 interface MockInterviewListProps {
 	batchId: number;
@@ -44,7 +37,6 @@ const MockInterviewList: React.FC<MockInterviewListProps> = ({ batchId, allocati
 		setIsFormOpen,
 		handleRefresh,
 		handleChangePage,
-		handleChangeRowsPerPage,
 		handleCreate,
 		handleEdit,
 		handleView,
@@ -52,18 +44,78 @@ const MockInterviewList: React.FC<MockInterviewListProps> = ({ batchId, allocati
 		setRowsPerPage
 	} = useMockInterviewList(batchId);
 
+	const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+	const [activeFilters, setActiveFilters] = useState<Record<string, any>>({
+		candidate: filterCandidateId ? String(filterCandidateId) : '',
+		status: []
+	});
+
+	const filterFields: FilterField[] = useMemo(() => [
+		{
+			key: 'candidate',
+			label: 'Candidate',
+			type: 'single-select',
+			options: [
+				...allocations.map(a => ({
+					value: String(a.candidate_id),
+					label: a.candidate?.name || 'Unknown'
+				}))
+			]
+		},
+		{
+			key: 'status',
+			label: 'Status',
+			type: 'multi-select',
+			options: [
+				{ value: 'cleared', label: 'Cleared' },
+				{ value: 'rejected', label: 'Rejected' },
+				{ value: 're-test', label: 'Re-test' },
+				{ value: 'pending', label: 'Pending' },
+				{ value: 'absent', label: 'Absent' }
+			]
+		}
+	], [allocations]);
+
+	const handleFilterChange = (key: string, value: any) => {
+		setActiveFilters(prev => ({ ...prev, [key]: value }));
+	};
+
+	const handleApplyFilters = () => {
+		const candidateId = activeFilters.candidate ? parseInt(activeFilters.candidate, 10) : null;
+		setFilterCandidateId(candidateId);
+		setIsFilterDrawerOpen(false);
+		// Note: Status filtering could be added to the hook if needed
+	};
+
+	const handleClearFilters = () => {
+		setActiveFilters({ candidate: '', status: [] });
+		setFilterCandidateId(null);
+		setIsFilterDrawerOpen(false);
+	};
+
+	const columns: ColumnDefinition<MockInterview>[] = useMemo(() => [
+		{ id: 'interview_date', label: 'DATE', width: '15%' },
+		{ id: 'candidate_id', label: 'CANDIDATE', width: '25%' },
+		{ id: 'interviewer_name', label: 'INTERVIEWER', width: '20%' },
+		{ id: 'status', label: 'STATUS', width: '15%' },
+		{ id: 'overall_rating', label: 'OVERALL RATING', width: '15%' },
+		{ id: 'actions', label: 'ACTIONS', align: 'right', width: '10%' }
+	], []);
+
 	const filteredCandidateName = allocations.find(a => a.candidate_id === filterCandidateId)?.candidate?.name;
+
+	// Apply status filters locally since the hook doesn't support it yet
+	const displayData = useMemo(() => {
+		let data = mockInterviews;
+		if (activeFilters.status.length > 0) {
+			data = data.filter(i => activeFilters.status.includes(i.status.toLowerCase()));
+		}
+		return data;
+	}, [mockInterviews, activeFilters.status]);
 
 	return (
 		<Box sx={{ width: '100%' }}>
 			<MockInterviewStats stats={stats} />
-
-			<MockInterviewTableHeader
-				searchTerm={searchTerm}
-				onSearchChange={setSearchTerm}
-				onRefresh={handleRefresh}
-				onCreate={handleCreate}
-			/>
 
 			{filterCandidateId && (
 				<Box 
@@ -86,7 +138,7 @@ const MockInterviewList: React.FC<MockInterviewListProps> = ({ batchId, allocati
 						size="small"
 						variant="outlined"
 						color="info"
-						onClick={() => setFilterCandidateId(null)}
+						onClick={() => handleClearFilters()}
 						sx={{ 
 							textTransform: 'none', 
 							borderRadius: 1.5,
@@ -99,78 +151,52 @@ const MockInterviewList: React.FC<MockInterviewListProps> = ({ batchId, allocati
 				</Box>
 			)}
 
-			<Card 
-				elevation={0}
-				sx={{ 
-					borderRadius: 3, 
-					overflow: 'hidden',
-					border: '1px solid',
-					borderColor: 'divider',
-					boxShadow: theme.shadows[1]
+			<DataTable
+				columns={columns}
+				data={displayData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)}
+				totalCount={displayData.length}
+				page={page}
+				rowsPerPage={rowsPerPage}
+				onPageChange={handleChangePage}
+				onRowsPerPageChange={(newRows) => {
+					setRowsPerPage(newRows);
+					handleChangePage(null, 0);
 				}}
-			>
-				<TableContainer>
-					<Table sx={{ minWidth: 800 }} size="small">
-						<TableHead sx={{ bgcolor: alpha(theme.palette.action.disabledBackground, 0.05) }}>
-							<TableRow>
-								<TableCell sx={{ py: 2 }}><Typography variant="overline" sx={{ fontWeight: 800, color: 'text.secondary' }}>DATE</Typography></TableCell>
-								<TableCell sx={{ py: 2 }}><Typography variant="overline" sx={{ fontWeight: 800, color: 'text.secondary' }}>CANDIDATE</Typography></TableCell>
-								<TableCell sx={{ py: 2 }}><Typography variant="overline" sx={{ fontWeight: 800, color: 'text.secondary' }}>INTERVIEWER</Typography></TableCell>
-								<TableCell sx={{ py: 2 }}><Typography variant="overline" sx={{ fontWeight: 800, color: 'text.secondary' }}>STATUS</Typography></TableCell>
-								<TableCell sx={{ py: 2 }}><Typography variant="overline" sx={{ fontWeight: 800, color: 'text.secondary' }}>OVERALL RATING</Typography></TableCell>
-								<TableCell align="right" sx={{ py: 2 }}><Typography variant="overline" sx={{ fontWeight: 800, color: 'text.secondary' }}>ACTIONS</Typography></TableCell>
-							</TableRow>
-						</TableHead>
-						<TableBody>
-							{loading && mockInterviews.length === 0 ? (
-								<TableRow>
-									<TableCell colSpan={6} align="center" sx={{ py: 10 }}>
-										<Box sx={{ width: '50%', mx: 'auto' }}>
-											<LinearProgress sx={{ borderRadius: 1, height: 6 }} />
-											<Typography variant="body2" color="text.secondary" sx={{ mt: 2, fontWeight: 500 }}>
-												Loading mock interviews...
-											</Typography>
-										</Box>
-									</TableCell>
-								</TableRow>
-							) : mockInterviews.length === 0 ? (
-								<TableRow>
-									<TableCell colSpan={6} align="center" sx={{ py: 10 }}>
-										<Typography variant="h6" fontWeight={800} color="text.disabled">
-											No mock interview sessions found
-										</Typography>
-										<Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-											Try adjusting your search or create a new session.
-										</Typography>
-									</TableCell>
-								</TableRow>
-							) : (
-								mockInterviews
-									.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-									.map((interview) => (
-										<MockInterviewTableRow
-											key={interview.id}
-											interview={interview}
-											allocations={allocations}
-											onView={handleView}
-											onEdit={handleEdit}
-											onDelete={handleDelete}
-											onFilterCandidate={setFilterCandidateId}
-										/>
-									))
-							)}
-						</TableBody>
-					</Table>
-				</TableContainer>
-				<CustomTablePagination
-					count={mockInterviews.length}
-					page={page}
-					rowsPerPage={rowsPerPage}
-					onPageChange={handleChangePage}
-					onRowsPerPageChange={handleChangeRowsPerPage}
-					onRowsPerPageSelectChange={setRowsPerPage}
-				/>
-			</Card>
+				loading={loading}
+				searchTerm={searchTerm}
+				onSearchChange={setSearchTerm}
+				searchPlaceholder="Search candidates or interviewers..."
+				onRefresh={handleRefresh}
+				onFilterOpen={() => setIsFilterDrawerOpen(true)}
+				activeFilterCount={(filterCandidateId ? 1 : 0) + activeFilters.status.length}
+				canCreate={true}
+				onCreateClick={handleCreate}
+				createButtonText="Create Session"
+				renderRow={(interview) => (
+					<MockInterviewTableRow
+						key={interview.id}
+						interview={interview}
+						allocations={allocations}
+						onView={handleView}
+						onEdit={handleEdit}
+						onDelete={handleDelete}
+						onFilterCandidate={(id) => {
+							setFilterCandidateId(id);
+							setActiveFilters(prev => ({ ...prev, candidate: String(id) }));
+						}}
+					/>
+				)}
+			/>
+
+			<FilterDrawer
+				open={isFilterDrawerOpen}
+				onClose={() => setIsFilterDrawerOpen(false)}
+				fields={filterFields}
+				activeFilters={activeFilters}
+				onFilterChange={handleFilterChange}
+				onClearFilters={handleClearFilters}
+				onApplyFilters={handleApplyFilters}
+			/>
 
 			{isFormOpen && (
 				<MockInterviewForm
