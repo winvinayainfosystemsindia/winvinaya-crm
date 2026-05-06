@@ -20,6 +20,9 @@ export interface MockInterview {
 	feedback?: string;
 	overall_rating?: number;
 	status: 'pending' | 'cleared' | 're-test' | 'rejected' | 'absent';
+	start_time?: string;
+	end_time?: string;
+	duration_minutes?: number;
 	created_at: string;
 	updated_at: string;
 }
@@ -34,6 +37,9 @@ export interface MockInterviewCreate {
 	feedback?: string;
 	overall_rating?: number;
 	status?: string;
+	start_time?: string;
+	end_time?: string;
+	duration_minutes?: number;
 }
 
 export interface MockInterviewUpdate {

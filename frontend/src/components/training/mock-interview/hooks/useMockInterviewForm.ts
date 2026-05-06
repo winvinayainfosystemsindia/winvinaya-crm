@@ -1,53 +1,91 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { type AppDispatch, type RootState } from '../../../../store/store';
 import { createMockInterview, updateMockInterview } from '../../../../store/slices/mockInterviewSlice';
+import { createSkill } from '../../../../store/slices/skillSlice';
 import { type Question, type Skill, type MockInterviewCreate } from '../../../../models/MockInterview';
 import useToast from '../../../../hooks/useToast';
 
 export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 	const dispatch = useDispatch<AppDispatch>();
+	const { user } = useSelector((state: RootState) => state.auth);
 	const { currentMockInterview, loading: saveLoading } = useSelector((state: RootState) => state.mockInterviews);
 
+	const defaultInterviewer = user?.full_name || user?.username || '';
+	
 	const [formData, setFormData] = useState<Partial<MockInterviewCreate>>({
 		candidate_id: undefined,
-		interviewer_name: '',
-		interview_date: new Date().toISOString().slice(0, 16),
+		interviewer_name: defaultInterviewer,
+		interview_date: new Date().toISOString(),
 		status: 'pending',
 		overall_rating: 0,
 		feedback: '',
+		start_time: new Date().toISOString(),
+		end_time: undefined,
+		duration_minutes: 0,
 	});
 
 	const [questions, setQuestions] = useState<Question[]>([]);
 	const [skills, setSkills] = useState<Skill[]>([]);
 	const [errors, setErrors] = useState<Record<string, string>>({});
+	const [elapsedSeconds, setElapsedSeconds] = useState(0);
+	const [isPaused, setIsPaused] = useState(true);
+	const timerRef = useRef<any>(null);
+
+	const toggleTimer = useCallback(() => {
+		setIsPaused(prev => !prev);
+	}, []);
 
 	useEffect(() => {
 		if (currentMockInterview) {
 			setFormData({
 				candidate_id: currentMockInterview.candidate_id,
 				interviewer_name: currentMockInterview.interviewer_name || '',
-				interview_date: new Date(currentMockInterview.interview_date).toISOString().slice(0, 16),
+				interview_date: currentMockInterview.interview_date,
 				status: currentMockInterview.status,
 				overall_rating: currentMockInterview.overall_rating || 0,
 				feedback: currentMockInterview.feedback || '',
+				start_time: currentMockInterview.start_time,
+				end_time: currentMockInterview.end_time,
+				duration_minutes: currentMockInterview.duration_minutes || 0,
 			});
 			setQuestions(currentMockInterview.questions || []);
 			setSkills(currentMockInterview.skills || []);
+			setElapsedSeconds((currentMockInterview.duration_minutes || 0) * 60);
 		} else {
+			const now = new Date().toISOString();
 			setFormData({
 				candidate_id: undefined,
-				interviewer_name: '',
-				interview_date: new Date().toISOString().slice(0, 16),
+				interviewer_name: defaultInterviewer,
+				interview_date: now,
 				status: 'pending',
 				overall_rating: 0,
 				feedback: '',
+				start_time: now,
+				end_time: undefined,
+				duration_minutes: 0,
 			});
 			setQuestions([{ question: '', answer: '' }]);
 			setSkills([{ skill: '', level: 'Beginner', rating: 5 }]);
+			setElapsedSeconds(0);
+			setIsPaused(true);
+
+			// Start stopwatch for new interview
+			timerRef.current = setInterval(() => {
+				setIsPaused(paused => {
+					if (!paused) {
+						setElapsedSeconds(prev => prev + 1);
+					}
+					return paused;
+				});
+			}, 1000);
 		}
 		setErrors({});
-	}, [currentMockInterview]);
+
+		return () => {
+			if (timerRef.current) clearInterval(timerRef.current);
+		};
+	}, [currentMockInterview, defaultInterviewer]);
 
 	const handleChange = useCallback((field: keyof MockInterviewCreate, value: any) => {
 		setFormData((prev) => ({ ...prev, [field]: value }));
@@ -95,10 +133,28 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 
 	const toast = useToast();
 
+	const { aggregatedSkills: masterSkills } = useSelector((state: RootState) => state.skills);
+
 	const handleSubmit = async () => {
 		if (!validate()) {
 			toast.error('Please fix the errors in the form');
 			return;
+		}
+
+		const now = new Date().toISOString();
+		const finalDuration = Math.ceil(elapsedSeconds / 60);
+
+		// Handle new skills creation
+		const newSkillsToAdd = skills
+			.map(s => s.skill.trim())
+			.filter(s => s && !masterSkills.includes(s));
+		
+		for (const skillName of Array.from(new Set(newSkillsToAdd))) {
+			try {
+				await dispatch(createSkill({ name: skillName, is_verified: false })).unwrap();
+			} catch (e) {
+				console.error(`Failed to create skill: ${skillName}`, e);
+			}
 		}
 
 		const payload: MockInterviewCreate = {
@@ -110,7 +166,10 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 			feedback: formData.feedback!,
 			questions: questions.filter(q => q.question.trim()),
 			skills: skills.filter(s => s.skill.trim()),
-			interview_date: new Date(formData.interview_date!).toISOString()
+			interview_date: formData.interview_date!,
+			start_time: formData.start_time,
+			end_time: currentMockInterview ? formData.end_time : now,
+			duration_minutes: currentMockInterview ? formData.duration_minutes : finalDuration
 		};
 
 		try {
@@ -133,6 +192,9 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 		skills,
 		errors,
 		saveLoading,
+		elapsedSeconds,
+		isPaused,
+		toggleTimer,
 		handleChange,
 		handleQuestionChange,
 		addQuestion,

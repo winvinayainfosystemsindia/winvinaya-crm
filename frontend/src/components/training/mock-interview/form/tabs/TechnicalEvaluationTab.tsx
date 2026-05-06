@@ -15,9 +15,9 @@ import {
 	Delete as DeleteIcon,
 	QuestionAnswer as QIcon
 } from '@mui/icons-material';
-import { type Question } from '../../../../models/MockInterview';
+import { type Question } from '../../../../../models/MockInterview';
 
-interface MockInterviewFormQuestionsProps {
+interface TechnicalEvaluationTabProps {
 	questions: Question[];
 	viewMode: boolean;
 	onQuestionChange: (index: number, field: keyof Question, value: string) => void;
@@ -25,7 +25,7 @@ interface MockInterviewFormQuestionsProps {
 	onRemoveQuestion: (index: number) => void;
 }
 
-const MockInterviewFormQuestions: React.FC<MockInterviewFormQuestionsProps> = memo(({
+const TechnicalEvaluationTab: React.FC<TechnicalEvaluationTabProps> = memo(({
 	questions,
 	viewMode,
 	onQuestionChange,
@@ -35,7 +35,7 @@ const MockInterviewFormQuestions: React.FC<MockInterviewFormQuestionsProps> = me
 	const theme = useTheme();
 
 	return (
-		<Box>
+		<Box sx={{ maxWidth: 1000, mx: 'auto' }}>
 			<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
 				<Stack direction="row" alignItems="center" spacing={2}>
 					<Box 
@@ -55,17 +55,17 @@ const MockInterviewFormQuestions: React.FC<MockInterviewFormQuestionsProps> = me
 				</Stack>
 				{!viewMode && (
 					<Button
+						variant="outlined"
 						startIcon={<AddIcon />}
 						onClick={onAddQuestion}
 						sx={{ 
 							textTransform: 'none', 
 							fontWeight: 700, 
-							color: 'primary.main',
 							borderRadius: 1.5,
-							'&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.05) }
+							px: 2
 						}}
 					>
-						Add Row
+						Add Question
 					</Button>
 				)}
 			</Box>
@@ -81,6 +81,7 @@ const MockInterviewFormQuestions: React.FC<MockInterviewFormQuestionsProps> = me
 							bgcolor: 'background.paper',
 							border: '1px solid',
 							borderColor: 'divider',
+							transition: 'all 0.2s ease-in-out',
 							'&:hover': {
 								borderColor: alpha(theme.palette.primary.main, 0.2),
 								boxShadow: theme.shadows[2]
@@ -122,7 +123,7 @@ const MockInterviewFormQuestions: React.FC<MockInterviewFormQuestionsProps> = me
 							onChange={(e) => onQuestionChange(idx, 'answer', e.target.value)}
 							fullWidth
 							multiline
-							rows={2}
+							rows={3}
 							size="small"
 							disabled={viewMode}
 							InputLabelProps={{ shrink: true, sx: { fontWeight: 600 } }}
@@ -133,7 +134,7 @@ const MockInterviewFormQuestions: React.FC<MockInterviewFormQuestionsProps> = me
 				{questions.length === 0 && (
 					<Box 
 						sx={{ 
-							py: 4, 
+							py: 6, 
 							textAlign: 'center', 
 							borderRadius: 2, 
 							border: '2px dashed',
@@ -141,9 +142,19 @@ const MockInterviewFormQuestions: React.FC<MockInterviewFormQuestionsProps> = me
 							bgcolor: alpha(theme.palette.action.disabledBackground, 0.02)
 						}}
 					>
-						<Typography variant="body2" color="text.disabled" sx={{ fontWeight: 500 }}>
-							No technical discussion points added yet.
+						<Typography variant="body2" color="text.disabled" sx={{ fontWeight: 600 }}>
+							No technical discussion points have been recorded for this session.
 						</Typography>
+						{!viewMode && (
+							<Button 
+								variant="text" 
+								startIcon={<AddIcon />} 
+								onClick={onAddQuestion}
+								sx={{ mt: 2, textTransform: 'none', fontWeight: 700 }}
+							>
+								Add First Question
+							</Button>
+						)}
 					</Box>
 				)}
 			</Stack>
@@ -151,7 +162,6 @@ const MockInterviewFormQuestions: React.FC<MockInterviewFormQuestionsProps> = me
 	);
 });
 
-MockInterviewFormQuestions.displayName = 'MockInterviewFormQuestions';
+TechnicalEvaluationTab.displayName = 'TechnicalEvaluationTab';
 
-export default MockInterviewFormQuestions;
-
+export default TechnicalEvaluationTab;

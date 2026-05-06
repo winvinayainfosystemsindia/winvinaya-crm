@@ -10,26 +10,30 @@ import {
 	Grid,
 	MenuItem,
 	Slider,
+	Autocomplete,
 	useTheme,
 	alpha
 } from '@mui/material';
 import {
 	Add as AddIcon,
 	Delete as DeleteIcon,
-	Psychology as SkillIcon
+	Psychology as SkillIcon,
+	InfoOutlined as InfoIcon
 } from '@mui/icons-material';
-import { type Skill } from '../../../../models/MockInterview';
+import { type Skill } from '../../../../../models/MockInterview';
 
-interface MockInterviewFormSkillsProps {
+interface CompetencyMatrixTabProps {
 	skills: Skill[];
+	masterSkills: string[];
 	viewMode: boolean;
 	onSkillChange: (index: number, field: keyof Skill, value: any) => void;
 	onAddSkill: () => void;
 	onRemoveSkill: (index: number) => void;
 }
 
-const MockInterviewFormSkills: React.FC<MockInterviewFormSkillsProps> = memo(({
+const CompetencyMatrixTab: React.FC<CompetencyMatrixTabProps> = memo(({
 	skills,
+	masterSkills,
 	viewMode,
 	onSkillChange,
 	onAddSkill,
@@ -38,7 +42,7 @@ const MockInterviewFormSkills: React.FC<MockInterviewFormSkillsProps> = memo(({
 	const theme = useTheme();
 
 	return (
-		<Box>
+		<Box sx={{ maxWidth: 1000, mx: 'auto' }}>
 			<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
 				<Stack direction="row" alignItems="center" spacing={2}>
 					<Box 
@@ -58,20 +62,49 @@ const MockInterviewFormSkills: React.FC<MockInterviewFormSkillsProps> = memo(({
 				</Stack>
 				{!viewMode && (
 					<Button
+						variant="outlined"
+						color="success"
 						startIcon={<AddIcon />}
 						onClick={onAddSkill}
 						sx={{ 
 							textTransform: 'none', 
 							fontWeight: 700, 
-							color: 'success.main',
 							borderRadius: 1.5,
-							'&:hover': { bgcolor: alpha(theme.palette.success.main, 0.05) }
+							px: 2
 						}}
 					>
 						Add Competency
 					</Button>
 				)}
 			</Box>
+			{!viewMode && (
+				<Box 
+					sx={{ 
+						mb: 4, 
+						p: 2, 
+						borderRadius: 2, 
+						bgcolor: alpha(theme.palette.info.main, 0.04),
+						border: '1px solid',
+						borderColor: alpha(theme.palette.info.main, 0.1),
+						display: 'flex',
+						alignItems: 'flex-start',
+						gap: 2
+					}}
+				>
+					<InfoIcon sx={{ color: 'info.main', fontSize: 20, mt: 0.25 }} />
+					<Box>
+						<Typography variant="caption" sx={{ color: 'info.main', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', mb: 0.5 }}>
+							Quick Guide: Skill Assessment
+						</Typography>
+						<Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500, lineHeight: 1.5, display: 'block' }}>
+							Select a competency from the dropdown or <strong>type and press Enter</strong> to create a new one. 
+							Each entry supports only <strong>one unique skill</strong> (commas are automatically removed). 
+							Use the 'Add Competency' button for multiple skill evaluations.
+						</Typography>
+					</Box>
+				</Box>
+			)}
+
 			<Grid container spacing={3}>
 				{skills.map((s, idx) => (
 					<Grid size={{ xs: 12, sm: 6 }} key={idx}>
@@ -84,6 +117,7 @@ const MockInterviewFormSkills: React.FC<MockInterviewFormSkillsProps> = memo(({
 								position: 'relative',
 								border: '1px solid',
 								borderColor: 'divider',
+								transition: 'all 0.2s ease-in-out',
 								'&:hover': {
 									borderColor: alpha(theme.palette.success.main, 0.2),
 									boxShadow: theme.shadows[2]
@@ -106,16 +140,35 @@ const MockInterviewFormSkills: React.FC<MockInterviewFormSkillsProps> = memo(({
 								</IconButton>
 							)}
 							<Stack spacing={2.5}>
-								<TextField
-									label="Competency / Skill Area"
+								<Autocomplete
+									freeSolo
+									options={masterSkills}
 									value={s.skill}
-									onChange={(e) => onSkillChange(idx, 'skill', e.target.value)}
-									fullWidth
-									size="small"
+									onChange={(_, newValue) => {
+										const cleaned = (newValue || '').replace(/,/g, '');
+										onSkillChange(idx, 'skill', cleaned);
+									}}
+									onInputChange={(_, newInputValue) => {
+										const cleaned = (newInputValue || '').replace(/,/g, '');
+										onSkillChange(idx, 'skill', cleaned);
+									}}
 									disabled={viewMode}
-									placeholder="e.g. System Design, React, Python"
-									InputLabelProps={{ shrink: true, sx: { fontWeight: 600 } }}
-									sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+									renderInput={(params) => (
+										<TextField
+											{...params}
+											label="Competency / Skill Area"
+											placeholder="Search or enter skill..."
+											fullWidth
+											size="small"
+											onKeyDown={(e) => {
+												if (e.key === ',') {
+													e.preventDefault();
+												}
+											}}
+											InputLabelProps={{ shrink: true, sx: { fontWeight: 600 } }}
+											sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+										/>
+									)}
 								/>
 								<Stack direction="row" spacing={2} alignItems="center">
 									<TextField
@@ -165,7 +218,7 @@ const MockInterviewFormSkills: React.FC<MockInterviewFormSkillsProps> = memo(({
 					<Grid size={{ xs: 12 }}>
 						<Box 
 							sx={{ 
-								py: 4, 
+								py: 6, 
 								textAlign: 'center', 
 								borderRadius: 2, 
 								border: '2px dashed',
@@ -173,9 +226,20 @@ const MockInterviewFormSkills: React.FC<MockInterviewFormSkillsProps> = memo(({
 								bgcolor: alpha(theme.palette.action.disabledBackground, 0.02)
 							}}
 						>
-							<Typography variant="body2" color="text.disabled" sx={{ fontWeight: 500 }}>
-								No competencies assessed yet.
+							<Typography variant="body2" color="text.disabled" sx={{ fontWeight: 600 }}>
+								No competencies have been assessed for this session yet.
 							</Typography>
+							{!viewMode && (
+								<Button 
+									variant="text" 
+									color="success"
+									startIcon={<AddIcon />} 
+									onClick={onAddSkill}
+									sx={{ mt: 2, textTransform: 'none', fontWeight: 700 }}
+								>
+									Add First Competency
+								</Button>
+							)}
 						</Box>
 					</Grid>
 				)}
@@ -184,7 +248,6 @@ const MockInterviewFormSkills: React.FC<MockInterviewFormSkillsProps> = memo(({
 	);
 });
 
-MockInterviewFormSkills.displayName = 'MockInterviewFormSkills';
+CompetencyMatrixTab.displayName = 'CompetencyMatrixTab';
 
-export default MockInterviewFormSkills;
-
+export default CompetencyMatrixTab;

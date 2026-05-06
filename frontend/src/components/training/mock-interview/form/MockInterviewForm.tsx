@@ -1,21 +1,26 @@
-import React from 'react';
-import { useSelector } from 'react-redux';
+import React, { useMemo, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import {
-	Button,
-	Grid,
-	Typography,
+	Dialog,
 	Box,
-	TextField,
-	CircularProgress,
+	Typography,
+	alpha,
 	useTheme,
-	alpha
+	IconButton,
+	Tooltip
 } from '@mui/material';
-import { type RootState } from '../../../../store/store';
+import { 
+	PlayArrow as StartIcon, 
+	Pause as PauseIcon 
+} from '@mui/icons-material';
+import { type AppDispatch, type RootState } from '../../../../store/store';
 import { useMockInterviewForm } from '../hooks/useMockInterviewForm';
-import MockInterviewFormMetadata from './MockInterviewFormMetadata';
-import MockInterviewFormQuestions from './MockInterviewFormQuestions';
-import MockInterviewFormSkills from './MockInterviewFormSkills';
-import BaseDialog from '../../../common/dialogbox/BaseDialog';
+import { fetchAggregatedSkills } from '../../../../store/slices/skillSlice';
+import BasicDetailsTab from './tabs/BasicDetailsTab';
+import TechnicalEvaluationTab from './tabs/TechnicalEvaluationTab';
+import CompetencyMatrixTab from './tabs/CompetencyMatrixTab';
+import FinalRemarksTab from './tabs/FinalRemarksTab';
+import EnterpriseForm, { type FormStep } from '../../../common/form/EnterpriseForm';
 
 interface MockInterviewFormProps {
 	open: boolean;
@@ -26,8 +31,14 @@ interface MockInterviewFormProps {
 
 const MockInterviewForm: React.FC<MockInterviewFormProps> = ({ open, onClose, batchId, viewMode = false }) => {
 	const theme = useTheme();
+	const dispatch = useDispatch<AppDispatch>();
 	const { currentMockInterview } = useSelector((state: RootState) => state.mockInterviews);
 	const { allocations } = useSelector((state: RootState) => state.training);
+	const { aggregatedSkills: masterSkills } = useSelector((state: RootState) => state.skills);
+
+	useEffect(() => {
+		dispatch(fetchAggregatedSkills());
+	}, [dispatch]);
 
 	const {
 		formData,
@@ -35,6 +46,9 @@ const MockInterviewForm: React.FC<MockInterviewFormProps> = ({ open, onClose, ba
 		skills,
 		errors,
 		saveLoading,
+		elapsedSeconds,
+		isPaused,
+		toggleTimer,
 		handleChange,
 		handleQuestionChange,
 		addQuestion,
@@ -45,124 +59,158 @@ const MockInterviewForm: React.FC<MockInterviewFormProps> = ({ open, onClose, ba
 		handleSubmit
 	} = useMockInterviewForm(batchId, onClose);
 
+	const steps: FormStep[] = useMemo(() => [
+		{
+			label: 'Basic Details',
+			description: 'Metadata & context',
+			content: (
+				<BasicDetailsTab
+					formData={formData}
+					errors={errors}
+					viewMode={viewMode}
+					isEdit={!!currentMockInterview}
+					allocations={allocations}
+					onChange={handleChange}
+				/>
+			)
+		},
+		{
+			label: 'Technical Evaluation',
+			description: 'Q&A discussion',
+			content: (
+				<TechnicalEvaluationTab
+					questions={questions}
+					viewMode={viewMode}
+					onQuestionChange={handleQuestionChange}
+					onAddQuestion={addQuestion}
+					onRemoveQuestion={removeQuestion}
+				/>
+			)
+		},
+		{
+			label: 'Competency Matrix',
+			description: 'Skill proficiency',
+			content: (
+				<CompetencyMatrixTab
+					skills={skills}
+					masterSkills={masterSkills}
+					viewMode={viewMode}
+					onSkillChange={handleSkillChange}
+					onAddSkill={addSkill}
+					onRemoveSkill={removeSkill}
+				/>
+			)
+		},
+		{
+			label: 'Final Remarks',
+			description: 'Summative feedback',
+			content: (
+				<FinalRemarksTab
+					formData={formData}
+					viewMode={viewMode}
+					onChange={handleChange}
+				/>
+			)
+		}
+	], [formData, questions, skills, errors, viewMode, currentMockInterview, allocations, handleChange, handleQuestionChange, addQuestion, removeQuestion, handleSkillChange, addSkill, removeSkill]);
+
+	const formatElapsed = (seconds: number) => {
+		const h = Math.floor(seconds / 3600);
+		const m = Math.floor((seconds % 3600) / 60);
+		const s = seconds % 60;
+		return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+	};
+
 	return (
-		<BaseDialog
+		<Dialog
 			open={open}
 			onClose={onClose}
 			maxWidth="lg"
-			title={`${viewMode ? 'Review' : currentMockInterview ? 'Edit' : 'Record'} Mock Interview`}
-			subtitle="Comprehensive technical interview and proficiency tracking"
-			actions={
-				<>
-					<Button 
-						onClick={onClose} 
-						variant="text" 
-						sx={{ 
-							color: 'text.secondary', 
-							textTransform: 'none', 
-							fontWeight: 600,
-							'&:hover': { bgcolor: alpha(theme.palette.action.active, 0.05) }
-						}}
-					>
-						{viewMode ? 'Close' : 'Discard Changes'}
-					</Button>
-					{!viewMode && (
-						<Button
-							onClick={handleSubmit}
-							variant="contained"
-							disabled={saveLoading}
-							sx={{
-								bgcolor: 'primary.main',
-								'&:hover': { bgcolor: 'primary.dark' },
-								textTransform: 'none',
-								fontWeight: 700,
-								px: 4,
-								borderRadius: 1.5,
-								boxShadow: `0 4px 14px ${alpha(theme.palette.primary.main, 0.4)}`
-							}}
-						>
-							{saveLoading ? <CircularProgress size={20} color="inherit" /> : 'Finalize Interview'}
-						</Button>
-					)}
-				</>
-			}
+			fullWidth
+			PaperProps={{
+				sx: {
+					borderRadius: 0,
+					boxShadow: 'none',
+					bgcolor: 'transparent'
+				}
+			}}
 		>
-			<Grid container spacing={4}>
-				{/* Sidebar: Metadata & Overall */}
-				<Grid size={{ xs: 12, md: 4 }}>
-					<Box 
-						sx={{ 
-							p: 3, 
-							borderRadius: 2, 
-							bgcolor: alpha(theme.palette.background.default, 0.5),
-							border: '1px solid',
-							borderColor: 'divider',
-							height: '100%'
-						}}
-					>
-						<MockInterviewFormMetadata
-							formData={formData}
-							errors={errors}
-							viewMode={viewMode}
-							isEdit={!!currentMockInterview}
-							allocations={allocations}
-							onChange={handleChange}
-						/>
-					</Box>
-				</Grid>
-
-				{/* Main: Q&A and Skills */}
-				<Grid size={{ xs: 12, md: 8 }}>
-					<Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-						<MockInterviewFormQuestions
-							questions={questions}
-							viewMode={viewMode}
-							onQuestionChange={handleQuestionChange}
-							onAddQuestion={addQuestion}
-							onRemoveQuestion={removeQuestion}
-						/>
-
-						<MockInterviewFormSkills
-							skills={skills}
-							viewMode={viewMode}
-							onSkillChange={handleSkillChange}
-							onAddSkill={addSkill}
-							onRemoveSkill={removeSkill}
-						/>
-
-						{/* Feedback */}
+			<EnterpriseForm
+				title={`${viewMode ? 'Review' : currentMockInterview ? 'Edit' : 'Record'} Mock Interview`}
+				subtitle="Enterprise-grade technical proficiency assessment console"
+				mode={viewMode ? 'view' : currentMockInterview ? 'edit' : 'create'}
+				steps={steps}
+				onSave={handleSubmit}
+				onCancel={onClose}
+				isSubmitting={saveLoading}
+				saveButtonText={viewMode ? 'Close' : currentMockInterview ? 'Update Session' : 'Finalize Session'}
+				headerActions={
+					!viewMode && !currentMockInterview && (
 						<Box 
 							sx={{ 
-								p: 3, 
+								display: 'flex', 
+								alignItems: 'center', 
+								gap: 1, 
+								px: 1.5, 
+								py: 0.5, 
 								borderRadius: 2, 
-								bgcolor: alpha(theme.palette.info.main, 0.02),
+								bgcolor: alpha(isPaused ? theme.palette.warning.main : theme.palette.error.main, 0.08),
 								border: '1px solid',
-								borderColor: alpha(theme.palette.info.main, 0.1)
+								borderColor: alpha(isPaused ? theme.palette.warning.main : theme.palette.error.main, 0.2),
+								mr: 2
 							}}
 						>
-							<Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 2, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'info.main' }}>
-								Summative Remarks
-							</Typography>
-							<TextField
-								multiline
-								rows={4}
-								placeholder="Provide detailed observations on the candidate's performance, strengths, and areas for improvement..."
-								value={formData.feedback}
-								onChange={(e) => handleChange('feedback', e.target.value)}
-								fullWidth
-								disabled={viewMode}
+							<Box 
 								sx={{ 
-									bgcolor: 'background.paper',
-									'& .MuiOutlinedInput-root': {
-										borderRadius: 2
-									}
-								}}
+									width: 8, 
+									height: 8, 
+									borderRadius: '50%', 
+									bgcolor: isPaused ? 'warning.main' : 'error.main',
+									animation: isPaused ? 'none' : 'pulse 2s infinite'
+								}} 
 							/>
+							<Typography 
+								variant="subtitle2" 
+								sx={{ 
+									fontWeight: 800, 
+									fontFamily: 'monospace', 
+									color: isPaused ? 'warning.main' : 'error.main',
+									fontSize: '0.9rem',
+									minWidth: '65px',
+									textAlign: 'center'
+								}}
+							>
+								{formatElapsed(elapsedSeconds)}
+							</Typography>
+							<Tooltip title={elapsedSeconds === 0 && isPaused ? "Start Interview" : isPaused ? "Resume Interview" : "Pause Interview"}>
+								<IconButton 
+									size="small" 
+									onClick={toggleTimer}
+									sx={{ 
+										color: isPaused ? 'warning.main' : 'error.main',
+										p: 0.5,
+										'&:hover': {
+											bgcolor: alpha(isPaused ? theme.palette.warning.main : theme.palette.error.main, 0.1)
+										}
+									}}
+								>
+									{isPaused ? <StartIcon fontSize="small" /> : <PauseIcon fontSize="small" />}
+								</IconButton>
+							</Tooltip>
+							<style>
+								{`
+									@keyframes pulse {
+										0% { opacity: 1; transform: scale(1); }
+										50% { opacity: 0.5; transform: scale(1.2); }
+										100% { opacity: 1; transform: scale(1); }
+									}
+								`}
+							</style>
 						</Box>
-					</Box>
-				</Grid>
-			</Grid>
-		</BaseDialog>
+					)
+				}
+			/>
+		</Dialog>
 	);
 };
 
