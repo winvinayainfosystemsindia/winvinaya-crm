@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import type { CandidateAllocation } from '../../../models/training';
 import CandidateAllocationTableRow from './CandidateAllocationTableRow';
-import DropoutReasonDialog from '../../common/DropoutReasonDialog';
+import { DropoutReasonDialog } from '../../common/dialogbox';
 import DataTable from '../../common/table/DataTable';
 import type { ColumnDefinition } from '../../common/table/DataTable';
 
