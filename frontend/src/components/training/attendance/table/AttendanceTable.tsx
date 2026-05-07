@@ -259,8 +259,9 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 					) : (
 						allocations.map(allocation => {
 							const droppedOut = isDroppedOut(allocation.candidate_id);
+							const isPlaced = allocation.status === 'moved_to_placement';
 
-							if (droppedOut) {
+							if (droppedOut || isPlaced) {
 								return (
 									<TableRow key={allocation.id} sx={{ bgcolor: alpha(theme.palette.action.disabledBackground, 0.1) }}>
 										<TableCell
@@ -285,15 +286,17 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 										</TableCell>
 										<TableCell colSpan={hasPeriods ? dailyPlan.length : 2} align="center">
 											<Chip
-												label="Dropped Out"
+												label={isPlaced ? "Moved to Placement" : "Dropped Out"}
 												size="small"
-												color="error"
+												color={isPlaced ? "success" : "error"}
 												variant="outlined"
-												icon={<BlockIcon sx={{ fontSize: '14px !important' }} />}
+												icon={isPlaced ? undefined : <BlockIcon sx={{ fontSize: '14px !important' }} />}
 												sx={{ fontWeight: 800, borderRadius: 1, textTransform: 'uppercase', fontSize: '0.65rem' }}
 											/>
 											<Typography variant="caption" display="block" sx={{ mt: 1, fontWeight: 500, color: 'text.disabled' }}>
-												Cannot mark attendance for dropped out candidates
+												{isPlaced 
+													? "Attendance cannot be marked for candidates in placement" 
+													: "Cannot mark attendance for dropped out candidates"}
 											</Typography>
 										</TableCell>
 									</TableRow>

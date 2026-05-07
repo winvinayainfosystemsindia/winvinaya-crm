@@ -75,7 +75,7 @@ const AttendanceTableRow: React.FC<AttendanceTableRowProps> = memo(({
 				<ToggleButtonGroup
 					value={value}
 					exclusive
-					onChange={(_, v) => { if (v) onChange(v); }}
+					onChange={(_, v) => { onChange(v || ''); }}
 					disabled={disabled}
 					size="small"
 					sx={{ 

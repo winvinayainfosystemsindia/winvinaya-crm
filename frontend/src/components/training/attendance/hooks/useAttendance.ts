@@ -57,9 +57,10 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		return allocation?.is_dropout === true;
 	}, [allocations]);
 
-	// Check if a candidate can mark attendance (must be 'in_training')
 	const canMarkAttendance = useCallback((candidateId: number) => {
 		const allocation = allocations.find(a => a.candidate_id === candidateId);
+		// Cannot mark if dropped out or moved to placement
+		if (allocation?.is_dropout || allocation?.status === 'moved_to_placement') return false;
 		return allocation?.status === 'in_training';
 	}, [allocations]);
 
@@ -136,7 +137,7 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 				candidate_id: candidateId,
 				date: dateStr,
 				period_id: periodId,
-				status: 'present',
+				status: (data.status || 'present') as any,
 				remarks: null,
 				trainer_notes: null,
 				...data
@@ -235,7 +236,7 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		}
 
 		allocations.forEach(allocation => {
-			if (!isDroppedOut(allocation.candidate_id)) {
+			if (!isDroppedOut(allocation.candidate_id) && allocation.status !== 'moved_to_placement') {
 				updatePeriodAttendance(allocation.candidate_id, periodId, { status: status as any });
 			}
 		});
@@ -255,8 +256,14 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		try {
 			const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
-			// Collect all attendance records for the selected date
-			const dailyAttendance = attendance.filter(a => a.date === dateStr);
+			// Collect only eligible attendance records for the selected date
+			const dailyAttendance = attendance.filter(a => {
+				const isDateMatch = a.date === dateStr;
+				if (!isDateMatch) return false;
+				
+				// Only include if candidate is eligible to have attendance records updated
+				return canMarkAttendance(a.candidate_id);
+			});
 
 			await dispatch(updateBulkAttendance(dailyAttendance)).unwrap();
 			toast.success('Attendance saved successfully');
