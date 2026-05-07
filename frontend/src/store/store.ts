@@ -26,7 +26,6 @@ import dsrReducer from './slices/dsrSlice';
 import dsrActivityTypeReducer from './slices/dsrActivityTypeSlice';
 import holidayReducer from './slices/holidaySlice';
 import healthReducer from './slices/healthSlice';
-import x0paReducer from './slices/x0paSlice';
 import aiReducer from './slices/aiSlice';
 import aiChatReducer from './slices/aiChatSlice';
 
@@ -55,7 +54,6 @@ export const store = configureStore({
 		holidays: holidayReducer,
 		// System Health
 		health: healthReducer,
-		x0pa: x0paReducer,
 		ai: aiReducer,
 		aiChat: aiChatReducer,
 		// Placement Slices

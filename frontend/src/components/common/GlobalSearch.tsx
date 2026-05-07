@@ -18,11 +18,10 @@ import {
 	Search as SearchIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useSearchActions, CandidatesIcon, UserIcon, CounselingIcon, ProjectIcon } from '../../hooks/useSearchActions';
+import { useSearchActions, CandidatesIcon, UserIcon, ProjectIcon } from '../../hooks/useSearchActions';
 import type { SearchAction } from '../../hooks/useSearchActions';
 import { candidateService } from '../../services/candidateService';
 import userService from '../../services/userService';
-import { x0paService } from '../../services/x0paService';
 import dsrProjectService from '../../services/dsrProjectService';
 
 const SearchContainer = styled('div')(({ theme }) => ({
@@ -172,11 +171,9 @@ const GlobalSearch: React.FC = () => {
 
 			setLoading(true);
 			try {
-				const [candidateData, userData, jobData, projectData] = await Promise.all([
+				const [candidateData, userData, projectData] = await Promise.all([
 					candidateService.getAll(0, 5, query),
 					userService.search(query, 0, 5),
-					x0paService.getJobs({ searchKey: query, limit: 5 })
-						.catch(() => ({ jobs: [] })),
 					dsrProjectService.getProjects(0, 5, false, query)
 						.catch(() => ({ items: [] }))
 				]);
@@ -197,14 +194,6 @@ const GlobalSearch: React.FC = () => {
 					icon: UserIcon
 				}));
 
-				const jobActions: SearchAction[] = (jobData.jobs || []).map((j: any) => ({
-					id: `job-${j.jobId}`,
-					title: j.jobName,
-					path: `/candidates/counseling`,
-					category: 'Job Role',
-					icon: CounselingIcon
-				}));
-
 				const projectActions: SearchAction[] = (projectData.items || []).map((p: any) => ({
 					id: `project-${p.public_id}`,
 					title: p.name,
@@ -213,7 +202,7 @@ const GlobalSearch: React.FC = () => {
 					icon: ProjectIcon
 				}));
 
-				setDynamicResults([...candidateActions, ...userActions, ...jobActions, ...projectActions]);
+				setDynamicResults([...candidateActions, ...userActions, ...projectActions]);
 			} catch (error) {
 				console.error('Global search error:', error);
 				setDynamicResults([]);
@@ -332,7 +321,7 @@ const GlobalSearch: React.FC = () => {
 							</Typography>
 						</Box>
 						<List sx={{ py: 0 }}>
-							{['General', 'Admin', 'Candidates', 'Projects', 'Training', 'Candidate', 'User', 'Job Role', 'Project'].map((cat) => {
+							{['General', 'Admin', 'Candidates', 'Projects', 'Training', 'Candidate', 'User', 'Project'].map((cat) => {
 								const catResults = filteredResults.filter(r => r.category === cat);
 								if (catResults.length === 0) return null;
 

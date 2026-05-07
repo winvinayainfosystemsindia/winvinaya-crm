@@ -41,7 +41,6 @@ from app.api.v1.endpoints import (
     dsr_project_requests,
     company_holidays,
     notifications,
-    x0pa,
     maintenance,
     skills,
     ai,
@@ -111,5 +110,3 @@ router.include_router(user_email_configuration.router, tags=["User Email Configu
 router.include_router(placement_email.router, tags=["Placement Email"])
 router.include_router(consent.router, prefix="/consent", tags=["Consent"])
 
-# X0PA Integration
-router.include_router(x0pa.router)
