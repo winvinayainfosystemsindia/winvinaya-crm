@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
 	Box,
 	Typography,
@@ -7,8 +7,13 @@ import {
 	Chip,
 	useTheme,
 	alpha,
+	Stack,
+	CircularProgress
 } from '@mui/material';
-import { Info as InfoIcon, Work as WorkIcon } from '@mui/icons-material';
+import { Info as InfoIcon, Work as WorkIcon, Business as BusinessIcon, LocationOn as LocationIcon } from '@mui/icons-material';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchJobRoles } from '../../store/slices/jobRoleSlice';
+import type { JobRole } from '../../models/jobRole';
 
 interface JobRoleSearchProps {
 	value: string[];
@@ -18,15 +23,51 @@ interface JobRoleSearchProps {
 
 /**
  * JobRoleSearch - Standalone component for professional job role selection.
- * Refactored to be a clean, free-text tag input for suggested job roles.
+ * Integrated with the JobRole Redux slice for state management.
  */
 const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 	value,
 	onChange,
-	placeholder = "Type to add suggested job roles..."
+	placeholder = "Search by job title or company..."
 }) => {
 	const theme = useTheme();
+	const dispatch = useAppDispatch();
 	const [inputValue, setInputValue] = useState('');
+	
+	// Get job roles from Redux store instead of local state
+	const { list: options, loading } = useAppSelector((state) => state.jobRoles);
+	const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	const loadJobRoles = useCallback((search: string) => {
+		dispatch(fetchJobRoles({
+			search: search || undefined,
+			limit: 50,
+			skip: 0
+		}));
+	}, [dispatch]);
+
+	useEffect(() => {
+		if (debounceTimer.current) clearTimeout(debounceTimer.current);
+		
+		// If user typed the first character, fetch immediately for responsiveness
+		if (inputValue.length === 1) {
+			loadJobRoles(inputValue);
+			return;
+		}
+
+		debounceTimer.current = setTimeout(() => {
+			loadJobRoles(inputValue);
+		}, 300);
+
+		return () => {
+			if (debounceTimer.current) clearTimeout(debounceTimer.current);
+		};
+	}, [inputValue, loadJobRoles]);
+
+	const formatValue = (val: string | JobRole) => {
+		if (typeof val === 'string') return val;
+		return val.title;
+	};
 
 	return (
 		<Box>
@@ -47,9 +88,9 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 				<Box>
 					<Typography variant="subtitle2" sx={{ color: 'primary.main', fontWeight: 700, mb: 0.5 }}>Recommendation Instructions</Typography>
 					<Typography variant="caption" sx={{ color: 'text.secondary', lineHeight: 1.6, display: 'block' }}>
-						• Type the job role name and press <strong>Enter</strong> to add it.<br />
-						• Use formal designations (e.g., "Software Architect" instead of "Lead Dev").<br />
-						• You can add multiple roles that are suitable for the candidate.
+						• Type to search our internal <strong>Placement Job Roles</strong>.<br />
+						• Select a role from the list or press <strong>Enter</strong> to add a custom recommendation.<br />
+						• Use formal designations (e.g., "Software Architect" instead of "Lead Dev").
 					</Typography>
 				</Box>
 			</Box>
@@ -57,15 +98,52 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 			<Autocomplete
 				multiple
 				freeSolo
-				options={[]} // No pre-defined options, entirely free-text for now
+				openOnFocus
+				filterOptions={(x) => x}
+				options={options}
+				loading={loading}
+				getOptionLabel={formatValue}
 				inputValue={inputValue}
 				onInputChange={(_, newInputValue) => {
 					setInputValue(newInputValue);
 				}}
 				value={value}
 				onChange={(_, newValue) => {
-					onChange(newValue as string[]);
+					const finalValue = newValue.map(v => typeof v === 'string' ? v : v.title);
+					onChange(finalValue);
 					setInputValue('');
+				}}
+				renderOption={(props, option) => {
+					const { key, ...optionProps } = props;
+					// When using freeSolo, option can be a string, but here options is JobRole[]
+					const job = option as JobRole;
+					return (
+						<li {...optionProps} key={key}>
+							<Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', py: 0.5 }}>
+								<Typography variant="body2" sx={{ fontWeight: 700, color: 'primary.main' }}>
+									{job.title}
+								</Typography>
+								<Stack direction="row" spacing={2} sx={{ mt: 0.5 }}>
+									{job.company && (
+										<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+											<BusinessIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+											<Typography variant="caption" color="text.secondary">
+												{job.company.name}
+											</Typography>
+										</Box>
+									)}
+									{job.location?.cities && job.location.cities.length > 0 && (
+										<Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+											<LocationIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+											<Typography variant="caption" color="text.secondary">
+												{job.location.cities.join(', ')}
+											</Typography>
+										</Box>
+									)}
+								</Stack>
+							</Box>
+						</li>
+					);
 				}}
 				renderInput={(params) => (
 					<TextField
@@ -73,6 +151,9 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 						placeholder={value.length === 0 ? placeholder : ""}
 						size="small"
 						fullWidth
+						onFocus={() => {
+							if (options.length === 0) loadJobRoles(inputValue);
+						}}
 						sx={{
 							'& .MuiOutlinedInput-root': {
 								borderRadius: 1,
@@ -82,31 +163,43 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 								'&.Mui-focused fieldset': { borderColor: theme.palette.primary.main }
 							}
 						}}
+						InputProps={{
+							...params.InputProps,
+							endAdornment: (
+								<React.Fragment>
+									{loading ? <CircularProgress color="inherit" size={16} /> : null}
+									{params.InputProps.endAdornment}
+								</React.Fragment>
+							),
+						}}
 					/>
 				)}
 				renderTags={(tagValue, getTagProps) =>
-					tagValue.map((option, index: number) => (
-						<Chip
-							{...getTagProps({ index })}
-							key={index}
-							icon={<WorkIcon sx={{ fontSize: '1rem !important' }} />}
-							label={option}
-							sx={{
-								borderRadius: 1,
-								bgcolor: alpha(theme.palette.primary.main, 0.08),
-								border: '1px solid',
-								borderColor: alpha(theme.palette.primary.main, 0.2),
-								color: 'primary.main',
-								fontWeight: 600,
-								height: 32,
-								'& .MuiChip-deleteIcon': {
+					tagValue.map((option, index: number) => {
+						const label = typeof option === 'string' ? option : option.title;
+						return (
+							<Chip
+								{...getTagProps({ index })}
+								key={index}
+								icon={<WorkIcon sx={{ fontSize: '1rem !important' }} />}
+								label={label}
+								sx={{
+									borderRadius: 1,
+									bgcolor: alpha(theme.palette.primary.main, 0.08),
+									border: '1px solid',
+									borderColor: alpha(theme.palette.primary.main, 0.2),
 									color: 'primary.main',
-									fontSize: 18,
-									'&:hover': { color: 'error.main' }
-								}
-							}}
-						/>
-					))
+									fontWeight: 600,
+									height: 32,
+									'& .MuiChip-deleteIcon': {
+										color: 'primary.main',
+										fontSize: 18,
+										'&:hover': { color: 'error.main' }
+									}
+								}}
+							/>
+						);
+					})
 				}
 			/>
 		</Box>
