@@ -14,7 +14,7 @@ import {
 	EmojiEvents as SoftSkillIcon
 } from '@mui/icons-material';
 import { awsStyles } from '../../../../theme/theme';
-import ConfirmDialog from '../../../common/ConfirmDialog';
+import { ConfirmationDialog } from '../../../common/dialogbox';
 import useToast from '../../../../hooks/useToast';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { fetchAggregatedSkills, createSkill } from '../../../../store/slices/skillSlice';
@@ -192,12 +192,12 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 			</Paper>
 
 			{/* Confirmation Dialog */}
-			<ConfirmDialog
+			<ConfirmationDialog
 				open={confirmDialogOpen}
 				title="Standardize New Skill?"
 				message={`"${newSkillName}" is not in our master database. Adding it will standardize this skill across all candidate profiles in the system.`}
-				confirmText="Add to Database"
-				cancelText="Discard"
+				confirmLabel="Add to Database"
+				cancelLabel="Discard"
 				onClose={() => {
 					setConfirmDialogOpen(false);
 					if (activeField) onUpdateField('skills', activeField, pendingNewValues);

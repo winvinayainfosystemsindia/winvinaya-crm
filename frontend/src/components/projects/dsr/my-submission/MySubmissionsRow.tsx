@@ -26,7 +26,7 @@ import {
 	CalendarMonth as DateIcon,
 	AccessTime as TimeIcon
 } from '@mui/icons-material';
-import ConfirmDialog from '../../../common/ConfirmDialog';
+import { ConfirmationDialog } from '../../../common/dialogbox';
 import type { DSREntry } from '../../../../models/dsr';
 import { DSRStatusValues } from '../../../../models/dsr';
 import useDateTime from '../../../../hooks/useDateTime';
@@ -332,13 +332,13 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ entry, onView, onEdit, onDelete
 				)}
 			</Menu>
 
-			<ConfirmDialog
+			<ConfirmationDialog
 				open={deleteDialogOpen}
 				title="Delete DSR Entry"
 				message={`Are you sure you want to delete the timesheet for ${formatDate(entry.report_date)}?`}
 				onClose={() => setDeleteDialogOpen(false)}
 				onConfirm={handleDeleteConfirm}
-				confirmText="Delete"
+				confirmLabel="Delete"
 				severity="error"
 			/>
 		</>

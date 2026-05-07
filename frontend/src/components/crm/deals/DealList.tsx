@@ -15,7 +15,7 @@ import { DataTable, type ColumnDefinition } from '../../common/table';
 import DealTableRow from './table/DealTableRow';
 import DealFormDialog from './DealFormDialog';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
-import ConfirmDialog from '../../common/ConfirmDialog';
+import { ConfirmationDialog } from '../../common/dialogbox';
 import StatCard from '../../common/stats/StatCard';
 import type { Deal, DealCreate, DealUpdate } from '../../../models/deal';
 import useToast from '../../../hooks/useToast';
@@ -231,11 +231,11 @@ const DealList: React.FC<DealListProps> = ({ onAddClick }) => {
 				onApplyFilters={() => { setFilterDrawerOpen(false); setPage(0); }}
 			/>
 
-			<ConfirmDialog
+			<ConfirmationDialog
 				open={deleteDialogOpen}
 				title="Delete Deal"
 				message={`Are you sure you want to delete deal "${selectedDeal?.title}"? This action cannot be undone.`}
-				confirmText="Delete"
+				confirmLabel="Delete"
 				onClose={() => setDeleteDialogOpen(false)}
 				onConfirm={handleDeleteConfirm}
 				loading={deleting}

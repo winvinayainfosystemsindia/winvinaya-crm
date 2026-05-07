@@ -14,7 +14,7 @@ import { DataTable, type ColumnDefinition } from '../../common/table';
 import ContactTableRow from './table/ContactTableRow';
 import ContactFormDialog from './ContactFormDialog';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
-import ConfirmDialog from '../../common/ConfirmDialog';
+import { ConfirmationDialog } from '../../common/dialogbox';
 import StatCard from '../../common/stats/StatCard';
 import type { Contact, ContactCreate, ContactUpdate } from '../../../models/contact';
 import useToast from '../../../hooks/useToast';
@@ -226,11 +226,11 @@ const ContactList: React.FC<ContactListProps> = ({ onAddClick }) => {
 				onApplyFilters={() => { setFilterDrawerOpen(false); setPage(0); }}
 			/>
 
-			<ConfirmDialog
+			<ConfirmationDialog
 				open={deleteDialogOpen}
 				title="Delete Contact"
 				message={`Are you sure you want to delete "${selectedContact?.first_name} ${selectedContact?.last_name}"? This action cannot be undone.`}
-				confirmText="Delete"
+				confirmLabel="Delete"
 				onClose={() => setDeleteDialogOpen(false)}
 				onConfirm={handleDeleteConfirm}
 				loading={deleting}

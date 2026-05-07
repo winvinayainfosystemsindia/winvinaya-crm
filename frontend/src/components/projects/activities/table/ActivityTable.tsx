@@ -26,7 +26,7 @@ import { useActivityTable } from '../hooks/useActivityTable';
 // Common Components
 import { DataTable, DataTableActions } from '../../../common/table';
 import type { ColumnDefinition } from '../../../common/table';
-import ConfirmDialog from '../../../common/ConfirmDialog';
+import { ConfirmationDialog } from '../../../common/dialogbox';
 
 interface ActivityTableProps {
 	projectId: string;
@@ -360,7 +360,7 @@ const ActivityTable: React.FC<ActivityTableProps> = ({
 				emptyMessage={statusFilter === 'all' ? 'No activities found for this project.' : `No ${statusFilter.replace('_', ' ')} activities found.`}
 			/>
 
-			<ConfirmDialog
+			<ConfirmationDialog
 				open={confirmOpen}
 				title="Delete Activities"
 				message={`Are you sure you want to delete ${selectedIds.size} selected activit${selectedIds.size === 1 ? 'y' : 'ies'}? This will permanently remove them if they are not referenced in any DSR entries.`}
@@ -370,6 +370,7 @@ const ActivityTable: React.FC<ActivityTableProps> = ({
 					await handleBulkDelete();
 					setConfirmOpen(false);
 				}}
+				confirmLabel="Delete"
 				severity="error"
 			/>
 		</Box>

@@ -23,7 +23,7 @@ import { Delete as DeleteIcon, Add as AddIcon, CloudUpload as UploadIcon, Edit a
 import CustomTablePagination from '../../../common/table/CustomTablePagination';
 import DSRAdminTableHeader from './DSRAdminTableHeader';
 import ExcelImportModal from '../../../common/ExcelImportModal';
-import ConfirmDialog from '../../../common/ConfirmDialog';
+import { ConfirmationDialog } from '../../../common/dialogbox';
 import dayjs from 'dayjs';
 import { useHolidayAdmin } from '../hooks/useHolidayAdmin';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
@@ -258,7 +258,7 @@ const HolidayTable: React.FC = () => {
 				onSuccess={() => admin.handleRefresh()}
 			/>
 
-			<ConfirmDialog
+			<ConfirmationDialog
 				open={openConfirmDelete}
 				title="Delete Holiday"
 				message="Are you sure you want to delete this holiday? This action cannot be undone."
@@ -267,7 +267,7 @@ const HolidayTable: React.FC = () => {
 					setHolidayToDelete(null);
 				}}
 				onConfirm={handleDeleteConfirm}
-				confirmText="Delete"
+				confirmLabel="Delete"
 				severity="error"
 				loading={deleting}
 			/>

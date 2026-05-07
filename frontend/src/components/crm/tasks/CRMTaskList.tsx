@@ -12,7 +12,7 @@ import { DataTable, type ColumnDefinition } from '../../common/table';
 import TaskTableRow from './table/TaskTableRow';
 import CRMTaskFormDialog from './CRMTaskFormDialog';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
-import ConfirmDialog from '../../common/ConfirmDialog';
+import { ConfirmationDialog } from '../../common/dialogbox';
 import StatCard from '../../common/stats/StatCard';
 import type { CRMTask, CRMTaskCreate, CRMTaskUpdate } from '../../../models/crmTask';
 import useToast from '../../../hooks/useToast';
@@ -219,11 +219,11 @@ const CRMTaskList: React.FC<CRMTaskListProps> = ({ onAddClick }) => {
 				onApplyFilters={() => { setFilterDrawerOpen(false); setPage(0); }}
 			/>
 
-			<ConfirmDialog
+			<ConfirmationDialog
 				open={deleteDialogOpen}
 				title="Delete Task"
 				message={`Are you sure you want to delete task "${selectedTask?.title}"?`}
-				confirmText="Delete"
+				confirmLabel="Delete"
 				onClose={() => setDeleteDialogOpen(false)}
 				onConfirm={handleDeleteConfirm}
 				loading={deleting}

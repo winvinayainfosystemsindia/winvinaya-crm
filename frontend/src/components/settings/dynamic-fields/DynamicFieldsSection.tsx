@@ -23,7 +23,7 @@ import {
 import { settingsService, type DynamicField } from '../../../services/settingsService';
 import { useSnackbar } from 'notistack';
 import FieldDialog from './FieldDialog';
-import ConfirmDialog from '../../common/ConfirmDialog';
+import { ConfirmationDialog } from '../../common/dialogbox';
 
 interface DynamicFieldsSectionProps {
 	entityType: 'screening' | 'counseling';
@@ -277,13 +277,13 @@ const DynamicFieldsSection: React.FC<DynamicFieldsSectionProps> = ({ entityType 
 				nextOrder={fields.length}
 			/>
 
-			<ConfirmDialog
+			<ConfirmationDialog
 				open={confirmDeleteOpen}
 				title="Delete Custom Field"
 				message="Are you sure you want to delete this custom field? This action will hide this field from future screening/counseling entries. Existing data will be preserved but the field will no longer be visible."
 				onClose={() => setConfirmDeleteOpen(false)}
 				onConfirm={handleConfirmDelete}
-				confirmText="Delete Field"
+				confirmLabel="Delete Field"
 				loading={deleteLoading}
 				severity="error"
 			/>

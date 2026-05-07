@@ -1,5 +1,5 @@
 import React from 'react';
-import ConfirmDialog from '../../../common/ConfirmDialog';
+import { ConfirmationDialog } from '../../../common/dialogbox';
 import { useJobRoleTable } from '../hooks/useJobRoleTable';
 import { getJobRoleFilterFields } from './JobRoleFilters';
 import FilterDrawer from '../../../common/FilterDrawer';
@@ -112,13 +112,13 @@ const JobRoleTable: React.FC<JobRoleTableProps> = ({ onEditJobRole }) => {
 				onApplyFilters={applyFilters}
 			/>
 
-			<ConfirmDialog
+			<ConfirmationDialog
 				open={deleteDialogOpen}
 				title="Delete Job Role"
 				message={`Are you sure you want to remove the job role "${jobRoleToDelete?.title}"? This action will archive the record and it will no longer appear in active lists.`}
 				onClose={handleDeleteCancel}
 				onConfirm={handleDeleteConfirm}
-				confirmText="Delete"
+				confirmLabel="Delete"
 				loading={deleteLoading}
 				severity="error"
 			/>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Snackbar, Alert, Button } from '@mui/material';
 import { AssignmentInd } from '@mui/icons-material';
-import ConfirmDialog from '../../common/ConfirmDialog';
+import { ConfirmationDialog } from '../../common/dialogbox';
 import { useCandidateTable } from '../hooks/useCandidateTable';
 import { getCandidateFilterFields } from './CandidateFilters';
 
@@ -124,13 +124,13 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onViewCandidate }) => {
 			/>
 
 			{/* Dialogs & Notifications */}
-			<ConfirmDialog
+			<ConfirmationDialog
 				open={deleteDialogOpen}
 				title="Delete Candidate"
 				message={`Are you sure you want to delete "${candidateToDelete?.name}"? This action is permanent and will remove all associated data, documents, and training history.`}
 				onClose={handleDeleteCancel}
 				onConfirm={handleDeleteConfirm}
-				confirmText="Delete permanently"
+				confirmLabel="Delete permanently"
 				loading={deleteLoading}
 				severity="error"
 			/>

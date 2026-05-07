@@ -28,7 +28,7 @@ import {
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { fetchAggregatedSkills, createSkill } from '../../../../store/slices/skillSlice';
 import type { CandidateCounselingCreate, CounselingSkill } from '../../../../models/candidate';
-import ConfirmDialog from '../../../common/ConfirmDialog';
+import { ConfirmationDialog } from '../../../common/dialogbox';
 import useToast from '../../../../hooks/useToast';
 
 interface SkillAssessmentTabProps {
@@ -309,12 +309,12 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 				)}
 			</Paper>
 
-			<ConfirmDialog
+			<ConfirmationDialog
 				open={confirmAddSkillDialogOpen}
 				title="Standardize Competency?"
 				message={`"${newSkillName}" is not in our master data registry. Adding it will standardize this competency across the enterprise.`}
-				confirmText="Yes, Standardize"
-				cancelText="Cancel"
+				confirmLabel="Yes, Standardize"
+				cancelLabel="Cancel"
 				onClose={() => {
 					setConfirmAddSkillDialogOpen(false);
 					if (pendingIndex !== null) onSkillChange(pendingIndex, 'name', newSkillName);

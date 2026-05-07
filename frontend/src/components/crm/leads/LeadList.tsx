@@ -15,7 +15,7 @@ import { DataTable, type ColumnDefinition } from '../../common/table';
 import LeadTableRow from './table/LeadTableRow';
 import LeadFormDialog from './LeadFormDialog';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
-import ConfirmDialog from '../../common/ConfirmDialog';
+import { ConfirmationDialog } from '../../common/dialogbox';
 import StatCard from '../../common/stats/StatCard';
 import type { Lead, LeadCreate, LeadUpdate } from '../../../models/lead';
 import useToast from '../../../hooks/useToast';
@@ -225,11 +225,11 @@ const LeadList: React.FC<LeadListProps> = ({ onAddClick }) => {
 				onApplyFilters={() => { setFilterDrawerOpen(false); setPage(0); }}
 			/>
 
-			<ConfirmDialog
+			<ConfirmationDialog
 				open={deleteDialogOpen}
 				title="Delete Lead"
 				message={`Are you sure you want to delete lead "${selectedLead?.title}"? This action cannot be undone.`}
-				confirmText="Delete"
+				confirmLabel="Delete"
 				onClose={() => setDeleteDialogOpen(false)}
 				onConfirm={handleDeleteConfirm}
 				loading={deleting}

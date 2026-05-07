@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchCompanies, fetchCompanyStats, createCompany, updateCompany, deleteCompany } from '../../../store/slices/companySlice';
 
 import CompanyFormDialog from './form/CompanyFormDialog';
-import ConfirmDialog from '../../common/ConfirmDialog';
+import { ConfirmationDialog } from '../../common/dialogbox';
 import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
 import CompanyStats from './stats/CompanyStats';
 import CompanyTable from './table/CompanyTable';
@@ -220,11 +220,11 @@ const CompanyList: React.FC<CompanyListProps> = ({ onAddClick }) => {
 					onApplyFilters={handleApplyFilters}
 				/>
 
-				<ConfirmDialog
+				<ConfirmationDialog
 					open={deleteDialogOpen}
 					title="Delete Company"
 					message={`Are you sure you want to delete "${selectedCompany?.name}"? This will remove all associated data and cannot be undone.`}
-					confirmText="Delete"
+					confirmLabel="Delete"
 					onClose={() => setDeleteDialogOpen(false)}
 					onConfirm={handleDeleteConfirm}
 					loading={deleting}

@@ -41,7 +41,7 @@ import useToast from '../../../../hooks/useToast';
 import type { DSRActivityType, ImportResult } from '../../../../models/dsr';
 import DSRAdminTableHeader from './DSRAdminTableHeader';
 import ExcelImportModal from '../../../common/ExcelImportModal';
-import ConfirmDialog from '../../../common/ConfirmDialog';
+import { ConfirmationDialog } from '../../../common/dialogbox';
 
 const DSRActivityTypeManagement: React.FC = () => {
 	const dispatch = useAppDispatch();
@@ -426,24 +426,24 @@ const DSRActivityTypeManagement: React.FC = () => {
 				accept=".csv"
 			/>
 
-			<ConfirmDialog
+			<ConfirmationDialog
 				open={deleteConfirmOpen}
 				onClose={() => setDeleteConfirmOpen(false)}
 				onConfirm={handleConfirmDelete}
 				title="Confirm Delete"
 				message="Are you sure you want to delete this activity type? This will move it to the inactive list."
-				confirmText="Delete"
+				confirmLabel="Delete"
 				severity="error"
 				loading={deleting}
 			/>
 
-			<ConfirmDialog
+			<ConfirmationDialog
 				open={bulkDeleteConfirmOpen}
 				onClose={() => setBulkDeleteConfirmOpen(false)}
 				onConfirm={handleConfirmBulkDelete}
 				title="Confirm Bulk Delete"
 				message={`Are you sure you want to delete ${selectedIds.length} activity types? This will move them to the inactive list.`}
-				confirmText={`Delete ${selectedIds.length} items`}
+				confirmLabel={`Delete ${selectedIds.length} items`}
 				severity="error"
 				loading={deleting}
 			/>
