@@ -116,6 +116,7 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 		setInactivitySeconds(0);
 		setIsDirty(true);
 		setShowTimeRunningAlert(false);
+		setShowInactivityAlert(false);
 	}, []);
 
 	// Monitor for "Forgot to start" scenario

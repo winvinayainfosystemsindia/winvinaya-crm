@@ -3,8 +3,14 @@ import {
 	Snackbar, 
 	Alert, 
 	Button, 
-	Stack, 
-	useTheme 
+	alpha,
+	useTheme,
+	Dialog,
+	DialogTitle,
+	DialogContent,
+	DialogActions,
+	Typography,
+	Box
 } from '@mui/material';
 import { 
 	Timer as TimerIcon, 
@@ -115,48 +121,67 @@ const SessionMonitoring: React.FC<SessionMonitoringProps> = ({
 				</Alert>
 			</Snackbar>
 
-			{/* Inactivity Alert Prompt */}
-			<Snackbar 
-				open={showInactivityAlert} 
-				anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-				onClose={onCloseInactivity}
-				sx={{ mt: 12 }}
-			>
-				<Alert 
-					severity="error" 
-					icon={<WarningIcon sx={{ color: 'error.main' }} />}
-					action={
-						<Stack direction="row" spacing={1}>
-							<Button 
-								variant="contained" 
-								color="error"
-								size="small" 
-								onClick={onResume} 
-								sx={{ fontWeight: 800, px: 2 }}
-							>
-								STILL HERE (RESUME)
-							</Button>
-						</Stack>
-					}
-					sx={{ 
-						borderRadius: '4px',
-						border: '1px solid',
+			{/* Inactivity Alert Modal (3 Minutes Inactivity) */}
+			<Dialog
+				open={showInactivityAlert}
+				disableEscapeKeyDown
+				onClose={(_, reason) => {
+					if (reason === 'backdropClick') return;
+					onCloseInactivity();
+				}}
+				PaperProps={{
+					sx: {
+						borderRadius: 2,
+						border: '2px solid',
 						borderColor: 'error.light',
-						bgcolor: 'background.paper',
-						color: 'text.primary',
-						boxShadow: theme.shadows[12],
-						fontWeight: 600,
-						minWidth: 450,
-						py: 1.5,
-						px: 2,
-						'& .MuiAlert-message': {
-							fontSize: '0.95rem'
-						}
-					}}
-				>
-					Inactivity detected for 3 minutes. The session has been paused automatically. Are you still there?
-				</Alert>
-			</Snackbar>
+						p: 1
+					}
+				}}
+			>
+				<DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5, pb: 1 }}>
+					<WarningIcon color="error" />
+					<Typography variant="h6" sx={{ fontWeight: 800, color: 'error.main' }}>
+						Session Paused Due to Inactivity
+					</Typography>
+				</DialogTitle>
+				<DialogContent>
+					<Typography variant="body1" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+						You have been inactive for 3 minutes. The interview timer has been paused automatically to ensure accurate session tracking.
+					</Typography>
+					<Box sx={{ 
+						mt: 2, 
+						p: 2, 
+						bgcolor: alpha(theme.palette.error.main, 0.05), 
+						borderRadius: 1, 
+						border: '1px dashed', 
+						borderColor: 'error.main',
+						textAlign: 'center'
+					}}>
+						<Typography variant="caption" sx={{ color: 'error.main', fontWeight: 900, letterSpacing: '0.05em' }}>
+							SYSTEM STATUS: TIMER SUSPENDED
+						</Typography>
+					</Box>
+				</DialogContent>
+				<DialogActions sx={{ p: 2.5, pt: 1 }}>
+					<Button 
+						fullWidth
+						variant="contained" 
+						color="error"
+						size="large" 
+						onClick={onResume} 
+						sx={{ 
+							fontWeight: 800, 
+							py: 1.5,
+							boxShadow: theme.shadows[4],
+							'&:hover': {
+								boxShadow: theme.shadows[8]
+							}
+						}}
+					>
+						STILL HERE (RESUME SESSION)
+					</Button>
+				</DialogActions>
+			</Dialog>
 
 			<style>
 				{`
