@@ -7,12 +7,13 @@ import {
 	alpha,
 	useTheme,
 	IconButton,
-	Tooltip
+	Tooltip,
 } from '@mui/material';
-import { 
-	PlayArrow as StartIcon, 
-	Pause as PauseIcon 
+import {
+	PlayArrow as StartIcon,
+	Pause as PauseIcon
 } from '@mui/icons-material';
+import SessionMonitoring from '../../../common/monitoring/SessionMonitoring';
 import { type AppDispatch, type RootState } from '../../../../store/store';
 import { useMockInterviewForm } from '../hooks/useMockInterviewForm';
 import { fetchAggregatedSkills } from '../../../../store/slices/skillSlice';
@@ -48,6 +49,10 @@ const MockInterviewForm: React.FC<MockInterviewFormProps> = ({ open, onClose, ba
 		saveLoading,
 		elapsedSeconds,
 		isPaused,
+		showStartReminder,
+		showInactivityAlert,
+		showTimeRunningAlert,
+		setShowInactivityAlert,
 		toggleTimer,
 		handleChange,
 		handleQuestionChange,
@@ -56,7 +61,8 @@ const MockInterviewForm: React.FC<MockInterviewFormProps> = ({ open, onClose, ba
 		handleSkillChange,
 		addSkill,
 		removeSkill,
-		handleSubmit
+		handleSubmit,
+		updateInteraction
 	} = useMockInterviewForm(batchId, onClose);
 
 	const steps: FormStep[] = useMemo(() => [
@@ -122,101 +128,112 @@ const MockInterviewForm: React.FC<MockInterviewFormProps> = ({ open, onClose, ba
 	};
 
 	return (
-		<Dialog
-			open={open}
-			onClose={(_, reason) => {
-				if (reason === 'backdropClick') return;
-				onClose();
-			}}
-			maxWidth="lg"
-			fullWidth
-			disableEscapeKeyDown
-			PaperProps={{
-				sx: {
-					borderRadius: 0,
-					boxShadow: 'none',
-					bgcolor: 'transparent'
-				}
-			}}
-		>
-			<EnterpriseForm
-				title={`${viewMode ? 'Review' : currentMockInterview ? 'Edit' : 'Record'} Mock Interview`}
-				subtitle="Enterprise-grade technical proficiency assessment console"
-				mode={viewMode ? 'view' : currentMockInterview ? 'edit' : 'create'}
-				steps={steps}
-				onSave={handleSubmit}
-				onCancel={onClose}
-				isSubmitting={saveLoading}
-				saveButtonText={viewMode ? 'Close' : currentMockInterview ? 'Update Session' : 'Finalize Session'}
-				headerActions={
-					!viewMode && !currentMockInterview && (
-						<Box 
-							sx={{ 
-								display: 'flex', 
-								alignItems: 'center', 
-								gap: 1, 
-								px: 1.5, 
-								py: 0.5, 
-								borderRadius: 2, 
-								bgcolor: alpha(isPaused ? theme.palette.warning.main : theme.palette.error.main, 0.08),
-								border: '1px solid',
-								borderColor: alpha(isPaused ? theme.palette.warning.main : theme.palette.error.main, 0.2),
-								mr: 2
-							}}
-						>
-							<Box 
-								sx={{ 
-									width: 8, 
-									height: 8, 
-									borderRadius: '50%', 
-									bgcolor: isPaused ? 'warning.main' : 'error.main',
-									animation: isPaused ? 'none' : 'pulse 2s infinite'
-								}} 
-							/>
-							<Typography 
-								variant="subtitle2" 
-								sx={{ 
-									fontWeight: 800, 
-									fontFamily: 'monospace', 
-									color: isPaused ? 'warning.main' : 'error.main',
-									fontSize: '0.9rem',
-									minWidth: '65px',
-									textAlign: 'center'
+		<>
+			<Dialog
+				open={open}
+				onClose={(_, reason) => {
+					if (reason === 'backdropClick') return;
+					onClose();
+				}}
+				maxWidth="lg"
+				fullWidth
+				disableEscapeKeyDown
+				PaperProps={{
+					sx: {
+						borderRadius: 0,
+						boxShadow: 'none',
+						bgcolor: 'transparent'
+					}
+				}}
+			>
+				<EnterpriseForm
+					title={`${viewMode ? 'Review' : currentMockInterview ? 'Edit' : 'Record'} Mock Interview`}
+					subtitle="Enterprise-grade technical proficiency assessment console"
+					mode={viewMode ? 'view' : currentMockInterview ? 'edit' : 'create'}
+					steps={steps}
+					onSave={handleSubmit}
+					onCancel={onClose}
+					isSubmitting={saveLoading}
+					saveButtonText={viewMode ? 'Close' : currentMockInterview ? 'Update Session' : 'Finalize Session'}
+					headerActions={
+						!viewMode && !currentMockInterview && (
+							<Box
+								sx={{
+									display: 'flex',
+									alignItems: 'center',
+									gap: 1,
+									px: 1.5,
+									py: 0.5,
+									borderRadius: 2,
+									bgcolor: alpha(isPaused ? theme.palette.warning.main : theme.palette.error.main, 0.08),
+									border: '1px solid',
+									borderColor: alpha(isPaused ? theme.palette.warning.main : theme.palette.error.main, 0.2),
+									mr: 2
 								}}
 							>
-								{formatElapsed(elapsedSeconds)}
-							</Typography>
-							<Tooltip title={elapsedSeconds === 0 && isPaused ? "Start Interview" : isPaused ? "Resume Interview" : "Pause Interview"}>
-								<IconButton 
-									size="small" 
-									onClick={toggleTimer}
-									sx={{ 
+								<Box
+									sx={{
+										width: 8,
+										height: 8,
+										borderRadius: '50%',
+										bgcolor: isPaused ? 'warning.main' : 'error.main',
+										animation: isPaused ? 'none' : 'pulse 2s infinite'
+									}}
+								/>
+								<Typography
+									variant="subtitle2"
+									sx={{
+										fontWeight: 800,
+										fontFamily: 'monospace',
 										color: isPaused ? 'warning.main' : 'error.main',
-										p: 0.5,
-										'&:hover': {
-											bgcolor: alpha(isPaused ? theme.palette.warning.main : theme.palette.error.main, 0.1)
-										}
+										fontSize: '0.9rem',
+										minWidth: '65px',
+										textAlign: 'center'
 									}}
 								>
-									{isPaused ? <StartIcon fontSize="small" /> : <PauseIcon fontSize="small" />}
-								</IconButton>
-							</Tooltip>
-							<style>
-								{`
+									{formatElapsed(elapsedSeconds)}
+								</Typography>
+								<Tooltip title={elapsedSeconds === 0 && isPaused ? "Start Interview" : isPaused ? "Resume Interview" : "Pause Interview"}>
+									<IconButton
+										size="small"
+										onClick={toggleTimer}
+										sx={{
+											color: isPaused ? 'warning.main' : 'error.main',
+											p: 0.5,
+											'&:hover': {
+												bgcolor: alpha(isPaused ? theme.palette.warning.main : theme.palette.error.main, 0.1)
+											}
+										}}
+									>
+										{isPaused ? <StartIcon fontSize="small" /> : <PauseIcon fontSize="small" />}
+									</IconButton>
+								</Tooltip>
+								<style>
+									{`
 									@keyframes pulse {
 										0% { opacity: 1; transform: scale(1); }
 										50% { opacity: 0.5; transform: scale(1.2); }
 										100% { opacity: 1; transform: scale(1); }
 									}
 								`}
-							</style>
-						</Box>
-					)
-				}
-			/>
-		</Dialog>
+								</style>
+							</Box>
+						)
+					}
+				/>
+
+				{/* Session Monitoring Prompts - Integrated inside Dialog for visibility */}
+				<SessionMonitoring
+					showStartReminder={showStartReminder}
+					showInactivityAlert={showInactivityAlert}
+					showTimeRunningAlert={showTimeRunningAlert}
+					onStart={toggleTimer}
+					onResume={() => { updateInteraction(); toggleTimer(); }}
+					onCloseInactivity={() => setShowInactivityAlert(false)}
+				/>
+			</Dialog>
+		</>
 	);
 };
 
 export default MockInterviewForm;
-

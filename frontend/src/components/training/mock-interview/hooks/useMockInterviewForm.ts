@@ -74,11 +74,26 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 			setElapsedSeconds(0);
 			setIsPaused(true);
 
-			// Start stopwatch for new interview
+			// Start stopwatch & inactivity tracker
 			timerRef.current = setInterval(() => {
 				setIsPaused(paused => {
 					if (!paused) {
 						setElapsedSeconds(prev => prev + 1);
+						
+						// Synchronized Inactivity Check
+						setInactivitySeconds(prevInactivity => {
+							const nextInactivity = prevInactivity + 1;
+							
+							if (nextInactivity === 180) { // 3 Minutes - Automatic Pause
+								setIsPaused(true);
+								setShowInactivityAlert(true);
+								setShowTimeRunningAlert(false);
+							} else if (nextInactivity === 120) { // 2 Minutes - Warning
+								setShowTimeRunningAlert(true);
+							}
+							
+							return nextInactivity;
+						});
 					}
 					return paused;
 				});
@@ -90,8 +105,31 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 			if (timerRef.current) clearInterval(timerRef.current);
 		};
 	}, [currentMockInterview, defaultInterviewer]);
+ 
+	const [isDirty, setIsDirty] = useState(false);
+	const [_inactivitySeconds, setInactivitySeconds] = useState(0);
+	const [showStartReminder, setShowStartReminder] = useState(false);
+	const [showInactivityAlert, setShowInactivityAlert] = useState(false);
+	const [showTimeRunningAlert, setShowTimeRunningAlert] = useState(false);
+
+	const updateInteraction = useCallback(() => {
+		setInactivitySeconds(0);
+		setIsDirty(true);
+		setShowTimeRunningAlert(false);
+	}, []);
+
+	// Monitor for "Forgot to start" scenario
+	useEffect(() => {
+		if (isDirty && isPaused && elapsedSeconds === 0 && !currentMockInterview) {
+			setShowStartReminder(true);
+		} else {
+			setShowStartReminder(false);
+		}
+	}, [isDirty, isPaused, elapsedSeconds, currentMockInterview]);
+
 
 	const handleChange = useCallback((field: keyof MockInterviewCreate, value: any) => {
+		updateInteraction();
 		setFormData((prev) => ({ ...prev, [field]: value }));
 		setErrors((prev) => {
 			if (prev[field]) {
@@ -104,6 +142,7 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 	}, []);
 
 	const handleQuestionChange = useCallback((index: number, field: keyof Question, value: string) => {
+		updateInteraction();
 		setQuestions((prev) => {
 			const next = [...prev];
 			next[index] = { ...next[index], [field]: value };
@@ -115,6 +154,7 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 	const removeQuestion = useCallback((index: number) => setQuestions((prev) => prev.filter((_, i) => i !== index)), []);
 
 	const handleSkillChange = useCallback((index: number, field: keyof Skill, value: any) => {
+		updateInteraction();
 		setSkills((prev) => {
 			const next = [...prev];
 			next[index] = { ...next[index], [field]: value };
@@ -200,6 +240,12 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 		saveLoading,
 		elapsedSeconds,
 		isPaused,
+		showStartReminder,
+		showInactivityAlert,
+		showTimeRunningAlert,
+		setShowStartReminder,
+		setShowInactivityAlert,
+		setShowTimeRunningAlert,
 		toggleTimer,
 		handleChange,
 		handleQuestionChange,
@@ -208,7 +254,8 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 		handleSkillChange,
 		addSkill,
 		removeSkill,
-		handleSubmit
+		handleSubmit,
+		updateInteraction
 	};
 };
 
