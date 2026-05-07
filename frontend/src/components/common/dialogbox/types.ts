@@ -25,12 +25,24 @@ export interface ConfirmationDialogProps extends Omit<BaseDialogProps, 'children
 	children?: ReactNode;
 }
 
+export interface ImportResult {
+	total_rows: number;
+	created: number;
+	skipped: number;
+	errors: Array<{
+		row: number;
+		error: string;
+	}>;
+}
+
 export interface ImportDialogProps extends Omit<BaseDialogProps, 'children' | 'actions' | 'title'> {
-	onImport: (file: File) => void | Promise<void>;
+	onImport: (file: File) => void | Promise<ImportResult | void>;
 	acceptedFiles?: string;
 	templateUrl?: string;
 	onDownloadTemplate?: () => void | Promise<void>;
 	title?: string;
+	result?: ImportResult | null;
+	onResetResult?: () => void;
 }
 
 export interface ExportDialogProps extends Omit<BaseDialogProps, 'children' | 'actions' | 'title'> {

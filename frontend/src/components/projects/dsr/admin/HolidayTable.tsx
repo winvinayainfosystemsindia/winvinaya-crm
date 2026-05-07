@@ -22,8 +22,7 @@ import {
 import { Delete as DeleteIcon, Add as AddIcon, CloudUpload as UploadIcon, Edit as EditIcon } from '@mui/icons-material';
 import CustomTablePagination from '../../../common/table/CustomTablePagination';
 import DSRAdminTableHeader from './DSRAdminTableHeader';
-import ExcelImportModal from '../../../common/ExcelImportModal';
-import { ConfirmationDialog } from '../../../common/dialogbox';
+import { ConfirmationDialog, ImportDialog, type ImportResult } from '../../../common/dialogbox';
 import dayjs from 'dayjs';
 import { useHolidayAdmin } from '../hooks/useHolidayAdmin';
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
@@ -47,6 +46,8 @@ const HolidayTable: React.FC = () => {
 	const [editingHoliday, setEditingHoliday] = useState<CompanyHoliday | null>(null);
 	const [holidayToDelete, setHolidayToDelete] = useState<string | null>(null);
 	const [deleting, setDeleting] = useState(false);
+	const [importResult, setImportResult] = useState<ImportResult | null>(null);
+	const [importing, setImporting] = useState(false);
 
 	const handleAddHoliday = async () => {
 		if (newHoliday.holiday_date && newHoliday.holiday_name) {
@@ -100,7 +101,17 @@ const HolidayTable: React.FC = () => {
 	};
 
 	const handleImport = async (file: File) => {
-		return await dispatch(importHolidays(file)).unwrap();
+		setImporting(true);
+		try {
+			const res = await dispatch(importHolidays(file)).unwrap();
+			setImportResult(res);
+			admin.handleRefresh();
+			return res;
+		} catch (err: any) {
+			toast.error(err || 'Failed to import holidays');
+		} finally {
+			setImporting(false);
+		}
 	};
 
 	const handleDownloadTemplate = async () => {
@@ -247,15 +258,17 @@ const HolidayTable: React.FC = () => {
 				/>
 			</Paper>
 
-			<ExcelImportModal
+			<ImportDialog
 				open={openImport}
 				onClose={() => setOpenImport(false)}
 				onImport={handleImport}
 				title="Import Company Holidays"
-				description="Upload a CSV file with columns: date (YYYY-MM-DD or DD-MM-YYYY) and name."
-				accept=".csv"
+				subtitle="Upload a CSV file with columns: date (YYYY-MM-DD or DD-MM-YYYY) and name."
+				acceptedFiles=".csv"
 				onDownloadTemplate={handleDownloadTemplate}
-				onSuccess={() => admin.handleRefresh()}
+				loading={importing}
+				result={importResult}
+				onResetResult={() => setImportResult(null)}
 			/>
 
 			<ConfirmationDialog

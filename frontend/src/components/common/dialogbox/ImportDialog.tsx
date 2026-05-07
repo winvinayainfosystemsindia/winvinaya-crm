@@ -7,13 +7,20 @@ import {
 	useTheme, 
 	LinearProgress,
 	Link,
-	Paper
+	Paper,
+	Alert,
+	List,
+	ListItem,
+	ListItemIcon,
+	ListItemText
 } from '@mui/material';
 import { 
 	CloudUploadRounded, 
 	DescriptionRounded,
 	Close as CloseIcon,
-	DownloadRounded
+	DownloadRounded,
+	ErrorOutlineRounded as ErrorIcon,
+	CheckCircleOutlineRounded as SuccessIcon
 } from '@mui/icons-material';
 import BaseDialog from './BaseDialog';
 import type { ImportDialogProps } from './types';
@@ -28,7 +35,9 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
 	templateUrl,
 	onDownloadTemplate,
 	loading = false,
-	maxWidth = 'sm'
+	maxWidth = 'sm',
+	result,
+	onResetResult
 }) => {
 	const theme = useTheme();
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -51,20 +60,96 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
 		setDragActive(false);
 		if (e.dataTransfer.files && e.dataTransfer.files[0]) {
 			setSelectedFile(e.dataTransfer.files[0]);
+			if (onResetResult) onResetResult();
 		}
 	};
 
 	const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
 		if (e.target.files && e.target.files[0]) {
 			setSelectedFile(e.target.files[0]);
+			if (onResetResult) onResetResult();
 		}
 	};
 
 	const handleConfirmImport = async () => {
 		if (selectedFile) {
-			await onImport(selectedFile);
-			setSelectedFile(null);
+			const res = await onImport(selectedFile);
+			if (!res) {
+				setSelectedFile(null);
+			}
 		}
+	};
+
+	const handleClose = () => {
+		if (loading) return;
+		setSelectedFile(null);
+		if (onResetResult) onResetResult();
+		onClose();
+	};
+
+	const renderResult = () => {
+		if (!result) return null;
+
+		const hasErrors = result.errors && result.errors.length > 0;
+		
+		return (
+			<Box sx={{ mt: 1 }}>
+				<Alert 
+					severity={hasErrors ? 'warning' : 'success'} 
+					icon={hasErrors ? <ErrorIcon /> : <SuccessIcon />}
+					sx={{ 
+						mb: 2, 
+						borderRadius: '4px',
+						'& .MuiAlert-message': { width: '100%' }
+					}}
+				>
+					<Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+						{hasErrors ? 'Import Processed with Warnings' : 'Import Successful'}
+					</Typography>
+					<Typography variant="body2">
+						Successfully created {result.created} records. {result.skipped} records were skipped as duplicates.
+					</Typography>
+				</Alert>
+
+				{hasErrors && (
+					<Box>
+						<Typography variant="caption" sx={{ color: 'error.main', fontWeight: 700, mb: 1, display: 'block', textTransform: 'uppercase' }}>
+							Data Validation Errors ({result.errors.length})
+						</Typography>
+						<Paper 
+							variant="outlined" 
+							sx={{ 
+								maxHeight: 200, 
+								overflow: 'auto', 
+								bgcolor: alpha(theme.palette.error.main, 0.02),
+								borderColor: alpha(theme.palette.error.main, 0.1),
+								borderRadius: '4px'
+							}}
+						>
+							<List dense disablePadding>
+								{result.errors.map((err, idx) => (
+									<ListItem 
+										key={idx} 
+										divider={idx < result.errors.length - 1}
+										sx={{ py: 1 }}
+									>
+										<ListItemIcon sx={{ minWidth: 32 }}>
+											<ErrorIcon color="error" sx={{ fontSize: 16 }} />
+										</ListItemIcon>
+										<ListItemText
+											primary={`Row ${err.row}`}
+											secondary={err.error}
+											primaryTypographyProps={{ variant: 'caption', fontWeight: 800, color: 'error.main' }}
+											secondaryTypographyProps={{ variant: 'caption', color: 'text.primary', sx: { display: 'block', mt: 0.25 } }}
+										/>
+									</ListItem>
+								))}
+							</List>
+						</Paper>
+					</Box>
+				)}
+			</Box>
+		);
 	};
 
 	const actions = (
@@ -113,27 +198,29 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
 			) : <Box />}
 			<Box sx={{ display: 'flex', gap: 1.5 }}>
 				<Button 
-					onClick={onClose} 
+					onClick={handleClose} 
 					disabled={loading}
 					sx={{ textTransform: 'none', color: 'text.secondary', fontWeight: 600 }}
 				>
-					Cancel
+					{result ? 'Dismiss' : 'Cancel'}
 				</Button>
-				<Button
-					variant="contained"
-					disabled={!selectedFile || loading}
-					onClick={handleConfirmImport}
-					sx={{
-						bgcolor: 'accent.main',
-						color: 'white',
-						textTransform: 'none',
-						fontWeight: 700,
-						px: 4,
-						'&:hover': { bgcolor: 'accent.dark' }
-					}}
-				>
-					{loading ? 'Processing...' : 'Begin Ingestion'}
-				</Button>
+				{!result && (
+					<Button
+						variant="contained"
+						disabled={!selectedFile || loading}
+						onClick={handleConfirmImport}
+						sx={{
+							bgcolor: 'accent.main',
+							color: 'white',
+							textTransform: 'none',
+							fontWeight: 700,
+							px: 4,
+							'&:hover': { bgcolor: 'accent.dark' }
+						}}
+					>
+						{loading ? 'Processing...' : 'Begin Ingestion'}
+					</Button>
+				)}
 			</Box>
 		</Box>
 	);
@@ -141,7 +228,7 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
 	return (
 		<BaseDialog
 			open={open}
-			onClose={onClose}
+			onClose={handleClose}
 			title={title}
 			subtitle={subtitle}
 			maxWidth={maxWidth}
@@ -149,80 +236,82 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
 			actions={actions}
 		>
 			<Box sx={{ position: 'relative' }}>
-				<Paper
-					variant="outlined"
-					onDragEnter={handleDrag}
-					onDragLeave={handleDrag}
-					onDragOver={handleDrag}
-					onDrop={handleDrop}
-					onClick={() => fileInputRef.current?.click()}
-					sx={{
-						py: 6,
-						px: 2,
-						display: 'flex',
-						flexDirection: 'column',
-						alignItems: 'center',
-						justifyContent: 'center',
-						cursor: 'pointer',
-						transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-						bgcolor: dragActive ? alpha(theme.palette.primary.main, 0.03) : alpha(theme.palette.background.default, 0.2),
-						borderStyle: 'dashed',
-						borderWidth: 2,
-						borderColor: dragActive ? 'primary.main' : alpha(theme.palette.divider, 0.8),
-						'&:hover': {
-							borderColor: 'primary.main',
-							bgcolor: alpha(theme.palette.primary.main, 0.02)
-						}
-					}}
-				>
-					<input
-						ref={fileInputRef}
-						type="file"
-						accept={acceptedFiles}
-						style={{ display: 'none' }}
-						onChange={handleFileSelect}
-					/>
+				{!result ? (
+					<Paper
+						variant="outlined"
+						onDragEnter={handleDrag}
+						onDragLeave={handleDrag}
+						onDragOver={handleDrag}
+						onDrop={handleDrop}
+						onClick={() => fileInputRef.current?.click()}
+						sx={{
+							py: 6,
+							px: 2,
+							display: 'flex',
+							flexDirection: 'column',
+							alignItems: 'center',
+							justifyContent: 'center',
+							cursor: 'pointer',
+							transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+							bgcolor: dragActive ? alpha(theme.palette.primary.main, 0.03) : alpha(theme.palette.background.default, 0.2),
+							borderStyle: 'dashed',
+							borderWidth: 2,
+							borderColor: dragActive ? 'primary.main' : alpha(theme.palette.divider, 0.8),
+							'&:hover': {
+								borderColor: 'primary.main',
+								bgcolor: alpha(theme.palette.primary.main, 0.02)
+							}
+						}}
+					>
+						<input
+							ref={fileInputRef}
+							type="file"
+							accept={acceptedFiles}
+							style={{ display: 'none' }}
+							onChange={handleFileSelect}
+						/>
 
-					{selectedFile ? (
-						<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-							<DescriptionRounded sx={{ fontSize: 48, color: 'primary.main' }} />
-							<Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
-								{selectedFile.name}
-							</Typography>
-							<Typography variant="caption" sx={{ color: 'text.secondary' }}>
-								{(selectedFile.size / 1024).toFixed(1)} KB
-							</Typography>
-							<Button 
-								size="small" 
-								color="error" 
-								onClick={(e) => { e.stopPropagation(); setSelectedFile(null); }}
-								sx={{ mt: 1, textTransform: 'none' }}
-								startIcon={<CloseIcon fontSize="small" />}
-							>
-								Remove
-							</Button>
-						</Box>
-					) : (
-						<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5 }}>
-							<Box sx={{ 
-								p: 1.5, 
-								borderRadius: '12px', 
-								bgcolor: alpha(theme.palette.primary.main, 0.08),
-								color: 'primary.main'
-							}}>
-								<CloudUploadRounded sx={{ fontSize: 32 }} />
-							</Box>
-							<Box sx={{ textAlign: 'center' }}>
-								<Typography variant="body2" sx={{ fontWeight: 700, mb: 0.5 }}>
-									Click or drag file to this area to upload
+						{selectedFile ? (
+							<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+								<DescriptionRounded sx={{ fontSize: 48, color: 'primary.main' }} />
+								<Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+									{selectedFile.name}
 								</Typography>
-								<Typography variant="caption" color="text.secondary">
-									Supported formats: {acceptedFiles} (Max 10MB)
+								<Typography variant="caption" sx={{ color: 'text.secondary' }}>
+									{(selectedFile.size / 1024).toFixed(1)} KB
 								</Typography>
+								<Button 
+									size="small" 
+									color="error" 
+									onClick={(e) => { e.stopPropagation(); setSelectedFile(null); }}
+									sx={{ mt: 1, textTransform: 'none' }}
+									startIcon={<CloseIcon fontSize="small" />}
+								>
+									Remove
+								</Button>
 							</Box>
-						</Box>
-					)}
-				</Paper>
+						) : (
+							<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5 }}>
+								<Box sx={{ 
+									p: 1.5, 
+									borderRadius: '12px', 
+									bgcolor: alpha(theme.palette.primary.main, 0.08),
+									color: 'primary.main'
+								}}>
+									<CloudUploadRounded sx={{ fontSize: 32 }} />
+								</Box>
+								<Box sx={{ textAlign: 'center' }}>
+									<Typography variant="body2" sx={{ fontWeight: 700, mb: 0.5 }}>
+										Click or drag file to this area to upload
+									</Typography>
+									<Typography variant="caption" color="text.secondary">
+										Supported formats: {acceptedFiles} (Max 10MB)
+									</Typography>
+								</Box>
+							</Box>
+						)}
+					</Paper>
+				) : renderResult()}
 
 				{loading && (
 					<Box sx={{ mt: 3 }}>
@@ -231,12 +320,10 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
 								Ingesting data stream...
 							</Typography>
 							<Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 700 }}>
-								75%
+								{loading ? 'Processing' : '100%'}
 							</Typography>
 						</Box>
 						<LinearProgress 
-							variant="determinate" 
-							value={75} 
 							sx={{ 
 								height: 6, 
 								borderRadius: 3,

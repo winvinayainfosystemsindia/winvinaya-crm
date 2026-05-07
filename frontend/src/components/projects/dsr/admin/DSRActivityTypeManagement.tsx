@@ -38,10 +38,9 @@ import {
 } from '../../../../store/slices/dsrActivityTypeSlice';
 import dsrActivityTypeService from '../../../../services/dsrActivityTypeService';
 import useToast from '../../../../hooks/useToast';
-import type { DSRActivityType, ImportResult } from '../../../../models/dsr';
+import type { DSRActivityType } from '../../../../models/dsr';
 import DSRAdminTableHeader from './DSRAdminTableHeader';
-import ExcelImportModal from '../../../common/ExcelImportModal';
-import { ConfirmationDialog } from '../../../common/dialogbox';
+import { ConfirmationDialog, ImportDialog, type ImportResult } from '../../../common/dialogbox';
 
 const DSRActivityTypeManagement: React.FC = () => {
 	const dispatch = useAppDispatch();
@@ -64,6 +63,8 @@ const DSRActivityTypeManagement: React.FC = () => {
 	const [selectedIds, setSelectedIds] = useState<string[]>([]);
 	const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
 	const [deleting, setDeleting] = useState(false);
+	const [importResult, setImportResult] = useState<ImportResult | null>(null);
+	const [importing, setImporting] = useState(false);
 
 	const filteredActivityTypes = React.useMemo(() => {
 		if (!searchTerm) return activityTypes;
@@ -189,12 +190,18 @@ const DSRActivityTypeManagement: React.FC = () => {
 		}
 	};
 
-	const handleImportFile = async (file: File): Promise<ImportResult> => {
+	const handleImportFile = async (file: File) => {
+		setImporting(true);
 		try {
-			return await dsrActivityTypeService.importActivityTypes(file);
+			const res = await dsrActivityTypeService.importActivityTypes(file);
+			setImportResult(res);
+			dispatch(fetchActivityTypes({ onlyActive: false }));
+			return res;
 		} catch (err: any) {
 			const errorMsg = err.response?.data?.detail || err.message || 'Import failed';
-			throw new Error(errorMsg);
+			toast.error(errorMsg);
+		} finally {
+			setImporting(false);
 		}
 	};
 
@@ -415,15 +422,17 @@ const DSRActivityTypeManagement: React.FC = () => {
 				</DialogActions>
 			</Dialog>
 
-			<ExcelImportModal
+			<ImportDialog
 				open={importDialogOpen}
 				onClose={() => setImportDialogOpen(false)}
 				onImport={handleImportFile}
 				title="Import Activity Types"
+				subtitle="Upload a CSV file to bulk-import or update activity types. Ensure the columns match the template."
 				onDownloadTemplate={handleDownloadTemplate}
-				description="Upload a CSV file to bulk-import or update activity types. Ensure the columns match the template."
-				onSuccess={() => dispatch(fetchActivityTypes({ onlyActive: false }))}
-				accept=".csv"
+				acceptedFiles=".csv"
+				loading={importing}
+				result={importResult}
+				onResetResult={() => setImportResult(null)}
 			/>
 
 			<ConfirmationDialog
