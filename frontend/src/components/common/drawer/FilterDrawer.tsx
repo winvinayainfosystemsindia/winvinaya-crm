@@ -21,7 +21,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import Autocomplete from '@mui/material/Autocomplete';
 import dayjs from 'dayjs';
-import { awsStyles } from '../../theme/theme';
+import { awsStyles } from '../../../theme/theme';
 
 // Types for filter configuration
 export interface FilterOption {
@@ -119,7 +119,7 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
 										label={typeof option === 'string' ? option : option.label}
 										{...getTagProps({ index })}
 										size="small"
-										sx={{ 
+										sx={{
 											borderRadius: `${(theme.shape.borderRadius as number) / 3}px`,
 											bgcolor: alpha(theme.palette.accent.main, 0.1),
 											color: theme.palette.accent.main,
@@ -140,7 +140,7 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
 				return field.options && field.options.length > 0 ? (
 					<Box sx={{ display: 'flex', flexDirection: 'column', maxHeight: 300, overflow: 'auto' }}>
 						{field.options.map((option, optIdx) => (
-							<Box key={option.value} sx={{ 
+							<Box key={option.value} sx={{
 								px: 1.5,
 								borderBottom: optIdx === field.options!.length - 1 ? 0 : `1px solid ${theme.palette.divider}`,
 								'&:hover': { bgcolor: alpha(theme.palette.accent.main, 0.05) }
@@ -172,20 +172,20 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
 						onChange={(e) => handleSingleSelectChange(field.key, e.target.value)}
 						sx={{ display: 'flex', flexDirection: 'column' }}
 					>
-						<Box sx={{ 
+						<Box sx={{
 							px: 1.5,
 							borderBottom: `1px solid ${theme.palette.divider}`,
 							'&:hover': { bgcolor: alpha(theme.palette.accent.main, 0.05) }
 						}}>
-							<FormControlLabel 
-								value="" 
-								control={<Radio size="small" sx={{ color: theme.palette.divider, '&.Mui-checked': { color: theme.palette.accent.main } }} />} 
+							<FormControlLabel
+								value=""
+								control={<Radio size="small" sx={{ color: theme.palette.divider, '&.Mui-checked': { color: theme.palette.accent.main } }} />}
 								label={<Typography variant="body2" sx={{ fontSize: '0.85rem' }}>All</Typography>}
 								sx={{ width: '100%', m: 0, py: 0.5 }}
 							/>
 						</Box>
 						{field.options && field.options.map((option, optIdx) => (
-							<Box key={option.value} sx={{ 
+							<Box key={option.value} sx={{
 								px: 1.5,
 								borderBottom: optIdx === field.options!.length - 1 ? 0 : `1px solid ${theme.palette.divider}`,
 								'&:hover': { bgcolor: alpha(theme.palette.accent.main, 0.05) }
@@ -312,9 +312,9 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
 						<Chip
 							label={`${activeFilterCount} active`}
 							size="small"
-							sx={{ 
-								height: 18, 
-								fontSize: '0.65rem', 
+							sx={{
+								height: 18,
+								fontSize: '0.65rem',
 								bgcolor: theme.palette.accent.main,
 								color: 'white',
 								borderRadius: `${(theme.shape.borderRadius as number) / 3}px`,

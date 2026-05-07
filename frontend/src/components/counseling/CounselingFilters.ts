@@ -1,4 +1,4 @@
-import type { FilterField } from '../common/FilterDrawer';
+import type { FilterField } from '../common/drawer/FilterDrawer';
 
 export const getCounselingFilterFields = (
 	type: 'not_counseled' | 'pending' | 'selected' | 'rejected' | 'counseled',

@@ -27,7 +27,7 @@ import {
 } from '@mui/material';
 import type { DSREntry } from '../../../../models/dsr';
 import DSRAdminTableHeader from './DSRAdminTableHeader';
-import FilterDrawer from '../../../common/FilterDrawer';
+import FilterDrawer from '../../../common/drawer/FilterDrawer';
 import DSRSubmissionDialog from '../forms/DSRSubmissionDialog';
 import dayjs from 'dayjs';
 

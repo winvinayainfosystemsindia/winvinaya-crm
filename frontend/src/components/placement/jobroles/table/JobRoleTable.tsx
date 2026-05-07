@@ -2,7 +2,7 @@ import React from 'react';
 import { ConfirmationDialog } from '../../../common/dialogbox';
 import { useJobRoleTable } from '../hooks/useJobRoleTable';
 import { getJobRoleFilterFields } from './JobRoleFilters';
-import FilterDrawer from '../../../common/FilterDrawer';
+import FilterDrawer from '../../../common/drawer/FilterDrawer';
 import DataTable, { type ColumnDefinition } from '../../../common/table/DataTable';
 import JobRoleTableRow from './JobRoleTableRow';
 import type { JobRole } from '../../../../models/jobRole';

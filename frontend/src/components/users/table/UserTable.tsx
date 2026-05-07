@@ -18,7 +18,7 @@ import type { User } from '../../../models/user';
 // Import modular table components
 import { DataTable, DataTableActions } from '../../common/table';
 import { useUserTableConfig, getRoleColor } from './UserTableConfig';
-import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
+import FilterDrawer, { type FilterField } from '../../common/drawer/FilterDrawer';
 import useDateTime from '../../../hooks/useDateTime';
 
 interface UserTableProps {

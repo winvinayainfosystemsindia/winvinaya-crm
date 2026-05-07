@@ -19,7 +19,7 @@ import { useAppSelector } from '../../../../store/hooks';
 import type { DSRPermissionRequest } from '../../../../models/dsr';
 import DSRAdminTableHeader from './DSRAdminTableHeader';
 import CustomTablePagination from '../../../common/table/CustomTablePagination';
-import FilterDrawer from '../../../common/FilterDrawer';
+import FilterDrawer from '../../../common/drawer/FilterDrawer';
 
 interface PermissionRequestsTableProps {
 	requests: DSRPermissionRequest[];

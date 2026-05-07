@@ -11,7 +11,7 @@ import { fetchCRMTasks, createCRMTask, updateCRMTask, deleteCRMTask } from '../.
 import { DataTable, type ColumnDefinition } from '../../common/table';
 import TaskTableRow from './table/TaskTableRow';
 import CRMTaskFormDialog from './CRMTaskFormDialog';
-import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
+import FilterDrawer, { type FilterField } from '../../common/drawer/FilterDrawer';
 import { ConfirmationDialog } from '../../common/dialogbox';
 import StatCard from '../../common/stats/StatCard';
 import type { CRMTask, CRMTaskCreate, CRMTaskUpdate } from '../../../models/crmTask';

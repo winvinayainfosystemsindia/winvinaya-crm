@@ -12,7 +12,7 @@ import ReportHeader from '../../components/reports/ReportHeader';
 import ReportToolbar from '../../components/reports/ReportToolbar';
 import ReportTable from '../../components/reports/ReportTable';
 import ColumnSelector from '../../components/reports/ColumnSelector';
-import FilterDrawer, { type FilterField } from '../../components/common/FilterDrawer';
+import FilterDrawer, { type FilterField } from '../../components/common/drawer/FilterDrawer';
 
 // Column definitions
 const ALL_COLUMNS = [

@@ -36,8 +36,8 @@ import {
 } from '../../store/slices/dsrSlice';
 import DSRStatsHeader from '../../components/projects/dsr/DSRStatsHeader';
 import MyPermissionRequests from '../../components/projects/dsr/user/MyPermissionRequests';
-import FilterDrawer from '../../components/common/FilterDrawer';
-import type { FilterField } from '../../components/common/FilterDrawer';
+import FilterDrawer from '../../components/common/drawer/FilterDrawer';
+import type { FilterField } from '../../components/common/drawer/FilterDrawer';
 import { DSRStatusValues } from '../../models/dsr';
 // PermissionStatsCards removed
 

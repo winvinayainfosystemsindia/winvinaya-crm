@@ -1,4 +1,4 @@
-import type { FilterField } from '../../../common/FilterDrawer';
+import type { FilterField } from '../../../common/drawer/FilterDrawer';
 import { JOB_ROLE_STATUS } from '../../../../models/jobRole';
 
 export const getJobRoleFilterFields = (): FilterField[] => [

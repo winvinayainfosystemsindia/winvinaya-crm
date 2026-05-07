@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { DataTable, type ColumnDefinition } from '../../common/table';
-import FilterDrawer from '../../common/FilterDrawer';
+import FilterDrawer from '../../common/drawer/FilterDrawer';
 import { useCounselingTable } from '../hooks/useCounselingTable';
 import { getCounselingFilterFields } from '../CounselingFilters';
 import CounselingTableRow from './CounselingTableRow';

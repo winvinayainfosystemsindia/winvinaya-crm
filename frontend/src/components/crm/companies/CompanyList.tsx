@@ -6,7 +6,7 @@ import { fetchCompanies, fetchCompanyStats, createCompany, updateCompany, delete
 
 import CompanyFormDialog from './form/CompanyFormDialog';
 import { ConfirmationDialog } from '../../common/dialogbox';
-import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
+import FilterDrawer, { type FilterField } from '../../common/drawer/FilterDrawer';
 import CompanyStats from './stats/CompanyStats';
 import CompanyTable from './table/CompanyTable';
 import type { CompanyCreate, CompanyUpdate, Company } from '../../../models/company';

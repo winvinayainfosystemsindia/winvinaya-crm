@@ -9,7 +9,7 @@ import CandidateTableRow from './CandidateTableRow';
 import AssignCandidateDialog from '../AssignCandidateDialog';
 import { DataTable } from '../../common/table';
 import { candidateColumns } from './CandidateTableHead';
-import FilterDrawer from '../../common/FilterDrawer';
+import FilterDrawer from '../../common/drawer/FilterDrawer';
 
 interface CandidateTableProps {
 	onViewCandidate?: (candidateId: string) => void;

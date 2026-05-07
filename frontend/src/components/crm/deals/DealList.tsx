@@ -14,7 +14,7 @@ import { fetchContacts } from '../../../store/slices/contactSlice';
 import { DataTable, type ColumnDefinition } from '../../common/table';
 import DealTableRow from './table/DealTableRow';
 import DealFormDialog from './DealFormDialog';
-import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
+import FilterDrawer, { type FilterField } from '../../common/drawer/FilterDrawer';
 import { ConfirmationDialog } from '../../common/dialogbox';
 import StatCard from '../../common/stats/StatCard';
 import type { Deal, DealCreate, DealUpdate } from '../../../models/deal';

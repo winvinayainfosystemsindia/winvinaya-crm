@@ -1,6 +1,6 @@
 import React from 'react';
 import { DataTableHeader } from '../../common/table';
-import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
+import FilterDrawer, { type FilterField } from '../../common/drawer/FilterDrawer';
 
 interface CandidateTableHeaderProps {
 	searchTerm: string;

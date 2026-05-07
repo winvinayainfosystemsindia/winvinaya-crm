@@ -1,4 +1,4 @@
-import type { FilterField } from '../common/FilterDrawer';
+import type { FilterField } from '../common/drawer/FilterDrawer';
 
 export const getScreeningFilterFields = (
 	type: 'unscreened' | 'screened',

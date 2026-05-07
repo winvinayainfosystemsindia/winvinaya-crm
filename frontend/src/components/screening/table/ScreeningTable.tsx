@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { DataTable } from '../../common/table';
-import FilterDrawer from '../../common/FilterDrawer';
+import FilterDrawer from '../../common/drawer/FilterDrawer';
 import type { CandidateListItem } from '../../../models/candidate';
 import { useScreeningTable } from '../hooks/useScreeningTable';
 import { getScreeningFilterFields } from '../ScreeningFilters';

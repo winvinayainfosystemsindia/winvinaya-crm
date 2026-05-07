@@ -14,7 +14,7 @@ import { fetchContacts } from '../../../store/slices/contactSlice';
 import { DataTable, type ColumnDefinition } from '../../common/table';
 import LeadTableRow from './table/LeadTableRow';
 import LeadFormDialog from './LeadFormDialog';
-import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
+import FilterDrawer, { type FilterField } from '../../common/drawer/FilterDrawer';
 import { ConfirmationDialog } from '../../common/dialogbox';
 import StatCard from '../../common/stats/StatCard';
 import type { Lead, LeadCreate, LeadUpdate } from '../../../models/lead';
@@ -25,13 +25,13 @@ interface LeadListProps {
 }
 
 const COLUMNS: ColumnDefinition<Lead>[] = [
-	{ id: 'title',           label: 'Lead Title', sortable: true,  width: 250 },
-	{ id: 'lead_status',     label: 'Status',     sortable: true,  width: 130 },
-	{ id: 'company',         label: 'Entity',     sortable: false, width: 200 },
-	{ id: 'estimated_value', label: 'Value',      sortable: true,  width: 140 },
-	{ id: 'lead_source',     label: 'Source',     sortable: true,  width: 130 },
-	{ id: 'created_at',      label: 'Added On',   sortable: true,  width: 130 },
-	{ id: 'actions',         label: 'Actions',    sortable: false, width: 100, align: 'right' },
+	{ id: 'title', label: 'Lead Title', sortable: true, width: 250 },
+	{ id: 'lead_status', label: 'Status', sortable: true, width: 130 },
+	{ id: 'company', label: 'Entity', sortable: false, width: 200 },
+	{ id: 'estimated_value', label: 'Value', sortable: true, width: 140 },
+	{ id: 'lead_source', label: 'Source', sortable: true, width: 130 },
+	{ id: 'created_at', label: 'Added On', sortable: true, width: 130 },
+	{ id: 'actions', label: 'Actions', sortable: false, width: 100, align: 'right' },
 ];
 
 const LeadList: React.FC<LeadListProps> = ({ onAddClick }) => {

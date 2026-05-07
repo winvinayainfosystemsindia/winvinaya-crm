@@ -8,7 +8,7 @@ import {
     Stack,
     Typography
 } from '@mui/material';
-import { 
+import {
     GroupAdd as BulkIcon,
     InfoOutlined as InfoIcon
 } from '@mui/icons-material';
@@ -26,7 +26,7 @@ import useToast from '../../../../hooks/useToast';
 import type { JobRole } from '../../../../models/jobRole';
 import { fetchAggregatedSkills } from '../../../../store/slices/skillSlice';
 import { sendBulkProfiles } from '../../../../store/slices/placementEmailSlice';
-import FilterDrawer from '../../../common/FilterDrawer';
+import FilterDrawer from '../../../common/drawer/FilterDrawer';
 import ConfirmationDialog from '../../../common/dialogbox/ConfirmationDialog';
 import { CANDIDATE_MAPPING_FILTER_FIELDS, INITIAL_FILTERS, type CandidateMappingFiltersState } from './mapping/CandidateMappingFilters';
 
@@ -70,7 +70,7 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
 
     // Skills from Redux
     const { aggregatedSkills: allPossibleSkills } = useAppSelector(state => state.skills);
-    
+
     // Email status from Redux
     const { sendLoading: sendingEmail } = useAppSelector(state => state.placementEmail);
 
@@ -196,7 +196,7 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
     };
 
     const handleSelectToggle = (id: number) => {
-        setSelectedCandidateIds(prev => 
+        setSelectedCandidateIds(prev =>
             prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
         );
     };
@@ -238,7 +238,7 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
 
     const handleBulkMapConfirm = async () => {
         if (selectedCandidateIds.length === 0) return;
-        
+
         setSubmitting(true);
         try {
             const mappings = selectedCandidateIds.map(id => {
@@ -299,7 +299,7 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                 custom_subject: data.subject,
                 custom_message: data.message
             })).unwrap();
-            
+
             toast.success('Candidate profiles sent successfully');
             setEmailDialogOpen(false);
             setSelectedMappings([]);
@@ -315,14 +315,14 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
 
     const handleConfirmUnmap = async () => {
         if (!candidateToUnmap) return;
-        
+
         setSubmitting(true);
         try {
-            await dispatch(unmapCandidate({ 
-                candidateId: candidateToUnmap.candidate_id, 
-                jobRoleId: jobRole.id! 
+            await dispatch(unmapCandidate({
+                candidateId: candidateToUnmap.candidate_id,
+                jobRoleId: jobRole.id!
             })).unwrap();
-            
+
             toast.success(`Successfully unmapped ${candidateToUnmap.name}`);
             setUnmapConfirmOpen(false);
             setCandidateToUnmap(null);
@@ -359,17 +359,17 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
             {(() => {
                 const isExpired = jobRole.close_date && new Date(jobRole.close_date) < new Date(new Date().setHours(0, 0, 0, 0));
                 const isClosed = jobRole.status === 'closed' || isExpired;
-                
+
                 if (!isClosed) return null;
-                
+
                 return (
                     <Grid size={{ xs: 12 }}>
-                        <Alert 
-                            severity="info" 
+                        <Alert
+                            severity="info"
                             variant="outlined"
                             icon={<InfoIcon />}
-                            sx={{ 
-                                borderRadius: '4px', 
+                            sx={{
+                                borderRadius: '4px',
                                 bgcolor: 'rgba(0, 126, 185, 0.03)',
                                 borderColor: 'rgba(0, 126, 185, 0.2)',
                                 '& .MuiAlert-icon': { color: '#007eb9' }
@@ -380,7 +380,7 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                                     {jobRole.status === 'closed' ? 'Job Role Closed' : 'Job Role Expired'}
                                 </Typography>
                                 <Typography variant="caption" sx={{ color: '#545b64' }}>
-                                    This job role is currently {jobRole.status === 'closed' ? 'marked as closed' : 'past its closing date'}. 
+                                    This job role is currently {jobRole.status === 'closed' ? 'marked as closed' : 'past its closing date'}.
                                     You can still map candidates to it if needed for administrative or historical purposes.
                                 </Typography>
                             </Stack>

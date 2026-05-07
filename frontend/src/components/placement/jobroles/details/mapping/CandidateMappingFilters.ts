@@ -1,4 +1,4 @@
-import type { FilterField } from '../../../../common/FilterDrawer';
+import type { FilterField } from '../../../../common/drawer/FilterDrawer';
 
 export const CANDIDATE_MAPPING_FILTER_FIELDS: FilterField[] = [
     {

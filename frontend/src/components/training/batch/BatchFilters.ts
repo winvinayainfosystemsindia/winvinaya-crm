@@ -1,4 +1,4 @@
-import type { FilterField } from '../../common/FilterDrawer';
+import type { FilterField } from '../../common/drawer/FilterDrawer';
 import { disabilityTypes } from '../../../data/Disabilities';
 
 export const BATCH_STATUS_OPTIONS = [

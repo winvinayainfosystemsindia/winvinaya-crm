@@ -13,7 +13,7 @@ import { fetchCompanies } from '../../../store/slices/companySlice';
 import { DataTable, type ColumnDefinition } from '../../common/table';
 import ContactTableRow from './table/ContactTableRow';
 import ContactFormDialog from './ContactFormDialog';
-import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
+import FilterDrawer, { type FilterField } from '../../common/drawer/FilterDrawer';
 import { ConfirmationDialog } from '../../common/dialogbox';
 import StatCard from '../../common/stats/StatCard';
 import type { Contact, ContactCreate, ContactUpdate } from '../../../models/contact';

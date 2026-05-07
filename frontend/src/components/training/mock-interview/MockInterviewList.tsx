@@ -13,7 +13,7 @@ import MockInterviewTableRow from './table/MockInterviewTableRow';
 import MockInterviewForm from './form/MockInterviewForm';
 import MockInterviewStats from './stats/MockInterviewStats';
 import DataTable, { type ColumnDefinition } from '../../common/table/DataTable';
-import FilterDrawer, { type FilterField } from '../../common/FilterDrawer';
+import FilterDrawer, { type FilterField } from '../../common/drawer/FilterDrawer';
 
 interface MockInterviewListProps {
 	batchId: number;
