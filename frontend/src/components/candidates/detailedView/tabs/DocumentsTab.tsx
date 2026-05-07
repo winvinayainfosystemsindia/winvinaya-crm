@@ -189,6 +189,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ candidate }) => {
 													const blob = await documentService.download(doc.id);
 													const url = window.URL.createObjectURL(blob);
 													window.open(url, '_blank');
+													// Clean up the URL after a delay
 													setTimeout(() => window.URL.revokeObjectURL(url), 1000);
 												} catch (error) {
 													console.error('Failed to view document:', error);
@@ -199,7 +200,25 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ candidate }) => {
 										</IconButton>
 									</Tooltip>
 									<Tooltip title="Download">
-										<IconButton size="small">
+										<IconButton 
+											size="small"
+											onClick={async () => {
+												try {
+													const { documentService } = await import('../../../../services/candidateService');
+													const blob = await documentService.download(doc.id);
+													const url = window.URL.createObjectURL(blob);
+													const link = document.createElement('a');
+													link.href = url;
+													link.download = doc.document_name || `document_${doc.id}.pdf`;
+													document.body.appendChild(link);
+													link.click();
+													document.body.removeChild(link);
+													window.URL.revokeObjectURL(url);
+												} catch (error) {
+													console.error('Failed to download document:', error);
+												}
+											}}
+										>
 											<DownloadIcon fontSize="small" />
 										</IconButton>
 									</Tooltip>

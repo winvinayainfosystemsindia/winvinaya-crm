@@ -29,7 +29,6 @@ import {
 
 // Hooks & Utils
 import useToast from '../../../../hooks/useToast';
-import { getDocumentPreviewUrl } from './drawerUtils';
 
 // Sub-components
 import DrawerHeader from './DrawerHeader';
@@ -62,7 +61,6 @@ const PlacementDetailDrawer = ({
 	
 	// Redux state
 	const { history, offer, notes, candidateDocuments, loading } = useAppSelector(state => state.placementDetail);
-	const { token } = useAppSelector(state => state.auth);
 	
 	// Local state
 	const [tabValue, setTabValue] = useState(0);
@@ -104,16 +102,16 @@ const PlacementDetailDrawer = ({
 		setTabValue(newValue);
 	};
 
-	const handleViewDocument = (docId?: number, fallbackUrl?: string) => {
+	const handleViewDocument = async (docId?: number, fallbackUrl?: string) => {
 		if (docId) {
-			if (!token) {
-				toast.error('Authentication session expired. Please log in again.');
-				return;
-			}
 			try {
-				const url = getDocumentPreviewUrl(docId, token);
+				const { documentService } = await import('../../../../services/candidateService');
+				const blob = await documentService.download(docId);
+				const url = window.URL.createObjectURL(blob);
 				window.open(url, '_blank');
+				setTimeout(() => window.URL.revokeObjectURL(url), 1000);
 			} catch (error) {
+				console.error('Failed to view document:', error);
 				toast.error('Failed to load document');
 				if (fallbackUrl) {
 					const finalUrl = fallbackUrl.startsWith('http') ? fallbackUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/${fallbackUrl}`;

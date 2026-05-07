@@ -351,32 +351,11 @@ export const documentService = {
 		return response.data;
 	},
 
-	/**
-	 * Download document file
-	 */
 	download: async (documentId: number): Promise<Blob> => {
 		const response = await api.get(`/candidates/documents/${documentId}/download`, {
 			responseType: 'blob',
 		});
 		return response.data;
-	},
-
-	/**
-	 * Get preview URL with authentication token
-	 */
-	getPreviewUrl: (documentId: number, token: string | null): string => {
-		if (!token) return '';
-		const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-		return `${apiUrl}/api/v1/candidates/documents/${documentId}/download?token=${token}&disposition=inline`;
-	},
-
-	/**
-	 * Get download URL with authentication token
-	 */
-	getDownloadUrl: (documentId: number, token: string | null): string => {
-		if (!token) return '';
-		const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-		return `${apiUrl}/api/v1/candidates/documents/${documentId}/download?token=${token}&disposition=attachment`;
 	},
 
 	/**

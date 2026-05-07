@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { 
-	fetchCandidateById, 
+	fetchCandidateById,
 	fetchDocuments, 
 	uploadDocument, 
-	deleteDocument 
+	deleteDocument,
+	downloadDocument
 } from '../../../store/slices/candidateSlice';
 import { REQUIRED_DOCUMENTS, type RequiredDocument } from '../forms/documentConfig';
 import type { CandidateDocument } from '../../../models/candidate';
@@ -19,9 +20,6 @@ export const useDocumentDetail = (id?: string) => {
 	// State from Candidate Slice
 	const { selectedCandidate: candidate, error } = useAppSelector((state) => state.candidates);
 	const documents = candidate?.documents || [];
-	
-	// State from Auth Slice for secure file access
-	const { token } = useAppSelector((state) => state.auth);
 	
 	const [uploading, setUploading] = useState<string | null>(null);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -67,6 +65,7 @@ export const useDocumentDetail = (id?: string) => {
 					publicId: id, 
 					documentType: backendType as any, 
 					file, 
+					description: '',
 					documentSource 
 				})).unwrap();
 			} catch (err) {
@@ -105,27 +104,36 @@ export const useDocumentDetail = (id?: string) => {
 	/**
 	 * handlePreview - Generates an authenticated preview URL using state-managed tokens.
 	 */
-	const handlePreview = (documentId: number) => {
-		if (!token) return;
-		const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-		const url = `${apiUrl}/api/v1/candidates/documents/${documentId}/download?token=${token}&disposition=inline`;
-		window.open(url, '_blank');
+	const handlePreview = async (documentId: number) => {
+		try {
+			const blob = await dispatch(downloadDocument({ documentId })).unwrap();
+			const url = window.URL.createObjectURL(blob as any);
+			window.open(url, '_blank');
+			setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+		} catch (error) {
+			console.error('Failed to preview document:', error);
+		}
 	};
 
 	/**
 	 * handleDownload - Generates an authenticated download link using state-managed tokens.
 	 */
-	const handleDownload = (documentId: number) => {
-		if (!token) return;
-		const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-		const url = `${apiUrl}/api/v1/candidates/documents/${documentId}/download?token=${token}&disposition=attachment`;
-		
-		const link = document.createElement('a');
-		link.href = url;
-		link.setAttribute('download', '');
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
+	const handleDownload = async (documentId: number) => {
+		try {
+			const blob = await dispatch(downloadDocument({ documentId })).unwrap();
+			const url = window.URL.createObjectURL(blob as any);
+			const doc = documents.find(d => d.id === documentId);
+			
+			const link = document.createElement('a');
+			link.href = url;
+			link.setAttribute('download', doc?.document_name || `document_${documentId}.pdf`);
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			window.URL.revokeObjectURL(url);
+		} catch (error) {
+			console.error('Failed to download document:', error);
+		}
 	};
 
 	const getDocumentForType = (type: string) => {

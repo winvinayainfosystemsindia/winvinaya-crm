@@ -12,12 +12,6 @@ import {
 	PersonSearch as SearchIcon,
 } from '@mui/icons-material';
 
-export const getDocumentPreviewUrl = (documentId: number, token: string | null): string => {
-	if (!token) return '';
-	const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-	return `${apiUrl}/api/v1/candidates/documents/${documentId}/download?token=${token}&disposition=inline`;
-};
-
 // Matches any dynamic interview round: interview_l1, interview_l2, interview_l10, etc.
 const INTERVIEW_ROUND_RE = /^interview_l\d+$/;
 
