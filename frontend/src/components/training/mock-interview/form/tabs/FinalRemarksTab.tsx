@@ -11,7 +11,7 @@ import {
 	alpha,
 	useTheme
 } from '@mui/material';
-import { 
+import {
 	CommentBankOutlined as FeedbackIcon,
 	HelpOutline as HelpIcon
 } from '@mui/icons-material';
@@ -35,11 +35,11 @@ const FinalRemarksTab: React.FC<FinalRemarksTabProps> = memo(({
 	return (
 		<Box sx={{ maxWidth: 800, mx: 'auto' }}>
 			<Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 4 }}>
-				<Box 
-					sx={{ 
-						p: 1.25, 
-						bgcolor: alpha(theme.palette.info.main, 0.08), 
-						borderRadius: 2, 
+				<Box
+					sx={{
+						p: 1.25,
+						bgcolor: alpha(theme.palette.info.main, 0.08),
+						borderRadius: 2,
 						display: 'flex',
 						color: 'info.main'
 					}}
@@ -57,12 +57,12 @@ const FinalRemarksTab: React.FC<FinalRemarksTabProps> = memo(({
 			</Stack>
 
 			<Stack spacing={4}>
-				<Paper 
+				<Paper
 					elevation={0}
-					sx={{ 
-						p: 4, 
-						borderRadius: 3, 
-						bgcolor: alpha(scoreColor, 0.04), 
+					sx={{
+						p: 4,
+						borderRadius: 3,
+						bgcolor: alpha(scoreColor, 0.04),
 						border: '1px solid',
 						borderColor: alpha(scoreColor, 0.12)
 					}}
@@ -115,10 +115,10 @@ const FinalRemarksTab: React.FC<FinalRemarksTabProps> = memo(({
 					</Box>
 				</Paper>
 
-				<Box 
-					sx={{ 
-						p: 4, 
-						borderRadius: 3, 
+				<Box
+					sx={{
+						p: 4,
+						borderRadius: 3,
 						bgcolor: alpha(theme.palette.primary.main, 0.02),
 						border: '1px solid',
 						borderColor: alpha(theme.palette.primary.main, 0.1)
@@ -130,29 +130,27 @@ const FinalRemarksTab: React.FC<FinalRemarksTabProps> = memo(({
 					<TextField
 						select
 						label="Outcome Status"
-						value={formData.status || 'pending'}
+						value={formData.status || 'inprogress'}
 						onChange={(e) => onChange('status', e.target.value)}
 						fullWidth
 						size="small"
 						disabled={viewMode}
 						InputLabelProps={{ shrink: true, sx: { fontWeight: 600 } }}
-						sx={{ 
+						sx={{
 							bgcolor: 'background.paper',
 							'& .MuiOutlinedInput-root': { borderRadius: 2 }
 						}}
 					>
-						<MenuItem value="pending">Pending Review</MenuItem>
-						<MenuItem value="cleared">Cleared / Recommended</MenuItem>
-						<MenuItem value="re-test">Require Re-assessment</MenuItem>
-						<MenuItem value="rejected">Not Recommended</MenuItem>
-						<MenuItem value="absent">Absent / Not Attended</MenuItem>
+						<MenuItem value="inprogress">In-Progress</MenuItem>
+						<MenuItem value="selected">Selected</MenuItem>
+						<MenuItem value="rejected">Rejected</MenuItem>
 					</TextField>
 				</Box>
 
-				<Box 
-					sx={{ 
-						p: 4, 
-						borderRadius: 3, 
+				<Box
+					sx={{
+						p: 4,
+						borderRadius: 3,
 						bgcolor: alpha(theme.palette.info.main, 0.02),
 						border: '1px solid',
 						borderColor: alpha(theme.palette.info.main, 0.1)
@@ -169,7 +167,7 @@ const FinalRemarksTab: React.FC<FinalRemarksTabProps> = memo(({
 						onChange={(e) => onChange('feedback', e.target.value)}
 						fullWidth
 						disabled={viewMode}
-						sx={{ 
+						sx={{
 							bgcolor: 'background.paper',
 							'& .MuiOutlinedInput-root': {
 								borderRadius: 2,
