@@ -6,7 +6,7 @@ import {
 	Stack,
 	Paper,
 	Tooltip,
-	Slider,
+	Rating,
 	MenuItem,
 	alpha,
 	useTheme
@@ -80,31 +80,21 @@ const FinalRemarksTab: React.FC<FinalRemarksTabProps> = memo(({
 							{isAbsent ? '--' : formData.overall_rating}
 							{!isAbsent && <Typography component="span" variant="h5" color="text.secondary" sx={{ ml: 1, fontWeight: 700, opacity: 0.5 }}>/ 10</Typography>}
 						</Typography>
-						<Slider
+						<Rating
 							value={isAbsent ? 0 : (formData.overall_rating || 0)}
-							min={0}
 							max={10}
-							step={0.5}
-							onChange={(_, v) => onChange('overall_rating', v)}
+							precision={0.5}
+							onChange={(_, v) => onChange('overall_rating', v || 0)}
 							disabled={viewMode || isAbsent}
+							size="large"
 							sx={{
 								mt: 3,
-								width: '80%',
 								color: scoreColor,
-								'& .MuiSlider-thumb': {
-									width: 24,
-									height: 24,
-									backgroundColor: theme.palette.background.paper,
-									border: '2px solid currentColor',
-									'&:hover, &.Mui-focusVisible': {
-										boxShadow: `0px 0px 0px 8px ${alpha(scoreColor, 0.16)}`,
-									},
-									'&.Mui-active': {
-										boxShadow: `0px 0px 0px 14px ${alpha(scoreColor, 0.16)}`,
-									},
+								'& .MuiRating-iconFilled': {
+									color: scoreColor,
 								},
-								'& .MuiSlider-rail': {
-									opacity: 0.32,
+								'& .MuiRating-iconHover': {
+									color: isAbsent ? theme.palette.text.disabled : theme.palette.primary.dark,
 								},
 							}}
 						/>
