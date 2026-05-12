@@ -9,7 +9,7 @@ import {
 	TextField,
 	Grid,
 	MenuItem,
-	Slider,
+	Rating,
 	Autocomplete,
 	useTheme,
 	alpha
@@ -193,23 +193,27 @@ const CompetencyMatrixTab: React.FC<CompetencyMatrixTabProps> = memo(({
 										</Typography>
 									</Box>
 								</Stack>
-								<Slider
-									value={s.rating}
-									min={0}
-									max={10}
-									step={1}
-									size="small"
-									onChange={(_, v) => onSkillChange(idx, 'rating', v)}
-									disabled={viewMode}
-									sx={{ 
-										color: 'success.main',
-										'& .MuiSlider-thumb': {
-											'&:hover, &.Mui-focusVisible': {
-												boxShadow: `0px 0px 0px 8px ${alpha(theme.palette.success.main, 0.16)}`,
+								<Box sx={{ mt: 1 }}>
+									<Typography variant="caption" sx={{ fontWeight: 700, mb: 1, display: 'block', color: 'text.secondary' }}>
+										Proficiency Score
+									</Typography>
+									<Rating
+										value={s.rating}
+										max={10}
+										onChange={(_, v) => onSkillChange(idx, 'rating', v || 0)}
+										disabled={viewMode}
+										size="medium"
+										sx={{
+											color: 'success.main',
+											'& .MuiRating-iconFilled': {
+												color: 'success.main',
 											},
-										},
-									}}
-								/>
+											'& .MuiRating-iconHover': {
+												color: 'success.dark',
+											},
+										}}
+									/>
+								</Box>
 							</Stack>
 						</Paper>
 					</Grid>
