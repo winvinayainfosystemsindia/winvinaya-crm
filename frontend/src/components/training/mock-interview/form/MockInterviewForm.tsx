@@ -41,6 +41,13 @@ const MockInterviewForm: React.FC<MockInterviewFormProps> = ({ open, onClose, ba
 		dispatch(fetchAggregatedSkills());
 	}, [dispatch]);
 
+	// Filter allocations to only show "In Training" or "Moved to Placement"
+	const filteredAllocations = useMemo(() => {
+		return allocations.filter(a => 
+			a.status === 'in_training' || a.status === 'moved_to_placement'
+		);
+	}, [allocations]);
+
 	const {
 		formData,
 		questions,
@@ -75,7 +82,7 @@ const MockInterviewForm: React.FC<MockInterviewFormProps> = ({ open, onClose, ba
 					errors={errors}
 					viewMode={viewMode}
 					isEdit={!!currentMockInterview}
-					allocations={allocations}
+					allocations={filteredAllocations}
 					onChange={handleChange}
 				/>
 			)
@@ -118,7 +125,7 @@ const MockInterviewForm: React.FC<MockInterviewFormProps> = ({ open, onClose, ba
 				/>
 			)
 		}
-	], [formData, questions, skills, errors, viewMode, currentMockInterview, allocations, handleChange, handleQuestionChange, addQuestion, removeQuestion, handleSkillChange, addSkill, removeSkill]);
+	], [formData, questions, skills, errors, viewMode, currentMockInterview, filteredAllocations, handleChange, handleQuestionChange, addQuestion, removeQuestion, handleSkillChange, addSkill, removeSkill]);
 
 	const formatElapsed = (seconds: number) => {
 		const h = Math.floor(seconds / 3600);

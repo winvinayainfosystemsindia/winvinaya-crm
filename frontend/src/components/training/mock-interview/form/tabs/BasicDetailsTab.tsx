@@ -70,17 +70,17 @@ const BasicDetailsTab: React.FC<BasicDetailsTabProps> = memo(({
 						</Grid>
 						<Grid size={{ xs: 12, md: 6 }}>
 							<TextField
-								label="Evaluation Conducted By"
+								label="Evaluated By"
 								value={formData.interviewer_name || ''}
 								onChange={(e) => onChange('interviewer_name', e.target.value)}
 								fullWidth
 								size="small"
-								disabled={viewMode}
+								disabled={true}
 								error={!!errors.interviewer_name}
 								helperText={errors.interviewer_name}
 								InputLabelProps={{ shrink: true, sx: { fontWeight: 600 } }}
 								sx={{
-									bgcolor: 'background.paper',
+									bgcolor: alpha(theme.palette.action.disabledBackground, 0.05),
 									'& .MuiOutlinedInput-root': { borderRadius: 2 }
 								}}
 							/>
@@ -134,12 +134,12 @@ const BasicDetailsTab: React.FC<BasicDetailsTabProps> = memo(({
 								onChange={(e) => onChange('interview_date', e.target.value)}
 								fullWidth
 								size="small"
-								disabled={viewMode}
+								disabled={true}
 								error={!!errors.interview_date}
 								helperText={errors.interview_date}
 								InputLabelProps={{ shrink: true, sx: { fontWeight: 600 } }}
 								sx={{
-									bgcolor: 'background.paper',
+									bgcolor: alpha(theme.palette.action.disabledBackground, 0.05),
 									'& .MuiOutlinedInput-root': { borderRadius: 2 }
 								}}
 							/>
