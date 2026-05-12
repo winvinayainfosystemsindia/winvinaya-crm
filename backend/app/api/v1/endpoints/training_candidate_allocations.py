@@ -2,7 +2,7 @@
 
 from typing import List, Optional
 from uuid import UUID
-from fastapi import APIRouter, Depends, status, Request, Query
+from fastapi import APIRouter, Depends, status, Request, Query, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.api.deps import require_roles
@@ -53,6 +53,82 @@ async def get_all_allocations(
         sort_order=sort_order
     )
     return {"items": items, "total": total}
+
+
+from app.core.database import get_db, AsyncSessionLocal
+
+
+async def _run_export_allocations(
+    user_id: int,
+    user_email: str,
+    user_name: str,
+    **kwargs
+):
+    """Wrapper to run export in background with its own DB session"""
+    from loguru import logger
+    import sys
+    print(f"DEBUG: Background task STARTING for training allocations export (User: {user_email})")
+    sys.stdout.flush()
+    logger.info(f"Background task STARTED for training allocations export (User: {user_email})")
+    try:
+        async with AsyncSessionLocal() as db:
+            from app.models.user import User
+            current_user = User(
+                id=user_id, 
+                email=user_email, 
+                full_name=user_name,
+                username=user_email
+            )
+            
+            service = TrainingCandidateAllocationService(db)
+            await service.export_allocations(current_user=current_user, **kwargs)
+        logger.info(f"Background task COMPLETED for training allocations export (User: {user_email})")
+        print(f"DEBUG: Background task COMPLETED for training allocations export (User: {user_email})")
+        sys.stdout.flush()
+    except Exception as e:
+        logger.error(f"Background task FAILED for training allocations export: {str(e)}", exc_info=True)
+        print(f"DEBUG: Background task FAILED for training allocations export: {str(e)}")
+        sys.stdout.flush()
+
+
+@router.post("/export")
+async def export_allocations(
+    background_tasks: BackgroundTasks,
+    search: Optional[str] = Query(None),
+    batch_id: Optional[int] = Query(None),
+    status: Optional[str] = Query(None),
+    is_dropout: Optional[bool] = Query(None),
+    gender: Optional[str] = Query(None),
+    disability_types: Optional[str] = Query(None),
+    sort_by: str = Query("created_at"),
+    sort_order: str = Query("desc"),
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Export all matching allocations and send via email.
+    """
+    service = TrainingCandidateAllocationService(db)
+    from loguru import logger
+    logger.info(f"API: Export training allocations requested by {current_user.email}")
+    
+    # Trigger export in background
+    background_tasks.add_task(
+        _run_export_allocations,
+        user_id=current_user.id,
+        user_email=current_user.email,
+        user_name=current_user.full_name or current_user.username,
+        search=search,
+        batch_id=batch_id,
+        status=status,
+        is_dropout=is_dropout,
+        gender=gender,
+        disability_types=disability_types,
+        sort_by=sort_by,
+        sort_order=sort_order
+    )
+    
+    return {"message": f"Export started. The report will be sent to {current_user.email} shortly."}
 
 
 @router.post("/", response_model=TrainingCandidateAllocationResponse, status_code=status.HTTP_201_CREATED)

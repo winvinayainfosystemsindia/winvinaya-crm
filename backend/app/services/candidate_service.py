@@ -1,10 +1,14 @@
 """Candidate Service"""
 
+import io
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Any
 from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from openpyxl import Workbook
+from openpyxl.styles import Font
+
 from app.models.candidate import Candidate
 from app.models.user import User, UserRole
 from app.models.candidate_assignment import CandidateAssignment
@@ -12,6 +16,7 @@ from app.schemas.candidate import CandidateCreate, CandidateUpdate
 from app.schemas.candidate_assignment import CandidateAssignmentCreate
 from app.repositories.candidate_repository import CandidateRepository
 from app.services.pincode_service import get_pincode_details
+from app.utils.email import send_email, send_export_email
 
 
 class CandidateService:
@@ -342,3 +347,123 @@ class CandidateService:
             return new_assignment
 
 
+    async def export_candidates(
+        self,
+        current_user: User,
+        search: Optional[str] = None,
+        sort_by: Optional[str] = None,
+        sort_order: str = "desc",
+        disability_types: Optional[list] = None,
+        education_levels: Optional[list] = None,
+        cities: Optional[list] = None,
+        counseling_status: Optional[str] = None,
+        is_experienced: Optional[bool] = None,
+        screening_status: Optional[str] = None,
+        disability_percentages: Optional[list] = None,
+        screening_reasons: Optional[list] = None,
+        gender: Optional[str] = None,
+        year_of_passing: Optional[list] = None,
+        year_of_experience: Optional[str] = None,
+        currently_employed: Optional[bool] = None,
+        extra_filters: Optional[dict] = None,
+        is_global: bool = False
+    ) -> bool:
+        """Fetch all filtered candidates, generate Excel, and email to user"""
+        
+        # 1. Fetch all matching candidates (no limit)
+        res = await self.get_candidates(
+            skip=0,
+            limit=10000, # High limit for export
+            search=search,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            disability_types=disability_types,
+            education_levels=education_levels,
+            cities=cities,
+            counseling_status=counseling_status,
+            is_experienced=is_experienced,
+            screening_status=screening_status,
+            disability_percentages=disability_percentages,
+            screening_reasons=screening_reasons,
+            gender=gender,
+            year_of_passing=year_of_passing,
+            year_of_experience=year_of_experience,
+            currently_employed=currently_employed,
+            extra_filters=extra_filters,
+            current_user=current_user,
+            is_global=is_global
+        )
+        candidates = res["items"]
+        
+        # 2. Generate Excel in memory
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Candidates Report"
+        
+        # Headers
+        headers = [
+            "Name", "Gender", "Email", "Phone", "WhatsApp", "DOB", 
+            "City", "District", "State", "Pincode", "Year of Passing", "Education",
+            "Disability Type", "Disability Percentage", "Registration Date",
+            "Screening Status", "Screening Date", "Screened By",
+            "Counseling Status", "Counseling Date", "Counselor"
+        ]
+        
+        for col_num, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_num, value=header)
+            cell.font = Font(bold=True)
+            
+        # Data Rows
+        for row_num, c in enumerate(candidates, 2):
+            # Basic info
+            ws.cell(row=row_num, column=1, value=c.name)
+            ws.cell(row=row_num, column=2, value=c.gender)
+            ws.cell(row=row_num, column=3, value=c.email)
+            ws.cell(row=row_num, column=4, value=c.phone)
+            ws.cell(row=row_num, column=5, value=c.whatsapp_number)
+            ws.cell(row=row_num, column=6, value=c.dob.strftime('%Y-%m-%d') if c.dob else "")
+            ws.cell(row=row_num, column=7, value=c.city)
+            ws.cell(row=row_num, column=8, value=c.district)
+            ws.cell(row=row_num, column=9, value=c.state)
+            ws.cell(row=row_num, column=10, value=c.pincode)
+            
+            # Education (from JSON)
+            edu = c.education_details or {}
+            ws.cell(row=row_num, column=11, value=str(edu.get("year_of_passing", "")))
+            ws.cell(row=row_num, column=12, value=str(edu.get("education_level", "")))
+            
+            # Disability (from JSON)
+            dis = c.disability_details or {}
+            ws.cell(row=row_num, column=13, value=dis.get("disability_type", ""))
+            ws.cell(row=row_num, column=14, value=dis.get("disability_percentage", ""))
+            
+            ws.cell(row=row_num, column=15, value=c.created_at.strftime('%Y-%m-%d %H:%M') if c.created_at else "")
+            
+            # Screening
+            if c.screening:
+                ws.cell(row=row_num, column=16, value=c.screening.status)
+                ws.cell(row=row_num, column=17, value=c.screening.created_at.strftime('%Y-%m-%d') if c.screening.created_at else "")
+                ws.cell(row=row_num, column=18, value=c.screening.screened_by.full_name or c.screening.screened_by.username if c.screening.screened_by else "")
+            
+            # Counseling
+            if c.counseling:
+                ws.cell(row=row_num, column=19, value=c.counseling.status)
+                ws.cell(row=row_num, column=20, value=c.counseling.counseling_date.strftime('%Y-%m-%d') if c.counseling.counseling_date else "")
+                ws.cell(row=row_num, column=21, value=c.counseling.counselor.full_name or c.counseling.counselor.username if c.counseling.counselor else "")
+
+        # Save to buffer
+        excel_buffer = io.BytesIO()
+        wb.save(excel_buffer)
+        excel_buffer.seek(0)
+        
+        # 3. Send Email
+        report_name = "Candidates Report"
+        filename = f"Candidates_Report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        
+        return await send_export_email(
+            to_email=current_user.email,
+            user_name=current_user.full_name or current_user.username,
+            report_name=report_name,
+            file_content=excel_buffer.getvalue(),
+            filename=filename
+        )

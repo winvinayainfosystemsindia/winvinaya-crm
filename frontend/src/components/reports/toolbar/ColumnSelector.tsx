@@ -46,14 +46,17 @@ const ColumnSelector: React.FC<ColumnSelectorProps> = ({
 				onClick={onOpen}
 				size="small"
 				sx={{
-					height: 32,
+					height: 36,
 					width: isMobile ? '100%' : 'auto',
-					borderColor: '#d5dbdb',
-					color: '#545b64',
+					borderColor: theme.palette.divider,
+					color: theme.palette.text.primary,
 					textTransform: 'none',
-					fontSize: '0.85rem',
+					fontSize: theme.typography.body2.fontSize,
 					fontWeight: 500,
-					'&:hover': { borderColor: '#aab7b7', backgroundColor: '#f2f3f3' }
+					'&:hover': { 
+						borderColor: theme.palette.primary.light, 
+						backgroundColor: theme.palette.action.hover 
+					}
 				}}
 			>
 				Configure Columns
@@ -66,15 +69,15 @@ const ColumnSelector: React.FC<ColumnSelectorProps> = ({
 					sx: {
 						width: 280,
 						maxHeight: 480,
-						boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-						border: '1px solid #eaeded',
+						boxShadow: theme.shadows[3],
+						border: `1px solid ${theme.palette.divider}`,
 						overflowY: 'auto',
 						'overscrollBehavior': 'contain'
 					}
 				}}
 			>
 				<Box sx={{ px: 2, py: 1.5 }}>
-					<Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1a1c1e' }}>
+					<Typography variant="subtitle2" sx={{ fontWeight: 700, color: theme.palette.text.primary }}>
 						Select Columns
 					</Typography>
 					<Typography variant="caption" color="text.secondary">
@@ -102,8 +105,8 @@ const ColumnSelector: React.FC<ColumnSelectorProps> = ({
 
 						return (
 							<React.Fragment key={group}>
-								<Box sx={{ px: 2, py: 1, bgcolor: '#f8f9fa' }}>
-									<Typography variant="caption" sx={{ fontWeight: 700, color: '#545b64', textTransform: 'uppercase' }}>
+								<Box sx={{ px: 2, py: 1, bgcolor: theme.palette.action.hover }}>
+									<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.text.secondary, textTransform: 'uppercase' }}>
 										{getGroupLabel(group)}
 									</Typography>
 								</Box>
@@ -113,7 +116,7 @@ const ColumnSelector: React.FC<ColumnSelectorProps> = ({
 										onClick={() => onToggleColumn(col.id)}
 										sx={{
 											py: 0.5,
-											'&:hover': { backgroundColor: '#f2f3f3' }
+											'&:hover': { backgroundColor: theme.palette.action.hover }
 										}}
 									>
 										<FormControlLabel
@@ -122,13 +125,13 @@ const ColumnSelector: React.FC<ColumnSelectorProps> = ({
 													size="small"
 													checked={visibleColumns.includes(col.id)}
 													sx={{
-														color: '#d5dbdb',
-														'&.Mui-checked': { color: '#ff9900' }
+														color: theme.palette.divider,
+														'&.Mui-checked': { color: theme.palette.primary.main }
 													}}
 												/>
 											}
 											label={
-												<Typography variant="body2" sx={{ color: '#545b64', fontSize: '0.875rem' }}>
+												<Typography variant="body2" sx={{ color: theme.palette.text.primary, fontSize: theme.typography.body2.fontSize }}>
 													{col.label}
 												</Typography>
 											}

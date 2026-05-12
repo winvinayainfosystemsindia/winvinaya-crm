@@ -1,4 +1,5 @@
 """Training Candidate Allocation Service"""
+import io
 from typing import List, Optional, Any
 from uuid import UUID
 from datetime import datetime
@@ -6,6 +7,9 @@ from fastapi import HTTPException
 from sqlalchemy import select, and_, or_, func, desc
 from sqlalchemy.orm import selectinload, joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
+from openpyxl import Workbook
+from openpyxl.styles import Font
+
 from app.models.training_candidate_allocation import TrainingCandidateAllocation
 from app.models.candidate import Candidate
 from app.models.candidate_counseling import CandidateCounseling
@@ -14,6 +18,8 @@ from app.schemas.training_candidate_allocation import TrainingCandidateAllocatio
 from app.repositories.training_candidate_allocation_repository import TrainingCandidateAllocationRepository
 from app.repositories.training_batch_repository import TrainingBatchRepository
 from app.repositories.candidate_repository import CandidateRepository
+from app.models.user import User
+from app.utils.email import send_email, send_export_email
 
 
 class TrainingCandidateAllocationService:
@@ -447,4 +453,102 @@ class TrainingCandidateAllocationService:
             disability_types=disability_types,
             sort_by=sort_by,
             sort_order=sort_order
+        )
+
+    async def export_allocations(
+        self,
+        current_user: User,
+        search: Optional[str] = None,
+        batch_id: Optional[int] = None,
+        status: Optional[str] = None,
+        is_dropout: Optional[bool] = None,
+        gender: Optional[str] = None,
+        disability_types: Optional[str] = None,
+        sort_by: str = "created_at",
+        sort_order: str = "desc"
+    ) -> bool:
+        """Fetch all filtered allocations, generate Excel, and email to user"""
+        
+        # 1. Fetch all matching allocations (no limit)
+        allocations, total = await self.get_multi(
+            skip=0,
+            limit=10000, # High limit for export
+            search=search,
+            batch_id=batch_id,
+            status=status,
+            is_dropout=is_dropout,
+            gender=gender,
+            disability_types=disability_types,
+            sort_by=sort_by,
+            sort_order=sort_order
+        )
+        
+        # 2. Generate Excel in memory
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Training Allocations Report"
+        
+        # Headers
+        headers = [
+            "Candidate Name", "Gender", "Email", "Phone", "Disability Type",
+            "Batch Name", "Batch Status", "Domain", "Training Mode", "Courses", "Duration",
+            "Training Status", "Attendance (%)", "Assessment Mark", "Allocation Date"
+        ]
+        
+        for col_num, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_num, value=header)
+            cell.font = Font(bold=True)
+            
+        # Data Rows
+        for row_num, a in enumerate(allocations, 2):
+            # Candidate info
+            c = a.candidate
+            ws.cell(row=row_num, column=1, value=c.name if c else "")
+            ws.cell(row=row_num, column=2, value=c.gender if c else "")
+            ws.cell(row=row_num, column=3, value=c.email if c else "")
+            ws.cell(row=row_num, column=4, value=c.phone if c else "")
+            
+            dis = c.disability_details if c else {}
+            ws.cell(row=row_num, column=5, value=dis.get("disability_type", "") if dis else "")
+            
+            # Batch info
+            b = a.batch
+            ws.cell(row=row_num, column=6, value=b.batch_name if b else "")
+            ws.cell(row=row_num, column=7, value=b.status if b else "")
+            ws.cell(row=row_num, column=8, value=b.domain if b else "")
+            ws.cell(row=row_num, column=9, value=b.training_mode if b else "")
+            
+            courses = b.courses if b else []
+            if isinstance(courses, list):
+                ws.cell(row=row_num, column=10, value=", ".join([str(c.get('name') if isinstance(c, dict) else c) for c in courses]))
+            else:
+                ws.cell(row=row_num, column=10, value=str(courses))
+                
+            dur = b.duration if b else {}
+            dur_str = ""
+            if isinstance(dur, dict):
+                dur_str = f"{dur.get('weeks', 0)} weeks, {dur.get('days', 0)} days"
+            ws.cell(row=row_num, column=11, value=dur_str)
+            
+            # Allocation info
+            ws.cell(row=row_num, column=12, value=a.status)
+            ws.cell(row=row_num, column=13, value=f"{a.attendance_percentage}%" if a.attendance_percentage is not None else "-")
+            ws.cell(row=row_num, column=14, value=a.assessment_score if a.assessment_score is not None else "-")
+            ws.cell(row=row_num, column=15, value=a.created_at.strftime('%Y-%m-%d %H:%M') if a.created_at else "")
+
+        # Save to buffer
+        excel_buffer = io.BytesIO()
+        wb.save(excel_buffer)
+        excel_buffer.seek(0)
+        
+        # 3. Send Email
+        report_name = "Training Allocations Report"
+        filename = f"Training_Allocations_Report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        
+        return await send_export_email(
+            to_email=current_user.email,
+            user_name=current_user.full_name or current_user.username,
+            report_name=report_name,
+            file_content=excel_buffer.getvalue(),
+            filename=filename
         )

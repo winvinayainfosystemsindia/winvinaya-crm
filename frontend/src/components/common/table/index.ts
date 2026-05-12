@@ -4,6 +4,7 @@ export { default as DataTableHead } from './DataTableHead';
 export { default as DataTableActions } from './DataTableActions';
 export { default as DataTableEmpty } from './DataTableEmpty';
 export { default as DataTableSkeleton } from './DataTableSkeleton';
+export { default as CustomTablePagination } from './CustomTablePagination';
 
 export type { DataTableProps } from './DataTable';
 export type { ColumnDefinition } from './DataTableHead';

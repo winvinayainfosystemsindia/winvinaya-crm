@@ -68,7 +68,7 @@ const ReportHeader: React.FC<ReportHeaderProps> = ({
 				role="toolbar"
 				aria-label="Report Actions"
 			>
-				<FormControl size="small" sx={{ minWidth: isMobile ? '100%' : 180 }}>
+				<FormControl size="small" sx={{ minWidth: isMobile ? '100%' : 220 }}>
 					<InputLabel id="report-type-label">Report Type</InputLabel>
 					<Select
 						labelId="report-type-label"
@@ -76,17 +76,17 @@ const ReportHeader: React.FC<ReportHeaderProps> = ({
 						label="Report Type"
 						onChange={(e) => onReportTypeChange(e.target.value)}
 						sx={{
-							height: 32,
-							fontSize: '0.85rem',
-							borderRadius: '2px',
-							'& .MuiOutlinedInput-notchedOutline': { borderColor: '#d5dbdb' }
+							height: 36,
+							fontSize: theme.typography.body2.fontSize,
+							borderRadius: `${theme.shape.borderRadius}px`,
+							'& .MuiOutlinedInput-notchedOutline': { borderColor: theme.palette.divider }
 						}}
 						inputProps={{
 							'aria-label': 'Select report type'
 						}}
 					>
-						<MenuItem value="candidate" sx={{ fontSize: '0.85rem' }}>Candidate Report</MenuItem>
-						<MenuItem value="training" sx={{ fontSize: '0.85rem' }}>Training Management Report</MenuItem>
+						<MenuItem value="candidate" sx={{ fontSize: theme.typography.body2.fontSize }}>Candidate Report</MenuItem>
+						<MenuItem value="training" sx={{ fontSize: theme.typography.body2.fontSize }}>Training Management Report</MenuItem>
 					</Select>
 				</FormControl>
 
@@ -99,20 +99,17 @@ const ReportHeader: React.FC<ReportHeaderProps> = ({
 						size="small"
 						aria-label={loading ? "Refreshing data" : "Refresh report data"}
 						sx={{
-							height: 32,
+							height: 36,
 							flex: isMobile ? 1 : 'none',
-							borderColor: '#d5dbdb',
-							color: '#545b64',
+							borderColor: theme.palette.divider,
+							color: theme.palette.text.primary,
 							textTransform: 'none',
-							fontWeight: 700,
+							fontWeight: 600,
+							fontSize: theme.typography.body2.fontSize,
 							whiteSpace: 'nowrap',
 							'&:hover': {
-								borderColor: '#aab7b7',
-								backgroundColor: '#f2f3f3'
-							},
-							'&.Mui-disabled': {
-								color: '#aab7b7',
-								borderColor: '#eaeded'
+								borderColor: theme.palette.primary.light,
+								backgroundColor: theme.palette.action.hover
 							}
 						}}
 					>
@@ -125,16 +122,12 @@ const ReportHeader: React.FC<ReportHeaderProps> = ({
 						size="small"
 						aria-label="Export report to Excel"
 						sx={{
-							height: 32,
+							height: 36,
 							flex: isMobile ? 1 : 'none',
-							backgroundColor: '#ec7211',
-							color: '#fff',
 							textTransform: 'none',
 							fontWeight: 700,
+							fontSize: theme.typography.body2.fontSize,
 							whiteSpace: 'nowrap',
-							'&:hover': {
-								backgroundColor: '#eb5f07'
-							},
 							boxShadow: 'none'
 						}}
 					>

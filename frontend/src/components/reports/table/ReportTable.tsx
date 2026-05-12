@@ -6,21 +6,27 @@ import {
 	TableBody,
 	TableCell,
 	TableContainer,
-	TableHead,
 	TableRow,
 	CircularProgress,
 	Typography,
 	Chip,
 	useTheme,
 	useMediaQuery,
-	Stack
+	Stack,
+	alpha
 } from '@mui/material';
 import { format } from 'date-fns';
-import CustomTablePagination from '../common/table/CustomTablePagination';
+import { 
+	DataTableHead, 
+	DataTableEmpty, 
+	CustomTablePagination,
+	type ColumnDefinition
+} from '../../common/table';
 
 interface Column {
 	id: string;
 	label: string;
+	group?: string;
 }
 
 interface ReportTableProps {
@@ -35,28 +41,7 @@ interface ReportTableProps {
 	onRowsPerPageChange: (newRowsPerPage: number) => void;
 }
 
-const StyledHeaderCell = ({ children, sx = {} }: { children: React.ReactNode; sx?: any }) => (
-	<TableCell
-		component="th"
-		scope="col"
-		sx={{
-			backgroundColor: '#fafafa',
-			fontWeight: 700,
-			fontSize: '0.75rem',
-			color: '#545b64',
-			textTransform: 'uppercase',
-			letterSpacing: '0.05em',
-			py: 1.5,
-			px: 2,
-			borderBottom: '1px solid #eaeded',
-			whiteSpace: 'nowrap',
-			minWidth: 150,
-			...sx
-		}}
-	>
-		{children}
-	</TableCell>
-);
+// Removed local StyledHeaderCell in favor of common DataTableHead
 
 const ReportTable: React.FC<ReportTableProps> = ({
 	loading,
@@ -73,6 +58,13 @@ const ReportTable: React.FC<ReportTableProps> = ({
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const activeColumns = columns.filter(c => visibleColumns.includes(c.id));
 
+	// Map to common ColumnDefinition
+	const tableColumns: ColumnDefinition<any>[] = activeColumns.map(col => ({
+		id: col.id,
+		label: col.label,
+		sortable: false // Default for reports for now
+	}));
+
 	// Helper for Card View Rendering
 	const renderMobileCard = (item: any) => (
 		<Paper
@@ -81,21 +73,21 @@ const ReportTable: React.FC<ReportTableProps> = ({
 			sx={{
 				p: 2,
 				mb: 2,
-				border: '1px solid #eaeded',
-				borderRadius: '4px',
-				backgroundColor: '#fff'
+				border: `1px solid ${theme.palette.divider}`,
+				borderRadius: `${theme.shape.borderRadius}px`,
+				backgroundColor: theme.palette.background.paper
 			}}
 		>
-			<Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#232f3e', mb: 1.5 }}>
+			<Typography variant="subtitle1" sx={{ fontWeight: 700, color: theme.palette.text.primary, mb: 1.5 }}>
 				{item.candidate?.name || item.name}
 			</Typography>
 			<Stack spacing={1.5}>
 				{activeColumns.filter(c => c.id !== 'name').map(col => (
 					<Box key={col.id}>
-						<Typography variant="caption" sx={{ color: '#545b64', fontWeight: 600, display: 'block', mb: 0.25, textTransform: 'uppercase' }}>
+						<Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontWeight: 700, display: 'block', mb: 0.25, textTransform: 'uppercase' }}>
 							{col.label}
 						</Typography>
-						<Box sx={{ fontSize: '0.875rem', color: '#1a1c1e' }}>
+						<Box sx={{ fontSize: theme.typography.body2.fontSize, color: theme.palette.text.primary }}>
 							{renderCell(item, col.id)}
 						</Box>
 					</Box>
@@ -154,13 +146,13 @@ const ReportTable: React.FC<ReportTableProps> = ({
 			else if (colId === 'attendance_percentage') {
 				val = item.attendance_percentage;
 				if (val === null || val === undefined) return '-';
-				const color = val >= 90 ? '#1d8102' : val >= 75 ? '#c85e00' : '#d13212';
+				const color = val >= 90 ? theme.palette.success.main : val >= 75 ? theme.palette.warning.main : theme.palette.error.main;
 				return <Box sx={{ color, fontWeight: 700 }}>{val}%</Box>;
 			}
 			else if (colId === 'assessment_score') {
 				val = item.assessment_score;
 				if (val === null || val === undefined) return '-';
-				return <Box sx={{ fontWeight: 700, color: '#232f3e' }}>{val}</Box>;
+				return <Box sx={{ fontWeight: 700, color: theme.palette.text.primary }}>{val}</Box>;
 			}
 			else val = item[colId];
 		} else {
@@ -238,7 +230,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
 							label={doc}
 							size="small"
 							variant="outlined"
-							sx={{ fontSize: '0.65rem', height: 18, backgroundColor: '#f8f9fa' }}
+							sx={{ fontSize: '0.65rem', height: 18, backgroundColor: theme.palette.action.hover }}
 						/>
 					)) : '-'}
 				</Box>
@@ -264,7 +256,13 @@ const ReportTable: React.FC<ReportTableProps> = ({
 							label={role}
 							size="small"
 							variant="outlined"
-							sx={{ fontSize: '0.65rem', height: 18, backgroundColor: '#fdf3e7', color: '#ec7211', borderColor: '#fbd49d' }}
+							sx={{
+								fontSize: '0.65rem',
+								height: 18,
+								backgroundColor: alpha(theme.palette.secondary.main, 0.05),
+								color: theme.palette.secondary.main,
+								borderColor: alpha(theme.palette.secondary.main, 0.2)
+							}}
 						/>
 					)) : '-'}
 				</Box>
@@ -274,10 +272,16 @@ const ReportTable: React.FC<ReportTableProps> = ({
 		if ((colId === 'disability_type' || colId === 'screening_status' || colId === 'counseling_status' || colId === 'status' || colId === 'batch_status') && val) {
 			const getStatusColor = (v: string) => {
 				const lowerV = v.toLowerCase();
-				if (lowerV === 'completed' || lowerV === 'selected' || lowerV === 'ongoing') return { bg: '#e7f4e4', text: '#1d8102', border: '#b7d1a3' };
-				if (lowerV === 'allocated' || lowerV === 'pending') return { bg: '#fff7e6', text: '#c85e00', border: '#fbd49d' };
-				if (lowerV === 'rejected' || lowerV === 'dropped_out') return { bg: '#fdecea', text: '#d13212', border: '#f5bcac' };
-				return { bg: '#f2f3f3', text: '#545b64', border: '#d5dbdb' };
+				if (lowerV === 'completed' || lowerV === 'selected' || lowerV === 'ongoing') {
+					return { bg: alpha(theme.palette.success.main, 0.1), text: theme.palette.success.main, border: alpha(theme.palette.success.main, 0.2) };
+				}
+				if (lowerV === 'allocated' || lowerV === 'pending') {
+					return { bg: alpha(theme.palette.warning.main, 0.1), text: theme.palette.warning.main, border: alpha(theme.palette.warning.main, 0.2) };
+				}
+				if (lowerV === 'rejected' || lowerV === 'dropped_out') {
+					return { bg: alpha(theme.palette.error.main, 0.1), text: theme.palette.error.main, border: alpha(theme.palette.error.main, 0.2) };
+				}
+				return { bg: theme.palette.action.hover, text: theme.palette.text.secondary, border: theme.palette.divider };
 			};
 			const colors = getStatusColor(val);
 			return <Chip label={val} size="small" sx={{ borderRadius: '4px', backgroundColor: colors.bg, color: colors.text, border: `1px solid ${colors.border}`, fontWeight: 600, fontSize: '0.7rem', height: 20 }} />;
@@ -293,8 +297,8 @@ const ReportTable: React.FC<ReportTableProps> = ({
 				<Box sx={{ fontSize: '0.75rem' }}>
 					{val.map((q: any, i: number) => (
 						<div key={i} style={{ marginBottom: i < val.length - 1 ? '4px' : 0 }}>
-							<Typography variant="caption" sx={{ fontWeight: 700, color: '#ec7211', display: 'block' }}>Q: {q.question}</Typography>
-							<Typography variant="caption" sx={{ color: '#545b64' }}>A: {q.answer}</Typography>
+							<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.primary.main, display: 'block' }}>Q: {q.question}</Typography>
+							<Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>A: {q.answer}</Typography>
 						</div>
 					))}
 				</Box>
@@ -335,20 +339,31 @@ const ReportTable: React.FC<ReportTableProps> = ({
 			sx={{
 				flex: 1,
 				width: '100%',
-				border: '1px solid #eaeded',
-				borderRadius: '0 0 4px 4px',
+				border: `1px solid ${theme.palette.divider}`,
+				borderRadius: `0 0 ${theme.shape.borderRadius}px ${theme.shape.borderRadius}px`,
 				position: 'relative',
 				overflow: 'hidden',
 				display: 'flex',
 				flexDirection: 'column',
 				'&::-webkit-scrollbar': { height: 8, width: 8 },
-				'&::-webkit-scrollbar-track': { backgroundColor: '#f1f1f1' },
-				'&::-webkit-scrollbar-thumb': { backgroundColor: '#c1c1c1', borderRadius: 4 },
+				'&::-webkit-scrollbar-track': { backgroundColor: theme.palette.background.default },
+				'&::-webkit-scrollbar-thumb': { backgroundColor: theme.palette.divider, borderRadius: 4 },
 			}}
 		>
 			{loading && (
-				<Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.6)', zIndex: 2 }}>
-					<CircularProgress size={32} thickness={4} sx={{ color: '#007eb9' }} />
+				<Box sx={{
+					position: 'absolute',
+					top: 0,
+					left: 0,
+					right: 0,
+					bottom: 0,
+					display: 'flex',
+					alignItems: 'center',
+					justifyContent: 'center',
+					backgroundColor: alpha(theme.palette.background.paper, 0.6),
+					zIndex: 2
+				}}>
+					<CircularProgress size={32} thickness={4} />
 				</Box>
 			)}
 			<Box sx={{
@@ -357,7 +372,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
 				width: '100%',
 				'WebkitOverflowScrolling': 'touch',
 				p: isMobile ? 2 : 0,
-				backgroundColor: isMobile ? '#f2f3f3' : 'transparent'
+				backgroundColor: isMobile ? theme.palette.background.default : 'transparent'
 			}}>
 				{isMobile ? (
 					<Box role="list" aria-label="Candidates report list">
@@ -369,15 +384,9 @@ const ReportTable: React.FC<ReportTableProps> = ({
 					</Box>
 				) : (
 					<Table size="small" stickyHeader aria-label="Candidates report table" role="table">
-						<TableHead>
-							<TableRow role="row">
-								{activeColumns.map(col => (
-									<StyledHeaderCell key={col.id}>
-										{col.label}
-									</StyledHeaderCell>
-								))}
-							</TableRow>
-						</TableHead>
+						<DataTableHead 
+							columns={tableColumns}
+						/>
 						<TableBody>
 							{data.length > 0 ? (
 								data.map((candidate, idx) => (
@@ -385,9 +394,9 @@ const ReportTable: React.FC<ReportTableProps> = ({
 										key={candidate.public_id}
 										role="row"
 										sx={{
-											backgroundColor: idx % 2 === 0 ? '#fff' : '#fafafa',
-											'&:hover': { backgroundColor: '#f2f3f3' },
-											'& td': { borderBottom: '1px solid #f2f3f3' }
+											backgroundColor: idx % 2 === 0 ? theme.palette.background.paper : theme.palette.action.hover,
+											'&:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.05) },
+											'& td': { borderBottom: `1px solid ${theme.palette.divider}` }
 										}}
 									>
 										{activeColumns.map(col => (
@@ -398,8 +407,8 @@ const ReportTable: React.FC<ReportTableProps> = ({
 													py: 1,
 													px: 2,
 													fontSize: '0.8125rem',
-													color: '#1a1c1e',
-													borderRight: '1px solid #f2f3f3',
+													color: theme.palette.text.primary,
+													borderRight: `1px solid ${theme.palette.divider}`,
 													'&:last-child': { borderRight: 'none' }
 												}}
 											>
@@ -409,13 +418,10 @@ const ReportTable: React.FC<ReportTableProps> = ({
 									</TableRow>
 								))
 							) : (
-								<TableRow>
-									<TableCell colSpan={activeColumns.length} sx={{ py: 10, textAlign: 'center' }}>
-										<Typography variant="body2" color="text.secondary">
-											No candidate data available for the current selection.
-										</Typography>
-									</TableCell>
-								</TableRow>
+								<DataTableEmpty 
+									colSpan={activeColumns.length} 
+									message="No candidate data available for the current selection."
+								/>
 							)}
 						</TableBody>
 					</Table>
@@ -425,9 +431,9 @@ const ReportTable: React.FC<ReportTableProps> = ({
 				count={total}
 				page={page}
 				rowsPerPage={rowsPerPage}
-				onPageChange={(_, p) => onPageChange(p)}
-				onRowsPerPageChange={(e) => onRowsPerPageChange(parseInt(e.target.value, 10))}
-				onRowsPerPageSelectChange={(rows) => onRowsPerPageChange(rows)}
+				onPageChange={(_: unknown, p: number) => onPageChange(p)}
+				onRowsPerPageChange={(e: React.ChangeEvent<HTMLInputElement>) => onRowsPerPageChange(parseInt(e.target.value, 10))}
+				onRowsPerPageSelectChange={(rows: number) => onRowsPerPageChange(rows)}
 			/>
 		</TableContainer>
 	);

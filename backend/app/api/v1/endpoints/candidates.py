@@ -149,6 +149,114 @@ async def get_candidates(
     )
 
 
+from app.core.database import get_db, AsyncSessionLocal
+
+
+async def _run_export_candidates(
+    user_id: int,
+    user_email: str,
+    user_name: str,
+    **kwargs
+):
+    """Wrapper to run export in background with its own DB session"""
+    from loguru import logger
+    import sys
+    print(f"DEBUG: Background task STARTING for candidate export (User: {user_email})")
+    sys.stdout.flush()
+    logger.info(f"Background task STARTED for candidate export (User: {user_email})")
+    try:
+        async with AsyncSessionLocal() as db:
+            from app.models.user import User
+            # Create a mock user for the service with correct attributes
+            current_user = User(
+                id=user_id, 
+                email=user_email, 
+                full_name=user_name,
+                username=user_email # Fallback for username
+            )
+            
+            service = CandidateService(db)
+            await service.export_candidates(current_user=current_user, **kwargs)
+        logger.info(f"Background task COMPLETED for candidate export (User: {user_email})")
+        print(f"DEBUG: Background task COMPLETED for candidate export (User: {user_email})")
+        sys.stdout.flush()
+    except Exception as e:
+        logger.error(f"Background task FAILED for candidate export: {str(e)}", exc_info=True)
+        print(f"DEBUG: Background task FAILED for candidate export: {str(e)}")
+        sys.stdout.flush()
+
+
+@router.post("/export")
+@rate_limit_medium()
+async def export_candidates(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    search: str = None,
+    sort_by: str = None,
+    sort_order: str = "desc",
+    disability_types: str = None,
+    education_levels: str = None,
+    cities: str = None,
+    counseling_status: str = None,
+    is_experienced: bool = None,
+    screening_status: str = None,
+    disability_percentages: str = None,
+    screening_reasons: str = None,
+    gender: str = None,
+    year_of_passing: str = None,
+    year_of_experience: str = None,
+    currently_employed: bool = None,
+    is_global: bool = False,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Export all matching candidates and send via email.
+    """
+    disability_types_list = disability_types.split(',') if disability_types else None
+    education_levels_list = education_levels.split(',') if education_levels else None
+    cities_list = cities.split(',') if cities else None
+    disability_percentages_list = disability_percentages.split(',') if disability_percentages else None
+    screening_reasons_list = screening_reasons.split(',') if screening_reasons else None
+    year_of_passing_list = year_of_passing.split(',') if year_of_passing else None
+    
+    extra_filters = {}
+    for key, value in request.query_params.items():
+        if key.startswith(('screening_others.', 'counseling_others.')):
+            extra_filters[key] = value
+
+    service = CandidateService(db)
+    from loguru import logger
+    logger.info(f"API: Export candidates requested by {current_user.email}")
+    
+    # Trigger export in background
+    background_tasks.add_task(
+        _run_export_candidates,
+        user_id=current_user.id,
+        user_email=current_user.email,
+        user_name=current_user.full_name or current_user.username,
+        search=search, 
+        sort_by=sort_by, 
+        sort_order=sort_order,
+        disability_types=disability_types_list,
+        education_levels=education_levels_list,
+        cities=cities_list,
+        counseling_status=counseling_status,
+        is_experienced=is_experienced,
+        screening_status=screening_status,
+        disability_percentages=disability_percentages_list,
+        screening_reasons=screening_reasons_list,
+        gender=gender,
+        year_of_passing=year_of_passing_list,
+        year_of_experience=year_of_experience,
+        currently_employed=currently_employed,
+        extra_filters=extra_filters,
+        is_global=is_global
+    )
+    
+    return {"message": f"Export started. The report will be sent to {current_user.email} shortly."}
+
+
 
 
 

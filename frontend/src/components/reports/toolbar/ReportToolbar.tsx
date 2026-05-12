@@ -40,14 +40,14 @@ const ReportToolbar: React.FC<ReportToolbarProps> = ({
 			sx={{
 				p: 2,
 				mb: 0,
-				border: '1px solid #eaeded',
+				border: `1px solid ${theme.palette.divider}`,
 				borderBottom: 'none',
 				display: 'flex',
 				flexDirection: isMobile ? 'column' : 'row',
 				justifyContent: 'space-between',
 				alignItems: isMobile ? 'stretch' : 'center',
-				backgroundColor: '#fff',
-				borderRadius: '4px 4px 0 0',
+				backgroundColor: theme.palette.background.paper,
+				borderRadius: `${theme.shape.borderRadius}px ${theme.shape.borderRadius}px 0 0`,
 				gap: isMobile ? 2 : 0
 			}}
 		>
@@ -67,18 +67,18 @@ const ReportToolbar: React.FC<ReportToolbarProps> = ({
 					sx={{
 						width: isMobile ? '100%' : 400,
 						'& .MuiOutlinedInput-root': {
-							height: 32,
-							backgroundColor: '#fff',
-							fontSize: '0.875rem',
-							'& fieldset': { borderColor: '#d5dbdb' },
-							'&:hover fieldset': { borderColor: '#aab7b7' },
-							'&.Mui-focused fieldset': { borderColor: '#007eb9', borderWidth: 1 }
+							height: 36,
+							backgroundColor: theme.palette.background.paper,
+							fontSize: theme.typography.body2.fontSize,
+							'& fieldset': { borderColor: theme.palette.divider },
+							'&:hover fieldset': { borderColor: theme.palette.primary.light },
+							'&.Mui-focused fieldset': { borderColor: theme.palette.primary.main, borderWidth: 1 }
 						}
 					}}
 					InputProps={{
 						startAdornment: (
 							<InputAdornment position="start">
-								<SearchIcon sx={{ color: '#545b64', fontSize: 18 }} />
+								<SearchIcon sx={{ color: theme.palette.text.secondary, fontSize: 18 }} />
 							</InputAdornment>
 						),
 						'aria-label': 'Search candidates'
@@ -98,7 +98,6 @@ const ReportToolbar: React.FC<ReportToolbarProps> = ({
 										minWidth: 16,
 										top: 2,
 										right: -2,
-										backgroundColor: '#007eb9'
 									}
 								}}
 							>
@@ -108,19 +107,29 @@ const ReportToolbar: React.FC<ReportToolbarProps> = ({
 						onClick={onFilterClick}
 						aria-label="Toggle filters"
 						sx={{
-							height: 32,
-							borderColor: '#d5dbdb',
-							color: '#545b64',
+							height: 36,
+							borderColor: theme.palette.divider,
+							color: theme.palette.text.primary,
 							textTransform: 'none',
-							fontSize: '0.85rem',
+							fontSize: theme.typography.body2.fontSize,
 							fontWeight: 500,
 							flex: isMobile ? 1 : 'none',
-							'&:hover': { borderColor: '#aab7b7', backgroundColor: '#f2f3f3' }
+							'&:hover': { 
+								borderColor: theme.palette.primary.light, 
+								backgroundColor: theme.palette.action.hover 
+							}
 						}}
 					>
 						Filter
 					</Button>
-					<Typography variant="body2" sx={{ color: '#545b64', fontWeight: 500, whiteSpace: 'nowrap' }}>
+					<Typography 
+						variant="body2" 
+						sx={{ 
+							color: theme.palette.text.secondary, 
+							fontWeight: 500, 
+							whiteSpace: 'nowrap' 
+						}}
+					>
 						({total} candidates)
 					</Typography>
 				</Box>

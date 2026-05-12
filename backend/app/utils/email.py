@@ -4,7 +4,8 @@ import logging
 import os
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import List, Optional, Any
+from email.mime.application import MIMEApplication
+from typing import List, Optional, Any, Tuple
 import aiosmtplib
 from datetime import datetime
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -24,7 +25,8 @@ async def send_email(
     to_email: str,
     subject: str,
     html_content: str,
-    cc: Optional[List[str]] = None
+    cc: Optional[List[str]] = None,
+    attachments: Optional[List[Tuple[str, bytes]]] = None
 ) -> bool:
     """Generic function to send HTML emails via SMTP"""
     
@@ -37,7 +39,13 @@ async def send_email(
     from_name = settings.EMAILS_FROM_NAME or "winvinaya"
     smtp_tls = settings.SMTP_TLS if settings.SMTP_TLS is not None else True
 
-    message = MIMEMultipart("alternative")
+    message = MIMEMultipart("mixed")
+    
+    # Create the alternative part for HTML/Text
+    alt_part = MIMEMultipart("alternative")
+    alt_part.attach(MIMEText(html_content, "html"))
+    message.attach(alt_part)
+    
     message["From"] = f"{from_name} <{from_email}>"
     message["To"] = to_email
     message["Subject"] = subject
@@ -45,7 +53,12 @@ async def send_email(
     if cc:
         message["Cc"] = ", ".join(cc)
 
-    message.attach(MIMEText(html_content, "html"))
+    # Attach files if provided
+    if attachments:
+        for filename, content in attachments:
+            part = MIMEApplication(content)
+            part.add_header("Content-Disposition", f"attachment; filename=\"{filename}\"")
+            message.attach(part)
 
     # Determine TLS strategy
     use_tls_strategy = smtp_tls and smtp_port == 465
@@ -68,10 +81,13 @@ async def send_email(
         logger.info(f"Email sent successfully to {to_email}")
         return True
     except aiosmtplib.SMTPAuthenticationError as e:
-        logger.error(f"Authentication failed for {smtp_user} at {smtp_host}: {str(e)}")
+        logger.error(f"SMTP Authentication failed for {smtp_user} at {smtp_host}: {str(e)}")
+        return False
+    except aiosmtplib.SMTPConnectError as e:
+        logger.error(f"SMTP Connection failed to {smtp_host}:{smtp_port}: {str(e)}")
         return False
     except Exception as e:
-        logger.error(f"Failed to send email to {to_email}: {str(e)}")
+        logger.error(f"Unexpected error sending email to {to_email}: {str(e)}", exc_info=True)
         return False
 
 
@@ -102,6 +118,68 @@ async def send_registration_emails(candidate: Any):
         
     except Exception as e:
         logger.error(f"Error in send_registration_emails: {str(e)}")
+
+
+async def send_export_email(
+    to_email: str,
+    user_name: str,
+    report_name: str,
+    file_content: bytes,
+    filename: str
+):
+    """Sends a report export email with the generated file attached"""
+    logger.info(f"Preparing to send export email for {report_name} to {to_email}")
+    subject = f"Your Requested Report: {report_name}"
+    
+    try:
+        # Try to use template if it exists, otherwise use fallback
+        try:
+            template = jinja_env.get_template("report_export.html")
+            html_content = template.render(
+                user_name=user_name,
+                report_name=report_name,
+                date=datetime.now().strftime("%d %b %Y"),
+                year=datetime.now().year,
+                support_email=settings.EMAILS_FROM_EMAIL or "support@winvinaya.com"
+            )
+        except Exception:
+            # Fallback professional HTML
+            html_content = f"""
+            <html>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                    <div style="max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+                        <div style="background-color: #1a73e8; padding: 20px; text-align: center; color: white;">
+                            <h2 style="margin: 0;">Report Ready for Download</h2>
+                        </div>
+                        <div style="padding: 30px;">
+                            <p>Dear <strong>{user_name}</strong>,</p>
+                            <p>The <strong>{report_name}</strong> you requested has been generated successfully.</p>
+                            <p>Please find the attached Excel file containing the data. This report includes the records matching your applied filters as of {datetime.now().strftime("%I:%M %p")}.</p>
+                            <p style="margin-top: 30px; font-size: 0.9em; color: #666;">
+                                If you did not request this report, please contact our support team at {settings.EMAILS_FROM_EMAIL or "support@winvinaya.com"}.
+                            </p>
+                        </div>
+                        <div style="background-color: #f8f9fa; padding: 15px; text-align: center; font-size: 0.8em; color: #888; border-top: 1px solid #e0e0e0;">
+                            &copy; {datetime.now().year} WinVinaya Foundation. All rights reserved.
+                        </div>
+                    </div>
+                </body>
+            </html>
+            """
+        
+        attachments = [(filename, file_content)]
+        
+        await send_email(
+            to_email=to_email,
+            subject=subject,
+            html_content=html_content,
+            attachments=attachments
+        )
+        logger.info(f"Export email sent successfully to {to_email} for {report_name}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send export email: {str(e)}")
+        return False
 
 
 async def send_dsr_submission_email(user_name: str, report_date: str, items: List[dict]):

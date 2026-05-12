@@ -234,6 +234,57 @@ export const candidateService = {
 	assignCandidate: async (publicId: string, userId: number): Promise<any> => {
 		const response = await api.post(`/candidates/${publicId}/assign`, { user_id: userId });
 		return response.data;
+	},
+
+	/**
+	 * Export candidates based on filters and send via email
+	 */
+	export: async (
+		search?: string,
+		sortBy?: string,
+		sortOrder: 'asc' | 'desc' = 'desc',
+		disabilityTypes?: string,
+		educationLevels?: string,
+		cities?: string,
+		counselingStatus?: string,
+		screeningStatus?: string,
+		isExperienced?: boolean,
+		disabilityPercentages?: string,
+		screeningReasons?: string,
+		gender?: string,
+		yearOfPassing?: string,
+		yearOfExperience?: string,
+		currentlyEmployed?: boolean,
+		extraFilters?: Record<string, string>,
+		isGlobal: boolean = false
+	): Promise<{ message: string }> => {
+		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
+		const globalParam = isGlobal ? `&is_global=true` : '';
+		const sortParam = sortBy ? `&sort_by=${sortBy}&sort_order=${sortOrder}` : '';
+		const filterParams = [
+			disabilityTypes ? `&disability_types=${encodeURIComponent(disabilityTypes)}` : '',
+			educationLevels ? `&education_levels=${encodeURIComponent(educationLevels)}` : '',
+			cities ? `&cities=${encodeURIComponent(cities)}` : '',
+			counselingStatus ? `&counseling_status=${encodeURIComponent(counselingStatus)}` : '',
+			screeningStatus ? `&screening_status=${encodeURIComponent(screeningStatus)}` : '',
+			isExperienced !== undefined ? `&is_experienced=${isExperienced}` : '',
+			disabilityPercentages ? `&disability_percentages=${encodeURIComponent(disabilityPercentages)}` : '',
+			screeningReasons ? `&screening_reasons=${encodeURIComponent(screeningReasons)}` : '',
+			gender ? `&gender=${encodeURIComponent(gender)}` : '',
+			yearOfPassing ? `&year_of_passing=${encodeURIComponent(yearOfPassing)}` : '',
+			yearOfExperience ? `&year_of_experience=${encodeURIComponent(yearOfExperience)}` : '',
+			currentlyEmployed !== undefined ? `&currently_employed=${currentlyEmployed}` : ''
+		].join('');
+
+		const extraParams = extraFilters
+			? Object.entries(extraFilters)
+				.filter(([, v]) => v)
+				.map(([k, v]) => `&${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+				.join('')
+			: '';
+
+		const response = await api.post<{ message: string }>(`/candidates/export?${searchParam}${sortParam}${filterParams}${extraParams}${globalParam}`);
+		return response.data;
 	}
 };
 
