@@ -14,6 +14,7 @@ import MockInterviewForm from './form/MockInterviewForm';
 import MockInterviewStats from './stats/MockInterviewStats';
 import DataTable, { type ColumnDefinition } from '../../common/table/DataTable';
 import FilterDrawer, { type FilterField } from '../../common/drawer/FilterDrawer';
+import ConfirmationDialog from '../../common/dialogbox/ConfirmationDialog';
 
 interface MockInterviewListProps {
 	batchId: number;
@@ -91,6 +92,15 @@ const MockInterviewList: React.FC<MockInterviewListProps> = ({ batchId, allocati
 		setActiveFilters({ candidate: '', status: [] });
 		setFilterCandidateId(null);
 		setIsFilterDrawerOpen(false);
+	};
+
+	const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+
+	const handleConfirmDelete = async () => {
+		if (deleteConfirmId) {
+			await handleDelete(deleteConfirmId);
+			setDeleteConfirmId(null);
+		}
 	};
 
 	const columns: ColumnDefinition<MockInterview>[] = useMemo(() => [
@@ -182,7 +192,7 @@ const MockInterviewList: React.FC<MockInterviewListProps> = ({ batchId, allocati
 						allocations={allocations}
 						onView={handleView}
 						onEdit={handleEdit}
-						onDelete={handleDelete}
+						onDelete={(id) => setDeleteConfirmId(id)}
 						onFilterCandidate={(id) => {
 							setFilterCandidateId(id);
 							setActiveFilters(prev => ({ ...prev, candidate: String(id) }));
@@ -209,6 +219,16 @@ const MockInterviewList: React.FC<MockInterviewListProps> = ({ batchId, allocati
 					viewMode={viewMode}
 				/>
 			)}
+
+			<ConfirmationDialog
+				open={!!deleteConfirmId}
+				onClose={() => setDeleteConfirmId(null)}
+				onConfirm={handleConfirmDelete}
+				title="Delete Interview Record"
+				message="Are you sure you want to delete this mock interview record? This action will permanently remove all associated technical discussion points and ratings. This action cannot be undone."
+				confirmLabel="Delete Record"
+				severity="error"
+			/>
 		</Box>
 	);
 };

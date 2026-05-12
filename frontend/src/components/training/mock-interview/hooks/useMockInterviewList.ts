@@ -56,13 +56,11 @@ export const useMockInterviewList = (batchId: number) => {
 	const toast = useToast();
 
 	const handleDelete = useCallback(async (id: number) => {
-		if (window.confirm('Are you sure you want to delete this mock interview record? This action cannot be undone.')) {
-			try {
-				await dispatch(deleteMockInterview(id)).unwrap();
-				toast.success('Mock interview record deleted successfully');
-			} catch (error: any) {
-				toast.error(error?.message || 'Failed to delete mock interview record');
-			}
+		try {
+			await dispatch(deleteMockInterview(id)).unwrap();
+			toast.success('Mock interview record deleted successfully');
+		} catch (error: any) {
+			toast.error(error?.message || 'Failed to delete mock interview record');
 		}
 	}, [dispatch, toast]);
 
