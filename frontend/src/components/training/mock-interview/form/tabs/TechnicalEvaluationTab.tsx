@@ -30,8 +30,10 @@ interface TechnicalEvaluationTabProps {
 	onAddQuestion: () => void;
 	onRemoveQuestion: (index: number) => void;
 	onGenerateLink: () => void;
-	onRefresh: () => void;
+	onRefresh: (showToast?: boolean) => void;
 	isSaving?: boolean;
+	candidateSubmittedAt?: string | null;
+	status?: string;
 }
 
 const TechnicalEvaluationTab: React.FC<TechnicalEvaluationTabProps> = memo(({
@@ -43,10 +45,13 @@ const TechnicalEvaluationTab: React.FC<TechnicalEvaluationTabProps> = memo(({
 	onRemoveQuestion,
 	onGenerateLink,
 	onRefresh,
-	isSaving
+	isSaving,
+	candidateSubmittedAt,
+	status
 }) => {
 	const theme = useTheme();
 	const toast = useToast();
+	const isFinalized = status && !['inprogress', 'pending'].includes(status);
 
 	// Auto-scroll to bottom when questions are added
 	useEffect(() => {
@@ -61,11 +66,19 @@ const TechnicalEvaluationTab: React.FC<TechnicalEvaluationTabProps> = memo(({
 	const handleCopyLink = () => {
 		const url = `${window.location.origin}/candidate/interview/${candidateToken}`;
 		navigator.clipboard.writeText(url);
-		toast.success('Interview link copied to clipboard!');
+		toast.success('Interview link copied to clipboard');
 	};
 
 	return (
-		<Box sx={{ maxWidth: 1000, mx: 'auto' }}>
+		<Box sx={{ 
+			maxWidth: 1000, 
+			mx: 'auto',
+			'@keyframes pulse': {
+				'0%': { opacity: 1, transform: 'scale(1)' },
+				'50%': { opacity: 0.4, transform: 'scale(0.8)' },
+				'100%': { opacity: 1, transform: 'scale(1)' },
+			}
+		}}>
 			<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
 				<Stack direction="row" alignItems="center" spacing={2}>
 					<Box
@@ -85,19 +98,33 @@ const TechnicalEvaluationTab: React.FC<TechnicalEvaluationTabProps> = memo(({
 						</Typography>
 						{candidateToken && (
 							<Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
-								<Typography variant="caption" sx={{ fontWeight: 600, color: 'success.main', display: 'flex', alignItems: 'center', gap: 0.5 }}>
-									<Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'success.main' }} />
-									Shareable link active
-								</Typography>
-								<Button
-									size="small"
-									variant="text"
-									startIcon={<CopyIcon sx={{ fontSize: '14px !important' }} />}
-									onClick={handleCopyLink}
-									sx={{ py: 0, height: 20, fontSize: '0.7rem', fontWeight: 700 }}
-								>
-									Copy Link
-								</Button>
+								{isFinalized ? (
+									<Typography variant="caption" sx={{ fontWeight: 700, color: 'text.disabled', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+										<Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'text.disabled' }} />
+										Assessment finalized - Link deactivated
+									</Typography>
+								) : candidateSubmittedAt ? (
+									<Typography variant="caption" sx={{ fontWeight: 800, color: 'success.main', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+										<Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'success.main' }} />
+										Candidate submitted evaluation
+									</Typography>
+								) : (
+									<Typography variant="caption" sx={{ fontWeight: 600, color: 'primary.main', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+										<Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'primary.main', animation: 'pulse 2s infinite' }} />
+										Shareable link active
+									</Typography>
+								)}
+								{!isFinalized && (
+									<Button
+										size="small"
+										variant="text"
+										startIcon={<CopyIcon sx={{ fontSize: '14px !important' }} />}
+										onClick={handleCopyLink}
+										sx={{ py: 0, height: 20, fontSize: '0.7rem', fontWeight: 700 }}
+									>
+										Copy Link
+									</Button>
+								)}
 							</Stack>
 						)}
 					</Box>
@@ -115,7 +142,7 @@ const TechnicalEvaluationTab: React.FC<TechnicalEvaluationTabProps> = memo(({
 									variant="outlined"
 									color="primary"
 									startIcon={<SyncIcon />}
-									onClick={onRefresh}
+									onClick={() => onRefresh(true)}
 									sx={{
 										textTransform: 'none',
 										fontWeight: 700,

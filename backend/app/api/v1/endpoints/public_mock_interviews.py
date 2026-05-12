@@ -46,10 +46,14 @@ async def submit_public_answers(
     if not mock or mock.status in ["completed", "cancelled"]:
         raise HTTPException(status_code=403, detail="This evaluation is no longer active.")
     
-    # Update only the questions/answers
+    # Update questions and set submission timestamp
+    from datetime import datetime
     updated_mock = await service.update_mock_interview(
         mock.id, 
-        {"questions": [a.model_dump() for a in answers]}
+        {
+            "questions": [a.model_dump() for a in answers],
+            "candidate_submitted_at": datetime.utcnow()
+        }
     )
     
     await db.commit()

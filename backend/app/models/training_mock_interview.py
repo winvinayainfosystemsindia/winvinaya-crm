@@ -59,6 +59,7 @@ class TrainingMockInterview(BaseModel):
     interview_category: Mapped[str | None] = mapped_column(String(20), nullable=True, default="domain")
     start_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     end_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    candidate_submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     duration_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True, default=0)
     
     # Relationships

@@ -30,6 +30,7 @@ class TrainingMockInterviewBase(BaseModel):
     interview_category: Optional[str] = "domain"
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
+    candidate_submitted_at: Optional[datetime] = None
     duration_minutes: Optional[int] = 0
     candidate_token: Optional[str] = None
     interviewer_id: Optional[int] = None

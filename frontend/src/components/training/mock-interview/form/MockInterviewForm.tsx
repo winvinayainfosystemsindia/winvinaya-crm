@@ -103,6 +103,8 @@ const MockInterviewForm: React.FC<MockInterviewFormProps> = ({ open, onClose, ba
 					onGenerateLink={handleGenerateLink}
 					onRefresh={refreshQuestions}
 					isSaving={saveLoading}
+					candidateSubmittedAt={formData.candidate_submitted_at}
+					status={formData.status}
 				/>
 			)
 		},
