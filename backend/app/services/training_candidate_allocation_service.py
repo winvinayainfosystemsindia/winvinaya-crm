@@ -2,7 +2,7 @@
 import io
 from typing import List, Optional, Any
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, date
 from fastapi import HTTPException
 from sqlalchemy import select, and_, or_, func, desc
 from sqlalchemy.orm import selectinload, joinedload
@@ -465,9 +465,11 @@ class TrainingCandidateAllocationService:
         gender: Optional[str] = None,
         disability_types: Optional[str] = None,
         sort_by: str = "created_at",
-        sort_order: str = "desc"
+        sort_order: str = "desc",
+        columns: Optional[str] = None
     ) -> bool:
         """Fetch all filtered allocations, generate Excel, and email to user"""
+        import json
         
         # 1. Fetch all matching allocations (no limit)
         allocations, total = await self.get_multi(
@@ -483,58 +485,84 @@ class TrainingCandidateAllocationService:
             sort_order=sort_order
         )
         
-        # 2. Generate Excel in memory
+        # 2. Parse columns if provided
+        column_defs = []
+        if columns:
+            try:
+                column_defs = json.loads(columns)
+            except Exception:
+                column_defs = []
+        
+        if not column_defs:
+            # Default columns if none provided
+            column_defs = [
+                {"id": "name", "label": "Candidate Name"},
+                {"id": "gender", "label": "Gender"},
+                {"id": "email", "label": "Email"},
+                {"id": "batch_name", "label": "Batch Name"},
+                {"id": "status", "label": "Training Status"},
+                {"id": "attendance_percentage", "label": "Attendance (%)"},
+                {"id": "assessment_score", "label": "Assessment Mark"},
+                {"id": "created_at", "label": "Allocation Date"}
+            ]
+
+        # 3. Generate Excel
         wb = Workbook()
         ws = wb.active
         ws.title = "Training Allocations Report"
         
         # Headers
-        headers = [
-            "Candidate Name", "Gender", "Email", "Phone", "Disability Type",
-            "Batch Name", "Batch Status", "Domain", "Training Mode", "Courses", "Duration",
-            "Training Status", "Attendance (%)", "Assessment Mark", "Allocation Date"
-        ]
-        
-        for col_num, header in enumerate(headers, 1):
-            cell = ws.cell(row=1, column=col_num, value=header)
+        for col_num, col_def in enumerate(column_defs, 1):
+            cell = ws.cell(row=1, column=col_num, value=col_def["label"])
             cell.font = Font(bold=True)
             
         # Data Rows
         for row_num, a in enumerate(allocations, 2):
-            # Candidate info
-            c = a.candidate
-            ws.cell(row=row_num, column=1, value=c.name if c else "")
-            ws.cell(row=row_num, column=2, value=c.gender if c else "")
-            ws.cell(row=row_num, column=3, value=c.email if c else "")
-            ws.cell(row=row_num, column=4, value=c.phone if c else "")
-            
-            dis = c.disability_details if c else {}
-            ws.cell(row=row_num, column=5, value=dis.get("disability_type", "") if dis else "")
-            
-            # Batch info
-            b = a.batch
-            ws.cell(row=row_num, column=6, value=b.batch_name if b else "")
-            ws.cell(row=row_num, column=7, value=b.status if b else "")
-            ws.cell(row=row_num, column=8, value=b.domain if b else "")
-            ws.cell(row=row_num, column=9, value=b.training_mode if b else "")
-            
-            courses = b.courses if b else []
-            if isinstance(courses, list):
-                ws.cell(row=row_num, column=10, value=", ".join([str(c.get('name') if isinstance(c, dict) else c) for c in courses]))
-            else:
-                ws.cell(row=row_num, column=10, value=str(courses))
+            for col_num, col_def in enumerate(column_defs, 1):
+                col_id = col_def["id"]
+                val = ""
                 
-            dur = b.duration if b else {}
-            dur_str = ""
-            if isinstance(dur, dict):
-                dur_str = f"{dur.get('weeks', 0)} weeks, {dur.get('days', 0)} days"
-            ws.cell(row=row_num, column=11, value=dur_str)
-            
-            # Allocation info
-            ws.cell(row=row_num, column=12, value=a.status)
-            ws.cell(row=row_num, column=13, value=f"{a.attendance_percentage}%" if a.attendance_percentage is not None else "-")
-            ws.cell(row=row_num, column=14, value=a.assessment_score if a.assessment_score is not None else "-")
-            ws.cell(row=row_num, column=15, value=a.created_at.strftime('%Y-%m-%d %H:%M') if a.created_at else "")
+                try:
+                    # Mapping logic similar to frontend exportUtils.ts
+                    if col_id == "name": val = a.candidate.name if a.candidate else ""
+                    elif col_id == "gender": val = a.candidate.gender if a.candidate else ""
+                    elif col_id == "email": val = a.candidate.email if a.candidate else ""
+                    elif col_id == "phone": val = a.candidate.phone if a.candidate else ""
+                    elif col_id == "disability_type": val = (a.candidate.disability_details or {}).get("disability_type", "") if a.candidate else ""
+                    elif col_id == "batch_name": val = a.batch.batch_name if a.batch else ""
+                    elif col_id == "batch_status": val = a.batch.status if a.batch else ""
+                    elif col_id == "domain": val = a.batch.domain if a.batch else ""
+                    elif col_id == "training_mode": val = a.batch.training_mode if a.batch else ""
+                    elif col_id == "courses":
+                        courses = a.batch.courses if a.batch else []
+                        if isinstance(courses, list):
+                            val = ", ".join([str(c.get('name') if isinstance(c, dict) else c) for c in courses])
+                        else:
+                            val = str(courses)
+                    elif col_id == "duration":
+                        dur = a.batch.duration if a.batch else {}
+                        if isinstance(dur, dict):
+                            val = f"{dur.get('weeks', 0)} weeks, {dur.get('days', 0)} days"
+                    elif col_id == "attendance_percentage":
+                        val = f"{a.attendance_percentage}%" if a.attendance_percentage is not None else "-"
+                    elif col_id == "assessment_score":
+                        val = a.assessment_score if a.assessment_score is not None else "-"
+                    else:
+                        val = getattr(a, col_id, "")
+                    
+                    # Formatting
+                    if isinstance(val, (datetime, date)):
+                        val = val.strftime('%Y-%m-%d')
+                    elif isinstance(val, bool):
+                        val = "Yes" if val else "No"
+                    elif val is None:
+                        val = ""
+                    elif isinstance(val, (dict, list)):
+                        val = json.dumps(val)
+                except Exception:
+                    val = "Error"
+                
+                ws.cell(row=row_num, column=col_num, value=str(val) if val is not None else "")
 
         # Save to buffer
         excel_buffer = io.BytesIO()

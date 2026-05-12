@@ -1,7 +1,7 @@
 """Candidate Service"""
 
 import io
-from datetime import datetime
+from datetime import datetime, date
 from typing import List, Optional, Any
 from uuid import UUID
 from fastapi import HTTPException, status
@@ -366,9 +366,11 @@ class CandidateService:
         year_of_experience: Optional[str] = None,
         currently_employed: Optional[bool] = None,
         extra_filters: Optional[dict] = None,
-        is_global: bool = False
+        is_global: bool = False,
+        columns: Optional[str] = None
     ) -> bool:
         """Fetch all filtered candidates, generate Excel, and email to user"""
+        import json
         
         # 1. Fetch all matching candidates (no limit)
         res = await self.get_candidates(
@@ -395,61 +397,134 @@ class CandidateService:
         )
         candidates = res["items"]
         
-        # 2. Generate Excel in memory
+        # 2. Parse columns if provided
+        column_defs = []
+        if columns:
+            try:
+                column_defs = json.loads(columns)
+            except Exception:
+                column_defs = []
+        
+        if not column_defs:
+            # Default columns if none provided
+            column_defs = [
+                {"id": "name", "label": "Name"},
+                {"id": "gender", "label": "Gender"},
+                {"id": "email", "label": "Email"},
+                {"id": "phone", "label": "Phone"},
+                {"id": "city", "label": "City"},
+                {"id": "education_details.education_level", "label": "Education"},
+                {"id": "disability_details.disability_type", "label": "Disability"},
+                {"id": "screening.status", "label": "Screening Status"},
+                {"id": "counseling.status", "label": "Counseling Status"},
+                {"id": "created_at", "label": "Registration Date"}
+            ]
+
+        # 3. Generate Excel
         wb = Workbook()
         ws = wb.active
         ws.title = "Candidates Report"
         
         # Headers
-        headers = [
-            "Name", "Gender", "Email", "Phone", "WhatsApp", "DOB", 
-            "City", "District", "State", "Pincode", "Year of Passing", "Education",
-            "Disability Type", "Disability Percentage", "Registration Date",
-            "Screening Status", "Screening Date", "Screened By",
-            "Counseling Status", "Counseling Date", "Counselor"
-        ]
-        
-        for col_num, header in enumerate(headers, 1):
-            cell = ws.cell(row=1, column=col_num, value=header)
+        for col_num, col_def in enumerate(column_defs, 1):
+            cell = ws.cell(row=1, column=col_num, value=col_def["label"])
             cell.font = Font(bold=True)
             
         # Data Rows
         for row_num, c in enumerate(candidates, 2):
-            # Basic info
-            ws.cell(row=row_num, column=1, value=c.name)
-            ws.cell(row=row_num, column=2, value=c.gender)
-            ws.cell(row=row_num, column=3, value=c.email)
-            ws.cell(row=row_num, column=4, value=c.phone)
-            ws.cell(row=row_num, column=5, value=c.whatsapp_number)
-            ws.cell(row=row_num, column=6, value=c.dob.strftime('%Y-%m-%d') if c.dob else "")
-            ws.cell(row=row_num, column=7, value=c.city)
-            ws.cell(row=row_num, column=8, value=c.district)
-            ws.cell(row=row_num, column=9, value=c.state)
-            ws.cell(row=row_num, column=10, value=c.pincode)
-            
-            # Education (from JSON)
-            edu = c.education_details or {}
-            ws.cell(row=row_num, column=11, value=str(edu.get("year_of_passing", "")))
-            ws.cell(row=row_num, column=12, value=str(edu.get("education_level", "")))
-            
-            # Disability (from JSON)
-            dis = c.disability_details or {}
-            ws.cell(row=row_num, column=13, value=dis.get("disability_type", ""))
-            ws.cell(row=row_num, column=14, value=dis.get("disability_percentage", ""))
-            
-            ws.cell(row=row_num, column=15, value=c.created_at.strftime('%Y-%m-%d %H:%M') if c.created_at else "")
-            
-            # Screening
-            if c.screening:
-                ws.cell(row=row_num, column=16, value=c.screening.status)
-                ws.cell(row=row_num, column=17, value=c.screening.created_at.strftime('%Y-%m-%d') if c.screening.created_at else "")
-                ws.cell(row=row_num, column=18, value=c.screening.screened_by.full_name or c.screening.screened_by.username if c.screening.screened_by else "")
-            
-            # Counseling
-            if c.counseling:
-                ws.cell(row=row_num, column=19, value=c.counseling.status)
-                ws.cell(row=row_num, column=20, value=c.counseling.counseling_date.strftime('%Y-%m-%d') if c.counseling.counseling_date else "")
-                ws.cell(row=row_num, column=21, value=c.counseling.counselor.full_name or c.counseling.counselor.username if c.counseling.counselor else "")
+            for col_num, col_def in enumerate(column_defs, 1):
+                col_id = col_def["id"]
+                val = ""
+                
+                try:
+                    # Specific mappings for common IDs from constants.ts and CandidateListResponse
+                    if col_id == "disability_type":
+                        val = (c.disability_details or {}).get("disability_type", "")
+                    elif col_id == "disability_percentage":
+                        val = (c.disability_details or {}).get("disability_percentage", "")
+                    elif col_id == "education_level":
+                        edu = c.education_details or {}
+                        degrees = edu.get("degrees", [])
+                        val = degrees[0].get("degree_name") if degrees else ""
+                    elif col_id == "year_of_passing":
+                        edu = c.education_details or {}
+                        degrees = edu.get("degrees", [])
+                        val = degrees[0].get("year_of_passing") if degrees else ""
+                    elif col_id == "screening_status":
+                        val = c.screening.status if c.screening else "Pending"
+                    elif col_id == "screening_date":
+                        val = c.screening.created_at if c.screening else ""
+                    elif col_id == "screened_by_name":
+                        val = (c.screening.screened_by.full_name or c.screening.screened_by.username) if c.screening and c.screening.screened_by else ""
+                    elif col_id == "counseling_status":
+                        val = c.counseling.status if c.counseling else ""
+                    elif col_id == "counseling_date":
+                        val = c.counseling.counseling_date if c.counseling else ""
+                    elif col_id == "counselor_name":
+                        val = (c.counseling.counselor.full_name or c.counseling.counselor.username) if c.counseling and c.counseling.counselor else ""
+                    elif col_id == "is_experienced":
+                        val = (c.work_experience or {}).get("is_experienced", False)
+                    elif col_id == "year_of_experience":
+                        val = (c.work_experience or {}).get("year_of_experience", "")
+                    elif col_id == "currently_employed":
+                        val = (c.work_experience or {}).get("currently_employed", False)
+                    elif col_id == "suitable_job_roles":
+                        val = (c.counseling.others or {}).get("suitable_job_roles", []) if c.counseling else []
+                    elif col_id == "source_of_info":
+                        val = (c.screening.others or {}).get("source_of_info", "") if c.screening else ""
+                    elif col_id == "family_annual_income":
+                        val = (c.screening.others or {}).get("family_annual_income", "") if c.screening else ""
+                    elif col_id == "screening_comments":
+                        val = (c.screening.others or {}).get("reason", "") if c.screening else ""
+                    elif col_id == "skills" and c.counseling:
+                        val = c.counseling.skills
+                    elif col_id == "workexperience" and c.counseling:
+                        val = c.counseling.workexperience
+                    elif col_id == "questions" and c.counseling:
+                        val = c.counseling.questions
+                    elif col_id.startswith("screening_others."):
+                        field_name = col_id.replace("screening_others.", "")
+                        val = (c.screening.others or {}).get(field_name, "") if c.screening else ""
+                    elif col_id.startswith("counseling_others."):
+                        field_name = col_id.replace("counseling_others.", "")
+                        val = (c.counseling.others or {}).get(field_name, "") if c.counseling else ""
+                    elif "." in col_id:
+                        parts = col_id.split(".")
+                        obj = c
+                        for part in parts:
+                            if obj is None: break
+                            if isinstance(obj, dict): obj = obj.get(part, "")
+                            else: obj = getattr(obj, part, None)
+                        val = obj
+                    else:
+                        val = getattr(c, col_id, "")
+                        if (val is None or val == "") and c.screening and hasattr(c.screening, col_id):
+                            val = getattr(c.screening, col_id, "")
+                        if (val is None or val == "") and c.counseling and hasattr(c.counseling, col_id):
+                            val = getattr(c.counseling, col_id, "")
+                    
+                    # Formatting
+                    if isinstance(val, (datetime, date)):
+                        val = val.strftime('%Y-%m-%d')
+                    elif isinstance(val, bool):
+                        val = "Yes" if val else "No"
+                    elif val is None:
+                        val = ""
+                    elif isinstance(val, (dict, list)):
+                        if col_id == "family_details" and isinstance(val, list):
+                            val = "; ".join([f"{f.get('relation')}: {f.get('name')} ({f.get('occupation', 'N/A')})" for f in val])
+                        elif col_id == "skills" and isinstance(val, list):
+                            val = ", ".join([f"{s.get('name')} ({s.get('level')})" for s in val])
+                        elif col_id == "workexperience" and isinstance(val, list):
+                            val = ", ".join([f"{w.get('job_title')} at {w.get('company')}" for w in val])
+                        elif col_id == "questions" and isinstance(val, list):
+                            val = " | ".join([f"Q: {q.get('question')} A: {q.get('answer')}" for q in val])
+                        else:
+                            val = json.dumps(val)
+                except Exception:
+                    val = "Error"
+                
+                ws.cell(row=row_num, column=col_num, value=str(val) if val is not None else "")
 
         # Save to buffer
         excel_buffer = io.BytesIO()

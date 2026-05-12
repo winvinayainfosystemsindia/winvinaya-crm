@@ -1,8 +1,8 @@
 """Candidate Endpoints"""
 
-from typing import List
+from typing import List, Optional, Any
 from uuid import UUID
-from fastapi import APIRouter, Depends, status, Request, BackgroundTasks
+from fastapi import APIRouter, Depends, status, Request, BackgroundTasks, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.rate_limiter import rate_limit_medium
@@ -156,6 +156,7 @@ async def _run_export_candidates(
     user_id: int,
     user_email: str,
     user_name: str,
+    columns: Optional[str] = None,
     **kwargs
 ):
     """Wrapper to run export in background with its own DB session"""
@@ -176,7 +177,7 @@ async def _run_export_candidates(
             )
             
             service = CandidateService(db)
-            await service.export_candidates(current_user=current_user, **kwargs)
+            await service.export_candidates(current_user=current_user, columns=columns, **kwargs)
         logger.info(f"Background task COMPLETED for candidate export (User: {user_email})")
         print(f"DEBUG: Background task COMPLETED for candidate export (User: {user_email})")
         sys.stdout.flush()
@@ -207,6 +208,7 @@ async def export_candidates(
     year_of_experience: str = None,
     currently_employed: bool = None,
     is_global: bool = False,
+    columns: Optional[str] = Query(None),
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
     db: AsyncSession = Depends(get_db)
 ):
@@ -235,6 +237,7 @@ async def export_candidates(
         user_id=current_user.id,
         user_email=current_user.email,
         user_name=current_user.full_name or current_user.username,
+        columns=columns,
         search=search, 
         sort_by=sort_by, 
         sort_order=sort_order,

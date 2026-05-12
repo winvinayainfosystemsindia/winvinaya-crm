@@ -256,10 +256,12 @@ export const candidateService = {
 		yearOfExperience?: string,
 		currentlyEmployed?: boolean,
 		extraFilters?: Record<string, string>,
-		isGlobal: boolean = false
+		isGlobal: boolean = false,
+		columns?: string
 	): Promise<{ message: string }> => {
 		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
 		const globalParam = isGlobal ? `&is_global=true` : '';
+		const columnsParam = columns ? `&columns=${encodeURIComponent(columns)}` : '';
 		const sortParam = sortBy ? `&sort_by=${sortBy}&sort_order=${sortOrder}` : '';
 		const filterParams = [
 			disabilityTypes ? `&disability_types=${encodeURIComponent(disabilityTypes)}` : '',
@@ -283,7 +285,7 @@ export const candidateService = {
 				.join('')
 			: '';
 
-		const response = await api.post<{ message: string }>(`/candidates/export?${searchParam}${sortParam}${filterParams}${extraParams}${globalParam}`);
+		const response = await api.post<{ message: string }>(`/candidates/export?${searchParam}${globalParam}${columnsParam}${sortParam}${filterParams}${extraParams}`);
 		return response.data;
 	}
 };

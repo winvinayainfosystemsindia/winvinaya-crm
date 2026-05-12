@@ -184,6 +184,11 @@ export const useReports = () => {
 		setExportLoading(true);
 		try {
 			let response;
+			const visibleColData = visibleColumns.map(id => {
+				const col = columns.find(c => c.id === id);
+				return { id, label: col?.label || id };
+			});
+
 			if (isTraining) {
 				response = await trainingService.exportAllocations({
 					search,
@@ -193,7 +198,8 @@ export const useReports = () => {
 					gender: filters.gender,
 					disability_types: filters.disability_type?.join(','),
 					sortBy: 'created_at',
-					sortOrder: 'desc'
+					sortOrder: 'desc',
+					columns: JSON.stringify(visibleColData)
 				});
 			} else {
 				response = await candidateService.export(
@@ -221,7 +227,8 @@ export const useReports = () => {
 							}
 							return acc;
 						}, {} as Record<string, string>),
-					true
+					true,
+					JSON.stringify(visibleColData)
 				);
 			}
 			toast.success(response.message);

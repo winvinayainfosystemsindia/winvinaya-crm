@@ -110,6 +110,7 @@ const trainingService = {
 		if (params.disability_types) query.append('disability_types', params.disability_types);
 		if (params.sortBy) query.append('sort_by', params.sortBy);
 		if (params.sortOrder) query.append('sort_order', params.sortOrder);
+		if (params.columns) query.append('columns', params.columns);
 
 		const response = await api.post<{ message: string }>(`/training-candidate-allocations/export?${query.toString()}`);
 		return response.data;
