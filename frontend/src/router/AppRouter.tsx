@@ -34,7 +34,7 @@ import ContactManagement from '../pages/crm/ContactManagement';
 import LeadManagement from '../pages/crm/LeadManagement';
 import DealManagement from '../pages/crm/DealManagement';
 import TaskManagement from '../pages/crm/TaskManagement';
-import CandidateTechnicalEvaluation from '../pages/candidate/CandidateTechnicalEvaluation';
+import CandidateTechnicalEvaluation from '../pages/training/CandidateTechnicalEvaluation';
 
 import ProjectManagement from '../pages/projects/ProjectManagement';
 import ActivityPlanning from '../pages/projects/ActivityPlanning';

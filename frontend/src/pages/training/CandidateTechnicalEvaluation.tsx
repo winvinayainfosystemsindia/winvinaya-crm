@@ -23,16 +23,27 @@ import {
 	Send as SendIcon,
 	CheckCircle as SuccessIcon,
 } from '@mui/icons-material';
-import publicInterviewService from '../../services/publicInterviewService';
-import { type TrainingMockInterview } from '../../models/training';
+import { useDispatch, useSelector } from 'react-redux';
+import { type AppDispatch, type RootState } from '../../store/store';
+import { 
+	fetchPublicInterview, 
+	submitPublicAnswers, 
+	resetPublicState 
+} from '../../store/slices/publicInterviewSlice';
 
 const CandidateTechnicalEvaluation: React.FC = () => {
 	const { token } = useParams<{ token: string }>();
 	const theme = useTheme();
-	const [interview, setInterview] = useState<TrainingMockInterview | null>(null);
+	const dispatch = useDispatch<AppDispatch>();
+
+	const { 
+		currentInterview: interview, 
+		loading, 
+		submitting, 
+		error: reduxError
+	} = useSelector((state: RootState) => state.publicInterview);
+
 	const [answers, setAnswers] = useState<Array<{ question: string; answer: string }>>([]);
-	const [loading, setLoading] = useState(true);
-	const [submitting, setSubmitting] = useState(false);
 	const [lastSaved, setLastSaved] = useState<Date | null>(null);
 	const [submitted, setSubmitted] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -40,78 +51,68 @@ const CandidateTechnicalEvaluation: React.FC = () => {
 
 	// Fetch interview on mount
 	useEffect(() => {
-		const fetchInterview = async () => {
-			if (!token) return;
-			try {
-				const data = await publicInterviewService.getInterview(token);
-				setInterview(data);
-				setAnswers(data.questions || []);
-				setLoading(false);
-			} catch (err: any) {
-				setError(err.response?.data?.detail || 'This interview link is invalid or has expired.');
-				setLoading(false);
-			}
+		if (token) {
+			dispatch(fetchPublicInterview(token));
+		}
+		return () => {
+			dispatch(resetPublicState());
 		};
+	}, [token, dispatch]);
 
-		fetchInterview();
-	}, [token]);
+	// Initialize answers when interview is fetched
+	useEffect(() => {
+		const fetchedQuestions = interview?.questions;
+		if (fetchedQuestions && Array.isArray(fetchedQuestions)) {
+			setAnswers(prev => {
+				// If we already have answers, merge them
+				if (prev.length > 0) {
+					const next = [...fetchedQuestions];
+					prev.forEach((oldQ) => {
+						const matchingIdx = next.findIndex(n => n.question === oldQ.question);
+						if (matchingIdx !== -1) {
+							next[matchingIdx].answer = oldQ.answer;
+						}
+					});
+					return next;
+				}
+				return fetchedQuestions;
+			});
+		}
+	}, [interview?.questions]);
+
+	// Sync local errors with redux errors
+	useEffect(() => {
+		if (reduxError) {
+			setError(reduxError);
+		}
+	}, [reduxError]);
 
 	// Poll for updates (questions from trainer) - More frequent (3s)
 	useEffect(() => {
 		if (!token || submitted || loading) return;
 
-		const interval = setInterval(async () => {
-			try {
-				const data = await publicInterviewService.getInterview(token);
-				const fetchedQuestions = data.questions || [];
-				
-				// Check if questions changed (text or count)
-				const hasChanges = fetchedQuestions.length !== answers.length || 
-					fetchedQuestions.some((q, i) => q.question !== answers[i]?.question);
-
-				if (hasChanges) {
-					setAnswers(prev => {
-						const next = [...fetchedQuestions];
-						// Preserve answers for questions that match
-						prev.forEach((oldQ) => {
-							const matchingIdx = next.findIndex(n => n.question === oldQ.question);
-							if (matchingIdx !== -1) {
-								next[matchingIdx].answer = oldQ.answer;
-							}
-						});
-						return next;
-					});
-				}
-				
-				if (data.candidate && !interview?.candidate) {
-					setInterview(data);
-				}
-			} catch (err) {
-				console.error('Polling failed', err);
-			}
+		const interval = setInterval(() => {
+			dispatch(fetchPublicInterview(token));
 		}, 3000); 
 
 		return () => clearInterval(interval);
-	}, [token, submitted, loading, answers, interview?.candidate]);
+	}, [token, submitted, loading, dispatch]);
 
 	// Auto-save logic
 	useEffect(() => {
 		if (!token || submitted || loading || answers.length === 0) return;
 
 		const timer = setTimeout(async () => {
-			setSubmitting(true);
 			try {
-				await publicInterviewService.submitAnswers(token, answers);
+				await dispatch(submitPublicAnswers({ token, answers })).unwrap();
 				setLastSaved(new Date());
 			} catch (err) {
 				console.error('Auto-save failed', err);
-			} finally {
-				setSubmitting(false);
 			}
 		}, 1500); // 1.5 second debounce
 
 		return () => clearTimeout(timer);
-	}, [answers, token, submitted, loading]);
+	}, [answers, token, submitted, loading, dispatch]);
 
 	const handleAnswerChange = (index: number, value: string) => {
 		setAnswers(prev => {
@@ -128,14 +129,11 @@ const CandidateTechnicalEvaluation: React.FC = () => {
 	const confirmSubmit = async () => {
 		if (!token) return;
 		setConfirmOpen(false);
-		setSubmitting(true);
 		try {
-			await publicInterviewService.submitAnswers(token, answers);
+			await dispatch(submitPublicAnswers({ token, answers })).unwrap();
 			setSubmitted(true);
 		} catch (err: any) {
-			setError(err.response?.data?.detail || 'Failed to submit answers.');
-		} finally {
-			setSubmitting(false);
+			setError(err || 'Failed to submit answers.');
 		}
 	};
 
