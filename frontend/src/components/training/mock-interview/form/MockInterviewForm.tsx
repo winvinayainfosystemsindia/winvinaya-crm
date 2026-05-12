@@ -69,8 +69,10 @@ const MockInterviewForm: React.FC<MockInterviewFormProps> = ({ open, onClose, ba
 		addSkill,
 		removeSkill,
 		handleSubmit,
+		handleGenerateLink,
+		refreshQuestions,
 		updateInteraction
-	} = useMockInterviewForm(batchId, onClose);
+	} = useMockInterviewForm(batchId, onClose, viewMode);
 
 	const steps: FormStep[] = useMemo(() => [
 		{
@@ -94,9 +96,13 @@ const MockInterviewForm: React.FC<MockInterviewFormProps> = ({ open, onClose, ba
 				<TechnicalEvaluationTab
 					questions={questions}
 					viewMode={viewMode}
+					candidateToken={formData.candidate_token}
 					onQuestionChange={handleQuestionChange}
 					onAddQuestion={addQuestion}
 					onRemoveQuestion={removeQuestion}
+					onGenerateLink={handleGenerateLink}
+					onRefresh={refreshQuestions}
+					isSaving={saveLoading}
 				/>
 			)
 		},

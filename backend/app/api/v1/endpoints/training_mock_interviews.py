@@ -137,3 +137,16 @@ async def get_candidate_mock_interviews(
     """
     service = TrainingExtensionService(db)
     return await service.get_mock_interviews_by_candidate(public_id)
+
+
+@router.post("/{id}/generate-token", response_model=TrainingMockInterviewResponse)
+async def generate_mock_interview_token(
+    id: int,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Generate a secure token for candidate self-assessment.
+    """
+    service = TrainingExtensionService(db)
+    return await service.generate_mock_interview_token(id)

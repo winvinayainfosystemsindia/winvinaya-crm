@@ -103,6 +103,7 @@ const mockInterviewSlice = createSlice({
 				state.loading = false;
 				state.success = true;
 				state.mockInterviews.unshift(action.payload);
+				state.currentMockInterview = action.payload;
 			})
 			.addCase(createMockInterview.rejected, (state, action) => {
 				state.loading = false;
@@ -121,6 +122,7 @@ const mockInterviewSlice = createSlice({
 				if (index !== -1) {
 					state.mockInterviews[index] = action.payload;
 				}
+				state.currentMockInterview = action.payload;
 			})
 			.addCase(updateMockInterview.rejected, (state, action) => {
 				state.loading = false;

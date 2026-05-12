@@ -8,31 +8,51 @@ import {
 	IconButton,
 	TextField,
 	useTheme,
-	alpha
+	alpha,
+	CircularProgress
 } from '@mui/material';
 import {
 	Add as AddIcon,
 	Delete as DeleteIcon,
-	QuestionAnswer as QIcon
+	QuestionAnswer as QIcon,
+	Share as ShareIcon,
+	ContentCopy as CopyIcon,
+	Sync as SyncIcon
 } from '@mui/icons-material';
 import { type Question } from '../../../../../models/MockInterview';
+import useToast from '../../../../../hooks/useToast';
 
 interface TechnicalEvaluationTabProps {
 	questions: Question[];
 	viewMode: boolean;
+	candidateToken?: string;
 	onQuestionChange: (index: number, field: keyof Question, value: string) => void;
 	onAddQuestion: () => void;
 	onRemoveQuestion: (index: number) => void;
+	onGenerateLink: () => void;
+	onRefresh: () => void;
+	isSaving?: boolean;
 }
 
 const TechnicalEvaluationTab: React.FC<TechnicalEvaluationTabProps> = memo(({
 	questions,
 	viewMode,
+	candidateToken,
 	onQuestionChange,
 	onAddQuestion,
-	onRemoveQuestion
+	onRemoveQuestion,
+	onGenerateLink,
+	onRefresh,
+	isSaving
 }) => {
 	const theme = useTheme();
+	const toast = useToast();
+
+	const handleCopyLink = () => {
+		const url = `${window.location.origin}/candidate/interview/${candidateToken}`;
+		navigator.clipboard.writeText(url);
+		toast.success('Interview link copied to clipboard!');
+	};
 
 	return (
 		<Box sx={{ maxWidth: 1000, mx: 'auto' }}>
@@ -49,25 +69,87 @@ const TechnicalEvaluationTab: React.FC<TechnicalEvaluationTabProps> = memo(({
 					>
 						<QIcon />
 					</Box>
-					<Typography variant="subtitle2" sx={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'text.secondary' }}>
-						Technical Discussion Points
-					</Typography>
+					<Box>
+						<Typography variant="subtitle2" sx={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'text.secondary' }}>
+							Technical Discussion Points
+						</Typography>
+						{candidateToken && (
+							<Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+								<Typography variant="caption" sx={{ fontWeight: 600, color: 'success.main', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+									<Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'success.main' }} />
+									Shareable link active
+								</Typography>
+								<Button 
+									size="small" 
+									variant="text" 
+									startIcon={<CopyIcon sx={{ fontSize: '14px !important' }} />}
+									onClick={handleCopyLink}
+									sx={{ py: 0, height: 20, fontSize: '0.7rem', fontWeight: 700 }}
+								>
+									Copy Link
+								</Button>
+							</Stack>
+						)}
+					</Box>
 				</Stack>
-				{!viewMode && (
-					<Button
-						variant="outlined"
-						startIcon={<AddIcon />}
-						onClick={onAddQuestion}
-						sx={{ 
-							textTransform: 'none', 
-							fontWeight: 700, 
-							borderRadius: 1.5,
-							px: 2
-						}}
-					>
-						Add Question
-					</Button>
-				)}
+				<Stack direction="row" spacing={1.5} alignItems="center">
+					{isSaving && (
+						<Typography variant="caption" color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontWeight: 700 }}>
+							<CircularProgress size={12} color="inherit" /> Saving...
+						</Typography>
+					)}
+					{candidateToken && (
+						<Box sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
+							{onRefresh && (
+								<Button
+									variant="outlined"
+									color="primary"
+									startIcon={<SyncIcon />}
+									onClick={onRefresh}
+									sx={{ 
+										textTransform: 'none', 
+										fontWeight: 700, 
+										borderRadius: 1.5,
+										px: 2
+									}}
+								>
+									Sync Answers
+								</Button>
+							)}
+						</Box>
+					)}
+					{!viewMode && !candidateToken && (
+						<Button
+							variant="outlined"
+							color="success"
+							startIcon={<ShareIcon />}
+							onClick={onGenerateLink}
+							sx={{ 
+								textTransform: 'none', 
+								fontWeight: 700, 
+								borderRadius: 1.5,
+								px: 2
+							}}
+						>
+							Share with Candidate
+						</Button>
+					)}
+					{!viewMode && (
+						<Button
+							variant="outlined"
+							startIcon={<AddIcon />}
+							onClick={onAddQuestion}
+							sx={{ 
+								textTransform: 'none', 
+								fontWeight: 700, 
+								borderRadius: 1.5,
+								px: 2
+							}}
+						>
+							Add Question
+						</Button>
+					)}
+				</Stack>
 			</Box>
 			<Stack spacing={3}>
 				{questions.map((q, idx) => (

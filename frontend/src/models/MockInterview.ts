@@ -25,6 +25,8 @@ export interface MockInterview {
 	start_time?: string;
 	end_time?: string;
 	duration_minutes?: number;
+	candidate_token?: string;
+	interviewer_id?: number;
 	created_at: string;
 	updated_at: string;
 }
@@ -44,6 +46,8 @@ export interface MockInterviewCreate {
 	start_time?: string;
 	end_time?: string;
 	duration_minutes?: number;
+	candidate_token?: string;
+	interviewer_id?: number;
 }
 
 export interface MockInterviewUpdate {
@@ -56,4 +60,6 @@ export interface MockInterviewUpdate {
 	feedback?: string;
 	overall_rating?: number;
 	status?: string;
+	candidate_token?: string;
+	interviewer_id?: number;
 }

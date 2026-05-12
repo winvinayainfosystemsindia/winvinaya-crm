@@ -31,6 +31,8 @@ class TrainingMockInterviewBase(BaseModel):
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
     duration_minutes: Optional[int] = 0
+    candidate_token: Optional[str] = None
+    interviewer_id: Optional[int] = None
 
 
 class TrainingMockInterviewCreate(TrainingMockInterviewBase):
@@ -50,14 +52,18 @@ class TrainingMockInterviewUpdate(BaseModel):
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
     duration_minutes: Optional[int] = None
+    candidate_token: Optional[str] = None
+    interviewer_id: Optional[int] = None
 
 
 from app.schemas.training_batch import TrainingBatchMini
+from app.schemas.candidate import CandidateMini
 
 class TrainingMockInterviewResponse(TrainingMockInterviewBase):
     id: int
     created_at: datetime
     updated_at: datetime
     batch: Optional[TrainingBatchMini] = None
+    candidate: Optional[CandidateMini] = None
     
     model_config = ConfigDict(from_attributes=True)

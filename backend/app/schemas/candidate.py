@@ -3,7 +3,7 @@
 from typing import List, Optional, Any
 from uuid import UUID
 from datetime import datetime, date
-from pydantic import BaseModel, EmailStr, Field, model_validator
+from pydantic import BaseModel, EmailStr, Field, model_validator, ConfigDict
 
 # Import related schemas (forward compatibility)
 from app.schemas.candidate_screening import CandidateScreeningResponse
@@ -141,6 +141,18 @@ class CandidateResponse(CandidateBase):
     
     class Config:
         from_attributes = True
+
+
+class CandidateMini(BaseModel):
+    """Simplified candidate schema for nested responses"""
+    id: int
+    public_id: UUID
+    name: str
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    gender: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CandidateListResponse(BaseModel):

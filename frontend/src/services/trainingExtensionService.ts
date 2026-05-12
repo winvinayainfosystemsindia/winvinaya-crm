@@ -66,8 +66,18 @@ const trainingExtensionService = {
 		return response.data;
 	},
 
+	getMockInterview: async (id: number) => {
+		const response = await api.get<TrainingMockInterview>(`/training-extensions/mock-interviews/${id}`);
+		return response.data;
+	},
+
 	createMockInterview: async (data: TrainingMockInterview) => {
 		const response = await api.post<TrainingMockInterview>('/training-extensions/mock-interviews', data);
+		return response.data;
+	},
+
+	generateMockInterviewToken: async (id: number) => {
+		const response = await api.post<TrainingMockInterview>(`/training-extensions/mock-interviews/${id}/generate-token`);
 		return response.data;
 	},
 

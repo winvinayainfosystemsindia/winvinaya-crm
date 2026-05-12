@@ -34,6 +34,7 @@ import ContactManagement from '../pages/crm/ContactManagement';
 import LeadManagement from '../pages/crm/LeadManagement';
 import DealManagement from '../pages/crm/DealManagement';
 import TaskManagement from '../pages/crm/TaskManagement';
+import CandidateTechnicalEvaluation from '../pages/candidate/CandidateTechnicalEvaluation';
 
 import ProjectManagement from '../pages/projects/ProjectManagement';
 import ActivityPlanning from '../pages/projects/ActivityPlanning';
@@ -53,6 +54,7 @@ const AppRouter: React.FC = () => {
 			<Route path="/success" element={<SuccessPage />} />
 			<Route path="/maintenance" element={<MaintenancePage />} />
 			<Route path="/consent/:publicId" element={<ConsentFormPage />} />
+			<Route path="/candidate/interview/:token" element={<CandidateTechnicalEvaluation />} />
 
 			<Route element={<ProtectedRoute />}>
 				{/* Protected Routes */}

@@ -104,7 +104,7 @@ api.interceptors.response.use(
 			authService.clearTokens();
 
 			// Redirect to login - only for non-public routes
-			const publicPaths = ['/login', '/candidate-registration', '/success', '/maintenance', '/exam'];
+			const publicPaths = ['/login', '/candidate-registration', '/success', '/maintenance', '/exam', '/candidate/interview'];
 			const isPublicPath = publicPaths.some(path => window.location.pathname.startsWith(path));
 
 			if (!isPublicPath && window.location.pathname !== '/login') {

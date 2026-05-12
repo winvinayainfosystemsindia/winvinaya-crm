@@ -31,7 +31,14 @@ class TrainingMockInterview(BaseModel):
         index=True
     )
     
+    interviewer_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True
+    )
+    
     interviewer_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    candidate_token: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
     interview_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
     
     # Structured data

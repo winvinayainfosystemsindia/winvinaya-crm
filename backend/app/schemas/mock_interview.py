@@ -10,8 +10,10 @@ class MockInterviewBase(BaseModel):
     skills: Optional[List[Dict[str, Any]]] = None # List of {skill_name: str, level: str, rating: int}
     others: Optional[Dict[str, Any]] = None # Dynamic fields
     feedback: Optional[str] = None
-    overall_rating: Optional[int] = None
+    overall_rating: Optional[float] = None
     status: Optional[str] = "pending"
+    candidate_token: Optional[str] = None
+    interviewer_id: Optional[int] = None
 
 # Properties to receive on creation
 class MockInterviewCreate(MockInterviewBase):

@@ -264,28 +264,70 @@ class TrainingExtensionService:
         return result.scalars().all()
 
     async def get_mock_interview(self, id: int):
-        return await self.mock_interview_repo.get(id)
+        query = select(self.mock_interview_repo.model).options(
+            selectinload(self.mock_interview_repo.model.batch),
+            selectinload(self.mock_interview_repo.model.candidate)
+        ).where(
+            self.mock_interview_repo.model.id == id,
+            self.mock_interview_repo.model.is_deleted == False
+        )
+        result = await self.db.execute(query)
+        return result.scalar_one_or_none()
 
     async def create_mock_interview(self, mock_in: TrainingMockInterviewCreate):
         record = await self.mock_interview_repo.create(mock_in.model_dump())
-        # Re-fetch with batch
-        query = select(self.mock_interview_repo.model).options(
-            selectinload(self.mock_interview_repo.model.batch)
-        ).where(self.mock_interview_repo.model.id == record.id)
-        return (await self.db.execute(query)).scalar_one()
+        await self.db.commit()
+        # Re-fetch with eager loading to ensure relationships are available for the response model
+        return await self.get_mock_interview(record.id)
 
-    async def update_mock_interview(self, id: int, mock_in: TrainingMockInterviewUpdate):
-        record = await self.mock_interview_repo.update(id, mock_in.model_dump(exclude_unset=True))
+    async def update_mock_interview(self, id: int, mock_in: Any):
+        update_data = mock_in
+        if hasattr(mock_in, 'model_dump'):
+            update_data = mock_in.model_dump(exclude_unset=True)
+            
+        record = await self.mock_interview_repo.update(id, update_data)
         if not record:
             return None
-        # Re-fetch with batch
-        query = select(self.mock_interview_repo.model).options(
-            selectinload(self.mock_interview_repo.model.batch)
-        ).where(self.mock_interview_repo.model.id == record.id)
-        return (await self.db.execute(query)).scalar_one()
+        await self.db.commit()
+        # Re-fetch with eager loading to ensure relationships are available for the response model
+        return await self.get_mock_interview(id)
 
     async def delete_mock_interview(self, id: int):
         return await self.mock_interview_repo.delete(id)
+
+    async def generate_mock_interview_token(self, id: int):
+        import secrets
+        token = secrets.token_urlsafe(32)
+        
+        # Update the model using repo to handle session correctly
+        mock = await self.mock_interview_repo.update(id, {"candidate_token": token})
+        if not mock:
+            raise HTTPException(status_code=404, detail="Mock interview not found")
+        
+        await self.db.commit()
+        
+        # Re-fetch with eager loading to ensure relationships are available for the response model
+        return await self.get_mock_interview(id)
+
+    async def get_mock_interview_by_token(self, token: str):
+        query = select(self.mock_interview_repo.model).options(
+            selectinload(self.mock_interview_repo.model.batch),
+            selectinload(self.mock_interview_repo.model.candidate)
+        ).where(
+            self.mock_interview_repo.model.candidate_token == token,
+            self.mock_interview_repo.model.is_deleted == False
+        )
+        result = await self.db.execute(query)
+        mock = result.scalar_one_or_none()
+        
+        if not mock:
+            raise HTTPException(status_code=404, detail="Interview link is invalid or has expired")
+        
+        # Check if completed - using statuses from schema/UI
+        if mock.status in ["cleared", "selected", "rejected"]:
+             raise HTTPException(status_code=403, detail="This interview has already been completed")
+        
+        return mock
 
     # Batch Events (Holidays)
     async def get_batch_events(self, batch_id: int):

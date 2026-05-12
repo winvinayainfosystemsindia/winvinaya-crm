@@ -125,10 +125,19 @@ export interface TrainingMockInterview {
 	interviewer_name: string | null;
 	interview_date: string;
 	questions: { question: string; answer: string }[] | null;
+	skills?: { skill: string; level: string; rating: number }[] | null;
 	feedback: string | null;
 	overall_rating: number | null;
-	status: 'pending' | 'cleared' | 're-test' | 'rejected' | 'absent';
+	status: 'pending' | 'cleared' | 're-test' | 'rejected' | 'absent' | string;
+	interview_type?: 'internal' | 'external';
+	interview_category?: 'hr' | 'domain';
+	start_time?: string;
+	end_time?: string;
+	duration_minutes?: number;
+	candidate_token?: string;
+	interviewer_id?: number;
 	batch?: TrainingBatch; // Eager loaded batch info
+	candidate?: CandidateAllocation['candidate']; // Eager loaded candidate info
 }
 
 export interface TrainingBatchPlan {

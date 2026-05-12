@@ -3,6 +3,7 @@
 from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.training_mock_interview import TrainingMockInterview
+from app.models.candidate import Candidate
 from app.repositories.base import BaseRepository
 
 

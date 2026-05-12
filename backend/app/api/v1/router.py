@@ -48,6 +48,7 @@ from app.api.v1.endpoints import (
     ai_chat,
     user_email_configuration,
     placement_email,
+    public_mock_interviews,
 )
 
 
@@ -109,4 +110,5 @@ router.include_router(ai_chat.router, prefix="/ai/chat", tags=["AI Engine Chat"]
 router.include_router(user_email_configuration.router, tags=["User Email Configuration"])
 router.include_router(placement_email.router, tags=["Placement Email"])
 router.include_router(consent.router, prefix="/consent", tags=["Consent"])
+router.include_router(public_mock_interviews.router)
 

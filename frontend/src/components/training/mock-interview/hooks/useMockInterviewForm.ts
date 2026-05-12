@@ -5,8 +5,9 @@ import { createMockInterview, updateMockInterview } from '../../../../store/slic
 import { createSkill } from '../../../../store/slices/skillSlice';
 import { type Question, type Skill, type MockInterviewCreate } from '../../../../models/MockInterview';
 import useToast from '../../../../hooks/useToast';
+import trainingExtensionService from '../../../../services/trainingExtensionService';
 
-export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
+export const useMockInterviewForm = (batchId: number, onClose: () => void, viewMode: boolean = false) => {
 	const dispatch = useDispatch<AppDispatch>();
 	const { user } = useSelector((state: RootState) => state.auth);
 	const { currentMockInterview, loading: saveLoading } = useSelector((state: RootState) => state.mockInterviews);
@@ -38,24 +39,31 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 		setIsPaused(prev => !prev);
 	}, []);
 
+	const currentIdRef = useRef<number | null>(null);
+
 	useEffect(() => {
 		if (currentMockInterview) {
-			setFormData({
-				candidate_id: currentMockInterview.candidate_id,
-				interviewer_name: currentMockInterview.interviewer_name || '',
-				interview_date: currentMockInterview.interview_date,
-				interview_type: currentMockInterview.interview_type || 'internal',
-				interview_category: currentMockInterview.interview_category || 'domain',
-				status: currentMockInterview.status,
-				overall_rating: currentMockInterview.overall_rating || 0,
-				feedback: currentMockInterview.feedback || '',
-				start_time: currentMockInterview.start_time,
-				end_time: currentMockInterview.end_time,
-				duration_minutes: currentMockInterview.duration_minutes || 0,
-			});
-			setQuestions(currentMockInterview.questions || []);
-			setSkills(currentMockInterview.skills || []);
-			setElapsedSeconds((currentMockInterview.duration_minutes || 0) * 60);
+			// Only initialize form state if the ID has changed (loading a new one)
+			if (currentIdRef.current !== currentMockInterview.id) {
+				setFormData({
+					candidate_id: currentMockInterview.candidate_id,
+					interviewer_name: currentMockInterview.interviewer_name || '',
+					interview_date: currentMockInterview.interview_date,
+					interview_type: currentMockInterview.interview_type || 'internal',
+					interview_category: currentMockInterview.interview_category || 'domain',
+					status: currentMockInterview.status,
+					overall_rating: currentMockInterview.overall_rating || 0,
+					feedback: currentMockInterview.feedback || '',
+					start_time: currentMockInterview.start_time,
+					end_time: currentMockInterview.end_time,
+					duration_minutes: currentMockInterview.duration_minutes || 0,
+					candidate_token: currentMockInterview.candidate_token
+				});
+				setQuestions(currentMockInterview.questions || []);
+				setSkills(currentMockInterview.skills || []);
+				setElapsedSeconds((currentMockInterview.duration_minutes || 0) * 60);
+				currentIdRef.current = currentMockInterview.id;
+			}
 		} else {
 			const now = new Date().toISOString();
 			setFormData({
@@ -73,6 +81,7 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 			setSkills([{ skill: '', level: 'Beginner', rating: 5 }]);
 			setElapsedSeconds(0);
 			setIsPaused(true);
+			currentIdRef.current = null;
 
 			// Start stopwatch & inactivity tracker
 			timerRef.current = setInterval(() => {
@@ -119,7 +128,6 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 		setShowInactivityAlert(false);
 	}, []);
 
-	// Monitor for "Forgot to start" scenario
 	useEffect(() => {
 		if (isDirty && isPaused && elapsedSeconds === 0 && !currentMockInterview) {
 			setShowStartReminder(true);
@@ -128,6 +136,58 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 		}
 	}, [isDirty, isPaused, elapsedSeconds, currentMockInterview]);
 
+	const lastSavedDataRef = useRef<string>('');
+
+	// Trainer Auto-save (Enterprise-grade Deferred Sync)
+	useEffect(() => {
+		if (!currentMockInterview || viewMode || !isDirty) return;
+
+		// Skip if data hasn't changed since last meaningful save (prevent redundant CPU/Network usage)
+		const currentDataStr = JSON.stringify({ questions, skills });
+		if (currentDataStr === lastSavedDataRef.current) return;
+
+		const timer = setTimeout(async () => {
+			try {
+				await handleSubmit(false); // Save without closing
+				lastSavedDataRef.current = currentDataStr;
+			} catch (e) {
+				console.error('Auto-save failed', e);
+			}
+		}, 5000); // 5 second window for enterprise stability
+
+		return () => clearTimeout(timer);
+	}, [questions, skills, currentMockInterview?.id, isDirty, viewMode]);
+
+	const toast = useToast();
+	const { aggregatedSkills: masterSkills } = useSelector((state: RootState) => state.skills);
+
+	const refreshQuestions = useCallback(async (showToast = false) => {
+		if (!currentMockInterview) return;
+		try {
+			const updated = await trainingExtensionService.getMockInterview(currentMockInterview.id);
+			if (updated.questions) {
+				setQuestions(updated.questions);
+				if (showToast) toast.success('Synchronized with candidate answers');
+			}
+		} catch (error) {
+			console.error('Failed to sync questions', error);
+		}
+	}, [currentMockInterview, toast]);
+
+	// Trainer Auto-sync (pull candidate answers automatically every 10s)
+	useEffect(() => {
+		if (!currentMockInterview?.candidate_token || viewMode || !currentMockInterview?.id) return;
+
+		const interval = setInterval(() => {
+			// Don't auto-sync if trainer is currently typing (dirty state)
+			// to avoid jumping inputs
+			if (!isDirty) {
+				refreshQuestions(false); // No toast for auto-sync
+			}
+		}, 10000); // 10 second poll for candidate answers
+
+		return () => clearInterval(interval);
+	}, [currentMockInterview?.candidate_token, currentMockInterview?.id, isDirty, viewMode, refreshQuestions]);
 
 	const handleChange = useCallback((field: keyof MockInterviewCreate, value: any) => {
 		updateInteraction();
@@ -140,7 +200,7 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 			}
 			return prev;
 		});
-	}, []);
+	}, [updateInteraction]);
 
 	const handleQuestionChange = useCallback((index: number, field: keyof Question, value: string) => {
 		updateInteraction();
@@ -149,10 +209,17 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 			next[index] = { ...next[index], [field]: value };
 			return next;
 		});
-	}, []);
+	}, [updateInteraction]);
 
-	const addQuestion = useCallback(() => setQuestions((prev) => [...prev, { question: '', answer: '' }]), []);
-	const removeQuestion = useCallback((index: number) => setQuestions((prev) => prev.filter((_, i) => i !== index)), []);
+	const addQuestion = useCallback(() => {
+		// Adding a question structure is a layout change, not a data change yet
+		setQuestions((prev) => [...prev, { question: '', answer: '' }]);
+	}, []);
+	
+	const removeQuestion = useCallback((index: number) => {
+		updateInteraction();
+		setQuestions((prev) => prev.filter((_, i) => i !== index));
+	}, [updateInteraction]);
 
 	const handleSkillChange = useCallback((index: number, field: keyof Skill, value: any) => {
 		updateInteraction();
@@ -161,7 +228,7 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 			next[index] = { ...next[index], [field]: value };
 			return next;
 		});
-	}, []);
+	}, [updateInteraction]);
 
 	const addSkill = useCallback(() => setSkills((prev) => [...prev, { skill: '', level: 'Beginner', rating: 5 }]), []);
 	const removeSkill = useCallback((index: number) => setSkills((prev) => prev.filter((_, i) => i !== index)), []);
@@ -176,11 +243,7 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 		return Object.keys(newErrors).length === 0;
 	};
 
-	const toast = useToast();
-
-	const { aggregatedSkills: masterSkills } = useSelector((state: RootState) => state.skills);
-
-	const handleSubmit = async () => {
+	const handleSubmit = async (shouldClose = true) => {
 		if (!validate()) {
 			toast.error('Please fix the errors in the form');
 			return;
@@ -220,16 +283,39 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 		};
 
 		try {
+			let result;
 			if (currentMockInterview) {
-				await dispatch(updateMockInterview({ id: currentMockInterview.id, data: payload })).unwrap();
-				toast.success('Mock interview updated successfully');
+				result = await dispatch(updateMockInterview({ id: currentMockInterview.id, data: payload })).unwrap();
 			} else {
-				await dispatch(createMockInterview(payload)).unwrap();
-				toast.success('Mock interview created successfully');
+				result = await dispatch(createMockInterview(payload)).unwrap();
 			}
-			onClose();
+			setIsDirty(false); // Reset dirty flag after successful save
+			if (shouldClose) {
+				onClose();
+			}
+			return result;
 		} catch (error: any) {
 			toast.error(error?.message || 'Failed to save mock interview');
+			return null;
+		}
+	};
+
+	const handleGenerateLink = async () => {
+		let interviewId = currentMockInterview?.id;
+		
+		if (!interviewId) {
+			// Auto-save first to create the record
+			const saved = await handleSubmit(false);
+			if (!saved) return;
+			interviewId = saved.id;
+		}
+
+		try {
+			const updated = await trainingExtensionService.generateMockInterviewToken(interviewId);
+			setFormData(prev => ({ ...prev, candidate_token: updated.candidate_token }));
+			toast.success('Shareable link generated!');
+		} catch (error: any) {
+			toast.error(error?.message || 'Failed to generate link');
 		}
 	};
 
@@ -256,6 +342,8 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void) => {
 		addSkill,
 		removeSkill,
 		handleSubmit,
+		handleGenerateLink,
+		refreshQuestions,
 		updateInteraction
 	};
 };
