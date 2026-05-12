@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useEffect } from 'react';
 import {
 	Box,
 	Stack,
@@ -48,6 +48,16 @@ const TechnicalEvaluationTab: React.FC<TechnicalEvaluationTabProps> = memo(({
 	const theme = useTheme();
 	const toast = useToast();
 
+	// Auto-scroll to bottom when questions are added
+	useEffect(() => {
+		if (!viewMode) {
+			const anchor = document.getElementById('bottom-scroll-anchor');
+			if (anchor) {
+				anchor.scrollIntoView({ behavior: 'smooth', block: 'end' });
+			}
+		}
+	}, [questions.length, viewMode]);
+
 	const handleCopyLink = () => {
 		const url = `${window.location.origin}/candidate/interview/${candidateToken}`;
 		navigator.clipboard.writeText(url);
@@ -58,11 +68,11 @@ const TechnicalEvaluationTab: React.FC<TechnicalEvaluationTabProps> = memo(({
 		<Box sx={{ maxWidth: 1000, mx: 'auto' }}>
 			<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
 				<Stack direction="row" alignItems="center" spacing={2}>
-					<Box 
-						sx={{ 
-							p: 1.25, 
-							bgcolor: alpha(theme.palette.primary.main, 0.08), 
-							borderRadius: 2, 
+					<Box
+						sx={{
+							p: 1.25,
+							bgcolor: alpha(theme.palette.primary.main, 0.08),
+							borderRadius: 2,
 							display: 'flex',
 							color: 'primary.main'
 						}}
@@ -79,9 +89,9 @@ const TechnicalEvaluationTab: React.FC<TechnicalEvaluationTabProps> = memo(({
 									<Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'success.main' }} />
 									Shareable link active
 								</Typography>
-								<Button 
-									size="small" 
-									variant="text" 
+								<Button
+									size="small"
+									variant="text"
 									startIcon={<CopyIcon sx={{ fontSize: '14px !important' }} />}
 									onClick={handleCopyLink}
 									sx={{ py: 0, height: 20, fontSize: '0.7rem', fontWeight: 700 }}
@@ -106,9 +116,9 @@ const TechnicalEvaluationTab: React.FC<TechnicalEvaluationTabProps> = memo(({
 									color="primary"
 									startIcon={<SyncIcon />}
 									onClick={onRefresh}
-									sx={{ 
-										textTransform: 'none', 
-										fontWeight: 700, 
+									sx={{
+										textTransform: 'none',
+										fontWeight: 700,
 										borderRadius: 1.5,
 										px: 2
 									}}
@@ -124,9 +134,9 @@ const TechnicalEvaluationTab: React.FC<TechnicalEvaluationTabProps> = memo(({
 							color="success"
 							startIcon={<ShareIcon />}
 							onClick={onGenerateLink}
-							sx={{ 
-								textTransform: 'none', 
-								fontWeight: 700, 
+							sx={{
+								textTransform: 'none',
+								fontWeight: 700,
 								borderRadius: 1.5,
 								px: 2
 							}}
@@ -139,9 +149,9 @@ const TechnicalEvaluationTab: React.FC<TechnicalEvaluationTabProps> = memo(({
 							variant="outlined"
 							startIcon={<AddIcon />}
 							onClick={onAddQuestion}
-							sx={{ 
-								textTransform: 'none', 
-								fontWeight: 700, 
+							sx={{
+								textTransform: 'none',
+								fontWeight: 700,
 								borderRadius: 1.5,
 								px: 2
 							}}
@@ -153,13 +163,13 @@ const TechnicalEvaluationTab: React.FC<TechnicalEvaluationTabProps> = memo(({
 			</Box>
 			<Stack spacing={3}>
 				{questions.map((q, idx) => (
-					<Paper 
-						key={idx} 
+					<Paper
+						key={idx}
 						elevation={0}
-						sx={{ 
-							p: 3, 
-							borderRadius: 2, 
-							position: 'relative', 
+						sx={{
+							p: 3,
+							borderRadius: 2,
+							position: 'relative',
 							bgcolor: 'background.paper',
 							border: '1px solid',
 							borderColor: 'divider',
@@ -174,12 +184,12 @@ const TechnicalEvaluationTab: React.FC<TechnicalEvaluationTabProps> = memo(({
 							<IconButton
 								size="small"
 								onClick={() => onRemoveQuestion(idx)}
-								sx={{ 
-									position: 'absolute', 
-									right: 12, 
-									top: 12, 
-									opacity: 0.4, 
-									'&:hover': { opacity: 1, color: 'error.main', bgcolor: alpha(theme.palette.error.main, 0.05) } 
+								sx={{
+									position: 'absolute',
+									right: 12,
+									top: 12,
+									opacity: 0.4,
+									'&:hover': { opacity: 1, color: 'error.main', bgcolor: alpha(theme.palette.error.main, 0.05) }
 								}}
 							>
 								<DeleteIcon fontSize="small" />
@@ -191,8 +201,8 @@ const TechnicalEvaluationTab: React.FC<TechnicalEvaluationTabProps> = memo(({
 							onChange={(e) => onQuestionChange(idx, 'question', e.target.value)}
 							fullWidth
 							size="small"
-							sx={{ 
-								mb: 2.5, 
+							sx={{
+								mb: 2.5,
 								mt: 1,
 								'& .MuiOutlinedInput-root': { borderRadius: 1.5 }
 							}}
@@ -214,11 +224,11 @@ const TechnicalEvaluationTab: React.FC<TechnicalEvaluationTabProps> = memo(({
 					</Paper>
 				))}
 				{questions.length === 0 && (
-					<Box 
-						sx={{ 
-							py: 6, 
-							textAlign: 'center', 
-							borderRadius: 2, 
+					<Box
+						sx={{
+							py: 6,
+							textAlign: 'center',
+							borderRadius: 2,
 							border: '2px dashed',
 							borderColor: 'divider',
 							bgcolor: alpha(theme.palette.action.disabledBackground, 0.02)
@@ -227,19 +237,37 @@ const TechnicalEvaluationTab: React.FC<TechnicalEvaluationTabProps> = memo(({
 						<Typography variant="body2" color="text.disabled" sx={{ fontWeight: 600 }}>
 							No technical discussion points have been recorded for this session.
 						</Typography>
-						{!viewMode && (
-							<Button 
-								variant="text" 
-								startIcon={<AddIcon />} 
-								onClick={onAddQuestion}
-								sx={{ mt: 2, textTransform: 'none', fontWeight: 700 }}
-							>
-								Add First Question
-							</Button>
-						)}
 					</Box>
 				)}
+
+				{!viewMode && (
+					<Button
+						fullWidth
+						variant="outlined"
+						startIcon={<AddIcon />}
+						onClick={onAddQuestion}
+						sx={{
+							py: 2,
+							borderStyle: 'dashed',
+							borderWidth: 2,
+							borderRadius: 3,
+							textTransform: 'none',
+							fontWeight: 800,
+							fontSize: '0.95rem',
+							color: 'text.secondary',
+							borderColor: 'divider',
+							'&:hover': {
+								borderColor: 'primary.main',
+								bgcolor: alpha(theme.palette.primary.main, 0.04),
+								borderStyle: 'dashed',
+							}
+						}}
+					>
+						Add Question / Discussion Topic
+					</Button>
+				)}
 			</Stack>
+			<div id="bottom-scroll-anchor" />
 		</Box>
 	);
 });
