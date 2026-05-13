@@ -30,6 +30,17 @@ export interface MockInterview {
 	interviewer_id?: number;
 	created_at: string;
 	updated_at: string;
+	candidate?: {
+		id: number;
+		public_id: string;
+		name: string;
+		documents?: import('./candidate').CandidateDocument[];
+	};
+	batch?: {
+		id: number;
+		public_id: string;
+		batch_name: string;
+	};
 }
 
 export interface MockInterviewCreate {

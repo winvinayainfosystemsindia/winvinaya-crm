@@ -20,7 +20,7 @@ class TrainingMockInterviewRepository(BaseRepository[TrainingMockInterview]):
         query = (
             select(self.model)
             .options(
-                selectinload(self.model.candidate),
+                selectinload(self.model.candidate).selectinload(Candidate.documents),
                 selectinload(self.model.batch)
             )
             .where(self.model.batch_id == batch_id)

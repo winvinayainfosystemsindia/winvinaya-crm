@@ -255,7 +255,8 @@ class TrainingExtensionService:
 
     async def get_mock_interviews_by_candidate(self, public_id: UUID):
         query = select(self.mock_interview_repo.model).join(Candidate).options(
-            selectinload(self.mock_interview_repo.model.batch)
+            selectinload(self.mock_interview_repo.model.batch),
+            selectinload(self.mock_interview_repo.model.candidate).selectinload(Candidate.documents)
         ).where(
             Candidate.public_id == public_id,
             self.mock_interview_repo.model.is_deleted == False
@@ -266,7 +267,7 @@ class TrainingExtensionService:
     async def get_mock_interview(self, id: int):
         query = select(self.mock_interview_repo.model).options(
             selectinload(self.mock_interview_repo.model.batch),
-            selectinload(self.mock_interview_repo.model.candidate)
+            selectinload(self.mock_interview_repo.model.candidate).selectinload(Candidate.documents)
         ).where(
             self.mock_interview_repo.model.id == id,
             self.mock_interview_repo.model.is_deleted == False
@@ -312,7 +313,7 @@ class TrainingExtensionService:
     async def get_mock_interview_by_token(self, token: str):
         query = select(self.mock_interview_repo.model).options(
             selectinload(self.mock_interview_repo.model.batch),
-            selectinload(self.mock_interview_repo.model.candidate)
+            selectinload(self.mock_interview_repo.model.candidate).selectinload(Candidate.documents)
         ).where(
             self.mock_interview_repo.model.candidate_token == token,
             self.mock_interview_repo.model.is_deleted == False

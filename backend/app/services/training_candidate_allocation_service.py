@@ -79,7 +79,7 @@ class TrainingCandidateAllocationService:
         
         # Eager load relationships
         query = query.options(
-            selectinload(TrainingCandidateAllocation.candidate),
+            selectinload(TrainingCandidateAllocation.candidate).selectinload(Candidate.documents),
             joinedload(TrainingCandidateAllocation.batch)
         )
         
@@ -99,7 +99,7 @@ class TrainingCandidateAllocationService:
             TrainingCandidateAllocation.is_deleted == False
         ).options(
             joinedload(TrainingCandidateAllocation.batch),
-            selectinload(TrainingCandidateAllocation.candidate)
+            selectinload(TrainingCandidateAllocation.candidate).selectinload(Candidate.documents)
         ).order_by(desc(TrainingCandidateAllocation.created_at))
         
         result = await self.db.execute(query)
@@ -421,7 +421,7 @@ class TrainingCandidateAllocationService:
         query = select(TrainingCandidateAllocation).where(
             TrainingCandidateAllocation.id == allocation_id
         ).options(
-            selectinload(TrainingCandidateAllocation.candidate),
+            selectinload(TrainingCandidateAllocation.candidate).selectinload(Candidate.documents),
             joinedload(TrainingCandidateAllocation.batch)
         )
         result = await self.db.execute(query)

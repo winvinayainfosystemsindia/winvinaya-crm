@@ -21,10 +21,10 @@ const WelcomeHeader: React.FC = () => {
     }).format(new Date());
 
     return (
-        <Box sx={{ 
-            mb: 4, 
-            display: 'flex', 
-            justifyContent: 'space-between', 
+        <Box sx={{
+            mb: 4,
+            display: 'flex',
+            justifyContent: 'space-between',
             alignItems: 'flex-start',
             flexWrap: 'wrap',
             gap: 2
@@ -36,7 +36,7 @@ const WelcomeHeader: React.FC = () => {
                     </Typography>
                 </Box>
                 <Typography variant="body1" sx={{ color: '#545b64', fontWeight: 500 }}>
-                    Welcome back to the WinVinaya CRM. Here's what's happening today, {formattedDate}.
+                    Welcome back to the WinVinaya MIS. Here's what's happening today, {formattedDate}.
                 </Typography>
             </Box>
             <RegistrationLinkModal />

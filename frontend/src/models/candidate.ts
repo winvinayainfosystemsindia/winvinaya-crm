@@ -48,7 +48,7 @@ export interface CandidateScreeningCreate {
 export interface CandidateDocument {
 	id: number;
 	candidate_id: number;
-	document_type: 'resume' | 'disability_certificate' | '10th_certificate' | '12th_certificate' | 'degree_certificate' | 'pan_card' | 'aadhar_card' | 'passport_photo' | 'other';
+	document_type: 'resume' | 'trainer_resume' | 'disability_certificate' | '10th_certificate' | '12th_certificate' | 'degree_certificate' | 'pan_card' | 'aadhar_card' | 'passport_photo' | 'other';
 	document_name: string;
 	file_path: string;
 	file_size?: number;
@@ -61,7 +61,7 @@ export interface CandidateDocument {
 }
 
 export interface CandidateDocumentCreate {
-	document_type: 'resume' | 'disability_certificate' | '10th_certificate' | '12th_certificate' | 'degree_certificate' | 'pan_card' | 'aadhar_card' | 'passport_photo' | 'other';
+	document_type: 'resume' | 'trainer_resume' | 'disability_certificate' | '10th_certificate' | '12th_certificate' | 'degree_certificate' | 'pan_card' | 'aadhar_card' | 'passport_photo' | 'other';
 	document_name: string;
 	file_path: string;
 	file_size?: number;

@@ -60,6 +60,7 @@ export interface CandidateAllocation {
 			qualification?: string;
 			[key: string]: any;
 		};
+		documents?: import('./candidate').CandidateDocument[];
 	};
 }
 

@@ -4,6 +4,7 @@ from typing import Optional, List
 from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.training_candidate_allocation import TrainingCandidateAllocation
+from app.models.candidate import Candidate
 from app.repositories.base import BaseRepository
 
 
@@ -29,7 +30,7 @@ class TrainingCandidateAllocationRepository(BaseRepository[TrainingCandidateAllo
             self.model.batch_id == batch_id,
             self.model.is_deleted == False
         ).options(
-            selectinload(self.model.candidate),
+            selectinload(self.model.candidate).selectinload(Candidate.documents),
             joinedload(self.model.batch)
         )
         result = await self.db.execute(query)
@@ -97,7 +98,6 @@ class TrainingCandidateAllocationRepository(BaseRepository[TrainingCandidateAllo
         """Global retrieval with expert filtering and metrics aggregation for reports"""
         from sqlalchemy import func, desc, asc, and_, cast, Numeric, Float
         from sqlalchemy.orm import selectinload, joinedload
-        from app.models.candidate import Candidate
         from app.models.training_attendance import TrainingAttendance
 
         
@@ -191,7 +191,7 @@ class TrainingCandidateAllocationRepository(BaseRepository[TrainingCandidateAllo
 
         # Pagination and Eager Loading
         query = query.offset(skip).limit(limit).options(
-            selectinload(self.model.candidate),
+            selectinload(self.model.candidate).selectinload(Candidate.documents),
             joinedload(self.model.batch)
         )
 

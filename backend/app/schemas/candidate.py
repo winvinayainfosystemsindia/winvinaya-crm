@@ -151,6 +151,7 @@ class CandidateMini(BaseModel):
     email: Optional[EmailStr] = None
     phone: Optional[str] = None
     gender: Optional[str] = None
+    documents: List[CandidateDocumentResponse] = []
 
     model_config = ConfigDict(from_attributes=True)
 

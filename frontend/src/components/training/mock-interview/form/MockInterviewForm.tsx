@@ -8,12 +8,16 @@ import {
 	useTheme,
 	IconButton,
 	Tooltip,
+	Button,
 } from '@mui/material';
 import {
 	PlayArrow as StartIcon,
-	Pause as PauseIcon
+	Pause as PauseIcon,
+	Article as ResumeIcon,
+	AssignmentInd as TrainerResumeIcon
 } from '@mui/icons-material';
 import SessionMonitoring from '../../../common/monitoring/SessionMonitoring';
+import { documentService } from '../../../../services/candidateService';
 import { type AppDispatch, type RootState } from '../../../../store/store';
 import { useMockInterviewForm } from '../hooks/useMockInterviewForm';
 import { fetchAggregatedSkills } from '../../../../store/slices/skillSlice';
@@ -73,6 +77,53 @@ const MockInterviewForm: React.FC<MockInterviewFormProps> = ({ open, onClose, ba
 		refreshQuestions,
 		updateInteraction
 	} = useMockInterviewForm(batchId, onClose, viewMode);
+
+	const selectedAllocation = useMemo(() => {
+		if (!formData.candidate_id || !allocations) return null;
+		const targetId = Number(formData.candidate_id);
+		return allocations.find(a => Number(a.candidate_id) === targetId);
+	}, [allocations, formData.candidate_id]);
+
+	const resumes = useMemo(() => {
+		// Combine documents from both sources and deduplicate by ID
+		const currentDocs = currentMockInterview?.candidate?.documents || [];
+		const allocDocs = selectedAllocation?.candidate?.documents || [];
+		
+		const docsMap = new Map();
+		// Order matters: later items overwrite earlier ones. 
+		// We prioritize currentDocs as they are likely more specific to the session.
+		[...allocDocs, ...currentDocs].forEach(d => {
+			if (d && d.id) docsMap.set(d.id, d);
+		});
+		const allDocs = Array.from(docsMap.values());
+		
+		return {
+			candidate: allDocs.find(d => {
+				const type = (d.document_type || '').toLowerCase();
+				const source = (d.document_source || '').toLowerCase();
+				return d.is_active && 
+					(type === 'resume') && 
+					(source === 'candidate' || source === '');
+			}),
+			trainer: allDocs.find(d => {
+				const type = (d.document_type || '').toLowerCase();
+				const source = (d.document_source || '').toLowerCase();
+				return d.is_active && 
+					(type === 'trainer_resume' || (type === 'resume' && source === 'trainer'));
+			})
+		};
+	}, [currentMockInterview, selectedAllocation]);
+
+	const handleViewDocument = async (docId: number) => {
+		try {
+			const blob = await documentService.download(docId);
+			const url = window.URL.createObjectURL(blob);
+			window.open(url, '_blank');
+			setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+		} catch (error) {
+			console.error('Failed to view document:', error);
+		}
+	};
 
 	const steps: FormStep[] = useMemo(() => [
 		{
@@ -171,21 +222,70 @@ const MockInterviewForm: React.FC<MockInterviewFormProps> = ({ open, onClose, ba
 					isSubmitting={saveLoading}
 					saveButtonText={viewMode ? 'Close' : currentMockInterview ? 'Update Session' : 'Finalize Session'}
 					headerActions={
-						!viewMode && !currentMockInterview && (
-							<Box
-								sx={{
-									display: 'flex',
-									alignItems: 'center',
-									gap: 1,
-									px: 1.5,
-									py: 0.5,
-									borderRadius: 2,
-									bgcolor: alpha(isPaused ? theme.palette.warning.main : theme.palette.error.main, 0.08),
-									border: '1px solid',
-									borderColor: alpha(isPaused ? theme.palette.warning.main : theme.palette.error.main, 0.2),
-									mr: 2
-								}}
-							>
+						<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mr: 2 }}>
+							{/* Resume Actions */}
+							{resumes.candidate && (
+								<Button 
+									size="small" 
+									variant="outlined"
+									startIcon={<ResumeIcon fontSize="small" />}
+									onClick={() => handleViewDocument(resumes.candidate!.id)}
+									sx={{ 
+										borderRadius: 1.5,
+										textTransform: 'none',
+										fontWeight: 600,
+										px: 1.5,
+										color: 'primary.main',
+										borderColor: alpha(theme.palette.primary.main, 0.3),
+										bgcolor: alpha(theme.palette.primary.main, 0.04),
+										'&:hover': { 
+											bgcolor: alpha(theme.palette.primary.main, 0.08),
+											borderColor: theme.palette.primary.main
+										}
+									}}
+								>
+									Candidate Resume
+								</Button>
+							)}
+							{resumes.trainer && (
+								<Button 
+									size="small" 
+									variant="outlined"
+									startIcon={<TrainerResumeIcon fontSize="small" />}
+									onClick={() => handleViewDocument(resumes.trainer!.id)}
+									sx={{ 
+										borderRadius: 1.5,
+										textTransform: 'none',
+										fontWeight: 600,
+										px: 1.5,
+										color: '#ec7211',
+										borderColor: alpha('#ec7211', 0.3),
+										bgcolor: alpha('#ec7211', 0.04),
+										'&:hover': { 
+											bgcolor: alpha('#ec7211', 0.08),
+											borderColor: '#ec7211'
+										}
+									}}
+								>
+									Trainer Prepared Resume
+								</Button>
+							)}
+
+							{/* Timer Actions */}
+							{!viewMode && !currentMockInterview && (
+								<Box
+									sx={{
+										display: 'flex',
+										alignItems: 'center',
+										gap: 1,
+										px: 1.5,
+										py: 0.5,
+										borderRadius: 2,
+										bgcolor: alpha(isPaused ? theme.palette.warning.main : theme.palette.error.main, 0.08),
+										border: '1px solid',
+										borderColor: alpha(isPaused ? theme.palette.warning.main : theme.palette.error.main, 0.2),
+									}}
+								>
 								<Box
 									sx={{
 										width: 8,
@@ -233,7 +333,8 @@ const MockInterviewForm: React.FC<MockInterviewFormProps> = ({ open, onClose, ba
 								`}
 								</style>
 							</Box>
-						)
+						)}
+						</Box>
 					}
 				/>
 

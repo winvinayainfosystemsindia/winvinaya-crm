@@ -4,6 +4,7 @@ import uuid
 from typing import Optional, List, Any
 from datetime import datetime, date
 from pydantic import BaseModel
+from app.schemas.candidate_document import CandidateDocumentResponse
 
 
 class TrainingCandidateAllocationBase(BaseModel):
@@ -43,6 +44,7 @@ class CandidateMini(BaseModel):
     gender: Optional[str] = None
     disability_details: Optional[dict] = None
     education_details: Optional[dict] = None
+    documents: List[CandidateDocumentResponse] = []
 
     class Config:
         from_attributes = True
