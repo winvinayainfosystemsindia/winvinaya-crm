@@ -16,5 +16,10 @@ export const colleges = [
 	"SRM University",
 	"Manipal University",
 	"Amrita Vishwa Vidyapeetham",
+	"State Board",
+	"CBSE Board",
+	"ICSE Board",
+	"Government Polytechnic",
+	"Government ITI",
 	"Other"
 ];
