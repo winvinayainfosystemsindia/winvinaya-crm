@@ -15,5 +15,9 @@ export const degrees = [
 	"M.C.A",
 	"Ph.D",
 	"Diploma",
+	"10th",
+	"12th",
+	"ITI",
+	"Polytechnic",
 	"Other"
 ];
