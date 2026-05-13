@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, Paper, Box, Stack, Typography, Link, Divider, Avatar, Chip } from '@mui/material';
+import { Grid, Paper, Box, Stack, Typography, Link, Divider, Avatar, Chip, useTheme, alpha } from '@mui/material';
 import {
 	Description as DescriptionIcon,
 	Assignment as RequirementsIcon,
@@ -23,6 +23,7 @@ interface JobRoleDetailsTabProps {
 }
 
 const JobRoleDetailsTab: React.FC<JobRoleDetailsTabProps> = ({ jobRole }) => {
+	const theme = useTheme();
 	const formatSalary = () => {
 		if (!jobRole.salary_range) return 'N/A';
 		const { min, max, currency } = jobRole.salary_range;
@@ -69,6 +70,16 @@ const JobRoleDetailsTab: React.FC<JobRoleDetailsTabProps> = ({ jobRole }) => {
 							</ReactMarkdown>
 						</Box>
 					</Paper>
+
+					{/* Status Remarks Section (if applicable) */}
+					{(jobRole.status === 'closed' && jobRole.status_reason) && (
+						<Paper variant="outlined" sx={{ p: 3, borderRadius: 1, bgcolor: alpha(theme.palette.warning.main, 0.04), border: `1px solid ${alpha(theme.palette.warning.main, 0.2)}` }}>
+							<SectionHeader title="Closure Remarks" icon={<OverviewIcon sx={{ color: 'warning.main' }} />} />
+							<Typography variant="body2" sx={{ color: 'text.primary', fontStyle: 'italic', pl: 4.5 }}>
+								"{jobRole.status_reason}"
+							</Typography>
+						</Paper>
+					)}
 
 					{/* Requirements Section */}
 					<Paper variant="outlined" sx={{ p: 4, borderRadius: 1.5, bgcolor: 'background.paper', boxShadow: (theme) => `0 2px 4px 0 ${theme.palette.divider}` }}>

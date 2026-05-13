@@ -35,8 +35,12 @@ export const useJobRoleTable = () => {
 
 	const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [closeDialogOpen, setCloseDialogOpen] = useState(false);
 	const [jobRoleToDelete, setJobRoleToDelete] = useState<JobRole | null>(null);
+	const [jobRoleToClose, setJobRoleToClose] = useState<JobRole | null>(null);
+	const [reason, setReason] = useState('');
 	const [deleteLoading, setDeleteLoading] = useState(false);
+	const [closeLoading, setCloseLoading] = useState(false);
 
 	const fetchJobRolesData = useCallback(async () => {
 		const filterParams: any = {
@@ -126,7 +130,7 @@ export const useJobRoleTable = () => {
 		if (!jobRoleToDelete) return;
 		setDeleteLoading(true);
 		try {
-			await dispatch(deleteJobRole(jobRoleToDelete.public_id)).unwrap();
+			await dispatch(deleteJobRole({ publicId: jobRoleToDelete.public_id, reason })).unwrap();
 			toast.success(`Job Role "${jobRoleToDelete.title}" deleted successfully`);
 			fetchJobRolesData();
 		} catch (error: any) {
@@ -135,17 +139,40 @@ export const useJobRoleTable = () => {
 			setDeleteLoading(false);
 			setDeleteDialogOpen(false);
 			setJobRoleToDelete(null);
+			setReason('');
 		}
 	};
 
-	const handleCloseJobRole = async (jobRole: JobRole) => {
+	const handleCloseClick = (jobRole: JobRole) => {
+		setJobRoleToClose(jobRole);
+		setCloseDialogOpen(true);
+	};
+
+	const handleCloseConfirm = async () => {
+		if (!jobRoleToClose) return;
+		setCloseLoading(true);
 		try {
-			await dispatch(updateJobRoleStatus({ publicId: jobRole.public_id, status: 'closed' as any })).unwrap();
-			toast.success(`Job Role "${jobRole.title}" marked as closed`);
+			await dispatch(updateJobRoleStatus({ 
+				publicId: jobRoleToClose.public_id, 
+				status: 'closed' as any,
+				reason 
+			})).unwrap();
+			toast.success(`Job Role "${jobRoleToClose.title}" marked as closed`);
 			fetchJobRolesData();
 		} catch (error: any) {
 			toast.error(error || 'Failed to close job role');
+		} finally {
+			setCloseLoading(false);
+			setCloseDialogOpen(false);
+			setJobRoleToClose(null);
+			setReason('');
 		}
+	};
+
+	const handleCloseCancel = () => {
+		setCloseDialogOpen(false);
+		setJobRoleToClose(null);
+		setReason('');
 	};
 
 	const handleReopenJobRole = async (jobRole: JobRole) => {
@@ -176,8 +203,12 @@ export const useJobRoleTable = () => {
 		filterDrawerOpen,
 		filters: localFilters, // Pass local state to the drawer for pending selection
 		deleteDialogOpen,
+		closeDialogOpen,
 		jobRoleToDelete,
+		jobRoleToClose,
+		reason,
 		deleteLoading,
+		closeLoading,
 		fetchJobRolesData,
 		handleChangePage,
 		handleChangeRowsPerPage,
@@ -188,11 +219,14 @@ export const useJobRoleTable = () => {
 		handleFilterChange,
 		applyFilters,
 		clearFilters,
-		handleCloseJobRole,
+		handleCloseClick,
+		handleCloseConfirm,
+		handleCloseCancel,
 		handleReopenJobRole,
 		handleDeleteClick,
 		handleDeleteConfirm,
 		handleDeleteCancel,
+		setReason,
 		setRowsPerPage
 	};
 };

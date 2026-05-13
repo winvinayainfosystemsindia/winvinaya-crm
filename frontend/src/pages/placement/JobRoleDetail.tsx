@@ -6,8 +6,10 @@ import {
 	Tabs,
 	Tab,
 	CircularProgress,
-	Alert
+	Alert,
+	TextField
 } from '@mui/material';
+import { ConfirmationDialog } from '../../components/common/dialogbox';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchJobRoleById, updateJobRole, updateJobRoleStatus, clearCurrentJobRole } from '../../store/slices/jobRoleSlice';
 import useToast from '../../hooks/useToast';
@@ -28,7 +30,10 @@ const JobRoleDetail: React.FC = () => {
 
 	const [tabIndex, setTabIndex] = useState(0);
 	const [editDialogOpen, setEditDialogOpen] = useState(false);
+	const [closeDialogOpen, setCloseDialogOpen] = useState(false);
+	const [reason, setReason] = useState('');
 	const [formLoading, setFormLoading] = useState(false);
+	const [closeLoading, setCloseLoading] = useState(false);
 
 	useEffect(() => {
 		if (publicId) {
@@ -60,13 +65,42 @@ const JobRoleDetail: React.FC = () => {
 	
 	const handleStatusChange = async (newStatus: 'active' | 'closed') => {
 		if (!publicId) return;
+		if (newStatus === 'closed') {
+			setCloseDialogOpen(true);
+			return;
+		}
 		try {
 			await dispatch(updateJobRoleStatus({ publicId, status: newStatus as any })).unwrap();
-			toast.success(`Job Role ${newStatus === 'closed' ? 'closed' : 're-opened'} successfully`);
+			toast.success(`Job Role re-opened successfully`);
 			dispatch(fetchJobRoleById(publicId));
 		} catch (error: any) {
 			toast.error(error || 'Failed to update status');
 		}
+	};
+
+	const handleCloseConfirm = async () => {
+		if (!publicId) return;
+		setCloseLoading(true);
+		try {
+			await dispatch(updateJobRoleStatus({ 
+				publicId, 
+				status: 'closed' as any,
+				reason 
+			})).unwrap();
+			toast.success(`Job Role closed successfully`);
+			setCloseDialogOpen(false);
+			setReason('');
+			dispatch(fetchJobRoleById(publicId));
+		} catch (error: any) {
+			toast.error(error || 'Failed to close job role');
+		} finally {
+			setCloseLoading(false);
+		}
+	};
+
+	const handleCloseCancel = () => {
+		setCloseDialogOpen(false);
+		setReason('');
 	};
 
 	const handleRefresh = () => {
@@ -145,6 +179,28 @@ const JobRoleDetail: React.FC = () => {
 				jobRole={jobRole}
 				loading={formLoading}
 			/>
+
+			<ConfirmationDialog
+				open={closeDialogOpen}
+				title="Close Job Role"
+				message={`Are you sure you want to close this job role? This will mark the position as filled or cancelled.`}
+				onClose={handleCloseCancel}
+				onConfirm={handleCloseConfirm}
+				confirmLabel="Close Role"
+				loading={closeLoading}
+				severity="warning"
+			>
+				<TextField
+					fullWidth
+					label="Reason for closing"
+					multiline
+					rows={3}
+					value={reason}
+					onChange={(e) => setReason(e.target.value)}
+					sx={{ mt: 2 }}
+					placeholder="Explain why this job role is being closed..."
+				/>
+			</ConfirmationDialog>
 		</Box>
 	);
 };

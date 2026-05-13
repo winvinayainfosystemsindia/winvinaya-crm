@@ -1,4 +1,5 @@
 import React from 'react';
+import { TextField } from '@mui/material';
 import { ConfirmationDialog } from '../../../common/dialogbox';
 import { useJobRoleTable } from '../hooks/useJobRoleTable';
 import { getJobRoleFilterFields } from './JobRoleFilters';
@@ -10,7 +11,6 @@ import type { JobRole } from '../../../../models/jobRole';
 interface JobRoleTableProps {
 	onEditJobRole: (jobRole: JobRole) => void;
 }
-
 const JobRoleTable: React.FC<JobRoleTableProps> = ({ onEditJobRole }) => {
 	const {
 		jobRoles,
@@ -25,8 +25,12 @@ const JobRoleTable: React.FC<JobRoleTableProps> = ({ onEditJobRole }) => {
 		filterDrawerOpen,
 		filters,
 		deleteDialogOpen,
+		closeDialogOpen,
 		jobRoleToDelete,
+		jobRoleToClose,
+		reason,
 		deleteLoading,
+		closeLoading,
 		fetchJobRolesData,
 		handleChangePage,
 		handleChangeRowsPerPage,
@@ -37,11 +41,14 @@ const JobRoleTable: React.FC<JobRoleTableProps> = ({ onEditJobRole }) => {
 		handleFilterChange,
 		applyFilters,
 		clearFilters,
-		handleCloseJobRole,
+		handleCloseClick,
+		handleCloseConfirm,
+		handleCloseCancel,
 		handleReopenJobRole,
 		handleDeleteClick,
 		handleDeleteConfirm,
-		handleDeleteCancel
+		handleDeleteCancel,
+		setReason
 	} = useJobRoleTable();
 
 	const activeFilterCount = (
@@ -94,7 +101,7 @@ const JobRoleTable: React.FC<JobRoleTableProps> = ({ onEditJobRole }) => {
 						key={role.public_id}
 						jobRole={role}
 						onEdit={onEditJobRole}
-						onClose={handleCloseJobRole}
+						onClose={handleCloseClick}
 						onReopen={handleReopenJobRole}
 						onDelete={handleDeleteClick}
 						isAdmin={user?.role === 'admin' || user?.role === 'manager' || user?.role === 'placement'}
@@ -121,8 +128,41 @@ const JobRoleTable: React.FC<JobRoleTableProps> = ({ onEditJobRole }) => {
 				confirmLabel="Delete"
 				loading={deleteLoading}
 				severity="error"
-			/>
-		</>
+			>
+				<TextField
+					fullWidth
+					label="Reason for deletion"
+					multiline
+					rows={3}
+					value={reason}
+					onChange={(e) => setReason(e.target.value)}
+					sx={{ mt: 2 }}
+					placeholder="Explain why this job role is being deleted..."
+				/>
+			</ConfirmationDialog>
+
+			<ConfirmationDialog
+				open={closeDialogOpen}
+				title="Close Job Role"
+				message={`Are you sure you want to close the job role "${jobRoleToClose?.title}"? This will mark the position as filled or cancelled.`}
+				onClose={handleCloseCancel}
+				onConfirm={handleCloseConfirm}
+				confirmLabel="Close Role"
+				loading={closeLoading}
+				severity="warning"
+			>
+				<TextField
+					fullWidth
+					label="Reason for closing"
+					multiline
+					rows={3}
+					value={reason}
+					onChange={(e) => setReason(e.target.value)}
+					sx={{ mt: 2 }}
+					placeholder="Explain why this job role is being closed (e.g., position filled, project cancelled)..."
+				/>
+			</ConfirmationDialog>
+</>
 	);
 };
 

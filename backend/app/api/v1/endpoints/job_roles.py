@@ -74,21 +74,23 @@ async def update_job_role(
 async def change_job_role_status(
     public_id: UUID,
     new_status: JobRoleStatus,
+    reason: Optional[str] = None,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user)
 ) -> Any:
     """Change job role status"""
     service = JobRoleService(db)
-    return await service.change_status(public_id, new_status)
+    return await service.change_status(public_id, new_status, reason)
 
 
 @router.delete("/{public_id}")
 async def delete_job_role(
     public_id: UUID,
+    reason: Optional[str] = None,
     db: AsyncSession = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user)
 ) -> Any:
     """Soft delete a job role"""
     service = JobRoleService(db)
-    await service.delete_job_role(public_id)
+    await service.delete_job_role(public_id, reason)
     return {"message": "Job Role deleted successfully"}

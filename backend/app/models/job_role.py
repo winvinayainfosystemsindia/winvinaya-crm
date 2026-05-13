@@ -124,6 +124,9 @@ class JobRole(BaseModel):
         comment='{"designation": "", "workplace_type": "", "job_type": ""}'
     )
     
+    status_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    deletion_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    
     other: Mapped[dict | None] = mapped_column(
         JSON,
         nullable=True,

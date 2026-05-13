@@ -4,6 +4,7 @@ from typing import List, Optional, Any
 from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import datetime
 from app.models.job_role import JobRole, JobRoleStatus
 from app.models.user import User
 from app.schemas.job_role import JobRoleCreate, JobRoleUpdate
@@ -83,7 +84,7 @@ class JobRoleService:
         # Fetch with relationships loaded
         return await self.repository.get_by_public_id(updated_obj.public_id)
         
-    async def delete_job_role(self, public_id: UUID) -> bool:
+    async def delete_job_role(self, public_id: UUID, reason: Optional[str] = None) -> bool:
         """Soft delete a job role"""
         job_role = await self.get_job_role(public_id)
         
@@ -94,11 +95,19 @@ class JobRoleService:
                 detail=f"Cannot delete job role with {job_role.mappings_count} active candidate mappings."
             )
             
-        return await self.repository.delete(job_role.id, soft=True)
+        return await self.repository.update(job_role.id, {
+            "is_deleted": True, 
+            "deleted_at": datetime.utcnow(),
+            "deletion_reason": reason
+        }) is not None
 
-    async def change_status(self, public_id: UUID, new_status: JobRoleStatus) -> JobRole:
+    async def change_status(self, public_id: UUID, new_status: JobRoleStatus, reason: Optional[str] = None) -> JobRole:
         """Change job role status"""
         job_role = await self.get_job_role(public_id)
-        updated_obj = await self.repository.update(job_role.id, {"status": new_status})
+        update_data = {"status": new_status}
+        if reason:
+            update_data["status_reason"] = reason
+            
+        updated_obj = await self.repository.update(job_role.id, update_data)
         # Fetch with relationships loaded
         return await self.repository.get_by_public_id(updated_obj.public_id)

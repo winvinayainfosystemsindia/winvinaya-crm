@@ -42,13 +42,16 @@ export const jobRoleService = {
 		return response.data;
 	},
 
-	updateStatus: async (publicId: string, status: JobRoleStatus): Promise<JobRole> => {
-		const response = await api.patch<JobRole>(`/placement/job-roles/${publicId}/status?new_status=${status}`);
+	updateStatus: async (publicId: string, status: JobRoleStatus, reason?: string): Promise<JobRole> => {
+		const params = new URLSearchParams({ new_status: status });
+		if (reason) params.append('reason', reason);
+		const response = await api.patch<JobRole>(`/placement/job-roles/${publicId}/status?${params.toString()}`);
 		return response.data;
 	},
 
-	delete: async (publicId: string): Promise<void> => {
-		await api.delete(`/placement/job-roles/${publicId}`);
+	delete: async (publicId: string, reason?: string): Promise<void> => {
+		const params = reason ? `?reason=${encodeURIComponent(reason)}` : '';
+		await api.delete(`/placement/job-roles/${publicId}${params}`);
 	}
 };
 

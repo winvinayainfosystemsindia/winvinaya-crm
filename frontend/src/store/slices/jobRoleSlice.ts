@@ -74,9 +74,9 @@ export const updateJobRole = createAsyncThunk(
 
 export const updateJobRoleStatus = createAsyncThunk(
 	'jobRoles/updateStatus',
-	async ({ publicId, status }: { publicId: string; status: JobRoleStatus }, { rejectWithValue }) => {
+	async ({ publicId, status, reason }: { publicId: string; status: JobRoleStatus; reason?: string }, { rejectWithValue }) => {
 		try {
-			return await jobRoleService.updateStatus(publicId, status);
+			return await jobRoleService.updateStatus(publicId, status, reason);
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.detail || 'Failed to update job role status');
 		}
@@ -85,9 +85,9 @@ export const updateJobRoleStatus = createAsyncThunk(
 
 export const deleteJobRole = createAsyncThunk(
 	'jobRoles/delete',
-	async (publicId: string, { rejectWithValue }) => {
+	async ({ publicId, reason }: { publicId: string; reason?: string }, { rejectWithValue }) => {
 		try {
-			await jobRoleService.delete(publicId);
+			await jobRoleService.delete(publicId, reason);
 			return publicId;
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.detail || 'Failed to delete job role');

@@ -64,6 +64,8 @@ export interface JobRole {
 		username: string;
 	};
 	mappings_count?: number;
+	status_reason?: string;
+	deletion_reason?: string;
 }
 
 export interface JobRoleCreate extends Omit<JobRole, 'id' | 'public_id' | 'created_at' | 'updated_at' | 'company' | 'contact' | 'creator'> { }
