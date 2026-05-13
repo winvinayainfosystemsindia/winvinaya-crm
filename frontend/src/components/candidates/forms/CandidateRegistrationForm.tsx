@@ -172,10 +172,10 @@ const CandidateRegistrationForm: React.FC<CandidateRegistrationFormProps> = ({
                     errors.degrees = 'Please add at least one educational qualification';
                 } else {
                     formData.education_details.degrees.forEach((degree, index) => {
-                        if (!degree.degree_name) errors[`degree_${index}_name`] = 'Degree name is required';
+                        if (!degree.degree_name) errors[`degree_${index}_name`] = 'Qualification is required';
                         if (!degree.specialization) errors[`degree_${index}_specialization`] = 'Specialization is required';
-                        if (!degree.college_name) errors[`degree_${index}_college`] = 'College name is required';
-                        if (!degree.year_of_passing) errors[`degree_${index}_year`] = 'Year of passing is required';
+                        if (!degree.college_name) errors[`degree_${index}_college`] = 'Institution name is required';
+                        if (!degree.year_of_passing) errors[`degree_${index}_year`] = 'Year of completion is required';
                         if (degree.percentage === undefined || degree.percentage === null || degree.percentage < 0 || degree.percentage > 100) {
                             errors[`degree_${index}_percentage`] = 'Percentage must be between 0 and 100';
                         }

@@ -162,7 +162,7 @@ const EducationStep: React.FC<EducationStepProps> = ({
                         size="small"
                         aria-label="Add educational qualification"
                     >
-                        Add Degree
+                        Add Qualification
                     </Button>
                 </Stack>
 
@@ -209,9 +209,9 @@ const EducationStep: React.FC<EducationStepProps> = ({
                                             <TextField
                                                 {...params}
                                                 fullWidth
-                                                label="Degree Name"
+                                                label="Qualification / Education Level"
                                                 variant="outlined"
-                                                placeholder="Select Degree"
+                                                placeholder="Select Qualification"
                                                 required
                                                 error={!!errors[`degree_${index}_name`]}
                                                 helperText={errors[`degree_${index}_name`]}
@@ -235,9 +235,9 @@ const EducationStep: React.FC<EducationStepProps> = ({
                                             <TextField
                                                 {...params}
                                                 fullWidth
-                                                label="Specialization"
+                                                label="Major / Specialization"
                                                 variant="outlined"
-                                                placeholder="e.g., Computer Science"
+                                                placeholder="e.g., Computer Science, SSLC"
                                                 required
                                                 error={!!errors[`degree_${index}_specialization`]}
                                                 helperText={errors[`degree_${index}_specialization`]}
@@ -261,7 +261,7 @@ const EducationStep: React.FC<EducationStepProps> = ({
                                             <TextField
                                                 {...params}
                                                 fullWidth
-                                                label="College/University"
+                                                label="School / College / Institute"
                                                 variant="outlined"
                                                 required
                                                 error={!!errors[`degree_${index}_college`]}
@@ -279,7 +279,7 @@ const EducationStep: React.FC<EducationStepProps> = ({
                                     <TextField
                                         fullWidth
                                         type="number"
-                                        label="Year of Passing"
+                                        label="Year of Completion"
                                         value={degree.year_of_passing}
                                         onChange={handleDegreeChange(index, 'year_of_passing')}
                                         variant="outlined"
@@ -328,7 +328,7 @@ const EducationStep: React.FC<EducationStepProps> = ({
                             }}
                         >
                             <Typography color={errors.degrees ? "error" : "text.secondary"} aria-live="polite">
-                                {errors.degrees || 'No degrees added yet. Click "Add Degree" to add your qualifications.'}
+                                {errors.degrees || 'No qualifications added yet. Click "Add Qualification" to add your education details.'}
                             </Typography>
                         </Paper>
                     )}

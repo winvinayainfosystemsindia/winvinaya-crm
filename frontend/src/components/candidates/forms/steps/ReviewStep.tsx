@@ -149,8 +149,8 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ formData }) => {
 
                     {formData.education_details?.degrees && formData.education_details.degrees.length > 0 ? (
                         <Box>
-                            <Typography variant="subtitle2" gutterBottom>Degrees</Typography>
-                            <List aria-label="List of educational degrees">
+                            <Typography variant="subtitle2" gutterBottom>Educational Qualifications</Typography>
+                            <List aria-label="List of educational qualifications">
                                 {formData.education_details.degrees.map((degree, index) => (
                                     <ListItem key={index} divider={index !== formData.education_details!.degrees.length - 1}>
                                         <ListItemIcon>
