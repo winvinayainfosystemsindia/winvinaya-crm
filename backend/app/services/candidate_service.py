@@ -89,10 +89,10 @@ class CandidateService:
              candidate_data["disability_details"] = candidate_in.disability_details.model_dump()
 
         # Set default registration type in 'other' JSON field
-        if not candidate_data.get("other"):
-            candidate_data["other"] = {"registration_type": "Registered"}
-        elif "registration_type" not in candidate_data["other"]:
-            candidate_data["other"]["registration_type"] = "Registered"
+        other_data = candidate_data.get("other") or {}
+        if not other_data.get("registration_type"):
+            other_data["registration_type"] = "Registered"
+        candidate_data["other"] = other_data
 
         # guardian_details and work_experience are passed as dicts currently
 

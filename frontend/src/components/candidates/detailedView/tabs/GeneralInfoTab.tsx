@@ -1,14 +1,14 @@
 import React from 'react';
-import { 
-	Grid, 
-	Box, 
-	Typography, 
-	useTheme, 
-	alpha, 
-	Chip, 
-	Stack, 
-	Avatar, 
-	Divider 
+import {
+	Grid,
+	Box,
+	Typography,
+	useTheme,
+	alpha,
+	Chip,
+	Stack,
+	Avatar,
+	Divider
 } from '@mui/material';
 import {
 	Person as PersonIcon,
@@ -42,7 +42,7 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({ candidate }) => {
 		const g = gender?.toLowerCase();
 		let icon = <TransgenderIcon />;
 		let color: "primary" | "secondary" | "info" = "info";
-		
+
 		if (g === 'male') {
 			icon = <MaleIcon />;
 			color = "primary";
@@ -52,10 +52,10 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({ candidate }) => {
 		}
 
 		return (
-			<Chip 
-				icon={icon} 
-				label={gender || 'Not specified'} 
-				size="small" 
+			<Chip
+				icon={icon}
+				label={gender || 'Not specified'}
+				size="small"
 				variant="outlined"
 				color={color}
 				sx={{ fontWeight: 600, borderRadius: 1.5 }}
@@ -69,10 +69,10 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({ candidate }) => {
 			<Grid size={{ xs: 12, md: 8 }}>
 				<SectionCard sx={{ border: 'none', boxShadow: 'none', bgcolor: 'transparent', p: 0 }}>
 					{/* Basic Information Section */}
-					<Box sx={{ 
-						mb: 4, 
-						p: 3, 
-						borderRadius: 3, 
+					<Box sx={{
+						mb: 4,
+						p: 3,
+						borderRadius: 3,
 						bgcolor: 'background.paper',
 						border: '1px solid',
 						borderColor: 'divider',
@@ -81,13 +81,13 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({ candidate }) => {
 						<SectionHeader title="Basic Information" icon={<PersonIcon />} />
 						<Grid container spacing={4}>
 							<Grid size={{ xs: 12, sm: 6 }}>
-								<InfoRow 
-									label="Full Name" 
+								<InfoRow
+									label="Full Name"
 									value={
 										<Typography variant="h6" sx={{ fontWeight: 700, color: 'primary.main' }}>
 											{candidate.name}
 										</Typography>
-									} 
+									}
 								/>
 								<Stack spacing={2} sx={{ mt: 1 }}>
 									<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -134,9 +134,9 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({ candidate }) => {
 											<Typography variant="body2" sx={{ fontWeight: 500 }}>{formatDate(candidate.dob)}</Typography>
 										</Box>
 									</Box>
-									<Box sx={{ 
-										p: 2, 
-										borderRadius: 2, 
+									<Box sx={{
+										p: 2,
+										borderRadius: 2,
 										bgcolor: alpha(theme.palette.primary.main, 0.03),
 										border: '1px dashed',
 										borderColor: alpha(theme.palette.primary.main, 0.2),
@@ -168,10 +168,10 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({ candidate }) => {
 					</Box>
 
 					{/* Disability Information Section */}
-					<Box sx={{ 
-						mb: 4, 
-						p: 3, 
-						borderRadius: 3, 
+					<Box sx={{
+						mb: 4,
+						p: 3,
+						borderRadius: 3,
 						bgcolor: 'background.paper',
 						border: '1px solid',
 						borderColor: 'divider',
@@ -179,11 +179,11 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({ candidate }) => {
 					}}>
 						<SectionHeader title="Disability Profile" icon={<AccessibilityIcon />} />
 						<Stack direction="row" spacing={3} alignItems="center">
-							<Box sx={{ 
-								display: 'flex', 
-								flexDirection: 'column', 
-								alignItems: 'center', 
-								p: 2, 
+							<Box sx={{
+								display: 'flex',
+								flexDirection: 'column',
+								alignItems: 'center',
+								p: 2,
 								minWidth: 100,
 								borderRadius: 2,
 								bgcolor: candidate.disability_details?.is_disabled ? alpha(theme.palette.error.main, 0.05) : alpha(theme.palette.success.main, 0.05),
@@ -191,19 +191,24 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({ candidate }) => {
 								borderColor: candidate.disability_details?.is_disabled ? alpha(theme.palette.error.main, 0.1) : alpha(theme.palette.success.main, 0.1),
 							}}>
 								<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, mb: 1 }}>STATUS</Typography>
-								<Chip 
-									label={candidate.disability_details?.is_disabled ? 'Disabled' : 'No Disability'} 
+								<Chip
+									label={candidate.disability_details?.is_disabled ? 'Disabled' : 'No Disability'}
 									color={candidate.disability_details?.is_disabled ? 'error' : 'success'}
 									size="small"
 									sx={{ fontWeight: 700 }}
 								/>
 							</Box>
-							
+
 							{candidate.disability_details?.is_disabled && (
 								<>
 									<Box sx={{ flex: 1 }}>
 										<Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>Type of Disability</Typography>
 										<Typography variant="body1" sx={{ fontWeight: 600 }}>{candidate.disability_details?.disability_type}</Typography>
+										{candidate.other?.disability_sub_category && (
+											<Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5 }}>
+												Sub-category: <strong>{candidate.other.disability_sub_category}</strong>
+											</Typography>
+										)}
 									</Box>
 									<Box sx={{ textAlign: 'right' }}>
 										<Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>Severity</Typography>
@@ -220,9 +225,9 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({ candidate }) => {
 					</Box>
 
 					{/* Academic History Section */}
-					<Box sx={{ 
-						p: 3, 
-						borderRadius: 3, 
+					<Box sx={{
+						p: 3,
+						borderRadius: 3,
 						bgcolor: 'background.paper',
 						border: '1px solid',
 						borderColor: 'divider',
@@ -232,7 +237,7 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({ candidate }) => {
 						{candidate.education_details?.degrees && candidate.education_details.degrees.length > 0 ? (
 							<Stack spacing={2}>
 								{candidate.education_details.degrees.map((edu, index) => (
-									<Box 
+									<Box
 										key={index}
 										sx={{
 											p: 2.5,
@@ -297,9 +302,9 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({ candidate }) => {
 			<Grid size={{ xs: 12, md: 4 }}>
 				<Stack spacing={4}>
 					{/* Guardian Card */}
-					<Box sx={{ 
-						p: 3, 
-						borderRadius: 3, 
+					<Box sx={{
+						p: 3,
+						borderRadius: 3,
 						bgcolor: 'background.paper',
 						border: '1px solid',
 						borderColor: 'divider',
@@ -307,26 +312,16 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({ candidate }) => {
 						position: 'relative',
 						overflow: 'hidden'
 					}}>
-						<Box sx={{ 
-							position: 'absolute', 
-							top: -10, 
-							right: -10, 
-							width: 100, 
-							height: 100, 
-							bgcolor: alpha(theme.palette.secondary.main, 0.03),
-							borderRadius: '50%',
-							zIndex: 0
-						}} />
 						<Box sx={{ position: 'relative', zIndex: 1 }}>
 							<SectionHeader title="Guardian Details" icon={<FamilyIcon />} />
 							<Stack spacing={2.5}>
 								<InfoRow label="Guardian Name" value={candidate.guardian_details?.parent_name} />
 								<Box>
 									<Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', mb: 0.5, display: 'block' }}>Relationship</Typography>
-									<Chip 
-										label={candidate.guardian_details?.relationship || 'Not specified'} 
-										size="small" 
-										color="secondary" 
+									<Chip
+										label={candidate.guardian_details?.relationship || 'Not specified'}
+										size="small"
+										color="secondary"
 										variant="outlined"
 										sx={{ borderRadius: 1.5, fontWeight: 600 }}
 									/>
@@ -344,29 +339,54 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({ candidate }) => {
 						</Box>
 					</Box>
 
+					{/* Placement & Batch Information (Imported Data) */}
+					{candidate.other && (
+						<Box sx={{
+							p: 3,
+							borderRadius: 3,
+							bgcolor: 'background.paper',
+							border: '1px solid',
+							borderColor: 'divider',
+							boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
+						}}>
+							<SectionHeader title="Historical & Batch Info" icon={<VerifiedIcon />} />
+							<Stack spacing={2}>
+								{candidate.other.batch_year && <InfoRow label="Batch Year" value={candidate.other.batch_year} />}
+								{candidate.other.donor && <InfoRow label="Donor" value={candidate.other.donor} />}
+								{candidate.other.status_of_beneficiary && <InfoRow label="Beneficiary Status" value={candidate.other.status_of_beneficiary} />}
+
+								<Divider sx={{ my: 1 }} />
+
+								{candidate.other.company_placed && <InfoRow label="Placed At" value={candidate.other.company_placed} />}
+								{candidate.other.designation && <InfoRow label="Designation" value={candidate.other.designation} />}
+								{candidate.other.ctc && <InfoRow label="CTC/Salary" value={candidate.other.ctc} />}
+								{candidate.other.date_of_joining && <InfoRow label="Joining Date" value={candidate.other.date_of_joining} />}
+							</Stack>
+						</Box>
+					)}
+
 					{/* Experience Card */}
-					<Box sx={{ 
-						p: 3, 
-						borderRadius: 3, 
+					<Box sx={{
+						p: 3,
+						borderRadius: 3,
 						bgcolor: 'background.paper',
 						border: '1px solid',
 						borderColor: 'divider',
 						boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
-						background: `linear-gradient(135deg, ${theme.palette.background.paper} 0%, ${alpha(theme.palette.primary.main, 0.02)} 100%)`
 					}}>
 						<SectionHeader title="Professional Profile" icon={<WorkIcon />} />
 						<Stack spacing={3}>
 							<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 								<Typography variant="body2" sx={{ fontWeight: 600 }}>Status</Typography>
-								<Chip 
-									label={candidate.work_experience?.is_experienced ? 'EXPERIENCED' : 'FRESHER'} 
+								<Chip
+									label={candidate.work_experience?.is_experienced ? 'EXPERIENCED' : 'FRESHER'}
 									color={candidate.work_experience?.is_experienced ? 'primary' : 'default'}
 									variant={candidate.work_experience?.is_experienced ? 'filled' : 'outlined'}
 									size="small"
 									sx={{ fontWeight: 800, borderRadius: 1 }}
 								/>
 							</Box>
-							
+
 							{candidate.work_experience?.is_experienced && (
 								<>
 									<Divider />
@@ -381,9 +401,9 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({ candidate }) => {
 											<Typography variant="caption" color="text.secondary">Total professional tenure</Typography>
 										</Box>
 									</Box>
-									<Box sx={{ 
-										p: 1.5, 
-										borderRadius: 2, 
+									<Box sx={{
+										p: 1.5,
+										borderRadius: 2,
 										bgcolor: candidate.work_experience?.currently_employed ? alpha(theme.palette.success.main, 0.05) : alpha(theme.palette.info.main, 0.05),
 										border: '1px solid',
 										borderColor: candidate.work_experience?.currently_employed ? alpha(theme.palette.success.main, 0.1) : alpha(theme.palette.info.main, 0.1),

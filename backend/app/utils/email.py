@@ -94,6 +94,12 @@ async def send_email(
 async def send_registration_emails(candidate: Any):
     """Sends both candidate and sourcing team registration confirmation emails"""
     
+    # Skip for bulk Excel imports
+    other = getattr(candidate, 'other', {}) or {}
+    if other.get('registration_type') == 'Excel':
+        logger.info(f"Skipping registration email for Excel import: {candidate.name}")
+        return
+        
     try:
         # 1. Send to Candidate
         candidate_subject = "Welcome to WinVinaya - Registration Successful"
