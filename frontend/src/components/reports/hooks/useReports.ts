@@ -104,6 +104,7 @@ export const useReports = () => {
 			year_of_experience: filters.year_of_experience ? `${filters.year_of_experience.min || 0}-${filters.year_of_experience.max || 50}` : undefined,
 			is_experienced: filters.is_experienced === 'true' ? true : filters.is_experienced === 'false' ? false : undefined,
 			currently_employed: filters.currently_employed === 'true' ? true : filters.currently_employed === 'false' ? false : undefined,
+			registration_type: filters.registration_type,
 			is_global: true,
 			extraFilters: Object.keys(filters)
 				.filter(key => key.startsWith('screening_others.') || key.startsWith('counseling_others.'))
@@ -218,6 +219,7 @@ export const useReports = () => {
 					filters.year_of_passing?.join(','),
 					filters.year_of_experience ? `${filters.year_of_experience.min || 0}-${filters.year_of_experience.max || 50}` : undefined,
 					filters.currently_employed === 'true' ? true : filters.currently_employed === 'false' ? false : undefined,
+					filters.registration_type,
 					Object.keys(filters)
 						.filter(key => key.startsWith('screening_others.') || key.startsWith('counseling_others.'))
 						.reduce((acc, key) => {

@@ -425,6 +425,7 @@ class CandidateService:
                 {"id": "disability_details.disability_type", "label": "Disability"},
                 {"id": "screening.status", "label": "Screening Status"},
                 {"id": "counseling.status", "label": "Counseling Status"},
+                {"id": "registration_type", "label": "Registration Source"},
                 {"id": "created_at", "label": "Registration Date"}
             ]
 
@@ -446,7 +447,9 @@ class CandidateService:
                 
                 try:
                     # Specific mappings for common IDs from constants.ts and CandidateListResponse
-                    if col_id == "disability_type":
+                    if col_id == "registration_type":
+                        val = (c.other or {}).get("registration_type", "Registered")
+                    elif col_id == "disability_type":
                         val = (c.disability_details or {}).get("disability_type", "")
                     elif col_id == "disability_percentage":
                         val = (c.disability_details or {}).get("disability_percentage", "")

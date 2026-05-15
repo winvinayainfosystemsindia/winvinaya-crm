@@ -129,7 +129,7 @@ const CandidateTableRow: React.FC<CandidateTableRowProps> = ({
 					}
 				</Typography>
 			</TableCell>
-			<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+			<TableCell>
 				<Typography variant="body2" color="text.secondary">
 					{candidate.registration_type || '-'}
 				</Typography>

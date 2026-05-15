@@ -38,6 +38,7 @@ export const candidateService = {
 		yearOfPassing?: string,
 		yearOfExperience?: string,
 		currentlyEmployed?: boolean,
+		registrationType?: string,
 		extraFilters?: Record<string, string>,
 		isGlobal: boolean = false
 	): Promise<CandidatePaginatedResponse> => {
@@ -56,7 +57,8 @@ export const candidateService = {
 			gender ? `&gender=${encodeURIComponent(gender)}` : '',
 			yearOfPassing ? `&year_of_passing=${encodeURIComponent(yearOfPassing)}` : '',
 			yearOfExperience ? `&year_of_experience=${encodeURIComponent(yearOfExperience)}` : '',
-			currentlyEmployed !== undefined ? `&currently_employed=${currentlyEmployed}` : ''
+			currentlyEmployed !== undefined ? `&currently_employed=${currentlyEmployed}` : '',
+			registrationType ? `&registration_type=${encodeURIComponent(registrationType)}` : ''
 		].join('');
 
 		// Append dynamic (screening_others.* / counseling_others.*) filters
@@ -206,6 +208,7 @@ export const candidateService = {
 		cities: string[];
 		counseling_statuses: string[];
 		screening_statuses: string[];
+		registration_types: string[];
 	}> => {
 		const response = await api.get('/candidates/filter-options');
 		return response.data;
@@ -255,6 +258,7 @@ export const candidateService = {
 		yearOfPassing?: string,
 		yearOfExperience?: string,
 		currentlyEmployed?: boolean,
+		registrationType?: string,
 		extraFilters?: Record<string, string>,
 		isGlobal: boolean = false,
 		columns?: string
@@ -275,7 +279,8 @@ export const candidateService = {
 			gender ? `&gender=${encodeURIComponent(gender)}` : '',
 			yearOfPassing ? `&year_of_passing=${encodeURIComponent(yearOfPassing)}` : '',
 			yearOfExperience ? `&year_of_experience=${encodeURIComponent(yearOfExperience)}` : '',
-			currentlyEmployed !== undefined ? `&currently_employed=${currentlyEmployed}` : ''
+			currentlyEmployed !== undefined ? `&currently_employed=${currentlyEmployed}` : '',
+			registrationType ? `&registration_type=${encodeURIComponent(registrationType)}` : ''
 		].join('');
 
 		const extraParams = extraFilters

@@ -999,6 +999,19 @@ class CandidateRepository(BaseRepository[Candidate]):
             result_cities = await self.db.execute(stmt_cities)
             cities = sorted([city for city in result_cities.scalars().all() if city])
             
+            # Get unique registration types
+            stmt_reg_types = select(Candidate.other).where(
+                Candidate.other.isnot(None),
+                Candidate.is_deleted == False
+            )
+            result_reg_types = await self.db.execute(stmt_reg_types)
+            registration_types = set()
+            for row in result_reg_types.scalars().all():
+                if row and isinstance(row, dict):
+                    reg_type = row.get('registration_type')
+                    if reg_type:
+                        registration_types.add(reg_type)
+            
             # Get unique screening statuses
             stmt_screening = select(func.distinct(CandidateScreening.status)).where(
                 CandidateScreening.status.isnot(None)
@@ -1044,7 +1057,8 @@ class CandidateRepository(BaseRepository[Candidate]):
                 "screening_statuses": sorted(screening_statuses),
                 "disability_percentages": sorted(list(disability_percentages)),
                 "screening_reasons": sorted(list(screening_reasons)),
-                "years_of_passing": sorted(list(years_of_passing), reverse=True)
+                "years_of_passing": sorted(list(years_of_passing), reverse=True),
+                "registration_types": sorted(list(registration_types))
             }
         except Exception as e:
             import traceback

@@ -104,6 +104,7 @@ export const fetchCandidates = createAsyncThunk(
 			year_of_passing?: string;
 			year_of_experience?: string;
 			currently_employed?: boolean;
+			registration_type?: string;
 			extraFilters?: Record<string, string>;
 			is_global?: boolean;
 		} | void = {},
@@ -128,6 +129,7 @@ export const fetchCandidates = createAsyncThunk(
 				year_of_passing,
 				year_of_experience,
 				currently_employed,
+				registration_type,
 				extraFilters,
 				is_global
 			} = (params || {}) as any;
@@ -149,6 +151,7 @@ export const fetchCandidates = createAsyncThunk(
 				year_of_passing,
 				year_of_experience,
 				currently_employed,
+				registration_type,
 				extraFilters,
 				is_global
 			);

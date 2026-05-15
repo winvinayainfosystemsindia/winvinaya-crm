@@ -23,14 +23,16 @@ export const useCandidateTable = () => {
 		disability_type: [] as string[],
 		education_level: [] as string[],
 		city: [] as string[],
-		counseling_status: '' as string
+		counseling_status: '' as string,
+		registration_type: [] as string[]
 	});
 	const [filterOptions, setFilterOptions] = useState<{
 		disability_types: string[];
 		education_levels: string[];
 		cities: string[];
 		counseling_statuses: string[];
-	}>({ disability_types: [], education_levels: [], cities: [], counseling_statuses: [] });
+		registration_types: string[];
+	}>({ disability_types: [], education_levels: [], cities: [], counseling_statuses: [], registration_types: [] });
 
 	// Assignment state
 	const [assignDialogOpen, setAssignDialogOpen] = useState(false);
@@ -66,6 +68,9 @@ export const useCandidateTable = () => {
 		}
 		if (filters.counseling_status) {
 			filterParams.counseling_status = filters.counseling_status;
+		}
+		if (filters.registration_type.length > 0) {
+			filterParams.registration_type = filters.registration_type.join(',');
 		}
 
 		dispatch(fetchCandidates(filterParams));
@@ -129,7 +134,8 @@ export const useCandidateTable = () => {
 			disability_type: [],
 			education_level: [],
 			city: [],
-			counseling_status: ''
+			counseling_status: '',
+			registration_type: []
 		});
 		setPage(0);
 	};

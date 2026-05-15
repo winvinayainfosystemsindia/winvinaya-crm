@@ -5,6 +5,7 @@ export const getCandidateFilterFields = (
 		disability_types: string[];
 		education_levels: string[];
 		cities: string[];
+		registration_types: string[];
 	}
 ): FilterField[] => {
 	const fields: FilterField[] = [
@@ -25,6 +26,12 @@ export const getCandidateFilterFields = (
 			label: 'Location (City)',
 			type: 'multi-select',
 			options: (filterOptions.cities || []).map(val => ({ value: val, label: val }))
+		},
+		{
+			key: 'registration_type',
+			label: 'Registration Source',
+			type: 'multi-select',
+			options: (filterOptions.registration_types || []).map(val => ({ value: val, label: val }))
 		}
 	];
 

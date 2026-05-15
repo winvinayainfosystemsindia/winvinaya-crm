@@ -60,7 +60,8 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ onViewCandidate }) => {
 	const activeFilterCount = (
 		filters.disability_type.length +
 		filters.education_level.length +
-		filters.city.length
+		filters.city.length +
+		filters.registration_type.length
 	);
 
 	const filterFields = getCandidateFilterFields(filterOptions);
