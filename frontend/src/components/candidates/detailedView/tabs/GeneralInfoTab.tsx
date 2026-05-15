@@ -151,6 +151,17 @@ const GeneralInfoTab: React.FC<GeneralInfoTabProps> = ({ candidate }) => {
 											<Typography variant="caption" color="text.secondary">Pincode: {candidate.pincode}</Typography>
 										</Box>
 									</Box>
+									<Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+										<Avatar sx={{ bgcolor: alpha(theme.palette.warning.main, 0.1), color: 'warning.dark', width: 32, height: 32 }}>
+											<VerifiedIcon sx={{ fontSize: 18 }} />
+										</Avatar>
+										<Box>
+											<Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>Registration Source</Typography>
+											<Typography variant="body2" sx={{ fontWeight: 600, color: 'warning.dark' }}>
+												{candidate.other?.registration_type || 'Self Registered'}
+											</Typography>
+										</Box>
+									</Box>
 								</Stack>
 							</Grid>
 						</Grid>

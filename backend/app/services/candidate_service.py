@@ -88,6 +88,12 @@ class CandidateService:
         if candidate_in.disability_details:
              candidate_data["disability_details"] = candidate_in.disability_details.model_dump()
 
+        # Set default registration type in 'other' JSON field
+        if not candidate_data.get("other"):
+            candidate_data["other"] = {"registration_type": "Registered"}
+        elif "registration_type" not in candidate_data["other"]:
+            candidate_data["other"]["registration_type"] = "Registered"
+
         # guardian_details and work_experience are passed as dicts currently
 
         # Build candidate object (UUID is automatically generated)
@@ -130,6 +136,7 @@ class CandidateService:
         year_of_experience: Optional[str] = None,
         currently_employed: Optional[bool] = None,
         extra_filters: Optional[dict] = None,
+        registration_type: Optional[str] = None,
         current_user: Optional[User] = None,
         is_global: bool = False
     ) -> dict:
@@ -159,7 +166,8 @@ class CandidateService:
             year_of_experience=year_of_experience,
             currently_employed=currently_employed,
             assigned_to_id=assigned_to_id,
-            extra_filters=extra_filters
+            extra_filters=extra_filters,
+            registration_type=registration_type
         )
         return {"items": items, "total": total}
 

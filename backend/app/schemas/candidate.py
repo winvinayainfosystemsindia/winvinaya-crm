@@ -57,6 +57,7 @@ class CandidateBase(BaseModel):
     work_experience: Optional[WorkExperience] = None
     education_details: Optional[EducationDetails] = None
     disability_details: Optional[DisabilityDetails] = None
+    other: Optional[dict] = None
 
 
 class CandidateCreate(CandidateBase):
@@ -210,6 +211,7 @@ class CandidateListResponse(BaseModel):
     year_of_experience: Optional[str] = None
     currently_employed: bool = False
     year_of_passing: Optional[int] = None
+    registration_type: Optional[str] = None
     
     @model_validator(mode='before')
     @classmethod
@@ -240,6 +242,7 @@ class CandidateListResponse(BaseModel):
         assigned_to_name = None
         assigned_to = []
         remarks = None
+        registration_type = None
         
         screening_data = None
         counseling_data = None
@@ -406,6 +409,11 @@ class CandidateListResponse(BaseModel):
                 uname = get_val(user, 'username')
                 assigned_to_name = fname if fname else uname
 
+        # 6.5 Registration Type (from other JSON)
+        other = get_val(data, 'other')
+        if other and isinstance(other, dict):
+            registration_type = other.get('registration_type')
+
         # 7. Build response dict
         if isinstance(data, dict):
             data.update({
@@ -439,7 +447,8 @@ class CandidateListResponse(BaseModel):
                 'currently_employed': currently_employed,
                 'year_of_passing': year_of_passing,
                 'assigned_to_id': assigned_to_id,
-                'assigned_to_name': assigned_to_name
+                'assigned_to_name': assigned_to_name,
+                'registration_type': registration_type
             })
             return data
             
@@ -488,7 +497,8 @@ class CandidateListResponse(BaseModel):
             'currently_employed': currently_employed,
             'year_of_passing': year_of_passing,
             'assigned_to_id': assigned_to_id,
-            'assigned_to_name': assigned_to_name
+            'assigned_to_name': assigned_to_name,
+            'registration_type': registration_type
         }
 
 

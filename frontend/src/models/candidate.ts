@@ -174,6 +174,7 @@ export interface Candidate {
 	state: string;
 	created_at: string;
 	updated_at: string;
+	other?: Record<string, any>;
 
 	// Optional nested relationships (from with_details=true)
 	screening?: CandidateScreening;
@@ -228,6 +229,7 @@ export interface CandidateListItem {
 	year_of_passing?: number;
 	assigned_to_id?: number;
 	assigned_to_name?: string;
+	registration_type?: string;
 }
 
 
@@ -249,6 +251,7 @@ export interface CandidateCheck {
 
 export interface CandidateUpdate {
 	name?: string;
+	other?: Record<string, any>;
 	gender?: string;
 	email?: string;
 	phone?: string;

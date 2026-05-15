@@ -131,6 +131,11 @@ const CandidateTableRow: React.FC<CandidateTableRowProps> = ({
 			</TableCell>
 			<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
 				<Typography variant="body2" color="text.secondary">
+					{candidate.registration_type || '-'}
+				</Typography>
+			</TableCell>
+			<TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+				<Typography variant="body2" color="text.secondary">
 					{formatDate(candidate.created_at)}
 				</Typography>
 			</TableCell>

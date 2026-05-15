@@ -101,6 +101,7 @@ async def get_candidates(
     year_of_passing: str = None, # Comma-separated list
     year_of_experience: str = None,
     currently_employed: bool = None,
+    registration_type: str = None,
     is_global: bool = False,
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
     db: AsyncSession = Depends(get_db)
@@ -144,6 +145,7 @@ async def get_candidates(
         year_of_experience=year_of_experience,
         currently_employed=currently_employed,
         extra_filters=extra_filters,
+        registration_type=registration_type,
         current_user=current_user,
         is_global=is_global
     )

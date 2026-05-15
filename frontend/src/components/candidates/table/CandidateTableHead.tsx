@@ -9,6 +9,7 @@ export const candidateColumns: ColumnDefinition<CandidateListItem>[] = [
 	{ id: 'city', label: 'Location', sortable: true, hideOnMobile: true },
 	{ id: 'assigned_to_name', label: 'Assigned To', sortable: true, hideOnMobile: true },
 	{ id: 'disability_type', label: 'Disability', sortable: true, hideOnMobile: false },
+	{ id: 'registration_type', label: 'Reg. Type', sortable: true, hideOnMobile: true },
 	{ id: 'created_at', label: 'Date', sortable: true, hideOnMobile: true },
 	{ id: 'actions', label: 'Actions', sortable: false, align: 'right' }
 ];

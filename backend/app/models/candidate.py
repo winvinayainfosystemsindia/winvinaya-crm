@@ -52,6 +52,7 @@ class Candidate(BaseModel):
     work_experience: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     education_details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     disability_details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    other: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     
     # Relationships (filled by trainers)
     screening: Mapped[CandidateScreening] = relationship(

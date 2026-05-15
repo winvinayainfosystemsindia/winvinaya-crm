@@ -74,7 +74,8 @@ class CandidateRepository(BaseRepository[Candidate]):
         year_of_experience: Optional[str] = None,
         currently_employed: Optional[bool] = None,
         assigned_to_id: Optional[int] = None,
-        extra_filters: Optional[dict] = None
+        extra_filters: Optional[dict] = None,
+        registration_type: Optional[str] = None
     ):
         """Get multiples candidates with counseling loaded for list view, with optional search filtering, category filters, and sorting"""
         from sqlalchemy import or_, and_
@@ -169,6 +170,10 @@ class CandidateRepository(BaseRepository[Candidate]):
         if gender:
             stmt = stmt.where(Candidate.gender == gender)
             count_stmt = count_stmt.where(Candidate.gender == gender)
+
+        if registration_type:
+            stmt = stmt.where(Candidate.other['registration_type'].as_string() == registration_type)
+            count_stmt = count_stmt.where(Candidate.other['registration_type'].as_string() == registration_type)
 
         if extra_filters:
             # Handle dynamic JSON filters for screening/counseling 'others' field

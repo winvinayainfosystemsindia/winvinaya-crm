@@ -105,6 +105,10 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ formData }) => {
                             <Typography variant="body2" color="text.secondary">Pincode</Typography>
                             <Typography variant="body1">{formData.pincode}</Typography>
                         </Grid>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                            <Typography variant="body2" color="text.secondary">Registration Type</Typography>
+                            <Typography variant="body1">{formData.other?.registration_type || 'Registered'}</Typography>
+                        </Grid>
                     </Grid>
                 </Paper>
 
