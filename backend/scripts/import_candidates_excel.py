@@ -70,10 +70,18 @@ def import_candidates(token):
     processed_emails = set()
     
     for row_idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
-        name = row[1]
+        # Safety check for empty rows
+        if not any(row):
+            continue
+            
+        # Ensure row has enough columns (pad with None if needed)
+        row = list(row) + [None] * (23 - len(row))
+        
+        name = str(row[1]).strip() if row[1] else None
         email = str(row[5]).strip() if row[5] else None
         
         if not name or not email:
+            print(f"  [SKIP] Row {row_idx}: Missing name or email.")
             continue
 
         if email in processed_emails:
@@ -83,33 +91,33 @@ def import_candidates(token):
             
         processed_emails.add(email)
             
-        gender = str(row[2]).lower() if row[2] else "male"
+        gender = str(row[2]).strip().lower() if row[2] else "male"
         if "female" in gender:
             gender = "female"
         else:
             gender = "male"
             
-        disability_cat = row[3]
-        disability_sub_cat = row[4]
-        contact = str(row[6]) if row[6] else ""
+        disability_cat = str(row[3]).strip() if row[3] else ""
+        disability_sub_cat = str(row[4]).strip() if row[4] else ""
+        contact = str(row[6]).strip() if row[6] else ""
         dob = format_date(row[7])
-        state = row[8]
-        district = row[9]
-        city = row[10]
-        pincode = str(row[11]) if row[11] else ""
+        state = str(row[8]).strip() if row[8] else "Unknown"
+        district = str(row[9]).strip() if row[9] else "Unknown"
+        city = str(row[10]).strip() if row[10] else "Unknown"
+        pincode = str(row[11]).strip() if row[11] else ""
         passing_year = row[12]
-        qualification = row[13]
-        college = row[14]
-        primary_skills = row[15]
+        qualification = str(row[13]).strip() if row[13] else "Degree"
+        college = str(row[14]).strip() if row[14] else "Other"
+        primary_skills = str(row[15]).strip() if row[15] else ""
         
         # Placement info
-        company = row[16]
+        company = str(row[16]).strip() if row[16] else ""
         joining_date = format_date(row[17])
-        designation = row[18]
-        ctc = row[19]
-        status_beneficiary = row[20]
-        donor = row[21]
-        batch_year = row[22]
+        designation = str(row[18]).strip() if row[18] else ""
+        ctc = str(row[19]).strip() if row[19] else ""
+        status_beneficiary = str(row[20]).strip() if row[20] else ""
+        donor = str(row[21]).strip() if row[21] else ""
+        batch_year = str(row[22]).strip() if row[22] else ""
 
         print(f"\nProcessing row {row_idx}: {name} ({email})")
 
@@ -127,9 +135,10 @@ def import_candidates(token):
             "district": district or "Unknown",
             "state": state or "Unknown",
             "disability_details": {
-                "is_disabled": True if disability_cat else False,
-                "disability_type": disability_cat,
-                "disability_percentage": 40 # Default minimum
+                "is_disabled": True if disability_cat and disability_cat.lower() != "none" else False,
+                "disability_type": disability_cat or "",
+                "disability_percentage": 40 if disability_cat and disability_cat.lower() != "none" else 0,
+                "disability_sub_category": disability_sub_cat or ""
             },
             "education_details": {
                 "degrees": [
