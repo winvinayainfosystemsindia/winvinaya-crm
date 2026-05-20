@@ -25,8 +25,8 @@ def rate_limit_low():
 
 
 def rate_limit_medium():
-    """Medium rate limit for normal operations (30/min, 500/hour)"""
-    return limiter.limit("30/minute;500/hour")
+    """Medium rate limit for normal operations (30/min, 5000/hour)"""
+    return limiter.limit("30/minute;5000/hour")
 
 
 def rate_limit_high():

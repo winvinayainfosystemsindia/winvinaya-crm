@@ -6,7 +6,7 @@ import sys
 import os
 
 # Configuration
-BASE_URL = "http://127.0.0.1:8000/api/v1"
+BASE_URL = "https://dev-crm.winvinaya.com/api/v1"
 EXCEL_FILE = r"C:\\Users\\daran\\Downloads\\candidates_pool_cleaned.xlsx"  # Change this to your file name
 
 # Credentials provided by user
@@ -147,7 +147,7 @@ def import_candidates(token):
                         "specialization": "General",
                         "college_name": college or "Other",
                         "year_of_passing": int(passing_year) if str(passing_year).isdigit() else 2020,
-                        "percentage": 0.0
+                        "percentage": 50.0
                     }
                 ]
             },
@@ -166,27 +166,33 @@ def import_candidates(token):
 
         def make_request(method, url, **kwargs):
             """Helper to handle rate limits and retries"""
-            max_retries = 5
+            max_retries = 100 # High retry count to survive long waits
             for attempt in range(max_retries):
                 try:
                     resp = requests.request(method, url, timeout=30, **kwargs)
                     if resp.status_code == 429:
-                        wait_time = (attempt + 1) * 10
-                        print(f"  [WAIT] Rate limit hit. Waiting {wait_time}s...")
+                        retry_after = resp.headers.get("Retry-After")
+                        if retry_after and retry_after.isdigit():
+                            wait_time = int(retry_after) + 1
+                        else:
+                            wait_time = 60 # Default wait 1 minute if no header
+                        print(f"  [WAIT] Rate limit hit. Waiting {wait_time}s (Attempt {attempt+1}/{max_retries})...")
                         import time
                         time.sleep(wait_time)
                         continue
                     return resp
                 except Exception as e:
-                    print(f"  [ERROR] Request failed: {e}")
+                    print(f"  [ERROR] Request failed (attempt {attempt+1}): {e}")
+                    import traceback
+                    traceback.print_exc()
                     import time
                     time.sleep(2)
             return None
 
         # 1. Register Candidate
-        resp = make_request("POST", f"{BASE_URL}/candidates/", json=candidate_payload)
-        if not resp or resp.status_code != 201:
-            print(f"  [ERROR] Candidate creation failed: {resp.status_code if resp else 'N/A'} - {resp.text if resp else ''}")
+        resp = make_request("POST", f"{BASE_URL}/candidates/", json=candidate_payload, headers=headers)
+        if resp is None or resp.status_code != 201:
+            print(f"  [ERROR] Candidate creation failed: {resp.status_code if resp is not None else 'N/A'} - {resp.text if resp is not None else ''}")
             fail_count += 1
             continue
         
@@ -195,8 +201,16 @@ def import_candidates(token):
         print(f"  [SUCCESS] Candidate created. Public ID: {public_id}")
 
         # 2. Create Screening Record
+        tech_skills = []
+        if primary_skills:
+            tech_skills = [s.strip() for s in str(primary_skills).split(',') if s.strip()]
+            
         screening_payload = {
             "status": "Completed",
+            "skills": {
+                "technical_skills": tech_skills,
+                "soft_skills": []
+            },
             "others": {
                 "comments": f"Imported from Excel. Status: {status_beneficiary}",
                 "source_of_info": "WinVinaya Trained",
@@ -222,7 +236,7 @@ def import_candidates(token):
 
         counseling_payload = {
             "status": "selected",
-            "skills_taught": skills_list,
+            "skills": skills_list,
             "others": {
                 "comments": "Imported from Excel with skill history."
             }

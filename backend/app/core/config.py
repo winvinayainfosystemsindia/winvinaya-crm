@@ -71,7 +71,7 @@ class Settings(BaseSettings):
     # Rate Limiting
     RATE_LIMIT_ENABLED: bool = True
     RATE_LIMIT_PER_MINUTE: int = 60
-    RATE_LIMIT_PER_HOUR: int = 1000
+    RATE_LIMIT_PER_HOUR: int = 10000
     
     # Logging
     LOG_LEVEL: str = "INFO"
