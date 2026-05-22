@@ -99,8 +99,15 @@ const DataTable = <T,>({
 						onSelectAllClick={onSelectAllClick}
 						rowCount={data.length}
 					/>
-					<TableBody aria-busy={loading}>
-						{loading ? (
+					<TableBody 
+						aria-busy={loading}
+						sx={{
+							opacity: loading ? 0.65 : 1,
+							transition: 'opacity 0.2s',
+							pointerEvents: loading ? 'none' : 'auto'
+						}}
+					>
+						{loading && data.length === 0 ? (
 							<DataTableSkeleton
 								columns={visibleColumns}
 								rowsPerPage={rowsPerPage || 5}
