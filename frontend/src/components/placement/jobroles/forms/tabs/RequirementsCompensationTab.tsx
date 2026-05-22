@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSnackbar } from 'notistack';
 import {
 	Grid,
 	TextField,
@@ -41,6 +42,7 @@ const RequirementsCompensationTab: React.FC<RequirementsCompensationTabProps> = 
 	highlightMissing
 }) => {
 	const { awsPanel, helperBox } = awsStyles;
+	const { enqueueSnackbar } = useSnackbar();
 
 	const getFieldStyle = (value: any, isRequired: boolean = false) => {
 		const isEmpty = Array.isArray(value) ? value.length === 0 : !value;
@@ -183,7 +185,9 @@ const RequirementsCompensationTab: React.FC<RequirementsCompensationTabProps> = 
 													return prev;
 												});
 												return newSkill.name;
-											} catch (e) {
+											} catch (e: any) {
+												const errMsg = e.response?.data?.detail || 'Failed to create skill';
+												enqueueSnackbar(errMsg, { variant: 'error' });
 												return val.inputValue;
 											}
 										}

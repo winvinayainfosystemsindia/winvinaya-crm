@@ -71,8 +71,8 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 			onUpdateField('skills', activeField, pendingNewValues);
 			toast.success(`Skill "${newSkillName}" added to master database`);
 			setConfirmDialogOpen(false);
-		} catch (error) {
-			toast.error('Failed to add skill to database');
+		} catch (error: any) {
+			toast.error(error || 'Failed to add skill to database');
 		} finally {
 			setNewSkillName('');
 			setActiveField(null);

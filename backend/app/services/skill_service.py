@@ -1,11 +1,18 @@
 """Skill Service"""
 
+import json
+import re
+import logging
 from typing import List, Optional
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.skill import Skill
 from app.schemas.skill import SkillCreate
 from app.repositories.skill_repository import SkillRepository
+from app.ai.providers import get_llm_provider
+from app.ai.prompts.loader import loader
+
+logger = logging.getLogger(__name__)
 
 
 class SkillService:
@@ -14,9 +21,71 @@ class SkillService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.repository = SkillRepository(db)
+
+    async def _check_ai_duplicate(self, name: str) -> None:
+        """
+        Check if the proposed skill name is a semantic duplicate (alias, variation,
+        abbreviation, or synonym) of any existing skill in the master table.
+        """
+        try:
+            # 1. Fetch all master skill names (up to a reasonable limit)
+            master_skills = await self.repository.get_all_alphabetical(limit=2000)
+            existing_names = [s.name for s in master_skills]
+            
+            if not existing_names:
+                return
+
+            # 2. Get the active LLM provider
+            provider = await get_llm_provider(self.db)
+            
+            # 3. Formulate prompts (Loaded from template)
+            system_prompt = loader.render("system/skill_deduplication.md")
+            
+            user_message = f"Existing Skills: {existing_names}\nProposed New Skill: '{name}'"
+            
+            # 4. Call LLM
+            response = await provider.complete(
+                system_prompt=system_prompt,
+                user_message=user_message,
+                temperature=0.1
+            )
+            
+            # 5. Parse output
+            content = response.content.strip()
+            json_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', content, re.DOTALL)
+            if json_match:
+                parsed = json.loads(json_match.group(1).strip())
+            else:
+                first_brace = content.find('{')
+                last_brace = content.rfind('}')
+                if first_brace != -1 and last_brace != -1:
+                    parsed = json.loads(content[first_brace:last_brace+1])
+                else:
+                    parsed = json.loads(content)
+            
+            # 6. Check results
+            if parsed.get("is_duplicate"):
+                matched_skill = parsed.get("matched_skill")
+                reason = parsed.get("reason")
+                matched = matched_skill or "an existing skill"
+                explanation = f" ({reason})" if reason else ""
+                detail = f"A similar skill '{matched}' already exists in the system. '{name}' is identified as a duplicate/alias of it.{explanation}"
+                
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=detail
+                )
+                
+        except HTTPException:
+            # Re-raise standard HTTPExceptions (like the 400 Bad Request duplicate error)
+            raise
+        except Exception as e:
+            # Fall back gracefully to database check in case of LLM outages, rate limits, or parse errors
+            logger.warning(f"AI duplicate skill check failed gracefully, proceeding with standard exact match check. Error: {str(e)}")
+            return
         
     async def create_skill(self, skill_in: SkillCreate, created_by_id: Optional[int] = None) -> Skill:
-        """Create a new skill if it doesn't exist (case-insensitive check)"""
+        """Create a new skill if it doesn't exist (case-insensitive check and AI duplicate check)"""
         # Normalize name (Trim)
         name = skill_in.name.strip()
         
@@ -24,6 +93,9 @@ class SkillService:
         existing_skill = await self.repository.get_by_name(name)
         if existing_skill:
             return existing_skill # Return existing instead of error to handle "Add new" gracefully
+            
+        # Run AI semantic duplicate check
+        await self._check_ai_duplicate(name)
             
         skill_data = skill_in.model_dump()
         skill_data["name"] = name # Use normalized name

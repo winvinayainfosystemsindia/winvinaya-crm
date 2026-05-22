@@ -63,8 +63,9 @@ const SkillsSection: React.FC = () => {
 			enqueueSnackbar('Skill added successfully', { variant: 'success' });
 			setNewSkillName('');
 			loadSkills();
-		} catch (error) {
-			enqueueSnackbar('Failed to add skill', { variant: 'error' });
+		} catch (error: any) {
+			const errMsg = error.response?.data?.detail || 'Failed to add skill';
+			enqueueSnackbar(errMsg, { variant: 'error' });
 		} finally {
 			setAdding(false);
 		}

@@ -86,8 +86,8 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 			onSkillChange(pendingIndex, 'name', newSkillName);
 			toast.success(`Skill "${newSkillName}" added to master database`);
 			setConfirmAddSkillDialogOpen(false);
-		} catch (error) {
-			toast.error('Failed to add skill to database');
+		} catch (error: any) {
+			toast.error(error || 'Failed to add skill to database');
 		} finally {
 			setNewSkillName('');
 			setPendingIndex(null);
