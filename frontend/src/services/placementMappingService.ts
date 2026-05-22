@@ -22,9 +22,24 @@ export interface CandidateMatchResult {
     other_mappings: string[];
     is_already_mapped: boolean;
     year_of_experience?: string;
-    status: string; // New field
-    mapping_id?: number; // New field
+    status: string;
+    mapping_id?: number;
     source_of_info?: string;
+    // AI Scoring fields
+    ai_explanation?: string;
+    ai_recommendation?: string;
+    score_source?: string; // 'ai' | 'rule_based'
+}
+
+export interface AIScoreResultItem {
+    score?: number | null;
+    explanation?: string | null;
+    recommendation?: string | null;
+    score_source: string;
+}
+
+export interface AIScoreResponse {
+    scores: Record<string, AIScoreResultItem>;
 }
 
 export interface PlacementMapping {
@@ -144,6 +159,17 @@ const placementMappingService = {
 
     addNote: async (note: { mapping_id: number; content: string }): Promise<any> => {
         const response = await api.post('/placement/notes/', note);
+        return response.data;
+    },
+
+    aiScoreCandidates: async (
+        jobRolePublicId: string,
+        candidateIds: number[]
+    ): Promise<AIScoreResponse> => {
+        const response = await api.post(
+            `/placement/mappings/ai-score/${jobRolePublicId}`,
+            { candidate_ids: candidateIds }
+        );
         return response.data;
     }
 };

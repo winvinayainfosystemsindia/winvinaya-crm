@@ -133,6 +133,20 @@ class PlacementMapping(BaseModel):
         default="manual"
     )
     
+    # AI Scoring Fields
+    ai_explanation: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+        comment="AI-generated explanation of the match score at time of mapping"
+    )
+    
+    score_source: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+        default="rule_based",
+        comment="ai | rule_based"
+    )
+    
     # Relationships
     candidate: Mapped["Candidate"] = relationship("Candidate")
     job_role: Mapped["JobRole"] = relationship("JobRole")

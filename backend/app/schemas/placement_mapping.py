@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 from pydantic import BaseModel, ConfigDict
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Dict
 from app.schemas.job_role import JobRoleRead
 from app.schemas.candidate import CandidateResponse
 from app.schemas.user import UserResponse
@@ -40,6 +40,8 @@ class PlacementMappingInDBBase(PlacementMappingBase):
     unmapped_by_id: Optional[int] = None
     unmapped_at: Optional[datetime] = None
     unmapped_reason: Optional[str] = None
+    ai_explanation: Optional[str] = None
+    score_source: Optional[str] = "rule_based"
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -109,6 +111,10 @@ class CandidateMatchResult(BaseModel):
     status: Optional[str] = None
     mapping_id: Optional[int] = None
     source_of_info: Optional[str] = None
+    # AI Scoring fields
+    ai_explanation: Optional[str] = None
+    ai_recommendation: Optional[str] = None
+    score_source: str = "rule_based"  # "ai" | "rule_based"
     
     model_config = ConfigDict(from_attributes=True)
 
@@ -117,9 +123,27 @@ class CandidateMatchResult(BaseModel):
 class PlacementBulkMappingItem(BaseModel):
     candidate_id: int
     match_score: float
+    ai_explanation: Optional[str] = None
+    score_source: Optional[str] = "rule_based"
 
 
 class PlacementMappingBulkCreate(BaseModel):
     job_role_id: int
     mappings: List[PlacementBulkMappingItem]
     notes: Optional[str] = None
+
+
+# AI Scoring Request/Response
+class AIScoreRequest(BaseModel):
+    candidate_ids: List[int]
+
+
+class AIScoreResultItem(BaseModel):
+    score: Optional[float] = None
+    explanation: Optional[str] = None
+    recommendation: Optional[str] = None
+    score_source: str = "rule_based"
+
+
+class AIScoreResponse(BaseModel):
+    scores: Dict[str, AIScoreResultItem]  # key = str(candidate_id)

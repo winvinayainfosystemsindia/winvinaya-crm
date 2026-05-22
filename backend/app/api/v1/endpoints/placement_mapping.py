@@ -11,7 +11,9 @@ from app.schemas.placement_mapping import (
     PlacementMappingCreate, 
     CandidateMatchResult,
     PlacementMappingInDBBase,
-    PlacementMappingBulkCreate
+    PlacementMappingBulkCreate,
+    AIScoreRequest,
+    AIScoreResponse,
 )
 from app.services.placement_mapping_service import PlacementMappingService
 from app.utils.activity_tracker import log_create, log_delete
@@ -33,6 +35,24 @@ async def get_matches_for_job_role(
     """
     service = PlacementMappingService(db)
     return await service.get_matches_for_job_role(job_role_public_id)
+
+
+@router.post("/ai-score/{job_role_public_id}", response_model=AIScoreResponse)
+@rate_limit_medium()
+async def ai_score_candidates(
+    request: Request,
+    job_role_public_id: UUID,
+    score_request: AIScoreRequest,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    On-demand AI scoring for a set of candidates against a job role.
+    Triggered by the frontend 'Score with AI' button.
+    Returns per-candidate AI scores, explanations, and recommendations.
+    """
+    service = PlacementMappingService(db)
+    return await service.ai_score_candidates(job_role_public_id, score_request)
 
 
 @router.post("/", response_model=PlacementMappingInDBBase, status_code=status.HTTP_201_CREATED)

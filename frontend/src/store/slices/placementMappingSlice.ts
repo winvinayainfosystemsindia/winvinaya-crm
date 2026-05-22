@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import placementMappingService from '../../services/placementMappingService';
-import type { CandidateMatchResult, PlacementMapping, PlacementMappingCreate } from '../../services/placementMappingService';
+import type { CandidateMatchResult, PlacementMapping, PlacementMappingCreate, AIScoreResponse } from '../../services/placementMappingService';
 
 export type { CandidateMatchResult, PlacementMapping, PlacementMappingCreate };
 
@@ -8,6 +8,7 @@ interface PlacementMappingState {
     matches: CandidateMatchResult[];
     mappings: PlacementMapping[];
     loading: boolean;
+    aiScoring: boolean;   // separate loading flag for AI scoring
     error: string | null;
 }
 
@@ -15,6 +16,7 @@ const initialState: PlacementMappingState = {
     matches: [],
     mappings: [],
     loading: false,
+    aiScoring: false,
     error: null,
 };
 
@@ -92,6 +94,20 @@ export const uploadOfferLetter = createAsyncThunk(
             return await placementMappingService.uploadOfferLetter(mappingId, file, metadata);
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.detail || 'Failed to upload offer letter');
+        }
+    }
+);
+
+export const aiScoreCandidates = createAsyncThunk(
+    'placementMapping/aiScore',
+    async (
+        { jobRolePublicId, candidateIds }: { jobRolePublicId: string; candidateIds: number[] },
+        { rejectWithValue }
+    ) => {
+        try {
+            return await placementMappingService.aiScoreCandidates(jobRolePublicId, candidateIds);
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.detail || 'AI scoring failed. Please try again.');
         }
     }
 );
@@ -236,6 +252,36 @@ const placementMappingSlice = createSlice({
             })
             .addCase(uploadOfferLetter.rejected, (state, action) => {
                 state.loading = false;
+                state.error = action.payload as string;
+            })
+            // AI Score Candidates
+            .addCase(aiScoreCandidates.pending, (state) => {
+                state.aiScoring = true;
+                state.error = null;
+            })
+            .addCase(aiScoreCandidates.fulfilled, (state, action: PayloadAction<AIScoreResponse>) => {
+                state.aiScoring = false;
+                // Merge AI scores in-place into existing matches array
+                const scores = action.payload.scores;
+                state.matches = state.matches.map(match => {
+                    const aiResult = scores[String(match.candidate_id)];
+                    if (aiResult) {
+                        return {
+                            ...match,
+                            // Only replace score if AI returned a valid score
+                            match_score: aiResult.score != null ? aiResult.score : match.match_score,
+                            ai_explanation: aiResult.explanation ?? match.ai_explanation,
+                            ai_recommendation: aiResult.recommendation ?? match.ai_recommendation,
+                            score_source: aiResult.score_source,
+                        };
+                    }
+                    return match;
+                });
+                // Re-sort by the new AI scores
+                state.matches = [...state.matches].sort((a, b) => b.match_score - a.match_score);
+            })
+            .addCase(aiScoreCandidates.rejected, (state, action) => {
+                state.aiScoring = false;
                 state.error = action.payload as string;
             });
     },

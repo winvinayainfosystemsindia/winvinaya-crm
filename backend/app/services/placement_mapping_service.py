@@ -14,7 +14,10 @@ from app.schemas.placement_mapping import (
     PlacementMappingCreate, 
     CandidateMatchResult, 
     MatchMatchInfo,
-    PlacementMappingBulkCreate
+    PlacementMappingBulkCreate,
+    AIScoreRequest,
+    AIScoreResponse,
+    AIScoreResultItem,
 )
 
 
@@ -47,7 +50,9 @@ class PlacementMappingService:
             "match_score": mapping_in.match_score,
             "notes": mapping_in.notes,
             "mapped_by_id": user_id,
-            "mapped_at": datetime.utcnow()
+            "mapped_at": datetime.utcnow(),
+            "ai_explanation": getattr(mapping_in, "ai_explanation", None),
+            "score_source": getattr(mapping_in, "score_source", "rule_based") or "rule_based",
         }
         return await self.repository.create(mapping_data)
 
@@ -70,7 +75,9 @@ class PlacementMappingService:
                 "match_score": item.match_score,
                 "notes": bulk_mapping.notes,
                 "mapped_by_id": user_id,
-                "mapped_at": datetime.utcnow()
+                "mapped_at": datetime.utcnow(),
+                "ai_explanation": getattr(item, "ai_explanation", None),
+                "score_source": getattr(item, "score_source", "rule_based") or "rule_based",
             }
             mapping = await self.repository.create(mapping_data)
             results.append(mapping)
@@ -133,6 +140,27 @@ class PlacementMappingService:
             screening_status='Completed',
             counseling_status='selected'
         )
+        
+        # Eagerly load attendance and mock_interviews for AI scoring
+        if candidates:
+            from sqlalchemy import select
+            from sqlalchemy.orm import selectinload
+            from app.models.candidate import Candidate as CandidateModel
+            cand_ids = [c.id for c in candidates]
+            enriched_stmt = (
+                select(CandidateModel)
+                .where(CandidateModel.id.in_(cand_ids))
+                .options(
+                    selectinload(CandidateModel.attendance),
+                    selectinload(CandidateModel.mock_interviews),
+                    selectinload(CandidateModel.screening),
+                    selectinload(CandidateModel.counseling),
+                )
+            )
+            enriched_result = await self.db.execute(enriched_stmt)
+            enriched_map = {c.id: c for c in enriched_result.scalars().unique().all()}
+            # Replace candidates list with enriched versions (preserving order)
+            candidates = [enriched_map.get(c.id, c) for c in candidates]
         
         if not candidates:
             return []
@@ -306,3 +334,57 @@ class PlacementMappingService:
         # Sort by match score descending
         results.sort(key=lambda x: x.match_score, reverse=True)
         return results
+
+    async def ai_score_candidates(
+        self, job_role_public_id: UUID, request: AIScoreRequest
+    ) -> AIScoreResponse:
+        """
+        AI-score a specific set of candidates against a job role.
+        Called on-demand when the user clicks "Score with AI".
+
+        Returns AIScoreResponse with a dict of str(candidate_id) -> AIScoreResultItem.
+        """
+        from sqlalchemy import select
+        from sqlalchemy.orm import selectinload
+        from app.models.candidate import Candidate as CandidateModel
+        from app.ai.services.placement_scoring_service import PlacementScoringService
+
+        job_role = await self.job_role_repo.get_by_public_id(job_role_public_id)
+        if not job_role:
+            raise HTTPException(status_code=404, detail="Job role not found")
+
+        if not request.candidate_ids:
+            return AIScoreResponse(scores={})
+
+        # Fetch candidates with all relationships needed for scoring
+        stmt = (
+            select(CandidateModel)
+            .where(CandidateModel.id.in_(request.candidate_ids))
+            .options(
+                selectinload(CandidateModel.screening),
+                selectinload(CandidateModel.counseling),
+                selectinload(CandidateModel.attendance),
+                selectinload(CandidateModel.mock_interviews),
+            )
+        )
+        result = await self.db.execute(stmt)
+        candidates = list(result.scalars().unique().all())
+
+        if not candidates:
+            return AIScoreResponse(scores={})
+
+        # Run AI scoring with bounded concurrency
+        scoring_service = PlacementScoringService(self.db)
+        scores_map = await scoring_service.score_candidates(job_role, candidates)
+
+        # Build response — keys must be str for JSON serialization
+        scores_out: Dict[str, AIScoreResultItem] = {}
+        for cand_id, data in scores_map.items():
+            scores_out[str(cand_id)] = AIScoreResultItem(
+                score=data.get("score"),
+                explanation=data.get("explanation"),
+                recommendation=data.get("recommendation"),
+                score_source=data.get("score_source", "rule_based"),
+            )
+
+        return AIScoreResponse(scores=scores_out)

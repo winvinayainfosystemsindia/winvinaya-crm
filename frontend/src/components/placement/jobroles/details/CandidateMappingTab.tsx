@@ -19,6 +19,7 @@ import {
     unmapCandidate,
     clearMatches,
     clearPlacementError,
+    aiScoreCandidates,
     type CandidateMatchResult
 } from '../../../../store/slices/placementMappingSlice';
 import CandidateEmailDialog from '../../mapping/dialogs/CandidateEmailDialog';
@@ -46,7 +47,7 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
     const dispatch = useAppDispatch();
 
     // Redux State
-    const { matches: matchingCandidates, loading, error: placementError } = useAppSelector((state) => state.placementMapping);
+    const { matches: matchingCandidates, loading, aiScoring, error: placementError } = useAppSelector((state) => state.placementMapping);
 
     // Auto-display errors from slice
     useEffect(() => {
@@ -248,6 +249,16 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
         setIsFilterDrawerOpen(false);
     };
 
+    const handleScoreWithAI = useCallback(() => {
+        // Score only the currently visible (paginated) suggestion candidates
+        const idsToScore = paginatedSuggestions.map(c => c.candidate_id);
+        if (idsToScore.length === 0) return;
+        dispatch(aiScoreCandidates({
+            jobRolePublicId: jobRole.public_id,
+            candidateIds: idsToScore
+        }));
+    }, [paginatedSuggestions, jobRole.public_id, dispatch]);
+
     const handleBulkMapClick = () => {
         setBulkMapDialogOpen(true);
     };
@@ -410,6 +421,7 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                 <SuggestionsTable
                     candidates={paginatedSuggestions}
                     loading={loading}
+                    aiScoring={aiScoring}
                     page={page}
                     rowsPerPage={rowsPerPage}
                     totalCount={suggestions.length}
@@ -432,6 +444,7 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                     onFilterOpen={() => setIsFilterDrawerOpen(true)}
                     activeFilterCount={activeFilterCount}
                     headerActions={bulkMapActions}
+                    onScoreWithAI={handleScoreWithAI}
                 />
             </Grid>
 
