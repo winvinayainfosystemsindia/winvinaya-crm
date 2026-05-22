@@ -188,6 +188,25 @@ const RequirementsCompensationTab: React.FC<RequirementsCompensationTabProps> = 
 											} catch (e: any) {
 												const errMsg = e.response?.data?.detail || 'Failed to create skill';
 												enqueueSnackbar(errMsg, { variant: 'error' });
+												
+												if (typeof errMsg === 'string') {
+													const match = errMsg.match(/Did you mean '([^']+)'\?/);
+													if (match && match[1]) {
+														const suggested = match[1];
+														try {
+															const newSkill = await skillService.createSkill({ name: suggested });
+															setSkillOptions(prev => {
+																if (!prev.find(s => s.id === newSkill.id)) {
+																	return [...prev, newSkill].sort((a, b) => a.name.localeCompare(b.name));
+																}
+																return prev;
+															});
+															return newSkill.name;
+														} catch (innerErr) {
+															return suggested;
+														}
+													}
+												}
 												return val.inputValue;
 											}
 										}

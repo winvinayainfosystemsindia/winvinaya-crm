@@ -72,7 +72,18 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 			toast.success(`Skill "${newSkillName}" added to master database`);
 			setConfirmDialogOpen(false);
 		} catch (error: any) {
-			toast.error(error || 'Failed to add skill to database');
+			const errorMsg = typeof error === 'string' ? error : (error?.message || 'Failed to add skill to database');
+			toast.error(errorMsg);
+			
+			if (typeof errorMsg === 'string') {
+				const match = errorMsg.match(/Did you mean '([^']+)'\?/);
+				if (match && match[1]) {
+					const suggested = match[1];
+					const updatedValues = pendingNewValues.map(v => v === newSkillName ? suggested : v);
+					onUpdateField('skills', activeField, updatedValues);
+				}
+			}
+			setConfirmDialogOpen(false);
 		} finally {
 			setNewSkillName('');
 			setActiveField(null);

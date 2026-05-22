@@ -66,6 +66,14 @@ const SkillsSection: React.FC = () => {
 		} catch (error: any) {
 			const errMsg = error.response?.data?.detail || 'Failed to add skill';
 			enqueueSnackbar(errMsg, { variant: 'error' });
+			
+			if (typeof errMsg === 'string') {
+				const match = errMsg.match(/Did you mean '([^']+)'\?/);
+				if (match && match[1]) {
+					const suggested = match[1];
+					setNewSkillName(suggested);
+				}
+			}
 		} finally {
 			setAdding(false);
 		}

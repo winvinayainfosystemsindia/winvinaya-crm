@@ -87,7 +87,17 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 			toast.success(`Skill "${newSkillName}" added to master database`);
 			setConfirmAddSkillDialogOpen(false);
 		} catch (error: any) {
-			toast.error(error || 'Failed to add skill to database');
+			const errorMsg = typeof error === 'string' ? error : (error?.message || 'Failed to add skill to database');
+			toast.error(errorMsg);
+			
+			if (typeof errorMsg === 'string') {
+				const match = errorMsg.match(/Did you mean '([^']+)'\?/);
+				if (match && match[1]) {
+					const suggested = match[1];
+					onSkillChange(pendingIndex, 'name', suggested);
+				}
+			}
+			setConfirmAddSkillDialogOpen(false);
 		} finally {
 			setNewSkillName('');
 			setPendingIndex(null);
@@ -198,6 +208,11 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 												options={aggregatedSkills}
 												value={skill.name}
 												onChange={(_e, val) => handleNameChange(index, val)}
+												onInputChange={(_e, val) => onSkillChange(index, 'name', val)}
+												onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+													const val = e.target.value;
+													handleNameChange(index, val);
+												}}
 												renderInput={(params) => (
 													<TextField
 														{...params}

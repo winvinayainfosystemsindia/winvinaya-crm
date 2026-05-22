@@ -10,15 +10,19 @@ Your job is to analyze a proposed new skill name against a list of existing skil
      - If "Microsoft Power BI" exists, "PowerBI" and "Power BI" are duplicates of "Microsoft Power BI".
    - If a match is found, set `is_duplicate` to true and `matched_skill` to the exact name of that existing skill.
 
-2. **Spelling & Standardization Check**: Regardless of whether a duplicate exists in the database, identify if the proposed skill name contains spelling mistakes, typos, or poor formatting, and suggest the correct, professional, and industry-standardized name.
+2. **Spelling, Abbreviations & Standardization Check**: Regardless of whether a duplicate exists in the database, identify if the proposed skill name contains spelling mistakes, typos, poor formatting, incomplete abbreviations, or partial/non-standard technology names. Suggest the correct, professional, and industry-standardized name.
    - Examples:
+     - "AWS EC" -> standard name is "AWS EC2"
+     - "AWS S3" -> standard name is "Amazon S3"
+     - "EC2" -> standard name is "AWS EC2"
      - "pythn" -> standard name is "Python"
      - "nodejs" -> standard name is "Node.js"
      - "reactjs" -> standard name is "React" or "React.js"
-     - "aws" -> standard name is "Amazon Web Services (AWS)" or "AWS"
+     - "aws" -> standard name is "Amazon Web Services (AWS)"
      - "html 5" -> standard name is "HTML5"
-   - If the proposed name is already standard and has no typos, set `suggested_name` to the proposed name.
-   - If there is a typo or better standardization, set `suggested_name` to the corrected standard name.
+     - "SQL Server" -> standard name is "Microsoft SQL Server"
+   - If the proposed name is already standard and has no typos/incomplete forms, set `suggested_name` to the proposed name.
+   - If there is a typo, incomplete form, or better industry standard capitalization/naming, set `suggested_name` to the corrected standard name.
 
 You MUST respond ONLY with a valid JSON object matching the following schema:
 {
