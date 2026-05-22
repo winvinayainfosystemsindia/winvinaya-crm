@@ -64,13 +64,34 @@ class SkillService:
                     parsed = json.loads(content)
             
             # 6. Check results
-            if parsed.get("is_duplicate"):
-                matched_skill = parsed.get("matched_skill")
-                reason = parsed.get("reason")
-                matched = matched_skill or "an existing skill"
+            is_duplicate = parsed.get("is_duplicate", False)
+            matched_skill = parsed.get("matched_skill")
+            suggested_name = parsed.get("suggested_name")
+            reason = parsed.get("reason")
+            
+            # Case 1: Semantic duplicate of an existing skill
+            if is_duplicate and matched_skill:
                 explanation = f" ({reason})" if reason else ""
-                detail = f"A similar skill '{matched}' already exists in the system. '{name}' is identified as a duplicate/alias of it.{explanation}"
+                detail = f"A similar skill '{matched_skill}' already exists in the system. Please use '{matched_skill}' instead of '{name}' to avoid duplicate entries.{explanation}"
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=detail
+                )
                 
+            # Case 2: No duplicate in database, but the AI identified a typo or recommended standardization
+            if suggested_name and suggested_name.strip().lower() != name.strip().lower():
+                # Check if the corrected suggestion already exists in the DB
+                existing_suggested = await self.repository.get_by_name(suggested_name.strip())
+                if existing_suggested:
+                    detail = f"A similar skill '{existing_suggested.name}' already exists in the system. Please use '{existing_suggested.name}' instead of '{name}'."
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=detail
+                    )
+                
+                # Proactively suggest the spelling correction to the user
+                explanation = f" ({reason})" if reason else ""
+                detail = f"Did you mean '{suggested_name}'? Please add it as '{suggested_name}' to avoid spelling mistakes and keep the skills list clean.{explanation}"
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=detail
