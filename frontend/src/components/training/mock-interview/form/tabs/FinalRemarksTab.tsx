@@ -132,10 +132,7 @@ const FinalRemarksTab: React.FC<FinalRemarksTabProps> = memo(({
 						}}
 					>
 						<MenuItem value="inprogress">In-Progress</MenuItem>
-						<MenuItem value="selected">Selected</MenuItem>
-						<MenuItem value="rejected">Rejected</MenuItem>
-						<MenuItem value="retest">Re-Test Required</MenuItem>
-						<MenuItem value="absent">Absent</MenuItem>
+						<MenuItem value="completed">Completed</MenuItem>
 					</TextField>
 				</Box>
 

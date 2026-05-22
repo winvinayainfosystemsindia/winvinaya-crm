@@ -64,18 +64,19 @@ const CandidateTechnicalEvaluation: React.FC = () => {
 		const fetchedQuestions = interview?.questions;
 		if (fetchedQuestions && Array.isArray(fetchedQuestions)) {
 			setAnswers(prev => {
-				// If we already have answers, merge them
+				// Clone each question object to make it mutable and prevent Redux state freeze errors
+				const next = fetchedQuestions.map(q => ({ ...q }));
+				
+				// If we already have answers in local state, merge them
 				if (prev.length > 0) {
-					const next = [...fetchedQuestions];
 					prev.forEach((oldQ) => {
 						const matchingIdx = next.findIndex(n => n.question === oldQ.question);
 						if (matchingIdx !== -1) {
 							next[matchingIdx].answer = oldQ.answer;
 						}
 					});
-					return next;
 				}
-				return fetchedQuestions;
+				return next;
 			});
 		}
 	}, [interview?.questions]);
