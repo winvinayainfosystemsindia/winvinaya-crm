@@ -39,7 +39,9 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ candidate }) => {
 	const navigate = useNavigate();
 	const theme = useTheme();
 
-	if (!candidate.documents || candidate.documents.length === 0) {
+	const activeDocuments = candidate.documents?.filter(doc => doc.is_active) || [];
+
+	if (activeDocuments.length === 0) {
 		return (
 			<SectionCard sx={{ textAlign: 'center', py: 10, bgcolor: alpha(theme.palette.background.default, 0.4), borderRadius: 4 }}>
 				<Box sx={{ maxWidth: 450, mx: 'auto' }}>
@@ -90,7 +92,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ candidate }) => {
 		<SectionCard sx={{ bgcolor: alpha(theme.palette.background.default, 0.4) }}>
 			<SectionHeader title="Document Repository" icon={<DescriptionIcon />}>
 				<Chip 
-					label={`${candidate.documents?.length || 0} Files Total`} 
+					label={`${activeDocuments.length} Files Total`} 
 					size="small" 
 					variant="filled" 
 					color="primary"
@@ -99,7 +101,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ candidate }) => {
 			</SectionHeader>
 
 			<Grid container spacing={3}>
-				{candidate.documents.map((doc) => (
+				{activeDocuments.map((doc) => (
 					<Grid size={{ xs: 12, sm: 6, lg: 4 }} key={doc.id}>
 						<Paper 
 							elevation={0}

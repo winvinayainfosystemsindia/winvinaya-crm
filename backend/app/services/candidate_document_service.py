@@ -96,7 +96,8 @@ class CandidateDocumentService:
         if not candidate:
             raise HTTPException(status_code=404, detail="Candidate not found")
         
-        return await self.repository.get_by_candidate_id(candidate.id)
+        docs = await self.repository.get_by_candidate_id(candidate.id)
+        return [doc for doc in docs if doc.is_active]
     
     async def get_document(self, document_id: int) -> CandidateDocument:
         """Get a specific document by id"""

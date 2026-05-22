@@ -117,6 +117,15 @@ class CandidateResponse(CandidateBase):
         from sqlalchemy.orm import object_session
         from sqlalchemy.inspect import inspect
         
+        # Filter documents from dict if present
+        if isinstance(obj, dict):
+            if 'documents' in obj and obj['documents'] is not None:
+                obj = dict(obj)
+                obj['documents'] = [
+                    d for d in obj['documents']
+                    if (d.get('is_active') if isinstance(d, dict) else getattr(d, 'is_active', True))
+                ]
+        
         # If this is a SQLAlchemy object, check which relationships are loaded
         if hasattr(obj, '__dict__'):
             state = inspect(obj)
@@ -131,7 +140,10 @@ class CandidateResponse(CandidateBase):
                             continue
                     # Get the attribute value
                     try:
-                        data[key] = getattr(obj, key)
+                        val = getattr(obj, key)
+                        if key == 'documents' and val is not None:
+                            val = [d for d in val if getattr(d, 'is_active', True)]
+                        data[key] = val
                     except:
                         # If we can't get it, skip it
                         continue
@@ -155,6 +167,28 @@ class CandidateMini(BaseModel):
     documents: List[CandidateDocumentResponse] = []
 
     model_config = ConfigDict(from_attributes=True)
+
+    @classmethod
+    def model_validate(cls, obj, *args, **kwargs):
+        if isinstance(obj, dict):
+            if 'documents' in obj and obj['documents'] is not None:
+                obj = dict(obj)
+                obj['documents'] = [
+                    d for d in obj['documents']
+                    if (d.get('is_active') if isinstance(d, dict) else getattr(d, 'is_active', True))
+                ]
+        elif hasattr(obj, '__dict__'):
+            data = {}
+            for key in cls.model_fields.keys():
+                try:
+                    val = getattr(obj, key)
+                    if key == 'documents' and val is not None:
+                        val = [d for d in val if getattr(d, 'is_active', True)]
+                    data[key] = val
+                except:
+                    continue
+            return super().model_validate(data, *args, **kwargs)
+        return super().model_validate(obj, *args, **kwargs)
 
 
 class CandidateListResponse(BaseModel):
@@ -390,7 +424,7 @@ class CandidateListResponse(BaseModel):
             docs_list = data.documents
 
         if docs_list:
-            documents_uploaded = [get_val(d, 'document_type') for d in docs_list]
+            documents_uploaded = [get_val(d, 'document_type') for d in docs_list if get_val(d, 'is_active')]
 
         # 6. Assignment Data
         assignment = None

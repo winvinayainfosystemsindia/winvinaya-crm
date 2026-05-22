@@ -19,7 +19,7 @@ export const useDocumentDetail = (id?: string) => {
 	
 	// State from Candidate Slice
 	const { selectedCandidate: candidate, error } = useAppSelector((state) => state.candidates);
-	const documents = candidate?.documents || [];
+	const documents = (candidate?.documents || []).filter((d: CandidateDocument) => d.is_active);
 	
 	const [uploading, setUploading] = useState<string | null>(null);
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);

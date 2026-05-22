@@ -37,7 +37,10 @@ async def get_available_documents(
         if not candidate:
             continue
             
-        doc_query = select(CandidateDocument).where(CandidateDocument.candidate_id == candidate.id)
+        doc_query = select(CandidateDocument).where(
+            CandidateDocument.candidate_id == candidate.id,
+            CandidateDocument.is_active == True
+        )
         doc_res = await db.execute(doc_query)
         documents = doc_res.scalars().all()
         

@@ -643,7 +643,7 @@ class CandidateRepository(BaseRepository[Candidate]):
                         else_=0
                     )).label('target_count')
                 )
-                .outerjoin(CandidateDocument, Candidate.id == CandidateDocument.candidate_id)
+                .outerjoin(CandidateDocument, and_(Candidate.id == CandidateDocument.candidate_id, CandidateDocument.is_active == True))
                 .group_by(Candidate.id)
             ).subquery()
 
@@ -830,7 +830,7 @@ class CandidateRepository(BaseRepository[Candidate]):
             stmt_sel_docs = (
                 select(Candidate.id, Candidate.disability_details, func.array_agg(CandidateDocument.document_type))
                 .join(CandidateCounseling, Candidate.id == CandidateCounseling.candidate_id)
-                .outerjoin(CandidateDocument, Candidate.id == CandidateDocument.candidate_id)
+                .outerjoin(CandidateDocument, and_(Candidate.id == CandidateDocument.candidate_id, CandidateDocument.is_active == True))
                 .where(CandidateCounseling.status == 'selected')
                 .where(Candidate.is_deleted == False)
                 .group_by(Candidate.id)
