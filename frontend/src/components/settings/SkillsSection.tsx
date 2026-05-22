@@ -177,6 +177,7 @@ const SkillsSection: React.FC = () => {
 								<TableRow>
 									<TableCell sx={{ fontWeight: 700, color: theme.palette.text.secondary }}>Skill Name</TableCell>
 									<TableCell sx={{ fontWeight: 700, color: theme.palette.text.secondary }}>Verification Status</TableCell>
+									<TableCell sx={{ fontWeight: 700, color: theme.palette.text.secondary }}>Created By</TableCell>
 									<TableCell sx={{ fontWeight: 700, color: theme.palette.text.secondary }}>ID</TableCell>
 									<TableCell align="right" sx={{ fontWeight: 700, color: theme.palette.text.secondary }}>Actions</TableCell>
 								</TableRow>
@@ -184,7 +185,7 @@ const SkillsSection: React.FC = () => {
 							<TableBody>
 								{skills.length === 0 ? (
 									<TableRow>
-										<TableCell colSpan={3} align="center" sx={{ py: 6 }}>
+										<TableCell colSpan={5} align="center" sx={{ py: 6 }}>
 											<Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontStyle: 'italic' }}>
 												{searchQuery ? `No skills found matching "${searchQuery}"` : 'No skills found in the database.'}
 											</Typography>
@@ -222,6 +223,38 @@ const SkillsSection: React.FC = () => {
 															color: theme.palette.error.main,
 															fontWeight: 600,
 															border: `1px solid ${theme.palette.error.main}`
+														}}
+													/>
+												)}
+											</TableCell>
+											<TableCell>
+												{skill.creator ? (
+													<Chip
+														label={skill.creator.full_name || skill.creator.username}
+														size="small"
+														variant="outlined"
+														sx={{
+															borderRadius: '6px',
+															fontWeight: 500,
+															fontSize: '0.75rem',
+															borderColor: theme.palette.divider,
+															color: theme.palette.text.primary,
+															bgcolor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'
+														}}
+													/>
+												) : (
+													<Chip
+														label="System"
+														size="small"
+														variant="outlined"
+														sx={{
+															borderRadius: '6px',
+															fontWeight: 500,
+															fontSize: '0.75rem',
+															borderStyle: 'dashed',
+															borderColor: theme.palette.text.disabled,
+															color: theme.palette.text.secondary,
+															bgcolor: 'transparent'
 														}}
 													/>
 												)}

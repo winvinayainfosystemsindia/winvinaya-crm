@@ -15,7 +15,7 @@ class SkillService:
         self.db = db
         self.repository = SkillRepository(db)
         
-    async def create_skill(self, skill_in: SkillCreate) -> Skill:
+    async def create_skill(self, skill_in: SkillCreate, created_by_id: Optional[int] = None) -> Skill:
         """Create a new skill if it doesn't exist (case-insensitive check)"""
         # Normalize name (Trim)
         name = skill_in.name.strip()
@@ -27,8 +27,13 @@ class SkillService:
             
         skill_data = skill_in.model_dump()
         skill_data["name"] = name # Use normalized name
-        
-        return await self.repository.create(skill_data)
+        if created_by_id is not None:
+            skill_data["created_by_id"] = created_by_id
+        new_skill = await self.repository.create(skill_data)
+        if created_by_id is not None:
+            await self.db.refresh(new_skill, ["creator"])
+        return new_skill
+
         
     async def get_skills(self, query: Optional[str] = None, limit: int = 100) -> List[Skill]:
         """Search or get all skills"""

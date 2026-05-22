@@ -2,6 +2,8 @@
 
 from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
+from app.schemas.job_role import UserMinimal
+
 
 
 class SkillBase(BaseModel):
@@ -20,5 +22,8 @@ class SkillUpdate(BaseModel):
 
 class SkillRead(SkillBase):
     id: int
+    created_by_id: Optional[int] = None
+    creator: Optional[UserMinimal] = None
 
     model_config = ConfigDict(from_attributes=True)
+

@@ -2,6 +2,7 @@
 
 from typing import List, Optional
 from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload
 from app.models.skill import Skill
 from app.repositories.base import BaseRepository
 
@@ -20,7 +21,9 @@ class SkillRepository(BaseRepository[Skill]):
         
     async def search(self, query: str, limit: int = 10) -> List[Skill]:
         """Search skills by name (case-insensitive)"""
-        stmt = select(self.model).where(
+        stmt = select(self.model).options(
+            selectinload(self.model.creator)
+        ).where(
             self.model.name.ilike(f"%{query}%")
         ).order_by(self.model.name).limit(limit)
         result = await self.db.execute(stmt)
@@ -28,9 +31,12 @@ class SkillRepository(BaseRepository[Skill]):
 
     async def get_all_alphabetical(self, limit: int = 100) -> List[Skill]:
         """Get all skills ordered alphabetically"""
-        stmt = select(self.model).order_by(self.model.name).limit(limit)
+        stmt = select(self.model).options(
+            selectinload(self.model.creator)
+        ).order_by(self.model.name).limit(limit)
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
+
 
     async def get_unique_screening_skills(self) -> List[str]:
         """Extract unique skill names from CandidateScreening JSON fields"""

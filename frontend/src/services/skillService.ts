@@ -4,6 +4,13 @@ export interface Skill {
     id: number;
     name: string;
     is_verified: boolean;
+    created_by_id?: number;
+    creator?: {
+        id: number;
+        public_id: string;
+        username: string;
+        full_name?: string;
+    };
 }
 
 export interface SkillCreate {

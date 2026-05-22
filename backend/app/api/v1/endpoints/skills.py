@@ -42,7 +42,8 @@ async def create_skill(
 ) -> Any:
     """Create a new skill (master data)"""
     service = SkillService(db)
-    return await service.create_skill(skill_in)
+    return await service.create_skill(skill_in, created_by_id=current_user.id)
+
 
 
 @router.patch("/{skill_id}/verify", response_model=SkillRead)
