@@ -68,6 +68,7 @@ def import_candidates(token):
     success_count = 0
     fail_count = 0
     processed_emails = set()
+    import_results = []
     
     for row_idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
         # Safety check for empty rows
@@ -79,18 +80,43 @@ def import_candidates(token):
         
         name = str(row[1]).strip() if row[1] else None
         email = str(row[5]).strip() if row[5] else None
+        contact = str(row[6]).strip() if row[6] else ""
         
         if not name or not email:
             print(f"  [SKIP] Row {row_idx}: Missing name or email.")
+            import_results.append({
+                "Row Index": row_idx,
+                "Name": name or "Unknown",
+                "Email": email or "Unknown",
+                "Phone": contact or "Unknown",
+                "Candidate Status": "Skipped",
+                "Candidate Error": "Missing name or email",
+                "Screening Status": "Skipped",
+                "Screening Error": "",
+                "Counseling Status": "Skipped",
+                "Counseling Error": ""
+            })
             continue
 
         if email in processed_emails:
             print(f"\nProcessing row {row_idx}: {name} ({email})")
             print(f"  [SKIP] Email {email} already processed in this batch.")
+            import_results.append({
+                "Row Index": row_idx,
+                "Name": name,
+                "Email": email,
+                "Phone": contact,
+                "Candidate Status": "Skipped",
+                "Candidate Error": "Duplicate email in batch",
+                "Screening Status": "Skipped",
+                "Screening Error": "",
+                "Counseling Status": "Skipped",
+                "Counseling Error": ""
+            })
             continue
             
         processed_emails.add(email)
-            
+        
         gender = str(row[2]).strip().lower() if row[2] else "male"
         if "female" in gender:
             gender = "female"
@@ -166,10 +192,24 @@ def import_candidates(token):
 
         def make_request(method, url, **kwargs):
             """Helper to handle rate limits and retries"""
+            nonlocal headers
             max_retries = 100 # High retry count to survive long waits
             for attempt in range(max_retries):
                 try:
+                    # Sync headers in kwargs with the potentially refreshed ones
+                    if 'headers' in kwargs:
+                        kwargs['headers'] = headers
                     resp = requests.request(method, url, timeout=30, **kwargs)
+                    
+                    # Handle token expiration (401 Unauthorized / 403 Forbidden)
+                    if resp.status_code in (401, 403):
+                        print("  [INFO] Token expired or unauthorized. Re-authenticating...")
+                        new_token = get_token()
+                        if new_token:
+                            headers = {"Authorization": f"Bearer {new_token}"}
+                            print("  [SUCCESS] Successfully re-authenticated. Retrying request...")
+                            continue
+                    
                     if resp.status_code == 429:
                         retry_after = resp.headers.get("Retry-After")
                         if retry_after and retry_after.isdigit():
@@ -192,13 +232,29 @@ def import_candidates(token):
         # 1. Register Candidate
         resp = make_request("POST", f"{BASE_URL}/candidates/", json=candidate_payload, headers=headers)
         if resp is None or resp.status_code != 201:
-            print(f"  [ERROR] Candidate creation failed: {resp.status_code if resp is not None else 'N/A'} - {resp.text if resp is not None else ''}")
+            status_code = resp.status_code if resp is not None else 'N/A'
+            error_text = resp.text if resp is not None else 'Request timed out or connection failed'
+            print(f"  [ERROR] Candidate creation failed: {status_code} - {error_text}")
             fail_count += 1
+            import_results.append({
+                "Row Index": row_idx,
+                "Name": name,
+                "Email": email,
+                "Phone": contact,
+                "Candidate Status": "Failed",
+                "Candidate Error": f"{status_code} - {error_text}",
+                "Screening Status": "Failed",
+                "Screening Error": "Candidate registration failed",
+                "Counseling Status": "Failed",
+                "Counseling Error": "Candidate registration failed"
+            })
             continue
         
         candidate_data = resp.json()
         public_id = candidate_data.get("public_id")
         print(f"  [SUCCESS] Candidate created. Public ID: {public_id}")
+        candidate_status = "Success"
+        candidate_error = ""
 
         # 2. Create Screening Record
         tech_skills = []
@@ -223,10 +279,16 @@ def import_candidates(token):
             json=screening_payload, 
             headers=headers
         )
-        if resp_screen and resp_screen.status_code == 201:
+        if resp_screen is not None and resp_screen.status_code == 201:
             print("  [SUCCESS] Screening record created.")
+            screening_status = "Success"
+            screening_error = ""
         else:
-            print(f"  [WARNING] Screening failed: {resp_screen.status_code if resp_screen else 'N/A'}")
+            status_code = resp_screen.status_code if resp_screen is not None else 'N/A'
+            error_msg = resp_screen.text if resp_screen is not None else ''
+            print(f"  [WARNING] Screening failed: {status_code} - {error_msg}")
+            screening_status = "Failed"
+            screening_error = f"{status_code} - {error_msg}"
 
         # 3. Create Counseling Record with Skills
         skills_list = []
@@ -247,11 +309,30 @@ def import_candidates(token):
             json=counseling_payload, 
             headers=headers
         )
-        if resp_counsel and resp_counsel.status_code == 201:
+        if resp_counsel is not None and resp_counsel.status_code == 201:
             print("  [SUCCESS] Counseling record created with skills.")
             success_count += 1
+            counseling_status = "Success"
+            counseling_error = ""
         else:
-            print(f"  [WARNING] Counseling failed: {resp_counsel.status_code if resp_counsel else 'N/A'}")
+            status_code = resp_counsel.status_code if resp_counsel is not None else 'N/A'
+            error_msg = resp_counsel.text if resp_counsel is not None else ''
+            print(f"  [WARNING] Counseling failed: {status_code} - {error_msg}")
+            counseling_status = "Failed"
+            counseling_error = f"{status_code} - {error_msg}"
+
+        import_results.append({
+            "Row Index": row_idx,
+            "Name": name,
+            "Email": email,
+            "Phone": contact,
+            "Candidate Status": candidate_status,
+            "Candidate Error": candidate_error,
+            "Screening Status": screening_status,
+            "Screening Error": screening_error,
+            "Counseling Status": counseling_status,
+            "Counseling Error": counseling_error
+        })
 
         # Small delay to avoid aggressive rate limit hits
         import time
@@ -260,6 +341,32 @@ def import_candidates(token):
     print("\nImport Finished!")
     print(f"Total Success: {success_count}")
     print(f"Total Failed: {fail_count}")
+
+    # Write import results to CSV
+    csv_file = "import_results.csv"
+    try:
+        excel_dir = os.path.dirname(EXCEL_FILE)
+        if excel_dir and os.path.exists(excel_dir):
+            csv_file = os.path.join(excel_dir, "import_results.csv")
+    except Exception as e:
+        print(f"[WARNING] Could not determine excel directory, saving in current working directory: {e}")
+        
+    print(f"\nWriting final results to: {csv_file}")
+    try:
+        import csv
+        fieldnames = [
+            "Row Index", "Name", "Email", "Phone", 
+            "Candidate Status", "Candidate Error", 
+            "Screening Status", "Screening Error", 
+            "Counseling Status", "Counseling Error"
+        ]
+        with open(csv_file, mode="w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(import_results)
+        print(f"[SUCCESS] Results written to CSV: {csv_file}")
+    except Exception as e:
+        print(f"[ERROR] Failed to write CSV results: {e}")
 
 if __name__ == "__main__":
     token = get_token()
