@@ -200,7 +200,9 @@ export interface CandidateListItem {
 	is_disabled?: boolean;
 	disability_type?: string;
 	education_level?: string;
+	specialization?: string;
 	screening_status?: string;
+	consent_status?: string;
 	counseling_status?: string;
 	counselor_name?: string;
 

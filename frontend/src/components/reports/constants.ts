@@ -13,12 +13,14 @@ export const ALL_COLUMNS = [
 	{ id: 'pincode', label: 'Pincode', default: false, group: 'general' },
 	{ id: 'year_of_passing', label: 'Year of Passing', default: false, group: 'general' },
 	{ id: 'education_level', label: 'Education', default: false, group: 'general' },
+	{ id: 'specialization', label: 'Specialization', default: false, group: 'general' },
 	{ id: 'disability_type', label: 'Disability Type', default: true, group: 'general' },
 	{ id: 'disability_percentage', label: 'Disability Percentage', default: false, group: 'general' },
 	{ id: 'created_at', label: 'Registration Date', default: false, group: 'general' },
 
 	// Screening Info
 	{ id: 'screening_status', label: 'Screening Status', default: true, group: 'screening' },
+	{ id: 'consent_status', label: 'Consent Status', default: false, group: 'screening' },
 	{ id: 'source_of_info', label: 'Where you know about us', default: false, group: 'screening' },
 	{ id: 'family_annual_income', label: 'Family Annual Income', default: false, group: 'screening' },
 	{ id: 'screened_by_name', label: 'Screened By', default: false, group: 'screening' },
@@ -27,7 +29,7 @@ export const ALL_COLUMNS = [
 	{ id: 'screening_updated_at', label: 'Screening Update Date', default: false, group: 'screening' },
 	{ id: 'family_details', label: 'Family Details', default: false, group: 'screening' },
 	{ id: 'documents_uploaded', label: 'Uploaded Documents', default: false, group: 'screening' },
-	{ id: 'screening_comments', label: 'Screening Reason', default: false, group: 'screening' },
+	{ id: 'screening_comments', label: 'Screening Comments', default: false, group: 'screening' },
 
 	// Counseling Info
 	{ id: 'counseling_status', label: 'Counseling Status', default: true, group: 'counseling' },

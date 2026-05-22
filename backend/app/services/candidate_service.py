@@ -457,12 +457,18 @@ class CandidateService:
                         edu = c.education_details or {}
                         degrees = edu.get("degrees", [])
                         val = degrees[0].get("degree_name") if degrees else ""
+                    elif col_id == "specialization":
+                        edu = c.education_details or {}
+                        degrees = edu.get("degrees", [])
+                        val = degrees[0].get("specialization") if degrees else ""
                     elif col_id == "year_of_passing":
                         edu = c.education_details or {}
                         degrees = edu.get("degrees", [])
                         val = degrees[0].get("year_of_passing") if degrees else ""
                     elif col_id == "screening_status":
                         val = c.screening.status if c.screening else "Pending"
+                    elif col_id == "consent_status":
+                        val = c.screening.consent_status if c.screening else ""
                     elif col_id == "screening_date":
                         val = c.screening.created_at if c.screening else ""
                     elif col_id == "screened_by_name":

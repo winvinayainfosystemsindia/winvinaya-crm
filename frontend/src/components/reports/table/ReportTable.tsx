@@ -269,10 +269,10 @@ const ReportTable: React.FC<ReportTableProps> = ({
 			);
 		}
 
-		if ((colId === 'disability_type' || colId === 'screening_status' || colId === 'counseling_status' || colId === 'status' || colId === 'batch_status') && val) {
+		if ((colId === 'disability_type' || colId === 'screening_status' || colId === 'counseling_status' || colId === 'status' || colId === 'batch_status' || colId === 'consent_status') && val) {
 			const getStatusColor = (v: string) => {
 				const lowerV = v.toLowerCase();
-				if (lowerV === 'completed' || lowerV === 'selected' || lowerV === 'ongoing') {
+				if (lowerV === 'completed' || lowerV === 'selected' || lowerV === 'ongoing' || lowerV === 'accepted') {
 					return { bg: alpha(theme.palette.success.main, 0.1), text: theme.palette.success.main, border: alpha(theme.palette.success.main, 0.2) };
 				}
 				if (lowerV === 'allocated' || lowerV === 'pending') {

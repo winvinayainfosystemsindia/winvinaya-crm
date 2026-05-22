@@ -176,7 +176,9 @@ class CandidateListResponse(BaseModel):
     disability_type: Optional[str] = None
     disability_percentage: Optional[float] = None
     education_level: Optional[str] = None
+    specialization: Optional[str] = None
     screening_status: str = "Pending"
+    consent_status: Optional[str] = None
     counseling_status: Optional[str] = None
     counselor_name: Optional[str] = None
     counseling_date: Optional[datetime] = None
@@ -221,7 +223,9 @@ class CandidateListResponse(BaseModel):
         disability_type = None
         disability_percentage = None
         education_level = None
+        specialization = None
         screening_status = "Pending"
+        consent_status = None
         counseling_status = None
         counselor_name = None
         counseling_date = None
@@ -278,6 +282,7 @@ class CandidateListResponse(BaseModel):
             if degrees and len(degrees) > 0:
                 education_level = degrees[0].get('degree_name')
                 year_of_passing = degrees[0].get('year_of_passing')
+                specialization = degrees[0].get('specialization')
 
         # 3. Screening Data
         screening = None
@@ -292,6 +297,7 @@ class CandidateListResponse(BaseModel):
             family_details = get_val(screening, 'family_details')
             screening_date = get_val(screening, 'created_at')
             screening_updated_at = get_val(screening, 'updated_at')
+            consent_status = get_val(screening, 'consent_status')
             
             # Extract from others JSON field
             others = get_val(screening, 'others')
@@ -421,7 +427,9 @@ class CandidateListResponse(BaseModel):
                 'disability_type': disability_type,
                 'disability_percentage': disability_percentage,
                 'education_level': education_level,
+                'specialization': specialization,
                 'screening_status': screening_status,
+                'consent_status': consent_status,
                 'counseling_status': counseling_status,
                 'counselor_name': counselor_name,
                 'counseling_date': counseling_date,
@@ -471,7 +479,9 @@ class CandidateListResponse(BaseModel):
             'disability_type': disability_type,
             'disability_percentage': disability_percentage,
             'education_level': education_level,
+            'specialization': specialization,
             'screening_status': screening_status,
+            'consent_status': consent_status,
             'counseling_status': counseling_status,
             'counselor_name': counselor_name,
             'counseling_date': counseling_date,
