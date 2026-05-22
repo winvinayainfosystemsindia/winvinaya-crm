@@ -510,7 +510,7 @@ class CandidateRepository(BaseRepository[Candidate]):
     async def get_screened(
         self, 
         skip: int = 0, 
-        limit: int = 100, 
+        limit: Optional[int] = 100, 
         counseling_status: Optional[str] = None, 
         search: Optional[str] = None, 
         document_status: Optional[str] = None, 
@@ -719,7 +719,10 @@ class CandidateRepository(BaseRepository[Candidate]):
             stmt = stmt.order_by(Candidate.created_at.desc())
 
         # Apply pagination
-        stmt = stmt.offset(skip).limit(limit)
+        if limit is not None:
+            stmt = stmt.limit(limit)
+        if skip > 0:
+            stmt = stmt.offset(skip)
         result = await self.db.execute(stmt)
         return result.scalars().unique().all(), total
 

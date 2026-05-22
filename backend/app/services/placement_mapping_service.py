@@ -129,15 +129,46 @@ class PlacementMappingService:
 
         # Fetch only placement-ready candidates: Screened (Completed) AND Counseled (Selected)
         candidates, _ = await self.candidate_repo.get_screened(
-            limit=1000,
+            limit=None, # Retrieve all records selected in counseling
             screening_status='Completed',
             counseling_status='selected'
         )
         
+        if not candidates:
+            return []
+
         # Get existing mappings for this job role to mark them
         existing_mappings = await self.repository.get_by_job_role_active(job_role.id)
         # Map of candidate_id -> (mapping_id, status)
         mapping_info = {m.candidate_id: (m.id, m.status) for m in existing_mappings}
+
+        # Get active mappings for all fetched candidates to avoid N+1 query loop
+        candidate_ids = [c.id for c in candidates]
+        
+        # Query active placement mappings in bulk for the candidate IDs, with job_role selectinload
+        from sqlalchemy import select, and_
+        from sqlalchemy.orm import selectinload
+        
+        stmt = (
+            select(PlacementMapping)
+            .where(
+                and_(
+                    PlacementMapping.candidate_id.in_(candidate_ids),
+                    PlacementMapping.is_active == True
+                )
+            )
+            .options(
+                selectinload(PlacementMapping.job_role)
+            )
+        )
+        bulk_result = await self.repository.db.execute(stmt)
+        all_other_mappings = list(bulk_result.scalars().all())
+        
+        # Group other mappings by candidate_id
+        from collections import defaultdict
+        mappings_by_candidate = defaultdict(list)
+        for m in all_other_mappings:
+            mappings_by_candidate[m.candidate_id].append(m)
 
         results = []
         for candidate in candidates:
@@ -220,8 +251,8 @@ class PlacementMappingService:
 
             total_score = skill_score + qual_score + dis_score
             
-            # Count and fetch other mappings for this candidate (Only Active roles)
-            other_mappings = await self.repository.get_by_candidate_active(candidate.id)
+            # Count and fetch other mappings for this candidate (Only Active roles) - fast dictionary lookup
+            other_mappings = mappings_by_candidate.get(candidate.id, [])
             other_role_names = [
                 m.job_role.title for m in other_mappings 
                 if m.job_role_id != job_role.id and m.job_role.status == "active"
