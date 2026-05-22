@@ -2,7 +2,6 @@ import asyncio
 import sys
 import os
 import argparse
-from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from dotenv import load_dotenv
 
@@ -41,32 +40,13 @@ def setup_environment(env_file_path=None):
     else:
         print(f"Warning: Environment file {env_file_path} not found.")
 
-async def clear_database(engine_to_use, include_users: bool = False):
+async def clear_database(engine_to_use):
     """
-    Clears records from the database tables in the correct order to respect FK constraints.
+    Clears records from all database tables except the users table.
+    Deletion order is managed dynamically to respect Foreign Key constraints.
     """
-    # Import models locally to prevent early validation crashes
-    from app.models.user import User
-    from app.models.candidate import Candidate
-    from app.models.candidate_screening import CandidateScreening
-    from app.models.candidate_document import CandidateDocument
-    from app.models.candidate_counseling import CandidateCounseling
-    from app.models.activity_log import ActivityLog
-    # New models
-    from app.models.training_attendance import TrainingAttendance
-    from app.models.training_assessment import TrainingAssessment
-    from app.models.training_mock_interview import TrainingMockInterview
-    from app.models.training_batch_event import TrainingBatchEvent
-    from app.models.training_candidate_allocation import TrainingCandidateAllocation
-    from app.models.training_batch import TrainingBatch
-    from app.models.training_batch_extension import TrainingBatchExtension
-    from app.models.ticket import Ticket, TicketMessage
-    from app.models.crm_activity_log import CRMActivityLog
-    from app.models.crm_task import CRMTask
-    from app.models.deal import Deal
-    from app.models.lead import Lead
-    from app.models.company import Company
-    from app.models.contact import Contact
+    from app.core.database import Base
+    import app.models  # Registers all models/tables onto Base.metadata
     from app.core.config import settings
 
     # Safety check for environment
@@ -91,69 +71,20 @@ async def clear_database(engine_to_use, include_users: bool = False):
     
     async with SessionLocal() as session:
         try:
-            # Order of deletion matters because of foreign keys
+            print("Clearing all tables except 'users'...")
             
-            # 1. CRM Logs & Tasks (Refers to Entities)
-            print("Clearing CRM Activity Logs & Tasks...")
-            await session.execute(delete(CRMActivityLog))
-            await session.execute(delete(CRMTask))
-            
-            # 2. Activity Logs (Refers to Users/Entities)
-            print("Clearing Activity Logs...")
-            await session.execute(delete(ActivityLog))
-
-            # 3. Ticket System (Refers to Users)
-            print("Clearing Ticket Messages & Tickets...")
-            await session.execute(delete(TicketMessage))
-            await session.execute(delete(Ticket))
-
-            # 4. Training Extensions (Refers to Batches & Candidates)
-            print("Clearing Training Extensions (Attendance, Assessments, Interviews, Events)...")
-            await session.execute(delete(TrainingAttendance))
-            await session.execute(delete(TrainingAssessment))
-            await session.execute(delete(TrainingMockInterview))
-            await session.execute(delete(TrainingBatchEvent))
-            await session.execute(delete(TrainingBatchExtension))
-
-            # 5. CRM Root Entities (Deals/Leads)
-            print("Clearing CRM Deals & Leads...")
-            await session.execute(delete(Deal))
-            await session.execute(delete(Lead))
-
-            # 6. Allocations (Refers to Batches & Candidates)
-            print("Clearing Candidate Allocations...")
-            await session.execute(delete(TrainingCandidateAllocation))
-
-            # 7. Batches (Refers to nothing/Users)
-            print("Clearing Training Batches...")
-            await session.execute(delete(TrainingBatch))
-            
-            # 8. Candidate Data (Refers to Candidates)
-            print("Clearing Candidate Documents...")
-            await session.execute(delete(CandidateDocument))
-            
-            print("Clearing Candidate Counseling...")
-            await session.execute(delete(CandidateCounseling))
-            
-            print("Clearing Candidate Screenings...")
-            await session.execute(delete(CandidateScreening))
-            
-            # 9. Candidates
-            print("Clearing Candidates...")
-            await session.execute(delete(Candidate))
-
-            # 10. CRM Base Entities (Contacts/Companies)
-            print("Clearing CRM Contacts & Companies...")
-            await session.execute(delete(Contact))
-            await session.execute(delete(Company))
-            
-            # 11. Users (Optional)
-            if include_users:
-                print("Clearing Users (excluding superusers)...")
-                await session.execute(delete(User).where(User.is_superuser == False))
+            # Base.metadata.sorted_tables lists tables in topological dependency order.
+            # Deleting in reverse order ensures child tables are deleted before their parents.
+            for table in reversed(Base.metadata.sorted_tables):
+                if table.name == "users":
+                    print("Skipping users table")
+                    continue
+                
+                print(f"Clearing table: {table.name}...")
+                await session.execute(table.delete())
             
             await session.commit()
-            print("\nSuccessfully cleared the specified tables.")
+            print("\nSuccessfully cleared all tables except the users table.")
             
         except Exception as e:
             await session.rollback()
@@ -164,7 +95,7 @@ async def clear_database(engine_to_use, include_users: bool = False):
             await engine_to_use.dispose()
 
 def main():
-    parser = argparse.ArgumentParser(description="Clear records from database tables.")
+    parser = argparse.ArgumentParser(description="Clear records from database tables except the users table.")
     parser.add_argument("--env-file", help="Specify which .env file to use (e.g., .env.dev)")
     parser.add_argument("--host", help="Database host (overrides env file)")
     parser.add_argument("--port", help="Database port (overrides env file)")
@@ -175,11 +106,6 @@ def main():
         "--confirm", 
         action="store_true", 
         help="Confirm that you want to delete all records. This action is irreversible."
-    )
-    parser.add_argument(
-        "--include-users", 
-        action="store_true", 
-        help="Also clear the users table (excluding superusers)."
     )
 
     args = parser.parse_args()
@@ -226,7 +152,7 @@ def main():
 
     # Step 5: Execute
     try:
-        asyncio.run(clear_database(engine, include_users=args.include_users))
+        asyncio.run(clear_database(engine))
     except KeyboardInterrupt:
         print("\nOperation interrupted by user.")
     except Exception as e:
