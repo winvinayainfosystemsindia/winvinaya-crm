@@ -42,7 +42,20 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 	const user = useAppSelector((state) => state.auth.user);
 	const loadingFields = useAppSelector(state => state.settings.loading);
 	const [showErrors, setShowErrors] = useState(false);
+	const [isInitialLoading, setIsInitialLoading] = useState(true);
 	const { formatDate } = useDateTime();
+
+	useEffect(() => {
+		if (open) {
+			setIsInitialLoading(true);
+		}
+	}, [open]);
+
+	useEffect(() => {
+		if (!loadingFields) {
+			setIsInitialLoading(false);
+		}
+	}, [loadingFields]);
 
 	const [formData, setFormData] = useState<CandidateCounselingCreate>({
 		skills: [],
@@ -67,7 +80,10 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 				const othersValues = initialData.others || {};
 				setFormData({
 					...initialData,
-					skills: initialData.skills || [],
+					skills: (initialData.skills || []).map(s => ({
+						name: s.name || '',
+						level: s.level || 'Beginner'
+					})),
 					questions: initialData.questions || [],
 					others: initialData.others || {},
 					workexperience: initialData.workexperience || [],
@@ -256,7 +272,7 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 			fullWidth
 			PaperProps={{ sx: { borderRadius: '4px', bgcolor: 'transparent', boxShadow: 'none' } }}
 		>
-			{loadingFields ? (
+			{isInitialLoading ? (
 				<Box sx={{ display: 'flex', justifyContent: 'center', p: 8, bgcolor: 'white', borderRadius: '4px' }}>
 					<CircularProgress />
 				</Box>

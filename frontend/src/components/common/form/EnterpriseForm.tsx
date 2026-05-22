@@ -54,7 +54,7 @@ const EnterpriseForm: React.FC<EnterpriseFormProps> = ({
 	};
 
 	const handleStepClick = (step: number) => {
-		if (mode === 'view' || step < activeStep) {
+		if (mode === 'view' || mode === 'edit' || step < activeStep) {
 			setDirection(step > activeStep ? 'left' : 'right');
 			setActiveStep(step);
 		}

@@ -216,7 +216,7 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 											<Typography variant="awsFieldLabel">Proficiency Outcome</Typography>
 											<FormControl fullWidth size="small">
 												<Select
-													value={skill.level}
+													value={skill.level || 'Beginner'}
 													onChange={(e) => onSkillChange(index, 'level', e.target.value as any)}
 													sx={{
 														borderRadius: 0.5,
@@ -225,20 +225,23 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 														'&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'text.secondary' },
 														'&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' }
 													}}
-													renderValue={(selected) => (
-														<Stack direction="row" spacing={1} alignItems="center">
-															<Chip 
-																label={selected} 
-																size="small" 
-																sx={{ 
-																	bgcolor: alpha(theme.palette[getProficiencyColor(selected) === 'success.main' ? 'success' : getProficiencyColor(selected) === 'info.main' ? 'info' : 'warning'].main, 0.1),
-																	color: getProficiencyColor(selected),
-																	fontWeight: 700,
-																	borderRadius: 0.5
-																}} 
-															/>
-														</Stack>
-													)}
+													renderValue={(selected) => {
+														const level = selected || 'Beginner';
+														return (
+															<Stack direction="row" spacing={1} alignItems="center">
+																<Chip 
+																	label={level} 
+																	size="small" 
+																	sx={{ 
+																		bgcolor: alpha(theme.palette[getProficiencyColor(level) === 'success.main' ? 'success' : getProficiencyColor(level) === 'info.main' ? 'info' : 'warning'].main, 0.1),
+																		color: getProficiencyColor(level),
+																		fontWeight: 700,
+																		borderRadius: 0.5
+																	}} 
+																/>
+															</Stack>
+														);
+													}}
 												>
 													<MenuItem value="Beginner">
 														<Stack sx={{ py: 0.5 }}>
@@ -264,25 +267,32 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 										
 										{/* Proficiency Indicator */}
 										<Box sx={{ mt: 2 }}>
-											<Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
-												<Typography variant="caption" color="text.secondary">Outcome Rating</Typography>
-												<Typography variant="caption" sx={{ fontWeight: 700, color: getProficiencyColor(skill.level) }}>
-													{getProficiencyValue(skill.level)}%
-												</Typography>
-											</Stack>
-											<LinearProgress 
-												variant="determinate" 
-												value={getProficiencyValue(skill.level)} 
-												sx={{ 
-													height: 4, 
-													borderRadius: 2,
-													bgcolor: alpha(theme.palette.divider, 0.5),
-													'& .MuiLinearProgress-bar': {
-														bgcolor: getProficiencyColor(skill.level),
-														borderRadius: 2
-													}
-												}}
-											/>
+											{(() => {
+												const level = skill.level || 'Beginner';
+												return (
+													<>
+														<Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
+															<Typography variant="caption" color="text.secondary">Outcome Rating</Typography>
+															<Typography variant="caption" sx={{ fontWeight: 700, color: getProficiencyColor(level) }}>
+																{getProficiencyValue(level)}%
+															</Typography>
+														</Stack>
+														<LinearProgress 
+															variant="determinate" 
+															value={getProficiencyValue(level)} 
+															sx={{ 
+																height: 4, 
+																borderRadius: 2,
+																bgcolor: alpha(theme.palette.divider, 0.5),
+																'& .MuiLinearProgress-bar': {
+																	bgcolor: getProficiencyColor(level),
+																	borderRadius: 2
+																}
+															}}
+														/>
+													</>
+												);
+											})()}
 										</Box>
 									</Grid>
 								</Grid>

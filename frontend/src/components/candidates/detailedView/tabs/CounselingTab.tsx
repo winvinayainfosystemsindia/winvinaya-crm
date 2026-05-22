@@ -38,6 +38,7 @@ const CounselingTab: React.FC<CounselingTabProps> = ({ candidate }) => {
 	const navigate = useNavigate();
 	const { formatDate } = useDateTime();
 	const { counseling } = candidate;
+	const suitableRoles = counseling ? (counseling.suitable_job_roles || counseling.others?.suitable_job_roles || []) : [];
 
 	if (!counseling) {
 		return (
@@ -257,6 +258,31 @@ const CounselingTab: React.FC<CounselingTabProps> = ({ candidate }) => {
 								label="Date" 
 								value={counseling.counseling_date ? formatDate(counseling.counseling_date) : '-'} 
 								icon={<EventIcon sx={{ fontSize: 18 }} />} 
+							/>
+							<InfoRow 
+								label="Suitable Job Roles" 
+								value={
+									suitableRoles.length > 0 ? (
+										<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 0.5 }}>
+											{suitableRoles.map((role: string, idx: number) => (
+												<Chip 
+													key={idx} 
+													label={role} 
+													size="small" 
+													color="primary"
+													variant="outlined"
+													sx={{ 
+														fontWeight: 700,
+														fontSize: '0.75rem',
+														borderRadius: '6px',
+														bgcolor: alpha(theme.palette.primary.main, 0.04)
+													}} 
+												/>
+											))}
+										</Box>
+									) : null
+								} 
+								icon={<WorkIcon sx={{ fontSize: 18 }} />} 
 							/>
 						</Stack>
 					</Box>
