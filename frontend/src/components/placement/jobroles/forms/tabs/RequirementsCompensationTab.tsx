@@ -15,7 +15,9 @@ import {
 	SchoolOutlined as EducationIcon,
 	AccessibleOutlined as DisabilityIcon,
 	InfoOutlined as InfoIcon,
-	Add as AddIcon
+	Add as AddIcon,
+	WorkHistoryOutlined as ExperienceIcon,
+	PaymentsOutlined as SalaryIcon
 } from '@mui/icons-material';
 import { awsStyles } from '../../../../../theme/theme';
 import { disabilityTypes } from '../../../../../data/Disabilities';
@@ -265,6 +267,116 @@ const RequirementsCompensationTab: React.FC<RequirementsCompensationTabProps> = 
 									/>
 								)}
 							/>
+						</Box>
+					</Grid>
+				</Grid>
+			</Paper>
+
+			{/* Experience Requirements Section */}
+			<Paper elevation={0} sx={awsPanel}>
+				<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
+					<Box sx={{ bgcolor: 'secondary.main', p: 0.5, borderRadius: '2px', display: 'flex' }}>
+						<ExperienceIcon sx={{ color: '#ffffff', fontSize: 20 }} />
+					</Box>
+					<Typography variant="awsSectionTitle">Experience Requirements</Typography>
+				</Stack>
+
+				<Grid container spacing={3}>
+					<Grid size={{ xs: 12, sm: 6 }}>
+						<Box>
+							<Typography variant="awsFieldLabel">Minimum Experience (Years)</Typography>
+							<TextField
+								type="number"
+								placeholder="0"
+								inputProps={{ min: 0, step: 0.5 }}
+								value={formData.experience?.min ?? ''}
+								onChange={(e) => {
+									const val = e.target.value === '' ? undefined : parseFloat(e.target.value);
+									handleNestedChange('experience', 'min', val);
+								}}
+								{...commonTextFieldProps}
+								fullWidth
+							/>
+						</Box>
+					</Grid>
+					<Grid size={{ xs: 12, sm: 6 }}>
+						<Box>
+							<Typography variant="awsFieldLabel">Maximum Experience (Years)</Typography>
+							<TextField
+								type="number"
+								placeholder="e.g. 5"
+								inputProps={{ min: 0, step: 0.5 }}
+								value={formData.experience?.max ?? ''}
+								onChange={(e) => {
+									const val = e.target.value === '' ? undefined : parseFloat(e.target.value);
+									handleNestedChange('experience', 'max', val);
+								}}
+							/>
+						</Box>
+					</Grid>
+				</Grid>
+			</Paper>
+
+			{/* Compensation Details Section */}
+			<Paper elevation={0} sx={awsPanel}>
+				<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
+					<Box sx={{ bgcolor: 'secondary.main', p: 0.5, borderRadius: '2px', display: 'flex' }}>
+						<SalaryIcon sx={{ color: '#ffffff', fontSize: 20 }} />
+					</Box>
+					<Typography variant="awsSectionTitle">Compensation Details</Typography>
+				</Stack>
+
+				<Grid container spacing={3}>
+					<Grid size={{ xs: 12, sm: 4 }}>
+						<Box>
+							<Typography variant="awsFieldLabel">Minimum Salary</Typography>
+							<TextField
+								type="number"
+								placeholder="e.g. 300000"
+								inputProps={{ min: 0, step: 10000 }}
+								value={formData.salary_range?.min ?? ''}
+								onChange={(e) => {
+									const val = e.target.value === '' ? undefined : parseFloat(e.target.value);
+									handleNestedChange('salary_range', 'min', val);
+								}}
+								{...commonTextFieldProps}
+								fullWidth
+							/>
+						</Box>
+					</Grid>
+					<Grid size={{ xs: 12, sm: 4 }}>
+						<Box>
+							<Typography variant="awsFieldLabel">Maximum Salary</Typography>
+							<TextField
+								type="number"
+								placeholder="e.g. 600000"
+								inputProps={{ min: 0, step: 10000 }}
+								value={formData.salary_range?.max ?? ''}
+								onChange={(e) => {
+									const val = e.target.value === '' ? undefined : parseFloat(e.target.value);
+									handleNestedChange('salary_range', 'max', val);
+								}}
+								{...commonTextFieldProps}
+								fullWidth
+							/>
+						</Box>
+					</Grid>
+					<Grid size={{ xs: 12, sm: 4 }}>
+						<Box>
+							<Typography variant="awsFieldLabel">Currency</Typography>
+							<TextField
+								select
+								value={formData.salary_range?.currency || 'INR'}
+								onChange={(e) => handleNestedChange('salary_range', 'currency', e.target.value)}
+								SelectProps={{ native: true }}
+								{...commonTextFieldProps}
+								fullWidth
+							>
+								<option value="INR">INR (₹)</option>
+								<option value="USD">USD ($)</option>
+								<option value="EUR">EUR (€)</option>
+								<option value="GBP">GBP (£)</option>
+							</TextField>
 						</Box>
 					</Grid>
 				</Grid>

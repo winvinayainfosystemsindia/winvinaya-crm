@@ -114,6 +114,8 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 						states: jobRole.location?.states || (legacyState ? [legacyState] : []),
 						cities: jobRole.location?.cities || []
 					},
+					experience: jobRole.experience || { min: undefined, max: undefined },
+					salary_range: jobRole.salary_range || { min: undefined, max: undefined, currency: 'INR' },
 					requirements: {
 						...jobRole.requirements,
 						disability_preferred: jobRole.requirements?.disability_preferred || []
@@ -128,6 +130,8 @@ const JobRoleFormDialog: React.FC<JobRoleFormDialogProps> = ({
 					no_of_vacancies: 1,
 					close_date: getDefaultCloseDate(),
 					location: { cities: [], states: [], country: 'India' },
+					experience: { min: undefined, max: undefined },
+					salary_range: { min: undefined, max: undefined, currency: 'INR' },
 					requirements: {
 						skills: [],
 						qualifications: ['Any Graduation'],
