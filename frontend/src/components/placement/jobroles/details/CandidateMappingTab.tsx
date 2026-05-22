@@ -126,6 +126,11 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                 if (!c.qualification || !activeFilters.qualification.includes(c.qualification)) return false;
             }
 
+            // Registration Source multi-select filter
+            if (activeFilters.sourceOfInfo && activeFilters.sourceOfInfo.length > 0) {
+                if (!c.source_of_info || !activeFilters.sourceOfInfo.includes(c.source_of_info)) return false;
+            }
+
             // Experience range filter
             const expValue = parseInt(String(c.year_of_experience || '0'), 10);
             if (activeFilters.experience.min && expValue < parseInt(activeFilters.experience.min, 10)) return false;
@@ -148,6 +153,7 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
     const dynamicFilterFields = useMemo(() => {
         const disabilities = Array.from(new Set(matchingCandidates.map(c => c.disability).filter((d): d is string => !!d)));
         const qualifications = Array.from(new Set(matchingCandidates.map(c => c.qualification).filter((q): q is string => !!q)));
+        const sources = Array.from(new Set(matchingCandidates.map(c => c.source_of_info).filter((s): s is string => !!s)));
 
         const fields = [...CANDIDATE_MAPPING_FILTER_FIELDS];
 
@@ -175,8 +181,17 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
             });
         }
 
+        if (sources.length > 0) {
+            fields.push({
+                key: 'sourceOfInfo',
+                label: 'Registration Source',
+                type: 'multi-select',
+                options: sources.map(s => ({ value: s, label: s }))
+            });
+        }
+
         return fields;
-    }, [matchingCandidates]);
+    }, [matchingCandidates, allPossibleSkills]);
 
     const activeFilterCount = useMemo(() => {
         let count = 0;
@@ -184,6 +199,7 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
         if (activeFilters.skills.length > 0) count++;
         if (activeFilters.disability.length > 0) count++;
         if (activeFilters.qualification.length > 0) count++;
+        if (activeFilters.sourceOfInfo && activeFilters.sourceOfInfo.length > 0) count++;
         if (activeFilters.experience.min || activeFilters.experience.max) count++;
         return count;
     }, [activeFilters]);

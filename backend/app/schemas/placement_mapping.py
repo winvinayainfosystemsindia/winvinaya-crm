@@ -108,6 +108,7 @@ class CandidateMatchResult(BaseModel):
     year_of_experience: Optional[str] = None
     status: Optional[str] = None
     mapping_id: Optional[int] = None
+    source_of_info: Optional[str] = None
     
     model_config = ConfigDict(from_attributes=True)
 

@@ -65,10 +65,11 @@ const SuggestionsTable: React.FC<SuggestionsTableProps> = ({
     const theme = useTheme();
     const navigate = useNavigate();
     const columns: ColumnDefinition<CandidateMatchResult>[] = [
-        { id: 'name', label: 'CANDIDATE', width: '30%' },
-        { id: 'match_score', label: 'SCORE', align: 'center', width: '12%' },
-        { id: 'skill_match', label: 'MATCH DETAILS', width: '33%' },
-        { id: 'year_of_experience', label: 'EXP', align: 'center', width: '10%' },
+        { id: 'name', label: 'CANDIDATE', width: '25%' },
+        { id: 'match_score', label: 'SCORE', align: 'center', width: '10%' },
+        { id: 'skill_match', label: 'MATCH DETAILS', width: '25%' },
+        { id: 'year_of_experience', label: 'EXP', align: 'center', width: '8%' },
+        { id: 'source_of_info', label: 'SOURCE', width: '17%' },
         { id: 'other_mappings_count', label: 'MAPPINGS', width: '15%' },
     ];
 
@@ -149,6 +150,11 @@ const SuggestionsTable: React.FC<SuggestionsTableProps> = ({
                 <TableCell align="center">
                     <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
                         {candidate.year_of_experience || 'Fresher'}
+                    </Typography>
+                </TableCell>
+                <TableCell>
+                    <Typography variant="body2" sx={{ color: theme.palette.text.secondary, fontWeight: 500 }}>
+                        {candidate.source_of_info || 'Unknown'}
                     </Typography>
                 </TableCell>
                 <TableCell>

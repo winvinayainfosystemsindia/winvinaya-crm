@@ -274,6 +274,13 @@ class PlacementMappingService:
             if candidate.work_experience and isinstance(candidate.work_experience, dict):
                 year_of_exp = candidate.work_experience.get("year_of_experience")
 
+            # Extract registration source (registration_type) from candidate's other field
+            reg_source = None
+            if candidate.other and isinstance(candidate.other, dict):
+                reg_source = candidate.other.get("registration_type")
+            if not reg_source:
+                reg_source = "Registered"
+
             results.append(
                 CandidateMatchResult(
                     public_id=candidate.public_id,
@@ -291,7 +298,8 @@ class PlacementMappingService:
                     is_already_mapped=candidate.id in mapping_info,
                     status=mapping_info.get(candidate.id)[1] if candidate.id in mapping_info else None,
                     mapping_id=mapping_info.get(candidate.id)[0] if candidate.id in mapping_info else None,
-                    year_of_experience=year_of_exp
+                    year_of_experience=year_of_exp,
+                    source_of_info=reg_source
                 )
             )
 

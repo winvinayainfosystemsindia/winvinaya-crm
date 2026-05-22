@@ -29,6 +29,7 @@ export interface CandidateMappingFiltersState {
     skills: string[];
     disability: string[];
     qualification: string[];
+    sourceOfInfo: string[];
     experience: {
         min?: string;
         max?: string;
@@ -40,6 +41,7 @@ export const INITIAL_FILTERS: CandidateMappingFiltersState = {
     skills: [],
     disability: [],
     qualification: [],
+    sourceOfInfo: [],
     experience: {
         min: '',
         max: ''

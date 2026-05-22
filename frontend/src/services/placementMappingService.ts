@@ -24,6 +24,7 @@ export interface CandidateMatchResult {
     year_of_experience?: string;
     status: string; // New field
     mapping_id?: number; // New field
+    source_of_info?: string;
 }
 
 export interface PlacementMapping {
