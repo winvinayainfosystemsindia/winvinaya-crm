@@ -7,7 +7,7 @@ from typing import List, Optional
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.skill import Skill
-from app.schemas.skill import SkillCreate
+from app.schemas.skill import SkillCreate, SkillUpdate
 from app.repositories.skill_repository import SkillRepository
 from app.ai.providers import get_llm_provider
 from app.ai.prompts.loader import loader
@@ -22,7 +22,7 @@ class SkillService:
         self.db = db
         self.repository = SkillRepository(db)
 
-    async def _check_ai_duplicate(self, name: str) -> None:
+    async def _check_ai_duplicate(self, name: str, exclude_name: Optional[str] = None) -> None:
         """
         Check if the proposed skill name is a semantic duplicate (alias, variation,
         abbreviation, or synonym) of any existing skill in the master table.
@@ -31,6 +31,9 @@ class SkillService:
             # 1. Fetch all master skill names (up to a reasonable limit)
             master_skills = await self.repository.get_all_alphabetical(limit=2000)
             existing_names = [s.name for s in master_skills]
+            
+            if exclude_name and exclude_name in existing_names:
+                existing_names.remove(exclude_name)
             
             if not existing_names:
                 return
@@ -138,9 +141,41 @@ class SkillService:
         """Get skill by ID"""
         return await self.repository.get(skill_id)
 
-    async def update_skill(self, skill_id: int, skill_in: dict) -> Optional[Skill]:
-        """Update a skill"""
-        return await self.repository.update(skill_id, skill_in)
+    async def update_skill(self, skill_id: int, skill_in: SkillUpdate) -> Optional[Skill]:
+        """Update a skill (with duplicate and AI semantic check)"""
+        # Get current skill
+        current_skill = await self.repository.get(skill_id)
+        if not current_skill:
+            return None
+            
+        update_data = skill_in.model_dump(exclude_unset=True)
+        
+        if "name" in update_data:
+            name = update_data["name"].strip()
+            # If the name is actually changing (case-insensitive check)
+            if name.lower() != current_skill.name.lower():
+                # 1. Check if another active skill with this name already exists
+                existing_skill = await self.repository.get_by_name(name)
+                if existing_skill and existing_skill.id != skill_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"A skill with the name '{name}' already exists in the system."
+                    )
+                
+                # 2. Run AI semantic duplicate check, excluding the current skill name
+                await self._check_ai_duplicate(name, exclude_name=current_skill.name)
+                
+            update_data["name"] = name
+            
+        # Perform database update
+        updated_skill = await self.repository.update(skill_id, update_data)
+        if updated_skill and updated_skill.created_by_id is not None:
+            await self.db.refresh(updated_skill, ["creator"])
+        return updated_skill
+
+    async def delete_skill(self, skill_id: int) -> bool:
+        """Delete a skill (soft delete)"""
+        return await self.repository.delete(skill_id, soft=True)
 
     async def verify_skill(self, skill_id: int) -> Optional[Skill]:
         """Verify a skill"""

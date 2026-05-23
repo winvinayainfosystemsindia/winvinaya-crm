@@ -39,5 +39,14 @@ export const skillService = {
     async verifySkill(id: number): Promise<Skill> {
         const response = await api.patch<Skill>(`/skills/${id}/verify`);
         return response.data;
+    },
+
+    async updateSkill(id: number, skill: Partial<SkillCreate>): Promise<Skill> {
+        const response = await api.put<Skill>(`/skills/${id}`, skill);
+        return response.data;
+    },
+
+    async deleteSkill(id: number): Promise<void> {
+        await api.delete(`/skills/${id}`);
     }
 };

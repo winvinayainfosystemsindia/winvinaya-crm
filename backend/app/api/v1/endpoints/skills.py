@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api import deps
 from app.models.user import User
-from app.schemas.skill import SkillCreate, SkillRead
+from app.schemas.skill import SkillCreate, SkillRead, SkillUpdate
 from app.services.skill_service import SkillService
 
 
@@ -59,3 +59,33 @@ async def verify_skill(
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Skill not found")
     return skill
+
+
+@router.put("/{skill_id}", response_model=SkillRead)
+async def update_skill(
+    skill_id: int,
+    skill_in: SkillUpdate,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user)
+) -> Any:
+    """Update a skill"""
+    service = SkillService(db)
+    skill = await service.update_skill(skill_id, skill_in)
+    if not skill:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Skill not found")
+    return skill
+
+
+@router.delete("/{skill_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_skill(
+    skill_id: int,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user)
+) -> None:
+    """Delete a skill (soft delete)"""
+    service = SkillService(db)
+    success = await service.delete_skill(skill_id)
+    if not success:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Skill not found")

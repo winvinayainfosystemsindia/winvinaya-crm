@@ -15,7 +15,10 @@ class SkillRepository(BaseRepository[Skill]):
         
     async def get_by_name(self, name: str) -> Optional[Skill]:
         """Get skill by name (case-insensitive)"""
-        stmt = select(self.model).where(func.lower(self.model.name) == func.lower(name))
+        stmt = select(self.model).where(
+            func.lower(self.model.name) == func.lower(name),
+            self.model.is_deleted == False
+        )
         result = await self.db.execute(stmt)
         return result.scalars().first()
         
@@ -24,7 +27,8 @@ class SkillRepository(BaseRepository[Skill]):
         stmt = select(self.model).options(
             selectinload(self.model.creator)
         ).where(
-            self.model.name.ilike(f"%{query}%")
+            self.model.name.ilike(f"%{query}%"),
+            self.model.is_deleted == False
         ).order_by(self.model.name).limit(limit)
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
@@ -33,6 +37,8 @@ class SkillRepository(BaseRepository[Skill]):
         """Get all skills ordered alphabetically"""
         stmt = select(self.model).options(
             selectinload(self.model.creator)
+        ).where(
+            self.model.is_deleted == False
         ).order_by(self.model.name).limit(limit)
         result = await self.db.execute(stmt)
         return list(result.scalars().all())

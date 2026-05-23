@@ -17,14 +17,21 @@ import {
 	Chip,
 	InputAdornment,
 	Tooltip,
-	IconButton
+	IconButton,
+	Dialog,
+	DialogTitle,
+	DialogContent,
+	DialogActions
 } from '@mui/material';
 import {
 	Search as SearchIcon,
 	Add as AddIcon,
 	CheckCircle as VerifiedIcon,
-	Cancel as UnverifiedIcon
+	Cancel as UnverifiedIcon,
+	Edit as EditIcon,
+	Delete as DeleteIcon
 } from '@mui/icons-material';
+import ConfirmationDialog from '../common/dialogbox/ConfirmationDialog';
 import { skillService, type Skill } from '../../services/skillService';
 import { useSnackbar } from 'notistack';
 
@@ -37,6 +44,15 @@ const SkillsSection: React.FC = () => {
 	const [newSkillName, setNewSkillName] = useState('');
 	const [adding, setAdding] = useState(false);
 	const [verifyingId, setVerifyingId] = useState<number | null>(null);
+
+	// Edit states
+	const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
+	const [editSkillName, setEditSkillName] = useState('');
+	const [editLoading, setEditLoading] = useState(false);
+
+	// Delete states
+	const [deletingSkill, setDeletingSkill] = useState<Skill | null>(null);
+	const [deleteLoading, setDeleteLoading] = useState(false);
 
 	useEffect(() => {
 		loadSkills();
@@ -89,6 +105,71 @@ const SkillsSection: React.FC = () => {
 			enqueueSnackbar('Failed to verify skill', { variant: 'error' });
 		} finally {
 			setVerifyingId(null);
+		}
+	};
+
+	const handleOpenEdit = (skill: Skill) => {
+		setEditingSkill(skill);
+		setEditSkillName(skill.name);
+	};
+
+	const handleCloseEdit = () => {
+		setEditingSkill(null);
+		setEditSkillName('');
+		setEditLoading(false);
+	};
+
+	const handleSaveEdit = async () => {
+		if (!editingSkill || !editSkillName.trim()) return;
+		if (editSkillName.trim() === editingSkill.name) {
+			handleCloseEdit();
+			return;
+		}
+
+		setEditLoading(true);
+		try {
+			await skillService.updateSkill(editingSkill.id, { name: editSkillName.trim() });
+			enqueueSnackbar('Skill updated successfully', { variant: 'success' });
+			handleCloseEdit();
+			loadSkills();
+		} catch (error: any) {
+			const errMsg = error.response?.data?.detail || 'Failed to update skill';
+			enqueueSnackbar(errMsg, { variant: 'error' });
+			
+			if (typeof errMsg === 'string') {
+				const match = errMsg.match(/Did you mean '([^']+)'\?/);
+				if (match && match[1]) {
+					const suggested = match[1];
+					setEditSkillName(suggested);
+				}
+			}
+		} finally {
+			setEditLoading(false);
+		}
+	};
+
+	const handleOpenDelete = (skill: Skill) => {
+		setDeletingSkill(skill);
+	};
+
+	const handleCloseDelete = () => {
+		setDeletingSkill(null);
+		setDeleteLoading(false);
+	};
+
+	const handleConfirmDelete = async () => {
+		if (!deletingSkill) return;
+
+		setDeleteLoading(true);
+		try {
+			await skillService.deleteSkill(deletingSkill.id);
+			enqueueSnackbar('Skill deleted successfully', { variant: 'success' });
+			handleCloseDelete();
+			loadSkills();
+		} catch (error: any) {
+			enqueueSnackbar(error.response?.data?.detail || 'Failed to delete skill', { variant: 'error' });
+		} finally {
+			setDeleteLoading(false);
 		}
 	};
 
@@ -274,25 +355,51 @@ const SkillsSection: React.FC = () => {
 												</Typography>
 											</TableCell>
 											<TableCell align="right">
-												{!skill.is_verified && (
-													<Tooltip title="Verify Skill">
-														<IconButton 
-															size="small" 
-															onClick={() => handleVerifySkill(skill.id)}
-															disabled={verifyingId === skill.id}
-															sx={{ 
-																color: theme.palette.success.main,
-																'&:hover': { bgcolor: theme.palette.mode === 'dark' ? 'rgba(16, 185, 129, 0.1)' : '#ecfdf5' }
+												<Stack direction="row" spacing={1} justifyContent="flex-end">
+													{!skill.is_verified && (
+														<Tooltip title="Verify Skill">
+															<IconButton 
+																size="small" 
+																onClick={() => handleVerifySkill(skill.id)}
+																disabled={verifyingId === skill.id}
+																sx={{ 
+																	color: theme.palette.success.main,
+																	'&:hover': { bgcolor: theme.palette.mode === 'dark' ? 'rgba(16, 185, 129, 0.1)' : '#ecfdf5' }
+																}}
+															>
+																{verifyingId === skill.id ? (
+																	<CircularProgress size={20} color="inherit" />
+																) : (
+																	<VerifiedIcon fontSize="small" />
+																)}
+															</IconButton>
+														</Tooltip>
+													)}
+													<Tooltip title="Edit Skill">
+														<IconButton
+															size="small"
+															onClick={() => handleOpenEdit(skill)}
+															sx={{
+																color: theme.palette.primary.main,
+																'&:hover': { bgcolor: theme.palette.mode === 'dark' ? 'rgba(37, 99, 235, 0.1)' : '#eff6ff' }
 															}}
 														>
-															{verifyingId === skill.id ? (
-																<CircularProgress size={20} color="inherit" />
-															) : (
-																<VerifiedIcon fontSize="small" />
-															)}
+															<EditIcon fontSize="small" />
 														</IconButton>
 													</Tooltip>
-												)}
+													<Tooltip title="Delete Skill">
+														<IconButton
+															size="small"
+															onClick={() => handleOpenDelete(skill)}
+															sx={{
+																color: theme.palette.error.main,
+																'&:hover': { bgcolor: theme.palette.mode === 'dark' ? 'rgba(239, 68, 68, 0.1)' : '#fef2f2' }
+															}}
+														>
+															<DeleteIcon fontSize="small" />
+														</IconButton>
+													</Tooltip>
+												</Stack>
 											</TableCell>
 										</TableRow>
 									))
@@ -311,6 +418,67 @@ const SkillsSection: React.FC = () => {
 					</Typography>
 				</Box>
 			</Stack>
+
+			{/* Edit Dialog */}
+			<Dialog 
+				open={!!editingSkill} 
+				onClose={handleCloseEdit}
+				maxWidth="xs"
+				fullWidth
+				PaperProps={{
+					sx: { borderRadius: '8px' }
+				}}
+			>
+				<DialogTitle sx={{ fontWeight: 700 }}>Edit Skill Name</DialogTitle>
+				<DialogContent>
+					<Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+						Modify the master skill name. This will run a semantic duplicate check to ensure consistency.
+					</Typography>
+					<TextField
+						autoFocus
+						margin="dense"
+						label="Skill Name"
+						type="text"
+						fullWidth
+						variant="outlined"
+						value={editSkillName}
+						onChange={(e) => setEditSkillName(e.target.value)}
+						onKeyPress={(e) => e.key === 'Enter' && handleSaveEdit()}
+						disabled={editLoading}
+					/>
+				</DialogContent>
+				<DialogActions sx={{ px: 3, pb: 2 }}>
+					<Button onClick={handleCloseEdit} disabled={editLoading} sx={{ textTransform: 'none', fontWeight: 600 }}>
+						Cancel
+					</Button>
+					<Button 
+						onClick={handleSaveEdit} 
+						disabled={editLoading || !editSkillName.trim()}
+						variant="contained"
+						sx={{ textTransform: 'none', fontWeight: 600 }}
+					>
+						{editLoading ? <CircularProgress size={20} color="inherit" /> : 'Save'}
+					</Button>
+				</DialogActions>
+			</Dialog>
+
+			{/* Delete Confirmation Dialog */}
+			{deletingSkill && (
+				<ConfirmationDialog
+					open={!!deletingSkill}
+					onClose={handleCloseDelete}
+					onConfirm={handleConfirmDelete}
+					title="Delete Master Skill"
+					severity="error"
+					loading={deleteLoading}
+					confirmLabel="Delete"
+					message={`Are you sure you want to delete the skill "${deletingSkill.name}"?`}
+				>
+					<Typography variant="body2" color="text.secondary" align="center">
+						This will perform a soft delete. Historical candidate records referencing this skill will remain intact, but it will no longer be available for selection in future counseling or screening forms.
+					</Typography>
+				</ConfirmationDialog>
+			)}
 		</Box>
 	);
 };
