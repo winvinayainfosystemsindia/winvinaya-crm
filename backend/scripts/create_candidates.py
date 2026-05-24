@@ -1,8 +1,17 @@
 import requests
 import random
 from datetime import date, timedelta
+import sys
+import time
 
-URL = "http://localhost:8000/api/v1/candidates/"
+# Reconfigure stdout/stderr to support unicode/emojis on Windows consoles
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+if hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8')
+
+
+URL = "https://dev-crm.winvinaya.com/api/v1/candidates/"
 
 # Data derived from frontend/src/data
 DEGREES = [
@@ -51,6 +60,9 @@ for i in range(1, 51):
         "whatsapp_number": f"9{random.randint(100000000, 999999999)}",
         "dob": random_dob().isoformat(),
         "pincode": "560001",
+        "city": "Bengaluru",
+        "district": "Bengaluru Urban",
+        "state": "Karnataka",
 
         "guardian_details": {
             "parent_name": f"Parent {i}",
@@ -83,13 +95,26 @@ for i in range(1, 51):
         }
     }
 
-    try:
-        response = requests.post(URL, json=payload)
+    max_retries = 5
+    for attempt in range(max_retries):
+        try:
+            response = requests.post(URL, json=payload)
+            
+            if response.status_code == 429:
+                wait_time = 10 * (attempt + 1)
+                print(f"Rate limit hit on Candidate {i}. Waiting {wait_time}s to retry (Attempt {attempt+1}/{max_retries})...")
+                time.sleep(wait_time)
+                continue
+                
+            if response.status_code == 201:
+                print(f"Candidate {i} created successfully | {payload['disability_details']['disability_type'] or 'None'}")
+            else:
+                print(f"Candidate {i} failed | {response.status_code} | {response.text}")
+            break
+        except Exception as e:
+            if attempt == max_retries - 1:
+                print(f"Connection Error on Candidate {i} after {max_retries} attempts: {e}")
+                break
+            print(f"Connection Error on Candidate {i}: {e}. Retrying in 3s...")
+            time.sleep(3)
 
-        if response.status_code == 201:
-            print(f"✅ Candidate {i} created successfully | {payload['disability_details']['disability_type'] or 'None'}")
-        else:
-            print(f"❌ Candidate {i} failed | {response.status_code} | {response.text}")
-    except Exception as e:
-        print(f"❌ Connection Error: {e}")
-        break

@@ -1,6 +1,7 @@
 import requests
 import json
 from openpyxl import load_workbook
+from openpyxl.worksheet.worksheet import Worksheet
 from datetime import datetime, date
 import sys
 import os
@@ -11,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Configuration
 # Use HTTP because local development uvicorn runs without SSL by default
-BASE_URL = "http://127.0.0.1:8000/api/v1"
+BASE_URL = "https://dev-crm.winvinaya.com/api/v1"
 EXCEL_FILE = r"C:\Users\daran\Downloads\candidates_pool_cleaned.xlsx"  # Change this to your file name
 
 # Credentials provided by user
@@ -379,6 +380,15 @@ def import_candidates(token):
     safe_print("Loading Excel file...")
     wb = load_workbook(EXCEL_FILE, data_only=True)
     sheet = wb.active
+    
+    # Ensure sheet is a valid Worksheet and not None/Chartsheet to satisfy static analysis
+    if sheet is None or not isinstance(sheet, Worksheet):
+        if wb.worksheets and isinstance(wb.worksheets[0], Worksheet):
+            sheet = wb.worksheets[0]
+        else:
+            safe_print("[ERROR] No valid Worksheet found in the Excel file.")
+            return
+            
     safe_print(f"Reading sheet: {sheet.title}")
 
     processed_emails = set()
@@ -483,7 +493,7 @@ def import_candidates(token):
                         "degree_name": qualification or "Degree",
                         "specialization": "General",
                         "college_name": college or "Other",
-                        "year_of_passing": int(passing_year) if str(passing_year).isdigit() else 2020,
+                        "year_of_passing": int(str(passing_year)) if str(passing_year).isdigit() else 2020,
                         "percentage": 50.0
                     }
                 ]
