@@ -16,7 +16,7 @@ import FullscreenIcon from '@mui/icons-material/Fullscreen';
 
 const REPORTS = {
   sourcing: "https://app.powerbi.com/view?r=eyJrIjoiYWVjYTkyNWMtOWUzYS00YTE2LWJhMTMtOWQ5ZWY1NmUyMmYxIiwidCI6ImNkMzY0NTJmLWFjMzQtNDRhNS1iZTMzLThiYWE4MDFhM2ZmZCJ9",
-  timesheet: "https://app.powerbi.com/view?r=eyJrIjoiZDI2NDAxZmUtMjBjMy00ZDI5LTgxOTAtYzBjMDMxZWM2N2FjIiwidCI6ImNkMzY0NTJmLWFjMzQtNDRhNS1iZTMzLThiYWE4MDFhM2ZmZCJ9"
+  timesheet: "https://app.powerbi.com/view?r=eyJrIjoiOWFmMDU0NjMtZmMxNC00NGJiLWIwOGMtMDIxYzdlYWNjOTQ0IiwidCI6ImNkMzY0NTJmLWFjMzQtNDRhNS1iZTMzLThiYWE4MDFhM2ZmZCJ9"
 } as const;
 
 type ReportType = keyof typeof REPORTS;
@@ -104,8 +104,8 @@ const BIReport: React.FC = () => {
                 },
               }}
             >
-              <MenuItem value="sourcing">Sourcing Analytics</MenuItem>
-              <MenuItem value="timesheet">Timesheet Report</MenuItem>
+              <MenuItem value="sourcing">MIS Analytics</MenuItem>
+              <MenuItem value="timesheet">Timesheet Analytics</MenuItem>
             </Select>
           </FormControl>
 
