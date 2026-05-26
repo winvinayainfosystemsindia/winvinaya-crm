@@ -55,7 +55,6 @@ const BIReport: React.FC = () => {
         flexDirection: 'column',
         height: '100%',
         minHeight: '500px'
-
       }}
     >
       {/* Enterprise-style Header */}
