@@ -41,14 +41,15 @@ const BIReport: React.FC = () => {
   return (
     <Paper
       elevation={0}
+      variant="outlined"
       component="section"
       aria-labelledby="bi-report-title"
       sx={{
         width: '100%',
         mb: 2,
-        borderRadius: 0,
-        border: '1px solid #d5dbdb',
-        bgcolor: '#ffffff',
+        borderRadius: 1.5,
+        borderColor: 'divider',
+        bgcolor: 'background.paper',
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
@@ -64,21 +65,22 @@ const BIReport: React.FC = () => {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          borderBottom: '1px solid #d5dbdb',
-          bgcolor: '#fafafa',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'background.default',
           flexWrap: 'wrap',
           gap: 2
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <AssessmentIcon sx={{ color: '#545b64' }} fontSize="small" />
+          <AssessmentIcon sx={{ color: 'text.secondary' }} fontSize="small" />
           <Typography
             variant="subtitle1"
             id="bi-report-title"
             component="h2"
             sx={{
-              fontWeight: 'bold',
-              color: '#232f3e',
+              fontWeight: 700,
+              color: 'text.primary',
               fontSize: '1rem',
             }}
           >
@@ -87,20 +89,21 @@ const BIReport: React.FC = () => {
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <FormControl size="small" sx={{ minWidth: 200, bgcolor: '#ffffff' }}>
+          <FormControl size="small" sx={{ minWidth: 200, bgcolor: 'background.paper' }}>
             <Select
               value={reportType}
               onChange={handleReportChange}
               inputProps={{ 'aria-label': 'Select Report Type' }}
               sx={{
+                borderRadius: 1,
                 '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#d5dbdb',
+                  borderColor: 'divider',
                 },
                 '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#232f3e',
+                  borderColor: 'text.primary',
                 },
                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#007185',
+                  borderColor: 'primary.main',
                 },
               }}
             >
@@ -113,16 +116,22 @@ const BIReport: React.FC = () => {
             <IconButton
               size="small"
               onClick={handleFullscreen}
-              sx={{ color: '#545b64' }}
+              sx={{ 
+                color: 'text.secondary',
+                '&:hover': {
+                  color: 'primary.main',
+                  bgcolor: 'action.hover'
+                }
+              }}
             >
-              <FullscreenIcon />
+              <FullscreenIcon fontSize="small" />
             </IconButton>
           </Tooltip>
         </Box>
       </Box>
 
       {/* Content Area with Loading Overlay */}
-      <Box sx={{ flexGrow: 1, width: '100%', position: 'relative', bgcolor: '#f2f3f3', minHeight: '450px' }}>
+      <Box sx={{ flexGrow: 1, width: '100%', position: 'relative', bgcolor: 'background.default', minHeight: '450px' }}>
         {loading && (
           <Box
             sx={{
@@ -134,11 +143,12 @@ const BIReport: React.FC = () => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              bgcolor: 'rgba(255, 255, 255, 0.8)',
+              bgcolor: 'rgba(255, 255, 255, 0.7)',
+              backdropFilter: 'blur(2px)',
               zIndex: 1,
             }}
           >
-            <CircularProgress size={40} sx={{ color: '#007185' }} />
+            <CircularProgress size={40} sx={{ color: 'primary.main' }} />
           </Box>
         )}
         <iframe
