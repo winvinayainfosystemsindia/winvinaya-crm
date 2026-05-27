@@ -1,9 +1,7 @@
 import React from 'react';
 import {
-	TextField,
 	Typography,
 	Stack,
-	Autocomplete,
 	Chip,
 	Box,
 	alpha,
@@ -11,7 +9,7 @@ import {
 } from '@mui/material';
 import { School as SchoolIcon } from '@mui/icons-material';
 import type { TrainingBatch } from '../../../../../models/training';
-import { COURSES } from '../../../../../data/Courses';
+import SkillDropdown from '../../../../common/SkillDropdown';
 
 interface CurriculumTabProps {
 	formData: Partial<TrainingBatch>;
@@ -30,13 +28,11 @@ const CurriculumTab: React.FC<CurriculumTabProps> = ({
 				<Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
 					<SchoolIcon fontSize="small" color="primary" /> Curriculum Configuration
 				</Typography>
-				<Autocomplete
+				<SkillDropdown
 					multiple
-					freeSolo
-					options={COURSES}
 					value={(formData.courses || []).map(c => typeof c === 'string' ? c : c.name)}
-					onChange={(_e, val) => {
-						const newCourses = val.map(courseName => {
+					onChange={(newValue: string[]) => {
+						const newCourses = newValue.map(courseName => {
 							const existing = (formData.courses || []).find(c =>
 								(typeof c === 'string' ? c : c.name) === courseName
 							);
@@ -44,13 +40,8 @@ const CurriculumTab: React.FC<CurriculumTabProps> = ({
 						});
 						onChange('courses', newCourses);
 					}}
-					renderInput={(params) => (
-						<TextField
-							{...params}
-							label="Select Courses"
-							placeholder="Add courses..."
-						/>
-					)}
+					label="Select Courses / Skills"
+					placeholder="Add courses..."
 					renderTags={(tagValue, getTagProps) =>
 						tagValue.map((option, index) => {
 							const { key, ...tagProps } = getTagProps({ index });
