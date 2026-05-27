@@ -64,6 +64,15 @@ const CandidateTechnicalEvaluation: React.FC = () => {
 		const fetchedQuestions = interview?.questions;
 		if (fetchedQuestions && Array.isArray(fetchedQuestions)) {
 			setAnswers(prev => {
+				// Only update if questions structure has changed to avoid focus loss / typing issues during background polls
+				const hasStructureChanged = 
+					fetchedQuestions.length !== prev.length || 
+					fetchedQuestions.some((q, idx) => prev[idx]?.question !== q.question);
+
+				if (!hasStructureChanged) {
+					return prev;
+				}
+
 				// Clone each question object to make it mutable and prevent Redux state freeze errors
 				const next = fetchedQuestions.map(q => ({ ...q }));
 				

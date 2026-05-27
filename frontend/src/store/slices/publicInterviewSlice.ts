@@ -55,7 +55,9 @@ const publicInterviewSlice = createSlice({
 	extraReducers: (builder) => {
 		builder
 			.addCase(fetchPublicInterview.pending, (state) => {
-				state.loading = true;
+				if (!state.currentInterview) {
+					state.loading = true;
+				}
 				state.error = null;
 			})
 			.addCase(fetchPublicInterview.fulfilled, (state, action) => {
