@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useSnackbar } from 'notistack';
+import React from 'react';
 import {
 	Grid,
 	TextField,
@@ -9,14 +8,12 @@ import {
 	Stack,
 	Typography,
 	Divider,
-	Chip,
-	createFilterOptions
+	Chip
 } from '@mui/material';
 import {
 	SchoolOutlined as EducationIcon,
 	AccessibleOutlined as DisabilityIcon,
 	InfoOutlined as InfoIcon,
-	Add as AddIcon,
 	WorkHistoryOutlined as ExperienceIcon,
 	PaymentsOutlined as SalaryIcon
 } from '@mui/icons-material';
@@ -24,9 +21,7 @@ import { awsStyles } from '../../../../../theme/theme';
 import { disabilityTypes } from '../../../../../data/Disabilities';
 import { QUALIFICATIONS } from '../../../../../data/jobRoleData';
 import type { JobRole } from '../../../../../models/jobRole';
-import { skillService, type Skill } from '../../../../../services/skillService';
-
-const filter = createFilterOptions<Skill | { inputValue: string; name: string }>();
+import SkillDropdown from '../../../../common/SkillDropdown';
 
 interface RequirementsCompensationTabProps {
 	formData: Partial<JobRole>;
@@ -34,15 +29,12 @@ interface RequirementsCompensationTabProps {
 	highlightMissing?: boolean;
 }
 
-
-
 const RequirementsCompensationTab: React.FC<RequirementsCompensationTabProps> = ({
 	formData,
 	handleNestedChange,
 	highlightMissing
 }) => {
 	const { awsPanel, helperBox } = awsStyles;
-	const { enqueueSnackbar } = useSnackbar();
 
 	const getFieldStyle = (value: any, isRequired: boolean = false) => {
 		const isEmpty = Array.isArray(value) ? value.length === 0 : !value;
@@ -56,23 +48,6 @@ const RequirementsCompensationTab: React.FC<RequirementsCompensationTabProps> = 
 			}
 		};
 	};
-	const [skillOptions, setSkillOptions] = useState<Skill[]>([]);
-	const [loadingSkills, setLoadingSkills] = useState(false);
-
-	useEffect(() => {
-		const loadSkills = async () => {
-			setLoadingSkills(true);
-			try {
-				const skills = await skillService.getSkills();
-				setSkillOptions(skills);
-			} catch (error) {
-				console.error("Error loading skills:", error);
-			} finally {
-				setLoadingSkills(false);
-			}
-		};
-		loadSkills();
-	}, []);
 
 	const commonTextFieldProps = {
 		size: 'small' as const,
@@ -148,79 +123,20 @@ const RequirementsCompensationTab: React.FC<RequirementsCompensationTabProps> = 
 					</Grid>
 					<Grid size={{ xs: 12, md: 6 }}>
 						<Box>
-							<Typography variant="awsFieldLabel">Key Technical Skills</Typography>
-							<Autocomplete<any, true, false, true>
+							<SkillDropdown
 								multiple
-								freeSolo
-								loading={loadingSkills}
-								options={skillOptions}
-								getOptionLabel={(option) => {
-									if (typeof option === 'string') return option;
-									if (option.inputValue) return option.inputValue;
-									return option.name;
-								}}
 								value={formData.requirements?.skills || []}
-								filterOptions={(options, params) => {
-									const filtered = filter(options, params);
-									const { inputValue } = params;
-									const isExisting = options.some((option) => inputValue.toLowerCase() === option.name.toLowerCase());
-									if (inputValue !== '' && !isExisting) {
-										filtered.push({
-											inputValue,
-											name: `Add "${inputValue}"`,
-										});
-									}
-									return filtered;
-								}}
-								onChange={async (_, newValue) => {
-									const processedValues = await Promise.all(newValue.map(async (val) => {
-										if (typeof val === 'string') return val;
-										if (val.inputValue) {
-											try {
-												const newSkill = await skillService.createSkill({ name: val.inputValue });
-												setSkillOptions(prev => {
-													if (!prev.find(s => s.id === newSkill.id)) {
-														return [...prev, newSkill].sort((a, b) => a.name.localeCompare(b.name));
-													}
-													return prev;
-												});
-												return newSkill.name;
-											} catch (e: any) {
-												const errMsg = e.response?.data?.detail || 'Failed to create skill';
-												enqueueSnackbar(errMsg, { variant: 'error' });
-												
-												if (typeof errMsg === 'string') {
-													const match = errMsg.match(/Did you mean '([^']+)'\?/);
-													if (match && match[1]) {
-														const suggested = match[1];
-														try {
-															const newSkill = await skillService.createSkill({ name: suggested });
-															setSkillOptions(prev => {
-																if (!prev.find(s => s.id === newSkill.id)) {
-																	return [...prev, newSkill].sort((a, b) => a.name.localeCompare(b.name));
-																}
-																return prev;
-															});
-															return newSkill.name;
-														} catch (innerErr) {
-															return suggested;
-														}
-													}
-												}
-												return val.inputValue;
-											}
-										}
-										return val.name;
-									}));
-									handleNestedChange('requirements', 'skills', processedValues);
-								}}
+								onChange={(newValue) => handleNestedChange('requirements', 'skills', newValue)}
+								label="Key Technical Skills"
+								placeholder="Type or select skills"
+								size="small"
 								renderTags={(value, getTagProps) =>
 									value.map((option, index) => {
 										const { key: _key, ...rest } = getTagProps({ index });
 										return (
 											<Chip
 												key={index}
-												label={typeof option === 'string' ? option : (option as any).name}
+												label={option}
 												size="small"
 												{...rest}
 												sx={{ borderRadius: '2px' }}
@@ -228,19 +144,6 @@ const RequirementsCompensationTab: React.FC<RequirementsCompensationTabProps> = 
 										);
 									})
 								}
-								renderOption={(props, option) => {
-									const { key: _key, ...rest } = props;
-									const isAdd = (option as any).inputValue;
-									return (
-										<Box component="li" key={isAdd ? `add-${(option as any).inputValue}` : (option as Skill).id} {...rest}>
-											<Stack direction="row" spacing={1} alignItems="center">
-												{isAdd && <AddIcon color="primary" fontSize="small" />}
-												<Typography>{isAdd ? `Add "${(option as any).inputValue}"` : (option as Skill).name}</Typography>
-											</Stack>
-										</Box>
-									);
-								}}
-								renderInput={(params) => <TextField {...params} placeholder="Type or select skills" {...commonTextFieldProps} />}
 							/>
 						</Box>
 					</Grid>
