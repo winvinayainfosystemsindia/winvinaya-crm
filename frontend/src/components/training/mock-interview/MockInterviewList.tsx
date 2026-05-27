@@ -68,6 +68,7 @@ const MockInterviewList: React.FC<MockInterviewListProps> = ({ batchId, allocati
 			label: 'Status',
 			type: 'multi-select',
 			options: [
+				{ value: 'inprogress', label: 'In Progress' },
 				{ value: 'cleared', label: 'Cleared' },
 				{ value: 'rejected', label: 'Rejected' },
 				{ value: 're-test', label: 'Re-test' },

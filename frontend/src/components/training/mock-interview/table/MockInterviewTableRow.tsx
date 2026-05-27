@@ -42,6 +42,9 @@ const getStatusStyles = (status: string) => {
 			return { color: 'warning', label: 'Re-test', variant: 'outlined' };
 		case 'pending':
 			return { color: 'info', label: 'Pending', variant: 'outlined' };
+		case 'inprogress':
+		case 'in_progress':
+			return { color: 'info', label: 'In Progress', variant: 'outlined' };
 		case 'absent':
 			return { color: 'default', label: 'Absent', variant: 'filled' };
 		default:
