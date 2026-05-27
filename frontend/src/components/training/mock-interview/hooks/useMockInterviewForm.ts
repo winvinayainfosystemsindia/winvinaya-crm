@@ -62,6 +62,7 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void, viewM
 				setQuestions(currentMockInterview.questions || []);
 				setSkills(currentMockInterview.skills || []);
 				setElapsedSeconds((currentMockInterview.duration_minutes || 0) * 60);
+				setIsPaused(true);
 				currentIdRef.current = currentMockInterview.id;
 			}
 		} else {
@@ -82,38 +83,42 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void, viewM
 			setElapsedSeconds(0);
 			setIsPaused(true);
 			currentIdRef.current = null;
-
-			// Start stopwatch & inactivity tracker
-			timerRef.current = setInterval(() => {
-				setIsPaused(paused => {
-					if (!paused) {
-						setElapsedSeconds(prev => prev + 1);
-						
-						// Synchronized Inactivity Check
-						setInactivitySeconds(prevInactivity => {
-							const nextInactivity = prevInactivity + 1;
-							
-							if (nextInactivity === 180) { // 3 Minutes - Automatic Pause
-								setIsPaused(true);
-								setShowInactivityAlert(true);
-								setShowTimeRunningAlert(false);
-							} else if (nextInactivity === 120) { // 2 Minutes - Warning
-								setShowTimeRunningAlert(true);
-							}
-							
-							return nextInactivity;
-						});
-					}
-					return paused;
-				});
-			}, 1000);
 		}
 		setErrors({});
+	}, [currentMockInterview, defaultInterviewer]);
+
+	// Start stopwatch & inactivity tracker when in edit/create mode
+	useEffect(() => {
+		if (viewMode) return;
+
+		timerRef.current = setInterval(() => {
+			setIsPaused(paused => {
+				if (!paused) {
+					setElapsedSeconds(prev => prev + 1);
+					
+					// Synchronized Inactivity Check
+					setInactivitySeconds(prevInactivity => {
+						const nextInactivity = prevInactivity + 1;
+						
+						if (nextInactivity === 180) { // 3 Minutes - Automatic Pause
+							setIsPaused(true);
+							setShowInactivityAlert(true);
+							setShowTimeRunningAlert(false);
+						} else if (nextInactivity === 120) { // 2 Minutes - Warning
+							setShowTimeRunningAlert(true);
+						}
+						
+						return nextInactivity;
+					});
+				}
+				return paused;
+			});
+		}, 1000);
 
 		return () => {
 			if (timerRef.current) clearInterval(timerRef.current);
 		};
-	}, [currentMockInterview, defaultInterviewer]);
+	}, [viewMode]);
  
 	const [isDirty, setIsDirty] = useState(false);
 	const [_inactivitySeconds, setInactivitySeconds] = useState(0);
@@ -129,12 +134,12 @@ export const useMockInterviewForm = (batchId: number, onClose: () => void, viewM
 	}, []);
 
 	useEffect(() => {
-		if (isDirty && isPaused && elapsedSeconds === 0 && !currentMockInterview) {
+		if (isDirty && isPaused) {
 			setShowStartReminder(true);
 		} else {
 			setShowStartReminder(false);
 		}
-	}, [isDirty, isPaused, elapsedSeconds, currentMockInterview]);
+	}, [isDirty, isPaused]);
 
 	const lastSavedDataRef = useRef<string>('');
 

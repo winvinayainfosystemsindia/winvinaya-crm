@@ -272,7 +272,7 @@ const MockInterviewForm: React.FC<MockInterviewFormProps> = ({ open, onClose, ba
 							)}
 
 							{/* Timer Actions */}
-							{!viewMode && !currentMockInterview && (
+							{!viewMode && (
 								<Box
 									sx={{
 										display: 'flex',
