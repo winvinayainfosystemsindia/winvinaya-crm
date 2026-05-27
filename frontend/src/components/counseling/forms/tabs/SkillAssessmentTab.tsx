@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
 	Box,
 	Typography,
@@ -6,8 +6,6 @@ import {
 	Divider,
 	Stack,
 	Grid,
-	Autocomplete,
-	TextField,
 	FormControl,
 	Select,
 	MenuItem,
@@ -25,11 +23,8 @@ import {
 	EmojiEvents as ProficiencyIcon,
 	CheckCircleOutline as VerifiedIcon
 } from '@mui/icons-material';
-import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
-import { fetchAggregatedSkills, createSkill } from '../../../../store/slices/skillSlice';
 import type { CandidateCounselingCreate, CounselingSkill } from '../../../../models/candidate';
-import { ConfirmationDialog } from '../../../common/dialogbox';
-import useToast from '../../../../hooks/useToast';
+import SkillDropdown from '../../../common/SkillDropdown';
 
 interface SkillAssessmentTabProps {
 	formData: CandidateCounselingCreate;
@@ -45,64 +40,6 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 	onSkillChange
 }) => {
 	const theme = useTheme();
-	const dispatch = useAppDispatch();
-	const toast = useToast();
-	
-	const { aggregatedSkills, loading: storeLoading } = useAppSelector((state) => state.skills);
-
-	// New skill addition state
-	const [confirmAddSkillDialogOpen, setConfirmAddSkillDialogOpen] = useState(false);
-	const [newSkillName, setNewSkillName] = useState('');
-	const [pendingIndex, setPendingIndex] = useState<number | null>(null);
-
-	useEffect(() => {
-		if (aggregatedSkills.length === 0) {
-			dispatch(fetchAggregatedSkills());
-		}
-	}, [dispatch, aggregatedSkills.length]);
-
-	const handleNameChange = (index: number, val: string | null) => {
-		const skillName = (val || '').trim();
-		
-		if (skillName !== '') {
-			const skillExists = aggregatedSkills.some(s => s.toLowerCase() === skillName.toLowerCase());
-			
-			if (!skillExists) {
-				setNewSkillName(skillName);
-				setPendingIndex(index);
-				setConfirmAddSkillDialogOpen(true);
-				return;
-			}
-		}
-		
-		onSkillChange(index, 'name', skillName);
-	};
-
-	const handleConfirmAddSkill = async () => {
-		if (!newSkillName || pendingIndex === null) return;
-		
-		try {
-			await dispatch(createSkill({ name: newSkillName, is_verified: false })).unwrap();
-			onSkillChange(pendingIndex, 'name', newSkillName);
-			toast.success(`Skill "${newSkillName}" added to master database`);
-			setConfirmAddSkillDialogOpen(false);
-		} catch (error: any) {
-			const errorMsg = typeof error === 'string' ? error : (error?.message || 'Failed to add skill to database');
-			toast.error(errorMsg);
-			
-			if (typeof errorMsg === 'string') {
-				const match = errorMsg.match(/Did you mean '([^']+)'\?/);
-				if (match && match[1]) {
-					const suggested = match[1];
-					onSkillChange(pendingIndex, 'name', suggested);
-				}
-			}
-			setConfirmAddSkillDialogOpen(false);
-		} finally {
-			setNewSkillName('');
-			setPendingIndex(null);
-		}
-	};
 
 	const getProficiencyColor = (level: CounselingSkill['level']) => {
 		switch (level) {
@@ -117,16 +54,6 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 			case 'Advanced': return 100;
 			case 'Intermediate': return 65;
 			default: return 35;
-		}
-	};
-
-	const inputSx = {
-		'& .MuiOutlinedInput-root': {
-			borderRadius: 0.5,
-			bgcolor: 'background.paper',
-			'& fieldset': { borderColor: 'divider' },
-			'&:hover fieldset': { borderColor: 'text.secondary' },
-			'&.Mui-focused fieldset': { borderColor: 'primary.main' }
 		}
 	};
 
@@ -203,26 +130,12 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 									<Grid size={{ xs: 12, md: 6 }}>
 										<Box>
 											<Typography variant="awsFieldLabel">Competency / Skill</Typography>
-											<Autocomplete
-												freeSolo
-												options={aggregatedSkills}
+											<SkillDropdown
 												value={skill.name}
-												onChange={(_e, val) => handleNameChange(index, val)}
-												onInputChange={(_e, val) => onSkillChange(index, 'name', val)}
-												onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
-													const val = e.target.value;
-													handleNameChange(index, val);
-												}}
-												renderInput={(params) => (
-													<TextField
-														{...params}
-														placeholder="e.g. Technical Support, Data Entry"
-														size="small"
-														fullWidth
-														required
-														sx={inputSx}
-													/>
-												)}
+												onChange={(newValue) => onSkillChange(index, 'name', newValue)}
+												placeholder="e.g. Technical Support, Data Entry"
+												label=""
+												size="small"
 											/>
 										</Box>
 									</Grid>
@@ -333,21 +246,6 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 					</Box>
 				)}
 			</Paper>
-
-			<ConfirmationDialog
-				open={confirmAddSkillDialogOpen}
-				title="Standardize Competency?"
-				message={`"${newSkillName}" is not in our master data registry. Adding it will standardize this competency across the enterprise.`}
-				confirmLabel="Yes, Standardize"
-				cancelLabel="Cancel"
-				onClose={() => {
-					setConfirmAddSkillDialogOpen(false);
-					if (pendingIndex !== null) onSkillChange(pendingIndex, 'name', newSkillName);
-				}}
-				onConfirm={handleConfirmAddSkill}
-				loading={storeLoading}
-				severity="info"
-			/>
 		</Stack>
 	);
 };
