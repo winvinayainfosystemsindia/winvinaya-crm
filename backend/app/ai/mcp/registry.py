@@ -42,6 +42,10 @@ class ToolRegistry:
         """Return all registered tools."""
         return list(self._tools.values())
 
+    def by_category(self, category: str) -> List[BaseTool]:
+        """Return registered tools belonging to a category."""
+        return [t for t in self._tools.values() if t.definition.category == category]
+
     def to_prompt_block(self, categories: List[str] | None = None) -> str:
         """
         Generates the formatted tool block for LLM system prompts.

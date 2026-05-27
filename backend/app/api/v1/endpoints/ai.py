@@ -36,11 +36,9 @@ from app.ai.schemas import (
     CandidateExtractionResponse,
     ToolDefinition,
 )
-from app.ai.services.extraction_service import (
-    JobRoleExtractionService, 
-    CandidateExtractionService,
-    SkillRecommendationService
-)
+from app.ai.services.job_role_extraction_service import JobRoleExtractionService
+from app.ai.services.candidate_extraction_service import CandidateExtractionService
+from app.ai.services.skill_recommendation_service import SkillRecommendationService
 from app.core.config import settings
 from app.models.ai_task_log import AITaskStatus
 from app.models.user import User

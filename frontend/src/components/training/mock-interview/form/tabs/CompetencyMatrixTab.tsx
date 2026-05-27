@@ -10,7 +10,6 @@ import {
 	Grid,
 	MenuItem,
 	Rating,
-	Autocomplete,
 	useTheme,
 	alpha
 } from '@mui/material';
@@ -20,11 +19,11 @@ import {
 	Psychology as SkillIcon,
 	InfoOutlined as InfoIcon
 } from '@mui/icons-material';
+import SkillDropdown from '../../../../common/SkillDropdown';
 import { type Skill } from '../../../../../models/MockInterview';
 
 interface CompetencyMatrixTabProps {
 	skills: Skill[];
-	masterSkills: string[];
 	viewMode: boolean;
 	onSkillChange: (index: number, field: keyof Skill, value: any) => void;
 	onAddSkill: () => void;
@@ -33,7 +32,6 @@ interface CompetencyMatrixTabProps {
 
 const CompetencyMatrixTab: React.FC<CompetencyMatrixTabProps> = memo(({
 	skills,
-	masterSkills,
 	viewMode,
 	onSkillChange,
 	onAddSkill,
@@ -140,35 +138,15 @@ const CompetencyMatrixTab: React.FC<CompetencyMatrixTabProps> = memo(({
 								</IconButton>
 							)}
 							<Stack spacing={2.5}>
-								<Autocomplete
-									freeSolo
-									options={masterSkills}
+								<SkillDropdown
 									value={s.skill}
-									onChange={(_, newValue) => {
+									onChange={(newValue) => {
 										const cleaned = (newValue || '').replace(/,/g, '');
 										onSkillChange(idx, 'skill', cleaned);
 									}}
-									onInputChange={(_, newInputValue) => {
-										const cleaned = (newInputValue || '').replace(/,/g, '');
-										onSkillChange(idx, 'skill', cleaned);
-									}}
 									disabled={viewMode}
-									renderInput={(params) => (
-										<TextField
-											{...params}
-											label="Competency / Skill Area"
-											placeholder="Search or enter skill..."
-											fullWidth
-											size="small"
-											onKeyDown={(e) => {
-												if (e.key === ',') {
-													e.preventDefault();
-												}
-											}}
-											InputLabelProps={{ shrink: true, sx: { fontWeight: 600 } }}
-											sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
-										/>
-									)}
+									label="Competency / Skill Area"
+									placeholder="Search or enter skill..."
 								/>
 								<Stack direction="row" spacing={2} alignItems="center">
 									<TextField

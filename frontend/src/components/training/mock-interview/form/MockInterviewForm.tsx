@@ -1,5 +1,5 @@
-import React, { useMemo, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import {
 	Dialog,
 	Box,
@@ -18,9 +18,8 @@ import {
 } from '@mui/icons-material';
 import SessionMonitoring from '../../../common/monitoring/SessionMonitoring';
 import { documentService } from '../../../../services/candidateService';
-import { type AppDispatch, type RootState } from '../../../../store/store';
+import { type RootState } from '../../../../store/store';
 import { useMockInterviewForm } from '../hooks/useMockInterviewForm';
-import { fetchAggregatedSkills } from '../../../../store/slices/skillSlice';
 import BasicDetailsTab from './tabs/BasicDetailsTab';
 import TechnicalEvaluationTab from './tabs/TechnicalEvaluationTab';
 import CompetencyMatrixTab from './tabs/CompetencyMatrixTab';
@@ -36,15 +35,8 @@ interface MockInterviewFormProps {
 
 const MockInterviewForm: React.FC<MockInterviewFormProps> = ({ open, onClose, batchId, viewMode = false }) => {
 	const theme = useTheme();
-	const dispatch = useDispatch<AppDispatch>();
 	const { currentMockInterview } = useSelector((state: RootState) => state.mockInterviews);
 	const { allocations } = useSelector((state: RootState) => state.training);
-	const { aggregatedSkills: masterSkills } = useSelector((state: RootState) => state.skills);
-
-	useEffect(() => {
-		dispatch(fetchAggregatedSkills());
-	}, [dispatch]);
-
 	// Filter allocations to only show "In Training" or "Moved to Placement"
 	const filteredAllocations = useMemo(() => {
 		return allocations.filter(a => 
@@ -165,7 +157,6 @@ const MockInterviewForm: React.FC<MockInterviewFormProps> = ({ open, onClose, ba
 			content: (
 				<CompetencyMatrixTab
 					skills={skills}
-					masterSkills={masterSkills}
 					viewMode={viewMode}
 					onSkillChange={handleSkillChange}
 					onAddSkill={addSkill}
