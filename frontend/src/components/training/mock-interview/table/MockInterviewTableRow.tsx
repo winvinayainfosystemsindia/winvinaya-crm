@@ -45,6 +45,8 @@ const getStatusStyles = (status: string) => {
 		case 'inprogress':
 		case 'in_progress':
 			return { color: 'info', label: 'In Progress', variant: 'outlined' };
+		case 'completed':
+			return { color: 'success', label: 'Completed', variant: 'filled' };
 		case 'absent':
 			return { color: 'default', label: 'Absent', variant: 'filled' };
 		default:
