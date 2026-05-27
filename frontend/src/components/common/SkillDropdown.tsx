@@ -19,14 +19,16 @@ import aiService from '../../services/aiService';
 import useToast from '../../hooks/useToast';
 
 interface SkillDropdownProps {
-	value: string;
-	onChange: (value: string) => void;
+	value: any;
+	onChange: (value: any) => void;
+	multiple?: boolean;
 	disabled?: boolean;
 	label?: string;
 	placeholder?: string;
 	error?: boolean;
 	helperText?: string;
 	size?: 'small' | 'medium';
+	renderTags?: (value: string[], getTagProps: any) => React.ReactNode;
 }
 
 const LOCAL_RECOMMENDATIONS: Record<string, string[]> = {
@@ -58,12 +60,14 @@ const LOCAL_RECOMMENDATIONS: Record<string, string[]> = {
 const SkillDropdown: React.FC<SkillDropdownProps> = ({
 	value,
 	onChange,
+	multiple = false,
 	disabled = false,
 	label = 'Competency / Skill Area',
 	placeholder = 'Search or enter skill...',
 	error = false,
 	helperText = '',
-	size = 'small'
+	size = 'small',
+	renderTags
 }) => {
 	const theme = useTheme();
 	const toast = useToast();
@@ -155,30 +159,50 @@ const SkillDropdown: React.FC<SkillDropdownProps> = ({
 
 	return (
 		<Autocomplete
+			multiple={multiple}
 			freeSolo
 			filterOptions={(x) => x}
 			options={options}
 			value={value}
 			onChange={(_, newValue) => {
-				const trimmedValue = (newValue || '').trim();
-				if (trimmedValue && !masterSkills.some((s) => s.toLowerCase() === trimmedValue.toLowerCase())) {
-					dispatch(createSkill({ name: trimmedValue }))
-						.unwrap()
-						.then((res: any) => {
-							toast.success(`Skill "${res.name}" successfully created in database!`);
-						})
-						.catch((err: any) => {
-							toast.error(err || `Failed to create skill "${trimmedValue}"`);
-						});
+				if (multiple) {
+					const valuesArray = (newValue as string[]) || [];
+					const lastValue = valuesArray[valuesArray.length - 1]?.trim();
+					if (lastValue && !masterSkills.some((s) => s.toLowerCase() === lastValue.toLowerCase())) {
+						dispatch(createSkill({ name: lastValue }))
+							.unwrap()
+							.then((res: any) => {
+								toast.success(`Skill "${res.name}" successfully created in database!`);
+							})
+							.catch((err: any) => {
+								toast.error(err || `Failed to create skill "${lastValue}"`);
+							});
+					}
+					onChange(valuesArray);
+				} else {
+					const trimmedValue = (newValue as string || '').trim();
+					if (trimmedValue && !masterSkills.some((s) => s.toLowerCase() === trimmedValue.toLowerCase())) {
+						dispatch(createSkill({ name: trimmedValue }))
+							.unwrap()
+							.then((res: any) => {
+								toast.success(`Skill "${res.name}" successfully created in database!`);
+							})
+							.catch((err: any) => {
+								toast.error(err || `Failed to create skill "${trimmedValue}"`);
+							});
+					}
+					onChange(newValue || '');
 				}
-				onChange(newValue || '');
 			}}
 			onInputChange={(_, newInputValue, reason) => {
 				if (reason === 'input' || reason === 'clear') {
 					setSearchQuery(newInputValue || '');
-					onChange(newInputValue || '');
+					if (!multiple) {
+						onChange(newInputValue || '');
+					}
 				}
 			}}
+			renderTags={renderTags}
 			groupBy={(option) => masterSkills.includes(option) ? 'Database Skills' : 'AI Recommendations'}
 			disabled={disabled}
 			loading={loadingAi}

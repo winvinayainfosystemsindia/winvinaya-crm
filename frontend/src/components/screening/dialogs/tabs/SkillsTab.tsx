@@ -1,23 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
 	Box,
 	Typography,
 	Stack,
-	Autocomplete,
-	TextField,
 	Chip,
-	Paper,
-	useTheme
+	Paper
 } from '@mui/material';
 import {
 	Build as BuildIcon,
 	EmojiEvents as SoftSkillIcon
 } from '@mui/icons-material';
 import { awsStyles } from '../../../../theme/theme';
-import { ConfirmationDialog } from '../../../common/dialogbox';
-import useToast from '../../../../hooks/useToast';
-import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
-import { fetchAggregatedSkills, createSkill } from '../../../../store/slices/skillSlice';
+import SkillDropdown from '../../../common/SkillDropdown';
 
 interface SkillsTabProps {
 	formData: any;
@@ -28,77 +22,7 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 	formData,
 	onUpdateField
 }) => {
-	const theme = useTheme();
-	const dispatch = useAppDispatch();
 	const { awsPanel } = awsStyles;
-	const toast = useToast();
-	
-	const { aggregatedSkills, loading } = useAppSelector((state) => state.skills);
-	
-	// New skill addition state
-	const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-	const [newSkillName, setNewSkillName] = useState('');
-	const [activeField, setActiveField] = useState<'technical_skills' | 'soft_skills' | null>(null);
-	const [pendingNewValues, setPendingNewValues] = useState<string[]>([]);
-
-	useEffect(() => {
-		dispatch(fetchAggregatedSkills());
-	}, [dispatch]);
-
-	const handleSkillChange = (field: 'technical_skills' | 'soft_skills', newValue: string[]) => {
-		const lastValue = newValue[newValue.length - 1];
-		
-		if (typeof lastValue === 'string' && lastValue.trim() !== '') {
-			const skillExists = aggregatedSkills.some(s => s.toLowerCase() === lastValue.toLowerCase());
-			
-			if (!skillExists) {
-				setNewSkillName(lastValue);
-				setActiveField(field);
-				setPendingNewValues(newValue);
-				setConfirmDialogOpen(true);
-				return;
-			}
-		}
-		
-		onUpdateField('skills', field, newValue);
-	};
-
-	const handleConfirmAddSkill = async () => {
-		if (!newSkillName || !activeField) return;
-		
-		try {
-			await dispatch(createSkill({ name: newSkillName, is_verified: false })).unwrap();
-			onUpdateField('skills', activeField, pendingNewValues);
-			toast.success(`Skill "${newSkillName}" added to master database`);
-			setConfirmDialogOpen(false);
-		} catch (error: any) {
-			const errorMsg = typeof error === 'string' ? error : (error?.message || 'Failed to add skill to database');
-			toast.error(errorMsg);
-			
-			if (typeof errorMsg === 'string') {
-				const match = errorMsg.match(/Did you mean '([^']+)'\?/);
-				if (match && match[1]) {
-					const suggested = match[1];
-					const updatedValues = pendingNewValues.map(v => v === newSkillName ? suggested : v);
-					onUpdateField('skills', activeField, updatedValues);
-				}
-			}
-			setConfirmDialogOpen(false);
-		} finally {
-			setNewSkillName('');
-			setActiveField(null);
-		}
-	};
-
-	const textFieldSx = {
-		'& .MuiOutlinedInput-root': {
-			borderRadius: '2px',
-			bgcolor: 'background.paper',
-			'& fieldset': { borderColor: 'divider' },
-			'&:hover fieldset': { borderColor: theme.palette.text.secondary },
-			'&.Mui-focused fieldset': { borderColor: 'primary.main' }
-		}
-	};
 
 	return (
 		<Stack spacing={4}>
@@ -112,13 +36,12 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 				</Stack>
 				
 				<Box>
-					<Typography variant="awsFieldLabel">Core Proficiencies</Typography>
-					<Autocomplete
+					<SkillDropdown
 						multiple
-						freeSolo
-						options={aggregatedSkills}
 						value={formData.skills?.technical_skills || []}
-						onChange={(_e, newValue) => handleSkillChange('technical_skills', newValue)}
+						onChange={(newValue) => onUpdateField('skills', 'technical_skills', newValue)}
+						label="Core Proficiencies"
+						placeholder="Select or type technical skills..."
 						renderTags={(value, getTagProps) =>
 							value.map((option, index) => (
 								<Chip
@@ -137,14 +60,6 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 								/>
 							))
 						}
-						renderInput={(params) => (
-							<TextField
-								{...params}
-								placeholder="Select or type technical skills..."
-								size="small"
-								sx={textFieldSx}
-							/>
-						)}
 					/>
 					<Typography variant="caption" sx={{ color: 'text.disabled', mt: 1, display: 'block' }}>
 						Add primary technical capabilities relevant for role mapping.
@@ -162,13 +77,12 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 				</Stack>
 
 				<Box>
-					<Typography variant="awsFieldLabel">Professional Attributes</Typography>
-					<Autocomplete
+					<SkillDropdown
 						multiple
-						freeSolo
-						options={['Communication', 'Teamwork', 'Punctuality', 'Problem Solving', 'Leadership', 'Critical Thinking', 'Adaptability']}
 						value={formData.skills?.soft_skills || []}
-						onChange={(_e, newValue) => handleSkillChange('soft_skills', newValue)}
+						onChange={(newValue) => onUpdateField('skills', 'soft_skills', newValue)}
+						label="Professional Attributes"
+						placeholder="Select or type professional attributes..."
 						renderTags={(value, getTagProps) =>
 							value.map((option, index) => (
 								<Chip
@@ -187,36 +101,12 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 								/>
 							))
 						}
-						renderInput={(params) => (
-							<TextField
-								{...params}
-								placeholder="Select or type professional attributes..."
-								size="small"
-								sx={textFieldSx}
-							/>
-						)}
 					/>
 					<Typography variant="caption" sx={{ color: 'text.disabled', mt: 1, display: 'block' }}>
 						Document behavioral strengths and workplace-ready attributes.
 					</Typography>
 				</Box>
 			</Paper>
-
-			{/* Confirmation Dialog */}
-			<ConfirmationDialog
-				open={confirmDialogOpen}
-				title="Standardize New Skill?"
-				message={`"${newSkillName}" is not in our master database. Adding it will standardize this skill across all candidate profiles in the system.`}
-				confirmLabel="Add to Database"
-				cancelLabel="Discard"
-				onClose={() => {
-					setConfirmDialogOpen(false);
-					if (activeField) onUpdateField('skills', activeField, pendingNewValues);
-				}}
-				onConfirm={handleConfirmAddSkill}
-				loading={loading}
-				severity="info"
-			/>
 		</Stack>
 	);
 };
