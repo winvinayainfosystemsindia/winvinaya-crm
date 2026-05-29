@@ -14,24 +14,30 @@ class CandidateDocumentRepository(BaseRepository[CandidateDocument]):
         super().__init__(CandidateDocument, db)
     
     async def get_by_candidate_id(self, candidate_id: int) -> list[CandidateDocument]:
-        """Get all documents for a candidate"""
-        result = await self.db.execute(
-            select(CandidateDocument)
-            .where(CandidateDocument.candidate_id == candidate_id)
-            .order_by(CandidateDocument.created_at.desc())
-        )
-        return result.scalars().all()
-    
-    async def get_by_type(self, candidate_id: int, document_type: str) -> list[CandidateDocument]:
-        """Get documents by type for a candidate"""
+        """Get all active, non-deleted documents for a candidate"""
         result = await self.db.execute(
             select(CandidateDocument)
             .where(
                 CandidateDocument.candidate_id == candidate_id,
-                CandidateDocument.document_type == document_type
+                CandidateDocument.is_active == True,
+                CandidateDocument.is_deleted == False
+            )
+            .order_by(CandidateDocument.created_at.desc())
+        )
+        return list(result.scalars().all())
+    
+    async def get_by_type(self, candidate_id: int, document_type: str) -> list[CandidateDocument]:
+        """Get active, non-deleted documents by type for a candidate"""
+        result = await self.db.execute(
+            select(CandidateDocument)
+            .where(
+                CandidateDocument.candidate_id == candidate_id,
+                CandidateDocument.document_type == document_type,
+                CandidateDocument.is_active == True,
+                CandidateDocument.is_deleted == False
             )
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
     
     async def delete_by_file_path(self, file_path: str) -> bool:
         """Delete document by file path"""

@@ -24,9 +24,9 @@ class CandidateDocumentService:
         candidate_public_id: UUID,
         document_type: str,
         file: UploadFile,
-        description: str = None,
+        description: str | None = None,
         document_source: str = "candidate",
-        uploaded_by_id: int = None
+        uploaded_by_id: int | None = None
     ) -> CandidateDocument:
         """Upload and save document file for a candidate"""
         # Verify candidate exists
@@ -114,15 +114,22 @@ class CandidateDocumentService:
         """Update a document"""
         document = await self.get_document(document_id)
         update_data = document_in.model_dump(exclude_unset=True)
-        return await self.repository.update(document.id, update_data)
+        updated = await self.repository.update(document.id, update_data)
+        if not updated:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update document"
+            )
+        return updated
     
     async def delete_document(self, document_id: int) -> bool:
-        """Delete a document and its file"""
+        """Delete a document and its file (marks it inactive in DB)"""
         document = await self.get_document(document_id)
         
         # Delete file from storage
         FileStorageService.delete_file(document.file_path)
         
-        # Delete database record
+        # Mark as inactive in DB and soft delete
+        await self.repository.update(document.id, {"is_active": False})
         return await self.repository.delete(document.id)
 
