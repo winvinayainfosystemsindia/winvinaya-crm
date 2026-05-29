@@ -14,27 +14,132 @@ import {
 	Stack,
 	useTheme,
 	Chip,
-	Divider,
-	Tooltip
+	Divider
 } from '@mui/material';
 import { 
 	Close as CloseIcon,
 	Add as AddIcon,
 	DeleteOutline as DeleteIcon,
 	Psychology as SkillIcon,
-	RateReviewOutlined as ReviewIcon,
-	FormatBold as BoldIcon,
-	FormatListBulleted as ListIcon,
-	FormatListNumbered as NumberedIcon,
-	Edit as EditIcon,
-	Visibility as PreviewIcon
+	RateReviewOutlined as ReviewIcon
 } from '@mui/icons-material';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import Quill from 'quill';
+import 'quill/dist/quill.snow.css';
 import { type RootState } from '../../../../store/store';
 import { type CandidateAnalysis, type AnalysisSkill } from '../../../../models/CandidateAnalysis';
 import SkillDropdown from '../../../common/SkillDropdown';
 import useToast from '../../../../hooks/useToast';
+
+// Lightweight, React 19 compatible WYSIWYG editor using pure Quill.js
+interface RichTextEditorProps {
+	value: string;
+	onChange: (val: string) => void;
+	placeholder?: string;
+}
+
+const RichTextEditor: React.FC<RichTextEditorProps> = ({
+	value,
+	onChange,
+	placeholder = 'Enter text...'
+}) => {
+	const containerRef = useRef<HTMLDivElement>(null);
+	const quillRef = useRef<any>(null);
+	const isUpdatingRef = useRef<boolean>(false);
+
+	useEffect(() => {
+		if (!containerRef.current) return;
+
+		// Clean up any pre-existing toolbars in our dedicated parent container first
+		const parent = containerRef.current.parentElement;
+		if (parent) {
+			const existingToolbars = parent.querySelectorAll('.ql-toolbar');
+			existingToolbars.forEach(tb => tb.remove());
+			
+			// Also make sure the editor container is empty!
+			containerRef.current.innerHTML = '';
+		}
+
+		// Initialize Quill editor instance dynamically
+		const quill = new (Quill as any)(containerRef.current, {
+			theme: 'snow',
+			placeholder,
+			modules: {
+				toolbar: [
+					['bold', 'italic'],
+					[{ list: 'ordered' }, { list: 'bullet' }],
+					['clean']
+				]
+			}
+		});
+
+		quillRef.current = quill;
+
+		// Paste initial value safely
+		if (value) {
+			quill.clipboard.dangerouslyPasteHTML(value);
+		}
+
+		// Sync local changes to parent handler
+		quill.on('text-change', () => {
+			if (isUpdatingRef.current) return;
+			const html = containerRef.current?.querySelector('.ql-editor')?.innerHTML || '';
+			if (html === '<p><br></p>') {
+				onChange('');
+			} else {
+				onChange(html);
+			}
+		});
+
+		return () => {
+			// Cleanup DOM on component unmount (handles StrictMode double-rendering safely)
+			if (containerRef.current) {
+				const editorEl = containerRef.current;
+				const previous = editorEl.previousSibling;
+				if (previous && (previous as HTMLElement).classList?.contains('ql-toolbar')) {
+					previous.remove();
+				}
+				editorEl.innerHTML = '';
+			}
+			quillRef.current = null;
+		};
+	}, []);
+
+	// Keep editor content synchronized with external value changes
+	useEffect(() => {
+		if (!quillRef.current) return;
+		const currentHtml = containerRef.current?.querySelector('.ql-editor')?.innerHTML || '';
+		if (value !== currentHtml && value !== '<p><br></p>') {
+			isUpdatingRef.current = true;
+			const selection = quillRef.current.getSelection();
+			quillRef.current.clipboard.dangerouslyPasteHTML(value || '');
+			if (selection) {
+				quillRef.current.setSelection(selection);
+			}
+			isUpdatingRef.current = false;
+		}
+	}, [value]);
+
+	return (
+		<div style={{ position: 'relative' }}>
+			<div ref={containerRef} />
+		</div>
+	);
+};
+
+// Word and character count helper functions (strips HTML tags to get exact raw text counts)
+const getWordCount = (html: string) => {
+	const tempDiv = document.createElement('div');
+	tempDiv.innerHTML = html;
+	const text = (tempDiv.textContent || tempDiv.innerText || '').trim();
+	if (!text) return 0;
+	return text.split(/\s+/).filter(Boolean).length;
+};
+
+const getCharacterCount = (html: string) => {
+	const tempDiv = document.createElement('div');
+	tempDiv.innerHTML = html;
+	return (tempDiv.textContent || tempDiv.innerText || '').length;
+};
 
 interface CandidateAnalysisFormProps {
 	open: boolean;
@@ -80,12 +185,6 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 	const [recommendation, setRecommendation] = useState<string>('ready_for_placement');
 	const [status, setStatus] = useState<string>('completed');
 	const [submitting, setSubmitting] = useState(false);
-
-	const [strengthsView, setStrengthsView] = useState<'edit' | 'preview'>('edit');
-	const [weaknessesView, setWeaknessesView] = useState<'edit' | 'preview'>('edit');
-
-	const strengthsRef = useRef<HTMLTextAreaElement>(null);
-	const weaknessesRef = useRef<HTMLTextAreaElement>(null);
 
 	// Load data if editing or viewing
 	useEffect(() => {
@@ -133,58 +232,6 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 		setSkills(prev => prev.map((s, i) => i === idx ? { ...s, [field]: val } : s));
 	};
 
-	const applyFormatting = (
-		field: 'strengths' | 'weaknesses',
-		ref: React.RefObject<HTMLTextAreaElement | null>,
-		prefix: string,
-		suffix: string = '',
-		isBlock: boolean = false
-	) => {
-		const textField = ref.current;
-		if (!textField) return;
-
-		const start = textField.selectionStart;
-		const end = textField.selectionEnd;
-		const text = field === 'strengths' ? strengths : weaknesses;
-		const selectedText = text.substring(start, end);
-
-		let replacement = '';
-		let needsNewline = false;
-		
-		if (isBlock) {
-			const beforeText = text.substring(0, start);
-			needsNewline = beforeText.length > 0 && !beforeText.endsWith('\n');
-			
-			if (selectedText.includes('\n')) {
-				replacement = (needsNewline ? '\n' : '') + selectedText
-					.split('\n')
-					.map(line => (line.trim() && !line.startsWith(prefix.trim())) ? `${prefix}${line}` : line)
-					.join('\n');
-			} else {
-				replacement = `${needsNewline ? '\n' : ''}${prefix}${selectedText}${suffix}`;
-			}
-		} else {
-			replacement = `${prefix}${selectedText}${suffix}`;
-		}
-
-		const newText = text.substring(0, start) + replacement + text.substring(end);
-		
-		if (field === 'strengths') {
-			setStrengths(newText);
-		} else {
-			setWeaknesses(newText);
-		}
-
-		setTimeout(() => {
-			if (ref.current) {
-				const tf = ref.current;
-				tf.focus();
-				const newPos = start + (needsNewline ? 1 : 0);
-				tf.setSelectionRange(newPos, newPos + replacement.length - (needsNewline ? 1 : 0));
-			}
-		}, 0);
-	};
-
 	const handleFormSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!candidateId) {
@@ -198,7 +245,7 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 				batch_id: batchId,
 				candidate_id: Number(candidateId),
 				analyst_name: analystName.trim(),
-				analysis_date: analysisDate,
+				analysis_date: analysisDate ? new Date(analysisDate).toISOString() : new Date().toISOString(),
 				strengths: strengths.trim(),
 				weaknesses: weaknesses.trim(),
 				technical_rating: techRating,
@@ -407,58 +454,15 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 							<Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
 								Key Strengths *
 							</Typography>
-							
-							<Stack direction="row" spacing={0.5} alignItems="center">
-								{strengthsView === 'edit' && !viewMode && (
-									<>
-										<Tooltip title="Bold">
-											<IconButton size="small" onClick={() => applyFormatting('strengths', strengthsRef, '**', '**')}>
-												<BoldIcon sx={{ fontSize: 16 }} />
-											</IconButton>
-										</Tooltip>
-										<Tooltip title="Bullet List">
-											<IconButton size="small" onClick={() => applyFormatting('strengths', strengthsRef, '- ', '', true)}>
-												<ListIcon sx={{ fontSize: 16 }} />
-											</IconButton>
-										</Tooltip>
-										<Tooltip title="Numbered List">
-											<IconButton size="small" onClick={() => applyFormatting('strengths', strengthsRef, '1. ', '', true)}>
-												<NumberedIcon sx={{ fontSize: 16 }} />
-											</IconButton>
-										</Tooltip>
-										<Divider orientation="vertical" flexItem sx={{ mx: 0.5, my: 0.5 }} />
-									</>
-								)}
-								
-								<IconButton 
-									size="small" 
-									onClick={() => setStrengthsView(prev => prev === 'edit' ? 'preview' : 'edit')}
-									title={strengthsView === 'edit' ? 'Preview Markdown' : 'Edit Text'}
-								>
-									{strengthsView === 'edit' ? <PreviewIcon sx={{ fontSize: 16 }} /> : <EditIcon sx={{ fontSize: 16 }} />}
-								</IconButton>
-							</Stack>
 						</Box>
 
-						{strengthsView === 'edit' ? (
-							<TextField
-								fullWidth
-								multiline
-								rows={6}
-								disabled={viewMode}
-								value={strengths}
-								onChange={(e) => setStrengths(e.target.value)}
-								placeholder="Describe core strengths (technical, soft skills, attitude). Supports Markdown."
-								inputRef={strengthsRef}
-								sx={inputSx}
-							/>
-						) : (
+						{viewMode ? (
 							<Paper 
 								variant="outlined" 
 								sx={{ 
 									p: 2, 
-									minHeight: 154, 
-									maxHeight: 154, 
+									minHeight: 180, 
+									maxHeight: 180, 
 									overflowY: 'auto', 
 									bgcolor: '#fbfbfb', 
 									borderRadius: 1.5,
@@ -471,10 +475,49 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 									'& strong': { fontWeight: 700 }
 								}}
 							>
-								<ReactMarkdown remarkPlugins={[remarkGfm]}>
-									{strengths || '*No strengths entered yet.*'}
-								</ReactMarkdown>
+								<div dangerouslySetInnerHTML={{ __html: strengths || '*No strengths entered yet.*' }} />
 							</Paper>
+						) : (
+							<Box sx={{ 
+								'& .ql-container': {
+									borderRadius: 0,
+									borderColor: '#d5dbdb',
+									minHeight: '120px',
+									maxHeight: '120px',
+									overflowY: 'auto',
+									bgcolor: 'white',
+									fontFamily: theme.typography.fontFamily,
+									fontSize: '0.875rem'
+								},
+								'& .ql-toolbar': {
+									borderRadius: '8px 8px 0 0',
+									borderColor: '#d5dbdb',
+									bgcolor: '#fcfcfc'
+								}
+							}}>
+								<RichTextEditor
+									value={strengths}
+									onChange={setStrengths}
+									placeholder="Describe core strengths (technical, soft skills, attitude)..."
+								/>
+								<Box sx={{ 
+									p: 1, 
+									border: '1px solid #d5dbdb', 
+									borderTop: 'none', 
+									borderRadius: '0 0 8px 8px', 
+									display: 'flex', 
+									justifyContent: 'space-between', 
+									alignItems: 'center', 
+									bgcolor: '#fff' 
+								}}>
+									<Typography variant="caption" sx={{ color: 'text.secondary', ml: 1, fontWeight: 500 }}>
+										{getWordCount(strengths)} words
+									</Typography>
+									<Typography variant="caption" sx={{ color: 'text.secondary', mr: 1, fontWeight: 500 }}>
+										{getCharacterCount(strengths)} characters
+									</Typography>
+								</Box>
+							</Box>
 						)}
 					</Grid>
 
@@ -483,58 +526,15 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 							<Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
 								Areas of Improvement *
 							</Typography>
-							
-							<Stack direction="row" spacing={0.5} alignItems="center">
-								{weaknessesView === 'edit' && !viewMode && (
-									<>
-										<Tooltip title="Bold">
-											<IconButton size="small" onClick={() => applyFormatting('weaknesses', weaknessesRef, '**', '**')}>
-												<BoldIcon sx={{ fontSize: 16 }} />
-											</IconButton>
-										</Tooltip>
-										<Tooltip title="Bullet List">
-											<IconButton size="small" onClick={() => applyFormatting('weaknesses', weaknessesRef, '- ', '', true)}>
-												<ListIcon sx={{ fontSize: 16 }} />
-											</IconButton>
-										</Tooltip>
-										<Tooltip title="Numbered List">
-											<IconButton size="small" onClick={() => applyFormatting('weaknesses', weaknessesRef, '1. ', '', true)}>
-												<NumberedIcon sx={{ fontSize: 16 }} />
-											</IconButton>
-										</Tooltip>
-										<Divider orientation="vertical" flexItem sx={{ mx: 0.5, my: 0.5 }} />
-									</>
-								)}
-								
-								<IconButton 
-									size="small" 
-									onClick={() => setWeaknessesView(prev => prev === 'edit' ? 'preview' : 'edit')}
-									title={weaknessesView === 'edit' ? 'Preview Markdown' : 'Edit Text'}
-								>
-									{weaknessesView === 'edit' ? <PreviewIcon sx={{ fontSize: 16 }} /> : <EditIcon sx={{ fontSize: 16 }} />}
-								</IconButton>
-							</Stack>
 						</Box>
 
-						{weaknessesView === 'edit' ? (
-							<TextField
-								fullWidth
-								multiline
-								rows={6}
-								disabled={viewMode}
-								value={weaknesses}
-								onChange={(e) => setWeaknesses(e.target.value)}
-								placeholder="Describe key improvement areas or technical gaps. Supports Markdown."
-								inputRef={weaknessesRef}
-								sx={inputSx}
-							/>
-						) : (
+						{viewMode ? (
 							<Paper 
 								variant="outlined" 
 								sx={{ 
 									p: 2, 
-									minHeight: 154, 
-									maxHeight: 154, 
+									minHeight: 180, 
+									maxHeight: 180, 
 									overflowY: 'auto', 
 									bgcolor: '#fbfbfb', 
 									borderRadius: 1.5,
@@ -547,10 +547,49 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 									'& strong': { fontWeight: 700 }
 								}}
 							>
-								<ReactMarkdown remarkPlugins={[remarkGfm]}>
-									{weaknesses || '*No improvement areas entered yet.*'}
-								</ReactMarkdown>
+								<div dangerouslySetInnerHTML={{ __html: weaknesses || '*No improvement areas entered yet.*' }} />
 							</Paper>
+						) : (
+							<Box sx={{ 
+								'& .ql-container': {
+									borderRadius: 0,
+									borderColor: '#d5dbdb',
+									minHeight: '120px',
+									maxHeight: '120px',
+									overflowY: 'auto',
+									bgcolor: 'white',
+									fontFamily: theme.typography.fontFamily,
+									fontSize: '0.875rem'
+								},
+								'& .ql-toolbar': {
+									borderRadius: '8px 8px 0 0',
+									borderColor: '#d5dbdb',
+									bgcolor: '#fcfcfc'
+								}
+							}}>
+								<RichTextEditor
+									value={weaknesses}
+									onChange={setWeaknesses}
+									placeholder="Describe key improvement areas or technical gaps..."
+								/>
+								<Box sx={{ 
+									p: 1, 
+									border: '1px solid #d5dbdb', 
+									borderTop: 'none', 
+									borderRadius: '0 0 8px 8px', 
+									display: 'flex', 
+									justifyContent: 'space-between', 
+									alignItems: 'center', 
+									bgcolor: '#fff' 
+								}}>
+									<Typography variant="caption" sx={{ color: 'text.secondary', ml: 1, fontWeight: 500 }}>
+										{getWordCount(weaknesses)} words
+									</Typography>
+									<Typography variant="caption" sx={{ color: 'text.secondary', mr: 1, fontWeight: 500 }}>
+										{getCharacterCount(weaknesses)} characters
+									</Typography>
+								</Box>
+							</Box>
 						)}
 					</Grid>
 
