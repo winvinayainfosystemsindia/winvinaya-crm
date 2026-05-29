@@ -1,6 +1,6 @@
 from typing import List, Optional, Dict, Any
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 
@@ -50,7 +50,7 @@ class PlacementMappingService:
             "match_score": mapping_in.match_score,
             "notes": mapping_in.notes,
             "mapped_by_id": user_id,
-            "mapped_at": datetime.utcnow(),
+            "mapped_at": datetime.now(timezone.utc).replace(tzinfo=None),
             "ai_explanation": getattr(mapping_in, "ai_explanation", None),
             "score_source": getattr(mapping_in, "score_source", "rule_based") or "rule_based",
         }
@@ -75,7 +75,7 @@ class PlacementMappingService:
                 "match_score": item.match_score,
                 "notes": bulk_mapping.notes,
                 "mapped_by_id": user_id,
-                "mapped_at": datetime.utcnow(),
+                "mapped_at": datetime.now(timezone.utc).replace(tzinfo=None),
                 "ai_explanation": getattr(item, "ai_explanation", None),
                 "score_source": getattr(item, "score_source", "rule_based") or "rule_based",
             }
@@ -200,8 +200,20 @@ class PlacementMappingService:
 
         results = []
         for candidate in candidates:
+            # Skip candidate if they have an active placement mapping with placed statuses in a different job role
+            other_mappings = mappings_by_candidate.get(candidate.id, [])
+            is_placed_elsewhere = False
+            placed_statuses = {"joined", "offered", "offer_made", "offer_accepted"}
+            for m in other_mappings:
+                status_str = getattr(m.status, "value", str(m.status)).lower().strip()
+                if m.job_role_id != job_role.id and status_str in placed_statuses:
+                    is_placed_elsewhere = True
+                    break
+            
+            if is_placed_elsewhere:
+                continue
+
             # 1. Skill Match (60%)
-            candidate_skills = []
             candidate_skills = []
             
             def get_names_from_skills(obj):
@@ -324,8 +336,8 @@ class PlacementMappingService:
                     other_mappings_count=other_count,
                     other_mappings=other_role_names,
                     is_already_mapped=candidate.id in mapping_info,
-                    status=mapping_info.get(candidate.id)[1] if candidate.id in mapping_info else None,
-                    mapping_id=mapping_info.get(candidate.id)[0] if candidate.id in mapping_info else None,
+                    status=mapping_info[candidate.id][1] if candidate.id in mapping_info else None,
+                    mapping_id=mapping_info[candidate.id][0] if candidate.id in mapping_info else None,
                     year_of_experience=year_of_exp,
                     source_of_info=reg_source
                 )
