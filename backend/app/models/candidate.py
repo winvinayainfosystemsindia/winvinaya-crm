@@ -64,6 +64,7 @@ class Candidate(BaseModel):
     
     documents: Mapped[list[CandidateDocument]] = relationship(
         "CandidateDocument",
+        primaryjoin="and_(Candidate.id == CandidateDocument.candidate_id, CandidateDocument.is_active == True, CandidateDocument.is_deleted == False)",
         back_populates="candidate",
         cascade="all, delete-orphan"
     )

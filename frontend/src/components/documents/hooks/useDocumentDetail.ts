@@ -68,6 +68,12 @@ export const useDocumentDetail = (id?: string) => {
 					description: '',
 					documentSource 
 				})).unwrap();
+
+				// Refresh the full document list from the backend after upload.
+				// The upload may have deactivated old documents of the same type+source
+				// on the server side. This ensures the Redux state accurately reflects
+				// which documents are active, removing any stale deactivated entries.
+				await dispatch(fetchDocuments(id));
 			} catch (err) {
 				console.error('Upload failed:', err);
 			} finally {
