@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import {
 	Dialog,
@@ -14,15 +14,23 @@ import {
 	Stack,
 	useTheme,
 	Chip,
-	Divider
+	Divider,
+	Tooltip
 } from '@mui/material';
 import { 
 	Close as CloseIcon,
 	Add as AddIcon,
 	DeleteOutline as DeleteIcon,
 	Psychology as SkillIcon,
-	RateReviewOutlined as ReviewIcon
+	RateReviewOutlined as ReviewIcon,
+	FormatBold as BoldIcon,
+	FormatListBulleted as ListIcon,
+	FormatListNumbered as NumberedIcon,
+	Edit as EditIcon,
+	Visibility as PreviewIcon
 } from '@mui/icons-material';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { type RootState } from '../../../../store/store';
 import { type CandidateAnalysis, type AnalysisSkill } from '../../../../models/CandidateAnalysis';
 import SkillDropdown from '../../../common/SkillDropdown';
@@ -48,6 +56,7 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 	const theme = useTheme();
 	const toast = useToast();
 	const { allocations } = useSelector((state: RootState) => state.training);
+	const { user } = useSelector((state: RootState) => state.auth);
 	
 	// Candidates in this batch
 	const candidates = useMemo(() => {
@@ -72,12 +81,18 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 	const [status, setStatus] = useState<string>('completed');
 	const [submitting, setSubmitting] = useState(false);
 
+	const [strengthsView, setStrengthsView] = useState<'edit' | 'preview'>('edit');
+	const [weaknessesView, setWeaknessesView] = useState<'edit' | 'preview'>('edit');
+
+	const strengthsRef = useRef<HTMLTextAreaElement>(null);
+	const weaknessesRef = useRef<HTMLTextAreaElement>(null);
+
 	// Load data if editing or viewing
 	useEffect(() => {
 		if (analysis) {
 			setCandidateId(analysis.candidate_id);
 			setAnalystName(analysis.analyst_name || '');
-			setAnalysisDate(analysis.analysis_date);
+			setAnalysisDate(analysis.analysis_date ? analysis.analysis_date.split('T')[0] : new Date().toISOString().split('T')[0]);
 			setStrengths(analysis.strengths || '');
 			setWeaknesses(analysis.weaknesses || '');
 			setTechRating(analysis.technical_rating);
@@ -88,7 +103,7 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 			setStatus(analysis.status);
 		} else {
 			setCandidateId('');
-			setAnalystName('');
+			setAnalystName(user?.full_name || user?.username || '');
 			setAnalysisDate(new Date().toISOString().split('T')[0]);
 			setStrengths('');
 			setWeaknesses('');
@@ -99,7 +114,7 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 			setRecommendation('ready_for_placement');
 			setStatus('completed');
 		}
-	}, [analysis, open]);
+	}, [analysis, open, user]);
 
 	// Calculate overall score automatically
 	const overallRating = useMemo(() => {
@@ -116,6 +131,58 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 
 	const handleSkillChange = (idx: number, field: keyof AnalysisSkill, val: any) => {
 		setSkills(prev => prev.map((s, i) => i === idx ? { ...s, [field]: val } : s));
+	};
+
+	const applyFormatting = (
+		field: 'strengths' | 'weaknesses',
+		ref: React.RefObject<HTMLTextAreaElement | null>,
+		prefix: string,
+		suffix: string = '',
+		isBlock: boolean = false
+	) => {
+		const textField = ref.current;
+		if (!textField) return;
+
+		const start = textField.selectionStart;
+		const end = textField.selectionEnd;
+		const text = field === 'strengths' ? strengths : weaknesses;
+		const selectedText = text.substring(start, end);
+
+		let replacement = '';
+		let needsNewline = false;
+		
+		if (isBlock) {
+			const beforeText = text.substring(0, start);
+			needsNewline = beforeText.length > 0 && !beforeText.endsWith('\n');
+			
+			if (selectedText.includes('\n')) {
+				replacement = (needsNewline ? '\n' : '') + selectedText
+					.split('\n')
+					.map(line => (line.trim() && !line.startsWith(prefix.trim())) ? `${prefix}${line}` : line)
+					.join('\n');
+			} else {
+				replacement = `${needsNewline ? '\n' : ''}${prefix}${selectedText}${suffix}`;
+			}
+		} else {
+			replacement = `${prefix}${selectedText}${suffix}`;
+		}
+
+		const newText = text.substring(0, start) + replacement + text.substring(end);
+		
+		if (field === 'strengths') {
+			setStrengths(newText);
+		} else {
+			setWeaknesses(newText);
+		}
+
+		setTimeout(() => {
+			if (ref.current) {
+				const tf = ref.current;
+				tf.focus();
+				const newPos = start + (needsNewline ? 1 : 0);
+				tf.setSelectionRange(newPos, newPos + replacement.length - (needsNewline ? 1 : 0));
+			}
+		}, 0);
 	};
 
 	const handleFormSubmit = async (e: React.FormEvent) => {
@@ -213,7 +280,7 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 							fullWidth
 							size="small"
 							required
-							disabled={viewMode}
+							disabled={true}
 							value={analystName}
 							onChange={(e) => setAnalystName(e.target.value)}
 							placeholder="e.g. David R."
@@ -229,7 +296,7 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 							fullWidth
 							size="small"
 							required
-							disabled={viewMode}
+							disabled={true}
 							value={analysisDate}
 							onChange={(e) => setAnalysisDate(e.target.value)}
 							sx={inputSx}
@@ -336,34 +403,155 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 
 					{/* Feedback Areas */}
 					<Grid size={{ xs: 12, sm: 6 }}>
-						<Typography variant="caption" sx={{ fontWeight: 700, mb: 0.5, display: 'block', color: 'text.secondary' }}>
-							Key Strengths
-						</Typography>
-						<TextField
-							fullWidth
-							multiline
-							rows={4}
-							disabled={viewMode}
-							value={strengths}
-							onChange={(e) => setStrengths(e.target.value)}
-							placeholder="Describe core strengths (technical, soft skills, attitude)..."
-							sx={inputSx}
-						/>
+						<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+							<Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
+								Key Strengths *
+							</Typography>
+							
+							<Stack direction="row" spacing={0.5} alignItems="center">
+								{strengthsView === 'edit' && !viewMode && (
+									<>
+										<Tooltip title="Bold">
+											<IconButton size="small" onClick={() => applyFormatting('strengths', strengthsRef, '**', '**')}>
+												<BoldIcon sx={{ fontSize: 16 }} />
+											</IconButton>
+										</Tooltip>
+										<Tooltip title="Bullet List">
+											<IconButton size="small" onClick={() => applyFormatting('strengths', strengthsRef, '- ', '', true)}>
+												<ListIcon sx={{ fontSize: 16 }} />
+											</IconButton>
+										</Tooltip>
+										<Tooltip title="Numbered List">
+											<IconButton size="small" onClick={() => applyFormatting('strengths', strengthsRef, '1. ', '', true)}>
+												<NumberedIcon sx={{ fontSize: 16 }} />
+											</IconButton>
+										</Tooltip>
+										<Divider orientation="vertical" flexItem sx={{ mx: 0.5, my: 0.5 }} />
+									</>
+								)}
+								
+								<IconButton 
+									size="small" 
+									onClick={() => setStrengthsView(prev => prev === 'edit' ? 'preview' : 'edit')}
+									title={strengthsView === 'edit' ? 'Preview Markdown' : 'Edit Text'}
+								>
+									{strengthsView === 'edit' ? <PreviewIcon sx={{ fontSize: 16 }} /> : <EditIcon sx={{ fontSize: 16 }} />}
+								</IconButton>
+							</Stack>
+						</Box>
+
+						{strengthsView === 'edit' ? (
+							<TextField
+								fullWidth
+								multiline
+								rows={6}
+								disabled={viewMode}
+								value={strengths}
+								onChange={(e) => setStrengths(e.target.value)}
+								placeholder="Describe core strengths (technical, soft skills, attitude). Supports Markdown."
+								inputRef={strengthsRef}
+								sx={inputSx}
+							/>
+						) : (
+							<Paper 
+								variant="outlined" 
+								sx={{ 
+									p: 2, 
+									minHeight: 154, 
+									maxHeight: 154, 
+									overflowY: 'auto', 
+									bgcolor: '#fbfbfb', 
+									borderRadius: 1.5,
+									borderColor: '#d5dbdb',
+									fontSize: '0.875rem',
+									color: 'text.primary',
+									'& p': { mb: 1 },
+									'& ul, & ol': { pl: 2.5, mb: 1 },
+									'& li': { mb: 0.5 },
+									'& strong': { fontWeight: 700 }
+								}}
+							>
+								<ReactMarkdown remarkPlugins={[remarkGfm]}>
+									{strengths || '*No strengths entered yet.*'}
+								</ReactMarkdown>
+							</Paper>
+						)}
 					</Grid>
+
 					<Grid size={{ xs: 12, sm: 6 }}>
-						<Typography variant="caption" sx={{ fontWeight: 700, mb: 0.5, display: 'block', color: 'text.secondary' }}>
-							Areas of Improvement
-						</Typography>
-						<TextField
-							fullWidth
-							multiline
-							rows={4}
-							disabled={viewMode}
-							value={weaknesses}
-							onChange={(e) => setWeaknesses(e.target.value)}
-							placeholder="Describe improvement areas, specific training gaps..."
-							sx={inputSx}
-						/>
+						<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+							<Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
+								Areas of Improvement *
+							</Typography>
+							
+							<Stack direction="row" spacing={0.5} alignItems="center">
+								{weaknessesView === 'edit' && !viewMode && (
+									<>
+										<Tooltip title="Bold">
+											<IconButton size="small" onClick={() => applyFormatting('weaknesses', weaknessesRef, '**', '**')}>
+												<BoldIcon sx={{ fontSize: 16 }} />
+											</IconButton>
+										</Tooltip>
+										<Tooltip title="Bullet List">
+											<IconButton size="small" onClick={() => applyFormatting('weaknesses', weaknessesRef, '- ', '', true)}>
+												<ListIcon sx={{ fontSize: 16 }} />
+											</IconButton>
+										</Tooltip>
+										<Tooltip title="Numbered List">
+											<IconButton size="small" onClick={() => applyFormatting('weaknesses', weaknessesRef, '1. ', '', true)}>
+												<NumberedIcon sx={{ fontSize: 16 }} />
+											</IconButton>
+										</Tooltip>
+										<Divider orientation="vertical" flexItem sx={{ mx: 0.5, my: 0.5 }} />
+									</>
+								)}
+								
+								<IconButton 
+									size="small" 
+									onClick={() => setWeaknessesView(prev => prev === 'edit' ? 'preview' : 'edit')}
+									title={weaknessesView === 'edit' ? 'Preview Markdown' : 'Edit Text'}
+								>
+									{weaknessesView === 'edit' ? <PreviewIcon sx={{ fontSize: 16 }} /> : <EditIcon sx={{ fontSize: 16 }} />}
+								</IconButton>
+							</Stack>
+						</Box>
+
+						{weaknessesView === 'edit' ? (
+							<TextField
+								fullWidth
+								multiline
+								rows={6}
+								disabled={viewMode}
+								value={weaknesses}
+								onChange={(e) => setWeaknesses(e.target.value)}
+								placeholder="Describe key improvement areas or technical gaps. Supports Markdown."
+								inputRef={weaknessesRef}
+								sx={inputSx}
+							/>
+						) : (
+							<Paper 
+								variant="outlined" 
+								sx={{ 
+									p: 2, 
+									minHeight: 154, 
+									maxHeight: 154, 
+									overflowY: 'auto', 
+									bgcolor: '#fbfbfb', 
+									borderRadius: 1.5,
+									borderColor: '#d5dbdb',
+									fontSize: '0.875rem',
+									color: 'text.primary',
+									'& p': { mb: 1 },
+									'& ul, & ol': { pl: 2.5, mb: 1 },
+									'& li': { mb: 0.5 },
+									'& strong': { fontWeight: 700 }
+								}}
+							>
+								<ReactMarkdown remarkPlugins={[remarkGfm]}>
+									{weaknesses || '*No improvement areas entered yet.*'}
+								</ReactMarkdown>
+							</Paper>
+						)}
 					</Grid>
 
 					{/* Competency Matrix (Skills assessment inside Candidate Analysis) */}

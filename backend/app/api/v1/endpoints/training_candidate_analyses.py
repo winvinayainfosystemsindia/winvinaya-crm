@@ -27,6 +27,11 @@ async def create_candidate_analysis(
     """
     Create a new candidate analysis record.
     """
+    # Auto-populate non-editable fields
+    from datetime import datetime, timezone
+    analysis_in.analyst_name = current_user.full_name or current_user.username
+    analysis_in.analysis_date = datetime.now(timezone.utc)
+
     service = TrainingExtensionService(db)
     analysis = await service.create_candidate_analysis(analysis_in)
     
@@ -87,7 +92,12 @@ async def update_candidate_analysis(
     if not original_analysis:
         raise HTTPException(status_code=404, detail="Candidate analysis not found")
         
-    analysis = await service.update_candidate_analysis(id, analysis_in)
+    # Exclude non-editable fields (analyst_name and analysis_date) from updates
+    update_data = analysis_in.model_dump(exclude_unset=True)
+    update_data.pop("analyst_name", None)
+    update_data.pop("analysis_date", None)
+
+    analysis = await service.update_candidate_analysis(id, update_data)
     
     await log_update(
         db=db,
