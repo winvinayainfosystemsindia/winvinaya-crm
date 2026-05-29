@@ -21,7 +21,7 @@ class PlacementPipelineService:
         changed_by_id: int,
         remarks: Optional[str] = None
     ) -> Optional[PlacementMapping]:
-        from sqlalchemy import select
+        from sqlalchemy import select, update as sa_update
         from sqlalchemy.orm import selectinload
         
         # Fetch mapping with necessary relationships for serialization
@@ -83,6 +83,25 @@ class PlacementPipelineService:
                 offer.joining_status = JoiningStatus.NOT_JOINED
             
             offer.updated_at = datetime.utcnow()
+
+        # ── Reflect placement in Candidate Allocation ─────────────────────────────
+        # When a candidate reaches an "offer" or "joined" stage in the placement
+        # pipeline, mark their training allocation(s) as 'placed' so that the
+        # Training module shows they have been successfully placed.
+        PLACED_TRIGGER_STATUSES = {
+            'offer_made', 'offered', 'offer_accepted', 'joined'
+        }
+        if to_status in PLACED_TRIGGER_STATUSES:
+            from app.models.training_candidate_allocation import TrainingCandidateAllocation
+            await self.db.execute(
+                sa_update(TrainingCandidateAllocation)
+                .where(
+                    TrainingCandidateAllocation.candidate_id == mapping.candidate_id,
+                    TrainingCandidateAllocation.is_deleted == False,
+                    TrainingCandidateAllocation.status != 'dropped_out'
+                )
+                .values(status='placed', updated_at=datetime.utcnow())
+            )
 
         await self.db.commit()
         await self.db.refresh(mapping)

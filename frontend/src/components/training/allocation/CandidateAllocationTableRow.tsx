@@ -17,7 +17,9 @@ import {
 import {
 	MailOutline as MailIcon,
 	PhoneIphone as PhoneIcon,
-	SwapHoriz as MoveIcon
+	SwapHoriz as MoveIcon,
+	EmojiEvents as PlacedIcon,
+	LockOutlined as LockIcon
 } from '@mui/icons-material';
 import type { CandidateAllocation } from '../../../models/training';
 
@@ -50,10 +52,13 @@ const CandidateAllocationTableRow: React.FC<CandidateAllocationTableRowProps> = 
 			case 'in_training': return 'In Training';
 			case 'completed': return 'Completed';
 			case 'dropped_out': return 'Drop Out';
-			case 'moved_to_placement': return 'Moved to placement';
+			case 'moved_to_placement': return 'Moved to Placement';
+			case 'placed': return 'Placed';
 			default: return status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ');
 		}
 	};
+
+	const isPlaced = currentStatus === 'placed';
 
 	return (
 		<TableRow
@@ -121,6 +126,33 @@ const CandidateAllocationTableRow: React.FC<CandidateAllocationTableRowProps> = 
 				</Stack>
 			</TableCell>
 			<TableCell>
+				{isPlaced ? (
+					// Placed status is read-only — driven by the Placement module
+					<Tooltip title="Placed via Placement module. Status is locked." placement="top">
+						<Box sx={{
+							display: 'inline-flex',
+							alignItems: 'center',
+							gap: 0.75,
+							px: 1.25,
+							py: 0.4,
+							borderRadius: 1,
+							bgcolor: alpha('#b8860b', 0.08),
+							border: '1px solid',
+							borderColor: alpha('#b8860b', 0.3),
+							cursor: 'default'
+						}}>
+							<PlacedIcon sx={{ fontSize: 14, color: '#b8860b' }} />
+							<Typography sx={{
+								fontSize: '0.65rem',
+								fontWeight: 800,
+								color: '#b8860b',
+								textTransform: 'uppercase',
+								letterSpacing: '0.06em'
+							}}>Placed</Typography>
+							<LockIcon sx={{ fontSize: 11, color: '#b8860b', opacity: 0.7 }} />
+						</Box>
+					</Tooltip>
+				) : (
 				<FormControl size="small" sx={{ minWidth: 160 }}>
 					<Select
 						value={currentStatus}
@@ -177,6 +209,7 @@ const CandidateAllocationTableRow: React.FC<CandidateAllocationTableRowProps> = 
 						))}
 					</Select>
 				</FormControl>
+				)}
 				{allocation.dropout_remark && (
 					<Tooltip title={allocation.dropout_remark}>
 						<Typography

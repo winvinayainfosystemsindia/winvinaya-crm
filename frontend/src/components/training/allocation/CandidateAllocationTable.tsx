@@ -25,6 +25,7 @@ const getAllocationStatusColor = (theme: any, status: string) => {
 		case 'dropped_out': return theme.palette.error.main;
 		case 'moved_to_placement': return theme.palette.secondary.main;
 		case 'in_training': return theme.palette.primary.main;
+		case 'placed': return '#b8860b'; // golden amber — visually distinct from other statuses
 		default: return theme.palette.warning.main;
 	}
 };
