@@ -89,6 +89,7 @@ const trainingService = {
 		if (params.limit !== undefined) query.append('limit', params.limit.toString());
 		if (params.search) query.append('search', params.search);
 		if (params.batch_id) query.append('batch_id', params.batch_id.toString());
+		if (params.batch_tag) query.append('batch_tag', params.batch_tag);
 		if (params.status) query.append('status', params.status);
 		if (params.is_dropout !== undefined) query.append('is_dropout', params.is_dropout.toString());
 		if (params.gender) query.append('gender', params.gender);
@@ -104,6 +105,7 @@ const trainingService = {
 		const query = new URLSearchParams();
 		if (params.search) query.append('search', params.search);
 		if (params.batch_id) query.append('batch_id', params.batch_id.toString());
+		if (params.batch_tag) query.append('batch_tag', params.batch_tag);
 		if (params.status) query.append('status', params.status);
 		if (params.is_dropout !== undefined) query.append('is_dropout', params.is_dropout.toString());
 		if (params.gender) query.append('gender', params.gender);

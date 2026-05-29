@@ -92,6 +92,7 @@ class TrainingCandidateAllocationRepository(BaseRepository[TrainingCandidateAllo
         is_dropout: Optional[bool] = None,
         gender: Optional[str] = None,
         disability_types: Optional[str] = None,
+        batch_tag: Optional[str] = None,
         sort_by: str = "created_at",
         sort_order: str = "desc"
     ) -> tuple[List[TrainingCandidateAllocation], int]:
@@ -180,6 +181,16 @@ class TrainingCandidateAllocationRepository(BaseRepository[TrainingCandidateAllo
         if batch_id:
             query = query.where(self.model.batch_id == batch_id)
             count_query = count_query.where(self.model.batch_id == batch_id)
+
+        if batch_tag:
+            from app.models.training_batch import TrainingBatch
+            # Join TrainingBatch if not already joined by batch_id or other conditions
+            query = query.join(TrainingBatch, self.model.batch_id == TrainingBatch.id)
+            count_query = count_query.join(TrainingBatch, self.model.batch_id == TrainingBatch.id)
+            
+            tag_filter = TrainingBatch.other['tag'].as_string().ilike(f"%{batch_tag}%")
+            query = query.where(tag_filter)
+            count_query = count_query.where(tag_filter)
         
         if status:
             query = query.where(self.model.status == status)

@@ -51,6 +51,11 @@ const Reports: React.FC = () => {
 	// Filter Field Configuration
 	const filterFields: FilterField[] = isTraining ? [
 		{
+			key: 'batch_tag',
+			label: 'Batch Tag',
+			type: 'text'
+		},
+		{
 			key: 'batch_id',
 			label: 'Batch Name',
 			type: 'single-select',

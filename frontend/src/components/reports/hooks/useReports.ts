@@ -124,6 +124,7 @@ export const useReports = () => {
 			limit: rowsPerPage,
 			search,
 			batch_id: filters.batch_id,
+			batch_tag: filters.batch_tag,
 			status: filters.status,
 			is_dropout: filters.is_dropout,
 			gender: filters.gender,
@@ -194,6 +195,7 @@ export const useReports = () => {
 				response = await trainingService.exportAllocations({
 					search,
 					batch_id: filters.batch_id,
+					batch_tag: filters.batch_tag,
 					status: filters.status,
 					is_dropout: filters.is_dropout,
 					gender: filters.gender,

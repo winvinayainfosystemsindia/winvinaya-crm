@@ -438,6 +438,7 @@ class TrainingCandidateAllocationService:
         is_dropout: Optional[bool] = None,
         gender: Optional[str] = None,
         disability_types: Optional[str] = None,
+        batch_tag: Optional[str] = None,
         sort_by: str = "created_at",
         sort_order: str = "desc"
     ) -> tuple[List[TrainingCandidateAllocation], int]:
@@ -451,6 +452,7 @@ class TrainingCandidateAllocationService:
             is_dropout=is_dropout,
             gender=gender,
             disability_types=disability_types,
+            batch_tag=batch_tag,
             sort_by=sort_by,
             sort_order=sort_order
         )
@@ -464,6 +466,7 @@ class TrainingCandidateAllocationService:
         is_dropout: Optional[bool] = None,
         gender: Optional[str] = None,
         disability_types: Optional[str] = None,
+        batch_tag: Optional[str] = None,
         sort_by: str = "created_at",
         sort_order: str = "desc",
         columns: Optional[str] = None
@@ -481,6 +484,7 @@ class TrainingCandidateAllocationService:
             is_dropout=is_dropout,
             gender=gender,
             disability_types=disability_types,
+            batch_tag=batch_tag,
             sort_by=sort_by,
             sort_order=sort_order
         )

@@ -31,6 +31,7 @@ async def get_all_allocations(
     is_dropout: Optional[bool] = Query(None),
     gender: Optional[str] = Query(None),
     disability_types: Optional[str] = Query(None),
+    batch_tag: Optional[str] = Query(None),
     sort_by: str = Query("created_at"),
     sort_order: str = Query("desc"),
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER])),
@@ -49,6 +50,7 @@ async def get_all_allocations(
         is_dropout=is_dropout,
         gender=gender,
         disability_types=disability_types,
+        batch_tag=batch_tag,
         sort_by=sort_by,
         sort_order=sort_order
     )
@@ -101,6 +103,7 @@ async def export_allocations(
     is_dropout: Optional[bool] = Query(None),
     gender: Optional[str] = Query(None),
     disability_types: Optional[str] = Query(None),
+    batch_tag: Optional[str] = Query(None),
     sort_by: str = Query("created_at"),
     sort_order: str = Query("desc"),
     columns: Optional[str] = Query(None),
@@ -127,6 +130,7 @@ async def export_allocations(
         is_dropout=is_dropout,
         gender=gender,
         disability_types=disability_types,
+        batch_tag=batch_tag,
         sort_by=sort_by,
         sort_order=sort_order
     )
