@@ -52,7 +52,8 @@ const JobRoleSearch: React.FC<JobRoleSearchProps> = ({
 		dispatch(fetchJobRoles({
 			search: search || undefined,
 			limit: search ? 50 : 200, // Fetch up to 200 on mount/empty to get full metadata for existing recommendations
-			skip: 0
+			skip: 0,
+			status: 'active' // Only show open job roles as suggestions; closed roles should not be recommended
 		}));
 	}, [dispatch]);
 
