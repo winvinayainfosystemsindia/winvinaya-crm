@@ -109,6 +109,7 @@ export const topNavigation: NavigationItem[] = [
 			{ label: 'Candidate Allocation', path: '/training/allocation', roles: ['admin', 'manager', 'trainer', 'placement'] },
 			{ label: 'Attendance', path: '/training/attendance', roles: ['admin', 'manager', 'trainer', 'placement'] },
 			{ label: 'Mock Interview', path: '/training/mock-interview', roles: ['admin', 'manager', 'trainer', 'placement'] },
+			{ label: 'Candidate Analysis', path: '/training/candidate-analysis', roles: ['admin', 'manager', 'trainer', 'placement'] },
 		],
 	},
 	{

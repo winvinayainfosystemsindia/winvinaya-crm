@@ -16,6 +16,7 @@ import AttendanceTrackerPage from '../pages/training/AttendanceTrackerPage';
 import AssignmentMatrixPage from '../pages/training/AssignmentMatrixPage';
 
 import MockInterviewPage from '../pages/training/MockInterviewPage';
+import CandidateAnalysisPage from '../pages/training/CandidateAnalysisPage';
 import WeeklyTrainingPlanPage from '../pages/training/WeeklyTrainingPlanPage';
 import SuccessPage from '../pages/common/SuccessPage';
 import NotFoundPage from '../pages/common/NotFoundPage';
@@ -85,6 +86,7 @@ const AppRouter: React.FC = () => {
 						<Route path="assignment" element={<AssignmentMatrixPage />} />
 
 						<Route path="mock-interview" element={<MockInterviewPage />} />
+						<Route path="candidate-analysis" element={<CandidateAnalysisPage />} />
 						<Route path="weekly-plan" element={<WeeklyTrainingPlanPage />} />
 					</Route>
 
