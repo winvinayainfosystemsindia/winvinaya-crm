@@ -528,9 +528,11 @@ class TrainingCandidateAllocationService:
                     elif col_id == "gender": val = a.candidate.gender if a.candidate else ""
                     elif col_id == "email": val = a.candidate.email if a.candidate else ""
                     elif col_id == "phone": val = a.candidate.phone if a.candidate else ""
+                    elif col_id == "city": val = a.candidate.city if a.candidate else ""
                     elif col_id == "disability_type": val = (a.candidate.disability_details or {}).get("disability_type", "") if a.candidate else ""
                     elif col_id == "batch_name": val = a.batch.batch_name if a.batch else ""
                     elif col_id == "batch_status": val = a.batch.status if a.batch else ""
+                    elif col_id == "batch_tag": val = (a.batch.other or {}).get("tag", "") if a.batch else ""
                     elif col_id == "domain": val = a.batch.domain if a.batch else ""
                     elif col_id == "training_mode": val = a.batch.training_mode if a.batch else ""
                     elif col_id == "courses":
@@ -547,6 +549,10 @@ class TrainingCandidateAllocationService:
                         val = f"{a.attendance_percentage}%" if a.attendance_percentage is not None else "-"
                     elif col_id == "assessment_score":
                         val = a.assessment_score if a.assessment_score is not None else "-"
+                    elif col_id == "placed_company":
+                        val = getattr(a, "placed_company", "") or ""
+                    elif col_id == "placed_date":
+                        val = getattr(a, "placed_date", None)
                     else:
                         val = getattr(a, col_id, "")
                     

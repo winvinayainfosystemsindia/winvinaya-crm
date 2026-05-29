@@ -43,6 +43,10 @@ export const formatReportData = (data: any[], visibleColumns: string[], columns:
 				else if (virtColId === 'gender') val = allocation.candidate?.gender;
 				else if (virtColId === 'email') val = allocation.candidate?.email;
 				else if (virtColId === 'phone') val = allocation.candidate?.phone;
+				else if (virtColId === 'city') val = allocation.candidate?.city;
+				else if (virtColId === 'batch_tag') val = allocation.batch?.other?.tag;
+				else if (virtColId === 'placed_company') val = allocation.placed_company;
+				else if (virtColId === 'placed_date') val = allocation.placed_date;
 				else if (virtColId === 'disability_type') val = allocation.candidate?.disability_details?.disability_type || allocation.candidate?.disability_details?.type;
 				else if (virtColId === 'attendance_percentage') val = allocation.attendance_percentage !== null ? `${allocation.attendance_percentage}%` : '-';
 				else if (virtColId === 'assessment_score') val = allocation.assessment_score !== null ? allocation.assessment_score : '-';
@@ -64,7 +68,7 @@ export const formatReportData = (data: any[], visibleColumns: string[], columns:
 				}
 			}
 
-			if ((virtColId === 'created_at' || virtColId === 'dob' || virtColId === 'counseling_date' || virtColId === 'screening_date' || virtColId === 'screening_updated_at') && val) {
+			if ((virtColId === 'created_at' || virtColId === 'dob' || virtColId === 'counseling_date' || virtColId === 'screening_date' || virtColId === 'screening_updated_at' || virtColId === 'placed_date') && val) {
 				try {
 					val = format(new Date(val), 'dd MMM yyyy');
 				} catch (e) {

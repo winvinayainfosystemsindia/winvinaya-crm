@@ -127,12 +127,51 @@ class TrainingCandidateAllocationRepository(BaseRepository[TrainingCandidateAllo
             2
         )
 
+        from app.models.placement_mapping import PlacementMapping
+        from app.models.job_role import JobRole
+        from app.models.company import Company
+        from app.models.placement_offer import PlacementOffer
+        from sqlalchemy import Date
 
+        # Correlated subquery for placed company name
+        placed_company = select(Company.name).join(
+            JobRole, Company.id == JobRole.company_id
+        ).join(
+            PlacementMapping, JobRole.id == PlacementMapping.job_role_id
+        ).where(
+            and_(
+                PlacementMapping.candidate_id == self.model.candidate_id,
+                PlacementMapping.status.in_(['joined', 'offer_accepted', 'offer_made', 'offered']),
+                PlacementMapping.is_active == True
+            )
+        ).order_by(
+            desc(PlacementMapping.mapped_at)
+        ).limit(1).correlate(self.model).scalar_subquery()
+
+        # Correlated subquery for placed date (actual joining date, fallback to joining date, fallback to offer date, fallback to mapped date)
+        placed_date = select(
+            func.coalesce(
+                select(PlacementOffer.actual_joining_date).where(PlacementOffer.mapping_id == PlacementMapping.id).limit(1).scalar_subquery(),
+                select(PlacementOffer.joining_date).where(PlacementOffer.mapping_id == PlacementMapping.id).limit(1).scalar_subquery(),
+                select(PlacementOffer.offer_date).where(PlacementOffer.mapping_id == PlacementMapping.id).limit(1).scalar_subquery(),
+                cast(PlacementMapping.mapped_at, Date)
+            )
+        ).where(
+            and_(
+                PlacementMapping.candidate_id == self.model.candidate_id,
+                PlacementMapping.status.in_(['joined', 'offer_accepted', 'offer_made', 'offered']),
+                PlacementMapping.is_active == True
+            )
+        ).order_by(
+            desc(PlacementMapping.mapped_at)
+        ).limit(1).correlate(self.model).scalar_subquery()
 
         # 2. Build main query
         query = select(
             self.model, 
-            attendance_percentage.label("attendance_percentage")
+            attendance_percentage.label("attendance_percentage"),
+            placed_company.label("placed_company"),
+            placed_date.label("placed_date")
         ).join(Candidate).where(self.model.is_deleted == False)
 
         count_query = select(func.count(self.model.id)).where(self.model.is_deleted == False)
@@ -207,6 +246,8 @@ class TrainingCandidateAllocationRepository(BaseRepository[TrainingCandidateAllo
             item = row[0]
             # Attach metrics to the model instance for pydantic serialization
             item.attendance_percentage = row[1]
+            item.placed_company = row[2]
+            item.placed_date = row[3]
             items.append(item)
         
         return items, total

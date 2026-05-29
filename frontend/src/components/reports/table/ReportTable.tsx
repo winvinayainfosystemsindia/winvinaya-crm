@@ -107,10 +107,14 @@ const ReportTable: React.FC<ReportTableProps> = ({
 			else if (colId === 'disability_type') val = item.candidate.disability_details?.disability_type || item.candidate.disability_details?.type;
 			else if (colId === 'email') val = item.candidate.email;
 			else if (colId === 'phone') val = item.candidate.phone;
+			else if (colId === 'city') val = item.candidate.city || '-';
 			else if (colId === 'batch_name') val = item.batch.batch_name;
 			else if (colId === 'batch_status') val = item.batch.status;
+			else if (colId === 'batch_tag') val = item.batch.other?.tag || '-';
 			else if (colId === 'domain') val = item.batch.domain;
 			else if (colId === 'training_mode') val = item.batch.training_mode;
+			else if (colId === 'placed_company') val = item.placed_company || '-';
+			else if (colId === 'placed_date') val = item.placed_date;
 			else if (colId === 'courses') {
 				if (Array.isArray(item.batch.courses)) {
 					return item.batch.courses.map((c: any) => typeof c === 'string' ? c : c.name).join(', ');
@@ -193,7 +197,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
 			);
 		}
 
-		if ((colId === 'created_at' || colId === 'dob' || colId === 'counseling_date' || colId === 'screening_date' || colId === 'screening_updated_at') && val) {
+		if ((colId === 'created_at' || colId === 'dob' || colId === 'counseling_date' || colId === 'screening_date' || colId === 'screening_updated_at' || colId === 'placed_date') && val) {
 			try {
 				val = format(new Date(val), 'dd MMM yyyy');
 			} catch (e) {

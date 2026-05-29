@@ -54,10 +54,12 @@ export const TRAINING_COLUMNS = [
 	{ id: 'disability_type', label: 'Disability Type', default: true, group: 'candidate' },
 	{ id: 'email', label: 'Email', default: true, group: 'candidate' },
 	{ id: 'phone', label: 'Phone', default: true, group: 'candidate' },
+	{ id: 'city', label: 'Location', default: false, group: 'candidate' },
 
 	// Batch Details
 	{ id: 'batch_name', label: 'Batch Name', default: true, group: 'batch' },
 	{ id: 'batch_status', label: 'Batch Status', default: false, group: 'batch' },
+	{ id: 'batch_tag', label: 'Batch Tag', default: false, group: 'batch' },
 	{ id: 'domain', label: 'Domain', default: false, group: 'batch' },
 	{ id: 'training_mode', label: 'Training Mode', default: false, group: 'batch' },
 	{ id: 'courses', label: 'Course(s)', default: false, group: 'batch' },
@@ -67,5 +69,7 @@ export const TRAINING_COLUMNS = [
 	{ id: 'status', label: 'Training Status', default: false, group: 'progress' },
 	{ id: 'attendance_percentage', label: 'Attendance (%)', default: false, group: 'progress' },
 	{ id: 'assessment_score', label: 'Assessment Mark', default: false, group: 'progress' },
+	{ id: 'placed_company', label: 'Placed Company', default: false, group: 'progress' },
+	{ id: 'placed_date', label: 'Placement Date', default: false, group: 'progress' },
 	{ id: 'created_at', label: 'Allocation Date', default: false, group: 'progress' },
 ];

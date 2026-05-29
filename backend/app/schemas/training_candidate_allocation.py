@@ -42,6 +42,7 @@ class CandidateMini(BaseModel):
     email: str
     phone: str
     gender: Optional[str] = None
+    city: Optional[str] = None
     disability_details: Optional[dict] = None
     education_details: Optional[dict] = None
     documents: List[CandidateDocumentResponse] = []
@@ -65,6 +66,8 @@ class TrainingCandidateAllocationResponse(TrainingCandidateAllocationBase):
 
     # Computed Metrics
     attendance_percentage: Optional[float] = None
+    placed_company: Optional[str] = None
+    placed_date: Optional[date] = None
 
     class Config:
         from_attributes = True
