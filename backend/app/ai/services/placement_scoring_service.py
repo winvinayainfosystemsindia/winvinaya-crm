@@ -79,7 +79,7 @@ class PlacementScoringService:
 
         output = {}
         for candidate, result in zip(candidates, results_list):
-            if isinstance(result, Exception):
+            if isinstance(result, BaseException):
                 logger.warning(f"[PlacementScoring] Error scoring candidate {candidate.id}: {result}")
                 output[candidate.id] = self._fallback_result()
             else:

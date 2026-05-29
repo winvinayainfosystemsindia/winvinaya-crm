@@ -97,6 +97,21 @@ export const aiService = {
     const res = await api.get(`${BASE}/recommendations/skills`, { params });
     return res.data;
   },
+
+  /** Enhance or generate feedback text using AI */
+  async enhanceFeedback(payload: {
+    feedback_type: 'strengths' | 'weaknesses';
+    current_text: string;
+    candidate_name?: string;
+    technical_rating?: number;
+    communication_rating?: number;
+    attitude_rating?: number;
+    skills?: Array<{ skill: string; level: string; rating?: number }>;
+    action: 'enhance' | 'generate';
+  }): Promise<{ enhanced_text: string }> {
+    const res = await api.post(`${BASE}/enhance-feedback`, payload);
+    return res.data;
+  },
 };
 
 export default aiService;

@@ -330,3 +330,64 @@ async def get_skill_recommendations(
     except Exception as e:
         logger.exception("Skill recommendation failed")
         raise HTTPException(status_code=500, detail="Failed to generate skill recommendations.")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# POST /ai/enhance-feedback — AI Polish & Auto-feedback generation
+# ─────────────────────────────────────────────────────────────────────────────
+
+from pydantic import BaseModel, Field
+
+class AIEnhanceFeedbackRequest(BaseModel):
+    feedback_type: str = Field(..., description="Either 'strengths' or 'weaknesses'")
+    current_text: str = Field(..., description="The current text in the editor (HTML or plain text)")
+    candidate_name: Optional[str] = Field(None, description="Name of the candidate")
+    technical_rating: Optional[int] = Field(None, description="Technical rating (1-5)")
+    communication_rating: Optional[int] = Field(None, description="Communication rating (1-5)")
+    attitude_rating: Optional[int] = Field(None, description="Attitude rating (1-5)")
+    skills: Optional[list[dict]] = Field(None, description="List of skills and levels/ratings")
+    action: str = Field("enhance", description="Either 'enhance' (rewrite/polish) or 'generate' (suggest points from scratch)")
+
+class AIEnhanceFeedbackResponse(BaseModel):
+    enhanced_text: str = Field(..., description="The AI-generated/polished feedback in formatted HTML")
+
+@router.post(
+    "/enhance-feedback",
+    response_model=AIEnhanceFeedbackResponse,
+    summary="Enhance or generate candidate feedback using AI",
+    description="Uses AI to polish, rewrite, or generate key strengths / areas of improvement based on performance scores and skills.",
+)
+async def enhance_feedback(
+    request: AIEnhanceFeedbackRequest,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+) -> AIEnhanceFeedbackResponse:
+    if not settings.AI_ENABLED:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="AI Engine is disabled.",
+        )
+
+    from app.ai.services.candidate_feedback_service import CandidateFeedbackService
+    try:
+        service = CandidateFeedbackService(db, current_user)
+        enhanced_text = await service.process_feedback(
+            feedback_type=request.feedback_type,
+            current_text=request.current_text,
+            candidate_name=request.candidate_name,
+            technical_rating=request.technical_rating,
+            communication_rating=request.communication_rating,
+            attitude_rating=request.attitude_rating,
+            skills=request.skills,
+            action=request.action
+        )
+        return AIEnhanceFeedbackResponse(enhanced_text=enhanced_text)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("AI feedback processing failed")
+        raise HTTPException(
+            status_code=500,
+            detail=f"AI generation/enhancement failed: {str(e)}"
+        )
+

@@ -14,14 +14,18 @@ import {
 	Stack,
 	useTheme,
 	Chip,
-	Divider
+	Divider,
+	CircularProgress,
+	Tooltip
 } from '@mui/material';
 import { 
 	Close as CloseIcon,
 	Add as AddIcon,
 	DeleteOutline as DeleteIcon,
 	Psychology as SkillIcon,
-	RateReviewOutlined as ReviewIcon
+	RateReviewOutlined as ReviewIcon,
+	AutoAwesome as AIIcon,
+	AutoFixHigh as PolishIcon
 } from '@mui/icons-material';
 import Quill from 'quill';
 import 'quill/dist/quill.snow.css';
@@ -29,6 +33,7 @@ import { type RootState } from '../../../../store/store';
 import { type CandidateAnalysis, type AnalysisSkill } from '../../../../models/CandidateAnalysis';
 import SkillDropdown from '../../../common/SkillDropdown';
 import useToast from '../../../../hooks/useToast';
+import aiService from '../../../../services/aiService';
 
 // Lightweight, React 19 compatible WYSIWYG editor using pure Quill.js
 interface RichTextEditorProps {
@@ -71,6 +76,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 				]
 			}
 		});
+
+		// Enable native spell check (for browser and Grammarly support)
+		quill.root.setAttribute('spellcheck', 'true');
 
 		quillRef.current = quill;
 
@@ -185,6 +193,54 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 	const [recommendation, setRecommendation] = useState<string>('ready_for_placement');
 	const [status, setStatus] = useState<string>('completed');
 	const [submitting, setSubmitting] = useState(false);
+	const [loadingStrengthsAI, setLoadingStrengthsAI] = useState(false);
+	const [loadingWeaknessesAI, setLoadingWeaknessesAI] = useState(false);
+
+	const handleAIAssist = async (type: 'strengths' | 'weaknesses', action: 'enhance' | 'generate') => {
+		const isStrengths = type === 'strengths';
+		const currentText = isStrengths ? strengths : weaknesses;
+		const setLoader = isStrengths ? setLoadingStrengthsAI : setLoadingWeaknessesAI;
+		const setText = isStrengths ? setStrengths : setWeaknesses;
+
+		if (action === 'generate' && !candidateId) {
+			toast.error('Please select a candidate first to generate personalized feedback.');
+			return;
+		}
+
+		if (action === 'enhance') {
+			const cleanText = currentText.replace(/<[^>]*>/g, '').trim();
+			if (!cleanText) {
+				toast.error('Please enter some rough feedback first so AI can polish it.');
+				return;
+			}
+		}
+
+		setLoader(true);
+		try {
+			const candName = candidates.find(c => c.id === Number(candidateId))?.name || '';
+			const result = await aiService.enhanceFeedback({
+				feedback_type: type,
+				current_text: currentText,
+				candidate_name: candName,
+				technical_rating: techRating,
+				communication_rating: commRating,
+				attitude_rating: attitudeRating,
+				skills: skills.map(s => ({ skill: s.skill, level: s.level, rating: s.rating })),
+				action
+			});
+
+			if (result?.enhanced_text) {
+				setText(result.enhanced_text);
+				toast.success(`${isStrengths ? 'Key strengths' : 'Areas of improvement'} successfully ${action === 'enhance' ? 'polished' : 'generated'} by AI!`);
+			} else {
+				toast.error('Failed to get enhanced feedback from AI.');
+			}
+		} catch (err: any) {
+			toast.error(err?.response?.data?.detail || err?.message || 'AI assistant failed.');
+		} finally {
+			setLoader(false);
+		}
+	};
 
 	// Load data if editing or viewing
 	useEffect(() => {
@@ -454,6 +510,45 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 							<Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
 								Key Strengths *
 							</Typography>
+							{!viewMode && (
+								<Stack direction="row" spacing={1} alignItems="center">
+									{loadingStrengthsAI ? (
+										<Stack direction="row" spacing={0.5} alignItems="center">
+											<CircularProgress size={12} color="primary" />
+											<Typography variant="caption" sx={{ fontSize: '0.7rem', color: 'primary.main', fontWeight: 600 }}>
+												AI working...
+											</Typography>
+										</Stack>
+									) : (
+										<>
+											<Tooltip title="Generate strengths automatically based on candidate skills and ratings" arrow>
+												<Button
+													size="small"
+													variant="text"
+													color="primary"
+													onClick={() => handleAIAssist('strengths', 'generate')}
+													startIcon={<AIIcon sx={{ fontSize: '14px !important' }} />}
+													sx={{ fontSize: '0.7rem', textTransform: 'none', py: 0, px: 0.5, minWidth: 0, fontWeight: 700 }}
+												>
+													AI Suggest
+												</Button>
+											</Tooltip>
+											<Tooltip title="Polish, format, and grammar-check current text" arrow>
+												<Button
+													size="small"
+													variant="text"
+													color="secondary"
+													onClick={() => handleAIAssist('strengths', 'enhance')}
+													startIcon={<PolishIcon sx={{ fontSize: '14px !important' }} />}
+													sx={{ fontSize: '0.7rem', textTransform: 'none', py: 0, px: 0.5, minWidth: 0, fontWeight: 700 }}
+												>
+													AI Polish
+												</Button>
+											</Tooltip>
+										</>
+									)}
+								</Stack>
+							)}
 						</Box>
 
 						{viewMode ? (
@@ -526,6 +621,45 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 							<Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
 								Areas of Improvement *
 							</Typography>
+							{!viewMode && (
+								<Stack direction="row" spacing={1} alignItems="center">
+									{loadingWeaknessesAI ? (
+										<Stack direction="row" spacing={0.5} alignItems="center">
+											<CircularProgress size={12} color="primary" />
+											<Typography variant="caption" sx={{ fontSize: '0.7rem', color: 'primary.main', fontWeight: 600 }}>
+												AI working...
+											</Typography>
+										</Stack>
+									) : (
+										<>
+											<Tooltip title="Generate improvement areas based on candidate skills and ratings" arrow>
+												<Button
+													size="small"
+													variant="text"
+													color="primary"
+													onClick={() => handleAIAssist('weaknesses', 'generate')}
+													startIcon={<AIIcon sx={{ fontSize: '14px !important' }} />}
+													sx={{ fontSize: '0.7rem', textTransform: 'none', py: 0, px: 0.5, minWidth: 0, fontWeight: 700 }}
+												>
+													AI Suggest
+												</Button>
+											</Tooltip>
+											<Tooltip title="Polish, format, and grammar-check current text" arrow>
+												<Button
+													size="small"
+													variant="text"
+													color="secondary"
+													onClick={() => handleAIAssist('weaknesses', 'enhance')}
+													startIcon={<PolishIcon sx={{ fontSize: '14px !important' }} />}
+													sx={{ fontSize: '0.7rem', textTransform: 'none', py: 0, px: 0.5, minWidth: 0, fontWeight: 700 }}
+												>
+													AI Polish
+												</Button>
+											</Tooltip>
+										</>
+									)}
+								</Stack>
+							)}
 						</Box>
 
 						{viewMode ? (
