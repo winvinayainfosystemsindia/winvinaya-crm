@@ -14,6 +14,7 @@ from app.api.v1.endpoints import (
     training_assignments,
     training_events,
     training_mock_interviews,
+    training_candidate_analyses,
     training_candidate_allocations,
     tickets,
     settings,
@@ -74,6 +75,7 @@ router.include_router(training_assignments.router, prefix="/training-extensions"
 
 router.include_router(training_events.router, prefix="/training-extensions")
 router.include_router(training_mock_interviews.router, prefix="/training-extensions")
+router.include_router(training_candidate_analyses.router, prefix="/training-extensions")
 router.include_router(training_batch_plans.router)
 router.include_router(notifications.router, prefix="/notifications", tags=["Notifications"])
 

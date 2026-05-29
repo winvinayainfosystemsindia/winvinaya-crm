@@ -1,6 +1,6 @@
 """Training Extension Service"""
 
-from typing import List, Any
+from typing import List, Any, Optional
 from datetime import date
 from uuid import UUID
 from fastapi import HTTPException, status
@@ -14,10 +14,12 @@ from app.repositories.training_attendance_repository import TrainingAttendanceRe
 from app.repositories.training_assignment_repository import TrainingAssignmentRepository
 from app.repositories.training_mock_interview_repository import TrainingMockInterviewRepository
 from app.repositories.training_batch_event_repository import TrainingBatchEventRepository
+from app.repositories.training_candidate_analysis_repository import TrainingCandidateAnalysisRepository
 from app.schemas.training_attendance import TrainingAttendanceCreate, TrainingAttendanceUpdate
 from app.schemas.training_assignment import TrainingAssignmentCreate, TrainingAssignmentUpdate
 from app.schemas.training_mock_interview import TrainingMockInterviewCreate, TrainingMockInterviewUpdate
 from app.schemas.training_batch_event import TrainingBatchEventCreate, TrainingBatchEventUpdate
+from app.schemas.training_candidate_analysis import TrainingCandidateAnalysisCreate, TrainingCandidateAnalysisUpdate
 from app.services.training_batch_plan_service import TrainingBatchPlanService
 from app.services.training_project_sync_service import TrainingProjectSyncService
 
@@ -31,9 +33,10 @@ class TrainingExtensionService:
         self.assignment_repo = TrainingAssignmentRepository(db)
         self.mock_interview_repo = TrainingMockInterviewRepository(db)
         self.event_repo = TrainingBatchEventRepository(db)
+        self.candidate_analysis_repo = TrainingCandidateAnalysisRepository(db)
 
     # Attendance
-    async def get_attendance(self, batch_id: int, start_date: date = None, end_date: date = None):
+    async def get_attendance(self, batch_id: int, start_date: Optional[date] = None, end_date: Optional[date] = None):
         query = select(self.attendance_repo.model).options(
             selectinload(self.attendance_repo.model.batch),
             selectinload(self.attendance_repo.model.period).selectinload(TrainingBatchPlan.trainer_user),
@@ -154,7 +157,7 @@ class TrainingExtensionService:
             records.append(record)
         
         # Re-fetch with batch and period to avoid session error during serialization
-        ids = [r.id for r in records]
+        ids = [r.id for r in records if r is not None]
         query = select(self.attendance_repo.model).options(
             selectinload(self.attendance_repo.model.batch),
             selectinload(self.attendance_repo.model.period).selectinload(TrainingBatchPlan.trainer_user)
@@ -203,6 +206,7 @@ class TrainingExtensionService:
 
     async def create_assignment(self, assignment_in: TrainingAssignmentCreate):
         record = await self.assignment_repo.create(assignment_in.model_dump())
+        assert record is not None, "Failed to create assignment record"
         # Re-fetch with batch
         query = select(self.assignment_repo.model).options(
             selectinload(self.assignment_repo.model.batch)
@@ -231,7 +235,7 @@ class TrainingExtensionService:
             records.append(record)
         
         # Re-fetch with batch
-        ids = [r.id for r in records]
+        ids = [r.id for r in records if r is not None]
         query = select(self.assignment_repo.model).options(
             selectinload(self.assignment_repo.model.batch)
         ).where(self.assignment_repo.model.id.in_(ids))
@@ -277,6 +281,7 @@ class TrainingExtensionService:
 
     async def create_mock_interview(self, mock_in: TrainingMockInterviewCreate):
         record = await self.mock_interview_repo.create(mock_in.model_dump())
+        assert record is not None, "Failed to create mock interview record"
         await self.db.commit()
         # Re-fetch with eager loading to ensure relationships are available for the response model
         return await self.get_mock_interview(record.id)
@@ -402,4 +407,39 @@ class TrainingExtensionService:
         )
         result = await self.db.execute(query)
         await self.db.commit()
-        return result.rowcount
+        return getattr(result, "rowcount", 0)
+
+    # Candidate Analyses
+    async def get_candidate_analyses(self, batch_id: int):
+        return await self.candidate_analysis_repo.get_by_batch_id(batch_id)
+
+    async def get_candidate_analysis(self, id: int):
+        query = select(self.candidate_analysis_repo.model).options(
+            selectinload(self.candidate_analysis_repo.model.batch),
+            selectinload(self.candidate_analysis_repo.model.candidate).selectinload(Candidate.documents)
+        ).where(
+            self.candidate_analysis_repo.model.id == id,
+            self.candidate_analysis_repo.model.is_deleted == False
+        )
+        result = await self.db.execute(query)
+        return result.scalar_one_or_none()
+
+    async def create_candidate_analysis(self, analysis_in: TrainingCandidateAnalysisCreate):
+        record = await self.candidate_analysis_repo.create(analysis_in.model_dump())
+        assert record is not None, "Failed to create candidate analysis record"
+        await self.db.commit()
+        return await self.get_candidate_analysis(record.id)
+
+    async def update_candidate_analysis(self, id: int, analysis_in: Any):
+        update_data = analysis_in
+        if hasattr(analysis_in, 'model_dump'):
+            update_data = analysis_in.model_dump(exclude_unset=True)
+            
+        record = await self.candidate_analysis_repo.update(id, update_data)
+        if not record:
+            return None
+        await self.db.commit()
+        return await self.get_candidate_analysis(id)
+
+    async def delete_candidate_analysis(self, id: int):
+        return await self.candidate_analysis_repo.delete(id)

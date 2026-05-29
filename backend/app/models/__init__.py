@@ -14,6 +14,7 @@ from app.models.training_attendance import TrainingAttendance
 from app.models.training_assignment import TrainingAssignment
 
 from app.models.training_mock_interview import TrainingMockInterview
+from app.models.training_candidate_analysis import TrainingCandidateAnalysis
 from app.models.training_batch_event import TrainingBatchEvent
 from app.models.training_batch_plan import TrainingBatchPlan
 from app.models.dynamic_field import DynamicField
@@ -63,6 +64,7 @@ __all__ = [
     "TrainingAssignment",
 
     "TrainingMockInterview",
+    "TrainingCandidateAnalysis",
     "TrainingBatchEvent",
     "TrainingBatchPlan",
     "DynamicField",
