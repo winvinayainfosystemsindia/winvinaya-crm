@@ -731,7 +731,7 @@ class CandidateRepository(BaseRepository[Candidate]):
         """Get candidate statistics"""
         # Lazy imports to avoid circular dependency
         # Lazy imports to avoid circular dependency
-        from sqlalchemy import func
+        from sqlalchemy import func, or_, and_
         from datetime import datetime, time, timedelta
         from app.models.candidate_counseling import CandidateCounseling
         from app.models.candidate_screening import CandidateScreening
@@ -744,7 +744,7 @@ class CandidateRepository(BaseRepository[Candidate]):
             # Helper to execute count query
             async def get_count(filter_expr=None):
                 stmt = select(func.count(Candidate.id))
-                start_filter = (Candidate.is_deleted == False)
+                start_filter = (Candidate.is_deleted == False) & (or_(Candidate.other.is_(None), Candidate.other['registration_type'].as_string() == 'Registered'))
                 if filter_expr is not None:
                     stmt = stmt.where(start_filter, filter_expr)
                 else:
@@ -778,14 +778,16 @@ class CandidateRepository(BaseRepository[Candidate]):
             
             # Screening stats - count all candidates with ANY screening record
             stmt_screened = select(func.count(CandidateScreening.id)).join(Candidate).where(
-                Candidate.is_deleted == False
+                (Candidate.is_deleted == False) & (or_(Candidate.other.is_(None), Candidate.other['registration_type'].as_string() == 'Registered'))
             )
             result_screened = await self.db.execute(stmt_screened)
             screened = result_screened.scalar() or 0
             
             # Screening distribution
             # Screening distribution
-            stmt_dist = select(CandidateScreening.status, func.count(CandidateScreening.id)).join(Candidate).where(Candidate.is_deleted == False).group_by(CandidateScreening.status)
+            stmt_dist = select(CandidateScreening.status, func.count(CandidateScreening.id)).join(Candidate).where(
+                (Candidate.is_deleted == False) & (or_(Candidate.other.is_(None), Candidate.other['registration_type'].as_string() == 'Registered'))
+            ).group_by(CandidateScreening.status)
             res_dist = await self.db.execute(stmt_dist)
             raw_dist = dict(res_dist.all())
             
@@ -802,7 +804,9 @@ class CandidateRepository(BaseRepository[Candidate]):
 
             # Counseling stats
             # Normalize status to lowercase for consistent counting
-            stmt_counseling = select(func.lower(CandidateCounseling.status), func.count(CandidateCounseling.id)).join(Candidate).where(Candidate.is_deleted == False).group_by(func.lower(CandidateCounseling.status))
+            stmt_counseling = select(func.lower(CandidateCounseling.status), func.count(CandidateCounseling.id)).join(Candidate).where(
+                (Candidate.is_deleted == False) & (or_(Candidate.other.is_(None), Candidate.other['registration_type'].as_string() == 'Registered'))
+            ).group_by(func.lower(CandidateCounseling.status))
             result_counseling = await self.db.execute(stmt_counseling)
             counseling_counts = dict(result_counseling.all())
             
@@ -832,7 +836,7 @@ class CandidateRepository(BaseRepository[Candidate]):
                 .join(CandidateCounseling, Candidate.id == CandidateCounseling.candidate_id)
                 .outerjoin(CandidateDocument, and_(Candidate.id == CandidateDocument.candidate_id, CandidateDocument.is_active == True))
                 .where(CandidateCounseling.status == 'selected')
-                .where(Candidate.is_deleted == False)
+                .where((Candidate.is_deleted == False) & (or_(Candidate.other.is_(None), Candidate.other['registration_type'].as_string() == 'Registered')))
                 .group_by(Candidate.id)
             )
             res_sel_docs = await self.db.execute(stmt_sel_docs)
@@ -886,12 +890,14 @@ class CandidateRepository(BaseRepository[Candidate]):
             # 1. In Training: count distinct candidates assigned to active batches who have not dropped out
             stmt_training = select(func.count(func.distinct(TrainingCandidateAllocation.candidate_id))).join(
                 TrainingBatch, TrainingCandidateAllocation.batch_id == TrainingBatch.id
-            ).where(
+            ).join(Candidate, TrainingCandidateAllocation.candidate_id == Candidate.id).where(
                 and_(
                     TrainingBatch.status.in_(['planned', 'running', 'extended']),
                     TrainingCandidateAllocation.is_deleted == False,
                     TrainingCandidateAllocation.is_dropout == False,
-                    TrainingBatch.is_deleted == False
+                    TrainingBatch.is_deleted == False,
+                    Candidate.is_deleted == False,
+                    or_(Candidate.other.is_(None), Candidate.other['registration_type'].as_string() == 'Registered')
                 )
             )
             result_training = await self.db.execute(stmt_training)
@@ -899,13 +905,26 @@ class CandidateRepository(BaseRepository[Candidate]):
 
             # 2. Moved to Placement: count distinct candidates in placement_mappings 
             # (any candidate who has reached the placement stage)
-            stmt_moved_placement = select(func.count(func.distinct(PlacementMapping.candidate_id)))
+            stmt_moved_placement = select(func.count(func.distinct(PlacementMapping.candidate_id))).join(
+                Candidate, PlacementMapping.candidate_id == Candidate.id
+            ).where(
+                and_(
+                    Candidate.is_deleted == False,
+                    or_(Candidate.other.is_(None), Candidate.other['registration_type'].as_string() == 'Registered')
+                )
+            )
             result_moved_placement = await self.db.execute(stmt_moved_placement)
             moved_to_placement_count = result_moved_placement.scalar() or 0
 
             # 3. Got Job: count distinct candidates who have accepted offers or joined
-            stmt_got_job = select(func.count(func.distinct(PlacementMapping.candidate_id))).where(
-                PlacementMapping.status.in_(['offer_accepted', 'joined'])
+            stmt_got_job = select(func.count(func.distinct(PlacementMapping.candidate_id))).join(
+                Candidate, PlacementMapping.candidate_id == Candidate.id
+            ).where(
+                and_(
+                    PlacementMapping.status.in_(['offer_accepted', 'joined']),
+                    Candidate.is_deleted == False,
+                    or_(Candidate.other.is_(None), Candidate.other['registration_type'].as_string() == 'Registered')
+                )
             )
             result_got_job = await self.db.execute(stmt_got_job)
             got_job_count = result_got_job.scalar() or 0
@@ -1078,7 +1097,7 @@ class CandidateRepository(BaseRepository[Candidate]):
 
     async def get_screening_stats(self, assigned_to_id: Optional[int] = None) -> dict:
         """Get candidate screening statistics for tabs, with optional assignment filter"""
-        from sqlalchemy import func
+        from sqlalchemy import func, or_
         from app.models.candidate_screening import CandidateScreening
         from app.models.candidate_assignment import CandidateAssignment
         
@@ -1089,7 +1108,7 @@ class CandidateRepository(BaseRepository[Candidate]):
                 if assigned_to_id is not None:
                     stmt = stmt.join(Candidate.assignment).where(CandidateAssignment.user_id == assigned_to_id)
                 
-                start_filter = (Candidate.is_deleted == False)
+                start_filter = (Candidate.is_deleted == False) & (or_(Candidate.other.is_(None), Candidate.other['registration_type'].as_string() == 'Registered'))
                 if filter_expr is not None:
                     stmt = stmt.where(start_filter, filter_expr)
                 else:
@@ -1101,7 +1120,7 @@ class CandidateRepository(BaseRepository[Candidate]):
             
             # Screening stats
             stmt_screened = select(func.count(CandidateScreening.id)).join(Candidate).where(
-                Candidate.is_deleted == False
+                (Candidate.is_deleted == False) & (or_(Candidate.other.is_(None), Candidate.other['registration_type'].as_string() == 'Registered'))
             )
             if assigned_to_id is not None:
                 stmt_screened = stmt_screened.join(Candidate.assignment).where(CandidateAssignment.user_id == assigned_to_id)
@@ -1110,7 +1129,9 @@ class CandidateRepository(BaseRepository[Candidate]):
             screened = result_screened.scalar() or 0
             
             # Screening distribution
-            stmt_dist = select(CandidateScreening.status, func.count(CandidateScreening.id)).join(Candidate).where(Candidate.is_deleted == False)
+            stmt_dist = select(CandidateScreening.status, func.count(CandidateScreening.id)).join(Candidate).where(
+                (Candidate.is_deleted == False) & (or_(Candidate.other.is_(None), Candidate.other['registration_type'].as_string() == 'Registered'))
+            )
             if assigned_to_id is not None:
                 stmt_dist = stmt_dist.join(Candidate.assignment).where(CandidateAssignment.user_id == assigned_to_id)
             stmt_dist = stmt_dist.group_by(CandidateScreening.status)
