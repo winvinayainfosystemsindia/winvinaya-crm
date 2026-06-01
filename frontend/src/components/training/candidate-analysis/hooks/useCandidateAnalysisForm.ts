@@ -10,6 +10,7 @@ interface UseCandidateAnalysisFormProps {
 	onClose: () => void;
 	batchId: number;
 	analysis: CandidateAnalysis | null;
+	analyses: CandidateAnalysis[];
 	onSave: (data: any) => Promise<void>;
 }
 
@@ -18,6 +19,7 @@ export const useCandidateAnalysisForm = ({
 	onClose,
 	batchId,
 	analysis,
+	analyses,
 	onSave
 }: UseCandidateAnalysisFormProps) => {
 	const toast = useToast();
@@ -25,15 +27,24 @@ export const useCandidateAnalysisForm = ({
 	const { user } = useSelector((state: RootState) => state.auth);
 	const currentUserName = user?.full_name || user?.username || 'System';
 	
-	// Candidates in this batch
+	// Candidates in this batch (filtered to only show unevaluated candidates when creating a new record)
 	const candidates = useMemo(() => {
+		const evaluatedCandidateIds = new Set(analyses.map(a => a.candidate_id));
+
 		return allocations
 			.filter(a => a.status === 'in_training' || a.status === 'moved_to_placement')
+			.filter(a => {
+				// If editing an existing analysis, always allow the candidate being edited
+				if (analysis && analysis.candidate_id === a.candidate_id) return true;
+				
+				// Otherwise, only list candidates who don't have a SWOT analysis yet
+				return !evaluatedCandidateIds.has(a.candidate_id);
+			})
 			.map(a => ({
 				id: a.candidate_id,
 				name: a.candidate?.name || 'Unknown'
 			}));
-	}, [allocations]);
+	}, [allocations, analyses, analysis]);
 
 	const [candidateId, setCandidateId] = useState<number | ''>('');
 	const [analystName, setAnalystName] = useState('');
@@ -187,7 +198,11 @@ export const useCandidateAnalysisForm = ({
 				opportunities: opportunities.trim(),
 				threats: threats.trim(),
 				other: {
-					remarks: remarks.trim()
+					remarks: remarks.trim(),
+					created_by: analysis ? (analysis.other?.created_by || analysis.analyst_name || 'System') : currentUserName,
+					created_at: analysis ? (analysis.other?.created_at || analysis.analysis_date) : new Date().toISOString(),
+					modified_by: currentUserName,
+					modified_at: new Date().toISOString()
 				},
 				skills,
 				recommendation,

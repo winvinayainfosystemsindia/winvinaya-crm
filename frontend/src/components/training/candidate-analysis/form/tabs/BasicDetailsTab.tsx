@@ -5,8 +5,16 @@ import {
 	Typography,
 	TextField,
 	Grid,
-	MenuItem
+	MenuItem,
+	Paper,
+	Divider
 } from '@mui/material';
+import {
+	Person as PersonIcon,
+	History as HistoryIcon,
+	Update as UpdateIcon
+} from '@mui/icons-material';
+import useDateTime from '../../../../../hooks/useDateTime';
 
 interface BasicDetailsTabProps {
 	candidateId: number | '';
@@ -16,6 +24,7 @@ interface BasicDetailsTabProps {
 	candidates: Array<{ id: number; name: string }>;
 	viewMode: boolean;
 	isEdit: boolean;
+	other?: any;
 }
 
 const BasicDetailsTab: React.FC<BasicDetailsTabProps> = memo(({
@@ -25,8 +34,11 @@ const BasicDetailsTab: React.FC<BasicDetailsTabProps> = memo(({
 	analysisDate,
 	candidates,
 	viewMode,
-	isEdit
+	isEdit,
+	other
 }) => {
+	const { formatDateTime } = useDateTime();
+
 	const inputSx = {
 		'& .MuiOutlinedInput-root': {
 			borderRadius: 1.5,
@@ -38,6 +50,82 @@ const BasicDetailsTab: React.FC<BasicDetailsTabProps> = memo(({
 
 	return (
 		<Stack spacing={4} sx={{ maxWidth: 800, mx: 'auto' }}>
+			{/* Audit Panel for Collaborative Changes */}
+			{other && (other.created_by || other.modified_by) && (
+				<Paper
+					variant="outlined"
+					sx={{
+						p: 2.5,
+						borderRadius: 2,
+						bgcolor: 'rgba(0, 77, 230, 0.03)',
+						borderColor: 'rgba(0, 77, 230, 0.15)',
+						borderWidth: 1,
+						borderStyle: 'solid'
+					}}
+				>
+					<Stack spacing={2}>
+						<Stack direction="row" alignItems="center" spacing={1.5}>
+							<HistoryIcon sx={{ color: 'primary.main', fontSize: 20 }} />
+							<Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'primary.main', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+								SWOT Collaborative Log
+							</Typography>
+						</Stack>
+
+						<Divider sx={{ borderColor: 'rgba(0, 77, 230, 0.1)' }} />
+
+						<Grid container spacing={3}>
+							{/* Created Section */}
+							{other.created_by && (
+								<Grid size={{ xs: 12, sm: 6 }}>
+									<Stack direction="row" spacing={1.5} alignItems="flex-start">
+										<Box sx={{ display: 'flex', mt: 0.25 }}>
+											<PersonIcon sx={{ color: 'text.secondary', fontSize: 18 }} />
+										</Box>
+										<Box>
+											<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, display: 'block', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+												Original Evaluator
+											</Typography>
+											<Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary', mt: 0.25 }}>
+												{other.created_by}
+											</Typography>
+											{other.created_at && (
+												<Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.25 }}>
+													{formatDateTime(other.created_at)}
+												</Typography>
+											)}
+										</Box>
+									</Stack>
+								</Grid>
+							)}
+
+							{/* Modified Section */}
+							{other.modified_by && (
+								<Grid size={{ xs: 12, sm: 6 }}>
+									<Stack direction="row" spacing={1.5} alignItems="flex-start">
+										<Box sx={{ display: 'flex', mt: 0.25 }}>
+											<UpdateIcon sx={{ color: 'text.secondary', fontSize: 18 }} />
+										</Box>
+										<Box>
+											<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, display: 'block', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+												Last Updated By
+											</Typography>
+											<Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary', mt: 0.25 }}>
+												{other.modified_by}
+											</Typography>
+											{other.modified_at && (
+												<Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.25 }}>
+													{formatDateTime(other.modified_at)}
+												</Typography>
+											)}
+										</Box>
+									</Stack>
+								</Grid>
+							)}
+						</Grid>
+					</Stack>
+				</Paper>
+			)}
+
 			<Box>
 				<Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.1em', mb: 3 }}>
 					Evaluation Metadata

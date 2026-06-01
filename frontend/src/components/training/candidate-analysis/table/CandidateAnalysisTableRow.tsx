@@ -15,14 +15,16 @@ import {
 	Delete as DeleteIcon,
 	MoreVert as MoreIcon
 } from '@mui/icons-material';
-import { format } from 'date-fns';
 import type { CandidateAnalysis } from '../../../../models/CandidateAnalysis';
 import type { CandidateAllocation } from '../../../../models/training';
 import ActionMenu, { type ActionMenuItem } from '../../../common/action-menu/ActionMenu';
+import useDateTime from '../../../../hooks/useDateTime';
 
 interface CandidateAnalysisTableRowProps {
 	analysis: CandidateAnalysis;
 	allocations: CandidateAllocation[];
+	canEdit: boolean;
+	canDelete: boolean;
 	onView: (analysis: CandidateAnalysis) => void;
 	onEdit: (analysis: CandidateAnalysis) => void;
 	onDelete: (id: number) => void;
@@ -47,12 +49,15 @@ const getRecommendationStyles = (recommendation: string) => {
 const CandidateAnalysisTableRow: React.FC<CandidateAnalysisTableRowProps> = memo(({
 	analysis,
 	allocations,
+	canEdit,
+	canDelete,
 	onView,
 	onEdit,
 	onDelete,
 	onFilterCandidate
 }) => {
 	const theme = useTheme();
+	const { formatDateTime } = useDateTime();
 	const rec = getRecommendationStyles(analysis.recommendation);
 	const candidate = allocations.find(a => a.candidate_id === analysis.candidate_id)?.candidate;
 
@@ -67,32 +72,39 @@ const CandidateAnalysisTableRow: React.FC<CandidateAnalysisTableRowProps> = memo
 		setAnchorEl(null);
 	};
 
+	// Formulate allowed actions dynamically based on ownership
 	const actions: ActionMenuItem[] = [
 		{
 			label: 'View Analysis',
 			icon: <ViewIcon fontSize="small" />,
 			onClick: () => onView(analysis)
-		},
-		{
+		}
+	];
+
+	if (canEdit) {
+		actions.push({
 			label: 'Edit Analysis',
 			icon: <EditIcon fontSize="small" />,
 			onClick: () => onEdit(analysis),
 			color: 'info.main'
-		},
-		{
+		});
+	}
+
+	if (canDelete) {
+		actions.push({
 			label: 'Delete',
 			icon: <DeleteIcon fontSize="small" />,
 			onClick: () => onDelete(analysis.id),
 			color: 'error.main',
 			divider: true
-		}
-	];
+		});
+	}
 
 	return (
 		<TableRow hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
 			<TableCell>
 				<Typography variant="body2" fontWeight={600}>
-					{format(new Date(analysis.analysis_date), 'MMM dd, yyyy')}
+					{formatDateTime(analysis.analysis_date)}
 				</Typography>
 			</TableCell>
 			<TableCell>

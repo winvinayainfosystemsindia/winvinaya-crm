@@ -14,6 +14,7 @@ interface CandidateAnalysisFormProps {
 	onClose: () => void;
 	batchId: number;
 	analysis: CandidateAnalysis | null;
+	analyses: CandidateAnalysis[];
 	viewMode?: boolean;
 	onSave: (data: any) => Promise<void>;
 }
@@ -23,6 +24,7 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 	onClose,
 	batchId,
 	analysis,
+	analyses,
 	viewMode = false,
 	onSave
 }) => {
@@ -63,6 +65,7 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 		onClose,
 		batchId,
 		analysis,
+		analyses,
 		onSave
 	});
 
@@ -79,6 +82,7 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 					candidates={candidates}
 					viewMode={!!viewMode}
 					isEdit={!!analysis}
+					other={analysis?.other}
 				/>
 			)
 		},

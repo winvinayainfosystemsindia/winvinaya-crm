@@ -1,4 +1,6 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { useSelector } from 'react-redux';
+import { type RootState } from '../../../store/store';
 import {
 	Box,
 	Typography,
@@ -25,6 +27,7 @@ interface CandidateAnalysisListProps {
 const CandidateAnalysisList: React.FC<CandidateAnalysisListProps> = ({ batchId, allocations }) => {
 	const theme = useTheme();
 	const toast = useToast();
+	const { user } = useSelector((state: RootState) => state.auth);
 	
 	const [analyses, setAnalyses] = useState<CandidateAnalysis[]>([]);
 	const [loading, setLoading] = useState(false);
@@ -41,6 +44,7 @@ const CandidateAnalysisList: React.FC<CandidateAnalysisListProps> = ({ batchId, 
 	const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
 	const [activeFilters, setActiveFilters] = useState<Record<string, any>>({
 		candidate: '',
+		analyst_name: '',
 		recommendation: []
 	});
 
@@ -77,6 +81,12 @@ const CandidateAnalysisList: React.FC<CandidateAnalysisListProps> = ({ batchId, 
 		loadAnalyses();
 	}, [loadAnalyses]);
 
+	// Extract unique evaluators dynamically from analyses
+	const uniqueEvaluators = useMemo(() => {
+		const names = new Set(analyses.map(a => a.analyst_name).filter(Boolean));
+		return Array.from(names).map(name => ({ value: name!, label: name! }));
+	}, [analyses]);
+
 	// Filter options
 	const filterFields: FilterField[] = useMemo(() => [
 		{
@@ -91,6 +101,12 @@ const CandidateAnalysisList: React.FC<CandidateAnalysisListProps> = ({ batchId, 
 			]
 		},
 		{
+			key: 'analyst_name',
+			label: 'Trainer / Evaluator',
+			type: 'single-select',
+			options: uniqueEvaluators
+		},
+		{
 			key: 'recommendation',
 			label: 'Recommendation',
 			type: 'multi-select',
@@ -101,7 +117,7 @@ const CandidateAnalysisList: React.FC<CandidateAnalysisListProps> = ({ batchId, 
 				{ value: 'counseling_required', label: 'Counseling Required' }
 			]
 		}
-	], [allocations]);
+	], [allocations, uniqueEvaluators]);
 
 	const handleFilterChange = (key: string, value: any) => {
 		setActiveFilters(prev => ({ ...prev, [key]: value }));
@@ -114,7 +130,7 @@ const CandidateAnalysisList: React.FC<CandidateAnalysisListProps> = ({ batchId, 
 	};
 
 	const handleClearFilters = () => {
-		setActiveFilters({ candidate: '', recommendation: [] });
+		setActiveFilters({ candidate: '', analyst_name: '', recommendation: [] });
 		setFilterCandidateId(null);
 		setIsFilterDrawerOpen(false);
 	};
@@ -163,13 +179,18 @@ const CandidateAnalysisList: React.FC<CandidateAnalysisListProps> = ({ batchId, 
 			data = data.filter(i => i.candidate_id === filterCandidateId);
 		}
 
+		// Evaluator / Trainer filter
+		if (activeFilters.analyst_name) {
+			data = data.filter(i => i.analyst_name === activeFilters.analyst_name);
+		}
+
 		// Recommendation filters
 		if (activeFilters.recommendation.length > 0) {
 			data = data.filter(i => activeFilters.recommendation.includes(i.recommendation));
 		}
 
 		return data;
-	}, [analyses, searchTerm, filterCandidateId, activeFilters.recommendation]);
+	}, [analyses, searchTerm, filterCandidateId, activeFilters.analyst_name, activeFilters.recommendation]);
 
 	// Calculate stats on the fly
 	const stats = useMemo(() => {
@@ -183,10 +204,10 @@ const CandidateAnalysisList: React.FC<CandidateAnalysisListProps> = ({ batchId, 
 	}, [displayData]);
 
 	const columns: ColumnDefinition<CandidateAnalysis>[] = useMemo(() => [
-		{ id: 'analysis_date' as any, label: 'DATE', width: '12%' },
-		{ id: 'candidate_id' as any, label: 'CANDIDATE', width: '28%' },
-		{ id: 'analyst_name' as any, label: 'EVALUATOR', width: '18%' },
-		{ id: 'recommendation' as any, label: 'RECOMMENDATION', width: '24%' },
+		{ id: 'analysis_date' as any, label: 'EVALUATION DATE', width: '18%' },
+		{ id: 'candidate_id' as any, label: 'CANDIDATE', width: '24%' },
+		{ id: 'analyst_name' as any, label: 'TRAINER / EVALUATOR', width: '20%' },
+		{ id: 'recommendation' as any, label: 'RECOMMENDATION', width: '20%' },
 		{ id: 'status' as any, label: 'STATUS', width: '10%' },
 		{ id: 'actions' as any, label: 'ACTIONS', align: 'right', width: '8%' }
 	], []);
@@ -248,7 +269,7 @@ const CandidateAnalysisList: React.FC<CandidateAnalysisListProps> = ({ batchId, 
 				searchPlaceholder="Search candidates or evaluators..."
 				onRefresh={loadAnalyses}
 				onFilterOpen={() => setIsFilterDrawerOpen(true)}
-				activeFilterCount={(filterCandidateId ? 1 : 0) + activeFilters.recommendation.length}
+				activeFilterCount={(filterCandidateId ? 1 : 0) + (activeFilters.analyst_name ? 1 : 0) + activeFilters.recommendation.length}
 				canCreate={true}
 				onCreateClick={() => {
 					setSelectedAnalysis(null);
@@ -256,28 +277,39 @@ const CandidateAnalysisList: React.FC<CandidateAnalysisListProps> = ({ batchId, 
 					setIsFormOpen(true);
 				}}
 				createButtonText="Create Analysis"
-				renderRow={(analysis) => (
-					<CandidateAnalysisTableRow
-						key={analysis.id}
-						analysis={analysis}
-						allocations={allocations}
-						onView={(item) => {
-							setSelectedAnalysis(item);
-							setViewMode(true);
-							setIsFormOpen(true);
-						}}
-						onEdit={(item) => {
-							setSelectedAnalysis(item);
-							setViewMode(false);
-							setIsFormOpen(true);
-						}}
-						onDelete={(id) => setDeleteConfirmId(id)}
-						onFilterCandidate={(id) => {
-							setFilterCandidateId(id);
-							setActiveFilters(prev => ({ ...prev, candidate: String(id) }));
-						}}
-					/>
-				)}
+				renderRow={(analysis) => {
+					// Evaluate edit/delete ownership permissions
+					const isOwner = user?.full_name === analysis.analyst_name || user?.username === analysis.analyst_name;
+					const isAdmin = user?.role === 'admin';
+					const isTrainer = user?.role === 'trainer' || user?.role === 'manager' || user?.role === 'admin';
+					const canEdit = isTrainer; // Collaborative: any authorized trainer can edit a candidate's single SWOT record!
+					const canDelete = isOwner || isAdmin; // Secure: only the original author or system administrators can delete it!
+
+					return (
+						<CandidateAnalysisTableRow
+							key={analysis.id}
+							analysis={analysis}
+							allocations={allocations}
+							canEdit={canEdit}
+							canDelete={canDelete}
+							onView={(item) => {
+								setSelectedAnalysis(item);
+								setViewMode(true);
+								setIsFormOpen(true);
+							}}
+							onEdit={(item) => {
+								setSelectedAnalysis(item);
+								setViewMode(false);
+								setIsFormOpen(true);
+							}}
+							onDelete={(id) => setDeleteConfirmId(id)}
+							onFilterCandidate={(id) => {
+								setFilterCandidateId(id);
+								setActiveFilters(prev => ({ ...prev, candidate: String(id) }));
+							}}
+						/>
+					);
+				}}
 			/>
 
 			<FilterDrawer
@@ -296,6 +328,7 @@ const CandidateAnalysisList: React.FC<CandidateAnalysisListProps> = ({ batchId, 
 					onClose={() => setIsFormOpen(false)}
 					batchId={batchId}
 					analysis={selectedAnalysis}
+					analyses={analyses}
 					viewMode={viewMode}
 					onSave={handleSave}
 				/>
