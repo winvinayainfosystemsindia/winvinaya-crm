@@ -23,6 +23,7 @@ export const useCandidateAnalysisForm = ({
 	const toast = useToast();
 	const { allocations } = useSelector((state: RootState) => state.training);
 	const { user } = useSelector((state: RootState) => state.auth);
+	const currentUserName = user?.full_name || user?.username || 'System';
 	
 	// Candidates in this batch
 	const candidates = useMemo(() => {
@@ -267,6 +268,7 @@ export const useCandidateAnalysisForm = ({
 		loadingOpportunitiesAI,
 		loadingThreatsAI,
 		overallRating,
+		currentUserName,
 		handleAIAssist,
 		handleAddSkill,
 		handleRemoveSkill,

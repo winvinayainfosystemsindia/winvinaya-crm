@@ -61,6 +61,7 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 		loadingOpportunitiesAI,
 		loadingThreatsAI,
 		overallRating,
+		currentUserName,
 		handleAIAssist,
 		handleAddSkill,
 		handleRemoveSkill,
@@ -146,6 +147,7 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 					status={status}
 					setStatus={setStatus}
 					viewMode={!!viewMode}
+					analystName={currentUserName}
 				/>
 			)
 		}
@@ -185,6 +187,7 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 		remarks,
 		setRemarks,
 		overallRating,
+		currentUserName,
 		recommendation,
 		setRecommendation,
 		status,

@@ -11,7 +11,7 @@ import {
 	TextField,
 	MenuItem
 } from '@mui/material';
-import RichTextEditor from '../../../../common/RichTextEditor';
+import Remarks from '../../../../common/Remarks';
 
 interface PerformanceRatingsTabProps {
 	strengthsRating: number;
@@ -30,6 +30,7 @@ interface PerformanceRatingsTabProps {
 	status: string;
 	setStatus: (val: string) => void;
 	viewMode: boolean;
+	analystName: string;
 }
 
 const PerformanceRatingsTab: React.FC<PerformanceRatingsTabProps> = memo(({
@@ -48,7 +49,8 @@ const PerformanceRatingsTab: React.FC<PerformanceRatingsTabProps> = memo(({
 	setRecommendation,
 	status,
 	setStatus,
-	viewMode
+	viewMode,
+	analystName
 }) => {
 	const inputSx = {
 		'& .MuiOutlinedInput-root': {
@@ -70,11 +72,11 @@ const PerformanceRatingsTab: React.FC<PerformanceRatingsTabProps> = memo(({
 					<Grid container spacing={3.5}>
 						{/* Strengths Score */}
 						<Grid size={{ xs: 12, sm: 6 }}>
-							<Box sx={{
-								textAlign: 'center',
-								p: 3,
-								border: '1px solid #f1f5f9',
-								borderRadius: 3,
+							<Box sx={{ 
+								textAlign: 'center', 
+								p: 3, 
+								border: '1px solid #f1f5f9', 
+								borderRadius: 3, 
 								bgcolor: '#ffffff',
 								boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
 							}}>
@@ -97,11 +99,11 @@ const PerformanceRatingsTab: React.FC<PerformanceRatingsTabProps> = memo(({
 
 						{/* Weaknesses Score */}
 						<Grid size={{ xs: 12, sm: 6 }}>
-							<Box sx={{
-								textAlign: 'center',
-								p: 3,
-								border: '1px solid #f1f5f9',
-								borderRadius: 3,
+							<Box sx={{ 
+								textAlign: 'center', 
+								p: 3, 
+								border: '1px solid #f1f5f9', 
+								borderRadius: 3, 
 								bgcolor: '#ffffff',
 								boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
 							}}>
@@ -124,11 +126,11 @@ const PerformanceRatingsTab: React.FC<PerformanceRatingsTabProps> = memo(({
 
 						{/* Opportunities Score */}
 						<Grid size={{ xs: 12, sm: 6 }}>
-							<Box sx={{
-								textAlign: 'center',
-								p: 3,
-								border: '1px solid #f1f5f9',
-								borderRadius: 3,
+							<Box sx={{ 
+								textAlign: 'center', 
+								p: 3, 
+								border: '1px solid #f1f5f9', 
+								borderRadius: 3, 
 								bgcolor: '#ffffff',
 								boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
 							}}>
@@ -151,11 +153,11 @@ const PerformanceRatingsTab: React.FC<PerformanceRatingsTabProps> = memo(({
 
 						{/* Threats Score */}
 						<Grid size={{ xs: 12, sm: 6 }}>
-							<Box sx={{
-								textAlign: 'center',
-								p: 3,
-								border: '1px solid #f1f5f9',
-								borderRadius: 3,
+							<Box sx={{ 
+								textAlign: 'center', 
+								p: 3, 
+								border: '1px solid #f1f5f9', 
+								borderRadius: 3, 
 								bgcolor: '#ffffff',
 								boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
 							}}>
@@ -194,20 +196,18 @@ const PerformanceRatingsTab: React.FC<PerformanceRatingsTabProps> = memo(({
 				</Paper>
 			</Box>
 
-			{/* Evaluation Remarks rich editor */}
+			{/* Evaluation Remarks Timeline Section */}
 			<Box>
 				<Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.1em', mb: 3 }}>
 					Overall Evaluation Remarks
 				</Typography>
-				<Paper elevation={0} variant="outlined" sx={{ p: 4, bgcolor: '#fcfcfc', borderRadius: 2 }}>
-					<Typography variant="caption" sx={{ fontWeight: 700, mb: 1.5, display: 'block', color: 'text.secondary' }}>
-						Summary Remarks & Comments
-					</Typography>
-					<RichTextEditor
+				<Paper elevation={0} variant="outlined" sx={{ p: 4, bgcolor: '#fcfcfc', borderRadius: 2.5 }}>
+					<Remarks
 						placeholder="Provide overall summary comments, candidate suitability, and general observations..."
 						value={remarks}
 						onChange={setRemarks}
 						disabled={viewMode}
+						analystName={analystName}
 					/>
 				</Paper>
 			</Box>
@@ -267,4 +267,4 @@ const PerformanceRatingsTab: React.FC<PerformanceRatingsTabProps> = memo(({
 
 PerformanceRatingsTab.displayName = 'PerformanceRatingsTab';
 
-export default PerformanceRatingsTab;
+export default memo(PerformanceRatingsTab);
