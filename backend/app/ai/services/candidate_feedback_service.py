@@ -35,7 +35,16 @@ class CandidateFeedbackService:
             raise ValueError("AI Engine is disabled.")
 
         provider = await get_llm_provider(self._db)
-        feedback_label = "Key Strengths" if feedback_type == "strengths" else "Areas of Improvement"
+        if feedback_type == "strengths":
+            feedback_label = "Key Strengths"
+        elif feedback_type == "weaknesses":
+            feedback_label = "Areas of Improvement"
+        elif feedback_type == "opportunities":
+            feedback_label = "Opportunities & Observations"
+        elif feedback_type == "threats":
+            feedback_label = "Threats & Challenges"
+        else:
+            feedback_label = feedback_type.capitalize()
 
         # Construct context about candidate
         candidate_info = ""

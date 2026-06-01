@@ -15,6 +15,9 @@ export interface CandidateAnalysis {
 	analysis_date: string;
 	strengths?: string;
 	weaknesses?: string;
+	opportunities?: string;
+	threats?: string;
+	other?: any;
 	technical_rating: number;
 	communication_rating: number;
 	attitude_rating: number;
@@ -44,6 +47,9 @@ export interface CandidateAnalysisCreate {
 	analysis_date: string;
 	strengths?: string;
 	weaknesses?: string;
+	opportunities?: string;
+	threats?: string;
+	other?: any;
 	technical_rating: number;
 	communication_rating: number;
 	attitude_rating: number;
@@ -58,6 +64,9 @@ export interface CandidateAnalysisUpdate {
 	analysis_date?: string;
 	strengths?: string;
 	weaknesses?: string;
+	opportunities?: string;
+	threats?: string;
+	other?: any;
 	technical_rating?: number;
 	communication_rating?: number;
 	attitude_rating?: number;

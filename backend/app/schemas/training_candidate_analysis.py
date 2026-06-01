@@ -17,14 +17,17 @@ class TrainingCandidateAnalysisBase(BaseModel):
     analyst_name: Optional[str] = None
     analysis_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     skills: Optional[List[AnalysisSkillSchema]] = None
+    other: Optional[Any] = None
     strengths: Optional[str] = None
     weaknesses: Optional[str] = None
+    opportunities: Optional[str] = None
+    threats: Optional[str] = None
     technical_rating: float = Field(0.0, ge=0, le=10)
     communication_rating: float = Field(0.0, ge=0, le=10)
     attitude_rating: float = Field(0.0, ge=0, le=10)
     overall_rating: float = Field(0.0, ge=0, le=10)
     recommendation: str = "ready_for_placement"
-    status: str = "completed"
+    status: str = "in-progress"
 
 
 class TrainingCandidateAnalysisCreate(TrainingCandidateAnalysisBase):
@@ -35,8 +38,11 @@ class TrainingCandidateAnalysisUpdate(BaseModel):
     analyst_name: Optional[str] = None
     analysis_date: Optional[datetime] = None
     skills: Optional[List[AnalysisSkillSchema]] = None
+    other: Optional[Any] = None
     strengths: Optional[str] = None
     weaknesses: Optional[str] = None
+    opportunities: Optional[str] = None
+    threats: Optional[str] = None
     technical_rating: Optional[float] = Field(None, ge=0, le=10)
     communication_rating: Optional[float] = Field(None, ge=0, le=10)
     attitude_rating: Optional[float] = Field(None, ge=0, le=10)

@@ -36,8 +36,11 @@ class TrainingCandidateAnalysis(BaseModel):
     
     # Structured data
     skills: Mapped[dict | list | None] = mapped_column(JSON, nullable=True) # List of {skill, level, rating}
+    other: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
     strengths: Mapped[str | None] = mapped_column(Text, nullable=True)
     weaknesses: Mapped[str | None] = mapped_column(Text, nullable=True)
+    opportunities: Mapped[str | None] = mapped_column(Text, nullable=True)
+    threats: Mapped[str | None] = mapped_column(Text, nullable=True)
     
     technical_rating: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     communication_rating: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
@@ -54,9 +57,9 @@ class TrainingCandidateAnalysis(BaseModel):
     status: Mapped[str] = mapped_column(
         String(20), 
         nullable=False, 
-        default="completed",
+        default="in-progress",
         index=True
-    ) # draft, completed
+    ) # in-progress, completed
     
     # Relationships
     batch: Mapped[TrainingBatch] = relationship("TrainingBatch")

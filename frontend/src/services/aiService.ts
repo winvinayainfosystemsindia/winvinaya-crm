@@ -100,7 +100,7 @@ export const aiService = {
 
   /** Enhance or generate feedback text using AI */
   async enhanceFeedback(payload: {
-    feedback_type: 'strengths' | 'weaknesses';
+    feedback_type: 'strengths' | 'weaknesses' | 'opportunities' | 'threats';
     current_text: string;
     candidate_name?: string;
     technical_rating?: number;
