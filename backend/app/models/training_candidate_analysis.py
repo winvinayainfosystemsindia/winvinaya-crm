@@ -42,11 +42,6 @@ class TrainingCandidateAnalysis(BaseModel):
     opportunities: Mapped[str | None] = mapped_column(Text, nullable=True)
     threats: Mapped[str | None] = mapped_column(Text, nullable=True)
     
-    technical_rating: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    communication_rating: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    attitude_rating: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    overall_rating: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    
     recommendation: Mapped[str] = mapped_column(
         String(50), 
         nullable=False, 

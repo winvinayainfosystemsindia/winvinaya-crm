@@ -4,10 +4,7 @@ import {
 	TableCell,
 	Typography,
 	Chip,
-	Stack,
 	IconButton,
-	Box,
-	LinearProgress,
 	Tooltip,
 	useTheme,
 	alpha
@@ -58,34 +55,6 @@ const CandidateAnalysisTableRow: React.FC<CandidateAnalysisTableRowProps> = memo
 	const theme = useTheme();
 	const rec = getRecommendationStyles(analysis.recommendation);
 	const candidate = allocations.find(a => a.candidate_id === analysis.candidate_id)?.candidate;
-
-	const renderRating = (rating: number) => {
-		const color = rating >= 8 ? theme.palette.success.main : rating >= 5 ? theme.palette.warning.main : theme.palette.error.main;
-
-		return (
-			<Box sx={{ minWidth: 90 }}>
-				<Stack direction="row" alignItems="center" spacing={1}>
-					<Box sx={{ width: '100%', mr: 1 }}>
-						<LinearProgress
-							variant="determinate"
-							value={rating * 10}
-							sx={{
-								height: 6,
-								borderRadius: 3,
-								backgroundColor: alpha(theme.palette.text.primary, 0.05),
-								'& .MuiLinearProgress-bar': {
-									backgroundColor: color
-								}
-							}}
-						/>
-					</Box>
-					<Typography variant="caption" fontWeight={600} color="text.secondary">
-						{rating.toFixed(1)}
-					</Typography>
-				</Stack>
-			</Box>
-		);
-	};
 
 	const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 	const open = Boolean(anchorEl);
@@ -180,15 +149,6 @@ const CandidateAnalysisTableRow: React.FC<CandidateAnalysisTableRowProps> = memo
 						color: analysis.status === 'completed' ? 'success.main' : 'warning.main',
 					}}
 				/>
-			</TableCell>
-			<TableCell>
-				{renderRating(analysis.technical_rating)}
-			</TableCell>
-			<TableCell>
-				{renderRating(analysis.communication_rating)}
-			</TableCell>
-			<TableCell>
-				{renderRating(analysis.overall_rating)}
 			</TableCell>
 			<TableCell align="right">
 				<IconButton size="small" onClick={handleOpenMenu}>

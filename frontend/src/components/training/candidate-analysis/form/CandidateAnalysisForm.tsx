@@ -40,14 +40,6 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 		setOpportunities,
 		threats,
 		setThreats,
-		strengthsRating,
-		setStrengthsRating,
-		weaknessesRating,
-		setWeaknessesRating,
-		opportunitiesRating,
-		setOpportunitiesRating,
-		threatsRating,
-		setThreatsRating,
 		remarks,
 		setRemarks,
 		skills,
@@ -60,7 +52,6 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 		loadingWeaknessesAI,
 		loadingOpportunitiesAI,
 		loadingThreatsAI,
-		overallRating,
 		currentUserName,
 		handleAIAssist,
 		handleAddSkill,
@@ -127,21 +118,12 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 			)
 		},
 		{
-			label: 'Performance Ratings',
-			description: 'Numerical scoring & recommendation',
+			label: 'Recommendation & Remarks',
+			description: 'Placement recommendation & comments',
 			content: (
 				<PerformanceRatingsTab
-					strengthsRating={strengthsRating}
-					setStrengthsRating={setStrengthsRating}
-					weaknessesRating={weaknessesRating}
-					setWeaknessesRating={setWeaknessesRating}
-					opportunitiesRating={opportunitiesRating}
-					setOpportunitiesRating={setOpportunitiesRating}
-					threatsRating={threatsRating}
-					setThreatsRating={setThreatsRating}
 					remarks={remarks}
 					setRemarks={setRemarks}
-					overallRating={overallRating}
 					recommendation={recommendation}
 					setRecommendation={setRecommendation}
 					status={status}
@@ -176,17 +158,8 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 		loadingOpportunitiesAI,
 		loadingThreatsAI,
 		handleAIAssist,
-		strengthsRating,
-		setStrengthsRating,
-		weaknessesRating,
-		setWeaknessesRating,
-		opportunitiesRating,
-		setOpportunitiesRating,
-		threatsRating,
-		setThreatsRating,
 		remarks,
 		setRemarks,
-		overallRating,
 		currentUserName,
 		recommendation,
 		setRecommendation,

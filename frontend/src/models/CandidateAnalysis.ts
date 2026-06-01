@@ -18,10 +18,6 @@ export interface CandidateAnalysis {
 	opportunities?: string;
 	threats?: string;
 	other?: any;
-	technical_rating: number;
-	communication_rating: number;
-	attitude_rating: number;
-	overall_rating: number;
 	skills?: AnalysisSkill[];
 	recommendation: PlacementRecommendation;
 	status: AnalysisStatus;
@@ -50,10 +46,6 @@ export interface CandidateAnalysisCreate {
 	opportunities?: string;
 	threats?: string;
 	other?: any;
-	technical_rating: number;
-	communication_rating: number;
-	attitude_rating: number;
-	overall_rating: number;
 	skills?: AnalysisSkill[];
 	recommendation: PlacementRecommendation;
 	status: AnalysisStatus;
@@ -67,10 +59,6 @@ export interface CandidateAnalysisUpdate {
 	opportunities?: string;
 	threats?: string;
 	other?: any;
-	technical_rating?: number;
-	communication_rating?: number;
-	attitude_rating?: number;
-	overall_rating?: number;
 	skills?: AnalysisSkill[];
 	recommendation?: PlacementRecommendation;
 	status?: AnalysisStatus;

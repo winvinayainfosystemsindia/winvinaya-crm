@@ -212,7 +212,7 @@ const FeedbackTab: React.FC<FeedbackTabProps> = memo(({
 						<WeaknessIcon sx={{ color: theme.palette.error.main }} />
 					)}
 					{renderSWOTCard(
-						'O - Observations',
+						'O - Opportunities',
 						'opportunities',
 						opportunities,
 						setOpportunities,

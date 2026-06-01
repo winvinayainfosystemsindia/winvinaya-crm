@@ -22,10 +22,6 @@ class TrainingCandidateAnalysisBase(BaseModel):
     weaknesses: Optional[str] = None
     opportunities: Optional[str] = None
     threats: Optional[str] = None
-    technical_rating: float = Field(0.0, ge=0, le=10)
-    communication_rating: float = Field(0.0, ge=0, le=10)
-    attitude_rating: float = Field(0.0, ge=0, le=10)
-    overall_rating: float = Field(0.0, ge=0, le=10)
     recommendation: str = "ready_for_placement"
     status: str = "in-progress"
 
@@ -43,10 +39,6 @@ class TrainingCandidateAnalysisUpdate(BaseModel):
     weaknesses: Optional[str] = None
     opportunities: Optional[str] = None
     threats: Optional[str] = None
-    technical_rating: Optional[float] = Field(None, ge=0, le=10)
-    communication_rating: Optional[float] = Field(None, ge=0, le=10)
-    attitude_rating: Optional[float] = Field(None, ge=0, le=10)
-    overall_rating: Optional[float] = Field(None, ge=0, le=10)
     recommendation: Optional[str] = None
     status: Optional[str] = None
 

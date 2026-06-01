@@ -43,11 +43,7 @@ export const useCandidateAnalysisForm = ({
 	const [opportunities, setOpportunities] = useState('');
 	const [threats, setThreats] = useState('');
 	
-	// SWOT 4 ratings and remarks stored in the "other" column
-	const [strengthsRating, setStrengthsRating] = useState(5);
-	const [weaknessesRating, setWeaknessesRating] = useState(5);
-	const [opportunitiesRating, setOpportunitiesRating] = useState(5);
-	const [threatsRating, setThreatsRating] = useState(5);
+	// Remarks timeline stored inside the "other" column
 	const [remarks, setRemarks] = useState('');
 
 	const [skills, setSkills] = useState<AnalysisSkill[]>([]);
@@ -102,9 +98,6 @@ export const useCandidateAnalysisForm = ({
 				feedback_type: type,
 				current_text: currentText,
 				candidate_name: candName,
-				technical_rating: strengthsRating,
-				communication_rating: opportunitiesRating,
-				attitude_rating: weaknessesRating,
 				skills: skills.map(s => ({ skill: s.skill, level: s.level, rating: s.rating })),
 				action
 			});
@@ -139,12 +132,8 @@ export const useCandidateAnalysisForm = ({
 			setOpportunities(analysis.opportunities || '');
 			setThreats(analysis.threats || '');
 			
-			// Load SWOT ratings and remarks from the "other" column
+			// Load remarks from the "other" column
 			const otherData = analysis.other as any || {};
-			setStrengthsRating(otherData.strengths_rating !== undefined ? otherData.strengths_rating : 5);
-			setWeaknessesRating(otherData.weaknesses_rating !== undefined ? otherData.weaknesses_rating : 5);
-			setOpportunitiesRating(otherData.opportunities_rating !== undefined ? otherData.opportunities_rating : 5);
-			setThreatsRating(otherData.threats_rating !== undefined ? otherData.threats_rating : 5);
 			setRemarks(otherData.remarks || '');
 			
 			setSkills(analysis.skills || []);
@@ -159,10 +148,6 @@ export const useCandidateAnalysisForm = ({
 			setOpportunities('');
 			setThreats('');
 			
-			setStrengthsRating(5);
-			setWeaknessesRating(5);
-			setOpportunitiesRating(5);
-			setThreatsRating(5);
 			setRemarks('');
 			
 			setSkills([]);
@@ -170,11 +155,6 @@ export const useCandidateAnalysisForm = ({
 			setStatus('in-progress');
 		}
 	}, [analysis, open, user]);
-
-	// Calculate overall score automatically based on the 4 SWOT ratings
-	const overallRating = useMemo(() => {
-		return parseFloat(((strengthsRating + weaknessesRating + opportunitiesRating + threatsRating) / 4).toFixed(1));
-	}, [strengthsRating, weaknessesRating, opportunitiesRating, threatsRating]);
 
 	const handleAddSkill = () => {
 		setSkills(prev => [...prev, { skill: '', level: 'Beginner', rating: 5 }]);
@@ -207,16 +187,8 @@ export const useCandidateAnalysisForm = ({
 				opportunities: opportunities.trim(),
 				threats: threats.trim(),
 				other: {
-					strengths_rating: strengthsRating,
-					weaknesses_rating: weaknessesRating,
-					opportunities_rating: opportunitiesRating,
-					threats_rating: threatsRating,
 					remarks: remarks.trim()
 				},
-				technical_rating: 0,
-				communication_rating: 0,
-				attitude_rating: 0,
-				overall_rating: overallRating,
 				skills,
 				recommendation,
 				status
@@ -246,14 +218,6 @@ export const useCandidateAnalysisForm = ({
 		setOpportunities,
 		threats,
 		setThreats,
-		strengthsRating,
-		setStrengthsRating,
-		weaknessesRating,
-		setWeaknessesRating,
-		opportunitiesRating,
-		setOpportunitiesRating,
-		threatsRating,
-		setThreatsRating,
 		remarks,
 		setRemarks,
 		skills,
@@ -267,7 +231,6 @@ export const useCandidateAnalysisForm = ({
 		loadingWeaknessesAI,
 		loadingOpportunitiesAI,
 		loadingThreatsAI,
-		overallRating,
 		currentUserName,
 		handleAIAssist,
 		handleAddSkill,

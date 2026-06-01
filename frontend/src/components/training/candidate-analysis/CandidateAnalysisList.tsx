@@ -176,28 +176,18 @@ const CandidateAnalysisList: React.FC<CandidateAnalysisListProps> = ({ batchId, 
 		const total = displayData.length;
 		const ready = displayData.filter(i => i.recommendation === 'ready_for_placement').length;
 		
-		const sumTech = displayData.reduce((acc, i) => acc + i.technical_rating, 0);
-		const sumComm = displayData.reduce((acc, i) => acc + i.communication_rating, 0);
-		const sumAttitude = displayData.reduce((acc, i) => acc + i.attitude_rating, 0);
-		
 		return {
 			total,
-			ready,
-			avgTech: total ? (sumTech / total).toFixed(1) : '0.0',
-			avgComm: total ? (sumComm / total).toFixed(1) : '0.0',
-			avgAttitude: total ? (sumAttitude / total).toFixed(1) : '0.0'
+			ready
 		};
 	}, [displayData]);
 
 	const columns: ColumnDefinition<CandidateAnalysis>[] = useMemo(() => [
 		{ id: 'analysis_date' as any, label: 'DATE', width: '12%' },
-		{ id: 'candidate_id' as any, label: 'CANDIDATE', width: '18%' },
-		{ id: 'analyst_name' as any, label: 'EVALUATOR', width: '15%' },
-		{ id: 'recommendation' as any, label: 'RECOMMENDATION', width: '15%' },
+		{ id: 'candidate_id' as any, label: 'CANDIDATE', width: '28%' },
+		{ id: 'analyst_name' as any, label: 'EVALUATOR', width: '18%' },
+		{ id: 'recommendation' as any, label: 'RECOMMENDATION', width: '24%' },
 		{ id: 'status' as any, label: 'STATUS', width: '10%' },
-		{ id: 'technical_rating' as any, label: 'TECH.', width: '10%' },
-		{ id: 'communication_rating' as any, label: 'COMM.', width: '10%' },
-		{ id: 'overall_rating' as any, label: 'OVERALL', width: '10%' },
 		{ id: 'actions' as any, label: 'ACTIONS', align: 'right', width: '8%' }
 	], []);
 
