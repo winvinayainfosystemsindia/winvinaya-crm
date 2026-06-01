@@ -179,6 +179,11 @@ export const useCandidateAnalysisForm = ({
 		setSkills(prev => prev.map((s, i) => i === idx ? { ...s, [field]: val } : s));
 	};
 
+	const stripHtml = (html: string) => {
+		if (!html) return '';
+		return html.replace(/<[^>]*>/g, '').trim();
+	};
+
 	const handleSubmit = async (e?: React.FormEvent) => {
 		e?.preventDefault();
 		if (!candidateId) {
@@ -188,6 +193,85 @@ export const useCandidateAnalysisForm = ({
 		
 		setSubmitting(true);
 		try {
+			// Compute changes if editing
+			const changes: Array<{ field: string; from: string; to: string }> = [];
+			if (analysis) {
+				const cleanOrigStrengths = stripHtml(analysis.strengths || '');
+				const cleanNewStrengths = stripHtml(strengths);
+				if (cleanOrigStrengths !== cleanNewStrengths) {
+					changes.push({ field: 'Strengths', from: cleanOrigStrengths, to: cleanNewStrengths });
+				}
+
+				const cleanOrigWeaknesses = stripHtml(analysis.weaknesses || '');
+				const cleanNewWeaknesses = stripHtml(weaknesses);
+				if (cleanOrigWeaknesses !== cleanNewWeaknesses) {
+					changes.push({ field: 'Weaknesses', from: cleanOrigWeaknesses, to: cleanNewWeaknesses });
+				}
+
+				const cleanOrigOpportunities = stripHtml(analysis.opportunities || '');
+				const cleanNewOpportunities = stripHtml(opportunities);
+				if (cleanOrigOpportunities !== cleanNewOpportunities) {
+					changes.push({ field: 'Opportunities', from: cleanOrigOpportunities, to: cleanNewOpportunities });
+				}
+
+				const cleanOrigThreats = stripHtml(analysis.threats || '');
+				const cleanNewThreats = stripHtml(threats);
+				if (cleanOrigThreats !== cleanNewThreats) {
+					changes.push({ field: 'Threats', from: cleanOrigThreats, to: cleanNewThreats });
+				}
+
+				if (analysis.recommendation !== recommendation) {
+					const recLabels: Record<string, string> = {
+						'ready_for_placement': 'Ready for Placement',
+						'needs_additional_training': 'Needs Additional Training',
+						'assign_dsr_project': 'Assign DSR Project',
+						'counseling_required': 'Counseling Required'
+					};
+					changes.push({
+						field: 'Recommendation',
+						from: recLabels[analysis.recommendation] || analysis.recommendation,
+						to: recLabels[recommendation] || recommendation
+					});
+				}
+
+				if (analysis.status !== status) {
+					changes.push({ field: 'Status', from: analysis.status, to: status });
+				}
+
+				// Skills diff
+				const originalSkillsMap = new Map((analysis.skills || []).map(s => [s.skill, s]));
+				const newSkillsMap = new Map(skills.map(s => [s.skill, s]));
+
+				// Removed or updated skills
+				for (const origSkill of (analysis.skills || [])) {
+					const newSkill = newSkillsMap.get(origSkill.skill);
+					if (!newSkill) {
+						changes.push({
+							field: `Skill '${origSkill.skill}'`,
+							from: `${origSkill.level} (Rating: ${origSkill.rating}/10)`,
+							to: 'Removed'
+						});
+					} else if (origSkill.level !== newSkill.level || origSkill.rating !== newSkill.rating) {
+						changes.push({
+							field: `Skill '${origSkill.skill}'`,
+							from: `${origSkill.level} (Rating: ${origSkill.rating}/10)`,
+							to: `${newSkill.level} (Rating: ${newSkill.rating}/10)`
+						});
+					}
+				}
+
+				// Added skills
+				for (const newSkill of skills) {
+					if (newSkill.skill && !originalSkillsMap.has(newSkill.skill)) {
+						changes.push({
+							field: `Skill '${newSkill.skill}'`,
+							from: 'None',
+							to: `${newSkill.level} (Rating: ${newSkill.rating}/10)`
+						});
+					}
+				}
+			}
+
 			const payload = {
 				batch_id: batchId,
 				candidate_id: Number(candidateId),
@@ -202,7 +286,17 @@ export const useCandidateAnalysisForm = ({
 					created_by: analysis ? (analysis.other?.created_by || analysis.analyst_name || 'System') : currentUserName,
 					created_at: analysis ? (analysis.other?.created_at || analysis.analysis_date) : new Date().toISOString(),
 					modified_by: currentUserName,
-					modified_at: new Date().toISOString()
+					modified_at: new Date().toISOString(),
+					change_log: (analysis && changes.length > 0)
+						? [
+								{
+									modified_by: currentUserName,
+									modified_at: new Date().toISOString(),
+									changes
+								},
+								...(analysis.other?.change_log || [])
+						  ]
+						: (analysis?.other?.change_log || [])
 				},
 				skills,
 				recommendation,

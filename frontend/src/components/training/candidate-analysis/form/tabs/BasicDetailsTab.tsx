@@ -122,6 +122,52 @@ const BasicDetailsTab: React.FC<BasicDetailsTabProps> = memo(({
 								</Grid>
 							)}
 						</Grid>
+
+						{/* Collapsible/Scrollable Edit Timeline Diff Logs */}
+						{other.change_log && other.change_log.length > 0 && (
+							<>
+								<Divider sx={{ borderColor: 'rgba(0, 77, 230, 0.1)', my: 1.5 }} />
+								<Box>
+									<Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+										<HistoryIcon sx={{ fontSize: 18 }} /> Detailed Change History ({other.change_log.length})
+									</Typography>
+									<Stack spacing={2} sx={{ maxHeight: 220, overflowY: 'auto', pr: 1, '&::-webkit-scrollbar': { width: 4 }, '&::-webkit-scrollbar-thumb': { bgcolor: 'rgba(0,0,0,0.1)', borderRadius: 2 } }}>
+										{other.change_log.map((log: any, idx: number) => (
+											<Paper key={idx} variant="outlined" sx={{ p: 2, bgcolor: '#ffffff', borderColor: '#e2e8f0', borderRadius: 1.5 }}>
+												<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
+													<Typography variant="caption" sx={{ fontWeight: 800, color: 'primary.main', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+														Modified by {log.modified_by}
+													</Typography>
+													<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+														{formatDateTime(log.modified_at)}
+													</Typography>
+												</Stack>
+												<Stack spacing={1}>
+													{log.changes.map((c: any, cIdx: number) => (
+														<Box key={cIdx} sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', fontSize: '0.75rem', gap: 1 }}>
+															<Typography variant="caption" sx={{ fontWeight: 800, color: 'text.primary', bgcolor: '#f1f5f9', px: 1, py: 0.25, borderRadius: 1 }}>
+																{c.field}
+															</Typography>
+															{c.from && (
+																<Typography variant="caption" sx={{ textDecoration: 'line-through', color: 'error.main', bgcolor: 'rgba(239, 68, 68, 0.05)', px: 0.75, py: 0.25, borderRadius: 0.5 }}>
+																	{c.from}
+																</Typography>
+															)}
+															<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700 }}>
+																&rarr;
+															</Typography>
+															<Typography variant="caption" sx={{ fontWeight: 800, color: 'success.main', bgcolor: 'rgba(34, 197, 94, 0.05)', px: 0.75, py: 0.25, borderRadius: 0.5 }}>
+																{c.to}
+															</Typography>
+														</Box>
+													))}
+												</Stack>
+											</Paper>
+										))}
+									</Stack>
+								</Box>
+							</>
+						)}
 					</Stack>
 				</Paper>
 			)}
