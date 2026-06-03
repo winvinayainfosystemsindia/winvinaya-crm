@@ -916,14 +916,19 @@ class CandidateRepository(BaseRepository[Candidate]):
             result_moved_placement = await self.db.execute(stmt_moved_placement)
             moved_to_placement_count = result_moved_placement.scalar() or 0
 
-            # 3. Got Job: count distinct candidates who have accepted offers or joined
-            stmt_got_job = select(func.count(func.distinct(PlacementMapping.candidate_id))).join(
-                Candidate, PlacementMapping.candidate_id == Candidate.id
+            # 3. Got Job: count distinct candidates who have accepted offers or joined, including Excel imports
+            stmt_got_job = select(func.count(func.distinct(Candidate.id))).outerjoin(
+                PlacementMapping, PlacementMapping.candidate_id == Candidate.id
             ).where(
                 and_(
-                    PlacementMapping.status.in_(['offer_accepted', 'joined']),
                     Candidate.is_deleted == False,
-                    or_(Candidate.other.is_(None), Candidate.other['registration_type'].as_string() == 'Registered')
+                    or_(
+                        Candidate.other.is_(None), 
+                        Candidate.other['registration_type'].as_string().in_(['Registered', 'Excel'])
+                    ),
+                    or_(
+                        PlacementMapping.status.in_(['offered', 'offer_made', 'offer_accepted', 'joined'])
+                    )
                 )
             )
             result_got_job = await self.db.execute(stmt_got_job)
