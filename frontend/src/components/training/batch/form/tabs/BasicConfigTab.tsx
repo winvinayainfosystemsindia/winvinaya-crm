@@ -25,6 +25,8 @@ interface BasicConfigTabProps {
 	onOtherChange: (key: string, value: any) => void;
 	availableTags: string[];
 	tagsLoading: boolean;
+	allUsers?: any[];
+	usersLoading?: boolean;
 }
 
 const BasicConfigTab: React.FC<BasicConfigTabProps> = ({
@@ -32,7 +34,9 @@ const BasicConfigTab: React.FC<BasicConfigTabProps> = ({
 	onChange,
 	onOtherChange,
 	availableTags,
-	tagsLoading
+	tagsLoading,
+	allUsers = [],
+	usersLoading = false
 }) => {
 	const theme = useTheme();
 
@@ -53,7 +57,23 @@ const BasicConfigTab: React.FC<BasicConfigTabProps> = ({
 							variant="outlined"
 						/>
 					</Grid>
-					<Grid size={{ xs: 12 }}>
+					<Grid size={{ xs: 12, sm: 6 }}>
+						<Autocomplete
+							options={allUsers}
+							getOptionLabel={(option) => option.full_name || option.email || 'Unknown User'}
+							value={allUsers.find(u => u.id === formData.owner_id) || null}
+							onChange={(_e, val) => onChange('owner_id', val ? val.id : null)}
+							loading={usersLoading}
+							renderInput={(params) => (
+								<TextField 
+									{...params} 
+									label="Batch Owner" 
+									placeholder="Select owner..." 
+								/>
+							)}
+						/>
+					</Grid>
+					<Grid size={{ xs: 12, sm: 6 }}>
 						<Autocomplete
 							multiple
 							options={disabilityTypes}

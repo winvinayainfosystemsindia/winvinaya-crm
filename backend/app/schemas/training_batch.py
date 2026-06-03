@@ -9,6 +9,7 @@ from app.schemas.training_batch_extension import TrainingBatchExtensionResponse
 
 class TrainingBatchBase(BaseModel):
     batch_name: str
+    owner_id: Optional[int] = None
     disability_types: Optional[List[str]] = []
     start_date: Optional[date] = None
     approx_close_date: Optional[date] = None
@@ -31,6 +32,7 @@ class TrainingBatchCreate(TrainingBatchBase):
 class TrainingBatchUpdate(BaseModel):
     """Schema for updating a training batch"""
     batch_name: Optional[str] = None
+    owner_id: Optional[int] = None
     disability_types: Optional[List[str]] = []
     start_date: Optional[date] = None
     approx_close_date: Optional[date] = None
@@ -47,12 +49,18 @@ class TrainingBatchExtend(BaseModel):
     reason: Optional[str] = None
 
 
+class UserMinimal(BaseModel):
+    id: int
+    full_name: str
+    email: str
+
 class TrainingBatchResponse(TrainingBatchBase):
     """Schema for training batch response"""
     id: int
     public_id: uuid.UUID
     total_extension_days: int = 0
     extensions: Optional[List[TrainingBatchExtensionResponse]] = []
+    owner: Optional[UserMinimal] = None
     created_at: datetime
     updated_at: datetime
     
@@ -76,6 +84,8 @@ class TrainingBatchMini(BaseModel):
     public_id: uuid.UUID
     batch_name: str
     status: str
+    owner_id: Optional[int] = None
+    owner: Optional[UserMinimal] = None
     disability_types: Optional[List[str]] = []
     start_date: Optional[date] = None
     approx_close_date: Optional[date] = None

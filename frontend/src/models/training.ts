@@ -14,6 +14,12 @@ export interface TrainingBatch {
 		days: number;
 	} | null;
 	status: 'planned' | 'running' | 'closed' | string;
+	owner_id?: number | null;
+	owner?: {
+		id: number;
+		full_name: string;
+		email: string;
+	} | null;
 	domain?: string;
 	training_mode?: string;
 	other: any;

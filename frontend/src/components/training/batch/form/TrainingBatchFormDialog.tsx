@@ -192,6 +192,8 @@ const TrainingBatchFormDialog: React.FC<TrainingBatchFormDialogProps> = ({
 					onOtherChange={handleOtherChange}
 					availableTags={availableTags}
 					tagsLoading={tagsLoading}
+					allUsers={allUsers}
+					usersLoading={usersLoading}
 				/>
 			)
 		},

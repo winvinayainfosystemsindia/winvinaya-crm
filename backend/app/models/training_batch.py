@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import uuid
 from typing import TYPE_CHECKING
-from sqlalchemy import String, JSON, Date, Integer, Uuid
+from sqlalchemy import String, JSON, Date, Integer, Uuid, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import date
 from app.models.base import BaseModel
@@ -11,6 +11,7 @@ from app.models.base import BaseModel
 if TYPE_CHECKING:
     from app.models.training_candidate_allocation import TrainingCandidateAllocation
     from app.models.training_batch_extension import TrainingBatchExtension
+    from app.models.user import User
 
 
 class TrainingBatch(BaseModel):
@@ -38,6 +39,13 @@ class TrainingBatch(BaseModel):
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="planned", index=True)
     other: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     
+    owner_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    
     # Relationships
     allocations: Mapped[list[TrainingCandidateAllocation]] = relationship(
         "TrainingCandidateAllocation",
@@ -49,6 +57,11 @@ class TrainingBatch(BaseModel):
         "TrainingBatchExtension",
         back_populates="batch",
         cascade="all, delete-orphan"
+    )
+    
+    owner: Mapped["User"] = relationship(
+        "User",
+        lazy="selectin",
     )
     
     def __repr__(self) -> str:
