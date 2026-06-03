@@ -59,7 +59,6 @@ const ReportTable: React.FC<ReportTableProps> = ({
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const isPlacement = reportType === 'placement';
-    const isTraining = reportType === 'training';
 	const activeColumns = columns.filter(c => visibleColumns.includes(c.id));
 
 	// Map to common ColumnDefinition
