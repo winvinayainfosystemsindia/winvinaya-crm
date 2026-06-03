@@ -1,6 +1,6 @@
 from datetime import datetime
 from uuid import UUID
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Optional, Any, Dict
 from app.schemas.job_role import JobRoleRead
 from app.schemas.candidate import CandidateResponse
@@ -105,8 +105,10 @@ class CandidateMatchResult(BaseModel):
     qualification_match: MatchMatchInfo
     disability_match: MatchMatchInfo
     other_mappings_count: int = 0
-    other_mappings: List[str] = []
+    other_mappings: List[str] = Field(default_factory=list)
     is_already_mapped: bool = False
+    is_placed_elsewhere: bool = False
+    placed_elsewhere_info: Optional[str] = None
     year_of_experience: Optional[str] = None
     status: Optional[str] = None
     mapping_id: Optional[int] = None

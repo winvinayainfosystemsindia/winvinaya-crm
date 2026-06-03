@@ -221,6 +221,20 @@ const MappedCandidatesList: React.FC<MappedCandidatesListProps> = ({
                                                 {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
                                             </Typography>
                                         </Stack>
+                                        {candidate.is_placed_elsewhere && candidate.placed_elsewhere_info && (
+                                            <Box sx={{ mt: 1 }}>
+                                                <Typography variant="caption" sx={{ 
+                                                    color: theme.palette.info.main, 
+                                                    bgcolor: alpha(theme.palette.info.main, 0.1),
+                                                    px: 1, py: 0.25, borderRadius: 1, 
+                                                    display: 'inline-block',
+                                                    fontWeight: 600,
+                                                    fontSize: '0.65rem'
+                                                }}>
+                                                    {candidate.placed_elsewhere_info}
+                                                </Typography>
+                                            </Box>
+                                        )}
                                     </Box>
                                 </Stack>
 

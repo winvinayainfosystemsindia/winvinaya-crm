@@ -114,6 +114,29 @@ const SortableCard: React.FC<SortableCardProps> = ({ candidate, onViewHistory })
 				))}
 			</Stack>
 
+			{candidate.is_placed_elsewhere && candidate.placed_elsewhere_info && (
+				<Box sx={{ mt: 1.5, mb: -0.5 }}>
+					<Chip
+						label={candidate.placed_elsewhere_info}
+						size="small"
+						color="info"
+						variant="outlined"
+						sx={{ 
+							height: 'auto', 
+							'& .MuiChip-label': { 
+								display: 'block', 
+								whiteSpace: 'normal', 
+								fontSize: '0.65rem', 
+								py: 0.5,
+								lineHeight: 1.2
+							},
+							width: '100%',
+							borderRadius: 1
+						}}
+					/>
+				</Box>
+			)}
+
 			<Divider sx={{ my: 1.5 }} />
 
 			<Stack direction="row" justifyContent="space-between" alignItems="center">

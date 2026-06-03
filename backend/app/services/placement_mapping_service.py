@@ -201,16 +201,25 @@ class PlacementMappingService:
         results = []
         for candidate in candidates:
             # Skip candidate if they have an active placement mapping with placed statuses in a different job role
+            # EXCEPT if they are already mapped to this current job role. If they are already mapped, we still
+            # want them to show up in the Kanban pipeline so the recruiter knows their status.
             other_mappings = mappings_by_candidate.get(candidate.id, [])
             is_placed_elsewhere = False
+            placed_elsewhere_info = None
             placed_statuses = {"joined", "offered", "offer_made", "offer_accepted"}
             for m in other_mappings:
                 status_str = getattr(m.status, "value", str(m.status)).lower().strip()
                 if m.job_role_id != job_role.id and status_str in placed_statuses:
                     is_placed_elsewhere = True
+                    company_name = m.job_role.company.name if m.job_role.company else "Another Company"
+                    placed_elsewhere_info = f"Placed at {company_name} as {m.job_role.title}"
                     break
             
-            if is_placed_elsewhere:
+            is_already_mapped = candidate.id in mapping_info
+
+            if is_placed_elsewhere and not is_already_mapped:
+                # If they are placed elsewhere and NOT mapped to this role, completely hide them
+                # from the "Map Candidates" dialog.
                 continue
 
             # 1. Skill Match (60%)
@@ -335,7 +344,9 @@ class PlacementMappingService:
                     disability_match=MatchMatchInfo(is_match=dis_match or not job_disability, details=dis_detail),
                     other_mappings_count=other_count,
                     other_mappings=other_role_names,
-                    is_already_mapped=candidate.id in mapping_info,
+                    is_already_mapped=is_already_mapped,
+                    is_placed_elsewhere=is_placed_elsewhere,
+                    placed_elsewhere_info=placed_elsewhere_info,
                     status=mapping_info[candidate.id][1] if candidate.id in mapping_info else None,
                     mapping_id=mapping_info[candidate.id][0] if candidate.id in mapping_info else None,
                     year_of_experience=year_of_exp,

@@ -21,6 +21,8 @@ export interface CandidateMatchResult {
     other_mappings_count: number;
     other_mappings: string[];
     is_already_mapped: boolean;
+    is_placed_elsewhere: boolean;
+    placed_elsewhere_info?: string | null;
     year_of_experience?: string;
     status: string;
     mapping_id?: number;
