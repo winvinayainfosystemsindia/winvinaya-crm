@@ -7,7 +7,8 @@ import {
 	Grid,
 	MenuItem,
 	Paper,
-	Divider
+	Divider,
+	alpha
 } from '@mui/material';
 import {
 	Person as PersonIcon,
@@ -42,9 +43,9 @@ const BasicDetailsTab: React.FC<BasicDetailsTabProps> = memo(({
 	const inputSx = {
 		'& .MuiOutlinedInput-root': {
 			borderRadius: 1.5,
-			bgcolor: '#fcfcfc',
-			'& fieldset': { borderColor: '#d5dbdb' },
-			'&:hover fieldset': { borderColor: '#879596' }
+			bgcolor: 'background.paper',
+			'& fieldset': { borderColor: 'divider' },
+			'&:hover fieldset': { borderColor: 'text.secondary' }
 		}
 	};
 
@@ -57,8 +58,8 @@ const BasicDetailsTab: React.FC<BasicDetailsTabProps> = memo(({
 					sx={{
 						p: 2.5,
 						borderRadius: 2,
-						bgcolor: 'rgba(0, 77, 230, 0.03)',
-						borderColor: 'rgba(0, 77, 230, 0.15)',
+						bgcolor: (theme) => alpha(theme.palette.primary.main, 0.03),
+						borderColor: (theme) => alpha(theme.palette.primary.main, 0.15),
 						borderWidth: 1,
 						borderStyle: 'solid'
 					}}
@@ -66,12 +67,12 @@ const BasicDetailsTab: React.FC<BasicDetailsTabProps> = memo(({
 					<Stack spacing={2}>
 						<Stack direction="row" alignItems="center" spacing={1.5}>
 							<HistoryIcon sx={{ color: 'primary.main', fontSize: 20 }} />
-							<Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'primary.main', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+							<Typography variant="overline" sx={{ color: 'primary.main' }}>
 								SWOT Collaborative Log
 							</Typography>
 						</Stack>
 
-						<Divider sx={{ borderColor: 'rgba(0, 77, 230, 0.1)' }} />
+						<Divider sx={{ borderColor: (theme) => alpha(theme.palette.primary.main, 0.1) }} />
 
 						<Grid container spacing={3}>
 							{/* Created Section */}
@@ -82,10 +83,10 @@ const BasicDetailsTab: React.FC<BasicDetailsTabProps> = memo(({
 											<PersonIcon sx={{ color: 'text.secondary', fontSize: 18 }} />
 										</Box>
 										<Box>
-											<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, display: 'block', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+											<Typography variant="subtitle2" sx={{ color: 'text.secondary', display: 'block' }}>
 												Original Evaluator
 											</Typography>
-											<Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary', mt: 0.25 }}>
+											<Typography variant="body2" sx={{ color: 'text.primary', mt: 0.25 }}>
 												{other.created_by}
 											</Typography>
 											{other.created_at && (
@@ -106,10 +107,10 @@ const BasicDetailsTab: React.FC<BasicDetailsTabProps> = memo(({
 											<UpdateIcon sx={{ color: 'text.secondary', fontSize: 18 }} />
 										</Box>
 										<Box>
-											<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, display: 'block', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+											<Typography variant="subtitle2" sx={{ color: 'text.secondary', display: 'block' }}>
 												Last Updated By
 											</Typography>
-											<Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary', mt: 0.25 }}>
+											<Typography variant="body2" sx={{ color: 'text.primary', mt: 0.25 }}>
 												{other.modified_by}
 											</Typography>
 											{other.modified_at && (
@@ -126,16 +127,16 @@ const BasicDetailsTab: React.FC<BasicDetailsTabProps> = memo(({
 						{/* Collapsible/Scrollable Edit Timeline Diff Logs */}
 						{other.change_log && other.change_log.length > 0 && (
 							<>
-								<Divider sx={{ borderColor: 'rgba(0, 77, 230, 0.1)', my: 1.5 }} />
+								<Divider sx={{ borderColor: (theme) => alpha(theme.palette.primary.main, 0.1), my: 1.5 }} />
 								<Box>
-									<Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.05em', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+									<Typography variant="overline" sx={{ color: 'text.secondary', mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
 										<HistoryIcon sx={{ fontSize: 18 }} /> Detailed Change History ({other.change_log.length})
 									</Typography>
-									<Stack spacing={2} sx={{ maxHeight: 220, overflowY: 'auto', pr: 1, '&::-webkit-scrollbar': { width: 4 }, '&::-webkit-scrollbar-thumb': { bgcolor: 'rgba(0,0,0,0.1)', borderRadius: 2 } }}>
+									<Stack spacing={2} sx={{ maxHeight: 220, overflowY: 'auto', pr: 1, '&::-webkit-scrollbar': { width: 4 }, '&::-webkit-scrollbar-thumb': { bgcolor: 'action.hover', borderRadius: 2 } }}>
 										{other.change_log.map((log: any, idx: number) => (
-											<Paper key={idx} variant="outlined" sx={{ p: 2, bgcolor: '#ffffff', borderColor: '#e2e8f0', borderRadius: 1.5 }}>
+											<Paper key={idx} variant="outlined" sx={{ p: 2, bgcolor: 'background.paper', borderColor: 'divider', borderRadius: 1.5 }}>
 												<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
-													<Typography variant="caption" sx={{ fontWeight: 800, color: 'primary.main', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+													<Typography variant="subtitle2" sx={{ color: 'primary.main' }}>
 														Modified by {log.modified_by}
 													</Typography>
 													<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
@@ -145,18 +146,18 @@ const BasicDetailsTab: React.FC<BasicDetailsTabProps> = memo(({
 												<Stack spacing={1}>
 													{log.changes.map((c: any, cIdx: number) => (
 														<Box key={cIdx} sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', fontSize: '0.75rem', gap: 1 }}>
-															<Typography variant="caption" sx={{ fontWeight: 800, color: 'text.primary', bgcolor: '#f1f5f9', px: 1, py: 0.25, borderRadius: 1 }}>
+															<Typography variant="caption" sx={{ color: 'text.primary', bgcolor: 'action.hover', px: 1, py: 0.25, borderRadius: 1 }}>
 																{c.field}
 															</Typography>
 															{c.from && (
-																<Typography variant="caption" sx={{ textDecoration: 'line-through', color: 'error.main', bgcolor: 'rgba(239, 68, 68, 0.05)', px: 0.75, py: 0.25, borderRadius: 0.5 }}>
+																<Typography variant="caption" sx={{ textDecoration: 'line-through', color: 'error.main', bgcolor: (theme) => alpha(theme.palette.error.main, 0.05), px: 0.75, py: 0.25, borderRadius: 0.5 }}>
 																	{c.from}
 																</Typography>
 															)}
 															<Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700 }}>
 																&rarr;
 															</Typography>
-															<Typography variant="caption" sx={{ fontWeight: 800, color: 'success.main', bgcolor: 'rgba(34, 197, 94, 0.05)', px: 0.75, py: 0.25, borderRadius: 0.5 }}>
+															<Typography variant="caption" sx={{ color: 'success.main', bgcolor: (theme) => alpha(theme.palette.success.main, 0.05), px: 0.75, py: 0.25, borderRadius: 0.5 }}>
 																{c.to}
 															</Typography>
 														</Box>
@@ -173,13 +174,13 @@ const BasicDetailsTab: React.FC<BasicDetailsTabProps> = memo(({
 			)}
 
 			<Box>
-				<Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.1em', mb: 3 }}>
+				<Typography variant="overline" sx={{ color: 'text.secondary', display: 'block', mb: 3 }}>
 					Evaluation Metadata
 				</Typography>
 				<Grid container spacing={3}>
 					{/* Candidate Name Select */}
 					<Grid size={{ xs: 12, sm: 6 }}>
-						<Typography variant="caption" sx={{ fontWeight: 700, mb: 0.5, display: 'block', color: 'text.secondary' }}>
+						<Typography variant="subtitle2" sx={{ mb: 0.5, display: 'block', color: 'text.secondary' }}>
 							Candidate Name *
 						</Typography>
 						<TextField
@@ -200,7 +201,7 @@ const BasicDetailsTab: React.FC<BasicDetailsTabProps> = memo(({
 
 					{/* Analyst Name */}
 					<Grid size={{ xs: 12, sm: 6 }}>
-						<Typography variant="caption" sx={{ fontWeight: 700, mb: 0.5, display: 'block', color: 'text.secondary' }}>
+						<Typography variant="subtitle2" sx={{ mb: 0.5, display: 'block', color: 'text.secondary' }}>
 							Evaluator / Analyst *
 						</Typography>
 						<TextField
@@ -215,7 +216,7 @@ const BasicDetailsTab: React.FC<BasicDetailsTabProps> = memo(({
 
 					{/* Evaluation Date */}
 					<Grid size={{ xs: 12, sm: 6 }}>
-						<Typography variant="caption" sx={{ fontWeight: 700, mb: 0.5, display: 'block', color: 'text.secondary' }}>
+						<Typography variant="subtitle2" sx={{ mb: 0.5, display: 'block', color: 'text.secondary' }}>
 							Evaluation Date *
 						</Typography>
 						<TextField

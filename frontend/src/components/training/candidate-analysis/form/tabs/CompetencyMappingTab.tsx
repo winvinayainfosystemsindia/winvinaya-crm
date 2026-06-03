@@ -37,9 +37,9 @@ const CompetencyMappingTab: React.FC<CompetencyMappingTabProps> = memo(({
 	const inputSx = {
 		'& .MuiOutlinedInput-root': {
 			borderRadius: 1.5,
-			bgcolor: '#fcfcfc',
-			'& fieldset': { borderColor: '#d5dbdb' },
-			'&:hover fieldset': { borderColor: '#879596' }
+			bgcolor: 'background.paper',
+			'& fieldset': { borderColor: 'divider' },
+			'&:hover fieldset': { borderColor: 'text.secondary' }
 		}
 	};
 
@@ -50,7 +50,7 @@ const CompetencyMappingTab: React.FC<CompetencyMappingTabProps> = memo(({
 					<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
 						<Stack direction="row" alignItems="center" spacing={1.5}>
 							<SkillIcon color="action" />
-							<Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+							<Typography variant="h6">
 								Competency Proficiency Mapping
 							</Typography>
 						</Stack>
@@ -60,7 +60,7 @@ const CompetencyMappingTab: React.FC<CompetencyMappingTabProps> = memo(({
 								size="small"
 								startIcon={<AddIcon />}
 								onClick={handleAddSkill}
-								sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 1.5 }}
+								sx={{ borderRadius: 1.5 }}
 							>
 								Add Skill
 							</Button>
@@ -70,7 +70,7 @@ const CompetencyMappingTab: React.FC<CompetencyMappingTabProps> = memo(({
 					{skills.length > 0 ? (
 						<Stack spacing={2.5}>
 							{skills.map((s, idx) => (
-								<Paper key={idx} elevation={0} variant="outlined" sx={{ p: 3, borderRadius: 1.5, position: 'relative', bgcolor: '#fcfcfc' }}>
+								<Paper key={idx} elevation={0} variant="outlined" sx={{ p: 3, borderRadius: 1.5, position: 'relative', bgcolor: 'background.paper' }}>
 									{!viewMode && (
 										<IconButton
 											size="small"
@@ -111,7 +111,7 @@ const CompetencyMappingTab: React.FC<CompetencyMappingTabProps> = memo(({
 										{/* Skill Rating */}
 										<Grid size={{ xs: 12, sm: 3 }}>
 											<Box sx={{ textAlign: 'center' }}>
-												<Typography variant="caption" sx={{ fontWeight: 700, display: 'block', color: 'text.secondary', mb: 0.5 }}>
+												<Typography variant="subtitle2" sx={{ display: 'block', color: 'text.secondary', mb: 0.5 }}>
 													Skill Score ({s.rating}/10)
 												</Typography>
 												<Rating
@@ -129,7 +129,7 @@ const CompetencyMappingTab: React.FC<CompetencyMappingTabProps> = memo(({
 							))}
 						</Stack>
 					) : (
-						<Box sx={{ py: 4, textAlign: 'center', border: '1px dashed divider', borderRadius: 1.5, bgcolor: '#fcfcfc' }}>
+						<Box sx={{ py: 4, textAlign: 'center', border: '1px dashed', borderColor: 'divider', borderRadius: 1.5, bgcolor: 'background.paper' }}>
 							<Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
 								No skills evaluated yet for this analysis session.
 							</Typography>

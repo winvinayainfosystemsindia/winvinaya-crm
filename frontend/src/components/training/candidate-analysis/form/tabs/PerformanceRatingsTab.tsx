@@ -32,9 +32,9 @@ const PerformanceRatingsTab: React.FC<PerformanceRatingsTabProps> = memo(({
 	const inputSx = {
 		'& .MuiOutlinedInput-root': {
 			borderRadius: 1.5,
-			bgcolor: '#fcfcfc',
-			'& fieldset': { borderColor: '#d5dbdb' },
-			'&:hover fieldset': { borderColor: '#879596' }
+			bgcolor: 'background.paper',
+			'& fieldset': { borderColor: 'divider' },
+			'&:hover fieldset': { borderColor: 'text.secondary' }
 		}
 	};
 
@@ -42,10 +42,10 @@ const PerformanceRatingsTab: React.FC<PerformanceRatingsTabProps> = memo(({
 		<Stack spacing={4} sx={{ maxWidth: 850, mx: 'auto', p: 1 }}>
 			{/* Evaluation Remarks Timeline Section */}
 			<Box>
-				<Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.1em', mb: 3 }}>
+				<Typography variant="overline" sx={{ color: 'text.secondary', display: 'block', mb: 3 }}>
 					Overall Evaluation Remarks
 				</Typography>
-				<Paper elevation={0} variant="outlined" sx={{ p: 4, bgcolor: '#fcfcfc', borderRadius: 2.5 }}>
+				<Paper elevation={0} variant="outlined" sx={{ p: 4, bgcolor: 'background.paper', borderRadius: 2.5 }}>
 					<Remarks
 						placeholder="Provide overall summary comments, candidate suitability, and general observations..."
 						value={remarks}
@@ -58,14 +58,14 @@ const PerformanceRatingsTab: React.FC<PerformanceRatingsTabProps> = memo(({
 
 			{/* Final Recommendation and Status cards */}
 			<Box>
-				<Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.1em', mb: 3 }}>
+				<Typography variant="overline" sx={{ color: 'text.secondary', display: 'block', mb: 3 }}>
 					Analysis Status
 				</Typography>
-				<Paper elevation={0} variant="outlined" sx={{ p: 4, bgcolor: '#fcfcfc', borderRadius: 2 }}>
+				<Paper elevation={0} variant="outlined" sx={{ p: 4, bgcolor: 'background.paper', borderRadius: 2 }}>
 					<Grid container spacing={3}>
 						{/* Status Select */}
 						<Grid size={{ xs: 12, sm: 6 }}>
-							<Typography variant="caption" sx={{ fontWeight: 700, mb: 0.5, display: 'block', color: 'text.secondary' }}>
+							<Typography variant="subtitle2" sx={{ mb: 0.5, display: 'block', color: 'text.secondary' }}>
 								Analysis Status *
 							</Typography>
 							<TextField

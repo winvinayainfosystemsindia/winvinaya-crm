@@ -86,9 +86,9 @@ const FeedbackTab: React.FC<FeedbackTabProps> = memo(({
 					sx={{
 						p: 3,
 						borderRadius: 3,
-						bgcolor: '#ffffff',
+						bgcolor: 'background.paper',
 						border: '1px solid',
-						borderColor: '#e2e8f0',
+						borderColor: 'divider',
 						transition: 'all 0.25s ease-in-out',
 						'&:hover': {
 							borderColor: themeColor,
@@ -100,7 +100,7 @@ const FeedbackTab: React.FC<FeedbackTabProps> = memo(({
 					<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
 						<Stack direction="row" alignItems="center" spacing={1.5}>
 							{icon}
-							<Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.primary', letterSpacing: '0.02em' }}>
+							<Typography variant="subtitle1" sx={{ color: 'text.primary' }}>
 								{title}
 							</Typography>
 						</Stack>
@@ -187,7 +187,7 @@ const FeedbackTab: React.FC<FeedbackTabProps> = memo(({
 	return (
 		<Stack spacing={4} sx={{ maxWidth: 1200, mx: 'auto', p: 1 }}>
 			<Box>
-				<Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.1em', mb: 3 }}>
+				<Typography variant="overline" sx={{ color: 'text.secondary', display: 'block', mb: 3 }}>
 					SWOT Feedback Analysis
 				</Typography>
 				<Grid container spacing={3.5}>
