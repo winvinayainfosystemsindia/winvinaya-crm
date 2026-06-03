@@ -104,7 +104,7 @@ export const Remarks: React.FC<RemarksProps> = ({
 							<HistoryIcon sx={{ fontSize: 18 }} />
 						</Box>
 						<Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.primary', letterSpacing: '0.01em' }}>
-							Remarks Audit Timeline
+							Remarks History
 						</Typography>
 					</Stack>
 					{value && (
@@ -184,10 +184,10 @@ export const Remarks: React.FC<RemarksProps> = ({
 					>
 						<CommentIcon sx={{ fontSize: 36, color: 'text.secondary', opacity: 0.35, mb: 1.5 }} />
 						<Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-							No Timeline Observations Recorded
+							No Remarks Recorded
 						</Typography>
 						<Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5 }}>
-							Use the input panel below to log the first evaluation remark.
+							Use the input panel below to add a remark.
 						</Typography>
 					</Paper>
 				)}
@@ -223,7 +223,7 @@ export const Remarks: React.FC<RemarksProps> = ({
 							<AddIcon sx={{ fontSize: 18 }} />
 						</Box>
 						<Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.primary', letterSpacing: '0.01em' }}>
-							Log New Observation
+							Add a Remark
 						</Typography>
 					</Stack>
 
@@ -293,7 +293,7 @@ export const Remarks: React.FC<RemarksProps> = ({
 									}
 								}}
 							>
-								Log Observation
+								Save Remark
 							</Button>
 						</Stack>
 					</Stack>

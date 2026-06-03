@@ -24,8 +24,6 @@ interface PerformanceRatingsTabProps {
 const PerformanceRatingsTab: React.FC<PerformanceRatingsTabProps> = memo(({
 	remarks,
 	setRemarks,
-	recommendation,
-	setRecommendation,
 	status,
 	setStatus,
 	viewMode,
@@ -61,30 +59,10 @@ const PerformanceRatingsTab: React.FC<PerformanceRatingsTabProps> = memo(({
 			{/* Final Recommendation and Status cards */}
 			<Box>
 				<Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.1em', mb: 3 }}>
-					Final Recommendation & Status
+					Analysis Status
 				</Typography>
 				<Paper elevation={0} variant="outlined" sx={{ p: 4, bgcolor: '#fcfcfc', borderRadius: 2 }}>
 					<Grid container spacing={3}>
-						{/* Recommendation Select */}
-						<Grid size={{ xs: 12, sm: 6 }}>
-							<Typography variant="caption" sx={{ fontWeight: 700, mb: 0.5, display: 'block', color: 'text.secondary' }}>
-								Placement Recommendation *
-							</Typography>
-							<TextField
-								select
-								fullWidth
-								size="small"
-								required
-								disabled={viewMode}
-								value={recommendation}
-								onChange={(e) => setRecommendation(e.target.value)}
-								sx={inputSx}
-							>
-								<MenuItem value="ready_for_placement">Ready for Placement</MenuItem>
-								<MenuItem value="needs_additional_training">Needs Additional Training</MenuItem>
-							</TextField>
-						</Grid>
-
 						{/* Status Select */}
 						<Grid size={{ xs: 12, sm: 6 }}>
 							<Typography variant="caption" sx={{ fontWeight: 700, mb: 0.5, display: 'block', color: 'text.secondary' }}>

@@ -122,8 +122,8 @@ const CandidateAnalysisForm: React.FC<CandidateAnalysisFormProps> = ({
 			)
 		},
 		{
-			label: 'Recommendation & Remarks',
-			description: 'Placement recommendation & comments',
+			label: 'Remarks & Status',
+			description: 'Evaluation comments and status',
 			content: (
 				<PerformanceRatingsTab
 					remarks={remarks}
