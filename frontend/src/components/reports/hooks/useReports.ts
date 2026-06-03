@@ -9,8 +9,9 @@ import { settingsService } from '../../../services/settingsService';
 import candidateService from '../../../services/candidateService';
 import trainingService from '../../../services/trainingService';
 import useToast from '../../../hooks/useToast';
-import { ALL_COLUMNS, TRAINING_COLUMNS } from '../constants';
+import { ALL_COLUMNS, TRAINING_COLUMNS, PLACEMENT_COLUMNS } from '../constants';
 import { formatReportData } from '../utils/exportUtils';
+import placementMappingService from '../../../services/placementMappingService';
 
 export const useReports = () => {
 	const dispatch = useAppDispatch();
@@ -33,10 +34,14 @@ export const useReports = () => {
 	const [exportDialogOpen, setExportDialogOpen] = useState(false);
 	const [exportLoading, setExportLoading] = useState(false);
 
+	const [placementData, setPlacementData] = useState<any[]>([]);
+	const [placementLoading, setPlacementLoading] = useState(false);
+
 	const isTraining = reportType === 'training';
-	const reportData = isTraining ? allocations : candidates;
-	const reportTotal = isTraining ? trainingTotal : total;
-	const reportLoading = isTraining ? trainingLoading : loading;
+	const isPlacement = reportType === 'placement';
+	const reportData = isPlacement ? placementData : (isTraining ? allocations : candidates);
+	const reportTotal = isPlacement ? placementData.length : (isTraining ? trainingTotal : total);
+	const reportLoading = isPlacement ? placementLoading : (isTraining ? trainingLoading : loading);
 
 	// Setup Columns
 	useEffect(() => {
@@ -72,6 +77,37 @@ export const useReports = () => {
 					}
 					setDynamicFieldDefs([...(screeningFields || []), ...(counselingFields || [])]);
 					currentCols = [...ALL_COLUMNS, ...dynamicCols];
+				} else if (reportType === 'placement') {
+					// Fetch dynamic fields as well for placement configure column
+					const [screeningFields, counselingFields] = await Promise.all([
+						settingsService.getFields('screening'),
+						settingsService.getFields('counseling')
+					]);
+					const dynamicCols: any[] = [];
+					if (screeningFields) {
+						screeningFields.forEach(field => {
+							dynamicCols.push({ id: `screening_others.${field.name}`, label: field.label, default: false, group: 'screening' });
+						});
+					}
+					if (counselingFields) {
+						counselingFields.forEach(field => {
+							dynamicCols.push({ id: `counseling_others.${field.name}`, label: field.label, default: false, group: 'counseling' });
+						});
+					}
+					setDynamicFieldDefs([...(screeningFields || []), ...(counselingFields || [])]);
+					
+					// Combine ALL_COLUMNS, TRAINING_COLUMNS for configuration, but default visibility is from PLACEMENT_COLUMNS
+					const allCols = [
+                        ...ALL_COLUMNS, 
+                        ...TRAINING_COLUMNS.filter(tc => !ALL_COLUMNS.find(ac => ac.id === tc.id)),
+                        ...dynamicCols, 
+                        ...PLACEMENT_COLUMNS.filter(pc => !ALL_COLUMNS.find(ac => ac.id === pc.id) && !TRAINING_COLUMNS.find(tc => tc.id === pc.id))
+                    ];
+					
+					currentCols = allCols.map(col => {
+						const pCol = PLACEMENT_COLUMNS.find(pc => pc.id === col.id);
+						return { ...col, default: pCol ? pCol.default : false, group: pCol ? pCol.group : col.group };
+					});
 				} else {
 					currentCols = TRAINING_COLUMNS;
 				}
@@ -134,6 +170,22 @@ export const useReports = () => {
 		}));
 	}, [dispatch, page, rowsPerPage, search, filters]);
 
+	const fetchPlacementData = useCallback(async () => {
+		if (!filters.job_role_id) {
+			setPlacementData([]);
+			return;
+		}
+		setPlacementLoading(true);
+		try {
+			const mappings = await placementMappingService.getJobRoleMappings(filters.job_role_id);
+			setPlacementData(mappings);
+		} catch (error) {
+			toast.error("Failed to fetch placement data");
+		} finally {
+			setPlacementLoading(false);
+		}
+	}, [filters.job_role_id, toast]);
+
 	useEffect(() => {
 		dispatch(fetchFilterOptions());
 		dispatch(fetchTrainingBatches({}));
@@ -142,10 +194,12 @@ export const useReports = () => {
 	useEffect(() => {
 		if (isTraining) {
 			fetchTrainingData();
+		} else if (isPlacement) {
+			fetchPlacementData();
 		} else {
 			fetchData();
 		}
-	}, [isTraining, fetchData, fetchTrainingData]);
+	}, [isTraining, isPlacement, fetchData, fetchTrainingData, fetchPlacementData]);
 
 	// Handlers
 	const handleSearchChange = (value: string) => {
@@ -174,7 +228,7 @@ export const useReports = () => {
 	};
 
 	const handleExportCurrentPage = () => {
-		const exportData = formatReportData(reportData, visibleColumns, columns, isTraining);
+		const exportData = formatReportData(reportData, visibleColumns, columns, isTraining, isPlacement);
 
 		const ws = XLSX.utils.json_to_sheet(exportData);
 		const wb = XLSX.utils.book_new();
@@ -204,6 +258,14 @@ export const useReports = () => {
 					sortOrder: 'desc',
 					columns: JSON.stringify(visibleColData)
 				});
+
+			} else if (isPlacement) {
+				if (!filters.job_role_id) {
+					toast.error("Please select a Job Role to export placement report.");
+					setExportLoading(false);
+					return;
+				}
+				response = await placementMappingService.exportPlacementMappings(filters.job_role_id, visibleColData);
 			} else {
 				response = await candidateService.export(
 					search,
@@ -283,6 +345,7 @@ export const useReports = () => {
 		batches,
 		dynamicFieldDefs,
 		isTraining,
-		onRefresh: isTraining ? fetchTrainingData : fetchData
+		isPlacement,
+		onRefresh: isPlacement ? fetchPlacementData : (isTraining ? fetchTrainingData : fetchData)
 	};
 };

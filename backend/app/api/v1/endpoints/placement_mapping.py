@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 from fastapi import APIRouter, Depends, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -175,3 +175,67 @@ async def unmap_candidate(
     )
     
     return None
+
+from app.core.database import AsyncSessionLocal
+from fastapi import BackgroundTasks
+
+async def _run_export_placement_mappings(
+    user_id: int,
+    user_email: str,
+    user_name: str,
+    job_role_public_id: UUID,
+    columns: Optional[str] = None
+):
+    """Wrapper to run export in background with its own DB session"""
+    from loguru import logger
+    import sys
+    print(f"DEBUG: Background task STARTING for placement mapping export (User: {user_email})")
+    sys.stdout.flush()
+    logger.info(f"Background task STARTED for placement mapping export (User: {user_email})")
+    try:
+        async with AsyncSessionLocal() as db:
+            from app.models.user import User
+            current_user = User(
+                id=user_id, 
+                email=user_email, 
+                full_name=user_name,
+                username=user_email
+            )
+            
+            service = PlacementMappingService(db)
+            await service.export_placement_mappings(
+                job_role_public_id=job_role_public_id,
+                current_user=current_user,
+                columns=columns
+            )
+        logger.info(f"Background task COMPLETED for placement mapping export (User: {user_email})")
+        print(f"DEBUG: Background task COMPLETED for placement mapping export (User: {user_email})")
+        sys.stdout.flush()
+    except Exception as e:
+        logger.error(f"Background task FAILED for placement mapping export: {str(e)}", exc_info=True)
+        print(f"DEBUG: Background task FAILED for placement mapping export: {str(e)}")
+        sys.stdout.flush()
+
+@router.post("/export/{job_role_public_id}")
+@rate_limit_medium()
+async def export_placement_mappings(
+    request: Request,
+    job_role_public_id: UUID,
+    background_tasks: BackgroundTasks,
+    columns: str = None,
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Export placement mappings for a specific job role.
+    Runs as a background task and sends the report via email.
+    """
+    background_tasks.add_task(
+        _run_export_placement_mappings,
+        user_id=current_user.id,
+        user_email=current_user.email,
+        user_name=current_user.full_name or current_user.username,
+        job_role_public_id=job_role_public_id,
+        columns=columns
+    )
+    
+    return {"message": "Export started. You will receive an email shortly with the report."}

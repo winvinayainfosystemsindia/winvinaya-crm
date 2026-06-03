@@ -12,11 +12,13 @@ class PlacementMappingRepository(BaseRepository[PlacementMapping]):
         from app.models.candidate import Candidate
         from app.models.candidate_screening import CandidateScreening
         from app.models.candidate_counseling import CandidateCounseling
+        from app.models.training_candidate_allocation import TrainingCandidateAllocation
         super().__init__(PlacementMapping, db)
         self.JobRole = JobRole
         self.Candidate = Candidate
         self.CandidateScreening = CandidateScreening
         self.CandidateCounseling = CandidateCounseling
+        self.TrainingCandidateAllocation = TrainingCandidateAllocation
 
     async def get_by_candidate_and_job_role(
         self, candidate_id: int, job_role_id: int
@@ -55,9 +57,10 @@ class PlacementMappingRepository(BaseRepository[PlacementMapping]):
                 selectinload(self.model.candidate).options(
                     selectinload(self.Candidate.screening).selectinload(self.CandidateScreening.screened_by),
                     selectinload(self.Candidate.documents),
-                    selectinload(self.Candidate.counseling).selectinload(self.CandidateCounseling.counselor)
+                    selectinload(self.Candidate.counseling).selectinload(self.CandidateCounseling.counselor),
+                    selectinload(self.Candidate.allocations).selectinload(self.TrainingCandidateAllocation.batch)
                 ),
-                selectinload(self.model.job_role),
+                selectinload(self.model.job_role).selectinload(self.JobRole.company),
                 selectinload(self.model.mapped_by)
             )
         )

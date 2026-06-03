@@ -49,11 +49,13 @@ const ReportHeader: React.FC<ReportHeaderProps> = ({
 						mb: 0.5
 					}}
 				>
-					{reportType === 'candidate' ? 'Candidates Report' : 'Training Management Report'}
+					{reportType === 'candidate' ? 'Candidates Report' : reportType === 'placement' ? 'Placement Report' : 'Training Management Report'}
 				</Typography>
 				<Typography variant="body2" color="text.secondary">
 					{reportType === 'candidate'
 						? 'Generate and customize candidate data reports for export.'
+						: reportType === 'placement'
+						? 'Track candidate placement statuses across specific job roles.'
 						: 'Track candidate progress and allocations across training batches.'}
 				</Typography>
 			</Box>
@@ -87,6 +89,7 @@ const ReportHeader: React.FC<ReportHeaderProps> = ({
 					>
 						<MenuItem value="candidate" sx={{ fontSize: theme.typography.body2.fontSize }}>Candidate Report</MenuItem>
 						<MenuItem value="training" sx={{ fontSize: theme.typography.body2.fontSize }}>Training Management Report</MenuItem>
+						<MenuItem value="placement" sx={{ fontSize: theme.typography.body2.fontSize }}>Placement Report</MenuItem>
 					</Select>
 				</FormControl>
 

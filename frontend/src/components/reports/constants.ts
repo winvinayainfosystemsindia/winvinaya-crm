@@ -73,3 +73,17 @@ export const TRAINING_COLUMNS = [
 	{ id: 'placed_date', label: 'Placement Date', default: false, group: 'progress' },
 	{ id: 'created_at', label: 'Allocation Date', default: false, group: 'progress' },
 ];
+
+export const PLACEMENT_COLUMNS = [
+    { id: 'name', label: 'Candidate Name', default: true, group: 'candidate' },
+    { id: 'email', label: 'Email', default: true, group: 'candidate' },
+    { id: 'phone', label: 'Phone', default: true, group: 'candidate' },
+    { id: 'disability_type', label: 'Disability Type', default: true, group: 'candidate' },
+    { id: 'mapped_company', label: 'Mapped Company', default: true, group: 'placement' },
+    { id: 'skills', label: 'Skills', default: true, group: 'candidate' },
+    { id: 'is_experienced', label: 'Fresher / Experienced', default: true, group: 'experience' },
+    { id: 'education_level', label: 'Educational Qualification', default: true, group: 'candidate' },
+    { id: 'dob', label: 'Date of Birth', default: true, group: 'candidate' },
+    { id: 'status', label: 'Placement Status', default: true, group: 'placement' },
+    { id: 'batch_tag', label: 'Training Tag', default: true, group: 'placement' }
+];

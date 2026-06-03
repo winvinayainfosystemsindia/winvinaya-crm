@@ -426,3 +426,171 @@ class PlacementMappingService:
             )
 
         return AIScoreResponse(scores=scores_out)
+
+    async def export_placement_mappings(
+        self,
+        job_role_public_id: UUID,
+        current_user: Any,
+        columns: Optional[str] = None
+    ) -> bool:
+        """Fetch all mapped candidates for a job role, generate Excel, and email to user"""
+        import json
+        import io
+        from datetime import datetime, date
+        from openpyxl import Workbook
+        from openpyxl.styles import Font
+        from app.utils.email import send_export_email
+
+        mappings = await self.get_mapped_candidates(job_role_public_id)
+        
+        job_role_title = mappings[0].job_role.title if mappings else "Placement"
+        company_name = mappings[0].job_role.company.name if mappings and getattr(mappings[0].job_role, "company", None) else ""
+        
+        column_defs = []
+        if columns:
+            try:
+                column_defs = json.loads(columns)
+            except Exception:
+                column_defs = []
+        
+        if not column_defs:
+            column_defs = [
+                {"id": "name", "label": "Candidate Name"},
+                {"id": "email", "label": "Email"},
+                {"id": "phone", "label": "Phone"},
+                {"id": "status", "label": "Placement Status"}
+            ]
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Placement Report"
+        for col_num, col_def in enumerate(column_defs, 1):
+            cell = ws.cell(row=1, column=col_num, value=col_def["label"])
+            cell.font = Font(bold=True)
+            
+        for row_num, mapping in enumerate(mappings, 2):
+            c = mapping.candidate
+            for col_num, col_def in enumerate(column_defs, 1):
+                col_id = col_def["id"]
+                val = ""
+                
+                try:
+                    if col_id == "mapped_company":
+                        val = company_name
+                    elif col_id == "status":
+                        val = getattr(mapping.status, "value", str(mapping.status))
+                    elif col_id == "batch_tag":
+                        allocs = getattr(c, "allocations", [])
+                        if allocs and len(allocs) > 0 and getattr(allocs[0], "batch", None):
+                            val = getattr(allocs[0].batch, "batch_tag", "")
+                        else:
+                            val = ""
+                    elif col_id == "registration_type":
+                        val = (c.other or {}).get("registration_type", "Registered")
+                    elif col_id == "disability_type":
+                        val = (c.disability_details or {}).get("disability_type", "")
+                    elif col_id == "disability_percentage":
+                        val = (c.disability_details or {}).get("disability_percentage", "")
+                    elif col_id == "education_level":
+                        edu = c.education_details or {}
+                        degrees = edu.get("degrees", [])
+                        val = degrees[0].get("degree_name") if degrees else ""
+                    elif col_id == "specialization":
+                        edu = c.education_details or {}
+                        degrees = edu.get("degrees", [])
+                        val = degrees[0].get("specialization") if degrees else ""
+                    elif col_id == "year_of_passing":
+                        edu = c.education_details or {}
+                        degrees = edu.get("degrees", [])
+                        val = degrees[0].get("year_of_passing") if degrees else ""
+                    elif col_id == "screening_status":
+                        val = c.screening.status if getattr(c, "screening", None) else "Pending"
+                    elif col_id == "consent_status":
+                        val = c.screening.consent_status if getattr(c, "screening", None) else ""
+                    elif col_id == "screening_date":
+                        val = c.screening.created_at if getattr(c, "screening", None) else ""
+                    elif col_id == "screened_by_name":
+                        val = (c.screening.screened_by.full_name or c.screening.screened_by.username) if getattr(c, "screening", None) and getattr(c.screening, "screened_by", None) else ""
+                    elif col_id == "counseling_status":
+                        val = c.counseling.status if getattr(c, "counseling", None) else ""
+                    elif col_id == "counseling_date":
+                        val = c.counseling.counseling_date if getattr(c, "counseling", None) else ""
+                    elif col_id == "counselor_name":
+                        val = (c.counseling.counselor.full_name or c.counseling.counselor.username) if getattr(c, "counseling", None) and getattr(c.counseling, "counselor", None) else ""
+                    elif col_id == "is_experienced":
+                        val = (c.work_experience or {}).get("is_experienced", False)
+                    elif col_id == "year_of_experience":
+                        val = (c.work_experience or {}).get("year_of_experience", "")
+                    elif col_id == "currently_employed":
+                        val = (c.work_experience or {}).get("currently_employed", False)
+                    elif col_id == "suitable_job_roles":
+                        val = (c.counseling.others or {}).get("suitable_job_roles", []) if getattr(c, "counseling", None) else []
+                    elif col_id == "source_of_info":
+                        val = (c.screening.others or {}).get("source_of_info", "") if getattr(c, "screening", None) else ""
+                    elif col_id == "family_annual_income":
+                        val = (c.screening.others or {}).get("family_annual_income", "") if getattr(c, "screening", None) else ""
+                    elif col_id == "screening_comments":
+                        val = (c.screening.others or {}).get("reason", "") if getattr(c, "screening", None) else ""
+                    elif col_id == "skills" and getattr(c, "counseling", None):
+                        val = c.counseling.skills
+                    elif col_id == "workexperience" and getattr(c, "counseling", None):
+                        val = c.counseling.workexperience
+                    elif col_id == "questions" and getattr(c, "counseling", None):
+                        val = c.counseling.questions
+                    elif col_id.startswith("screening_others."):
+                        field_name = col_id.replace("screening_others.", "")
+                        val = (c.screening.others or {}).get(field_name, "") if getattr(c, "screening", None) else ""
+                    elif col_id.startswith("counseling_others."):
+                        field_name = col_id.replace("counseling_others.", "")
+                        val = (c.counseling.others or {}).get(field_name, "") if getattr(c, "counseling", None) else ""
+                    elif "." in col_id:
+                        parts = col_id.split(".")
+                        obj = c
+                        for part in parts:
+                            if obj is None: break
+                            if isinstance(obj, dict): obj = obj.get(part, "")
+                            else: obj = getattr(obj, part, None)
+                        val = obj
+                    else:
+                        val = getattr(c, col_id, "")
+                        if (val is None or val == "") and getattr(c, "screening", None) and hasattr(c.screening, col_id):
+                            val = getattr(c.screening, col_id, "")
+                        if (val is None or val == "") and getattr(c, "counseling", None) and hasattr(c.counseling, col_id):
+                            val = getattr(c.counseling, col_id, "")
+                    
+                    if isinstance(val, (datetime, date)):
+                        val = val.strftime('%Y-%m-%d')
+                    elif isinstance(val, bool):
+                        val = "Yes" if val else "No"
+                    elif val is None:
+                        val = ""
+                    elif isinstance(val, (dict, list)):
+                        if col_id == "family_details" and isinstance(val, list):
+                            val = "; ".join([f"{f.get('relation')}: {f.get('name')} ({f.get('occupation', 'N/A')})" for f in val])
+                        elif col_id == "skills" and isinstance(val, list):
+                            val = ", ".join([f"{s.get('name')} ({s.get('level')})" for s in val])
+                        elif col_id == "workexperience" and isinstance(val, list):
+                            val = ", ".join([f"{w.get('job_title')} at {w.get('company')}" for w in val])
+                        elif col_id == "questions" and isinstance(val, list):
+                            val = " | ".join([f"Q: {q.get('question')} A: {q.get('answer')}" for q in val])
+                        else:
+                            val = json.dumps(val)
+                except Exception:
+                    val = "Error"
+                
+                ws.cell(row=row_num, column=col_num, value=str(val) if val is not None else "")
+
+        excel_buffer = io.BytesIO()
+        wb.save(excel_buffer)
+        excel_buffer.seek(0)
+        
+        report_name = f"Placement Report - {job_role_title}"
+        filename = f"Placement_Report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        
+        return await send_export_email(
+            to_email=current_user.email,
+            user_name=current_user.full_name or current_user.username,
+            report_name=report_name,
+            file_content=excel_buffer.getvalue(),
+            filename=filename
+        )

@@ -10,9 +10,13 @@ import {
 	useReports
 } from '../../components/reports';
 import FilterDrawer, { type FilterField } from '../../components/common/drawer/FilterDrawer';
+import { fetchJobRoles } from '../../store/slices/jobRoleSlice';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
 
 const Reports: React.FC = () => {
 	const theme = useTheme();
+	const dispatch = useAppDispatch();
+	const { list: jobRoles } = useAppSelector((state) => state.jobRoles);
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const {
 		reportType,
@@ -45,11 +49,29 @@ const Reports: React.FC = () => {
 		batches,
 		dynamicFieldDefs,
 		isTraining,
+		isPlacement,
 		onRefresh
 	} = useReports();
 
+	React.useEffect(() => {
+		if (isPlacement && jobRoles.length === 0) {
+			dispatch(fetchJobRoles({ limit: 1000 })); // Fetch all active/relevant job roles
+		}
+	}, [isPlacement, dispatch, jobRoles.length]);
+
 	// Filter Field Configuration
-	const filterFields: FilterField[] = isTraining ? [
+	let filterFields: FilterField[] = [];
+	if (isPlacement) {
+		filterFields = [
+			{
+				key: 'job_role_id',
+				label: 'Job Role',
+				type: 'single-select',
+				options: jobRoles.map(jr => ({ label: jr.title, value: jr.public_id }))
+			}
+		];
+	} else if (isTraining) {
+		filterFields = [
 		{
 			key: 'batch_tag',
 			label: 'Batch Tag',
@@ -90,7 +112,9 @@ const Reports: React.FC = () => {
 			type: 'multi-select',
 			options: filterOptions.disability_types?.map(v => ({ label: v, value: v })) || []
 		},
-	] : [
+	];
+	} else {
+		filterFields = [
 		{
 			key: 'disability_type',
 			label: 'Disability Type',
@@ -172,9 +196,10 @@ const Reports: React.FC = () => {
 			]
 		}
 	];
+	}
 
 	// Add dynamic filters
-	if (!isTraining) {
+	if (!isTraining && !isPlacement) {
 		columns.forEach(col => {
 			if (col.id.startsWith('screening_others.') || col.id.startsWith('counseling_others.')) {
 				const fieldName = col.id.split('.')[1];
@@ -257,6 +282,7 @@ const Reports: React.FC = () => {
 					page={page}
 					rowsPerPage={rowsPerPage}
 					onPageChange={setPage}
+					reportType={reportType}
 					onRowsPerPageChange={(v) => {
 						setRowsPerPage(v);
 						setPage(0);

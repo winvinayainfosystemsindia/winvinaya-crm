@@ -39,6 +39,7 @@ interface ReportTableProps {
 	rowsPerPage: number;
 	onPageChange: (newPage: number) => void;
 	onRowsPerPageChange: (newRowsPerPage: number) => void;
+    reportType?: string;
 }
 
 // Removed local StyledHeaderCell in favor of common DataTableHead
@@ -52,10 +53,13 @@ const ReportTable: React.FC<ReportTableProps> = ({
 	page,
 	rowsPerPage,
 	onPageChange,
-	onRowsPerPageChange
+	onRowsPerPageChange,
+    reportType = 'candidate'
 }) => {
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isPlacement = reportType === 'placement';
+    const isTraining = reportType === 'training';
 	const activeColumns = columns.filter(c => visibleColumns.includes(c.id));
 
 	// Map to common ColumnDefinition
@@ -99,8 +103,95 @@ const ReportTable: React.FC<ReportTableProps> = ({
 	const renderCell = (item: any, colId: string) => {
 		let val: any;
 
+        if (isPlacement) {
+            const mapping = item;
+            const c = mapping.candidate || {};
+            const allocation = c.allocations && c.allocations.length > 0 ? c.allocations[0] : null;
+
+            if (colId === 'name') val = c.name;
+            else if (colId === 'gender') val = c.gender;
+            else if (colId === 'email') val = c.email;
+            else if (colId === 'phone') val = c.phone;
+            else if (colId === 'city') val = c.city || '-';
+            else if (colId === 'mapped_company') val = mapping.job_role?.company?.name || '-';
+            else if (colId === 'status') val = mapping.status;
+            else if (colId === 'batch_tag') val = allocation?.batch?.batch_tag || '-';
+            else if (colId === 'batch_name') val = allocation?.batch?.batch_name || '-';
+            else if (colId === 'batch_status') val = allocation?.batch?.status || '-';
+            else if (colId === 'domain') val = allocation?.batch?.domain || '-';
+            else if (colId === 'training_mode') val = allocation?.batch?.training_mode || '-';
+            else if (colId === 'placed_company') val = allocation?.placed_company || '-';
+            else if (colId === 'placed_date') val = allocation?.placed_date;
+            else if (colId === 'courses') {
+                if (Array.isArray(allocation?.batch?.courses)) {
+                    val = allocation.batch.courses.map((cr: any) => typeof cr === 'string' ? cr : cr.name).join(', ');
+                } else val = '-';
+            }
+            else if (colId === 'duration') {
+                const dur = allocation?.batch?.duration;
+                let dateStr = '';
+                if (allocation?.batch?.start_date) {
+                    dateStr = format(new Date(allocation.batch.start_date), 'dd MMM yyyy');
+                    if (allocation?.batch?.approx_close_date) {
+                        dateStr += ` to ${format(new Date(allocation.batch.approx_close_date), 'dd MMM yyyy')}`;
+                    }
+                }
+                if (dur && (dur.weeks || dur.days)) {
+                    return (
+                        <Box>
+                            <Typography variant="body2" sx={{ fontSize: '0.8125rem' }}>
+                                {dur.weeks || 0}w, {dur.days || 0}d
+                            </Typography>
+                            {dateStr && (
+                                <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', fontSize: '0.7rem' }}>
+                                    {dateStr}
+                                </Typography>
+                            )}
+                        </Box>
+                    );
+                }
+                val = dateStr || '-';
+            }
+            else if (colId === 'attendance_percentage') {
+                val = allocation?.attendance_percentage;
+                if (val === null || val === undefined) return '-';
+                const color = val >= 90 ? theme.palette.success.main : val >= 75 ? theme.palette.warning.main : theme.palette.error.main;
+                return <Box sx={{ color, fontWeight: 700 }}>{val}%</Box>;
+            }
+            else if (colId === 'assessment_score') {
+                val = allocation?.assessment_score;
+                if (val === null || val === undefined) return '-';
+                return <Box sx={{ fontWeight: 700, color: theme.palette.text.primary }}>{val}</Box>;
+            }
+            else if (colId === 'disability_type') val = c.disability_details?.disability_type || c.disability_details?.type;
+            else if (colId === 'is_experienced') val = c.work_experience?.is_experienced;
+            else if (colId === 'education_level') {
+                const degrees = c.education_details?.degrees;
+                if (degrees && degrees.length > 0) val = degrees[0].degree_name || degrees[0].degree;
+            }
+            else if (colId === 'dob') val = c.dob;
+            else if (colId === 'skills') val = c.counseling?.skills;
+            else {
+                if (colId.startsWith('screening_others.')) {
+                    const fieldName = colId.substring('screening_others.'.length);
+                    val = c.screening?.others?.[fieldName] ?? c[fieldName];
+                } else if (colId.startsWith('counseling_others.')) {
+                    const fieldName = colId.substring('counseling_others.'.length);
+                    val = c.counseling?.others?.[fieldName] ?? c[fieldName];
+                } else {
+                    val = c[colId];
+                    if (val === undefined || val === null) {
+                        if (colId.includes('counseling') && c.counseling) {
+                            val = c.counseling[colId];
+                        } else if (colId.includes('screening') && c.screening) {
+                            val = c.screening[colId];
+                        }
+                    }
+                }
+            }
+        }
 		// 1. Precise Data Extraction (Handle both Candidate and Allocation)
-		if (item.candidate && item.batch) {
+		else if (item.candidate && item.batch) {
 			// It's an allocation
 			if (colId === 'name') val = item.candidate.name;
 			else if (colId === 'gender') val = item.candidate.gender;

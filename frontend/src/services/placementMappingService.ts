@@ -98,6 +98,13 @@ const placementMappingService = {
         });
     },
 
+    exportPlacementMappings: async (jobRolePublicId: string, columns: any[]): Promise<{ message: string }> => {
+        const response = await api.post(`/placement/mappings/export/${jobRolePublicId}`, null, {
+            params: { columns: JSON.stringify(columns) }
+        });
+        return response.data;
+    },
+
     updateStatus: async (mappingId: number, status: string, remarks?: string): Promise<PlacementMapping> => {
         const response = await api.post(`/placement/pipeline/${mappingId}/status`, null, {
             params: { to_status: status, remarks: remarks }

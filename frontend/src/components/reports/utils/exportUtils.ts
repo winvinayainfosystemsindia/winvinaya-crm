@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 
-export const formatReportData = (data: any[], visibleColumns: string[], columns: any[], isTraining: boolean) => {
+export const formatReportData = (data: any[], visibleColumns: string[], columns: any[], isTraining: boolean, isPlacement: boolean = false) => {
 	return data.map(item => {
 		const rowData: Record<string, any> = {};
 		
@@ -51,6 +51,66 @@ export const formatReportData = (data: any[], visibleColumns: string[], columns:
 				else if (virtColId === 'attendance_percentage') val = allocation.attendance_percentage !== null ? `${allocation.attendance_percentage}%` : '-';
 				else if (virtColId === 'assessment_score') val = allocation.assessment_score !== null ? allocation.assessment_score : '-';
 				else val = allocation[virtColId];
+			} else if (isPlacement) {
+				const mapping = item as any;
+				const c = mapping.candidate || {};
+				const allocation = c.allocations && c.allocations.length > 0 ? c.allocations[0] : null;
+
+				if (virtColId === 'name') val = c.name;
+				else if (virtColId === 'email') val = c.email;
+				else if (virtColId === 'phone') val = c.phone;
+				else if (virtColId === 'mapped_company') val = mapping.job_role?.company?.name;
+				else if (virtColId === 'status') val = typeof mapping.status === 'object' ? mapping.status.value : mapping.status;
+				else if (virtColId === 'batch_tag') val = allocation?.batch?.batch_tag;
+                else if (virtColId === 'batch_name') val = allocation?.batch?.batch_name;
+                else if (virtColId === 'batch_status') val = allocation?.batch?.status;
+                else if (virtColId === 'domain') val = allocation?.batch?.domain;
+                else if (virtColId === 'training_mode') val = allocation?.batch?.training_mode;
+                else if (virtColId === 'courses') {
+                    if (Array.isArray(allocation?.batch?.courses)) {
+                        val = allocation.batch.courses.map((cr: any) => typeof cr === 'string' ? cr : cr.name).join(', ');
+                    } else val = '-';
+                }
+                else if (virtColId === 'duration') {
+                    const dur = allocation?.batch?.duration;
+                    let dateStr = '';
+                    if (allocation?.batch?.start_date) {
+                        dateStr = format(new Date(allocation.batch.start_date), 'dd MMM yyyy');
+                        if (allocation?.batch?.approx_close_date) {
+                            dateStr += ` to ${format(new Date(allocation.batch.approx_close_date), 'dd MMM yyyy')}`;
+                        }
+                    }
+                    if (dur && (dur.weeks || dur.days)) {
+                        val = `${dur.weeks || 0} weeks, ${dur.days || 0} days${dateStr ? ` (${dateStr})` : ''}`;
+                    } else val = dateStr || '-';
+                }
+                else if (virtColId === 'attendance_percentage') val = allocation?.attendance_percentage !== null && allocation?.attendance_percentage !== undefined ? `${allocation.attendance_percentage}%` : '-';
+                else if (virtColId === 'assessment_score') val = allocation?.assessment_score !== null && allocation?.assessment_score !== undefined ? allocation.assessment_score : '-';
+                else if (virtColId === 'placed_company') val = allocation?.placed_company;
+                else if (virtColId === 'placed_date') val = allocation?.placed_date;
+				else if (virtColId === 'disability_type') val = c.disability_details?.disability_type || c.disability_details?.type;
+				else if (virtColId === 'is_experienced') val = c.work_experience?.is_experienced;
+				else if (virtColId === 'education_level') {
+					const degrees = c.education_details?.degrees;
+					if (degrees && degrees.length > 0) val = degrees[0].degree_name || degrees[0].degree;
+				}
+				else if (virtColId === 'dob') val = c.dob;
+				else if (virtColId === 'skills') val = c.counseling?.skills;
+				else {
+					if (virtColId.startsWith('screening_others.')) {
+						const fieldName = virtColId.substring('screening_others.'.length);
+						val = c.screening?.others?.[fieldName] ?? c[fieldName];
+					} else if (virtColId.startsWith('counseling_others.')) {
+						const fieldName = virtColId.substring('counseling_others.'.length);
+						val = c.counseling?.others?.[fieldName] ?? c[fieldName];
+					} else {
+						val = c[virtColId];
+						if (val === undefined || val === null) {
+							if (col.group === 'screening' && c.screening) val = c.screening[virtColId];
+							if ((val === undefined || val === null) && col.group === 'counseling' && c.counseling) val = c.counseling[virtColId];
+						}
+					}
+				}
 			} else {
 				const c = item as any;
 				if (virtColId.startsWith('screening_others.')) {
