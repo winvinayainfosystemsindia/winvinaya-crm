@@ -23,8 +23,8 @@ import DocumentsTab from '../../components/candidates/detailedView/tabs/Document
 import TrainingAllocationTab from '../../components/candidates/detailedView/tabs/TrainingAllocationTab';
 import CandidateAttendanceTab from '../../components/candidates/detailedView/tabs/CandidateAttendanceTab';
 import CandidatePlacementTab from '../../components/candidates/detailedView/tabs/CandidatePlacementTab';
-// import CandidateAssignmentTab from '../../components/candidates/detailedView/tabs/CandidateAssignmentTab';
-// import CandidateMockInterviewTab from '../../components/candidates/detailedView/tabs/CandidateMockInterviewTab';
+import CandidateMockInterviewTab from '../../components/candidates/detailedView/tabs/CandidateMockInterviewTab';
+import CandidateAnalysisTab from '../../components/candidates/detailedView/tabs/CandidateAnalysisTab';
 
 import ModuleLayout from '../../components/common/layout/ModuleLayout';
 
@@ -92,6 +92,8 @@ const CandidateDetail: React.FC = () => {
 			<Tab label="Allocation" id="tab-4" />
 			<Tab label="Attendance" id="tab-5" />
 			<Tab label="Placement" id="tab-6" />
+			<Tab label="Mock Interview" id="tab-7" />
+			<Tab label="Analysis" id="tab-8" />
 		</Tabs>
 	);
 
@@ -159,6 +161,8 @@ const CandidateDetail: React.FC = () => {
 						{tabValue === 4 && <TrainingAllocationTab candidate={candidate} />}
 						{tabValue === 5 && <CandidateAttendanceTab candidate={candidate} />}
 						{tabValue === 6 && <CandidatePlacementTab candidate={candidate} />}
+						{tabValue === 7 && <CandidateMockInterviewTab candidate={candidate} />}
+						{tabValue === 8 && <CandidateAnalysisTab candidate={candidate} />}
 					</Box>
 				)}
 			</ModuleLayout>

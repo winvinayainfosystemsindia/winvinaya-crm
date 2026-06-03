@@ -7,6 +7,11 @@ const candidateAnalysisService = {
 		return response.data;
 	},
 
+	getByCandidateId: async (publicId: string): Promise<CandidateAnalysis[]> => {
+		const response = await api.get<CandidateAnalysis[]>(`/training-extensions/candidate-analyses/candidate/${publicId}`);
+		return response.data;
+	},
+
 	getById: async (_batchId: number, id: number): Promise<CandidateAnalysis | null> => {
 		const response = await api.get<CandidateAnalysis>(`/training-extensions/candidate-analyses/${id}`);
 		return response.data;

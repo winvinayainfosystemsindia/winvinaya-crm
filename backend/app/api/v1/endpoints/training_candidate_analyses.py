@@ -59,6 +59,19 @@ async def get_candidate_analyses_by_batch(
     return await service.get_candidate_analyses(batch_id)
 
 
+@router.get("/candidate/{public_id}", response_model=List[TrainingCandidateAnalysisResponse])
+async def get_candidate_analyses_by_candidate(
+    public_id: str,
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.TRAINER])),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get candidate analysis records for a specific candidate.
+    """
+    service = TrainingExtensionService(db)
+    return await service.get_candidate_analyses_by_candidate(public_id)
+
+
 @router.get("/{id}", response_model=TrainingCandidateAnalysisResponse)
 async def get_candidate_analysis(
     id: int,

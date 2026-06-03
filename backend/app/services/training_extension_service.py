@@ -413,6 +413,17 @@ class TrainingExtensionService:
     async def get_candidate_analyses(self, batch_id: int):
         return await self.candidate_analysis_repo.get_by_batch_id(batch_id)
 
+    async def get_candidate_analyses_by_candidate(self, public_id: UUID):
+        query = select(self.candidate_analysis_repo.model).join(Candidate).options(
+            selectinload(self.candidate_analysis_repo.model.batch),
+            selectinload(self.candidate_analysis_repo.model.candidate).selectinload(Candidate.documents)
+        ).where(
+            Candidate.public_id == public_id,
+            self.candidate_analysis_repo.model.is_deleted == False
+        ).order_by(self.candidate_analysis_repo.model.analysis_date.desc())
+        result = await self.db.execute(query)
+        return result.scalars().all()
+
     async def get_candidate_analysis(self, id: int):
         query = select(self.candidate_analysis_repo.model).options(
             selectinload(self.candidate_analysis_repo.model.batch),
