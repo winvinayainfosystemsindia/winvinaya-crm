@@ -90,7 +90,7 @@ class PlacementMappingService:
         # Use hard delete since PlacementMapping doesn't support soft delete
         return await self.repository.delete(mapping.id, soft=False)
 
-    async def get_matches_for_job_role(self, job_role_public_id: UUID) -> List[CandidateMatchResult]:
+    async def get_matches_for_job_role(self, job_role_public_id: UUID, mapped_only: bool = False) -> List[CandidateMatchResult]:
         job_role = await self.job_role_repo.get_by_public_id(job_role_public_id)
         if not job_role:
             raise HTTPException(status_code=404, detail="Job role not found")
@@ -141,6 +141,13 @@ class PlacementMappingService:
             counseling_status='selected'
         )
         
+        # If mapped_only is true, we ONLY care about candidates who are ALREADY mapped to THIS job role.
+        if mapped_only:
+            # existing_mappings is fetched early, so we can filter immediately
+            existing_mappings = await self.repository.get_by_job_role_active(job_role.id)
+            mapped_candidate_ids = {m.candidate_id for m in existing_mappings}
+            candidates = [c for c in candidates if c.id in mapped_candidate_ids]
+        
         # We intentionally DO NOT eagerly load attendance, mock_interviews, or candidate_analyses here.
         # Those are only needed for AI scoring, which is handled in a separate endpoint.
         # Loading them here causes massive performance issues for the pipeline tabs.
@@ -165,9 +172,11 @@ class PlacementMappingService:
         if not candidates:
             return []
 
-        # Get existing mappings for this job role to mark them
-        existing_mappings = await self.repository.get_by_job_role_active(job_role.id)
         # Map of candidate_id -> (mapping_id, status)
+        # existing_mappings was fetched earlier (either for mapped_only or we fetch it here if we didn't yet)
+        if not mapped_only:
+            existing_mappings = await self.repository.get_by_job_role_active(job_role.id)
+            
         mapping_info = {m.candidate_id: (m.id, m.status) for m in existing_mappings}
 
         # Get active mappings for all fetched candidates to avoid N+1 query loop

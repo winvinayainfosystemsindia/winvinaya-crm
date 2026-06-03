@@ -22,9 +22,11 @@ const initialState: PlacementMappingState = {
 
 export const fetchMatchesForJobRole = createAsyncThunk(
     'placementMapping/fetchMatches',
-    async (jobRolePublicId: string, { rejectWithValue }) => {
+    async (params: { jobRolePublicId: string, mappedOnly?: boolean } | string, { rejectWithValue }) => {
         try {
-            return await placementMappingService.getMatchesForJobRole(jobRolePublicId);
+            const id = typeof params === 'string' ? params : params.jobRolePublicId;
+            const mappedOnly = typeof params === 'string' ? false : (params.mappedOnly || false);
+            return await placementMappingService.getMatchesForJobRole(id, mappedOnly);
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.detail || 'Failed to fetch candidate matches');
         }

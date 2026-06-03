@@ -88,7 +88,7 @@ const PipelineKanbanTab: React.FC<PipelineKanbanTabProps> = ({ jobRolePublicId }
 
 	React.useEffect(() => {
 		if (jobRolePublicId) {
-			dispatch(fetchMatchesForJobRole(jobRolePublicId));
+			dispatch(fetchMatchesForJobRole({ jobRolePublicId, mappedOnly: true }));
 		}
 	}, [jobRolePublicId, dispatch]);
 
@@ -165,7 +165,7 @@ const PipelineKanbanTab: React.FC<PipelineKanbanTabProps> = ({ jobRolePublicId }
 				})).unwrap();
 				
 				// Refresh data to show changes
-				dispatch(fetchMatchesForJobRole(jobRolePublicId));
+				dispatch(fetchMatchesForJobRole({ jobRolePublicId, mappedOnly: true }));
 				setOfferUploadDialogOpen(false);
 				setActiveCandidate(null);
 			} catch (error) {
@@ -183,7 +183,7 @@ const PipelineKanbanTab: React.FC<PipelineKanbanTabProps> = ({ jobRolePublicId }
 					remarks
 				})).unwrap();
 				// Refresh data to show changes
-				dispatch(fetchMatchesForJobRole(jobRolePublicId));
+				dispatch(fetchMatchesForJobRole({ jobRolePublicId, mappedOnly: true }));
 				setStatusDialog(null);
 				setActiveCandidate(null);
 			} catch (error) {
@@ -321,7 +321,7 @@ const PipelineKanbanTab: React.FC<PipelineKanbanTabProps> = ({ jobRolePublicId }
 					candidatePublicId={historyDrawer.candidatePublicId}
 					candidateName={historyDrawer.name}
 					jobTitle="Candidate Lifecycle"
-					onStatusChange={() => dispatch(fetchMatchesForJobRole(jobRolePublicId))}
+					onStatusChange={() => dispatch(fetchMatchesForJobRole({ jobRolePublicId, mappedOnly: true }))}
 				/>
 			)}
 

@@ -27,14 +27,16 @@ router = APIRouter(prefix="/placement/mappings", tags=["Placement Mapping"])
 async def get_matches_for_job_role(
     request: Request,
     job_role_public_id: UUID,
+    mapped_only: bool = False,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
     """
     Get ranked candidate matches for a specific job role based on skills, qualifications, and disability.
+    If mapped_only=True, only returns candidates that are already mapped to this role (for Kanban).
     """
     service = PlacementMappingService(db)
-    return await service.get_matches_for_job_role(job_role_public_id)
+    return await service.get_matches_for_job_role(job_role_public_id, mapped_only)
 
 
 @router.post("/ai-score/{job_role_public_id}", response_model=AIScoreResponse)

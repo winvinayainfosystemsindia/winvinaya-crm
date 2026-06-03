@@ -69,8 +69,11 @@ export interface PlacementMappingCreate {
 }
 
 const placementMappingService = {
-    getMatchesForJobRole: async (jobRolePublicId: string): Promise<CandidateMatchResult[]> => {
-        const response = await api.get(`/placement/mappings/match/${jobRolePublicId}`);
+    getMatchesForJobRole: async (jobRolePublicId: string, mappedOnly: boolean = false): Promise<CandidateMatchResult[]> => {
+        const url = mappedOnly 
+            ? `/placement/mappings/match/${jobRolePublicId}?mapped_only=true`
+            : `/placement/mappings/match/${jobRolePublicId}`;
+        const response = await api.get(url);
         return response.data;
     },
 
