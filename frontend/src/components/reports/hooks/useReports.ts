@@ -39,7 +39,7 @@ export const useReports = () => {
 
 	const isTraining = reportType === 'training';
 	const isPlacement = reportType === 'placement';
-	const reportData = isPlacement ? placementData : (isTraining ? allocations : candidates);
+	const reportData = isPlacement ? placementData.slice(page * rowsPerPage, (page + 1) * rowsPerPage) : (isTraining ? allocations : candidates);
 	const reportTotal = isPlacement ? placementData.length : (isTraining ? trainingTotal : total);
 	const reportLoading = isPlacement ? placementLoading : (isTraining ? trainingLoading : loading);
 
@@ -171,20 +171,73 @@ export const useReports = () => {
 	}, [dispatch, page, rowsPerPage, search, filters]);
 
 	const fetchPlacementData = useCallback(async () => {
-		if (!filters.job_role_id) {
-			setPlacementData([]);
-			return;
-		}
 		setPlacementLoading(true);
 		try {
-			const mappings = await placementMappingService.getJobRoleMappings(filters.job_role_id);
+			let mappings;
+			if (filters.job_role_id) {
+				mappings = await placementMappingService.getJobRoleMappings(filters.job_role_id);
+			} else {
+				mappings = await placementMappingService.getAllMappings();
+			}
+
+			// Apply frontend filtering
+			if (filters.company_id) {
+				mappings = mappings.filter((m: any) => String(m.job_role?.company_id) === String(filters.company_id));
+			}
+			if (filters.placement_status) {
+				mappings = mappings.filter((m: any) => m.status === filters.placement_status);
+			}
+			if (filters.gender) {
+				mappings = mappings.filter((m: any) => m.candidate?.gender === filters.gender);
+			}
+			if (filters.disability_type?.length) {
+				mappings = mappings.filter((m: any) => {
+					const candInfo = m.candidate?.other || {};
+					return filters.disability_type.includes(candInfo.disability_type) || 
+					       filters.disability_type.includes(m.candidate?.disability_type);
+				});
+			}
+			if (filters.education_level?.length) {
+				mappings = mappings.filter((m: any) => {
+					const candInfo = m.candidate?.other || {};
+					return filters.education_level.includes(candInfo.highest_education) || 
+					       filters.education_level.includes(m.candidate?.highest_education);
+				});
+			}
+			if (filters.city?.length) {
+				mappings = mappings.filter((m: any) => filters.city.includes(m.candidate?.city));
+			}
+			if (filters.counseling_status) {
+				mappings = mappings.filter((m: any) => m.candidate?.counseling_status === filters.counseling_status);
+			}
+			if (filters.screening_status) {
+				mappings = mappings.filter((m: any) => m.candidate?.screening_status === filters.screening_status);
+			}
+			if (filters.is_experienced) {
+				const isExp = filters.is_experienced === 'true';
+				mappings = mappings.filter((m: any) => {
+					const candInfo = m.candidate?.other || {};
+					return candInfo.is_experienced === isExp || m.candidate?.is_experienced === isExp;
+				});
+			}
+			
+			if (search) {
+				const lowerSearch = search.toLowerCase();
+				mappings = mappings.filter((m: any) => 
+					m.candidate?.first_name?.toLowerCase().includes(lowerSearch) ||
+					m.candidate?.last_name?.toLowerCase().includes(lowerSearch) ||
+					m.candidate?.email?.toLowerCase().includes(lowerSearch) ||
+					m.job_role?.title?.toLowerCase().includes(lowerSearch)
+				);
+			}
+
 			setPlacementData(mappings);
 		} catch (error) {
 			toast.error("Failed to fetch placement data");
 		} finally {
 			setPlacementLoading(false);
 		}
-	}, [filters.job_role_id, toast]);
+	}, [filters, search, toast]);
 
 	useEffect(() => {
 		dispatch(fetchFilterOptions());

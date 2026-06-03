@@ -11,12 +11,14 @@ import {
 } from '../../components/reports';
 import FilterDrawer, { type FilterField } from '../../components/common/drawer/FilterDrawer';
 import { fetchJobRoles } from '../../store/slices/jobRoleSlice';
+import { fetchCompanies } from '../../store/slices/companySlice';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 
 const Reports: React.FC = () => {
 	const theme = useTheme();
 	const dispatch = useAppDispatch();
 	const { list: jobRoles } = useAppSelector((state) => state.jobRoles);
+	const { list: companies } = useAppSelector((state) => state.companies);
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const {
 		reportType,
@@ -57,93 +59,43 @@ const Reports: React.FC = () => {
 		if (isPlacement && jobRoles.length === 0) {
 			dispatch(fetchJobRoles({ limit: 1000 })); // Fetch all active/relevant job roles
 		}
-	}, [isPlacement, dispatch, jobRoles.length]);
+		if (isPlacement && companies.length === 0) {
+			dispatch(fetchCompanies({ limit: 1000 }));
+		}
+	}, [isPlacement, dispatch, jobRoles.length, companies.length]);
 
 	// Filter Field Configuration
 	let filterFields: FilterField[] = [];
-	if (isPlacement) {
-		filterFields = [
-			{
-				key: 'job_role_id',
-				label: 'Job Role',
-				type: 'single-select',
-				options: jobRoles.map(jr => ({ label: jr.title, value: jr.public_id }))
-			}
-		];
-	} else if (isTraining) {
-		filterFields = [
-		{
-			key: 'batch_tag',
-			label: 'Batch Tag',
-			type: 'text'
-		},
-		{
-			key: 'batch_id',
-			label: 'Batch Name',
-			type: 'single-select',
-			options: batches.map(b => ({ label: b.batch_name, value: String(b.id) }))
-		},
-		{
-			key: 'status',
-			label: 'Training Status',
-			type: 'single-select',
-			options: [
-				{ label: 'Allocated', value: 'allocated' },
-				{ label: 'In Training', value: 'in_training' },
-				{ label: 'Completed', value: 'completed' },
-				{ label: 'Dropped Out', value: 'dropped_out' },
-				{ label: 'Moved to Placement', value: 'moved_to_placement' }
-			]
-		},
-		{ key: 'is_dropout', label: 'Is Dropout', type: 'boolean' },
-		{
-			key: 'gender',
-			label: 'Gender',
-			type: 'single-select',
-			options: [
-				{ value: 'male', label: 'Male' },
-				{ value: 'female', label: 'Female' },
-				{ value: 'other', label: 'Other' }
-			]
-		},
+	const commonFilters: FilterField[] = [
 		{
 			key: 'disability_type',
 			label: 'Disability Type',
 			type: 'multi-select',
-			options: filterOptions.disability_types?.map(v => ({ label: v, value: v })) || []
-		},
-	];
-	} else {
-		filterFields = [
-		{
-			key: 'disability_type',
-			label: 'Disability Type',
-			type: 'multi-select',
-			options: filterOptions.disability_types.map(v => ({ value: v, label: v }))
+			options: (filterOptions.disability_types || []).map(v => ({ value: v, label: v }))
 		},
 		{
 			key: 'education_level',
 			label: 'Education Level',
 			type: 'multi-select',
-			options: filterOptions.education_levels.map(v => ({ value: v, label: v }))
+			options: (filterOptions.education_levels || []).map(v => ({ value: v, label: v }))
 		},
 		{
 			key: 'city',
 			label: 'City',
 			type: 'multi-select',
-			options: filterOptions.cities.map(v => ({ value: v, label: v }))
+			options: (filterOptions.cities || []).map(v => ({ value: v, label: v }))
 		},
 		{
 			key: 'counseling_status',
 			label: 'Counseling Status',
 			type: 'single-select',
-			options: filterOptions.counseling_statuses.map(v => ({ value: v, label: v.charAt(0).toUpperCase() + v.slice(1) }))
+			options: (filterOptions.counseling_statuses || []).map(v => ({ value: v, label: v.charAt(0).toUpperCase() + v.slice(1) }))
 		},
 		{
 			key: 'screening_status',
 			label: 'Screening Status',
 			type: 'single-select',
-			options: filterOptions.screening_statuses.map(v => ({ value: v, label: v }))
+			options: (filterOptions.screening_statuses || []).map(v => ({ value: v, label: v }))
 		},
 		{
 			key: 'disability_percentage',
@@ -196,6 +148,84 @@ const Reports: React.FC = () => {
 			]
 		}
 	];
+
+	if (isPlacement) {
+		filterFields = [
+			{
+				key: 'company_id',
+				label: 'Company',
+				type: 'single-select',
+				options: companies.map(c => ({ label: c.name, value: String(c.id) }))
+			},
+			{
+				key: 'job_role_id',
+				label: 'Job Role',
+				type: 'single-select',
+				options: jobRoles.map(jr => ({ label: jr.title, value: jr.public_id }))
+			},
+			{
+				key: 'placement_status',
+				label: 'Placement Status',
+				type: 'single-select',
+				options: [
+					{ label: 'Mapped', value: 'mapped' },
+					{ label: 'Interview Scheduled', value: 'interview_scheduled' },
+					{ label: 'Interview Completed', value: 'interview_completed' },
+					{ label: 'Offer Made', value: 'offer_made' },
+					{ label: 'Offer Accepted', value: 'offer_accepted' },
+					{ label: 'Offer Declined', value: 'offer_declined' },
+					{ label: 'Joined', value: 'joined' },
+					{ label: 'Rejected', value: 'rejected' },
+					{ label: 'On Hold', value: 'on_hold' }
+				]
+			},
+			...commonFilters
+		];
+	} else if (isTraining) {
+		filterFields = [
+		{
+			key: 'batch_tag',
+			label: 'Batch Tag',
+			type: 'text'
+		},
+		{
+			key: 'batch_id',
+			label: 'Batch Name',
+			type: 'single-select',
+			options: batches.map(b => ({ label: b.batch_name, value: String(b.id) }))
+		},
+		{
+			key: 'status',
+			label: 'Training Status',
+			type: 'single-select',
+			options: [
+				{ label: 'Allocated', value: 'allocated' },
+				{ label: 'In Training', value: 'in_training' },
+				{ label: 'Completed', value: 'completed' },
+				{ label: 'Dropped Out', value: 'dropped_out' },
+				{ label: 'Moved to Placement', value: 'moved_to_placement' }
+			]
+		},
+		{ key: 'is_dropout', label: 'Is Dropout', type: 'boolean' },
+		{
+			key: 'gender',
+			label: 'Gender',
+			type: 'single-select',
+			options: [
+				{ value: 'male', label: 'Male' },
+				{ value: 'female', label: 'Female' },
+				{ value: 'other', label: 'Other' }
+			]
+		},
+		{
+			key: 'disability_type',
+			label: 'Disability Type',
+			type: 'multi-select',
+			options: filterOptions.disability_types?.map(v => ({ label: v, value: v })) || []
+		},
+	];
+	} else {
+		filterFields = commonFilters;
 	}
 
 	// Add dynamic filters

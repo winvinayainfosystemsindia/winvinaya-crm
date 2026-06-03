@@ -34,6 +34,9 @@ class PlacementMappingService:
             raise HTTPException(status_code=404, detail="Job role not found")
         return await self.repository.get_by_job_role_active(job_role.id)
 
+    async def get_all_mapped_candidates(self) -> List[PlacementMapping]:
+        return await self.repository.get_all_active()
+
     async def map_candidate(self, mapping_in: PlacementMappingCreate, user_id: int) -> PlacementMapping:
         # Check if already mapped
         existing = await self.repository.get_by_candidate_and_job_role(

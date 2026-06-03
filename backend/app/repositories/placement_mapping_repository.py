@@ -43,6 +43,23 @@ class PlacementMappingRepository(BaseRepository[PlacementMapping]):
         )
         result = await self.db.execute(stmt)
         return result.scalars().first()
+    async def get_all_active(self) -> List[PlacementMapping]:
+        stmt = (
+            select(self.model)
+            .where(self.model.is_active == True)
+            .options(
+                selectinload(self.model.candidate).options(
+                    selectinload(self.Candidate.screening).selectinload(self.CandidateScreening.screened_by),
+                    selectinload(self.Candidate.documents),
+                    selectinload(self.Candidate.counseling).selectinload(self.CandidateCounseling.counselor),
+                    selectinload(self.Candidate.allocations).selectinload(self.TrainingCandidateAllocation.batch)
+                ),
+                selectinload(self.model.job_role).selectinload(self.JobRole.company),
+                selectinload(self.model.mapped_by)
+            )
+        )
+        result = await self.db.execute(stmt)
+        return list(result.scalars().all())
 
     async def get_by_job_role_active(self, job_role_id: int) -> List[PlacementMapping]:
         stmt = (

@@ -88,6 +88,11 @@ const placementMappingService = {
         return response.data;
     },
 
+    getAllMappings: async (): Promise<PlacementMapping[]> => {
+        const response = await api.get('/placement/mappings/');
+        return response.data;
+    },
+
     getCandidateMappings: async (candidateId: number): Promise<PlacementMapping[]> => {
         const response = await api.get(`/placement/mappings/candidate/${candidateId}`);
         return response.data;

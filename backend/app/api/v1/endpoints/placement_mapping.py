@@ -127,6 +127,20 @@ async def get_job_role_mappings(
     return await service.get_mapped_candidates(job_role_public_id)
 
 
+@router.get("/", response_model=List[PlacementMapping])
+@rate_limit_medium()
+async def get_all_mappings(
+    request: Request,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get all current active placement mappings across all job roles.
+    """
+    service = PlacementMappingService(db)
+    return await service.get_all_mapped_candidates()
+
+
 @router.get("/candidate/{candidate_id}", response_model=List[PlacementMapping])
 @rate_limit_medium()
 async def get_candidate_mappings(
