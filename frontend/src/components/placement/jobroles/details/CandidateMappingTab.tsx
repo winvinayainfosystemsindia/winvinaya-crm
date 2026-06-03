@@ -132,6 +132,11 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
                 if (!c.source_of_info || !activeFilters.sourceOfInfo.includes(c.source_of_info)) return false;
             }
 
+            // Beneficiary Status filter
+            if (activeFilters.beneficiaryStatus && activeFilters.beneficiaryStatus.length > 0) {
+                if (!c.beneficiary_status || !activeFilters.beneficiaryStatus.includes(c.beneficiary_status)) return false;
+            }
+
             // Experience range filter
             const expValue = parseInt(String(c.year_of_experience || '0'), 10);
             if (activeFilters.experience.min && expValue < parseInt(activeFilters.experience.min, 10)) return false;
@@ -155,6 +160,7 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
         const disabilities = Array.from(new Set(matchingCandidates.map(c => c.disability).filter((d): d is string => !!d)));
         const qualifications = Array.from(new Set(matchingCandidates.map(c => c.qualification).filter((q): q is string => !!q)));
         const sources = Array.from(new Set(matchingCandidates.map(c => c.source_of_info).filter((s): s is string => !!s)));
+        const beneficiaryStatuses = Array.from(new Set(matchingCandidates.map(c => c.beneficiary_status).filter((s): s is string => !!s)));
 
         const fields = [...CANDIDATE_MAPPING_FILTER_FIELDS];
 
@@ -191,6 +197,15 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
             });
         }
 
+        if (beneficiaryStatuses.length > 0) {
+            fields.push({
+                key: 'beneficiaryStatus',
+                label: 'Beneficiary Status',
+                type: 'multi-select',
+                options: beneficiaryStatuses.map(s => ({ value: s, label: s }))
+            });
+        }
+
         return fields;
     }, [matchingCandidates, allPossibleSkills]);
 
@@ -201,6 +216,7 @@ const CandidateMappingTab: React.FC<CandidateMappingTabProps> = ({ jobRole }) =>
         if (activeFilters.disability.length > 0) count++;
         if (activeFilters.qualification.length > 0) count++;
         if (activeFilters.sourceOfInfo && activeFilters.sourceOfInfo.length > 0) count++;
+        if (activeFilters.beneficiaryStatus && activeFilters.beneficiaryStatus.length > 0) count++;
         if (activeFilters.experience.min || activeFilters.experience.max) count++;
         return count;
     }, [activeFilters]);

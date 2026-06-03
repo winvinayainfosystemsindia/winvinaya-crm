@@ -345,6 +345,10 @@ class PlacementMappingService:
             if not reg_source:
                 reg_source = "Registered"
 
+            beneficiary_status = None
+            if candidate.other and isinstance(candidate.other, dict):
+                beneficiary_status = candidate.other.get("status_of_beneficiary")
+
             results.append(
                 CandidateMatchResult(
                     public_id=candidate.public_id,
@@ -365,7 +369,8 @@ class PlacementMappingService:
                     status=mapping_info[candidate.id][1] if candidate.id in mapping_info else None,
                     mapping_id=mapping_info[candidate.id][0] if candidate.id in mapping_info else None,
                     year_of_experience=year_of_exp,
-                    source_of_info=reg_source
+                    source_of_info=reg_source,
+                    beneficiary_status=beneficiary_status
                 )
             )
 

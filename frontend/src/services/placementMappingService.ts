@@ -27,6 +27,7 @@ export interface CandidateMatchResult {
     status: string;
     mapping_id?: number;
     source_of_info?: string;
+    beneficiary_status?: string;
     // AI Scoring fields
     ai_explanation?: string;
     ai_recommendation?: string;

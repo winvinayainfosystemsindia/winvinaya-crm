@@ -91,9 +91,9 @@ const CandidateDetail: React.FC = () => {
 			<Tab label="Documents" id="tab-3" />
 			<Tab label="Allocation" id="tab-4" />
 			<Tab label="Attendance" id="tab-5" />
-			<Tab label="Placement" id="tab-6" />
 			<Tab label="Mock Interview" id="tab-7" />
 			<Tab label="Analysis" id="tab-8" />
+			<Tab label="Placement" id="tab-6" />
 		</Tabs>
 	);
 
@@ -104,9 +104,9 @@ const CandidateDetail: React.FC = () => {
 					variant="text"
 					startIcon={<ArrowBackIcon />}
 					onClick={() => navigate('/candidates')}
-					sx={{ 
-						textTransform: 'none', 
-						fontWeight: 700, 
+					sx={{
+						textTransform: 'none',
+						fontWeight: 700,
 						color: 'text.secondary',
 						'&:hover': { color: 'primary.main', bgcolor: 'transparent' }
 					}}

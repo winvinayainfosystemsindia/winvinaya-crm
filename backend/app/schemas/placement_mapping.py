@@ -113,6 +113,7 @@ class CandidateMatchResult(BaseModel):
     status: Optional[str] = None
     mapping_id: Optional[int] = None
     source_of_info: Optional[str] = None
+    beneficiary_status: Optional[str] = None
     # AI Scoring fields
     ai_explanation: Optional[str] = None
     ai_recommendation: Optional[str] = None
