@@ -141,7 +141,9 @@ class PlacementMappingService:
             counseling_status='selected'
         )
         
-        # Eagerly load attendance and mock_interviews for AI scoring
+        # We intentionally DO NOT eagerly load attendance, mock_interviews, or candidate_analyses here.
+        # Those are only needed for AI scoring, which is handled in a separate endpoint.
+        # Loading them here causes massive performance issues for the pipeline tabs.
         if candidates:
             from sqlalchemy import select
             from sqlalchemy.orm import selectinload
@@ -151,8 +153,6 @@ class PlacementMappingService:
                 select(CandidateModel)
                 .where(CandidateModel.id.in_(cand_ids))
                 .options(
-                    selectinload(CandidateModel.attendance),
-                    selectinload(CandidateModel.mock_interviews),
                     selectinload(CandidateModel.screening),
                     selectinload(CandidateModel.counseling),
                 )
@@ -173,30 +173,36 @@ class PlacementMappingService:
         # Get active mappings for all fetched candidates to avoid N+1 query loop
         candidate_ids = [c.id for c in candidates]
         
-        # Query active placement mappings in bulk for the candidate IDs, with job_role selectinload
+        # Query active placement mappings in bulk using a lightweight core select
         from sqlalchemy import select, and_
-        from sqlalchemy.orm import selectinload
+        from app.models.company import Company
         
         stmt = (
-            select(PlacementMapping)
+            select(
+                PlacementMapping.candidate_id,
+                PlacementMapping.status,
+                JobRole.id.label("job_role_id"),
+                JobRole.title.label("job_role_title"),
+                JobRole.status.label("job_role_status"),
+                Company.name.label("company_name")
+            )
+            .join(JobRole, PlacementMapping.job_role_id == JobRole.id)
+            .outerjoin(Company, JobRole.company_id == Company.id)
             .where(
                 and_(
                     PlacementMapping.candidate_id.in_(candidate_ids),
                     PlacementMapping.is_active == True
                 )
             )
-            .options(
-                selectinload(PlacementMapping.job_role)
-            )
         )
         bulk_result = await self.repository.db.execute(stmt)
-        all_other_mappings = list(bulk_result.scalars().all())
+        mapping_rows = bulk_result.all()
         
         # Group other mappings by candidate_id
         from collections import defaultdict
         mappings_by_candidate = defaultdict(list)
-        for m in all_other_mappings:
-            mappings_by_candidate[m.candidate_id].append(m)
+        for row in mapping_rows:
+            mappings_by_candidate[row.candidate_id].append(row)
 
         results = []
         for candidate in candidates:
@@ -207,12 +213,12 @@ class PlacementMappingService:
             is_placed_elsewhere = False
             placed_elsewhere_info = None
             placed_statuses = {"joined", "offered", "offer_made", "offer_accepted"}
-            for m in other_mappings:
-                status_str = getattr(m.status, "value", str(m.status)).lower().strip()
-                if m.job_role_id != job_role.id and status_str in placed_statuses:
+            for row in other_mappings:
+                status_str = getattr(row.status, "value", str(row.status)).lower().strip()
+                if row.job_role_id != job_role.id and status_str in placed_statuses:
                     is_placed_elsewhere = True
-                    company_name = m.job_role.company.name if m.job_role.company else "Another Company"
-                    placed_elsewhere_info = f"Placed at {company_name} as {m.job_role.title}"
+                    company_name = row.company_name or "Another Company"
+                    placed_elsewhere_info = f"Placed at {company_name} as {row.job_role_title}"
                     break
             
             is_already_mapped = candidate.id in mapping_info
@@ -303,8 +309,8 @@ class PlacementMappingService:
             # Count and fetch other mappings for this candidate (Only Active roles) - fast dictionary lookup
             other_mappings = mappings_by_candidate.get(candidate.id, [])
             other_role_names = [
-                m.job_role.title for m in other_mappings 
-                if m.job_role_id != job_role.id and m.job_role.status == "active"
+                row.job_role_title for row in other_mappings 
+                if row.job_role_id != job_role.id and getattr(row.job_role_status, "value", str(row.job_role_status)).lower() == "active"
             ]
             other_count = len(other_role_names)
 
