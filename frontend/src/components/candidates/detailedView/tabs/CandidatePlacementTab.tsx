@@ -31,6 +31,33 @@ import placementMappingService from '../../../../services/placementMappingServic
 import type { PlacementMapping } from '../../../../services/placementMappingService';
 import { SectionCard, SectionHeader } from '../DetailedViewCommon';
 
+const formatStatus = (status: string | undefined) => {
+    if (!status) return 'MAPPED';
+    return status.replace(/_/g, ' ').toUpperCase();
+};
+
+const getStatusColor = (status: string | undefined): 'success' | 'error' | 'info' | 'warning' | 'secondary' => {
+    switch (status?.toLowerCase()) {
+        case 'joined':
+        case 'offer_accepted':
+        case 'offered':
+        case 'offer_made':
+            return 'success';
+        case 'rejected':
+            return 'error';
+        case 'shortlisted':
+        case 'interview_scheduled':
+        case 'interviewing':
+            return 'info';
+        case 'withdrawn':
+        case 'on_hold':
+            return 'warning';
+        case 'mapped':
+        default:
+            return 'secondary';
+    }
+};
+
 interface CandidatePlacementTabProps {
     candidate: Candidate;
 }
@@ -133,7 +160,7 @@ const CandidatePlacementTab: React.FC<CandidatePlacementTabProps> = ({ candidate
                             >
                                 <Box sx={{ p: 3 }}>
                                     <Grid container spacing={3} alignItems="center">
-                                        <Grid size={{ xs: 12, md: 7 }}>
+                                        <Grid size={{ xs: 12, md: 5 }}>
                                             <Stack direction="row" spacing={2.5} alignItems="flex-start">
                                                 <Avatar 
                                                     variant="rounded"
@@ -166,8 +193,29 @@ const CandidatePlacementTab: React.FC<CandidatePlacementTabProps> = ({ candidate
                                             </Stack>
                                         </Grid>
 
-                                        <Grid size={{ xs: 12, md: 3 }}>
+                                        <Grid size={{ xs: 12, md: 2 }}>
                                             <Box sx={{ textAlign: { xs: 'left', md: 'center' }, pl: { xs: 9, md: 0 } }}>
+                                                <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.disabled', display: 'block', mb: 1 }}>
+                                                    STAGE
+                                                </Typography>
+                                                <Chip 
+                                                    label={formatStatus(mapping.status)} 
+                                                    color={getStatusColor(mapping.status)}
+                                                    sx={{ 
+                                                        fontWeight: 900,
+                                                        fontSize: '0.75rem',
+                                                        height: 28,
+                                                        bgcolor: alpha(theme.palette[getStatusColor(mapping.status)].main, 0.1),
+                                                        color: `${getStatusColor(mapping.status)}.dark`,
+                                                        border: '1px solid',
+                                                        borderColor: alpha(theme.palette[getStatusColor(mapping.status)].main, 0.2)
+                                                    }} 
+                                                />
+                                            </Box>
+                                        </Grid>
+
+                                        <Grid size={{ xs: 12, md: 3 }}>
+                                            <Box sx={{ textAlign: { xs: 'left', md: 'center' }, pl: { xs: 9, md: 0 }, mt: { xs: 2, md: 0 } }}>
                                                 <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.disabled', display: 'block', mb: 1 }}>
                                                     PROFILE MATCH SCORE
                                                 </Typography>
@@ -178,7 +226,7 @@ const CandidatePlacementTab: React.FC<CandidatePlacementTabProps> = ({ candidate
                                                         fontWeight: 900,
                                                         fontSize: '0.875rem',
                                                         px: 1,
-                                                        height: 32,
+                                                        height: 28,
                                                         bgcolor: mapping.match_score >= 75 ? alpha(theme.palette.success.main, 0.1) : alpha(theme.palette.warning.main, 0.1),
                                                         color: mapping.match_score >= 75 ? 'success.dark' : 'warning.dark',
                                                         border: '1px solid',
