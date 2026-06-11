@@ -25,6 +25,7 @@ import {
 import { useAppDispatch, useAppSelector } from '../../../../store/hooks';
 import { fetchSystemSettings, fetchFields } from '../../../../store/slices/settingsSlice';
 import DynamicFieldRenderer from '../../../common/DynamicFieldRenderer';
+import Remarks from '../../../common/Remarks';
 import type { CandidateCounselingCreate } from '../../../../models/candidate';
 
 interface CounselingInfoTabProps {
@@ -232,6 +233,29 @@ const CounselingInfoTab: React.FC<CounselingInfoTabProps> = ({
 							</Box>
 						</Grid>
 					</Grid>
+				</Paper>
+			)}
+
+			{/* Executive Remarks Timeline Section */}
+			{isManagerOrAdmin && (
+				<Paper elevation={0} variant="outlined" sx={{ p: 3, borderRadius: 0.5 }}>
+					<Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
+						<Box sx={{ bgcolor: 'primary.main', p: 0.5, borderRadius: 0.5, display: 'flex' }}>
+							<RemarkIcon sx={{ color: 'common.white', fontSize: 20 }} />
+						</Box>
+						<Typography variant="awsSectionTitle">Executive Remarks / Timeline</Typography>
+					</Stack>
+
+					<Divider sx={{ mb: 4 }} />
+
+					<Box>
+						<Remarks
+							value={formData.others?.remarks_timeline || ''}
+							onChange={(val) => onUpdateOtherField('remarks_timeline', val)}
+							placeholder="Document remarks history and timeline updates..."
+							analystName={user ? (user.full_name || user.username) : ''}
+						/>
+					</Box>
 				</Paper>
 			)}
 
