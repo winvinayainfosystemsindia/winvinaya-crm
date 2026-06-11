@@ -70,6 +70,7 @@ const JobRecommendationsTab: React.FC<JobRecommendationsTabProps> = ({
 				feedback_type: 'counseling summary',
 				current_text: formData.feedback || '',
 				skills: formattedSkills,
+				questions: formData.questions || [],
 				action
 			});
 

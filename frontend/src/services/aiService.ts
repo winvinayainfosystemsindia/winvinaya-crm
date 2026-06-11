@@ -107,6 +107,7 @@ export const aiService = {
     communication_rating?: number;
     attitude_rating?: number;
     skills?: Array<{ skill: string; level: string; rating?: number }>;
+    questions?: Array<{ question: string; answer: string }>;
     action: 'enhance' | 'generate';
   }): Promise<{ enhanced_text: string }> {
     const res = await api.post(`${BASE}/enhance-feedback`, payload);

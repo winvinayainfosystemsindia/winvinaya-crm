@@ -26,6 +26,7 @@ class CandidateFeedbackService:
         communication_rating: Optional[int] = None,
         attitude_rating: Optional[int] = None,
         skills: Optional[List[Dict[str, Any]]] = None,
+        questions: Optional[List[Dict[str, Any]]] = None,
         action: str = "enhance"
     ) -> str:
         """
@@ -60,6 +61,15 @@ class CandidateFeedbackService:
             skills_str = ", ".join([f"{s.get('skill', '')} ({s.get('level', '')})" for s in skills if s.get('skill')])
             if skills_str:
                 candidate_info += f"Competency Skills: {skills_str}\n"
+        if questions:
+            qa_str = ""
+            for i, q in enumerate(questions):
+                q_text = q.get("question", "").strip()
+                a_text = q.get("answer", "").strip()
+                if q_text and a_text:
+                    qa_str += f"Q{i+1}: {q_text}\nA{i+1}: {a_text}\n\n"
+            if qa_str:
+                candidate_info += f"\nCandidate Q&A Responses Transcript:\n{qa_str}"
 
         # Load prompts using the template loader
         if action == "generate":

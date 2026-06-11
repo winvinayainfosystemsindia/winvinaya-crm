@@ -346,6 +346,7 @@ class AIEnhanceFeedbackRequest(BaseModel):
     communication_rating: Optional[int] = Field(None, description="Communication rating (1-5)")
     attitude_rating: Optional[int] = Field(None, description="Attitude rating (1-5)")
     skills: Optional[list[dict]] = Field(None, description="List of skills and levels/ratings")
+    questions: Optional[list[dict]] = Field(None, description="List of interview questions and answers: [{'question': str, 'answer': str}]")
     action: str = Field("enhance", description="Either 'enhance' (rewrite/polish) or 'generate' (suggest points from scratch)")
 
 class AIEnhanceFeedbackResponse(BaseModel):
@@ -379,6 +380,7 @@ async def enhance_feedback(
             communication_rating=request.communication_rating,
             attitude_rating=request.attitude_rating,
             skills=request.skills,
+            questions=request.questions,
             action=request.action
         )
         return AIEnhanceFeedbackResponse(enhanced_text=enhanced_text)
