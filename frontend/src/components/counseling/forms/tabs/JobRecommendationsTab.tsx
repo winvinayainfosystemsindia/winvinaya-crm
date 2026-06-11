@@ -122,24 +122,111 @@ const JobRecommendationsTab: React.FC<JobRecommendationsTabProps> = ({
 				// Sort by score first, then number of matching skills
 				.sort((a, b) => b.score - a.score || b.matchingSkillsCount - a.matchingSkillsCount);
 
-			if (scoredJobs.length === 0) {
-				toast.warning('No active job roles match the candidate assessed skills.');
-				return;
+			let recommendedJobTitles: string[] = [];
+			let isCustom = false;
+
+			if (scoredJobs.length > 0) {
+				// Extract top job titles from active roles database
+				recommendedJobTitles = scoredJobs.slice(0, 3).map(item => item.jobTitle);
+			} else {
+				// No active job roles in DB matched candidate assessed skills
+				// Fallback to custom recommendation mapping
+				isCustom = true;
+				const customJobRoleMapping: Record<string, string[]> = {
+					'java': ['Java Developer', 'Backend Engineer'],
+					'python': ['Python Developer', 'Data Engineer', 'Backend Engineer'],
+					'javascript': ['Frontend Developer', 'Full Stack Developer', 'Software Engineer'],
+					'typescript': ['Frontend Developer', 'React Developer', 'Software Engineer'],
+					'react': ['React Developer', 'Frontend Developer', 'UI Engineer'],
+					'angular': ['Angular Developer', 'Frontend Developer'],
+					'vue.js': ['Vue Developer', 'Frontend Developer'],
+					'node.js': ['Backend Developer', 'Node.js Developer', 'Software Engineer'],
+					'sql': ['Database Administrator', 'SQL Developer', 'Data Analyst'],
+					'nosql': ['Backend Developer', 'NoSQL Database Specialist'],
+					'c++': ['C++ Developer', 'Systems Engineer'],
+					'c#': ['C# Developer', '.NET Developer', 'Software Developer'],
+					'.net': ['.NET Developer', 'C# Developer'],
+					'asp.net': ['.NET Developer', 'Software Developer'],
+					'html': ['Frontend Developer', 'Web Designer'],
+					'css': ['Frontend Developer', 'Web Designer'],
+					'html/css': ['Frontend Developer', 'Web Designer'],
+					'aws': ['DevOps Engineer', 'Cloud Engineer', 'Systems Administrator'],
+					'azure': ['DevOps Engineer', 'Cloud Engineer', 'Systems Administrator'],
+					'gcp': ['DevOps Engineer', 'Cloud Engineer', 'Systems Administrator'],
+					'docker': ['DevOps Engineer', 'Systems Engineer'],
+					'kubernetes': ['DevOps Engineer', 'Cloud Engineer'],
+					'git': ['Software Developer'],
+					'github': ['Software Developer'],
+					'data analytics': ['Data Analyst', 'Data Analytics Specialist'],
+					'data entry': ['Data Entry Operator', 'Office Assistant'],
+					'accounting': ['Accountant', 'Finance Associate'],
+					'tally': ['Accountant', 'Tally Operator', 'Accounts Assistant'],
+					'tally prime': ['Accountant', 'Tally Operator', 'Accounts Assistant'],
+					'sap': ['SAP Consultant', 'SAP Associate'],
+					'excel': ['Data Analyst', 'Operations Coordinator', 'Office Assistant'],
+					'microsoft excel': ['Data Analyst', 'Operations Coordinator', 'Office Assistant'],
+					'microsoft office': ['Office Assistant', 'Data Entry Operator'],
+					'bpo': ['Customer Support Associate', 'BPO Executive', 'Voice Support Agent'],
+					'customer support': ['Customer Support Associate', 'Customer Success Executive', 'Helpdesk Agent'],
+					'telesales': ['Telesales Executive', 'Inside Sales Representative', 'Sales Associate'],
+					'digital marketing': ['Digital Marketing Executive', 'SEO Specialist', 'Social Media Specialist'],
+					'seo': ['SEO Specialist', 'Digital Marketer'],
+					'sem': ['Digital Marketer', 'PPC Specialist'],
+					'seo/sem': ['SEO Specialist', 'Digital Marketer'],
+					'graphic design': ['Graphic Designer', 'UI Designer', 'Creative Associate'],
+					'photoshop': ['Graphic Designer', 'Photo Editor'],
+					'illustrator': ['Graphic Designer', 'Vector Artist'],
+					'ui/ux': ['UI/UX Designer', 'Product Designer'],
+					'figma': ['UI/UX Designer', 'Figma Specialist'],
+					'design': ['UI/UX Designer', 'Graphic Designer'],
+					'sign language': ['Sign Language Interpreter', 'Inclusion Associate'],
+					'isl': ['Sign Language Interpreter', 'Inclusion Associate'],
+					'asl': ['Sign Language Interpreter', 'Inclusion Associate'],
+					'accessibility testing': ['Accessibility QA Tester', 'Inclusion QA Engineer'],
+					'jaws': ['Accessibility Specialist', 'Accessibility QA Tester'],
+					'screen reader': ['Accessibility Tester', 'Accessibility Specialist'],
+					'assistive technology': ['Assistive Technology Trainer', 'Accessibility Specialist']
+				};
+
+				const customRecommendations: string[] = [];
+				candidateSkillNames.forEach((skillName: string) => {
+					const sLower = skillName.toLowerCase().trim();
+					if (customJobRoleMapping[sLower]) {
+						customRecommendations.push(...customJobRoleMapping[sLower]);
+					} else {
+						Object.keys(customJobRoleMapping).forEach((key) => {
+							if (sLower.includes(key) || key.includes(sLower)) {
+								customRecommendations.push(...customJobRoleMapping[key]);
+							}
+						});
+					}
+				});
+
+				recommendedJobTitles = Array.from(new Set(customRecommendations));
+				if (recommendedJobTitles.length === 0) {
+					recommendedJobTitles.push('Software Developer', 'Office Assistant', 'Customer Support Associate');
+				}
+				recommendedJobTitles = recommendedJobTitles.slice(0, 3);
 			}
 
-			// Extract top job titles
-			const topJobs = scoredJobs.slice(0, 3).map(item => item.jobTitle);
-			
 			// Merge with existing job roles
 			const existingRoles = formData.suitable_job_roles || [];
-			const mergedRoles = Array.from(new Set([...existingRoles, ...topJobs]));
+			const mergedRoles = Array.from(new Set([...existingRoles, ...recommendedJobTitles]));
 
 			const addedCount = mergedRoles.length - existingRoles.length;
 			if (addedCount > 0) {
 				onJobRolesChange(mergedRoles);
-				toast.success(`AI suggested and added ${addedCount} matching job role(s): ${topJobs.join(', ')}`);
+				if (isCustom) {
+					toast.success(`No active placement jobs matched. Added ${addedCount} custom role recommendation(s): ${recommendedJobTitles.join(', ')}`);
+				} else {
+					toast.success(`AI suggested and added ${addedCount} matching active job role(s): ${recommendedJobTitles.join(', ')}`);
+				}
 			} else {
-				toast.info(`AI suggestions matched existing selections: ${topJobs.join(', ')}`);
+				if (isCustom) {
+					toast.info(`AI suggested custom recommendations matched existing selections: ${recommendedJobTitles.join(', ')}`);
+				} else {
+					toast.info(`AI suggestions matched existing selections: ${recommendedJobTitles.join(', ')}`);
+				}
 			}
 		} catch (error: any) {
 			toast.error('Failed to generate job suggestions.');
