@@ -102,3 +102,64 @@ class CandidateFeedbackService:
             enhanced_text = enhanced_text[:-3]
         
         return enhanced_text.strip()
+
+    async def analyze_counseling_qa(
+        self,
+        questions: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """
+        Analyze a candidate's Q&A responses and recommend skills with their proficiency levels.
+        """
+        if not settings.AI_ENABLED:
+            raise ValueError("AI Engine is disabled.")
+
+        provider = await get_llm_provider(self._db)
+
+        # Format questions and answers context
+        qa_context = ""
+        for i, q in enumerate(questions):
+            question = q.get("question", "").strip()
+            answer = q.get("answer", "").strip()
+            if question and answer:
+                qa_context += f"Q{i+1}: {question}\nA{i+1}: {answer}\n\n"
+
+        if not qa_context:
+            return []
+
+        # Render prompt template
+        system_prompt = render_prompt("feedback/analyze_counseling_qa.md")
+        user_message = f"Please analyze these interview responses:\n\n{qa_context}"
+
+        # Call active LLM provider
+        response = await provider.complete(
+            system_prompt=system_prompt,
+            user_message=user_message,
+            temperature=0.2
+        )
+        content = response.content.strip()
+
+        # Parse JSON list
+        try:
+            import json
+            import re
+            # Clean up potential markdown code blocks
+            content = content.replace("```json", "").replace("```", "").strip()
+            
+            json_match = re.search(r'\[\s*\{.*\}\s*\]', content, re.DOTALL)
+            if json_match:
+                skills_list = json.loads(json_match.group(0))
+            else:
+                skills_list = json.loads(content)
+                
+            # Filter and validate list format
+            validated_skills = []
+            for s in skills_list:
+                if isinstance(s, dict) and s.get("name") and s.get("level") in ["Beginner", "Intermediate", "Advanced"]:
+                    validated_skills.append({
+                        "name": s["name"].strip(),
+                        "level": s["level"]
+                    })
+            return validated_skills
+        except Exception as e:
+            logger.error(f"Failed to parse Q&A analysis JSON: {str(e)}")
+            return []

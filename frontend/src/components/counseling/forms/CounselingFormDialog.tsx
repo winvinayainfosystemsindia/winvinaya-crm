@@ -7,10 +7,12 @@ import {
 	Chip,
 	alpha
 } from '@mui/material';
-import { Description as DescriptionIcon } from '@mui/icons-material';
+import { Description as DescriptionIcon, AutoAwesome as AIIcon } from '@mui/icons-material';
 import { useAppSelector, useAppDispatch } from '../../../store/hooks';
 import { fetchFields, fetchSystemSettings } from '../../../store/slices/settingsSlice';
 import type { CandidateCounselingCreate, WorkExperience, CandidateDocument } from '../../../models/candidate';
+import useToast from '../../../hooks/useToast';
+import { extractCandidateData } from '../../../store/slices/aiSlice';
 
 import EnterpriseForm, { type FormStep } from '../../common/form/EnterpriseForm';
 
@@ -47,8 +49,10 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 	const dispatch = useAppDispatch();
 	const user = useAppSelector((state) => state.auth.user);
 	const loadingFields = useAppSelector(state => state.settings.loading);
+	const toast = useToast();
 	const [showErrors, setShowErrors] = useState(false);
 	const [isInitialLoading, setIsInitialLoading] = useState(true);
+	const [extracting, setExtracting] = useState(false);
 	const { formatDate } = useDateTime();
 
 	useEffect(() => {
@@ -193,6 +197,63 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 		handleChange('questions', newQuestions);
 	};
 
+	const handleMagicFill = async () => {
+		if (!resumeDoc) {
+			toast.info('Please upload a resume first to use Magic Fill.');
+			return;
+		}
+
+		setExtracting(true);
+		try {
+			const result = await dispatch(extractCandidateData({ documentId: resumeDoc.id })).unwrap();
+			const aiData = result.data;
+
+			// Populate Work Experience
+			const aiWorkExp = (aiData.experience_history || aiData.work_experience || []).map((exp: any) => ({
+				job_title: exp.job_title || exp.role || '',
+				company: exp.company || exp.employer || '',
+				years_of_experience: exp.duration || exp.years || '',
+				currently_working: exp.currently_working || false
+			}));
+
+			// If experience_history is empty, but we have years of experience
+			const finalWorkExp = aiWorkExp.length > 0 ? aiWorkExp : (
+				aiData.experience?.years ? [{
+					job_title: 'Previous Role',
+					company: 'Previous Company',
+					years_of_experience: `${aiData.experience.years} years`,
+					currently_working: false
+				}] : []
+			);
+
+			// Populate Questions: Generate 3-4 custom questions based on candidate's skills/experience
+			const aiQuestionsList = aiData.interview_questions || [];
+			const mappedQuestions = aiQuestionsList.map((q: string) => ({
+				question: q,
+				answer: ''
+			}));
+
+			// Always prepend or append the default "Tell us about yourself..." question
+			const hasBioQuestion = (formData.questions || []).some(q => q.question.toLowerCase().includes('about yourself'));
+			const defaultQuestions = hasBioQuestion ? [] : [{
+				question: 'Tell us about yourself and your background?',
+				answer: ''
+			}];
+
+			setFormData(prev => ({
+				...prev,
+				workexperience: finalWorkExp,
+				questions: [...defaultQuestions, ...mappedQuestions]
+			}));
+
+			toast.success('Magic Fill completed! AI extracted work experience and generated custom interview questions.');
+		} catch (error: any) {
+			toast.error(error || 'AI Extraction failed. Please try again or fill manually.');
+		} finally {
+			setExtracting(false);
+		}
+	};
+
 	const handleSubmit = () => {
 		const userRole = user?.role || '';
 		const isManagerOrAdmin = userRole === 'admin' || userRole === 'manager' || userRole === 'sourcing';
@@ -220,6 +281,7 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 					onAddSkill={handleAddSkill}
 					onRemoveSkill={handleRemoveSkill}
 					onSkillChange={handleSkillChange}
+					onSkillsAutoPopulate={(skills) => handleChange('skills', skills)}
 				/>
 			)
 		},
@@ -307,27 +369,51 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 	const headerActions = (
 		<Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: 1 }}>
 			{resumeDoc ? (
-				<Button
-					size="small"
-					variant="outlined"
-					color="primary"
-					startIcon={<DescriptionIcon sx={{ fontSize: 16 }} />}
-					onClick={handleViewResume}
-					sx={{
-						textTransform: 'none',
-						fontWeight: 700,
-						fontSize: '0.72rem',
-						borderRadius: '4px',
-						py: 0.5,
-						px: 1.5,
-						bgcolor: alpha('#004de6', 0.05),
-						'&:hover': {
-							bgcolor: alpha('#004de6', 0.1)
-						}
-					}}
-				>
-					View Resume
-				</Button>
+				<>
+					<Button
+						size="small"
+						variant="contained"
+						color="secondary"
+						startIcon={<AIIcon sx={{ fontSize: 14 }} />}
+						onClick={handleMagicFill}
+						disabled={extracting}
+						sx={{
+							textTransform: 'none',
+							fontWeight: 700,
+							fontSize: '0.72rem',
+							borderRadius: '4px',
+							py: 0.5,
+							px: 1.5,
+							boxShadow: 'none',
+							'&:hover': {
+								boxShadow: 'none'
+							}
+						}}
+					>
+						{extracting ? 'Extracting...' : 'Magic Fill'}
+					</Button>
+					<Button
+						size="small"
+						variant="outlined"
+						color="primary"
+						startIcon={<DescriptionIcon sx={{ fontSize: 16 }} />}
+						onClick={handleViewResume}
+						sx={{
+							textTransform: 'none',
+							fontWeight: 700,
+							fontSize: '0.72rem',
+							borderRadius: '4px',
+							py: 0.5,
+							px: 1.5,
+							bgcolor: alpha('#004de6', 0.05),
+							'&:hover': {
+								bgcolor: alpha('#004de6', 0.1)
+							}
+						}}
+					>
+						View Resume
+					</Button>
+				</>
 			) : (
 				<Chip
 					label="No resume found for this candidate"

@@ -100,7 +100,7 @@ export const aiService = {
 
   /** Enhance or generate feedback text using AI */
   async enhanceFeedback(payload: {
-    feedback_type: 'strengths' | 'weaknesses' | 'opportunities' | 'threats';
+    feedback_type: string;
     current_text: string;
     candidate_name?: string;
     technical_rating?: number;
@@ -110,6 +110,14 @@ export const aiService = {
     action: 'enhance' | 'generate';
   }): Promise<{ enhanced_text: string }> {
     const res = await api.post(`${BASE}/enhance-feedback`, payload);
+    return res.data;
+  },
+
+  /** Analyze candidate Q&A to assess competencies and skills */
+  async analyzeCounselingQA(questions: Array<{ question: string; answer: string }>): Promise<{
+    skills: Array<{ name: string; level: 'Beginner' | 'Intermediate' | 'Advanced' }>;
+  }> {
+    const res = await api.post(`${BASE}/analyze-counseling-qa`, { questions });
     return res.data;
   },
 };

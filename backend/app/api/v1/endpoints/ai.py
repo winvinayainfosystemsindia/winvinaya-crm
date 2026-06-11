@@ -391,3 +391,39 @@ async def enhance_feedback(
             detail=f"AI generation/enhancement failed: {str(e)}"
         )
 
+
+class AICounselingQAAnalysisRequest(BaseModel):
+    questions: list[dict] = Field(..., description="List of questions and answers: [{'question': str, 'answer': str}]")
+
+class AICounselingQAAnalysisResponse(BaseModel):
+    skills: list[dict] = Field(..., description="List of recommended skills: [{'name': str, 'level': str}]")
+
+@router.post(
+    "/analyze-counseling-qa",
+    response_model=AICounselingQAAnalysisResponse,
+    summary="Analyze candidate Q&A to assess competencies and skills",
+    description="Takes a list of counseling questions and answers, and assesses canonical skills and proficiency levels.",
+)
+async def analyze_counseling_qa(
+    request: AICounselingQAAnalysisRequest,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+) -> AICounselingQAAnalysisResponse:
+    if not settings.AI_ENABLED:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="AI Engine is disabled.",
+        )
+
+    from app.ai.services.candidate_feedback_service import CandidateFeedbackService
+    try:
+        service = CandidateFeedbackService(db, current_user)
+        skills = await service.analyze_counseling_qa(request.questions)
+        return AICounselingQAAnalysisResponse(skills=skills)
+    except Exception as e:
+        logger.exception("Counseling Q&A analysis failed")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Analysis failed: {str(e)}"
+        )
+

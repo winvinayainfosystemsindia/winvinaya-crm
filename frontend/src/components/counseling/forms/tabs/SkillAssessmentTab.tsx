@@ -21,25 +21,64 @@ import {
 	DeleteOutline as DeleteIcon, 
 	Psychology as SkillIcon,
 	EmojiEvents as ProficiencyIcon,
-	CheckCircleOutline as VerifiedIcon
+	CheckCircleOutline as VerifiedIcon,
+	AutoAwesome as AIIcon
 } from '@mui/icons-material';
 import type { CandidateCounselingCreate, CounselingSkill } from '../../../../models/candidate';
 import SkillDropdown from '../../../common/SkillDropdown';
+import aiService from '../../../../services/aiService';
+import useToast from '../../../../hooks/useToast';
 
 interface SkillAssessmentTabProps {
 	formData: CandidateCounselingCreate;
 	onAddSkill: () => void;
 	onRemoveSkill: (index: number) => void;
 	onSkillChange: (index: number, field: string, value: string) => void;
+	onSkillsAutoPopulate: (skills: any[]) => void;
 }
 
 const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 	formData,
 	onAddSkill,
 	onRemoveSkill,
-	onSkillChange
+	onSkillChange,
+	onSkillsAutoPopulate
 }) => {
 	const theme = useTheme();
+	const toast = useToast();
+	const [analyzing, setAnalyzing] = React.useState(false);
+
+	const handleAnalyzeQA = async () => {
+		const validQA = (formData.questions || []).filter(
+			q => q.question && q.question.trim() !== '' && q.answer && q.answer.trim() !== ''
+		);
+		if (validQA.length === 0) {
+			toast.info('Please enter interview questions and responses in the "Interview & Feedback" tab first.');
+			return;
+		}
+
+		setAnalyzing(true);
+		try {
+			const result = await aiService.analyzeCounselingQA(
+				validQA.map(q => ({ question: q.question || '', answer: q.answer || '' }))
+			);
+			
+			if (result.skills && result.skills.length > 0) {
+				const mappedSkills = result.skills.map(s => ({
+					name: s.name,
+					level: s.level as 'Beginner' | 'Intermediate' | 'Advanced'
+				}));
+				onSkillsAutoPopulate(mappedSkills);
+				toast.success(`AI evaluated responses and mapped ${result.skills.length} skills/competencies!`);
+			} else {
+				toast.warning('AI did not identify specific skills from the Q&A text. Please ensure candidate responses contain specific skill details.');
+			}
+		} catch (error: any) {
+			toast.error(error?.response?.data?.detail || error?.message || 'Q&A analysis failed.');
+		} finally {
+			setAnalyzing(false);
+		}
+	};
 
 	const getProficiencyColor = (level: CounselingSkill['level']) => {
 		switch (level) {
@@ -68,20 +107,38 @@ const SkillAssessmentTab: React.FC<SkillAssessmentTabProps> = ({
 						</Box>
 						<Typography variant="awsSectionTitle">Competency Outcome Matrix</Typography>
 					</Stack>
-					<Button
-						variant="contained"
-						size="small"
-						startIcon={<AddIcon />}
-						onClick={onAddSkill}
-						sx={{
-							borderRadius: 0.5,
-							textTransform: 'none',
-							boxShadow: 'none',
-							'&:hover': { boxShadow: 'none', bgcolor: 'primary.dark' }
-						}}
-					>
-						Record Competency
-					</Button>
+					<Stack direction="row" spacing={1.5}>
+						<Button
+							variant="outlined"
+							color="secondary"
+							size="small"
+							startIcon={<AIIcon sx={{ fontSize: 14 }} />}
+							onClick={handleAnalyzeQA}
+							disabled={analyzing}
+							sx={{
+								borderRadius: 0.5,
+								textTransform: 'none',
+								fontWeight: 700,
+								'&:hover': { bgcolor: alpha(theme.palette.secondary.main, 0.05) }
+							}}
+						>
+							{analyzing ? 'Analyzing Answers...' : 'AI Analyze Answers'}
+						</Button>
+						<Button
+							variant="contained"
+							size="small"
+							startIcon={<AddIcon />}
+							onClick={onAddSkill}
+							sx={{
+								borderRadius: 0.5,
+								textTransform: 'none',
+								boxShadow: 'none',
+								'&:hover': { boxShadow: 'none', bgcolor: 'primary.dark' }
+							}}
+						>
+							Record Competency
+						</Button>
+					</Stack>
 				</Box>
 
 				<Box sx={{ bgcolor: alpha(theme.palette.primary.main, 0.04), p: 2, borderRadius: 0.5, mb: 3 }}>
