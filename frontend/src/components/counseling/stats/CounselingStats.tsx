@@ -13,9 +13,8 @@ const CounselingStats: React.FC = () => {
 	const screenedCompleted = stats.screening_distribution?.['Completed'] || 0;
 	const selected = stats.counseling_selected || 0;
 	const rejected = stats.counseling_rejected || 0;
-	const totalCounseled = stats.total_counseled || 0;
 
-	const yetToBeCounseled = Math.max(0, screenedCompleted - totalCounseled);
+	const yetToBeCounseled = stats.counseling_pending || 0;
 
 	return (
 		<Box sx={{ display: 'flex', gap: 3, mb: 3, flexWrap: 'wrap' }}>

@@ -528,12 +528,15 @@ class CandidateRepository(BaseRepository[Candidate]):
         """Get candidates with 'Completed' screening records loaded, with optional counseling status filter, document status filter, search filtering, category filters, and sorting"""
 
         from sqlalchemy import or_
+        base_filter = (Candidate.is_deleted == False) & (or_(Candidate.other.is_(None), Candidate.other['registration_type'].as_string() == 'Registered'))
+        
         stmt = (
             select(Candidate)
             .join(Candidate.screening)
             .outerjoin(Candidate.counseling)
             .outerjoin(Candidate.assignment)
             .where(CandidateScreening.id.isnot(None))
+            .where(base_filter)
             .options(
                 joinedload(Candidate.screening).joinedload(CandidateScreening.screened_by),
                 selectinload(Candidate.documents),
@@ -549,7 +552,7 @@ class CandidateRepository(BaseRepository[Candidate]):
                 stmt = stmt.where(CandidateAssignment.user_id == assigned_to_id)
         
         # Base count statement for screened candidates
-        count_stmt = select(func.count(Candidate.id)).join(Candidate.screening).outerjoin(Candidate.counseling).outerjoin(Candidate.assignment).where(CandidateScreening.id.isnot(None))
+        count_stmt = select(func.count(Candidate.id)).join(Candidate.screening).outerjoin(Candidate.counseling).outerjoin(Candidate.assignment).where(CandidateScreening.id.isnot(None)).where(base_filter)
 
         if assigned_to_id is not None:
             if assigned_to_id == 0:
@@ -803,7 +806,7 @@ class CandidateRepository(BaseRepository[Candidate]):
             not_screened = max(0, total - screened)
 
             # Counseling stats
-            # Normalize status to lowercase for consistent counting
+            # Normalizing status to lowercase for consistent counting
             stmt_counseling = select(func.lower(CandidateCounseling.status), func.count(CandidateCounseling.id)).join(Candidate).where(
                 (Candidate.is_deleted == False) & (or_(Candidate.other.is_(None), Candidate.other['registration_type'].as_string() == 'Registered'))
             ).group_by(func.lower(CandidateCounseling.status))
@@ -814,16 +817,22 @@ class CandidateRepository(BaseRepository[Candidate]):
             raw_selected = counseling_counts.get('selected', 0)
             raw_rejected = counseling_counts.get('rejected', 0)
             
-            # Pending counseling should include:
-            # 1. Candidates with explicit 'pending' status
-            # 2. Screening COMPLETED candidates who have NOT started counseling yet
-            # So: Pending = Screening Completed - (Selected + Rejected)
-            screened_completed = screening_distribution.get('Completed', 0)
-            counseling_pending = max(0, screened_completed - (raw_selected + raw_rejected))
+            # Count candidates who completed screening but have no counseling record (Yet to be counseled / Not Counseled)
+            stmt_not_counseled = select(func.count(Candidate.id)).join(CandidateScreening).outerjoin(CandidateCounseling).where(
+                (Candidate.is_deleted == False) &
+                (or_(Candidate.other.is_(None), Candidate.other['registration_type'].as_string() == 'Registered')) &
+                (CandidateScreening.status == 'Completed') &
+                (CandidateCounseling.id.is_(None))
+            )
+            result_not_counseled = await self.db.execute(stmt_not_counseled)
+            counseling_pending = result_not_counseled.scalar() or 0
             
             counseling_selected = raw_selected
             counseling_rejected = raw_rejected
             total_counseled = sum(counseling_counts.values())
+            
+            # Add 'not_counseled' to distribution counts for frontend tabs
+            counseling_counts['not_counseled'] = counseling_pending
 
             # Document collection stats (for Selected candidates)
             # 1. Total to collect from (status == 'selected')
