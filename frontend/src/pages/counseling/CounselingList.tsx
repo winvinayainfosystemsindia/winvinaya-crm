@@ -53,6 +53,7 @@ const CounselingList: React.FC = () => {
 				initialData={initialFormData}
 				candidateName={selectedCandidate?.name}
 				candidateWorkExperience={selectedCandidate?.work_experience}
+				candidateDocuments={selectedCandidate?.documents}
 			/>
 		</Container>
 	);

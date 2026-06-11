@@ -2,11 +2,15 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
 	Dialog,
 	Box,
-	CircularProgress
+	CircularProgress,
+	Button,
+	Chip,
+	alpha
 } from '@mui/material';
+import { Description as DescriptionIcon } from '@mui/icons-material';
 import { useAppSelector, useAppDispatch } from '../../../store/hooks';
 import { fetchFields, fetchSystemSettings } from '../../../store/slices/settingsSlice';
-import type { CandidateCounselingCreate, WorkExperience } from '../../../models/candidate';
+import type { CandidateCounselingCreate, WorkExperience, CandidateDocument } from '../../../models/candidate';
 
 import EnterpriseForm, { type FormStep } from '../../common/form/EnterpriseForm';
 
@@ -28,6 +32,7 @@ interface CounselingFormDialogProps {
 	initialData?: CandidateCounselingCreate;
 	candidateName?: string;
 	candidateWorkExperience?: WorkExperience;
+	candidateDocuments?: CandidateDocument[];
 }
 
 const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
@@ -36,7 +41,8 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 	onSubmit,
 	initialData,
 	candidateName,
-	candidateWorkExperience
+	candidateWorkExperience,
+	candidateDocuments = []
 }) => {
 	const dispatch = useAppDispatch();
 	const user = useAppSelector((state) => state.auth.user);
@@ -260,6 +266,86 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 
 	const subtitle = `${candidateName || 'New Candidate'} • Counselor: ${counselorName} • Date: ${dateString}`;
 
+	// Find the best resume document to display
+	const resumeDoc = useMemo(() => {
+		if (!candidateDocuments || candidateDocuments.length === 0) return null;
+		
+		// Priority logic for resume selection (Active Trainer -> Any Trainer -> Active Candidate -> Any Candidate)
+		return (
+			candidateDocuments.find(d => 
+				(d.document_type === 'resume' || d.document_type?.toLowerCase().includes('resume')) && 
+				d.document_source === 'trainer' && 
+				d.is_active
+			) ||
+			candidateDocuments.find(d => 
+				(d.document_type === 'resume' || d.document_type?.toLowerCase().includes('resume')) && 
+				d.document_source === 'trainer'
+			) ||
+			candidateDocuments.find(d => 
+				(d.document_type === 'resume' || d.document_type?.toLowerCase().includes('resume')) && 
+				d.is_active
+			) ||
+			candidateDocuments.find(d => 
+				(d.document_type === 'resume' || d.document_type?.toLowerCase().includes('resume'))
+			)
+		);
+	}, [candidateDocuments]);
+
+	const handleViewResume = async () => {
+		if (!resumeDoc) return;
+		try {
+			const { documentService } = await import('../../../services/candidateService');
+			const blob = await documentService.download(resumeDoc.id);
+			const url = window.URL.createObjectURL(blob);
+			window.open(url, '_blank');
+			setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+		} catch (error) {
+			console.error('Failed to view document:', error);
+		}
+	};
+
+	const headerActions = (
+		<Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: 1 }}>
+			{resumeDoc ? (
+				<Button
+					size="small"
+					variant="outlined"
+					color="primary"
+					startIcon={<DescriptionIcon sx={{ fontSize: 16 }} />}
+					onClick={handleViewResume}
+					sx={{
+						textTransform: 'none',
+						fontWeight: 700,
+						fontSize: '0.72rem',
+						borderRadius: '4px',
+						py: 0.5,
+						px: 1.5,
+						bgcolor: alpha('#004de6', 0.05),
+						'&:hover': {
+							bgcolor: alpha('#004de6', 0.1)
+						}
+					}}
+				>
+					View Resume
+				</Button>
+			) : (
+				<Chip
+					label="No resume found for this candidate"
+					size="small"
+					variant="outlined"
+					sx={{
+						fontSize: '0.72rem',
+						fontWeight: 600,
+						color: 'text.secondary',
+						borderColor: 'divider',
+						borderRadius: '4px',
+						bgcolor: '#f8fafc'
+					}}
+				/>
+			)}
+		</Box>
+	);
+
 	return (
 		<Dialog
 			open={open}
@@ -285,6 +371,7 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 					onSave={handleSubmit}
 					onCancel={onClose}
 					saveButtonText={initialData ? 'Update Counseling' : 'Save Counseling'}
+					headerActions={headerActions}
 				/>
 			)}
 		</Dialog>
