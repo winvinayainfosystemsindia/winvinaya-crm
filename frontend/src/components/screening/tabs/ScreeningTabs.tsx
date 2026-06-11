@@ -92,7 +92,7 @@ const ScreeningTabs: React.FC<ScreeningTabsProps> = ({
 						}
 					}}
 				>
-					<Tab label={renderTabLabel("Not Screened", stats?.not_screened || 0)} />
+ 					<Tab label={renderTabLabel("Not Screened", Math.max(0, stats?.not_screened || 0))} />
 					<Tab label={renderTabLabel("In Progress", getCount('In Progress'))} />
 					<Tab label={renderTabLabel("Completed", getCount('Completed'))} />
 					<Tab label={renderTabLabel("Rejected", getCount('Rejected'))} />

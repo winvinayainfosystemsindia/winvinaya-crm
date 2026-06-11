@@ -46,8 +46,8 @@ const CounselingTabs: React.FC<CounselingTabsProps> = ({
 		return stats.counseling_distribution[status] || 0;
 	};
 
-	const notCounseledCount = (stats?.screening_distribution?.['Completed'] || 0) - 
-		(getCount('selected') + getCount('rejected') + getCount('pending'));
+	const notCounseledCount = Math.max(0, (stats?.screening_distribution?.['Completed'] || 0) - 
+		(getCount('selected') + getCount('rejected') + getCount('pending')));
 
 	const renderTabLabel = (label: string, count: number) => (
 		<Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

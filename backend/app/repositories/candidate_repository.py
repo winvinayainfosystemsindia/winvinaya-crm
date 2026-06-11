@@ -800,7 +800,7 @@ class CandidateRepository(BaseRepository[Candidate]):
                 
                 screening_distribution[target_key] = screening_distribution.get(target_key, 0) + count
             
-            not_screened = total - screened
+            not_screened = max(0, total - screened)
 
             # Counseling stats
             # Normalize status to lowercase for consistent counting
@@ -1150,7 +1150,7 @@ class CandidateRepository(BaseRepository[Candidate]):
                     target_key = 'In Progress'
                 screening_distribution[target_key] = screening_distribution.get(target_key, 0) + count
             
-            not_screened = total - screened
+            not_screened = max(0, total - screened)
 
             return {
                 "not_screened": not_screened,
