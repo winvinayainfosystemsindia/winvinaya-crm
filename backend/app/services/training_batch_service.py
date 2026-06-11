@@ -230,7 +230,7 @@ class TrainingBatchService:
 
     async def get_stats(self) -> dict:
         """Get balanced training statistics where candidates are counted in non-overlapping buckets"""
-        from sqlalchemy import func, select, and_, distinct
+        from sqlalchemy import func, select, and_, distinct, or_
         from app.models.training_candidate_allocation import TrainingCandidateAllocation
         from app.models.candidate import Candidate
         from app.models.candidate_counseling import CandidateCounseling
@@ -255,7 +255,11 @@ class TrainingBatchService:
         ).where(
             and_(
                 Candidate.is_deleted == False,
-                func.lower(CandidateCounseling.status) == "selected"
+                func.lower(CandidateCounseling.status) == "selected",
+                or_(
+                    Candidate.other.is_(None),
+                    Candidate.other['registration_type'].as_string() == 'Registered'
+                )
             )
         )
         total_selected = (await self.db.execute(total_selected_query)).scalar() or 0
@@ -265,20 +269,32 @@ class TrainingBatchService:
         active_batch_ids = [b.id for b in batches if b.status in ['planned', 'running', 'extended']]
         in_training_ids = set()
         if active_batch_ids:
-            it_query = select(distinct(TrainingCandidateAllocation.candidate_id)).where(
+            it_query = select(distinct(TrainingCandidateAllocation.candidate_id)).join(
+                Candidate, TrainingCandidateAllocation.candidate_id == Candidate.id
+            ).where(
                 and_(
                     TrainingCandidateAllocation.batch_id.in_(active_batch_ids),
                     TrainingCandidateAllocation.is_deleted == False,
-                    TrainingCandidateAllocation.is_dropout == False
+                    TrainingCandidateAllocation.is_dropout == False,
+                    or_(
+                        Candidate.other.is_(None),
+                        Candidate.other['registration_type'].as_string() == 'Registered'
+                    )
                 )
             )
             in_training_ids = set((await self.db.execute(it_query)).scalars().all())
 
         # Priority 2: Moved to Placement (Not in training, but has moved_to_placement status)
-        moved_query = select(distinct(TrainingCandidateAllocation.candidate_id)).where(
+        moved_query = select(distinct(TrainingCandidateAllocation.candidate_id)).join(
+            Candidate, TrainingCandidateAllocation.candidate_id == Candidate.id
+        ).where(
             and_(
                 TrainingCandidateAllocation.status == 'moved_to_placement',
                 TrainingCandidateAllocation.is_deleted == False,
+                or_(
+                    Candidate.other.is_(None),
+                    Candidate.other['registration_type'].as_string() == 'Registered'
+                ),
                 ~TrainingCandidateAllocation.candidate_id.in_(in_training_ids) if in_training_ids else True
             )
         )
@@ -286,10 +302,16 @@ class TrainingBatchService:
 
         # Priority 3: Completed (Not in training/moved, but has completed status)
         excluded_ids = in_training_ids | moved_ids
-        completed_query = select(distinct(TrainingCandidateAllocation.candidate_id)).where(
+        completed_query = select(distinct(TrainingCandidateAllocation.candidate_id)).join(
+            Candidate, TrainingCandidateAllocation.candidate_id == Candidate.id
+        ).where(
             and_(
                 TrainingCandidateAllocation.status == 'completed',
                 TrainingCandidateAllocation.is_deleted == False,
+                or_(
+                    Candidate.other.is_(None),
+                    Candidate.other['registration_type'].as_string() == 'Registered'
+                ),
                 ~TrainingCandidateAllocation.candidate_id.in_(excluded_ids) if excluded_ids else True
             )
         )
@@ -297,10 +319,16 @@ class TrainingBatchService:
 
         # Priority 4: Dropped Out (Not in any of the above, but marked as dropout)
         excluded_ids = excluded_ids | completed_ids
-        dropped_query = select(distinct(TrainingCandidateAllocation.candidate_id)).where(
+        dropped_query = select(distinct(TrainingCandidateAllocation.candidate_id)).join(
+            Candidate, TrainingCandidateAllocation.candidate_id == Candidate.id
+        ).where(
             and_(
                 TrainingCandidateAllocation.is_dropout == True,
                 TrainingCandidateAllocation.is_deleted == False,
+                or_(
+                    Candidate.other.is_(None),
+                    Candidate.other['registration_type'].as_string() == 'Registered'
+                ),
                 ~TrainingCandidateAllocation.candidate_id.in_(excluded_ids) if excluded_ids else True
             )
         )
