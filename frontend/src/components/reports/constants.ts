@@ -20,6 +20,7 @@ export const ALL_COLUMNS = [
 
 	// Screening Info
 	{ id: 'screening_status', label: 'Screening Status', default: true, group: 'screening' },
+	{ id: 'screening_skills', label: 'Screening Skills', default: false, group: 'screening' },
 	{ id: 'consent_status', label: 'Consent Status', default: false, group: 'screening' },
 	{ id: 'source_of_info', label: 'Where you know about us', default: false, group: 'screening' },
 	{ id: 'family_annual_income', label: 'Family Annual Income', default: false, group: 'screening' },

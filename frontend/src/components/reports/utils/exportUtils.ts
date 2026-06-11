@@ -1,5 +1,15 @@
 import { format } from 'date-fns';
 
+const formatScreeningSkills = (skills: any) => {
+	if (!skills) return '';
+	const tech = skills.technical_skills || [];
+	const soft = skills.soft_skills || [];
+	const parts = [];
+	if (tech.length > 0) parts.push(`Technical: ${tech.join(', ')}`);
+	if (soft.length > 0) parts.push(`Soft: ${soft.join(', ')}`);
+	return parts.join(' | ');
+};
+
 export const formatReportData = (data: any[], visibleColumns: string[], columns: any[], isTraining: boolean, isPlacement: boolean = false) => {
 	return data.map(item => {
 		const rowData: Record<string, any> = {};
@@ -96,6 +106,7 @@ export const formatReportData = (data: any[], visibleColumns: string[], columns:
 				}
 				else if (virtColId === 'dob') val = c.dob;
 				else if (virtColId === 'skills') val = c.counseling?.skills;
+				else if (virtColId === 'screening_skills') val = formatScreeningSkills(c.screening?.skills);
 				else {
 					if (virtColId.startsWith('screening_others.')) {
 						const fieldName = virtColId.substring('screening_others.'.length);
@@ -113,7 +124,9 @@ export const formatReportData = (data: any[], visibleColumns: string[], columns:
 				}
 			} else {
 				const c = item as any;
-				if (virtColId.startsWith('screening_others.')) {
+				if (virtColId === 'screening_skills') {
+					val = formatScreeningSkills(c.screening?.skills);
+				} else if (virtColId.startsWith('screening_others.')) {
 					const fieldName = virtColId.substring('screening_others.'.length);
 					val = (c.screening?.others as any)?.[fieldName] ?? (c as any)[fieldName];
 				} else if (virtColId.startsWith('counseling_others.')) {

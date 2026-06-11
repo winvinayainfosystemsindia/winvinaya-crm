@@ -341,9 +341,18 @@ class CandidateListResponse(BaseModel):
                     family_annual_income = others.get('family_annual_income')
                     # Check for 'reason' first (as per user request), then 'comments'
                     screening_comments = others.get('reason')
+            
+            # Extract skills from screening JSON field
+            skills_val = get_val(screening, 'skills')
                 
-                # Expose full others in screening object for dynamic fields
-                screening_data = {'others': others}
+            # Expose others and skills in screening object for dynamic fields/reporting
+            screening_data = {}
+            if others:
+                screening_data['others'] = others
+            if skills_val:
+                screening_data['skills'] = skills_val
+            if not screening_data:
+                screening_data = None
             
             # Extract screened_by info
             screened_by = None

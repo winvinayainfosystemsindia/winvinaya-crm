@@ -170,6 +170,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
             }
             else if (colId === 'dob') val = c.dob;
             else if (colId === 'skills') val = c.counseling?.skills;
+            else if (colId === 'screening_skills') val = c.screening?.skills;
             else {
                 if (colId.startsWith('screening_others.')) {
                     const fieldName = colId.substring('screening_others.'.length);
@@ -257,6 +258,8 @@ const ReportTable: React.FC<ReportTableProps> = ({
 			} else if (colId.startsWith('counseling_others.')) {
 				const fieldName = colId.substring('counseling_others.'.length);
 				val = (item.counseling?.others as any)?.[fieldName] ?? (item as any)[fieldName];
+			} else if (colId === 'screening_skills') {
+				val = item.screening?.skills;
 			} else {
 				val = (item as any)[colId];
 			}
@@ -337,6 +340,33 @@ const ReportTable: React.FC<ReportTableProps> = ({
 					{val.length > 0 ? val.map((s: any, i: number) => (
 						<Chip key={i} label={`${s.name} (${s.level})`} size="small" sx={{ fontSize: '0.65rem', height: 18 }} />
 					)) : '-'}
+				</Box>
+			);
+		}
+
+		if (colId === 'screening_skills' && val) {
+			const tech = val.technical_skills || [];
+			const soft = val.soft_skills || [];
+			if (tech.length === 0 && soft.length === 0) return '-';
+			
+			return (
+				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+					{tech.length > 0 && (
+						<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, alignItems: 'center' }}>
+							<Typography variant="caption" sx={{ fontWeight: 600, mr: 0.5, fontSize: '0.65rem', color: theme.palette.text.secondary }}>Tech:</Typography>
+							{tech.map((s: string, i: number) => (
+								<Chip key={i} label={s} size="small" sx={{ fontSize: '0.65rem', height: 18 }} />
+							))}
+						</Box>
+					)}
+					{soft.length > 0 && (
+						<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, alignItems: 'center' }}>
+							<Typography variant="caption" sx={{ fontWeight: 600, mr: 0.5, fontSize: '0.65rem', color: theme.palette.text.secondary }}>Soft:</Typography>
+							{soft.map((s: string, i: number) => (
+								<Chip key={i} label={s} size="small" variant="outlined" sx={{ fontSize: '0.65rem', height: 18 }} />
+							))}
+						</Box>
+					)}
 				</Box>
 			);
 		}

@@ -495,6 +495,20 @@ class CandidateService:
                         val = (c.screening.others or {}).get("reason", "") if c.screening else ""
                     elif col_id == "skills" and c.counseling:
                         val = c.counseling.skills
+                    elif col_id == "screening_skills":
+                        if c.screening and c.screening.skills:
+                            tech_skills = c.screening.skills.get("technical_skills", []) or []
+                            soft_skills = c.screening.skills.get("soft_skills", []) or []
+                            tech_str = ", ".join(tech_skills) if isinstance(tech_skills, list) else str(tech_skills)
+                            soft_str = ", ".join(soft_skills) if isinstance(soft_skills, list) else str(soft_skills)
+                            parts = []
+                            if tech_str:
+                                parts.append(f"Technical: {tech_str}")
+                            if soft_str:
+                                parts.append(f"Soft: {soft_str}")
+                            val = " | ".join(parts)
+                        else:
+                            val = ""
                     elif col_id == "workexperience" and c.counseling:
                         val = c.counseling.workexperience
                     elif col_id == "questions" and c.counseling:
