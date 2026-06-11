@@ -27,6 +27,7 @@ class GroqProvider(LLMProvider):
         return self._model
 
     async def complete(self, system_prompt, user_message, temperature=0.2, max_tokens=4096) -> LLMResponse:
+        import asyncio
         headers = {"Authorization": f"Bearer {self._api_key}", "Content-Type": "application/json"}
         payload = {
             "model": self._model,
@@ -37,23 +38,41 @@ class GroqProvider(LLMProvider):
             "temperature": temperature,
             "max_tokens": max_tokens,
         }
+        
+        max_retries = 3
+        backoff = 2.0
+        delay = 2.0
+        
         async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(self.BASE_URL, json=payload, headers=headers)
-            if resp.status_code == 429:
-                raise LLMRateLimitError(provider="groq")
+            for attempt in range(max_retries + 1):
+                resp = await client.post(self.BASE_URL, json=payload, headers=headers)
                 
-            if not resp.is_success:
-                # Also check for rate limit in the JSON body just in case
-                try:
-                    error_data = resp.json()
-                    if error_data.get("error", {}).get("code") == "rate_limit_exceeded":
+                is_rate_limit = False
+                if resp.status_code == 429:
+                    is_rate_limit = True
+                else:
+                    try:
+                        error_data = resp.json()
+                        if error_data.get("error", {}).get("code") == "rate_limit_exceeded":
+                            is_rate_limit = True
+                    except:
+                        pass
+                        
+                if is_rate_limit:
+                    if attempt < max_retries:
+                        logger.warning(f"Groq rate limit hit. Retrying in {delay} seconds... (Attempt {attempt+1}/{max_retries})")
+                        await asyncio.sleep(delay)
+                        delay *= backoff
+                        continue
+                    else:
                         raise LLMRateLimitError(provider="groq")
-                except:
-                    pass
-                raise LLMProviderError(f"Groq error: {resp.text}", provider="groq")
-            data = resp.json()
-            content = data["choices"][0]["message"]["content"]
-            return LLMResponse(content=content, raw_response=data)
+                        
+                if not resp.is_success:
+                    raise LLMProviderError(f"Groq error: {resp.text}", provider="groq")
+                
+                data = resp.json()
+                content = data["choices"][0]["message"]["content"]
+                return LLMResponse(content=content, raw_response=data)
 
     async def stream_complete(self, system_prompt, user_message, temperature=0.2, max_tokens=4096) -> AsyncGenerator[str, None]:
         headers = {"Authorization": f"Bearer {self._api_key}", "Content-Type": "application/json"}
