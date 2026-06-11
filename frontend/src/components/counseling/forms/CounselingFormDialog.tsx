@@ -19,7 +19,8 @@ import EnterpriseForm, { type FormStep } from '../../common/form/EnterpriseForm'
 // Tabs
 import SkillAssessmentTab from './tabs/SkillAssessmentTab';
 import WorkExperienceTab from './tabs/WorkExperienceTab';
-import InterviewFeedbackTab from './tabs/InterviewFeedbackTab';
+import InterviewAssessmentTab from './tabs/InterviewAssessmentTab';
+import JobRecommendationsTab from './tabs/JobRecommendationsTab';
 import CounselingInfoTab from './tabs/CounselingInfoTab';
 import { useDateTime } from '../../../hooks/useDateTime';
 
@@ -274,18 +275,6 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 
 	const steps: FormStep[] = useMemo(() => [
 		{
-			label: 'Skill Assessment',
-			content: (
-				<SkillAssessmentTab
-					formData={formData}
-					onAddSkill={handleAddSkill}
-					onRemoveSkill={handleRemoveSkill}
-					onSkillChange={handleSkillChange}
-					onSkillsAutoPopulate={(skills) => handleChange('skills', skills)}
-				/>
-			)
-		},
-		{
 			label: 'Work Experience',
 			content: (
 				<WorkExperienceTab
@@ -298,13 +287,33 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 			)
 		},
 		{
-			label: 'Interview & Feedback',
+			label: 'Interview Assessment',
 			content: (
-				<InterviewFeedbackTab
+				<InterviewAssessmentTab
 					formData={formData}
 					onAddQuestion={handleAddQuestion}
 					onRemoveQuestion={handleRemoveQuestion}
 					onQuestionChange={handleQuestionChange}
+				/>
+			)
+		},
+		{
+			label: 'Skills',
+			content: (
+				<SkillAssessmentTab
+					formData={formData}
+					onAddSkill={handleAddSkill}
+					onRemoveSkill={handleRemoveSkill}
+					onSkillChange={handleSkillChange}
+					onSkillsAutoPopulate={(skills) => handleChange('skills', skills)}
+				/>
+			)
+		},
+		{
+			label: 'Job Recommendation & Remarks',
+			content: (
+				<JobRecommendationsTab
+					formData={formData}
 					onFeedbackChange={(val) => handleChange('feedback', val)}
 					onJobRolesChange={(roles) => handleChange('suitable_job_roles', roles)}
 				/>
