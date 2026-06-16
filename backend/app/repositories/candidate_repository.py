@@ -528,7 +528,7 @@ class CandidateRepository(BaseRepository[Candidate]):
         """Get candidates with 'Completed' screening records loaded, with optional counseling status filter, document status filter, search filtering, category filters, and sorting"""
 
         from sqlalchemy import or_
-        base_filter = (Candidate.is_deleted == False) & (or_(Candidate.other.is_(None), Candidate.other['registration_type'].as_string() == 'Registered'))
+        base_filter = (Candidate.is_deleted == False) & (or_(Candidate.other.is_(None), Candidate.other['registration_type'].as_string().in_(['Registered', 'Excel'])))
         
         stmt = (
             select(Candidate)
