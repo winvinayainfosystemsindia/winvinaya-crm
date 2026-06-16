@@ -292,7 +292,7 @@ const JobRecommendationsTab: React.FC<JobRecommendationsTabProps> = ({
 
 					<Box>
 						<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-							<Typography variant="awsFieldLabel" sx={{ mb: 0 }}>Clinical Summary & Recommended Next Steps</Typography>
+							<Typography variant="awsFieldLabel" sx={{ mb: 0 }}>Trainer/Counsellor Feedback</Typography>
 							<Stack direction="row" spacing={1} alignItems="center">
 								{loadingAI ? (
 									<Stack direction="row" spacing={0.5} alignItems="center">
