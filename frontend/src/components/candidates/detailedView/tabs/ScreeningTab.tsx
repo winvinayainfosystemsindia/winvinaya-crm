@@ -277,12 +277,12 @@ const ScreeningTab: React.FC<ScreeningTabProps> = ({ candidate }) => {
 							</Box>
 							<Divider />
 							<Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-								<Avatar sx={{ bgcolor: alpha(theme.palette.success.main, 0.1), color: 'success.main', width: 32, height: 32 }}>
+								<Avatar sx={{ bgcolor: alpha(theme.palette.info.main, 0.1), color: 'info.main', width: 32, height: 32 }}>
 									<LocationIcon sx={{ fontSize: 18 }} />
 								</Avatar>
 								<Box sx={{ flex: 1 }}>
-									<Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>READY TO RELOCATE</Typography>
-									<Typography variant="body2" sx={{ fontWeight: 600 }}>{screening.others?.ready_to_relocate ? 'Yes, flexible' : 'No, prefers local'}</Typography>
+									<Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>READY TO RELOCATE TO BANGALORE FOR TRAINING</Typography>
+									<Typography variant="body2" sx={{ fontWeight: 600 }}>{screening.others?.ready_to_relocate_bangalore ? 'Yes' : 'No'}</Typography>
 								</Box>
 							</Box>
 							<Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -290,8 +290,17 @@ const ScreeningTab: React.FC<ScreeningTabProps> = ({ candidate }) => {
 									<TrainingIcon sx={{ fontSize: 18 }} />
 								</Avatar>
 								<Box sx={{ flex: 1 }}>
-									<Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>WILLING FOR TRAINING</Typography>
-									<Typography variant="body2" sx={{ fontWeight: 600 }}>{screening.others?.willing_for_training ? 'Highly motivated' : 'Not interested'}</Typography>
+									<Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>WILLING TO JOIN TRAINING FOR 3 MONTHS</Typography>
+									<Typography variant="body2" sx={{ fontWeight: 600 }}>{screening.others?.willing_for_training ? 'Yes' : 'No'}</Typography>
+								</Box>
+							</Box>
+							<Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+								<Avatar sx={{ bgcolor: alpha(theme.palette.success.main, 0.1), color: 'success.main', width: 32, height: 32 }}>
+									<LocationIcon sx={{ fontSize: 18 }} />
+								</Avatar>
+								<Box sx={{ flex: 1 }}>
+									<Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>READY TO RELOCATE FOR WORK</Typography>
+									<Typography variant="body2" sx={{ fontWeight: 600 }}>{screening.others?.ready_to_relocate ? 'Yes' : 'No'}</Typography>
 								</Box>
 							</Box>
 							<Box sx={{ mt: 1, p: 2, borderRadius: 2, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
