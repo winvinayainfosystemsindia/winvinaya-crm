@@ -30,12 +30,7 @@ interface ApplyLeaveDialogProps {
 }
 
 const LEAVE_TYPES = [
-	'Casual Leave',
-	'Sick Leave',
-	'Privilege Leave',
-	'Compensatory Off',
-	'Holiday',
-	'Other'
+	'Leave'
 ];
 
 const ApplyLeaveDialog: React.FC<ApplyLeaveDialogProps> = ({ open, onClose, onSuccess }) => {
@@ -45,7 +40,7 @@ const ApplyLeaveDialog: React.FC<ApplyLeaveDialogProps> = ({ open, onClose, onSu
 	
 	const [startDate, setStartDate] = useState(dayjs().format('YYYY-MM-DD'));
 	const [endDate, setEndDate] = useState(dayjs().format('YYYY-MM-DD'));
-	const [leaveType, setLeaveType] = useState('Casual Leave');
+	const [leaveType, setLeaveType] = useState('Leave');
 	const [reason, setReason] = useState('');
 	const [submitting, setSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);

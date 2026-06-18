@@ -273,17 +273,12 @@ const DSRAdminSection: React.FC<DSRAdminSectionProps> = ({ admin }) => {
 							leaves={admin.adminLeaves}
 							total={admin.totalAdminLeaves}
 							loading={admin.loading}
-							onHandle={admin.handleLeaveAction}
 							onRefresh={admin.handleRefresh}
 							page={admin.leavePage}
 							rowsPerPage={admin.leaveRowsPerPage}
 							onPageChange={(_: unknown, p: number) => admin.setLeavePage(p)}
 							onRowsPerPageChange={(e: React.ChangeEvent<HTMLInputElement>) => admin.setLeaveRowsPerPage(parseInt(e.target.value, 10))}
 							onRowsPerPageSelectChange={(r: number) => admin.setLeaveRowsPerPage(r)}
-							statusFilter={admin.leaveStatusFilter}
-							onStatusFilterChange={admin.setLeaveStatusFilter}
-							filterDrawerOpen={admin.leaveFilterDrawerOpen}
-							onFilterDrawerOpen={admin.setLeaveFilterDrawerOpen}
 						/>
 					</TabPanel>
 

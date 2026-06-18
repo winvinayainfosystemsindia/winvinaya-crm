@@ -12,11 +12,7 @@ interface LeaveSectionProps {
 }
 
 const LeaveTypes = [
-	'Sick Leave',
-	'Earned Leave',
-	'Casual Leave',
-	'Comp Off',
-	'Other'
+	'Leave'
 ];
 
 const LeaveSection: React.FC<LeaveSectionProps> = ({
