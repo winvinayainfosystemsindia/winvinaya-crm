@@ -77,7 +77,7 @@ const DSRCalendarView: React.FC = () => {
 		calendarEntries.forEach((entry: any) => {
 			const d = dayjs(entry.report_date || entry.date).format('YYYY-MM-DD');
 			const isRevoked = entry.status === DSRStatusValues.DRAFT && !!entry.admin_notes;
-			statuses[d] = isRevoked ? DSRStatusValues.REJECTED : entry.status;
+			statuses[d] = isRevoked ? DSRStatusValues.REJECTED : (entry.is_leave && entry.status === DSRStatusValues.APPROVED ? 'leave' : entry.status);
 		});
 
 		return statuses;

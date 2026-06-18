@@ -58,15 +58,11 @@ class DSRLeaveService:
             "end_date": data.end_date,
             "leave_type": data.leave_type,
             "reason": data.reason,
-            "status": DSRLeaveStatus.PENDING,
+            "status": DSRLeaveStatus.APPROVED,
+            "handled_by": current_user.id,
+            "handled_at": datetime.utcnow(),
+            "admin_notes": "Auto-approved upon submission",
         }
-        
-        # For now, all leaves go through the pending workflow.
-        # if current_user.role in (UserRole.ADMIN, UserRole.MANAGER):
-        #     leave_data["status"] = DSRLeaveStatus.APPROVED
-        #     leave_data["handled_by"] = current_user.id
-        #     leave_data["handled_at"] = datetime.utcnow()
-        #     leave_data["admin_notes"] = "Auto-approved for privileged user."
 
         return await self.repo.create(leave_data)
 

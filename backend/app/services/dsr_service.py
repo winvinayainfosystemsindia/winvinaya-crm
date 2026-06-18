@@ -281,17 +281,11 @@ class DSRService:
         if not entry.is_leave and not entry.items:
             raise HTTPException(status_code=422, detail="Cannot submit an empty DSR. Add at least one work item or mark as Leave.")
 
-        # Transition directly to APPROVED as per new requirement, UNLESS it's a leave
+        # Transition directly to APPROVED as per new requirement
         status_val = DSRStatus.APPROVED
         admin_notes = "Auto-approved upon submission"
         reviewed_by = current_user.id
         reviewed_at = datetime.utcnow()
-
-        if entry.is_leave:
-            status_val = DSRStatus.SUBMITTED
-            admin_notes = None
-            reviewed_by = None
-            reviewed_at = None
 
         await self.repo.update(entry.id, {
             "status": status_val,
@@ -826,15 +820,17 @@ class DSRService:
     async def get_calendar_leave_data(self, user_id: int, start_date: date, end_date: date) -> List[dict]:
         """Fetch approved leaves for a user and date range, formatted for the calendar."""
         leaves = await self.leave_repo.get_leaves_for_calendar(user_id, start_date, end_date)
-        return [
-            {
-                "start_date": l.start_date,
-                "end_date": l.end_date,
-                "leave_type": l.leave_type,
-                "status": l.status,
-            }
-            for l in leaves
-        ]
+        expanded = []
+        for l in leaves:
+            curr = l.start_date
+            while curr <= l.end_date:
+                expanded.append({
+                    "date": curr,
+                    "leave_type": l.leave_type,
+                    "status": l.status,
+                })
+                curr += timedelta(days=1)
+        return expanded
 
         return stats
     async def get_user_stats_summary(self, current_user: User) -> dict:
