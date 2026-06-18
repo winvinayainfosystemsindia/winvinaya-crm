@@ -157,9 +157,9 @@ const BackgroundTrainingTab: React.FC<BackgroundTrainingTabProps> = ({
 				</Stack>
 
 				<Grid container spacing={3}>
-					<Grid size={{ xs: 12, md: 6 }}>
+					<Grid size={{ xs: 12 }}>
 						<FormControl component="fieldset" fullWidth>
-							<Typography variant="awsFieldLabel">Ready to relocate to Bangalore for training?</Typography>
+							<Typography variant="awsFieldLabel">Are you willing to attend training at Bangalore?</Typography>
 							<RadioGroup
 								row
 								value={formData.others?.ready_to_relocate_bangalore ? 'yes' : 'no'}
@@ -175,56 +175,6 @@ const BackgroundTrainingTab: React.FC<BackgroundTrainingTabProps> = ({
 								<Paper elevation={0} sx={{
 									px: 2, border: '1px solid', borderColor: 'divider', borderRadius: '2px',
 									bgcolor: formData.others?.ready_to_relocate_bangalore === false ? 'rgba(0, 77, 230, 0.04)' : 'transparent'
-								}}>
-									<FormControlLabel value="no" control={<Radio size="small" color="primary" />} label={<Typography variant="body2">No</Typography>} />
-								</Paper>
-							</RadioGroup>
-						</FormControl>
-					</Grid>
-
-					<Grid size={{ xs: 12, md: 6 }}>
-						<FormControl component="fieldset" fullWidth>
-							<Typography variant="awsFieldLabel">Willing to Join our training for next 3 months?</Typography>
-							<RadioGroup
-								row
-								value={formData.others?.willing_for_training ? 'yes' : 'no'}
-								onChange={(e) => onUpdateField('others', 'willing_for_training', e.target.value === 'yes')}
-								sx={{ gap: 2 }}
-							>
-								<Paper elevation={0} sx={{
-									px: 2, border: '1px solid', borderColor: 'divider', borderRadius: '2px',
-									bgcolor: formData.others?.willing_for_training === true ? 'rgba(0, 77, 230, 0.04)' : 'transparent'
-								}}>
-									<FormControlLabel value="yes" control={<Radio size="small" color="primary" />} label={<Typography variant="body2">Yes</Typography>} />
-								</Paper>
-								<Paper elevation={0} sx={{
-									px: 2, border: '1px solid', borderColor: 'divider', borderRadius: '2px',
-									bgcolor: formData.others?.willing_for_training === false ? 'rgba(0, 77, 230, 0.04)' : 'transparent'
-								}}>
-									<FormControlLabel value="no" control={<Radio size="small" color="primary" />} label={<Typography variant="body2">No</Typography>} />
-								</Paper>
-							</RadioGroup>
-						</FormControl>
-					</Grid>
-
-					<Grid size={{ xs: 12 }}>
-						<FormControl component="fieldset" fullWidth>
-							<Typography variant="awsFieldLabel">Are you ready to relocate to the work location where you get a job?</Typography>
-							<RadioGroup
-								row
-								value={formData.others?.ready_to_relocate ? 'yes' : 'no'}
-								onChange={(e) => onUpdateField('others', 'ready_to_relocate', e.target.value === 'yes')}
-								sx={{ gap: 2 }}
-							>
-								<Paper elevation={0} sx={{
-									px: 2, border: '1px solid', borderColor: 'divider', borderRadius: '2px',
-									bgcolor: formData.others?.ready_to_relocate === true ? 'rgba(0, 77, 230, 0.04)' : 'transparent'
-								}}>
-									<FormControlLabel value="yes" control={<Radio size="small" color="primary" />} label={<Typography variant="body2">Yes</Typography>} />
-								</Paper>
-								<Paper elevation={0} sx={{
-									px: 2, border: '1px solid', borderColor: 'divider', borderRadius: '2px',
-									bgcolor: formData.others?.ready_to_relocate === false ? 'rgba(0, 77, 230, 0.04)' : 'transparent'
 								}}>
 									<FormControlLabel value="no" control={<Radio size="small" color="primary" />} label={<Typography variant="body2">No</Typography>} />
 								</Paper>
