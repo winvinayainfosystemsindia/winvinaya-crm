@@ -17,7 +17,6 @@ import { AutoAwesome as MagicIcon } from '@mui/icons-material';
 
 // Tabs
 import BackgroundTrainingTab from './tabs/BackgroundTrainingTab';
-import SkillsTab from './tabs/SkillsTab';
 import FamilyDetailsTab from './tabs/FamilyDetailsTab';
 import DocumentsRemarksTab from './tabs/DocumentsRemarksTab';
 
@@ -376,15 +375,6 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 			label: 'Family Details',
 			content: (
 				<FamilyDetailsTab
-					formData={formData}
-					onUpdateField={handleUpdateField}
-				/>
-			)
-		},
-		{
-			label: 'Skills',
-			content: (
-				<SkillsTab
 					formData={formData}
 					onUpdateField={handleUpdateField}
 				/>
