@@ -133,6 +133,9 @@ class TrainingProjectSyncService:
                 act.start_date = data["start_date"]
                 act.end_date = data["end_date"]
                 
+                # Tag it as automated
+                act.others = {**(act.others or {}), "is_auto": True}
+                
                 # Check for new trainers to assign
                 current_trainer_ids = {u.id for u in act.assigned_users}
                 for t_id in data["trainer_ids"]:
@@ -161,22 +164,33 @@ class TrainingProjectSyncService:
                     estimated_hours=round(data["estimated_hours"], 2),
                     status=DSRActivityStatus.PLANNED,
                     is_active=True,
-                    assigned_users=trainers
+                    assigned_users=trainers,
+                    others={"is_auto": True}
                 )
                 self.db.add(new_act)
+
+        # Helper to determine if an activity is automated (to prevent deleting manually created tasks)
+        def is_automated_activity(activity: DSRActivity) -> bool:
+            if activity.others and activity.others.get("is_auto"):
+                return True
+            if activity.description and activity.description.startswith("Automated activity"):
+                return True
+            return False
 
         # 5. REMOVE activities that are no longer in the plan
         # BUT only if they haven't been used in any DSR entries (to prevent data loss)
         for name, act in activity_map.items():
             if name not in seen_dsr_names:
-                # Check if it has actual hours logged
-                if act.total_actual_hours == 0:
-                    # Soft delete or hard delete based on repo preference. 
-                    # BaseRepository.delete does soft delete by default if supported.
-                    await self.activity_repo.delete(act.id)
-                else:
-                    # Keep it but maybe mark as inactive?
-                    act.is_active = False
+                # Only remove or deactivate if it's an automated activity
+                if is_automated_activity(act):
+                    # Check if it has actual hours logged
+                    if act.total_actual_hours == 0:
+                        # Soft delete or hard delete based on repo preference. 
+                        # BaseRepository.delete does soft delete by default if supported.
+                        await self.activity_repo.delete(act.id)
+                    else:
+                        # Keep it but maybe mark as inactive?
+                        act.is_active = False
 
         await self.db.flush()
         await self.db.commit()
