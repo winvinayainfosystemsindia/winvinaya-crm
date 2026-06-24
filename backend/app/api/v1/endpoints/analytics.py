@@ -13,6 +13,7 @@ from app.models.candidate_counseling import CandidateCounseling
 from app.models.candidate_document import CandidateDocument
 from app.models.activity_log import ActivityLog, ActionType
 from app.models.training_candidate_allocation import TrainingCandidateAllocation
+from app.models.training_candidate_analysis import TrainingCandidateAnalysis
 from app.models.training_batch import TrainingBatch
 from app.models.training_attendance import TrainingAttendance
 from app.models.training_assignment import TrainingAssignment
@@ -69,7 +70,7 @@ async def export_table_for_power_bi(
     crm_tasks, crm_activity_logs, candidate_assignments, job_roles,
     system_settings, company_holidays, notifications,
     skills, placement_mappings, placement_pipeline_history,
-    placement_interviews, placement_offers, placement_notes
+    placement_interviews, placement_offers, placement_notes, candidate_analyses
     """
     from fastapi import HTTPException
     
@@ -81,6 +82,7 @@ async def export_table_for_power_bi(
         "documents": CandidateDocument,
         "activity_logs": ActivityLog,
         "allocations": TrainingCandidateAllocation,
+        "candidate_analyses": TrainingCandidateAnalysis,
         "batches": TrainingBatch,
         "attendance": TrainingAttendance,
         "assignments": TrainingAssignment,
