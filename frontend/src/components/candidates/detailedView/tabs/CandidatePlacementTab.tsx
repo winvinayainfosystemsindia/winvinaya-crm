@@ -11,8 +11,7 @@ import {
     alpha,
     Avatar,
     Grid,
-    Paper,
-    Tooltip
+    Paper
 } from '@mui/material';
 import {
     Business as BusinessIcon,
@@ -20,7 +19,6 @@ import {
     CalendarToday as CalendarIcon,
     Info as InfoIcon,
     CheckCircle as CheckCircleIcon,
-    ArrowForward as ArrowForwardIcon,
     AutoGraph as MatchIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -160,7 +158,7 @@ const CandidatePlacementTab: React.FC<CandidatePlacementTabProps> = ({ candidate
                             >
                                 <Box sx={{ p: 3 }}>
                                     <Grid container spacing={3} alignItems="center">
-                                        <Grid size={{ xs: 12, md: 5 }}>
+                                        <Grid size={{ xs: 12, md: 7 }}>
                                             <Stack direction="row" spacing={2.5} alignItems="flex-start">
                                                 <Avatar 
                                                     variant="rounded"
@@ -233,22 +231,6 @@ const CandidatePlacementTab: React.FC<CandidatePlacementTabProps> = ({ candidate
                                                         borderColor: mapping.match_score >= 75 ? alpha(theme.palette.success.main, 0.2) : alpha(theme.palette.warning.main, 0.2)
                                                     }} 
                                                 />
-                                            </Box>
-                                        </Grid>
-
-                                        <Grid size={{ xs: 12, md: 2 }}>
-                                            <Box sx={{ textAlign: 'right' }}>
-                                                <Tooltip title="View Job Role Details">
-                                                    <Button
-                                                        variant="text"
-                                                        color="primary"
-                                                        endIcon={<ArrowForwardIcon />}
-                                                        sx={{ fontWeight: 700, textTransform: 'none' }}
-                                                        onClick={() => navigate(`/job-roles/${mapping.job_role_id}`)}
-                                                    >
-                                                        Details
-                                                    </Button>
-                                                </Tooltip>
                                             </Box>
                                         </Grid>
                                     </Grid>
