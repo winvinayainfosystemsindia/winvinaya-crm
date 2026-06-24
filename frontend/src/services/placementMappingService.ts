@@ -53,6 +53,7 @@ export interface PlacementMapping {
     notes?: string;
     mapped_by_id?: number;
     mapped_at: string;
+    updated_at?: string;
     
     candidate?: Candidate;
     job_role?: JobRole;

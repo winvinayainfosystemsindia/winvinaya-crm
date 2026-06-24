@@ -42,6 +42,7 @@ class PlacementMappingInDBBase(PlacementMappingBase):
     unmapped_reason: Optional[str] = None
     ai_explanation: Optional[str] = None
     score_source: Optional[str] = "rule_based"
+    updated_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
 

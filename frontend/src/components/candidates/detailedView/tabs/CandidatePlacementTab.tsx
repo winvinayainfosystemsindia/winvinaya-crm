@@ -209,6 +209,20 @@ const CandidatePlacementTab: React.FC<CandidatePlacementTabProps> = ({ candidate
                                                         borderColor: alpha(theme.palette[getStatusColor(mapping.status)].main, 0.2)
                                                     }} 
                                                 />
+                                                {mapping.updated_at && (
+                                                    <Stack 
+                                                        direction="row" 
+                                                        spacing={0.5} 
+                                                        alignItems="center" 
+                                                        justifyContent={{ xs: 'flex-start', md: 'center' }}
+                                                        sx={{ mt: 1 }}
+                                                    >
+                                                        <CalendarIcon sx={{ fontSize: 12, color: 'text.disabled' }} />
+                                                        <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, fontSize: '0.7rem' }}>
+                                                            {formatDate(mapping.updated_at).toUpperCase()}
+                                                        </Typography>
+                                                    </Stack>
+                                                )}
                                             </Box>
                                         </Grid>
 
