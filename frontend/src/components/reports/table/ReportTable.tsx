@@ -179,7 +179,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
                     const fieldName = colId.substring('counseling_others.'.length);
                     val = c.counseling?.others?.[fieldName] ?? c[fieldName];
                 } else {
-                    val = c[colId];
+                    val = c[colId] ?? c.other?.[colId];
                     if (val === undefined || val === null) {
                         if (colId.includes('counseling') && c.counseling) {
                             val = c.counseling[colId];
@@ -249,7 +249,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
 				if (val === null || val === undefined) return '-';
 				return <Box sx={{ fontWeight: 700, color: theme.palette.text.primary }}>{val}</Box>;
 			}
-			else val = item[colId];
+			else val = item[colId] ?? item.candidate?.other?.[colId];
 		} else {
 			// It's a candidate
 			if (colId.startsWith('screening_others.')) {
@@ -261,7 +261,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
 			} else if (colId === 'screening_skills') {
 				val = item.screening?.skills;
 			} else {
-				val = (item as any)[colId];
+				val = (item as any)[colId] ?? (item.other as any)?.[colId];
 			}
 
 			// Relationship fallback for standard fields

@@ -75,7 +75,8 @@ class CandidateRepository(BaseRepository[Candidate]):
         currently_employed: Optional[bool] = None,
         assigned_to_id: Optional[int] = None,
         extra_filters: Optional[dict] = None,
-        registration_type: Optional[str] = None
+        registration_type: Optional[str] = None,
+        status_of_beneficiary: Optional[list] = None
     ):
         """Get multiples candidates with counseling loaded for list view, with optional search filtering, category filters, and sorting"""
         from sqlalchemy import or_, and_
@@ -174,6 +175,17 @@ class CandidateRepository(BaseRepository[Candidate]):
         if registration_type:
             stmt = stmt.where(Candidate.other['registration_type'].as_string() == registration_type)
             count_stmt = count_stmt.where(Candidate.other['registration_type'].as_string() == registration_type)
+
+        if status_of_beneficiary and len(status_of_beneficiary) > 0:
+            beneficiary_filters = []
+            for b_status in status_of_beneficiary:
+                if b_status:
+                    beneficiary_filters.append(
+                        Candidate.other['status_of_beneficiary'].as_string() == b_status
+                    )
+            if beneficiary_filters:
+                stmt = stmt.where(or_(*beneficiary_filters))
+                count_stmt = count_stmt.where(or_(*beneficiary_filters))
 
         if extra_filters:
             # Handle dynamic JSON filters for screening/counseling 'others' field
@@ -1042,11 +1054,16 @@ class CandidateRepository(BaseRepository[Candidate]):
             )
             result_reg_types = await self.db.execute(stmt_reg_types)
             registration_types = set()
+            beneficiary_statuses = set()
             for row in result_reg_types.scalars().all():
                 if row and isinstance(row, dict):
                     reg_type = row.get('registration_type')
                     if reg_type:
                         registration_types.add(reg_type)
+                    
+                    status_of_beneficiary = row.get('status_of_beneficiary')
+                    if status_of_beneficiary:
+                        beneficiary_statuses.add(status_of_beneficiary)
             
             # Get unique screening statuses
             stmt_screening = select(func.distinct(CandidateScreening.status)).where(
@@ -1094,7 +1111,8 @@ class CandidateRepository(BaseRepository[Candidate]):
                 "disability_percentages": sorted(list(disability_percentages)),
                 "screening_reasons": sorted(list(screening_reasons)),
                 "years_of_passing": sorted(list(years_of_passing), reverse=True),
-                "registration_types": sorted(list(registration_types))
+                "registration_types": sorted(list(registration_types)),
+                "beneficiary_statuses": sorted(list(beneficiary_statuses))
             }
         except Exception as e:
             import traceback

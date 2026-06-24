@@ -248,6 +248,7 @@ class CandidateListResponse(BaseModel):
     currently_employed: bool = False
     year_of_passing: Optional[int] = None
     registration_type: Optional[str] = None
+    other: Optional[dict] = None
     
     @model_validator(mode='before')
     @classmethod
@@ -499,7 +500,8 @@ class CandidateListResponse(BaseModel):
                 'year_of_passing': year_of_passing,
                 'assigned_to_id': assigned_to_id,
                 'assigned_to_name': assigned_to_name,
-                'registration_type': registration_type
+                'registration_type': registration_type,
+                'other': other
             })
             return data
             
@@ -551,7 +553,8 @@ class CandidateListResponse(BaseModel):
             'year_of_passing': year_of_passing,
             'assigned_to_id': assigned_to_id,
             'assigned_to_name': assigned_to_name,
-            'registration_type': registration_type
+            'registration_type': registration_type,
+            'other': other
         }
 
 

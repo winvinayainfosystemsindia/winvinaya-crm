@@ -115,7 +115,7 @@ export const formatReportData = (data: any[], visibleColumns: string[], columns:
 						const fieldName = virtColId.substring('counseling_others.'.length);
 						val = c.counseling?.others?.[fieldName] ?? c[fieldName];
 					} else {
-						val = c[virtColId];
+						val = c[virtColId] ?? c.other?.[virtColId];
 						if (val === undefined || val === null) {
 							if (col.group === 'screening' && c.screening) val = c.screening[virtColId];
 							if ((val === undefined || val === null) && col.group === 'counseling' && c.counseling) val = c.counseling[virtColId];
@@ -133,7 +133,7 @@ export const formatReportData = (data: any[], visibleColumns: string[], columns:
 					const fieldName = virtColId.substring('counseling_others.'.length);
 					val = (c.counseling?.others as any)?.[fieldName] ?? (c as any)[fieldName];
 				} else {
-					val = (c as any)[virtColId];
+					val = (c as any)[virtColId] ?? (c.other as any)?.[virtColId];
 					if (val === undefined || val === null) {
 						if (col.group === 'screening' && c.screening) val = (c.screening as any)[virtColId];
 						if ((val === undefined || val === null) && col.group === 'counseling' && c.counseling) val = (c.counseling as any)[virtColId];

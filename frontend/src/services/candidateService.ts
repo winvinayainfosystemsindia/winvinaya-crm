@@ -40,7 +40,8 @@ export const candidateService = {
 		currentlyEmployed?: boolean,
 		registrationType?: string,
 		extraFilters?: Record<string, string>,
-		isGlobal: boolean = false
+		isGlobal: boolean = false,
+		statusOfBeneficiary?: string
 	): Promise<CandidatePaginatedResponse> => {
 		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
 		const globalParam = isGlobal ? `&is_global=true` : '';
@@ -58,7 +59,8 @@ export const candidateService = {
 			yearOfPassing ? `&year_of_passing=${encodeURIComponent(yearOfPassing)}` : '',
 			yearOfExperience ? `&year_of_experience=${encodeURIComponent(yearOfExperience)}` : '',
 			currentlyEmployed !== undefined ? `&currently_employed=${currentlyEmployed}` : '',
-			registrationType ? `&registration_type=${encodeURIComponent(registrationType)}` : ''
+			registrationType ? `&registration_type=${encodeURIComponent(registrationType)}` : '',
+			statusOfBeneficiary ? `&status_of_beneficiary=${encodeURIComponent(statusOfBeneficiary)}` : ''
 		].join('');
 
 		// Append dynamic (screening_others.* / counseling_others.*) filters
@@ -209,6 +211,7 @@ export const candidateService = {
 		counseling_statuses: string[];
 		screening_statuses: string[];
 		registration_types: string[];
+		beneficiary_statuses?: string[];
 	}> => {
 		const response = await api.get('/candidates/filter-options');
 		return response.data;
@@ -261,7 +264,8 @@ export const candidateService = {
 		registrationType?: string,
 		extraFilters?: Record<string, string>,
 		isGlobal: boolean = false,
-		columns?: string
+		columns?: string,
+		statusOfBeneficiary?: string
 	): Promise<{ message: string }> => {
 		const searchParam = search ? `&search=${encodeURIComponent(search)}` : '';
 		const globalParam = isGlobal ? `&is_global=true` : '';
@@ -280,7 +284,8 @@ export const candidateService = {
 			yearOfPassing ? `&year_of_passing=${encodeURIComponent(yearOfPassing)}` : '',
 			yearOfExperience ? `&year_of_experience=${encodeURIComponent(yearOfExperience)}` : '',
 			currentlyEmployed !== undefined ? `&currently_employed=${currentlyEmployed}` : '',
-			registrationType ? `&registration_type=${encodeURIComponent(registrationType)}` : ''
+			registrationType ? `&registration_type=${encodeURIComponent(registrationType)}` : '',
+			statusOfBeneficiary ? `&status_of_beneficiary=${encodeURIComponent(statusOfBeneficiary)}` : ''
 		].join('');
 
 		const extraParams = extraFilters

@@ -30,6 +30,7 @@ interface CandidateState {
 		disability_percentages?: number[];
 		screening_reasons?: string[];
 		years_of_passing?: string[];
+		beneficiary_statuses?: string[];
 	};
 }
 
@@ -50,7 +51,8 @@ const initialState: CandidateState = {
 		screening_statuses: [],
 		disability_percentages: [],
 		screening_reasons: [],
-		years_of_passing: []
+		years_of_passing: [],
+		beneficiary_statuses: []
 	}
 };
 
@@ -107,6 +109,7 @@ export const fetchCandidates = createAsyncThunk(
 			registration_type?: string;
 			extraFilters?: Record<string, string>;
 			is_global?: boolean;
+			status_of_beneficiary?: string;
 		} | void = {},
 		{ rejectWithValue }
 	) => {
@@ -131,7 +134,8 @@ export const fetchCandidates = createAsyncThunk(
 				currently_employed,
 				registration_type,
 				extraFilters,
-				is_global
+				is_global,
+				status_of_beneficiary
 			} = (params || {}) as any;
 			const response = await candidateService.getAll(
 				skip,
@@ -153,7 +157,8 @@ export const fetchCandidates = createAsyncThunk(
 				currently_employed,
 				registration_type,
 				extraFilters,
-				is_global
+				is_global,
+				status_of_beneficiary
 			);
 			return response;
 		} catch (error: any) {

@@ -42,10 +42,19 @@ export const ALL_COLUMNS = [
 	{ id: 'questions', label: 'Assignment Q&A', default: false, group: 'counseling' },
 	{ id: 'workexperience', label: 'Counseling Work Experience', default: false, group: 'counseling' },
 
-	// Work Experience (Direct)
 	{ id: 'is_experienced', label: 'Is Experienced?', default: false, group: 'experience' },
 	{ id: 'year_of_experience', label: 'Years of Experience', default: false, group: 'experience' },
 	{ id: 'currently_employed', label: 'Currently Employed?', default: false, group: 'experience' },
+
+	// Additional Candidate details (from candidate.other)
+	{ id: 'status_of_beneficiary', label: 'Beneficiary Status', default: false, group: 'general' },
+	{ id: 'disability_sub_category', label: 'Disability Sub Category', default: false, group: 'general' },
+	{ id: 'company_placed', label: 'Company Placed', default: false, group: 'general' },
+	{ id: 'date_of_joining', label: 'Date of Joining', default: false, group: 'general' },
+	{ id: 'designation', label: 'Designation', default: false, group: 'general' },
+	{ id: 'ctc', label: 'CTC', default: false, group: 'general' },
+	{ id: 'donor', label: 'Donor', default: false, group: 'general' },
+	{ id: 'batch_year', label: 'Batch Year', default: false, group: 'general' },
 ];
 
 export const TRAINING_COLUMNS = [

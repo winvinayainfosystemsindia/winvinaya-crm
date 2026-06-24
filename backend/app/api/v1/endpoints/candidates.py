@@ -103,6 +103,7 @@ async def get_candidates(
     currently_employed: bool = None,
     registration_type: str = None,
     is_global: bool = False,
+    status_of_beneficiary: str = None,
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
     db: AsyncSession = Depends(get_db)
 ):
@@ -118,6 +119,7 @@ async def get_candidates(
     disability_percentages_list = disability_percentages.split(',') if disability_percentages else None
     screening_reasons_list = screening_reasons.split(',') if screening_reasons else None
     year_of_passing_list = year_of_passing.split(',') if year_of_passing else None
+    status_of_beneficiary_list = status_of_beneficiary.split(',') if status_of_beneficiary else None
     
     # Collect dynamic filters from query params
     extra_filters = {}
@@ -147,7 +149,8 @@ async def get_candidates(
         extra_filters=extra_filters,
         registration_type=registration_type,
         current_user=current_user,
-        is_global=is_global
+        is_global=is_global,
+        status_of_beneficiary=status_of_beneficiary_list
     )
 
 
@@ -210,6 +213,7 @@ async def export_candidates(
     year_of_experience: str = None,
     currently_employed: bool = None,
     is_global: bool = False,
+    status_of_beneficiary: str = None,
     columns: Optional[str] = Query(None),
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
     db: AsyncSession = Depends(get_db)
@@ -223,6 +227,7 @@ async def export_candidates(
     disability_percentages_list = disability_percentages.split(',') if disability_percentages else None
     screening_reasons_list = screening_reasons.split(',') if screening_reasons else None
     year_of_passing_list = year_of_passing.split(',') if year_of_passing else None
+    status_of_beneficiary_list = status_of_beneficiary.split(',') if status_of_beneficiary else None
     
     extra_filters = {}
     for key, value in request.query_params.items():
@@ -256,7 +261,8 @@ async def export_candidates(
         year_of_experience=year_of_experience,
         currently_employed=currently_employed,
         extra_filters=extra_filters,
-        is_global=is_global
+        is_global=is_global,
+        status_of_beneficiary=status_of_beneficiary_list
     )
     
     return {"message": f"Export started. The report will be sent to {current_user.email} shortly."}

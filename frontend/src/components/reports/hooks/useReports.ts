@@ -142,6 +142,7 @@ export const useReports = () => {
 			currently_employed: filters.currently_employed === 'true' ? true : filters.currently_employed === 'false' ? false : undefined,
 			registration_type: filters.registration_type,
 			is_global: true,
+			status_of_beneficiary: filters.status_of_beneficiary?.join(','),
 			extraFilters: Object.keys(filters)
 				.filter(key => key.startsWith('screening_others.') || key.startsWith('counseling_others.'))
 				.reduce((acc, key) => {
@@ -347,7 +348,8 @@ export const useReports = () => {
 							return acc;
 						}, {} as Record<string, string>),
 					true,
-					JSON.stringify(visibleColData)
+					JSON.stringify(visibleColData),
+					filters.status_of_beneficiary?.join(',')
 				);
 			}
 			toast.success(response.message);

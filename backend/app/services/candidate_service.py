@@ -138,7 +138,8 @@ class CandidateService:
         extra_filters: Optional[dict] = None,
         registration_type: Optional[str] = None,
         current_user: Optional[User] = None,
-        is_global: bool = False
+        is_global: bool = False,
+        status_of_beneficiary: Optional[list] = None
     ) -> dict:
         """Get list of candidates with total count, supporting optional search, filters, and sorting"""
         
@@ -167,7 +168,8 @@ class CandidateService:
             currently_employed=currently_employed,
             assigned_to_id=assigned_to_id,
             extra_filters=extra_filters,
-            registration_type=registration_type
+            registration_type=registration_type,
+            status_of_beneficiary=status_of_beneficiary
         )
         return {"items": items, "total": total}
 
@@ -375,7 +377,8 @@ class CandidateService:
         currently_employed: Optional[bool] = None,
         extra_filters: Optional[dict] = None,
         is_global: bool = False,
-        columns: Optional[str] = None
+        columns: Optional[str] = None,
+        status_of_beneficiary: Optional[list] = None
     ) -> bool:
         """Fetch all filtered candidates, generate Excel, and email to user"""
         import json
@@ -401,7 +404,8 @@ class CandidateService:
             currently_employed=currently_employed,
             extra_filters=extra_filters,
             current_user=current_user,
-            is_global=is_global
+            is_global=is_global,
+            status_of_beneficiary=status_of_beneficiary
         )
         candidates = res["items"]
         
