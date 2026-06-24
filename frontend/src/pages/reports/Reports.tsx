@@ -191,7 +191,7 @@ const Reports: React.FC = () => {
 		{
 			key: 'batch_id',
 			label: 'Batch Name',
-			type: 'single-select',
+			type: 'multi-select',
 			options: batches.map(b => ({ label: b.batch_name, value: String(b.id) }))
 		},
 		{

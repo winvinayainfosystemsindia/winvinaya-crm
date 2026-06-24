@@ -87,7 +87,7 @@ class TrainingCandidateAllocationRepository(BaseRepository[TrainingCandidateAllo
         skip: int = 0,
         limit: int = 100,
         search: Optional[str] = None,
-        batch_id: Optional[int] = None,
+        batch_id: Optional[int | str] = None,
         status: Optional[str] = None,
         is_dropout: Optional[bool] = None,
         gender: Optional[str] = None,
@@ -179,8 +179,21 @@ class TrainingCandidateAllocationRepository(BaseRepository[TrainingCandidateAllo
 
         # Apply filters
         if batch_id:
-            query = query.where(self.model.batch_id == batch_id)
-            count_query = count_query.where(self.model.batch_id == batch_id)
+            if isinstance(batch_id, str) and "," in batch_id:
+                try:
+                    ids = [int(x.strip()) for x in batch_id.split(",") if x.strip().isdigit()]
+                    if ids:
+                        query = query.where(self.model.batch_id.in_(ids))
+                        count_query = count_query.where(self.model.batch_id.in_(ids))
+                except ValueError:
+                    pass
+            else:
+                try:
+                    b_id = int(batch_id)
+                    query = query.where(self.model.batch_id == b_id)
+                    count_query = count_query.where(self.model.batch_id == b_id)
+                except ValueError:
+                    pass
 
         if batch_tag:
             from app.models.training_batch import TrainingBatch

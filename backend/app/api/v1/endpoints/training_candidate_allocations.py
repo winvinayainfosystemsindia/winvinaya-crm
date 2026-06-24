@@ -26,7 +26,7 @@ async def get_all_allocations(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
     search: Optional[str] = Query(None),
-    batch_id: Optional[int] = Query(None),
+    batch_id: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     is_dropout: Optional[bool] = Query(None),
     gender: Optional[str] = Query(None),
@@ -98,7 +98,7 @@ async def _run_export_allocations(
 async def export_allocations(
     background_tasks: BackgroundTasks,
     search: Optional[str] = Query(None),
-    batch_id: Optional[int] = Query(None),
+    batch_id: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     is_dropout: Optional[bool] = Query(None),
     gender: Optional[str] = Query(None),

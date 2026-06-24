@@ -159,7 +159,7 @@ export const useReports = () => {
 			skip: page * rowsPerPage,
 			limit: rowsPerPage,
 			search,
-			batch_id: filters.batch_id,
+			batch_id: filters.batch_id?.join(','),
 			batch_tag: filters.batch_tag,
 			status: filters.status,
 			is_dropout: filters.is_dropout,
@@ -301,7 +301,7 @@ export const useReports = () => {
 			if (isTraining) {
 				response = await trainingService.exportAllocations({
 					search,
-					batch_id: filters.batch_id,
+					batch_id: filters.batch_id?.join(','),
 					batch_tag: filters.batch_tag,
 					status: filters.status,
 					is_dropout: filters.is_dropout,
