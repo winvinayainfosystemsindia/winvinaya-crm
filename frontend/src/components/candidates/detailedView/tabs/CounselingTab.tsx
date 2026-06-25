@@ -112,6 +112,7 @@ const CounselingTab: React.FC<CounselingTabProps> = ({ candidate }) => {
 						<SectionHeader title="Counselor Insights" icon={<FeedbackIcon />} />
 						<Typography 
 							variant="body1" 
+							component="div"
 							sx={{ 
 								lineHeight: 1.8, 
 								color: 'text.primary', 
@@ -121,10 +122,20 @@ const CounselingTab: React.FC<CounselingTabProps> = ({ candidate }) => {
 								zIndex: 1,
 								pl: 2,
 								borderLeft: '4px solid',
-								borderColor: 'primary.main'
+								borderColor: 'primary.main',
+								'& p': {
+									margin: '0 0 8px 0',
+								},
+								'& p:last-child': {
+									margin: 0,
+								}
 							}}
 						>
-							{counseling.feedback || "No detailed feedback has been documented for this session."}
+							{counseling.feedback ? (
+								<div dangerouslySetInnerHTML={{ __html: counseling.feedback }} />
+							) : (
+								"No detailed feedback has been documented for this session."
+							)}
 						</Typography>
 					</Box>
 

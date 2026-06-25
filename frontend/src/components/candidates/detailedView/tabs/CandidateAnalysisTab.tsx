@@ -16,7 +16,8 @@ import {
 	AccordionSummary,
 	AccordionDetails,
 	useTheme,
-	alpha
+	alpha,
+	Tooltip
 } from '@mui/material';
 import {
 	Assessment as AssessmentIcon,
@@ -28,6 +29,11 @@ import { SectionHeader, SectionCard } from '../DetailedViewCommon';
 import candidateAnalysisService from '../../../../services/candidateAnalysisService';
 import type { CandidateAnalysis } from '../../../../models/CandidateAnalysis';
 import type { Candidate } from '../../../../models/candidate';
+
+const stripHtml = (html?: string) => {
+	if (!html) return '';
+	return html.replace(/<[^>]*>/g, '').trim();
+};
 
 interface CandidateAnalysisTabProps {
 	candidate: Candidate;
@@ -179,12 +185,16 @@ const CandidateAnalysisTab: React.FC<CandidateAnalysisTabProps> = ({ candidate }
 														<TableCell>{getRecommendationChip(row.recommendation)}</TableCell>
 														<TableCell sx={{ color: 'text.secondary', maxWidth: 300 }}>
 															<Stack spacing={0.5}>
-																<Typography variant="caption" noWrap>
-																	<b>Strengths:</b> {row.strengths || 'N/A'}
-																</Typography>
-																<Typography variant="caption" noWrap>
-																	<b>Weaknesses:</b> {row.weaknesses || 'N/A'}
-																</Typography>
+																<Tooltip title={stripHtml(row.strengths) || 'N/A'} enterDelay={500}>
+																	<Typography variant="caption" noWrap>
+																		<b>Strengths:</b> {stripHtml(row.strengths) || 'N/A'}
+																	</Typography>
+																</Tooltip>
+																<Tooltip title={stripHtml(row.weaknesses) || 'N/A'} enterDelay={500}>
+																	<Typography variant="caption" noWrap>
+																		<b>Weaknesses:</b> {stripHtml(row.weaknesses) || 'N/A'}
+																	</Typography>
+																</Tooltip>
 															</Stack>
 														</TableCell>
 													</TableRow>
