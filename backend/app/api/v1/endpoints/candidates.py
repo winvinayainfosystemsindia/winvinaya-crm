@@ -212,6 +212,7 @@ async def export_candidates(
     year_of_passing: str = None,
     year_of_experience: str = None,
     currently_employed: bool = None,
+    registration_type: str = None,
     is_global: bool = False,
     status_of_beneficiary: str = None,
     columns: Optional[str] = Query(None),
@@ -260,6 +261,7 @@ async def export_candidates(
         year_of_passing=year_of_passing_list,
         year_of_experience=year_of_experience,
         currently_employed=currently_employed,
+        registration_type=registration_type,
         extra_filters=extra_filters,
         is_global=is_global,
         status_of_beneficiary=status_of_beneficiary_list

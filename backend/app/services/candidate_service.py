@@ -378,7 +378,8 @@ class CandidateService:
         extra_filters: Optional[dict] = None,
         is_global: bool = False,
         columns: Optional[str] = None,
-        status_of_beneficiary: Optional[list] = None
+        status_of_beneficiary: Optional[list] = None,
+        registration_type: Optional[str] = None
     ) -> bool:
         """Fetch all filtered candidates, generate Excel, and email to user"""
         import json
@@ -405,7 +406,8 @@ class CandidateService:
             extra_filters=extra_filters,
             current_user=current_user,
             is_global=is_global,
-            status_of_beneficiary=status_of_beneficiary
+            status_of_beneficiary=status_of_beneficiary,
+            registration_type=registration_type
         )
         candidates = res["items"]
         

@@ -68,6 +68,12 @@ const Reports: React.FC = () => {
 	let filterFields: FilterField[] = [];
 	const commonFilters: FilterField[] = [
 		{
+			key: 'registration_type',
+			label: 'Source',
+			type: 'single-select',
+			options: (filterOptions.registration_types || []).map((v: string) => ({ value: v, label: v }))
+		},
+		{
 			key: 'status_of_beneficiary',
 			label: 'Beneficiary Status',
 			type: 'multi-select',

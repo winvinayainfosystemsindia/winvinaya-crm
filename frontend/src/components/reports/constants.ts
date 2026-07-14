@@ -17,6 +17,7 @@ export const ALL_COLUMNS = [
 	{ id: 'disability_type', label: 'Disability Type', default: true, group: 'general' },
 	{ id: 'disability_percentage', label: 'Disability Percentage', default: false, group: 'general' },
 	{ id: 'created_at', label: 'Registration Date', default: false, group: 'general' },
+	{ id: 'registration_type', label: 'Source', default: false, group: 'general' },
 
 	// Screening Info
 	{ id: 'screening_status', label: 'Screening Status', default: true, group: 'screening' },

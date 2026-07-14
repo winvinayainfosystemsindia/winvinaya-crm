@@ -60,6 +60,10 @@ export const formatReportData = (data: any[], visibleColumns: string[], columns:
 				else if (virtColId === 'disability_type') val = allocation.candidate?.disability_details?.disability_type || allocation.candidate?.disability_details?.type;
 				else if (virtColId === 'attendance_percentage') val = allocation.attendance_percentage !== null ? `${allocation.attendance_percentage}%` : '-';
 				else if (virtColId === 'assessment_score') val = allocation.assessment_score !== null ? allocation.assessment_score : '-';
+				else if (virtColId === 'registration_type') {
+					const rawVal = allocation.candidate?.[virtColId] ?? allocation.candidate?.other?.[virtColId];
+					val = rawVal ? (String(rawVal).charAt(0).toUpperCase() + String(rawVal).slice(1)) : 'Registered';
+				}
 				else val = allocation[virtColId];
 			} else if (isPlacement) {
 				const mapping = item as any;
@@ -115,10 +119,15 @@ export const formatReportData = (data: any[], visibleColumns: string[], columns:
 						const fieldName = virtColId.substring('counseling_others.'.length);
 						val = c.counseling?.others?.[fieldName] ?? c[fieldName];
 					} else {
-						val = c[virtColId] ?? c.other?.[virtColId];
-						if (val === undefined || val === null) {
-							if (col.group === 'screening' && c.screening) val = c.screening[virtColId];
-							if ((val === undefined || val === null) && col.group === 'counseling' && c.counseling) val = c.counseling[virtColId];
+						if (virtColId === 'registration_type') {
+							const rawVal = c[virtColId] ?? c.other?.[virtColId];
+							val = rawVal ? (String(rawVal).charAt(0).toUpperCase() + String(rawVal).slice(1)) : 'Registered';
+						} else {
+							val = c[virtColId] ?? c.other?.[virtColId];
+							if (val === undefined || val === null) {
+								if (col.group === 'screening' && c.screening) val = c.screening[virtColId];
+								if ((val === undefined || val === null) && col.group === 'counseling' && c.counseling) val = c.counseling[virtColId];
+							}
 						}
 					}
 				}
@@ -133,10 +142,15 @@ export const formatReportData = (data: any[], visibleColumns: string[], columns:
 					const fieldName = virtColId.substring('counseling_others.'.length);
 					val = (c.counseling?.others as any)?.[fieldName] ?? (c as any)[fieldName];
 				} else {
-					val = (c as any)[virtColId] ?? (c.other as any)?.[virtColId];
-					if (val === undefined || val === null) {
-						if (col.group === 'screening' && c.screening) val = (c.screening as any)[virtColId];
-						if ((val === undefined || val === null) && col.group === 'counseling' && c.counseling) val = (c.counseling as any)[virtColId];
+					if (virtColId === 'registration_type') {
+						const rawVal = (c as any)[virtColId] ?? (c.other as any)?.[virtColId];
+						val = rawVal ? (String(rawVal).charAt(0).toUpperCase() + String(rawVal).slice(1)) : 'Registered';
+					} else {
+						val = (c as any)[virtColId] ?? (c.other as any)?.[virtColId];
+						if (val === undefined || val === null) {
+							if (col.group === 'screening' && c.screening) val = (c.screening as any)[virtColId];
+							if ((val === undefined || val === null) && col.group === 'counseling' && c.counseling) val = (c.counseling as any)[virtColId];
+						}
 					}
 				}
 			}

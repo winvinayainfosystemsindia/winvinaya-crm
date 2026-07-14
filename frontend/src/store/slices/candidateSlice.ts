@@ -31,6 +31,7 @@ interface CandidateState {
 		screening_reasons?: string[];
 		years_of_passing?: string[];
 		beneficiary_statuses?: string[];
+		registration_types?: string[];
 	};
 }
 
@@ -52,7 +53,8 @@ const initialState: CandidateState = {
 		disability_percentages: [],
 		screening_reasons: [],
 		years_of_passing: [],
-		beneficiary_statuses: []
+		beneficiary_statuses: [],
+		registration_types: []
 	}
 };
 

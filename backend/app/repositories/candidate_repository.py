@@ -173,8 +173,18 @@ class CandidateRepository(BaseRepository[Candidate]):
             count_stmt = count_stmt.where(Candidate.gender == gender)
 
         if registration_type:
-            stmt = stmt.where(Candidate.other['registration_type'].as_string() == registration_type)
-            count_stmt = count_stmt.where(Candidate.other['registration_type'].as_string() == registration_type)
+            if registration_type.lower() == 'registered':
+                reg_filter = or_(
+                    Candidate.other.is_(None),
+                    Candidate.other['registration_type'].is_(None),
+                    Candidate.other['registration_type'].as_string() == '',
+                    Candidate.other['registration_type'].as_string().ilike('registered')
+                )
+            else:
+                reg_filter = Candidate.other['registration_type'].as_string().ilike(registration_type)
+            
+            stmt = stmt.where(reg_filter)
+            count_stmt = count_stmt.where(reg_filter)
 
         if status_of_beneficiary and len(status_of_beneficiary) > 0:
             beneficiary_filters = []
@@ -1059,11 +1069,21 @@ class CandidateRepository(BaseRepository[Candidate]):
                 if row and isinstance(row, dict):
                     reg_type = row.get('registration_type')
                     if reg_type:
-                        registration_types.add(reg_type)
+                        normalized_reg_type = reg_type.strip().capitalize()
+                        if normalized_reg_type:
+                            registration_types.add(normalized_reg_type)
+                    else:
+                        registration_types.add("Registered")
                     
                     status_of_beneficiary = row.get('status_of_beneficiary')
                     if status_of_beneficiary:
                         beneficiary_statuses.add(status_of_beneficiary)
+                else:
+                    registration_types.add("Registered")
+            
+            # Ensure at least "Registered" and "Excel" are present
+            registration_types.add("Registered")
+            registration_types.add("Excel")
             
             # Get unique screening statuses
             stmt_screening = select(func.distinct(CandidateScreening.status)).where(
