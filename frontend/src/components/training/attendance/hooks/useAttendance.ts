@@ -51,6 +51,13 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		return selectedDate > today;
 	}, [selectedDate]);
 
+	const isAdmin = useMemo(() => user?.is_superuser || user?.role === 'admin', [user]);
+
+	const isBatchClosed = useMemo(() => {
+		const status = batch?.status?.toLowerCase();
+		return status === 'closed' || status === 'completed';
+	}, [batch]);
+
 	// Check if a candidate is dropped out
 	const isDroppedOut = useCallback((candidateId: number) => {
 		const allocation = allocations.find(a => a.candidate_id === candidateId);
@@ -58,11 +65,13 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 	}, [allocations]);
 
 	const canMarkAttendance = useCallback((candidateId: number) => {
+		if (isAdmin) return true;
+
 		const allocation = allocations.find(a => a.candidate_id === candidateId);
 		// Cannot mark if dropped out or moved to placement
 		if (allocation?.is_dropout || allocation?.status === 'moved_to_placement') return false;
 		return allocation?.status === 'in_training';
-	}, [allocations]);
+	}, [allocations, isAdmin]);
 
 	// Fetch attendance and events data
 	const fetchData = useCallback(async () => {
@@ -171,12 +180,17 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		periodId: number,
 		status: string
 	) => {
-		if (isDroppedOut(candidateId)) {
+		if (!isAdmin && isDroppedOut(candidateId)) {
 			toast.warning('Cannot mark attendance for dropped out candidates');
 			return;
 		}
 		if (isFutureDate) {
 			toast.warning('Cannot mark attendance for future dates');
+			return;
+		}
+
+		if (!isAdmin && isBatchClosed) {
+			toast.warning('Attendance cannot be marked for closed batches');
 			return;
 		}
 
@@ -192,7 +206,7 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		}
 
 		updatePeriodAttendance(candidateId, periodId, { status: status as any });
-	}, [updatePeriodAttendance, isDroppedOut, isFutureDate, checkCanEditPeriod]);
+	}, [updatePeriodAttendance, isDroppedOut, isFutureDate, checkCanEditPeriod, isAdmin, isBatchClosed, canMarkAttendance, allocations, toast]);
 
 	// Handle trainer notes change
 	const handleTrainerNotesChange = useCallback((
@@ -205,12 +219,17 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 
 	// Handle status change (for full-day attendance)
 	const handleStatusChange = useCallback((candidateId: number, status: string) => {
-		if (isDroppedOut(candidateId)) {
+		if (!isAdmin && isDroppedOut(candidateId)) {
 			toast.warning('Cannot mark attendance for dropped out candidates');
 			return;
 		}
 		if (isFutureDate) {
 			toast.warning('Cannot mark attendance for future dates');
+			return;
+		}
+
+		if (!isAdmin && isBatchClosed) {
+			toast.warning('Attendance cannot be marked for closed batches');
 			return;
 		}
 
@@ -221,12 +240,17 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		}
 
 		updatePeriodAttendance(candidateId, null, { status: status as any });
-	}, [updatePeriodAttendance, isDroppedOut, isFutureDate]);
+	}, [updatePeriodAttendance, isDroppedOut, isFutureDate, isAdmin, isBatchClosed, canMarkAttendance, allocations, toast]);
 
 	// Mark all candidates for a specific period as a specific status
 	const handlePeriodMarkAll = useCallback((periodId: number, status: string) => {
 		if (isFutureDate) {
 			toast.warning('Cannot mark attendance for future dates');
+			return;
+		}
+
+		if (!isAdmin && isBatchClosed) {
+			toast.warning('Attendance cannot be marked for closed batches');
 			return;
 		}
 
@@ -236,12 +260,12 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		}
 
 		allocations.forEach(allocation => {
-			if (!isDroppedOut(allocation.candidate_id) && allocation.status !== 'moved_to_placement') {
+			if (isAdmin || (!isDroppedOut(allocation.candidate_id) && allocation.status !== 'moved_to_placement')) {
 				updatePeriodAttendance(allocation.candidate_id, periodId, { status: status as any });
 			}
 		});
 		toast.info(`All candidates marked as ${status} for this period`);
-	}, [allocations, updatePeriodAttendance, isDroppedOut, isFutureDate, checkCanEditPeriod]);
+	}, [allocations, updatePeriodAttendance, isDroppedOut, isFutureDate, checkCanEditPeriod, isAdmin, isBatchClosed, toast]);
 
 	const handleRemarkChange = useCallback((candidateId: number, remark: string) => {
 		updatePeriodAttendance(candidateId, null, { remarks: remark });
@@ -250,6 +274,11 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 	const handleSave = async () => {
 		if (isFutureDate) {
 			toast.error('Cannot save attendance for future dates');
+			return;
+		}
+
+		if (!isAdmin && isBatchClosed) {
+			toast.error('Cannot save attendance for closed batches');
 			return;
 		}
 
@@ -308,6 +337,8 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		currentEvent,
 		isDateOutOfRange,
 		isFutureDate,
+		isBatchClosed,
+		isAdmin,
 		batchBounds,
 		setSelectedDate,
 		setActiveTab,
@@ -319,6 +350,7 @@ export const useAttendance = (batch: TrainingBatch, allocations: CandidateAlloca
 		handleSave,
 		handleUpdateSingle,
 		handleDeleteSingle,
-		isDroppedOut
+		isDroppedOut,
+		canMarkAttendance
 	};
 };

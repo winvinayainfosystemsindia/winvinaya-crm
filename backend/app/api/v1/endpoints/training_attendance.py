@@ -27,10 +27,11 @@ async def update_bulk_attendance(
     Supports period-based attendance tracking.
     """
     service = TrainingExtensionService(db)
+    is_admin = current_user.role == UserRole.ADMIN or current_user.is_superuser
     
     # We might want to log before/after for bulk, but it's complex. 
     # For now, logging that an update happened.
-    records = await service.update_bulk_attendance(attendance_in)
+    records = await service.update_bulk_attendance(attendance_in, is_admin=is_admin)
     
     await log_update(
         db=db,

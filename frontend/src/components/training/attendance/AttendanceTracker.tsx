@@ -49,10 +49,15 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 		{ value: 'half_day', label: 'Half Day', icon: <HalfDayIcon sx={{ color: 'info.main' }} />, color: theme.palette.info.main },
 	], [theme]);
 
-	// Filter allocations to exclude 'allocated' status candidates as they haven't started training yet
+	const isAdmin = currentUser?.is_superuser || currentUser?.role === 'admin';
+
+	// Filter allocations: Admins can see/edit candidates in any status; non-admins exclude 'allocated' status
 	const filteredAllocations = useMemo(() => {
+		if (isAdmin) {
+			return allocations;
+		}
 		return allocations.filter(a => a.status !== 'allocated');
-	}, [allocations]);
+	}, [allocations, isAdmin]);
 
 	const {
 		loading,
@@ -65,6 +70,7 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 		currentEvent,
 		isDateOutOfRange,
 		isFutureDate,
+		isBatchClosed,
 		batchBounds,
 		setSelectedDate,
 		setActiveTab,
@@ -117,20 +123,40 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 
 			{activeTab === 'tracker' ? (
 				<Box sx={{ px: isDateOutOfRange ? 0 : 0.5 }}>
-					{isDateOutOfRange && (
+					{isBatchClosed && (
 						<Alert
-							severity="warning"
+							severity={isAdmin ? "info" : "warning"}
 							sx={{
 								mb: 4,
 								borderRadius: 2,
 								border: '1px solid',
-								borderColor: alpha(theme.palette.warning.main, 0.2),
+								borderColor: alpha(isAdmin ? theme.palette.info.main : theme.palette.warning.main, 0.2),
+								'& .MuiAlert-message': { fontWeight: 500 }
+							}}
+						>
+							This batch status is currently <strong>{batch.status?.toUpperCase()}</strong>.
+							{isAdmin
+								? " As an Administrator, you can still view, mark, or modify attendance records for this batch."
+								: " Attendance tracking is restricted for closed batches."}
+						</Alert>
+					)}
+
+					{isDateOutOfRange && (
+						<Alert
+							severity={isAdmin ? "info" : "warning"}
+							sx={{
+								mb: 4,
+								borderRadius: 2,
+								border: '1px solid',
+								borderColor: alpha(isAdmin ? theme.palette.info.main : theme.palette.warning.main, 0.2),
 								'& .MuiAlert-message': { fontWeight: 500 }
 							}}
 						>
 							The selected date ({format(selectedDate, 'MMM dd, yyyy')}) is outside the training batch duration
 							({batch.start_date || batch.duration?.start_date} to {batch.approx_close_date || batch.duration?.end_date}).
-							Attendance tracking is restricted to the scheduled batch period.
+							{isAdmin
+								? " As an Administrator, you can still view, mark, or modify attendance records."
+								: " Attendance tracking is restricted to the scheduled batch period."}
 						</Alert>
 					)}
 
@@ -160,6 +186,8 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ batch, allocation
 								saving={saving}
 								isDateOutOfRange={isDateOutOfRange}
 								isFutureDate={isFutureDate}
+								isBatchClosed={isBatchClosed}
+								isAdmin={isAdmin}
 								hasNoPlan={dailyPlan.length === 0}
 							/>
 						</Grid>

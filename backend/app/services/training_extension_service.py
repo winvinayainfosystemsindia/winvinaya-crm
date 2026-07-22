@@ -67,9 +67,9 @@ class TrainingExtensionService:
         result = await self.db.execute(query)
         return result.scalars().all()
 
-    async def validate_attendance_marking(self, candidate_id: int, batch_id: int) -> bool:
+    async def validate_attendance_marking(self, candidate_id: int, batch_id: int, is_admin: bool = False) -> bool:
         """Validate if attendance can be marked for a candidate"""
-        # Check if candidate is dropped out
+        # Check if candidate allocation exists
         query = select(TrainingCandidateAllocation).where(
             TrainingCandidateAllocation.batch_id == batch_id,
             TrainingCandidateAllocation.candidate_id == candidate_id,
@@ -83,6 +83,10 @@ class TrainingExtensionService:
                 detail="Candidate allocation not found for this batch"
             )
         
+        # Admin role bypasses candidate status and dropout restrictions
+        if is_admin:
+            return True
+
         if allocation.is_dropout:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -124,13 +128,13 @@ class TrainingExtensionService:
         result = await self.db.execute(query)
         return result.scalars().all()
 
-    async def update_bulk_attendance(self, attendance_list: List[TrainingAttendanceCreate]):
+    async def update_bulk_attendance(self, attendance_list: List[TrainingAttendanceCreate], is_admin: bool = False):
         records = []
         for att in attendance_list:
             # Validate holiday
             await self.check_is_holiday(att.batch_id, att.date)
-            # Validate attendance marking (dropout check)
-            await self.validate_attendance_marking(att.candidate_id, att.batch_id)
+            # Validate attendance marking (passes is_admin flag)
+            await self.validate_attendance_marking(att.candidate_id, att.batch_id, is_admin=is_admin)
             
             # Check if record exists (now includes period_id for uniqueness)
             query = select(self.attendance_repo.model).where(

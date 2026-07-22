@@ -187,9 +187,18 @@ const AttendanceTableRow: React.FC<AttendanceTableRowProps> = memo(({
 							<Typography variant="body2" sx={{ fontWeight: 700, color: 'text.primary', lineHeight: 1.2 }}>
 								{allocation.candidate?.name}
 							</Typography>
-							<Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>
+							<Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.75rem', display: 'block' }}>
 								{allocation.candidate?.email}
 							</Typography>
+							{(allocation.is_dropout || (allocation.status && allocation.status !== 'in_training')) && (
+								<Chip
+									label={allocation.is_dropout ? 'Dropout' : allocation.status.replace(/_/g, ' ')}
+									size="small"
+									color={allocation.is_dropout ? 'error' : (allocation.status === 'completed' || allocation.status === 'placed' ? 'success' : 'warning')}
+									variant="outlined"
+									sx={{ height: 18, fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', mt: 0.5 }}
+								/>
+							)}
 						</Box>
 					</Box>
 				</TableCell>

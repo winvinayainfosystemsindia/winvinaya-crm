@@ -27,6 +27,8 @@ interface AttendanceHeaderProps {
 	saving: boolean;
 	isDateOutOfRange: boolean;
 	isFutureDate: boolean;
+	isBatchClosed?: boolean;
+	isAdmin?: boolean;
 	hasNoPlan: boolean;
 }
 
@@ -39,6 +41,8 @@ const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
 	saving,
 	isDateOutOfRange,
 	isFutureDate,
+	isBatchClosed = false,
+	isAdmin = false,
 	hasNoPlan
 }) => {
 	const theme = useTheme();
@@ -116,7 +120,7 @@ const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
 						variant="contained"
 						startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
 						onClick={onSave}
-						disabled={saving || !!currentEvent || isDateOutOfRange || isFutureDate || hasNoPlan}
+						disabled={saving || !!currentEvent || (!isAdmin && (isDateOutOfRange || isBatchClosed)) || isFutureDate || hasNoPlan}
 						sx={{
 							bgcolor: 'primary.main',
 							'&:hover': { bgcolor: 'primary.dark' },

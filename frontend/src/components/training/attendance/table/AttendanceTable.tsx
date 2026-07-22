@@ -34,6 +34,7 @@ interface AttendanceTableProps {
 	currentEvent?: TrainingBatchEvent;
 	isDateOutOfRange: boolean;
 	isFutureDate: boolean;
+	isBatchClosed?: boolean;
 	isDroppedOut: (candidateId: number) => boolean;
 	statuses: Array<{ value: string; label: string; icon: React.ReactNode; color: string }>;
 	currentUser: any;
@@ -52,6 +53,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 	currentEvent,
 	isDateOutOfRange,
 	isFutureDate,
+	isBatchClosed = false,
 	isDroppedOut,
 	statuses,
 	currentUser,
@@ -59,6 +61,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 	const theme = useTheme();
 	const dateStr = format(selectedDate, 'yyyy-MM-dd');
 	const hasPeriods = dailyPlan.length > 0;
+	const isAdmin = currentUser?.is_superuser || currentUser?.role === 'admin';
 
 	// Get attendance for a specific candidate and period
 	const getPeriodAttendance = (candidateId: number, periodId: number | null) => {
@@ -78,7 +81,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 		return attendance.find(a => a.candidate_id === candidateId && a.date === dateStr && !a.period_id)?.remarks || '';
 	};
 
-	const isActive = !currentEvent && !isDateOutOfRange && !isFutureDate;
+	const isActive = !currentEvent && (!isDateOutOfRange || isAdmin) && (!isBatchClosed || isAdmin) && !isFutureDate;
 
 	// Check if the current user is authorized to edit a specific period
 	const canEditPeriod = (period: TrainingBatchPlan) => {
@@ -261,7 +264,8 @@ const AttendanceTable: React.FC<AttendanceTableProps> = memo(({
 							const droppedOut = isDroppedOut(allocation.candidate_id);
 							const isPlaced = allocation.status === 'moved_to_placement';
 
-							if (droppedOut || isPlaced) {
+							// Non-admin users are blocked from marking attendance for dropped out or placed candidates
+							if (!isAdmin && (droppedOut || isPlaced)) {
 								return (
 									<TableRow key={allocation.id} sx={{ bgcolor: alpha(theme.palette.action.disabledBackground, 0.1) }}>
 										<TableCell
