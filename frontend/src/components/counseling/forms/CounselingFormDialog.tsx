@@ -73,6 +73,7 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 		feedback: '',
 		questions: [],
 		status: 'pending',
+		sub_status: '',
 		counselor_name: '',
 		counseling_date: new Date().toISOString().split('T')[0],
 		others: {},
@@ -100,6 +101,7 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 					workexperience: initialData.workexperience || [],
 					counseling_date: initialData.counseling_date ? initialData.counseling_date.split('T')[0] : new Date().toISOString().split('T')[0],
 					status: initialData.status || 'pending',
+					sub_status: initialData.sub_status || othersValues.sub_status || '',
 					suitable_job_roles: initialData.suitable_job_roles || [],
 					assigned_to: Array.isArray(initialData.assigned_to) ? initialData.assigned_to : 
 								(initialData.assigned_to ? [initialData.assigned_to] : 
@@ -117,6 +119,7 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 					feedback: '',
 					questions: defaultQuestions,
 					status: 'pending',
+					sub_status: '',
 					counselor_name: user ? (user.full_name || user.username) : '',
 					counseling_date: new Date().toISOString().split('T')[0],
 					others: {},
@@ -261,6 +264,12 @@ const CounselingFormDialog: React.FC<CounselingFormDialogProps> = ({
 		
 		// Validation for Assignment/Remarks (Manager/Admin Only)
 		if (isManagerOrAdmin && (!formData.assigned_to || formData.assigned_to.length === 0) && !formData.remarks) {
+			setShowErrors(true);
+			return;
+		}
+
+		// Validation for Rejection Sub Status
+		if (formData.status === 'rejected' && !formData.sub_status) {
 			setShowErrors(true);
 			return;
 		}

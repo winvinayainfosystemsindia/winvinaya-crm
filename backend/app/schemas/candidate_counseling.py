@@ -24,6 +24,7 @@ class CandidateCounselingBase(BaseModel):
     suitable_job_roles: Optional[List[str]] = None
     assigned_to: Optional[List[str]] = None
     remarks: Optional[str] = None
+    sub_status: Optional[str] = None
     status: str = "pending"  # 'pending', 'selected', 'rejected'
     counseling_date: Optional[datetime] = None
 
@@ -44,6 +45,7 @@ class CandidateCounselingUpdate(BaseModel):
     suitable_job_roles: Optional[List[str]] = None
     assigned_to: Optional[List[str]] = None
     remarks: Optional[str] = None
+    sub_status: Optional[str] = None
     status: Optional[str] = None
     counselor_id: Optional[int] = None
     counseling_date: Optional[datetime] = None

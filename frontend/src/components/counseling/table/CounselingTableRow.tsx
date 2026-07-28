@@ -86,36 +86,43 @@ const CounselingTableRow: React.FC<CounselingTableRowProps> = ({
 			{/* Status Column (Only if not 'Not Counseled') */}
 			{type !== 'not_counseled' && (
 				<TableCell>
-					<Chip
-						label={candidate.counseling_status === 'pending' ? 'In Progress' : ((candidate.counseling_status || 'pending').charAt(0).toUpperCase() + (candidate.counseling_status || 'pending').slice(1))}
-						size="small"
-						icon={
-							candidate.counseling_status === 'selected' ? <CheckCircle /> :
-								candidate.counseling_status === 'rejected' ? <Cancel /> :
-									candidate.counseling_status === 'pending' ? <WatchLater /> :
-										<HelpOutline />
-						}
-						sx={{
-							height: 24,
-							fontSize: '0.75rem',
-							fontWeight: 700,
-							borderRadius: 1,
-							bgcolor:
-								candidate.counseling_status === 'selected' ? alpha(theme.palette.success.main, 0.08) :
-									candidate.counseling_status === 'rejected' ? alpha(theme.palette.error.main, 0.08) :
-										candidate.counseling_status === 'pending' ? alpha(theme.palette.warning.main, 0.08) :
-											'action.hover',
-							color:
-								candidate.counseling_status === 'selected' ? 'success.main' :
-									candidate.counseling_status === 'rejected' ? 'error.main' :
-										candidate.counseling_status === 'pending' ? 'warning.main' :
-											'text.secondary',
-							'& .MuiChip-icon': {
-								color: 'inherit',
-								fontSize: 16
+					<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 0.5 }}>
+						<Chip
+							label={candidate.counseling_status === 'pending' ? 'In Progress' : ((candidate.counseling_status || 'pending').charAt(0).toUpperCase() + (candidate.counseling_status || 'pending').slice(1))}
+							size="small"
+							icon={
+								candidate.counseling_status === 'selected' ? <CheckCircle /> :
+									candidate.counseling_status === 'rejected' ? <Cancel /> :
+										candidate.counseling_status === 'pending' ? <WatchLater /> :
+											<HelpOutline />
 							}
-						}}
-					/>
+							sx={{
+								height: 24,
+								fontSize: '0.75rem',
+								fontWeight: 700,
+								borderRadius: 1,
+								bgcolor:
+									candidate.counseling_status === 'selected' ? alpha(theme.palette.success.main, 0.08) :
+										candidate.counseling_status === 'rejected' ? alpha(theme.palette.error.main, 0.08) :
+											candidate.counseling_status === 'pending' ? alpha(theme.palette.warning.main, 0.08) :
+												'action.hover',
+								color:
+									candidate.counseling_status === 'selected' ? 'success.main' :
+										candidate.counseling_status === 'rejected' ? 'error.main' :
+											candidate.counseling_status === 'pending' ? 'warning.main' :
+												'text.secondary',
+								'& .MuiChip-icon': {
+									color: 'inherit',
+									fontSize: 16
+								}
+							}}
+						/>
+						{candidate.counseling_status === 'rejected' && candidate.sub_status && (
+							<Typography variant="caption" sx={{ color: 'error.main', fontWeight: 600, fontSize: '0.7rem' }}>
+								{candidate.sub_status}
+							</Typography>
+						)}
+					</Box>
 				</TableCell>
 			)}
 

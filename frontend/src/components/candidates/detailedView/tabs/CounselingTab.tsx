@@ -258,6 +258,11 @@ const CounselingTab: React.FC<CounselingTabProps> = ({ candidate }) => {
 								color={getStatusColor(counseling.status)}
 								sx={{ fontWeight: 900, px: 2, py: 2, height: 32, borderRadius: 1.5 }}
 							/>
+							{counseling.status?.toLowerCase() === 'rejected' && (counseling.sub_status || counseling.others?.sub_status) && (
+								<Typography variant="body2" sx={{ fontWeight: 700, mt: 1.5, color: 'error.main' }}>
+									Reason: {counseling.sub_status || counseling.others?.sub_status}
+								</Typography>
+							)}
 						</Box>
 						<Stack spacing={2.5} sx={{ mt: 3 }}>
 							<InfoRow 

@@ -60,5 +60,12 @@ class CandidateCounseling(BaseModel):
             return self.others.get("suitable_job_roles", [])
         return []
 
+    @property
+    def sub_status(self) -> str | None:
+        """Virtual property to access sub_status from others JSON field"""
+        if self.others and isinstance(self.others, dict):
+            return self.others.get("sub_status")
+        return None
+
     def __repr__(self) -> str:
         return f"<CandidateCounseling(id={self.id}, candidate_id={self.candidate_id}, status={self.status})>"

@@ -214,6 +214,7 @@ class CandidateListResponse(BaseModel):
     screening_status: str = "Pending"
     consent_status: Optional[str] = None
     counseling_status: Optional[str] = None
+    sub_status: Optional[str] = None
     counselor_name: Optional[str] = None
     counseling_date: Optional[datetime] = None
     documents_uploaded: List[str] = []
@@ -386,6 +387,7 @@ class CandidateListResponse(BaseModel):
             skills = get_val(counseling, 'skills', [])
             questions = get_val(counseling, 'questions', [])
             workexperience = get_val(counseling, 'workexperience', [])
+            sub_status = get_val(counseling, 'sub_status')
             
             # Extract suitable job roles, assigned_to, and remarks (from property or others)
             suitable_job_roles = get_val(counseling, 'suitable_job_roles', [])
@@ -409,6 +411,8 @@ class CandidateListResponse(BaseModel):
                         assigned_to = val or []
                 if not remarks:
                     remarks = c_others.get('remarks')
+                if not sub_status:
+                    sub_status = c_others.get('sub_status')
             
             # Extract others for dynamic fields
             counseling_others = get_val(counseling, 'others')
@@ -475,6 +479,7 @@ class CandidateListResponse(BaseModel):
                 'screening_status': screening_status,
                 'consent_status': consent_status,
                 'counseling_status': counseling_status,
+                'sub_status': sub_status,
                 'counselor_name': counselor_name,
                 'counseling_date': counseling_date,
                 'feedback': feedback,
@@ -528,6 +533,7 @@ class CandidateListResponse(BaseModel):
             'screening_status': screening_status,
             'consent_status': consent_status,
             'counseling_status': counseling_status,
+            'sub_status': sub_status,
             'counselor_name': counselor_name,
             'counseling_date': counseling_date,
             'feedback': feedback,

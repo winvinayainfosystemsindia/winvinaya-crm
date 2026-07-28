@@ -111,7 +111,12 @@ const CounselingInfoTab: React.FC<CounselingInfoTabProps> = ({
 							<FormControl fullWidth size="small">
 								<Select
 									value={formData.status || 'pending'}
-									onChange={(e) => onFieldChange('status', e.target.value)}
+									onChange={(e) => {
+										onFieldChange('status', e.target.value);
+										if (e.target.value !== 'rejected') {
+											onFieldChange('sub_status', undefined);
+										}
+									}}
 									sx={{
 										borderRadius: 0.5,
 										bgcolor: 'background.paper',
@@ -141,6 +146,56 @@ const CounselingInfoTab: React.FC<CounselingInfoTabProps> = ({
 							</FormControl>
 						</Box>
 					</Grid>
+
+					{formData.status === 'rejected' && (
+						<Grid size={{ xs: 12, md: 6 }}>
+							<Box>
+								<Typography variant="awsFieldLabel">Rejection Sub Status</Typography>
+								<FormControl fullWidth size="small" error={showErrors && !formData.sub_status}>
+									<Select
+										value={formData.sub_status || ''}
+										onChange={(e) => onFieldChange('sub_status', e.target.value)}
+										displayEmpty
+										renderValue={(selected) => {
+											if (!selected) {
+												return <Typography variant="body2" sx={{ color: 'text.secondary' }}>Select Sub Status...</Typography>;
+											}
+											return <Typography variant="body2" sx={{ fontWeight: 600 }}>{selected as string}</Typography>;
+										}}
+										sx={{
+											borderRadius: 0.5,
+											bgcolor: 'background.paper',
+											'& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
+											'&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'text.secondary' },
+											'&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' }
+										}}
+									>
+										<MenuItem value="" disabled>
+											<Typography variant="body2" sx={{ color: 'text.secondary' }}>Select Sub Status...</Typography>
+										</MenuItem>
+										{[
+											'No Response',
+											'Not Interested',
+											'Not Eligible',
+											'Got Job',
+											'Working',
+											'Future Interest',
+											'Joined Other training'
+										].map((status) => (
+											<MenuItem key={status} value={status}>
+												<Typography variant="body2">{status}</Typography>
+											</MenuItem>
+										))}
+									</Select>
+									{showErrors && !formData.sub_status && (
+										<Typography variant="caption" color="error.main" sx={{ mt: 0.5, display: 'block', fontWeight: 600 }}>
+											Please select a rejection sub status.
+										</Typography>
+									)}
+								</FormControl>
+							</Box>
+						</Grid>
+					)}
 				</Grid>
 			</Paper>
 

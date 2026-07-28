@@ -102,6 +102,7 @@ export interface CandidateCounseling {
 	assigned_to?: string[];
 	remarks?: string;
 	status: 'pending' | 'selected' | 'rejected';
+	sub_status?: string;
 	counselor_id?: number;
 	counseling_date?: string;
 	created_at: string;
@@ -119,6 +120,7 @@ export interface CandidateCounselingCreate {
 	assigned_to?: string[];
 	remarks?: string;
 	status?: 'pending' | 'selected' | 'rejected';
+	sub_status?: string;
 	counseling_date?: string;
 }
 
@@ -204,6 +206,7 @@ export interface CandidateListItem {
 	screening_status?: string;
 	consent_status?: string;
 	counseling_status?: string;
+	sub_status?: string;
 	counselor_name?: string;
 
 	counseling_date?: string;
