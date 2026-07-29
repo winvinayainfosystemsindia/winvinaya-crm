@@ -117,7 +117,7 @@ class Settings(BaseSettings):
     AI_MODEL_GEMINI: str = "gemini-1.5-flash"
     AI_MODEL_OPENAI: str = "gpt-4o-mini"
     AI_MODEL_ANTHROPIC: str = "claude-3-5-haiku-20241022"  # Best value Claude model
-    AI_MODEL_GROQ: str = "llama-3.1-8b-instant"           # Ultra-fast Groq model
+    AI_MODEL_GROQ: str = "openai/gpt-oss-20b"           # Ultra-fast Groq model
     AI_MODEL_MISTRAL: str = "mistral-small-latest"
     AI_MODEL_TOGETHER: str = "meta-llama/Llama-3.1-8B-Instruct-Turbo"
     AI_MODEL_COHERE: str = "command-r"

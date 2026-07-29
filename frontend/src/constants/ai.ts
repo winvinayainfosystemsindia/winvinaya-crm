@@ -104,7 +104,7 @@ export const PROVIDER_META: Record<string, ProviderMeta> = {
     icon: React.createElement(FastIcon),
     badge: 'Fastest',
     badgeColor: '#7c3aed',
-    models: ['llama-3.1-8b-instant', 'llama-3.1-70b-versatile', 'mixtral-8x7b-32768'],
+    models: ['openai/gpt-oss-20b', 'openai/gpt-oss-120b'],
     keyPlaceholder: 'gsk_...',
     docsUrl: 'https://console.groq.com/keys',
   },
