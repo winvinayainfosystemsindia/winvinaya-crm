@@ -163,6 +163,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
                 return <Box sx={{ fontWeight: 700, color: theme.palette.text.primary }}>{val}</Box>;
             }
             else if (colId === 'disability_type') val = c.disability_details?.disability_type || c.disability_details?.type;
+            else if (colId === 'counseling_sub_status') val = c.sub_status ?? c.counseling?.sub_status;
             else if (colId === 'is_experienced') val = c.work_experience?.is_experienced;
             else if (colId === 'education_level') {
                 const degrees = c.education_details?.degrees;
@@ -254,6 +255,9 @@ const ReportTable: React.FC<ReportTableProps> = ({
 				if (val === null || val === undefined) return '-';
 				return <Box sx={{ fontWeight: 700, color: theme.palette.text.primary }}>{val}</Box>;
 			}
+			else if (colId === 'counseling_sub_status') {
+				val = item.candidate?.sub_status ?? item.candidate?.counseling?.sub_status;
+			}
 			else {
 				if (colId === 'registration_type') {
 					const rawVal = item[colId] ?? item.candidate?.other?.[colId];
@@ -264,7 +268,9 @@ const ReportTable: React.FC<ReportTableProps> = ({
 			}
 		} else {
 			// It's a candidate
-			if (colId.startsWith('screening_others.')) {
+			if (colId === 'counseling_sub_status') {
+				val = item.sub_status ?? item.counseling?.sub_status;
+			} else if (colId.startsWith('screening_others.')) {
 				const fieldName = colId.substring('screening_others.'.length);
 				val = (item.screening?.others as any)?.[fieldName] ?? (item as any)[fieldName];
 			} else if (colId.startsWith('counseling_others.')) {

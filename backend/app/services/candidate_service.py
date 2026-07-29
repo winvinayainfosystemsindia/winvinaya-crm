@@ -431,6 +431,7 @@ class CandidateService:
                 {"id": "disability_details.disability_type", "label": "Disability"},
                 {"id": "screening.status", "label": "Screening Status"},
                 {"id": "counseling.status", "label": "Counseling Status"},
+                {"id": "counseling.sub_status", "label": "Counseling Sub Status"},
                 {"id": "registration_type", "label": "Registration Source"},
                 {"id": "created_at", "label": "Registration Date"}
             ]
@@ -481,6 +482,8 @@ class CandidateService:
                         val = (c.screening.screened_by.full_name or c.screening.screened_by.username) if c.screening and c.screening.screened_by else ""
                     elif col_id == "counseling_status":
                         val = c.counseling.status if c.counseling else ""
+                    elif col_id in ["counseling_sub_status", "counseling.sub_status", "sub_status"]:
+                        val = c.counseling.sub_status if c.counseling else ""
                     elif col_id == "counseling_date":
                         val = c.counseling.counseling_date if c.counseling else ""
                     elif col_id == "counselor_name":

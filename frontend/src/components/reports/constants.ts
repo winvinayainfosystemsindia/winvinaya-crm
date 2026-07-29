@@ -35,6 +35,7 @@ export const ALL_COLUMNS = [
 
 	// Counseling Info
 	{ id: 'counseling_status', label: 'Counseling Status', default: true, group: 'counseling' },
+	{ id: 'counseling_sub_status', label: 'Counseling Sub Status', default: false, group: 'counseling' },
 	{ id: 'counselor_name', label: 'Counselor', default: false, group: 'counseling' },
 	{ id: 'counseling_date', label: 'Counseling Date', default: false, group: 'counseling' },
 	{ id: 'feedback', label: 'Counseling Feedback', default: false, group: 'counseling' },
