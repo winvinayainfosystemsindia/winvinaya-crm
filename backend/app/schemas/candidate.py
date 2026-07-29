@@ -263,6 +263,7 @@ class CandidateListResponse(BaseModel):
         screening_status = "Pending"
         consent_status = None
         counseling_status = None
+        sub_status = None
         counselor_name = None
         counseling_date = None
         feedback = None
