@@ -181,14 +181,16 @@ const ReportTable: React.FC<ReportTableProps> = ({
 			'mapped_at_dates', 'batch_names', 'batch_statuses', 'batch_tags',
 			'domains', 'training_modes', 'durations', 'training_statuses',
 			'allocation_dates', 'mock_interview_statuses', 'mock_interview_ratings',
-			'mock_interview_dates', 'mock_interview_types',
+			'mock_interview_skills', 'mock_interview_dates', 'mock_interview_types',
+			'mock_interview_feedbacks',
 			'offered_ctcs', 'offered_designations', 'work_locations', 'joining_dates',
 			'offer_responses', 'actual_joining_dates', 'joining_statuses', 'offer_dates',
 			'offer_created_ats', 'offer_updated_ats'
 		].includes(colId);
 
-		if (isMultiItemCol && typeof val === 'string' && val.includes(',')) {
-			const itemsList = val.split(',').map(s => s.trim());
+		if (isMultiItemCol && typeof val === 'string' && (val.includes(',') || val.includes('|'))) {
+			const delimiter = val.includes('|') ? '|' : ',';
+			const itemsList = val.split(delimiter).map(s => s.trim());
 			return (
 				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, py: 0.5 }}>
 					{itemsList.map((subVal, i) => (

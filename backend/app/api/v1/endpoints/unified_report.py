@@ -82,6 +82,7 @@ async def get_unified_report(
     mock_interview_status: Optional[str] = Query(None),
     # Analysis filters
     recommendation: Optional[str] = Query(None),
+    analysis_status: Optional[str] = Query(None),
     # Placement filters
     company_id: Optional[int] = Query(None),
     job_role_id: Optional[str] = Query(None),
@@ -140,6 +141,7 @@ async def get_unified_report(
         is_dropout=is_dropout,
         mock_interview_status=mock_interview_status,
         recommendation=recommendation,
+        analysis_status=analysis_status,
         company_id=company_id,
         job_role_id=job_role_id,
         placement_status=placement_status,
@@ -181,6 +183,7 @@ async def export_unified_report(
     is_dropout: Optional[bool] = Query(None),
     mock_interview_status: Optional[str] = Query(None),
     recommendation: Optional[str] = Query(None),
+    analysis_status: Optional[str] = Query(None),
     company_id: Optional[int] = Query(None),
     job_role_id: Optional[str] = Query(None),
     placement_status: Optional[str] = Query(None),
@@ -235,6 +238,7 @@ async def export_unified_report(
         is_dropout=is_dropout,
         mock_interview_status=mock_interview_status,
         recommendation=recommendation,
+        analysis_status=analysis_status,
         company_id=company_id,
         job_role_id=job_role_id,
         placement_status=placement_status,

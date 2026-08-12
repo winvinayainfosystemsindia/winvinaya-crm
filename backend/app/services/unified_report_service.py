@@ -67,6 +67,7 @@ class UnifiedReportService:
         mock_interview_status: Optional[str] = None,
         # Analysis filters
         recommendation: Optional[str] = None,
+        analysis_status: Optional[str] = None,
         # Placement filters
         company_id: Optional[int] = None,
         job_role_id: Optional[str] = None,
@@ -341,6 +342,7 @@ class UnifiedReportService:
                 is_dropout=is_dropout,
                 mock_interview_status=mock_interview_status,
                 recommendation=recommendation,
+                analysis_status=analysis_status,
                 company_id=company_id,
                 job_role_id=job_role_id,
                 placement_status=placement_status,
@@ -597,19 +599,24 @@ class UnifiedReportService:
                 "total_absent_days": None,
             })
 
-        # === Mock Interviews (all, comma-separated) ===
+        # === Mock Interviews (all, formatted) ===
         mock_interviews = sorted(
             [m for m in (c.mock_interviews or []) if not m.is_deleted],
             key=lambda m: m.created_at or m.id,
             reverse=True
         )
         if mock_interviews:
+            formatted_skills = [
+                self._format_mock_skills(m.skills) for m in mock_interviews
+            ]
+
             item.update({
                 "mock_interview_statuses": ", ".join(m.status for m in mock_interviews),
                 "mock_interview_ratings": ", ".join(
-                    str(m.overall_rating) if m.overall_rating else "-"
+                    str(m.overall_rating) if m.overall_rating is not None else "-"
                     for m in mock_interviews
                 ),
+                "mock_interview_skills": " | ".join(formatted_skills),
                 "mock_interview_dates": ", ".join(
                     m.interview_date.strftime("%Y-%m-%d") if m.interview_date else "-"
                     for m in mock_interviews
@@ -623,6 +630,7 @@ class UnifiedReportService:
                 # Latest
                 "mock_interview_status": mock_interviews[0].status,
                 "mock_interview_rating": mock_interviews[0].overall_rating,
+                "mock_interview_skill": formatted_skills[0] if formatted_skills else None,
                 "mock_interview_date": mock_interviews[0].interview_date.isoformat() if mock_interviews[0].interview_date else None,
                 "mock_interview_type": mock_interviews[0].interview_type,
                 "mock_interview_feedback": mock_interviews[0].feedback,
@@ -632,11 +640,11 @@ class UnifiedReportService:
         else:
             item.update({
                 "mock_interview_statuses": None, "mock_interview_ratings": None,
-                "mock_interview_dates": None, "mock_interview_types": None,
-                "mock_interview_feedbacks": None,
+                "mock_interview_skills": None, "mock_interview_dates": None,
+                "mock_interview_types": None, "mock_interview_feedbacks": None,
                 "mock_interview_status": None, "mock_interview_rating": None,
-                "mock_interview_date": None, "mock_interview_type": None,
-                "mock_interview_feedback": None,
+                "mock_interview_skill": None, "mock_interview_date": None,
+                "mock_interview_type": None, "mock_interview_feedback": None,
                 "mock_interview_created_at": None, "mock_interview_updated_at": None,
             })
 
@@ -645,20 +653,32 @@ class UnifiedReportService:
             latest_analysis = analyses[0]
             item.update({
                 "analysis_recommendation": latest_analysis.recommendation,
+                "analysis_status": latest_analysis.status,
+                "analyst_name": latest_analysis.analyst_name,
+                "analysis_date": latest_analysis.analysis_date.isoformat() if latest_analysis.analysis_date else None,
                 "analysis_strengths": latest_analysis.strengths,
                 "analysis_weaknesses": latest_analysis.weaknesses,
                 "analysis_opportunities": latest_analysis.opportunities,
                 "analysis_threats": latest_analysis.threats,
-                "assessment_score": (latest_analysis.other or {}).get("assessment_score"),
+                "assessment_score": (latest_analysis.other or {}).get("assessment_score") or (latest_analysis.other or {}).get("score"),
+                "analysis_skills": self._format_mock_skills(latest_analysis.skills),
                 "analysis_created_at": latest_analysis.created_at.isoformat() if latest_analysis.created_at else None,
                 "analysis_updated_at": latest_analysis.updated_at.isoformat() if latest_analysis.updated_at else None,
+                # Multi-item aggregated fields
+                "analysis_recommendations": ", ".join(a.recommendation for a in analyses if a.recommendation),
+                "analysis_statuses": ", ".join(a.status for a in analyses if a.status),
+                "analyst_names": ", ".join(a.analyst_name for a in analyses if a.analyst_name),
             })
         else:
             item.update({
-                "analysis_recommendation": None, "analysis_strengths": None,
-                "analysis_weaknesses": None, "analysis_opportunities": None,
-                "analysis_threats": None, "assessment_score": None,
+                "analysis_recommendation": None, "analysis_status": None,
+                "analyst_name": None, "analysis_date": None,
+                "analysis_strengths": None, "analysis_weaknesses": None,
+                "analysis_opportunities": None, "analysis_threats": None,
+                "assessment_score": None, "analysis_skills": None,
                 "analysis_created_at": None, "analysis_updated_at": None,
+                "analysis_recommendations": None, "analysis_statuses": None,
+                "analyst_names": None,
             })
 
         # === Training Assignments (avg marks) ===
@@ -825,6 +845,7 @@ class UnifiedReportService:
         is_dropout: Optional[bool] = None,
         mock_interview_status: Optional[str] = None,
         recommendation: Optional[str] = None,
+        analysis_status: Optional[str] = None,
         company_id: Optional[int] = None,
         job_role_id: Optional[str] = None,
         placement_status: Optional[str] = None,
@@ -864,6 +885,9 @@ class UnifiedReportService:
         if recommendation and item.get("analysis_recommendation") != recommendation:
             return False
 
+        if analysis_status and item.get("analysis_status") != analysis_status:
+            return False
+
         if placement_status and item.get("placement_statuses"):
             if placement_status not in (item.get("placement_statuses") or ""):
                 return False
@@ -877,6 +901,40 @@ class UnifiedReportService:
             return False
 
         return True
+
+    @staticmethod
+    def _format_mock_skills(skills) -> str:
+        """Format mock interview skill ratings into a readable string."""
+        if not skills:
+            return "-"
+        if isinstance(skills, str):
+            try:
+                import json
+                skills = json.loads(skills)
+            except Exception:
+                return skills
+        if isinstance(skills, list):
+            parts = []
+            for s in skills:
+                if isinstance(s, dict):
+                    name = s.get("skill") or s.get("skill_name") or s.get("name") or "Skill"
+                    rating = s.get("rating")
+                    level = s.get("level")
+                    r_str = f"{rating}/10" if rating is not None else None
+                    if level and r_str:
+                        parts.append(f"{name} ({level}: {r_str})")
+                    elif r_str:
+                        parts.append(f"{name}: {r_str}")
+                    elif level:
+                        parts.append(f"{name} ({level})")
+                    else:
+                        parts.append(str(name))
+                elif isinstance(s, str):
+                    parts.append(s)
+            return ", ".join(parts) if parts else "-"
+        elif isinstance(skills, dict):
+            return ", ".join(f"{k}: {v}" for k, v in skills.items())
+        return "-"
 
     @staticmethod
     def _format_courses(courses) -> str:

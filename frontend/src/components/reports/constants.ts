@@ -87,17 +87,25 @@ export const UNIFIED_COLUMNS = [
 	// ── Mock Interview ──
 	{ id: 'mock_interview_statuses', label: 'Mock Interview Status(es)', default: false, group: 'mock_interview' },
 	{ id: 'mock_interview_ratings', label: 'Mock Interview Rating(s)', default: false, group: 'mock_interview' },
+	{ id: 'mock_interview_skills', label: 'Mock Interview Skill Rating(s)', default: false, group: 'mock_interview' },
 	{ id: 'mock_interview_dates', label: 'Mock Interview Date(s)', default: false, group: 'mock_interview' },
 	{ id: 'mock_interview_types', label: 'Mock Interview Type(s)', default: false, group: 'mock_interview' },
 	{ id: 'mock_interview_feedbacks', label: 'Mock Interview Feedback(s)', default: false, group: 'mock_interview' },
+	{ id: 'mock_interview_skill', label: 'Mock Interview Skill Rating (Latest)', default: false, group: 'mock_interview' },
 	{ id: 'mock_interview_created_at', label: 'Mock Interview Created Date', default: false, group: 'mock_interview' },
 	{ id: 'mock_interview_updated_at', label: 'Mock Interview Updated Date', default: false, group: 'mock_interview' },
 
 	// ── Candidate Analysis (SWOT) ──
 	{ id: 'analysis_recommendation', label: 'Analysis Recommendation', default: false, group: 'analysis' },
+	{ id: 'analysis_status', label: 'Analysis Status', default: false, group: 'analysis' },
+	{ id: 'analyst_name', label: 'Analyst / Trainer Name', default: false, group: 'analysis' },
+	{ id: 'analysis_date', label: 'Analysis Date', default: false, group: 'analysis' },
 	{ id: 'analysis_strengths', label: 'Strengths', default: false, group: 'analysis' },
 	{ id: 'analysis_weaknesses', label: 'Weaknesses', default: false, group: 'analysis' },
+	{ id: 'analysis_opportunities', label: 'Opportunities', default: false, group: 'analysis' },
+	{ id: 'analysis_threats', label: 'Threats', default: false, group: 'analysis' },
 	{ id: 'assessment_score', label: 'Assessment Score', default: false, group: 'analysis' },
+	{ id: 'analysis_skills', label: 'Analysis Skill Rating(s)', default: false, group: 'analysis' },
 	{ id: 'analysis_created_at', label: 'Analysis Created Date', default: false, group: 'analysis' },
 	{ id: 'analysis_updated_at', label: 'Analysis Updated Date', default: false, group: 'analysis' },
 

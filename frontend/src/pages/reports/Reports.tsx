@@ -271,6 +271,16 @@ const Reports: React.FC = () => {
 				{ label: 'Counseling Required', value: 'counseling_required' }
 			]
 		},
+		{
+			key: 'analysis_status',
+			label: 'Analysis Status',
+			type: 'single-select',
+			section: 'Analysis',
+			options: [
+				{ label: 'In Progress', value: 'in-progress' },
+				{ label: 'Completed', value: 'completed' }
+			]
+		},
 
 		// Placement
 		{
