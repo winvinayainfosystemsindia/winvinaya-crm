@@ -97,12 +97,30 @@ class CandidateDocumentService:
     
     async def get_documents(self, candidate_public_id: UUID) -> List[CandidateDocument]:
         """Get all documents for a candidate"""
-        candidate = await self.candidate_repo.get_by_public_id(candidate_public_id)
+        candidate = await self.candidate_repo.get_by_public_id_with_details(candidate_public_id)
         if not candidate:
             raise HTTPException(status_code=404, detail="Candidate not found")
         
         docs = await self.repository.get_by_candidate_id(candidate.id)
-        return [doc for doc in docs if doc.is_active]
+        active_docs = [doc for doc in docs if doc.is_active and not doc.is_deleted]
+
+        # Auto-ensure consent form PDF exists if candidate consent status is 'Accepted'
+        has_consent_pdf = any(d.document_type == "consent_form" for d in active_docs)
+        if not has_consent_pdf and candidate.screening and candidate.screening.consent_status == "Accepted":
+            try:
+                from app.services.consent_pdf_service import ConsentPDFService
+                new_doc = await ConsentPDFService.create_and_save_consent_pdf(
+                    db=self.db,
+                    candidate=candidate,
+                    screening=candidate.screening,
+                    consent_ip=candidate.screening.consent_ip or "System Verified"
+                )
+                active_docs.append(new_doc)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Failed auto-generating consent PDF for candidate {candidate.id}: {str(e)}")
+
+        return active_docs
     
     async def get_document(self, document_id: int) -> CandidateDocument:
         """Get a specific document by id"""
