@@ -47,7 +47,26 @@ class CandidateScreeningService:
         screening_data = screening_in.model_dump()
         screening_data["candidate_id"] = candidate.id  # Use internal id
         
-        return await self.repository.create(screening_data)
+        if screening_data.get("consent_status") == "Accepted" and not screening_data.get("consent_at"):
+            from datetime import datetime
+            screening_data["consent_at"] = datetime.utcnow()
+
+        new_screening = await self.repository.create(screening_data)
+
+        if new_screening.consent_status == "Accepted":
+            try:
+                from app.services.consent_pdf_service import ConsentPDFService
+                await ConsentPDFService.create_and_save_consent_pdf(
+                    db=self.db,
+                    candidate=candidate,
+                    screening=new_screening,
+                    consent_ip="Admin Screening Creation"
+                )
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Error generating consent PDF for candidate {candidate.id}: {str(e)}")
+
+        return new_screening
     
     async def update_screening(
         self,
@@ -73,8 +92,28 @@ class CandidateScreeningService:
         # Only allow setting screened_by_id if it's currently None
         if "screened_by_id" in update_data and candidate.screening.screened_by_id is not None:
              del update_data["screened_by_id"]
+
+        from datetime import datetime
+        is_newly_accepted = update_data.get("consent_status") == "Accepted" and candidate.screening.consent_status != "Accepted"
+        if is_newly_accepted and not candidate.screening.consent_at and "consent_at" not in update_data:
+            update_data["consent_at"] = datetime.utcnow()
              
-        return await self.repository.update(candidate.screening.id, update_data)
+        updated_screening = await self.repository.update(candidate.screening.id, update_data)
+
+        if is_newly_accepted:
+            try:
+                from app.services.consent_pdf_service import ConsentPDFService
+                await ConsentPDFService.create_and_save_consent_pdf(
+                    db=self.db,
+                    candidate=candidate,
+                    screening=updated_screening,
+                    consent_ip="Admin Update"
+                )
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Error generating consent PDF for candidate {candidate.id}: {str(e)}")
+
+        return updated_screening
     
     async def delete_screening(self, candidate_public_id: UUID) -> bool:
         """Delete candidate screening"""

@@ -71,4 +71,17 @@ class ConsentService:
         screening.consent_ip = ip_address
         
         await self.db.commit()
+
+        # Generate PDF consent document and save to candidate's document collection
+        try:
+            from app.services.consent_pdf_service import ConsentPDFService
+            await ConsentPDFService.create_and_save_consent_pdf(
+                db=self.db,
+                candidate=candidate,
+                screening=screening,
+                consent_ip=ip_address
+            )
+        except Exception as e:
+            logger.error(f"Error generating consent PDF for candidate {candidate.id}: {str(e)}", exc_info=True)
+
         return True

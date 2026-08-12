@@ -26,6 +26,7 @@ class FileStorageService:
         "aadhar_card": {".pdf", ".jpg", ".jpeg", ".png"},
         "passport_photo": {".jpg", ".jpeg", ".png"},
         "offer_letter": {".pdf", ".jpg", ".jpeg", ".png", ".doc", ".docx"},
+        "consent_form": {".pdf"},
         "other": {".pdf", ".doc", ".docx", ".jpg", ".jpeg", ".png", ".zip"}
     }
     
