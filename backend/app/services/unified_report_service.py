@@ -2,7 +2,7 @@
 
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, or_, and_, case, String, text
+from sqlalchemy import select, func, or_, and_, case, String, text, cast, Numeric
 from sqlalchemy.orm import selectinload, joinedload
 
 from app.models.candidate import Candidate
@@ -127,72 +127,160 @@ class UnifiedReportService:
 
         # --- Candidate Filters ---
         if gender:
-            filters.append(Candidate.gender == gender)
+            filters.append(func.lower(Candidate.gender) == gender.lower())
 
         if disability_types:
-            dt_list = [d.strip() for d in disability_types.split(",")]
-            filters.append(
-                func.json_extract_path_text(Candidate.disability_details, "disability_type").in_(dt_list)
-            )
+            dt_list = [d.strip() for d in disability_types.split(",") if d.strip()]
+            if dt_list:
+                dt_conditions = []
+                for dt in dt_list:
+                    dt_conditions.append(
+                        Candidate.disability_details['disability_type'].as_string().ilike(dt)
+                    )
+                    dt_conditions.append(
+                        Candidate.disability_details['type'].as_string().ilike(dt)
+                    )
+                filters.append(or_(*dt_conditions))
 
         if education_levels:
-            ed_list = [e.strip() for e in education_levels.split(",")]
-            filters.append(
-                func.json_extract_path_text(Candidate.education_details, "highest_education").in_(ed_list)
-            )
+            ed_list = [e.strip() for e in education_levels.split(",") if e.strip()]
+            if ed_list:
+                ed_conditions = []
+                for ed in ed_list:
+                    ed_conditions.append(
+                        Candidate.education_details['highest_education'].as_string().ilike(f"%{ed}%")
+                    )
+                    ed_conditions.append(
+                        Candidate.education_details['degrees'].as_string().ilike(f"%{ed}%")
+                    )
+                filters.append(or_(*ed_conditions))
 
         if cities:
-            city_list = [c.strip() for c in cities.split(",")]
-            filters.append(Candidate.city.in_(city_list))
+            city_list = [c.strip() for c in cities.split(",") if c.strip()]
+            if city_list:
+                city_conditions = [Candidate.city.ilike(c) for c in city_list]
+                filters.append(or_(*city_conditions))
 
         if disability_percentages:
             parts = disability_percentages.split("-")
             if len(parts) == 2:
-                min_pct, max_pct = int(parts[0]), int(parts[1])
-                filters.append(
-                    func.cast(
-                        func.json_extract_path_text(Candidate.disability_details, "disability_percentage"),
-                        String
-                    ).cast(func.integer).between(min_pct, max_pct)
-                )
+                try:
+                    min_pct, max_pct = float(parts[0]), float(parts[1])
+                    numeric_expr = cast(
+                        func.nullif(
+                            func.regexp_replace(
+                                or_(
+                                    Candidate.disability_details['disability_percentage'].as_string(),
+                                    Candidate.disability_details['percentage'].as_string()
+                                ),
+                                '[^0-9.]', '', 'g'
+                            ),
+                            ''
+                        ),
+                        Numeric
+                    )
+                    filters.append(and_(numeric_expr >= min_pct, numeric_expr <= max_pct))
+                except (ValueError, TypeError):
+                    pass
 
         if year_of_passing:
-            yp_list = [y.strip() for y in year_of_passing.split(",")]
-            filters.append(
-                func.json_extract_path_text(Candidate.education_details, "year_of_passing").in_(yp_list)
-            )
+            yp_list = [y.strip() for y in year_of_passing.split(",") if y.strip()]
+            if yp_list:
+                yp_conditions = []
+                for yop in yp_list:
+                    yp_conditions.append(
+                        Candidate.education_details['year_of_passing'].as_string().ilike(f"%{yop}%")
+                    )
+                    yp_conditions.append(
+                        Candidate.education_details['degrees'].as_string().ilike(f'%"year_of_passing": {yop}%')
+                    )
+                    yp_conditions.append(
+                        Candidate.education_details['degrees'].as_string().ilike(f'%"year_of_passing": "{yop}"%')
+                    )
+                filters.append(or_(*yp_conditions))
 
         if year_of_experience:
-            parts = year_of_experience.split("-")
-            if len(parts) == 2:
-                min_exp, max_exp = int(parts[0]), int(parts[1])
+            if '-' in str(year_of_experience):
+                parts = str(year_of_experience).split("-")
+                if len(parts) == 2:
+                    try:
+                        min_exp, max_exp = float(parts[0]), float(parts[1])
+                        exp_expr = cast(
+                            func.nullif(
+                                func.regexp_replace(
+                                    or_(
+                                        Candidate.work_experience['years'].as_string(),
+                                        Candidate.work_experience['year_of_experience'].as_string()
+                                    ),
+                                    '[^0-9.]', '', 'g'
+                                ),
+                                ''
+                            ),
+                            Numeric
+                        )
+                        filters.append(and_(exp_expr >= min_exp, exp_expr <= max_exp))
+                    except (ValueError, TypeError):
+                        pass
+            else:
+                exp_str = str(year_of_experience).strip()
                 filters.append(
-                    func.cast(
-                        func.json_extract_path_text(Candidate.work_experience, "years"),
-                        String
-                    ).cast(func.integer).between(min_exp, max_exp)
+                    or_(
+                        Candidate.work_experience['years'].as_string().ilike(f"%{exp_str}%"),
+                        Candidate.work_experience['year_of_experience'].as_string().ilike(f"%{exp_str}%")
+                    )
                 )
 
         if is_experienced is not None:
-            filters.append(
-                func.json_extract_path_text(Candidate.work_experience, "is_experienced") == str(is_experienced).lower()
-            )
+            if is_experienced:
+                filters.append(
+                    Candidate.work_experience['is_experienced'].as_string().ilike('true')
+                )
+            else:
+                filters.append(
+                    or_(
+                        Candidate.work_experience['is_experienced'].as_string().ilike('false'),
+                        Candidate.work_experience['is_experienced'].as_string().is_(None),
+                        Candidate.work_experience.is_(None)
+                    )
+                )
 
         if currently_employed is not None:
-            filters.append(
-                func.json_extract_path_text(Candidate.work_experience, "currently_employed") == str(currently_employed).lower()
-            )
+            if currently_employed:
+                filters.append(
+                    Candidate.work_experience['currently_employed'].as_string().ilike('true')
+                )
+            else:
+                filters.append(
+                    or_(
+                        Candidate.work_experience['currently_employed'].as_string().ilike('false'),
+                        Candidate.work_experience['currently_employed'].as_string().is_(None),
+                        Candidate.work_experience.is_(None)
+                    )
+                )
 
         if registration_type:
-            filters.append(
-                func.json_extract_path_text(Candidate.other, "registration_type") == registration_type
-            )
+            if registration_type.lower() == 'registered':
+                filters.append(
+                    or_(
+                        Candidate.other.is_(None),
+                        Candidate.other['registration_type'].is_(None),
+                        Candidate.other['registration_type'].as_string() == '',
+                        Candidate.other['registration_type'].as_string().ilike('registered')
+                    )
+                )
+            else:
+                filters.append(
+                    Candidate.other['registration_type'].as_string().ilike(registration_type)
+                )
 
         if status_of_beneficiary:
-            sb_list = [s.strip() for s in status_of_beneficiary.split(",")]
-            filters.append(
-                func.json_extract_path_text(Candidate.other, "status_of_beneficiary").in_(sb_list)
-            )
+            sb_list = [s.strip() for s in status_of_beneficiary.split(",") if s.strip()]
+            if sb_list:
+                sb_conditions = [
+                    Candidate.other['status_of_beneficiary'].as_string().ilike(s)
+                    for s in sb_list
+                ]
+                filters.append(or_(*sb_conditions))
 
         if created_from:
             filters.append(Candidate.created_at >= created_from)
@@ -201,70 +289,226 @@ class UnifiedReportService:
 
         # --- Screening Filters ---
         if screening_status:
-            filters.append(CandidateScreening.status == screening_status)
+            if screening_status.lower() == "pending":
+                filters.append(
+                    or_(
+                        CandidateScreening.id.is_(None),
+                        CandidateScreening.status.ilike("pending"),
+                        CandidateScreening.status.is_(None),
+                        CandidateScreening.status == ""
+                    )
+                )
+            elif screening_status.lower() in ("in progress", "in-progress"):
+                filters.append(
+                    and_(
+                        CandidateScreening.id.isnot(None),
+                        or_(
+                            CandidateScreening.status.ilike("in progress"),
+                            CandidateScreening.status.ilike("in-progress"),
+                            CandidateScreening.status.is_(None),
+                            CandidateScreening.status == ""
+                        )
+                    )
+                )
+            else:
+                filters.append(CandidateScreening.status.ilike(screening_status))
 
         if consent_status:
-            filters.append(CandidateScreening.consent_status == consent_status)
+            filters.append(CandidateScreening.consent_status.ilike(consent_status))
 
         if screening_reason:
-            sr_list = [s.strip() for s in screening_reason.split(",")]
-            filters.append(
-                func.json_extract_path_text(CandidateScreening.others, "screening_reason").in_(sr_list)
-            )
+            sr_list = [s.strip() for s in screening_reason.split(",") if s.strip()]
+            if sr_list:
+                sr_conditions = [
+                    func.json_extract_path_text(CandidateScreening.others, 'screening_reason').ilike(f"%{s}%")
+                    for s in sr_list
+                ]
+                filters.append(or_(*sr_conditions))
 
         # --- Counseling Filters ---
         if counseling_status:
-            filters.append(CandidateCounseling.status == counseling_status)
+            filters.append(CandidateCounseling.status.ilike(counseling_status))
+
+        # --- Document Filters ---
+        if has_resume is not None:
+            res_subq = select(CandidateDocument.candidate_id).where(
+                CandidateDocument.document_type == "resume",
+                CandidateDocument.is_active == True,
+                CandidateDocument.is_deleted == False
+            )
+            if has_resume:
+                filters.append(Candidate.id.in_(res_subq))
+            else:
+                filters.append(Candidate.id.not_in(res_subq))
+
+        if has_disability_cert is not None:
+            cert_subq = select(CandidateDocument.candidate_id).where(
+                CandidateDocument.document_type == "disability_certificate",
+                CandidateDocument.is_active == True,
+                CandidateDocument.is_deleted == False
+            )
+            if has_disability_cert:
+                filters.append(Candidate.id.in_(cert_subq))
+            else:
+                filters.append(Candidate.id.not_in(cert_subq))
+
+        # --- Training Filters ---
+        if batch_ids:
+            b_ids = [int(b.strip()) for b in batch_ids.split(",") if b.strip().isdigit()]
+            if b_ids:
+                b_subq = select(TrainingCandidateAllocation.candidate_id).where(
+                    TrainingCandidateAllocation.batch_id.in_(b_ids),
+                    TrainingCandidateAllocation.is_deleted == False
+                )
+                filters.append(Candidate.id.in_(b_subq))
+
+        if batch_tag:
+            tag_subq = (
+                select(TrainingCandidateAllocation.candidate_id)
+                .join(TrainingBatch, TrainingCandidateAllocation.batch_id == TrainingBatch.id)
+                .where(
+                    TrainingBatch.other['tag'].as_string().ilike(f"%{batch_tag}%"),
+                    TrainingCandidateAllocation.is_deleted == False
+                )
+            )
+            filters.append(Candidate.id.in_(tag_subq))
+
+        if training_status:
+            ts_subq = select(TrainingCandidateAllocation.candidate_id).where(
+                TrainingCandidateAllocation.status.ilike(training_status),
+                TrainingCandidateAllocation.is_deleted == False
+            )
+            filters.append(Candidate.id.in_(ts_subq))
+
+        if is_dropout is not None:
+            drop_subq = select(TrainingCandidateAllocation.candidate_id).where(
+                TrainingCandidateAllocation.is_dropout == is_dropout,
+                TrainingCandidateAllocation.is_deleted == False
+            )
+            filters.append(Candidate.id.in_(drop_subq))
+
+        # --- Mock Interview Filters ---
+        if mock_interview_status:
+            mock_subq = select(TrainingMockInterview.candidate_id).where(
+                TrainingMockInterview.status.ilike(mock_interview_status),
+                TrainingMockInterview.is_deleted == False
+            )
+            filters.append(Candidate.id.in_(mock_subq))
+
+        # --- Analysis Filters ---
+        if recommendation:
+            rec_subq = select(TrainingCandidateAnalysis.candidate_id).where(
+                TrainingCandidateAnalysis.recommendation.ilike(recommendation),
+                TrainingCandidateAnalysis.is_deleted == False
+            )
+            filters.append(Candidate.id.in_(rec_subq))
+
+        if analysis_status:
+            ana_subq = select(TrainingCandidateAnalysis.candidate_id).where(
+                TrainingCandidateAnalysis.status.ilike(analysis_status),
+                TrainingCandidateAnalysis.is_deleted == False
+            )
+            filters.append(Candidate.id.in_(ana_subq))
+
+        # --- Placement Filters ---
+        if company_id:
+            comp_subq = (
+                select(PlacementMapping.candidate_id)
+                .join(JobRole, PlacementMapping.job_role_id == JobRole.id)
+                .where(
+                    JobRole.company_id == company_id,
+                    PlacementMapping.is_active == True,
+                    PlacementMapping.is_deleted == False
+                )
+            )
+            filters.append(Candidate.id.in_(comp_subq))
+
+        if job_role_id:
+            jr_subq = (
+                select(PlacementMapping.candidate_id)
+                .join(JobRole, PlacementMapping.job_role_id == JobRole.id)
+                .where(
+                    or_(
+                        PlacementMapping.job_role_id == int(job_role_id) if str(job_role_id).isdigit() else False,
+                        JobRole.public_id.cast(String) == str(job_role_id)
+                    ),
+                    PlacementMapping.is_active == True,
+                    PlacementMapping.is_deleted == False
+                )
+            )
+            filters.append(Candidate.id.in_(jr_subq))
+
+        if placement_status:
+            pm_subq = select(PlacementMapping.candidate_id).where(
+                PlacementMapping.status.cast(String).ilike(placement_status),
+                PlacementMapping.is_active == True,
+                PlacementMapping.is_deleted == False
+            )
+            filters.append(Candidate.id.in_(pm_subq))
+
+        if offer_response:
+            off_subq = (
+                select(PlacementOffer.candidate_id)
+                .where(
+                    PlacementOffer.candidate_response.cast(String).ilike(offer_response)
+                )
+            )
+            filters.append(Candidate.id.in_(off_subq))
+
+        if joining_status:
+            join_subq = (
+                select(PlacementOffer.candidate_id)
+                .where(
+                    PlacementOffer.joining_status.cast(String).ilike(joining_status)
+                )
+            )
+            filters.append(Candidate.id.in_(join_subq))
 
         # --- Dynamic Field Filters ---
         if extra_filters:
             for key, value in extra_filters.items():
+                if not value:
+                    continue
+                selected_values = [v.strip() for v in str(value).split(',') if v.strip()]
+                if not selected_values:
+                    continue
+
                 if key.startswith("screening_others."):
                     field_name = key.replace("screening_others.", "")
-                    if "," in value:
-                        val_list = [v.strip() for v in value.split(",")]
-                        filters.append(
-                            func.json_extract_path_text(CandidateScreening.others, field_name).in_(val_list)
-                        )
-                    else:
-                        filters.append(
-                            func.json_extract_path_text(CandidateScreening.others, field_name) == value
-                        )
+                    conditions = [
+                        func.json_extract_path_text(CandidateScreening.others, field_name).ilike(f"%{v}%")
+                        for v in selected_values
+                    ]
+                    filters.append(or_(*conditions) if len(conditions) > 1 else conditions[0])
                 elif key.startswith("counseling_others."):
                     field_name = key.replace("counseling_others.", "")
-                    if "," in value:
-                        val_list = [v.strip() for v in value.split(",")]
-                        filters.append(
-                            func.json_extract_path_text(CandidateCounseling.others, field_name).in_(val_list)
-                        )
-                    else:
-                        filters.append(
-                            func.json_extract_path_text(CandidateCounseling.others, field_name) == value
-                        )
+                    conditions = [
+                        func.json_extract_path_text(CandidateCounseling.others, field_name).ilike(f"%{v}%")
+                        for v in selected_values
+                    ]
+                    filters.append(or_(*conditions) if len(conditions) > 1 else conditions[0])
 
-        # Apply filters
+        # Apply filters to both data query and count query
         if filters:
             query = query.where(and_(*filters))
             count_query = count_query.where(and_(*filters))
 
-        # Post-load filtering for training/placement (done in Python after fetching)
-        # These are applied after the main query to avoid complex subquery joins
-
-        # Get total count
+        # Get total count matching ALL filters
         total_result = await self.db.execute(count_query)
         total = total_result.scalar() or 0
 
-        # Get paginated data
+        # Get paginated data matching ALL filters
         query = query.order_by(Candidate.created_at.desc())
         query = query.offset(skip).limit(limit)
 
         result = await self.db.execute(query)
         candidates = result.unique().scalars().all()
 
-        # Now fetch placement mappings for these candidates
+        # Fetch relationship data for returned candidates
         candidate_ids = [c.id for c in candidates]
         placement_data = {}
         analysis_data = {}
+        attendance_data = {}
 
         if candidate_ids:
             # Fetch placement mappings with job role + company
@@ -306,8 +550,7 @@ class UnifiedReportService:
                     analysis_data[a.candidate_id] = []
                 analysis_data[a.candidate_id].append(a)
 
-            # Fetch training attendance for candidates
-            attendance_data = {}
+            # Fetch training attendance
             att_query = (
                 select(TrainingAttendance)
                 .where(
@@ -332,27 +575,6 @@ class UnifiedReportService:
                 analysis_data.get(candidate.id, []),
                 attendance_data.get(candidate.id, []),
             )
-            
-            # Apply post-fetch filters for training/placement
-            if not self._passes_post_filters(
-                item,
-                batch_ids=batch_ids,
-                batch_tag=batch_tag,
-                training_status=training_status,
-                is_dropout=is_dropout,
-                mock_interview_status=mock_interview_status,
-                recommendation=recommendation,
-                analysis_status=analysis_status,
-                company_id=company_id,
-                job_role_id=job_role_id,
-                placement_status=placement_status,
-                offer_response=offer_response,
-                joining_status=joining_status,
-                has_resume=has_resume,
-                has_disability_cert=has_disability_cert,
-            ):
-                continue
-
             items.append(item)
 
         return {"items": items, "total": total}
