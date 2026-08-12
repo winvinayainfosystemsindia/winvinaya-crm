@@ -1,12 +1,12 @@
-// Column definitions
-export const ALL_COLUMNS = [
-	// General Info
+// Unified Column definitions — all modules in a single array organized by section
+export const UNIFIED_COLUMNS = [
+	// ── General Info ──
 	{ id: 'name', label: 'Candidate Name', default: true, group: 'general' },
 	{ id: 'gender', label: 'Gender', default: true, group: 'general' },
 	{ id: 'email', label: 'Email', default: true, group: 'general' },
 	{ id: 'phone', label: 'Phone', default: true, group: 'general' },
 	{ id: 'whatsapp_number', label: 'WhatsApp', default: false, group: 'general' },
-	{ id: 'dob', label: 'DOB', default: false, group: 'general' },
+	{ id: 'dob', label: 'Date of Birth', default: false, group: 'general' },
 	{ id: 'city', label: 'City', default: false, group: 'general' },
 	{ id: 'district', label: 'District', default: false, group: 'general' },
 	{ id: 'state', label: 'State', default: false, group: 'general' },
@@ -15,11 +15,21 @@ export const ALL_COLUMNS = [
 	{ id: 'education_level', label: 'Education', default: false, group: 'general' },
 	{ id: 'specialization', label: 'Specialization', default: false, group: 'general' },
 	{ id: 'disability_type', label: 'Disability Type', default: true, group: 'general' },
-	{ id: 'disability_percentage', label: 'Disability Percentage', default: false, group: 'general' },
+	{ id: 'disability_percentage', label: 'Disability %', default: false, group: 'general' },
+	{ id: 'disability_sub_category', label: 'Disability Sub Category', default: false, group: 'general' },
 	{ id: 'created_at', label: 'Registration Date', default: false, group: 'general' },
+	{ id: 'updated_at', label: 'Last Updated', default: false, group: 'general' },
 	{ id: 'registration_type', label: 'Source', default: false, group: 'general' },
+	{ id: 'status_of_beneficiary', label: 'Beneficiary Status', default: false, group: 'general' },
+	{ id: 'donor', label: 'Donor', default: false, group: 'general' },
+	{ id: 'batch_year', label: 'Batch Year', default: false, group: 'general' },
 
-	// Screening Info
+	// ── Experience ──
+	{ id: 'is_experienced', label: 'Is Experienced?', default: false, group: 'experience' },
+	{ id: 'year_of_experience', label: 'Years of Experience', default: false, group: 'experience' },
+	{ id: 'currently_employed', label: 'Currently Employed?', default: false, group: 'experience' },
+
+	// ── Screening ──
 	{ id: 'screening_status', label: 'Screening Status', default: true, group: 'screening' },
 	{ id: 'screening_skills', label: 'Screening Skills', default: false, group: 'screening' },
 	{ id: 'consent_status', label: 'Consent Status', default: false, group: 'screening' },
@@ -29,73 +39,134 @@ export const ALL_COLUMNS = [
 	{ id: 'assigned_to_name', label: 'Screening Assigned To', default: false, group: 'screening' },
 	{ id: 'screening_date', label: 'Screened Date', default: false, group: 'screening' },
 	{ id: 'screening_updated_at', label: 'Screening Update Date', default: false, group: 'screening' },
+	{ id: 'screening_created_at', label: 'Screening Created Date', default: false, group: 'screening' },
 	{ id: 'family_details', label: 'Family Details', default: false, group: 'screening' },
 	{ id: 'documents_uploaded', label: 'Uploaded Documents', default: false, group: 'screening' },
 	{ id: 'screening_comments', label: 'Screening Comments', default: false, group: 'screening' },
 
-	// Counseling Info
+	// ── Counseling ──
 	{ id: 'counseling_status', label: 'Counseling Status', default: true, group: 'counseling' },
 	{ id: 'counseling_sub_status', label: 'Counseling Sub Status', default: false, group: 'counseling' },
 	{ id: 'counselor_name', label: 'Counselor', default: false, group: 'counseling' },
 	{ id: 'counseling_date', label: 'Counseling Date', default: false, group: 'counseling' },
+	{ id: 'counseling_created_at', label: 'Counseling Created Date', default: false, group: 'counseling' },
+	{ id: 'counseling_updated_at', label: 'Counseling Updated Date', default: false, group: 'counseling' },
 	{ id: 'feedback', label: 'Counseling Feedback', default: false, group: 'counseling' },
 	{ id: 'skills', label: 'Counseling Skills', default: false, group: 'counseling' },
 	{ id: 'suitable_job_roles', label: 'Suitable Job Roles', default: false, group: 'counseling' },
 	{ id: 'questions', label: 'Assignment Q&A', default: false, group: 'counseling' },
 	{ id: 'workexperience', label: 'Counseling Work Experience', default: false, group: 'counseling' },
 
-	{ id: 'is_experienced', label: 'Is Experienced?', default: false, group: 'experience' },
-	{ id: 'year_of_experience', label: 'Years of Experience', default: false, group: 'experience' },
-	{ id: 'currently_employed', label: 'Currently Employed?', default: false, group: 'experience' },
+	// ── Document Collection ──
+	{ id: 'doc_types_uploaded', label: 'Document Types Uploaded', default: false, group: 'documents' },
+	{ id: 'has_resume', label: 'Has Resume?', default: false, group: 'documents' },
+	{ id: 'has_disability_cert', label: 'Has Disability Certificate?', default: false, group: 'documents' },
+	{ id: 'total_documents', label: 'Total Documents', default: false, group: 'documents' },
 
-	// Additional Candidate details (from candidate.other)
-	{ id: 'status_of_beneficiary', label: 'Beneficiary Status', default: false, group: 'general' },
-	{ id: 'disability_sub_category', label: 'Disability Sub Category', default: false, group: 'general' },
-	{ id: 'company_placed', label: 'Company Placed', default: false, group: 'general' },
-	{ id: 'date_of_joining', label: 'Date of Joining', default: false, group: 'general' },
-	{ id: 'designation', label: 'Designation', default: false, group: 'general' },
-	{ id: 'ctc', label: 'CTC', default: false, group: 'general' },
-	{ id: 'donor', label: 'Donor', default: false, group: 'general' },
-	{ id: 'batch_year', label: 'Batch Year', default: false, group: 'general' },
+	// ── Training Batch ──
+	{ id: 'training_summary', label: 'Training Summary', default: false, group: 'training' },
+	{ id: 'batch_names', label: 'Batch Name(s)', default: false, group: 'training' },
+	{ id: 'batch_statuses', label: 'Batch Status(es)', default: false, group: 'training' },
+	{ id: 'batch_tags', label: 'Batch Tag(s)', default: false, group: 'training' },
+	{ id: 'domains', label: 'Domain(s)', default: false, group: 'training' },
+	{ id: 'training_modes', label: 'Training Mode(s)', default: false, group: 'training' },
+	{ id: 'courses_list', label: 'Course(s)', default: false, group: 'training' },
+	{ id: 'durations', label: 'Duration(s)', default: false, group: 'training' },
+	{ id: 'training_statuses', label: 'Training Status(es)', default: false, group: 'training' },
+	{ id: 'is_dropout', label: 'Is Dropout?', default: false, group: 'training' },
+	{ id: 'dropout_remarks', label: 'Dropout Remark(s)', default: false, group: 'training' },
+	{ id: 'allocation_dates', label: 'Allocation Date(s)', default: false, group: 'training' },
+	{ id: 'allocation_created_at', label: 'Allocation Created Date', default: false, group: 'training' },
+	{ id: 'allocation_updated_at', label: 'Allocation Updated Date', default: false, group: 'training' },
+
+	// ── Attendance ──
+	{ id: 'attendance_percentage', label: 'Attendance (%)', default: false, group: 'attendance' },
+	{ id: 'total_present_days', label: 'Total Present Days', default: false, group: 'attendance' },
+	{ id: 'total_absent_days', label: 'Total Absent Days', default: false, group: 'attendance' },
+
+	// ── Mock Interview ──
+	{ id: 'mock_interview_statuses', label: 'Mock Interview Status(es)', default: false, group: 'mock_interview' },
+	{ id: 'mock_interview_ratings', label: 'Mock Interview Rating(s)', default: false, group: 'mock_interview' },
+	{ id: 'mock_interview_dates', label: 'Mock Interview Date(s)', default: false, group: 'mock_interview' },
+	{ id: 'mock_interview_types', label: 'Mock Interview Type(s)', default: false, group: 'mock_interview' },
+	{ id: 'mock_interview_feedbacks', label: 'Mock Interview Feedback(s)', default: false, group: 'mock_interview' },
+	{ id: 'mock_interview_created_at', label: 'Mock Interview Created Date', default: false, group: 'mock_interview' },
+	{ id: 'mock_interview_updated_at', label: 'Mock Interview Updated Date', default: false, group: 'mock_interview' },
+
+	// ── Candidate Analysis (SWOT) ──
+	{ id: 'analysis_recommendation', label: 'Analysis Recommendation', default: false, group: 'analysis' },
+	{ id: 'analysis_strengths', label: 'Strengths', default: false, group: 'analysis' },
+	{ id: 'analysis_weaknesses', label: 'Weaknesses', default: false, group: 'analysis' },
+	{ id: 'assessment_score', label: 'Assessment Score', default: false, group: 'analysis' },
+	{ id: 'analysis_created_at', label: 'Analysis Created Date', default: false, group: 'analysis' },
+	{ id: 'analysis_updated_at', label: 'Analysis Updated Date', default: false, group: 'analysis' },
+
+	// ── Training Assignments ──
+	{ id: 'assignment_avg_marks', label: 'Avg Assignment Marks (%)', default: false, group: 'assignments' },
+
+	// ── Placement ──
+	{ id: 'placement_summary', label: 'Placement Summary', default: true, group: 'placement' },
+	{ id: 'mapped_companies', label: 'Mapped Company(ies)', default: false, group: 'placement' },
+	{ id: 'mapped_job_roles', label: 'Mapped Job Role(s)', default: false, group: 'placement' },
+	{ id: 'job_role_statuses', label: 'Job Role Status(es)', default: false, group: 'placement' },
+	{ id: 'placement_statuses', label: 'Placement Status(es)', default: false, group: 'placement' },
+	{ id: 'placement_priorities', label: 'Placement Priority(ies)', default: false, group: 'placement' },
+	{ id: 'match_scores', label: 'Match Score(s)', default: false, group: 'placement' },
+	{ id: 'mapped_at_dates', label: 'Mapped Date(s)', default: false, group: 'placement' },
+	{ id: 'placement_created_at', label: 'Placement Created Date', default: false, group: 'placement' },
+	{ id: 'placement_updated_at', label: 'Placement Updated Date', default: false, group: 'placement' },
+
+	// ── Placement Offer ──
+	{ id: 'offered_ctcs', label: 'Offered CTC(s)', default: false, group: 'offer' },
+	{ id: 'offered_designations', label: 'Offered Designation(s)', default: false, group: 'offer' },
+	{ id: 'work_locations', label: 'Work Location(s)', default: false, group: 'offer' },
+	{ id: 'joining_dates', label: 'Joining Date(s)', default: false, group: 'offer' },
+	{ id: 'offer_responses', label: 'Offer Response(s)', default: false, group: 'offer' },
+	{ id: 'actual_joining_dates', label: 'Actual Joining Date(s)', default: false, group: 'offer' },
+	{ id: 'joining_statuses', label: 'Joining Status(es)', default: false, group: 'offer' },
+	{ id: 'offer_dates', label: 'Offer Date(s)', default: false, group: 'offer' },
+	{ id: 'offer_created_ats', label: 'Offer Created Date(s)', default: false, group: 'offer' },
+	{ id: 'offer_updated_ats', label: 'Offer Updated Date(s)', default: false, group: 'offer' },
+	{ id: 'offered_ctc', label: 'Offered CTC (Latest)', default: false, group: 'offer' },
+	{ id: 'offered_designation', label: 'Offered Designation (Latest)', default: false, group: 'offer' },
+	{ id: 'work_location', label: 'Work Location (Latest)', default: false, group: 'offer' },
+	{ id: 'joining_date', label: 'Joining Date (Latest)', default: false, group: 'offer' },
+	{ id: 'offer_response', label: 'Offer Response (Latest)', default: false, group: 'offer' },
+	{ id: 'actual_joining_date', label: 'Actual Joining Date (Latest)', default: false, group: 'offer' },
+	{ id: 'joining_status', label: 'Joining Status (Latest)', default: false, group: 'offer' },
+	{ id: 'offer_date', label: 'Offer Date (Latest)', default: false, group: 'offer' },
+	{ id: 'offer_created_at', label: 'Offer Created Date (Latest)', default: false, group: 'offer' },
+	{ id: 'offer_updated_at', label: 'Offer Updated Date (Latest)', default: false, group: 'offer' },
 ];
 
-export const TRAINING_COLUMNS = [
-	// Candidate Details
-	{ id: 'name', label: 'Candidate Name', default: true, group: 'candidate' },
-	{ id: 'gender', label: 'Gender', default: true, group: 'candidate' },
-	{ id: 'disability_type', label: 'Disability Type', default: true, group: 'candidate' },
-	{ id: 'email', label: 'Email', default: true, group: 'candidate' },
-	{ id: 'phone', label: 'Phone', default: true, group: 'candidate' },
-	{ id: 'city', label: 'Location', default: false, group: 'candidate' },
+// Group labels for the column selector and filter drawer
+export const GROUP_LABELS: Record<string, string> = {
+	general: 'General Info',
+	experience: 'Work Experience',
+	screening: 'Screening',
+	counseling: 'Counseling',
+	documents: 'Document Collection',
+	training: 'Training Batch',
+	attendance: 'Attendance',
+	mock_interview: 'Mock Interview',
+	analysis: 'Candidate Analysis',
+	assignments: 'Training Assignments',
+	placement: 'Placement',
+	offer: 'Placement Offer',
+};
 
-	// Batch Details
-	{ id: 'batch_name', label: 'Batch Name', default: true, group: 'batch' },
-	{ id: 'batch_status', label: 'Batch Status', default: false, group: 'batch' },
-	{ id: 'batch_tag', label: 'Batch Tag', default: false, group: 'batch' },
-	{ id: 'domain', label: 'Domain', default: false, group: 'batch' },
-	{ id: 'training_mode', label: 'Training Mode', default: false, group: 'batch' },
-	{ id: 'courses', label: 'Course(s)', default: false, group: 'batch' },
-	{ id: 'duration', label: 'Duration', default: false, group: 'batch' },
-
-	// Progress
-	{ id: 'status', label: 'Training Status', default: false, group: 'progress' },
-	{ id: 'attendance_percentage', label: 'Attendance (%)', default: false, group: 'progress' },
-	{ id: 'assessment_score', label: 'Assessment Mark', default: false, group: 'progress' },
-	{ id: 'placed_company', label: 'Placed Company', default: false, group: 'progress' },
-	{ id: 'placed_date', label: 'Placement Date', default: false, group: 'progress' },
-	{ id: 'created_at', label: 'Allocation Date', default: false, group: 'progress' },
-];
-
-export const PLACEMENT_COLUMNS = [
-    { id: 'name', label: 'Candidate Name', default: true, group: 'candidate' },
-    { id: 'email', label: 'Email', default: true, group: 'candidate' },
-    { id: 'phone', label: 'Phone', default: true, group: 'candidate' },
-    { id: 'disability_type', label: 'Disability Type', default: true, group: 'candidate' },
-    { id: 'mapped_company', label: 'Mapped Company', default: true, group: 'placement' },
-    { id: 'skills', label: 'Skills', default: true, group: 'candidate' },
-    { id: 'is_experienced', label: 'Fresher / Experienced', default: true, group: 'experience' },
-    { id: 'education_level', label: 'Educational Qualification', default: true, group: 'candidate' },
-    { id: 'dob', label: 'Date of Birth', default: true, group: 'candidate' },
-    { id: 'status', label: 'Placement Status', default: true, group: 'placement' },
-    { id: 'batch_tag', label: 'Training Tag', default: true, group: 'placement' }
+// Ordered list of groups for rendering
+export const GROUP_ORDER = [
+	'general',
+	'experience',
+	'screening',
+	'counseling',
+	'documents',
+	'training',
+	'attendance',
+	'mock_interview',
+	'analysis',
+	'assignments',
+	'placement',
+	'offer',
 ];

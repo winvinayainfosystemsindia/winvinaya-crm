@@ -39,10 +39,27 @@ interface ReportTableProps {
 	rowsPerPage: number;
 	onPageChange: (newPage: number) => void;
 	onRowsPerPageChange: (newRowsPerPage: number) => void;
-    reportType?: string;
 }
 
-// Removed local StyledHeaderCell in favor of common DataTableHead
+const stripHtml = (htmlStr: string): string => {
+	if (!htmlStr || typeof htmlStr !== 'string') return '';
+	if (!/<[a-z][\s\S]*>/i.test(htmlStr)) return htmlStr;
+	let cleaned = htmlStr
+		.replace(/<li[^>]*>/gi, '• ')
+		.replace(/<\/li>/gi, '\n')
+		.replace(/<\/p>/gi, '\n\n')
+		.replace(/<br\s*\/?>/gi, '\n')
+		.replace(/<[^>]+>/g, '')
+		.replace(/\n\s*\n+/g, '\n\n')
+		.trim();
+	return cleaned
+		.replace(/&nbsp;/g, ' ')
+		.replace(/&amp;/g, '&')
+		.replace(/&lt;/g, '<')
+		.replace(/&gt;/g, '>')
+		.replace(/&quot;/g, '"')
+		.replace(/&#39;/g, "'");
+};
 
 const ReportTable: React.FC<ReportTableProps> = ({
 	loading,
@@ -53,26 +70,38 @@ const ReportTable: React.FC<ReportTableProps> = ({
 	page,
 	rowsPerPage,
 	onPageChange,
-	onRowsPerPageChange,
-    reportType = 'candidate'
+	onRowsPerPageChange
 }) => {
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    const isPlacement = reportType === 'placement';
 	const activeColumns = columns.filter(c => visibleColumns.includes(c.id));
 
 	// Map to common ColumnDefinition
 	const tableColumns: ColumnDefinition<any>[] = activeColumns.map(col => ({
 		id: col.id,
 		label: col.label,
-		sortable: false // Default for reports for now
+		sortable: false
 	}));
+
+	const getStatusColor = (v: string) => {
+		const lowerV = String(v).toLowerCase();
+		if (lowerV.includes('completed') || lowerV.includes('selected') || lowerV.includes('accepted') || lowerV.includes('cleared') || lowerV.includes('joined') || lowerV === 'ready_for_placement') {
+			return { bg: alpha(theme.palette.success.main, 0.1), text: theme.palette.success.main, border: alpha(theme.palette.success.main, 0.2) };
+		}
+		if (lowerV.includes('allocated') || lowerV.includes('pending') || lowerV.includes('in_training') || lowerV.includes('mapped') || lowerV.includes('shortlisted')) {
+			return { bg: alpha(theme.palette.warning.main, 0.1), text: theme.palette.warning.main, border: alpha(theme.palette.warning.main, 0.2) };
+		}
+		if (lowerV.includes('rejected') || lowerV.includes('dropped') || lowerV.includes('failed')) {
+			return { bg: alpha(theme.palette.error.main, 0.1), text: theme.palette.error.main, border: alpha(theme.palette.error.main, 0.2) };
+		}
+		return { bg: theme.palette.action.hover, text: theme.palette.text.secondary, border: theme.palette.divider };
+	};
 
 	// Helper for Card View Rendering
 	const renderMobileCard = (item: any) => (
 		<Paper
 			elevation={0}
-			key={item.public_id}
+			key={item.public_id || item.name}
 			sx={{
 				p: 2,
 				mb: 2,
@@ -82,7 +111,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
 			}}
 		>
 			<Typography variant="subtitle1" sx={{ fontWeight: 700, color: theme.palette.text.primary, mb: 1.5 }}>
-				{item.candidate?.name || item.name}
+				{item.name}
 			</Typography>
 			<Stack spacing={1.5}>
 				{activeColumns.filter(c => c.id !== 'name').map(col => (
@@ -102,208 +131,96 @@ const ReportTable: React.FC<ReportTableProps> = ({
 	const renderCell = (item: any, colId: string) => {
 		let val: any;
 
-        if (isPlacement) {
-            const mapping = item;
-            const c = mapping.candidate || {};
-            const allocation = c.allocations && c.allocations.length > 0 ? c.allocations[0] : null;
+		if (colId.startsWith('screening_others.')) {
+			const fieldName = colId.substring('screening_others.'.length);
+			val = item.screening_others?.[fieldName];
+		} else if (colId.startsWith('counseling_others.')) {
+			const fieldName = colId.substring('counseling_others.'.length);
+			val = item.counseling_others?.[fieldName];
+		} else {
+			val = item[colId];
+		}
 
-            if (colId === 'name') val = c.name;
-            else if (colId === 'gender') val = c.gender;
-            else if (colId === 'email') val = c.email;
-            else if (colId === 'phone') val = c.phone;
-            else if (colId === 'city') val = c.city || '-';
-            else if (colId === 'mapped_company') val = mapping.job_role?.company?.name || '-';
-            else if (colId === 'status') val = mapping.status;
-            else if (colId === 'batch_tag') val = allocation?.batch?.batch_tag || '-';
-            else if (colId === 'batch_name') val = allocation?.batch?.batch_name || '-';
-            else if (colId === 'batch_status') val = allocation?.batch?.status || '-';
-            else if (colId === 'domain') val = allocation?.batch?.domain || '-';
-            else if (colId === 'training_mode') val = allocation?.batch?.training_mode || '-';
-            else if (colId === 'placed_company') val = allocation?.placed_company || '-';
-            else if (colId === 'placed_date') val = allocation?.placed_date;
-            else if (colId === 'courses') {
-                if (Array.isArray(allocation?.batch?.courses)) {
-                    val = allocation.batch.courses.map((cr: any) => typeof cr === 'string' ? cr : cr.name).join(', ');
-                } else val = '-';
-            }
-            else if (colId === 'duration') {
-                const dur = allocation?.batch?.duration;
-                let dateStr = '';
-                if (allocation?.batch?.start_date) {
-                    dateStr = format(new Date(allocation.batch.start_date), 'dd MMM yyyy');
-                    if (allocation?.batch?.approx_close_date) {
-                        dateStr += ` to ${format(new Date(allocation.batch.approx_close_date), 'dd MMM yyyy')}`;
-                    }
-                }
-                if (dur && (dur.weeks || dur.days)) {
-                    return (
-                        <Box>
-                            <Typography variant="body2" sx={{ fontSize: '0.8125rem' }}>
-                                {dur.weeks || 0}w, {dur.days || 0}d
-                            </Typography>
-                            {dateStr && (
-                                <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', fontSize: '0.7rem' }}>
-                                    {dateStr}
-                                </Typography>
-                            )}
-                        </Box>
-                    );
-                }
-                val = dateStr || '-';
-            }
-            else if (colId === 'attendance_percentage') {
-                val = allocation?.attendance_percentage;
-                if (val === null || val === undefined) return '-';
-                const color = val >= 90 ? theme.palette.success.main : val >= 75 ? theme.palette.warning.main : theme.palette.error.main;
-                return <Box sx={{ color, fontWeight: 700 }}>{val}%</Box>;
-            }
-            else if (colId === 'assessment_score') {
-                val = allocation?.assessment_score;
-                if (val === null || val === undefined) return '-';
-                return <Box sx={{ fontWeight: 700, color: theme.palette.text.primary }}>{val}</Box>;
-            }
-            else if (colId === 'disability_type') val = c.disability_details?.disability_type || c.disability_details?.type;
-            else if (colId === 'counseling_sub_status') val = c.sub_status ?? c.counseling?.sub_status;
-            else if (colId === 'is_experienced') val = c.work_experience?.is_experienced;
-            else if (colId === 'education_level') {
-                const degrees = c.education_details?.degrees;
-                if (degrees && degrees.length > 0) val = degrees[0].degree_name || degrees[0].degree;
-            }
-            else if (colId === 'dob') val = c.dob;
-            else if (colId === 'skills') val = c.counseling?.skills;
-            else if (colId === 'screening_skills') val = c.screening?.skills;
-            else {
-                if (colId.startsWith('screening_others.')) {
-                    const fieldName = colId.substring('screening_others.'.length);
-                    val = c.screening?.others?.[fieldName] ?? c[fieldName];
-                } else if (colId.startsWith('counseling_others.')) {
-                    const fieldName = colId.substring('counseling_others.'.length);
-                    val = c.counseling?.others?.[fieldName] ?? c[fieldName];
-                } else {
-                    if (colId === 'registration_type') {
-                        const rawVal = c[colId] ?? c.other?.[colId];
-                        val = rawVal ? (String(rawVal).charAt(0).toUpperCase() + String(rawVal).slice(1)) : 'Registered';
-                    } else {
-                        val = c[colId] ?? c.other?.[colId];
-                        if (val === undefined || val === null) {
-                            if (colId.includes('counseling') && c.counseling) {
-                                val = c.counseling[colId];
-                            } else if (colId.includes('screening') && c.screening) {
-                                val = c.screening[colId];
-                            }
-                        }
-                    }
-                }
-            }
-        }
-		// 1. Precise Data Extraction (Handle both Candidate and Allocation)
-		else if (item.candidate && item.batch) {
-			// It's an allocation
-			if (colId === 'name') val = item.candidate.name;
-			else if (colId === 'gender') val = item.candidate.gender;
-			else if (colId === 'disability_type') val = item.candidate.disability_details?.disability_type || item.candidate.disability_details?.type;
-			else if (colId === 'email') val = item.candidate.email;
-			else if (colId === 'phone') val = item.candidate.phone;
-			else if (colId === 'city') val = item.candidate.city || '-';
-			else if (colId === 'batch_name') val = item.batch.batch_name;
-			else if (colId === 'batch_status') val = item.batch.status;
-			else if (colId === 'batch_tag') val = item.batch.other?.tag || '-';
-			else if (colId === 'domain') val = item.batch.domain;
-			else if (colId === 'training_mode') val = item.batch.training_mode;
-			else if (colId === 'placed_company') val = item.placed_company || '-';
-			else if (colId === 'placed_date') val = item.placed_date;
-			else if (colId === 'courses') {
-				if (Array.isArray(item.batch.courses)) {
-					return item.batch.courses.map((c: any) => typeof c === 'string' ? c : c.name).join(', ');
-				}
-				return '-';
-			}
-			else if (colId === 'duration') {
-				const dur = item.batch.duration;
-				let dateStr = '';
-				if (item.batch.start_date) {
-					dateStr = format(new Date(item.batch.start_date), 'dd MMM yyyy');
-					if (item.batch.approx_close_date) {
-						dateStr += ` to ${format(new Date(item.batch.approx_close_date), 'dd MMM yyyy')}`;
-					}
-				}
-
-				if (dur && (dur.weeks || dur.days)) {
-					return (
-						<Box>
-							<Typography variant="body2" sx={{ fontSize: '0.8125rem' }}>
-								{dur.weeks || 0}w, {dur.days || 0}d
+		// === Combined Placement / Training Summaries ===
+		if ((colId === 'placement_summary' || colId === 'training_summary') && val) {
+			const itemsList = String(val).split(' | ');
+			return (
+				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, py: 0.5, minWidth: 260 }}>
+					{itemsList.map((st, i) => (
+						<Paper
+							key={i}
+							variant="outlined"
+							sx={{
+								px: 1.25,
+								py: 0.5,
+								fontSize: '0.75rem',
+								backgroundColor: alpha(theme.palette.primary.main, 0.03),
+								borderColor: alpha(theme.palette.primary.main, 0.15),
+								borderRadius: '4px',
+								display: 'flex',
+								alignItems: 'center',
+								gap: 1
+							}}
+						>
+							<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.primary.main, minWidth: 16 }}>
+								{i + 1}.
 							</Typography>
-							{dateStr && (
-								<Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', fontSize: '0.7rem' }}>
-									{dateStr}
+							<Typography variant="body2" sx={{ fontSize: '0.75rem', color: theme.palette.text.primary }}>
+								{st}
+							</Typography>
+						</Paper>
+					))}
+				</Box>
+			);
+		}
+
+		// === Multi-Item List Columns (Numbered stacked lines for exact cross-column alignment) ===
+		const isMultiItemCol = [
+			'mapped_companies', 'mapped_job_roles', 'job_role_statuses',
+			'placement_statuses', 'placement_priorities', 'match_scores',
+			'mapped_at_dates', 'batch_names', 'batch_statuses', 'batch_tags',
+			'domains', 'training_modes', 'durations', 'training_statuses',
+			'allocation_dates', 'mock_interview_statuses', 'mock_interview_ratings',
+			'mock_interview_dates', 'mock_interview_types',
+			'offered_ctcs', 'offered_designations', 'work_locations', 'joining_dates',
+			'offer_responses', 'actual_joining_dates', 'joining_statuses', 'offer_dates',
+			'offer_created_ats', 'offer_updated_ats'
+		].includes(colId);
+
+		if (isMultiItemCol && typeof val === 'string' && val.includes(',')) {
+			const itemsList = val.split(',').map(s => s.trim());
+			return (
+				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, py: 0.5 }}>
+					{itemsList.map((subVal, i) => (
+						<Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 0.5, height: 22 }}>
+							<Typography variant="caption" sx={{ fontSize: '0.65rem', color: theme.palette.text.secondary, fontWeight: 700, width: 14 }}>
+								{i + 1}.
+							</Typography>
+							{colId.includes('status') ? (
+								(() => {
+									const colors = getStatusColor(subVal);
+									return <Chip label={subVal} size="small" sx={{ borderRadius: '4px', backgroundColor: colors.bg, color: colors.text, border: `1px solid ${colors.border}`, fontWeight: 600, fontSize: '0.65rem', height: 18 }} />;
+								})()
+							) : (
+								<Typography variant="caption" sx={{ fontSize: '0.75rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}>
+									{subVal || '-'}
 								</Typography>
 							)}
 						</Box>
-					);
-				}
-				return dateStr || '-';
-			}
-			else if (colId === 'attendance_percentage') {
-				val = item.attendance_percentage;
-				if (val === null || val === undefined) return '-';
-				const color = val >= 90 ? theme.palette.success.main : val >= 75 ? theme.palette.warning.main : theme.palette.error.main;
-				return <Box sx={{ color, fontWeight: 700 }}>{val}%</Box>;
-			}
-			else if (colId === 'assessment_score') {
-				val = item.assessment_score;
-				if (val === null || val === undefined) return '-';
-				return <Box sx={{ fontWeight: 700, color: theme.palette.text.primary }}>{val}</Box>;
-			}
-			else if (colId === 'counseling_sub_status') {
-				val = item.candidate?.sub_status ?? item.candidate?.counseling?.sub_status;
-			}
-			else {
-				if (colId === 'registration_type') {
-					const rawVal = item[colId] ?? item.candidate?.other?.[colId];
-					val = rawVal ? (String(rawVal).charAt(0).toUpperCase() + String(rawVal).slice(1)) : 'Registered';
-				} else {
-					val = item[colId] ?? item.candidate?.other?.[colId];
-				}
-			}
-		} else {
-			// It's a candidate
-			if (colId === 'counseling_sub_status') {
-				val = item.sub_status ?? item.counseling?.sub_status;
-			} else if (colId.startsWith('screening_others.')) {
-				const fieldName = colId.substring('screening_others.'.length);
-				val = (item.screening?.others as any)?.[fieldName] ?? (item as any)[fieldName];
-			} else if (colId.startsWith('counseling_others.')) {
-				const fieldName = colId.substring('counseling_others.'.length);
-				val = (item.counseling?.others as any)?.[fieldName] ?? (item as any)[fieldName];
-			} else if (colId === 'screening_skills') {
-				val = item.screening?.skills;
-			} else {
-				if (colId === 'registration_type') {
-					const rawVal = (item as any)[colId] ?? (item.other as any)?.[colId];
-					val = rawVal ? (String(rawVal).charAt(0).toUpperCase() + String(rawVal).slice(1)) : 'Registered';
-				} else {
-					val = (item as any)[colId] ?? (item.other as any)?.[colId];
-				}
-			}
-
-			// Relationship fallback for standard fields
-			if (val === undefined || val === null) {
-				if (colId.includes('counseling') && item.counseling) {
-					val = (item.counseling as any)[colId];
-				}
-			}
+					))}
+				</Box>
+			);
 		}
 
-		// Array Handling for dynamic fields (Multi-select)
-		if (Array.isArray(val) && (colId.startsWith('screening_others.') || colId.startsWith('counseling_others.'))) {
+		// Array Handling
+		if (Array.isArray(val)) {
 			if (val.length === 0) return '-';
 			return (
 				<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-					{val.map((item: any, i: number) => (
+					{val.map((v: any, i: number) => (
 						<Chip
 							key={i}
-							label={String(item)}
+							label={typeof v === 'object' ? JSON.stringify(v) : String(v)}
 							size="small"
 							variant="outlined"
 							sx={{ fontSize: '0.65rem', height: 18 }}
@@ -313,65 +230,35 @@ const ReportTable: React.FC<ReportTableProps> = ({
 			);
 		}
 
-		if ((colId === 'created_at' || colId === 'dob' || colId === 'counseling_date' || colId === 'screening_date' || colId === 'screening_updated_at' || colId === 'placed_date') && val) {
+		// Dates
+		if ((colId.includes('_at') || colId.includes('date') || colId === 'dob') && val) {
 			try {
 				val = format(new Date(val), 'dd MMM yyyy');
 			} catch (e) {
-				val = '-';
+				// Keep raw string if parse fails
 			}
 		}
 
-		if (colId === 'family_details' && Array.isArray(val)) {
-			if (val.length === 0) return '-';
-			return (
-				<Box sx={{ fontSize: '0.75rem' }}>
-					{val.map((f: any, i: number) => {
-						const details = [];
-						if (f.occupation) details.push(f.occupation);
-						if (f.company_name) details.push(f.company_name);
-						if (f.position) details.push(f.position);
-						const detailsStr = details.length > 0 ? ` - ${details.join(', ')}` : '';
-						return (
+		// Structured object fields rendering
+		if (colId === 'family_details' && val && typeof val === 'object') {
+			if (Array.isArray(val)) {
+				return (
+					<Box sx={{ fontSize: '0.75rem' }}>
+						{val.map((f: any, i: number) => (
 							<div key={i} style={{ marginBottom: i < val.length - 1 ? '4px' : 0 }}>
-								<strong>{f.relation}:</strong> {f.name} {detailsStr}
+								<strong>{f.relation}:</strong> {f.name} {f.occupation ? `(${f.occupation})` : ''}
 							</div>
-						);
-					})}
-				</Box>
-			);
+						))}
+					</Box>
+				);
+			}
 		}
 
-		if (colId === 'documents_uploaded' && Array.isArray(val)) {
-			return (
-				<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-					{val.length > 0 ? val.map((doc: string, i: number) => (
-						<Chip
-							key={i}
-							label={doc}
-							size="small"
-							variant="outlined"
-							sx={{ fontSize: '0.65rem', height: 18, backgroundColor: theme.palette.action.hover }}
-						/>
-					)) : '-'}
-				</Box>
-			);
-		}
-
-		if (colId === 'skills' && Array.isArray(val)) {
-			return (
-				<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-					{val.length > 0 ? val.map((s: any, i: number) => (
-						<Chip key={i} label={`${s.name} (${s.level})`} size="small" sx={{ fontSize: '0.65rem', height: 18 }} />
-					)) : '-'}
-				</Box>
-			);
-		}
-
-		if (colId === 'screening_skills' && val) {
+		if (colId === 'screening_skills' && val && typeof val === 'object') {
 			const tech = val.technical_skills || [];
 			const soft = val.soft_skills || [];
 			if (tech.length === 0 && soft.length === 0) return '-';
-			
+
 			return (
 				<Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
 					{tech.length > 0 && (
@@ -397,7 +284,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
 		if (colId === 'suitable_job_roles' && Array.isArray(val)) {
 			return (
 				<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-					{val.length > 0 ? val.map((role: string, i: number) => (
+					{val.map((role: string, i: number) => (
 						<Chip
 							key={i}
 							label={role}
@@ -411,69 +298,45 @@ const ReportTable: React.FC<ReportTableProps> = ({
 								borderColor: alpha(theme.palette.secondary.main, 0.2)
 							}}
 						/>
-					)) : '-'}
+					))}
 				</Box>
 			);
 		}
 
-		if ((colId === 'disability_type' || colId === 'screening_status' || colId === 'counseling_status' || colId === 'status' || colId === 'batch_status' || colId === 'consent_status') && val) {
-			const getStatusColor = (v: string) => {
-				const lowerV = v.toLowerCase();
-				if (lowerV === 'completed' || lowerV === 'selected' || lowerV === 'ongoing' || lowerV === 'accepted') {
-					return { bg: alpha(theme.palette.success.main, 0.1), text: theme.palette.success.main, border: alpha(theme.palette.success.main, 0.2) };
-				}
-				if (lowerV === 'allocated' || lowerV === 'pending') {
-					return { bg: alpha(theme.palette.warning.main, 0.1), text: theme.palette.warning.main, border: alpha(theme.palette.warning.main, 0.2) };
-				}
-				if (lowerV === 'rejected' || lowerV === 'dropped_out') {
-					return { bg: alpha(theme.palette.error.main, 0.1), text: theme.palette.error.main, border: alpha(theme.palette.error.main, 0.2) };
-				}
-				return { bg: theme.palette.action.hover, text: theme.palette.text.secondary, border: theme.palette.divider };
-			};
+		if (colId === 'skills' && Array.isArray(val)) {
+			return (
+				<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+					{val.map((s: any, i: number) => (
+						<Chip key={i} label={`${s.name} (${s.level})`} size="small" sx={{ fontSize: '0.65rem', height: 18 }} />
+					))}
+				</Box>
+			);
+		}
+
+		// Status Pills
+		if ((colId.includes('status') || colId === 'disability_type' || colId === 'consent_status' || colId === 'analysis_recommendation') && val) {
 			const colors = getStatusColor(val);
-			return <Chip label={val} size="small" sx={{ borderRadius: '4px', backgroundColor: colors.bg, color: colors.text, border: `1px solid ${colors.border}`, fontWeight: 600, fontSize: '0.7rem', height: 20 }} />;
+			return <Chip label={String(val)} size="small" sx={{ borderRadius: '4px', backgroundColor: colors.bg, color: colors.text, border: `1px solid ${colors.border}`, fontWeight: 600, fontSize: '0.7rem', height: 20 }} />;
 		}
 
 		if (colId === 'disability_percentage' && val) {
 			return `${val}%`;
 		}
 
-		if (colId === 'questions' && Array.isArray(val)) {
-			if (val.length === 0) return '-';
-			return (
-				<Box sx={{ fontSize: '0.75rem' }}>
-					{val.map((q: any, i: number) => (
-						<div key={i} style={{ marginBottom: i < val.length - 1 ? '4px' : 0 }}>
-							<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.primary.main, display: 'block' }}>Q: {q.question}</Typography>
-							<Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>A: {q.answer}</Typography>
-						</div>
-					))}
-				</Box>
-			);
-		}
-
-		if (colId === 'workexperience' && Array.isArray(val)) {
-			if (val.length === 0) return '-';
-			return (
-				<Box sx={{ fontSize: '0.75rem' }}>
-					{val.map((w: any, i: number) => (
-						<div key={i} style={{ marginBottom: i < val.length - 1 ? '4px' : 0 }}>
-							<strong>{w.job_title}</strong> at {w.company}
-						</div>
-					))}
-				</Box>
-			);
-		}
-
-		if (colId === 'screening_comments' && val) {
-			return (
-				<Box sx={{ maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={val}>
-					{val}
-				</Box>
-			);
+		if (colId === 'attendance_percentage' && val !== null && val !== undefined) {
+			return `${val}%`;
 		}
 
 		if (typeof val === 'boolean') return val ? 'Yes' : 'No';
+
+		if (typeof val === 'string' && /<[a-z][\s\S]*>/i.test(val)) {
+			const cleanText = stripHtml(val);
+			return (
+				<Typography variant="body2" sx={{ fontSize: '0.75rem', whiteSpace: 'pre-line', maxHeight: 220, overflowY: 'auto', pr: 0.5 }}>
+					{cleanText}
+				</Typography>
+			);
+		}
 
 		const finalVal = (val !== undefined && val !== null) ? String(val).trim() : '';
 		return finalVal !== '' ? finalVal : '-';
@@ -522,23 +385,23 @@ const ReportTable: React.FC<ReportTableProps> = ({
 				backgroundColor: isMobile ? theme.palette.background.default : 'transparent'
 			}}>
 				{isMobile ? (
-					<Box role="list" aria-label="Candidates report list">
-						{data.length > 0 ? data.map(candidate => renderMobileCard(candidate)) : (
+					<Box role="list" aria-label="Unified report list">
+						{data.length > 0 ? data.map(item => renderMobileCard(item)) : (
 							<Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-								No candidate data available.
+								No candidate report data available.
 							</Typography>
 						)}
 					</Box>
 				) : (
-					<Table size="small" stickyHeader aria-label="Candidates report table" role="table">
+					<Table size="small" stickyHeader aria-label="Unified report table" role="table">
 						<DataTableHead 
 							columns={tableColumns}
 						/>
 						<TableBody>
 							{data.length > 0 ? (
-								data.map((candidate, idx) => (
+								data.map((item, idx) => (
 									<TableRow
-										key={candidate.public_id}
+										key={item.public_id || idx}
 										role="row"
 										sx={{
 											backgroundColor: idx % 2 === 0 ? theme.palette.background.paper : theme.palette.action.hover,
@@ -556,10 +419,11 @@ const ReportTable: React.FC<ReportTableProps> = ({
 													fontSize: '0.8125rem',
 													color: theme.palette.text.primary,
 													borderRight: `1px solid ${theme.palette.divider}`,
-													'&:last-child': { borderRight: 'none' }
+													'&:last-child': { borderRight: 'none' },
+													verticalAlign: 'top'
 												}}
 											>
-												{renderCell(candidate, col.id)}
+												{renderCell(item, col.id)}
 											</TableCell>
 										))}
 									</TableRow>
@@ -567,7 +431,7 @@ const ReportTable: React.FC<ReportTableProps> = ({
 							) : (
 								<DataTableEmpty 
 									colSpan={activeColumns.length} 
-									message="No candidate data available for the current selection."
+									message="No report data available for the current selection."
 								/>
 							)}
 						</TableBody>

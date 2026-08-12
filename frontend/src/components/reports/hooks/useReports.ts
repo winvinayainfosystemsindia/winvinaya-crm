@@ -3,22 +3,19 @@ import { format } from 'date-fns';
 import * as XLSX from 'xlsx';
 
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
-import { fetchCandidates, fetchFilterOptions } from '../../../store/slices/candidateSlice';
-import { fetchAllAllocations, fetchTrainingBatches } from '../../../store/slices/trainingSlice';
+import { fetchFilterOptions } from '../../../store/slices/candidateSlice';
+import { fetchTrainingBatches } from '../../../store/slices/trainingSlice';
 import { settingsService } from '../../../services/settingsService';
-import candidateService from '../../../services/candidateService';
-import trainingService from '../../../services/trainingService';
+import unifiedReportService from '../../../services/unifiedReportService';
 import useToast from '../../../hooks/useToast';
-import { ALL_COLUMNS, TRAINING_COLUMNS, PLACEMENT_COLUMNS } from '../constants';
-import { formatReportData } from '../utils/exportUtils';
-import placementMappingService from '../../../services/placementMappingService';
+import { UNIFIED_COLUMNS } from '../constants';
 
 export const useReports = () => {
 	const dispatch = useAppDispatch();
 	const toast = useToast();
 	
-	const { list: candidates, total, loading, filterOptions } = useAppSelector((state) => state.candidates);
-	const { allocations, total: trainingTotal, loading: trainingLoading, batches } = useAppSelector((state) => state.training);
+	const { filterOptions } = useAppSelector((state) => state.candidates);
+	const { batches } = useAppSelector((state) => state.training);
 
 	const [dynamicFieldDefs, setDynamicFieldDefs] = useState<any[]>([]);
 	const [columns, setColumns] = useState<any[]>([]);
@@ -30,215 +27,124 @@ export const useReports = () => {
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(25);
 	const [filters, setFilters] = useState<Record<string, any>>({});
-	const [reportType, setReportType] = useState('candidate');
 	const [exportDialogOpen, setExportDialogOpen] = useState(false);
 	const [exportLoading, setExportLoading] = useState(false);
 
-	const [placementData, setPlacementData] = useState<any[]>([]);
-	const [placementLoading, setPlacementLoading] = useState(false);
+	const [reportData, setReportData] = useState<any[]>([]);
+	const [reportTotal, setReportTotal] = useState(0);
+	const [reportLoading, setReportLoading] = useState(false);
 
-	const isTraining = reportType === 'training';
-	const isPlacement = reportType === 'placement';
-	const reportData = isPlacement ? placementData.slice(page * rowsPerPage, (page + 1) * rowsPerPage) : (isTraining ? allocations : candidates);
-	const reportTotal = isPlacement ? placementData.length : (isTraining ? trainingTotal : total);
-	const reportLoading = isPlacement ? placementLoading : (isTraining ? trainingLoading : loading);
-
-	// Setup Columns
+	// Setup Columns — unified, single pass
 	useEffect(() => {
 		const setupColumns = async () => {
 			try {
-				let currentCols: any[] = [];
-				if (reportType === 'candidate') {
-					const [screeningFields, counselingFields] = await Promise.all([
-						settingsService.getFields('screening'),
-						settingsService.getFields('counseling')
-					]);
+				const [screeningFields, counselingFields] = await Promise.all([
+					settingsService.getFields('screening'),
+					settingsService.getFields('counseling')
+				]);
 
-					const dynamicCols: any[] = [];
-					if (screeningFields) {
-						screeningFields.forEach(field => {
-							dynamicCols.push({
-								id: `screening_others.${field.name}`,
-								label: field.label,
-								default: false,
-								group: 'screening'
-							});
+				const dynamicCols: any[] = [];
+				if (screeningFields) {
+					screeningFields.forEach((field: any) => {
+						dynamicCols.push({
+							id: `screening_others.${field.name}`,
+							label: field.label,
+							default: false,
+							group: 'screening'
 						});
-					}
-					if (counselingFields) {
-						counselingFields.forEach(field => {
-							dynamicCols.push({
-								id: `counseling_others.${field.name}`,
-								label: field.label,
-								default: false,
-								group: 'counseling'
-							});
-						});
-					}
-					setDynamicFieldDefs([...(screeningFields || []), ...(counselingFields || [])]);
-					currentCols = [...ALL_COLUMNS, ...dynamicCols];
-				} else if (reportType === 'placement') {
-					// Fetch dynamic fields as well for placement configure column
-					const [screeningFields, counselingFields] = await Promise.all([
-						settingsService.getFields('screening'),
-						settingsService.getFields('counseling')
-					]);
-					const dynamicCols: any[] = [];
-					if (screeningFields) {
-						screeningFields.forEach(field => {
-							dynamicCols.push({ id: `screening_others.${field.name}`, label: field.label, default: false, group: 'screening' });
-						});
-					}
-					if (counselingFields) {
-						counselingFields.forEach(field => {
-							dynamicCols.push({ id: `counseling_others.${field.name}`, label: field.label, default: false, group: 'counseling' });
-						});
-					}
-					setDynamicFieldDefs([...(screeningFields || []), ...(counselingFields || [])]);
-					
-					// Combine ALL_COLUMNS, TRAINING_COLUMNS for configuration, but default visibility is from PLACEMENT_COLUMNS
-					const allCols = [
-                        ...ALL_COLUMNS, 
-                        ...TRAINING_COLUMNS.filter(tc => !ALL_COLUMNS.find(ac => ac.id === tc.id)),
-                        ...dynamicCols, 
-                        ...PLACEMENT_COLUMNS.filter(pc => !ALL_COLUMNS.find(ac => ac.id === pc.id) && !TRAINING_COLUMNS.find(tc => tc.id === pc.id))
-                    ];
-					
-					currentCols = allCols.map(col => {
-						const pCol = PLACEMENT_COLUMNS.find(pc => pc.id === col.id);
-						return { ...col, default: pCol ? pCol.default : false, group: pCol ? pCol.group : col.group };
 					});
-				} else {
-					currentCols = TRAINING_COLUMNS;
 				}
+				if (counselingFields) {
+					counselingFields.forEach((field: any) => {
+						dynamicCols.push({
+							id: `counseling_others.${field.name}`,
+							label: field.label,
+							default: false,
+							group: 'counseling'
+						});
+					});
+				}
+				setDynamicFieldDefs([...(screeningFields || []), ...(counselingFields || [])]);
 
-				setColumns(currentCols);
-				setVisibleColumns(currentCols.filter(c => c.default).map(c => c.id));
+				const allCols = [...UNIFIED_COLUMNS, ...dynamicCols];
+				setColumns(allCols);
+				setVisibleColumns(allCols.filter(c => c.default).map(c => c.id));
 			} catch (error) {
 				toast.error("Failed to setup columns. Some data might be missing.");
 			}
 		};
 
 		setupColumns();
-	}, [reportType, toast]);
+	}, [toast]);
 
-	// Data Fetching
-	const fetchData = useCallback(() => {
-		dispatch(fetchCandidates({
-			skip: page * rowsPerPage,
-			limit: rowsPerPage,
-			search,
-			gender: filters.gender,
-			disability_types: filters.disability_type?.join(','),
-			education_levels: filters.education_level?.join(','),
-			cities: filters.city?.join(','),
-			counseling_status: filters.counseling_status,
-			screening_status: filters.screening_status,
-			disability_percentages: filters.disability_percentage ? `${filters.disability_percentage.min || 0}-${filters.disability_percentage.max || 100}` : undefined,
-			screening_reasons: filters.screening_reason?.join(','),
-			year_of_passing: filters.year_of_passing?.join(','),
-			year_of_experience: filters.year_of_experience ? `${filters.year_of_experience.min || 0}-${filters.year_of_experience.max || 50}` : undefined,
-			is_experienced: filters.is_experienced === 'true' ? true : filters.is_experienced === 'false' ? false : undefined,
-			currently_employed: filters.currently_employed === 'true' ? true : filters.currently_employed === 'false' ? false : undefined,
-			registration_type: filters.registration_type,
-			is_global: true,
-			status_of_beneficiary: filters.status_of_beneficiary?.join(','),
-			extraFilters: Object.keys(filters)
-				.filter(key => key.startsWith('screening_others.') || key.startsWith('counseling_others.'))
-				.reduce((acc, key) => {
+	// Data Fetching — single unified API call
+	const fetchData = useCallback(async () => {
+		setReportLoading(true);
+		try {
+			// Build extra filters for dynamic fields
+			const extraFilters: Record<string, string> = {};
+			Object.keys(filters).forEach(key => {
+				if (key.startsWith('screening_others.') || key.startsWith('counseling_others.')) {
 					const val = filters[key];
 					if (val && (!Array.isArray(val) || val.length > 0)) {
-						acc[key] = Array.isArray(val) ? val.join(',') : val;
+						extraFilters[key] = Array.isArray(val) ? val.join(',') : val;
 					}
-					return acc;
-				}, {} as Record<string, string>)
-		}));
-	}, [dispatch, page, rowsPerPage, search, filters]);
+				}
+			});
 
-	const fetchTrainingData = useCallback(() => {
-		dispatch(fetchAllAllocations({
-			skip: page * rowsPerPage,
-			limit: rowsPerPage,
-			search,
-			batch_id: filters.batch_id?.join(','),
-			batch_tag: filters.batch_tag,
-			status: filters.status,
-			is_dropout: filters.is_dropout,
-			gender: filters.gender,
-			disability_types: filters.disability_type?.join(','),
-			sortBy: 'created_at',
-			sortOrder: 'desc'
-		}));
-	}, [dispatch, page, rowsPerPage, search, filters]);
+			const result = await unifiedReportService.getReport({
+				skip: page * rowsPerPage,
+				limit: rowsPerPage,
+				search: search || undefined,
+				gender: filters.gender || undefined,
+				disability_types: filters.disability_type?.join(',') || undefined,
+				education_levels: filters.education_level?.join(',') || undefined,
+				cities: filters.city?.join(',') || undefined,
+				disability_percentages: filters.disability_percentage ? `${filters.disability_percentage.min || 0}-${filters.disability_percentage.max || 100}` : undefined,
+				year_of_passing: filters.year_of_passing?.join(',') || undefined,
+				year_of_experience: filters.year_of_experience ? `${filters.year_of_experience.min || 0}-${filters.year_of_experience.max || 50}` : undefined,
+				is_experienced: filters.is_experienced === 'true' ? true : filters.is_experienced === 'false' ? false : undefined,
+				currently_employed: filters.currently_employed === 'true' ? true : filters.currently_employed === 'false' ? false : undefined,
+				registration_type: filters.registration_type || undefined,
+				status_of_beneficiary: filters.status_of_beneficiary?.join(',') || undefined,
+				created_from: filters.created_from || undefined,
+				created_to: filters.created_to || undefined,
+				// Screening
+				screening_status: filters.screening_status || undefined,
+				consent_status: filters.consent_status || undefined,
+				screening_reason: filters.screening_reason?.join(',') || undefined,
+				// Counseling
+				counseling_status: filters.counseling_status || undefined,
+				// Documents
+				has_resume: filters.has_resume === true ? true : filters.has_resume === false ? false : undefined,
+				has_disability_cert: filters.has_disability_cert === true ? true : filters.has_disability_cert === false ? false : undefined,
+				// Training
+				batch_ids: filters.batch_id?.join(',') || undefined,
+				batch_tag: filters.batch_tag || undefined,
+				training_status: filters.training_status || undefined,
+				is_dropout: filters.is_dropout === true ? true : undefined,
+				// Mock interview
+				mock_interview_status: filters.mock_interview_status || undefined,
+				// Analysis
+				recommendation: filters.recommendation || undefined,
+				// Placement
+				company_id: filters.company_id ? Number(filters.company_id) : undefined,
+				job_role_id: filters.job_role_id || undefined,
+				placement_status: filters.placement_status || undefined,
+				offer_response: filters.offer_response || undefined,
+				joining_status: filters.joining_status || undefined,
+				// Dynamic
+				extra_filters: Object.keys(extraFilters).length > 0 ? JSON.stringify(extraFilters) : undefined,
+			});
 
-	const fetchPlacementData = useCallback(async () => {
-		setPlacementLoading(true);
-		try {
-			let mappings;
-			if (filters.job_role_id) {
-				mappings = await placementMappingService.getJobRoleMappings(filters.job_role_id);
-			} else {
-				mappings = await placementMappingService.getAllMappings();
-			}
-
-			// Apply frontend filtering
-			if (filters.company_id) {
-				mappings = mappings.filter((m: any) => String(m.job_role?.company_id) === String(filters.company_id));
-			}
-			if (filters.placement_status) {
-				mappings = mappings.filter((m: any) => m.status === filters.placement_status);
-			}
-			if (filters.gender) {
-				mappings = mappings.filter((m: any) => m.candidate?.gender === filters.gender);
-			}
-			if (filters.disability_type?.length) {
-				mappings = mappings.filter((m: any) => {
-					const candInfo = m.candidate?.other || {};
-					return filters.disability_type.includes(candInfo.disability_type) || 
-					       filters.disability_type.includes(m.candidate?.disability_type);
-				});
-			}
-			if (filters.education_level?.length) {
-				mappings = mappings.filter((m: any) => {
-					const candInfo = m.candidate?.other || {};
-					return filters.education_level.includes(candInfo.highest_education) || 
-					       filters.education_level.includes(m.candidate?.highest_education);
-				});
-			}
-			if (filters.city?.length) {
-				mappings = mappings.filter((m: any) => filters.city.includes(m.candidate?.city));
-			}
-			if (filters.counseling_status) {
-				mappings = mappings.filter((m: any) => m.candidate?.counseling_status === filters.counseling_status);
-			}
-			if (filters.screening_status) {
-				mappings = mappings.filter((m: any) => m.candidate?.screening_status === filters.screening_status);
-			}
-			if (filters.is_experienced) {
-				const isExp = filters.is_experienced === 'true';
-				mappings = mappings.filter((m: any) => {
-					const candInfo = m.candidate?.other || {};
-					return candInfo.is_experienced === isExp || m.candidate?.is_experienced === isExp;
-				});
-			}
-			
-			if (search) {
-				const lowerSearch = search.toLowerCase();
-				mappings = mappings.filter((m: any) => 
-					m.candidate?.first_name?.toLowerCase().includes(lowerSearch) ||
-					m.candidate?.last_name?.toLowerCase().includes(lowerSearch) ||
-					m.candidate?.email?.toLowerCase().includes(lowerSearch) ||
-					m.job_role?.title?.toLowerCase().includes(lowerSearch)
-				);
-			}
-
-			setPlacementData(mappings);
+			setReportData(result.items);
+			setReportTotal(result.total);
 		} catch (error) {
-			toast.error("Failed to fetch placement data");
+			toast.error("Failed to fetch report data");
 		} finally {
-			setPlacementLoading(false);
+			setReportLoading(false);
 		}
-	}, [filters, search, toast]);
+	}, [page, rowsPerPage, search, filters, toast]);
 
 	useEffect(() => {
 		dispatch(fetchFilterOptions());
@@ -246,14 +152,8 @@ export const useReports = () => {
 	}, [dispatch]);
 
 	useEffect(() => {
-		if (isTraining) {
-			fetchTrainingData();
-		} else if (isPlacement) {
-			fetchPlacementData();
-		} else {
-			fetchData();
-		}
-	}, [isTraining, isPlacement, fetchData, fetchTrainingData, fetchPlacementData]);
+		fetchData();
+	}, [fetchData]);
 
 	// Handlers
 	const handleSearchChange = (value: string) => {
@@ -281,80 +181,108 @@ export const useReports = () => {
 		);
 	};
 
+	const selectAllColumns = () => {
+		setVisibleColumns(columns.map(c => c.id));
+	};
+
+	const deselectAllColumns = () => {
+		setVisibleColumns([]);
+	};
+
 	const handleExportCurrentPage = () => {
-		const exportData = formatReportData(reportData, visibleColumns, columns, isTraining, isPlacement);
+		const exportData = reportData.map(item => {
+			const rowData: Record<string, any> = {};
+			visibleColumns.forEach(colId => {
+				const col = columns.find(c => c.id === colId);
+				if (!col) return;
+				let val = item[colId];
+
+				// Handle dynamic field columns
+				if (colId.startsWith('screening_others.')) {
+					const fieldName = colId.substring('screening_others.'.length);
+					val = item.screening_others?.[fieldName];
+				} else if (colId.startsWith('counseling_others.')) {
+					const fieldName = colId.substring('counseling_others.'.length);
+					val = item.counseling_others?.[fieldName];
+				}
+
+				// Format arrays
+				if (Array.isArray(val)) {
+					if (colId === 'skills') {
+						val = val.map((s: any) => `${s.name} (${s.level})`).join(', ');
+					} else if (colId === 'family_details') {
+						val = val.map((f: any) => `${f.relation}: ${f.name}`).join('; ');
+					} else if (colId === 'questions') {
+						val = val.map((q: any) => `Q: ${q.question} A: ${q.answer}`).join(' | ');
+					} else if (colId === 'workexperience') {
+						val = val.map((w: any) => `${w.job_title} at ${w.company}`).join(', ');
+					} else if (colId === 'doc_types_uploaded' || colId === 'documents_uploaded') {
+						val = val.join(', ');
+					} else {
+						val = val.map(String).join(', ');
+					}
+				} else if (typeof val === 'boolean') {
+					val = val ? 'Yes' : 'No';
+				} else if (val === null || val === undefined) {
+					val = '';
+				}
+
+				// Date formatting
+				if ((colId.includes('_at') || colId.includes('date') || colId === 'dob') && val) {
+					try {
+						val = format(new Date(val), 'dd MMM yyyy');
+					} catch {
+						// keep as is
+					}
+				}
+
+				rowData[col.label] = val;
+			});
+			return rowData;
+		});
 
 		const ws = XLSX.utils.json_to_sheet(exportData);
 		const wb = XLSX.utils.book_new();
 		XLSX.utils.book_append_sheet(wb, ws, 'Report');
-		XLSX.writeFile(wb, `${isTraining ? 'Training' : 'Candidates'}_Report_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+		XLSX.writeFile(wb, `Unified_Report_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
 	};
 
 	const handleExportAll = async () => {
 		setExportLoading(true);
 		try {
-			let response;
 			const visibleColData = visibleColumns.map(id => {
 				const col = columns.find(c => c.id === id);
 				return { id, label: col?.label || id };
 			});
 
-			if (isTraining) {
-				response = await trainingService.exportAllocations({
-					search,
-					batch_id: filters.batch_id?.join(','),
-					batch_tag: filters.batch_tag,
-					status: filters.status,
-					is_dropout: filters.is_dropout,
-					gender: filters.gender,
-					disability_types: filters.disability_type?.join(','),
-					sortBy: 'created_at',
-					sortOrder: 'desc',
-					columns: JSON.stringify(visibleColData)
-				});
-
-			} else if (isPlacement) {
-				if (!filters.job_role_id) {
-					toast.error("Please select a Job Role to export placement report.");
-					setExportLoading(false);
-					return;
+			// Build extra filters for dynamic fields
+			const extraFilters: Record<string, string> = {};
+			Object.keys(filters).forEach(key => {
+				if (key.startsWith('screening_others.') || key.startsWith('counseling_others.')) {
+					const val = filters[key];
+					if (val && (!Array.isArray(val) || val.length > 0)) {
+						extraFilters[key] = Array.isArray(val) ? val.join(',') : val;
+					}
 				}
-				response = await placementMappingService.exportPlacementMappings(filters.job_role_id, visibleColData);
-			} else {
-				response = await candidateService.export(
-					search,
-					undefined,
-					'desc',
-					filters.disability_type?.join(','),
-					filters.education_level?.join(','),
-					filters.city?.join(','),
-					filters.counseling_status,
-					filters.screening_status,
-					filters.is_experienced === 'true' ? true : filters.is_experienced === 'false' ? false : undefined,
-					filters.disability_percentage ? `${filters.disability_percentage.min || 0}-${filters.disability_percentage.max || 100}` : undefined,
-					filters.screening_reason?.join(','),
-					filters.gender,
-					filters.year_of_passing?.join(','),
-					filters.year_of_experience ? `${filters.year_of_experience.min || 0}-${filters.year_of_experience.max || 50}` : undefined,
-					filters.currently_employed === 'true' ? true : filters.currently_employed === 'false' ? false : undefined,
-					filters.registration_type,
-					Object.keys(filters)
-						.filter(key => key.startsWith('screening_others.') || key.startsWith('counseling_others.'))
-						.reduce((acc, key) => {
-							const val = filters[key];
-							if (val && (!Array.isArray(val) || val.length > 0)) {
-								acc[key] = Array.isArray(val) ? val.join(',') : val;
-							}
-							return acc;
-						}, {} as Record<string, string>),
-					true,
-					JSON.stringify(visibleColData),
-					filters.status_of_beneficiary?.join(',')
-				);
-			}
-			toast.success(response.message);
+			});
+
+			const response = await unifiedReportService.exportReport({
+				search: search || undefined,
+				gender: filters.gender || undefined,
+				disability_types: filters.disability_type?.join(',') || undefined,
+				education_levels: filters.education_level?.join(',') || undefined,
+				cities: filters.city?.join(',') || undefined,
+				counseling_status: filters.counseling_status || undefined,
+				screening_status: filters.screening_status || undefined,
+				registration_type: filters.registration_type || undefined,
+				status_of_beneficiary: filters.status_of_beneficiary?.join(',') || undefined,
+				extra_filters: Object.keys(extraFilters).length > 0 ? JSON.stringify(extraFilters) : undefined,
+				columns: JSON.stringify(visibleColData),
+			});
+
+			toast.success(response.message || "Export initiated. You will receive an email with the report shortly.");
 		} catch (error) {
-			toast.error("Failed to start export. Please try again later.");
+			toast.error("Failed to export report. Please try again later.");
 		} finally {
 			setExportLoading(false);
 		}
@@ -370,8 +298,6 @@ export const useReports = () => {
 	};
 
 	return {
-		reportType,
-		setReportType,
 		search,
 		handleSearchChange,
 		page,
@@ -385,6 +311,8 @@ export const useReports = () => {
 		columns,
 		visibleColumns,
 		toggleColumn,
+		selectAllColumns,
+		deselectAllColumns,
 		anchorEl,
 		setAnchorEl,
 		filterDrawerOpen,
@@ -399,8 +327,6 @@ export const useReports = () => {
 		filterOptions,
 		batches,
 		dynamicFieldDefs,
-		isTraining,
-		isPlacement,
-		onRefresh: isPlacement ? fetchPlacementData : (isTraining ? fetchTrainingData : fetchData)
+		onRefresh: fetchData
 	};
 };

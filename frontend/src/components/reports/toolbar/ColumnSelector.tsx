@@ -11,11 +11,13 @@ import {
 	useTheme,
 	useMediaQuery
 } from '@mui/material';
-import { ViewColumn as ColumnIcon } from '@mui/icons-material';
+import { ViewColumn as ColumnIcon, SelectAll as SelectAllIcon, Deselect as DeselectIcon } from '@mui/icons-material';
+import { GROUP_LABELS, GROUP_ORDER } from '../../reports/constants';
 
 interface Column {
 	id: string;
 	label: string;
+	group?: string;
 }
 
 interface ColumnSelectorProps {
@@ -25,6 +27,8 @@ interface ColumnSelectorProps {
 	columns: Column[];
 	visibleColumns: string[];
 	onToggleColumn: (columnId: string) => void;
+	onSelectAll?: () => void;
+	onDeselectAll?: () => void;
 }
 
 const ColumnSelector: React.FC<ColumnSelectorProps> = ({
@@ -33,10 +37,13 @@ const ColumnSelector: React.FC<ColumnSelectorProps> = ({
 	onOpen,
 	columns,
 	visibleColumns,
-	onToggleColumn
+	onToggleColumn,
+	onSelectAll,
+	onDeselectAll
 }) => {
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+	const isAllSelected = columns.length > 0 && visibleColumns.length === columns.length;
 
 	return (
 		<Box sx={{ width: isMobile ? '100%' : 'auto' }}>
@@ -59,7 +66,7 @@ const ColumnSelector: React.FC<ColumnSelectorProps> = ({
 					}
 				}}
 			>
-				Configure Columns
+				Configure Columns ({visibleColumns.length}/{columns.length})
 			</Button>
 			<Menu
 				anchorEl={anchorEl}
@@ -67,8 +74,8 @@ const ColumnSelector: React.FC<ColumnSelectorProps> = ({
 				onClose={onClose}
 				PaperProps={{
 					sx: {
-						width: 280,
-						maxHeight: 480,
+						width: 320,
+						maxHeight: 540,
 						boxShadow: theme.shadows[3],
 						border: `1px solid ${theme.palette.divider}`,
 						overflowY: 'auto',
@@ -77,37 +84,71 @@ const ColumnSelector: React.FC<ColumnSelectorProps> = ({
 				}}
 			>
 				<Box sx={{ px: 2, py: 1.5 }}>
-					<Typography variant="subtitle2" sx={{ fontWeight: 700, color: theme.palette.text.primary }}>
-						Select Columns
-					</Typography>
-					<Typography variant="caption" color="text.secondary">
+					<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+						<Typography variant="subtitle2" sx={{ fontWeight: 700, color: theme.palette.text.primary }}>
+							Select Columns
+						</Typography>
+						<Typography variant="caption" sx={{ fontWeight: 600, color: theme.palette.primary.main }}>
+							{visibleColumns.length} selected
+						</Typography>
+					</Box>
+					<Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
 						Choose which columns to show in the table.
 					</Typography>
+					<Box sx={{ display: 'flex', gap: 1 }}>
+						<Button
+							size="small"
+							variant="outlined"
+							startIcon={<SelectAllIcon fontSize="small" />}
+							onClick={onSelectAll}
+							disabled={isAllSelected}
+							sx={{
+								fontSize: '0.75rem',
+								py: 0.25,
+								px: 1,
+								textTransform: 'none',
+								flex: 1,
+								fontWeight: 600
+							}}
+						>
+							Select All
+						</Button>
+						<Button
+							size="small"
+							variant="outlined"
+							startIcon={<DeselectIcon fontSize="small" />}
+							onClick={onDeselectAll}
+							disabled={visibleColumns.length === 0}
+							sx={{
+								fontSize: '0.75rem',
+								py: 0.25,
+								px: 1,
+								textTransform: 'none',
+								flex: 1,
+								fontWeight: 600
+							}}
+						>
+							Deselect All
+						</Button>
+					</Box>
 				</Box>
 				<Divider />
 				<Box sx={{ py: 1 }}>
-					{['general', 'screening', 'counseling', 'experience', 'candidate', 'batch', 'progress'].map(group => {
+					{GROUP_ORDER.map(group => {
 						const groupCols = columns.filter(c => (c as any).group === group);
 						if (groupCols.length === 0) return null;
 
-						const getGroupLabel = (g: string) => {
-							switch (g) {
-								case 'general': return 'General Info';
-								case 'screening': return 'Screening Info';
-								case 'counseling': return 'Counseling Info';
-								case 'experience': return 'Work Experience';
-								case 'candidate': return 'Candidate Details';
-								case 'batch': return 'Batch Details';
-								case 'progress': return 'Progress Metrics';
-								default: return g;
-							}
-						};
+						const groupLabel = GROUP_LABELS[group] || group;
+						const groupSelectedCount = groupCols.filter(c => visibleColumns.includes(c.id)).length;
 
 						return (
 							<React.Fragment key={group}>
-								<Box sx={{ px: 2, py: 1, bgcolor: theme.palette.action.hover }}>
-									<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.text.secondary, textTransform: 'uppercase' }}>
-										{getGroupLabel(group)}
+								<Box sx={{ px: 2, py: 1, bgcolor: theme.palette.action.hover, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+									<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+										{groupLabel}
+									</Typography>
+									<Typography variant="caption" sx={{ fontSize: '0.65rem', color: theme.palette.text.secondary }}>
+										{groupSelectedCount}/{groupCols.length}
 									</Typography>
 								</Box>
 								{groupCols.map(col => (

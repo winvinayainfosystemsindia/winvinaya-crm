@@ -4,11 +4,7 @@ import {
 	Typography,
 	Button,
 	useTheme,
-	useMediaQuery,
-	FormControl,
-	Select,
-	MenuItem,
-	InputLabel
+	useMediaQuery
 } from '@mui/material';
 import { Refresh as RefreshIcon, FileDownload as ExportIcon } from '@mui/icons-material';
 
@@ -16,16 +12,12 @@ interface ReportHeaderProps {
 	onRefresh: () => void;
 	onExport: () => void;
 	loading: boolean;
-	reportType: string;
-	onReportTypeChange: (type: string) => void;
 }
 
 const ReportHeader: React.FC<ReportHeaderProps> = ({
 	onRefresh,
 	onExport,
-	loading,
-	reportType,
-	onReportTypeChange
+	loading
 }) => {
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -49,14 +41,10 @@ const ReportHeader: React.FC<ReportHeaderProps> = ({
 						mb: 0.5
 					}}
 				>
-					{reportType === 'candidate' ? 'Candidates Report' : reportType === 'placement' ? 'Placement Report' : 'Training Management Report'}
+					Reports
 				</Typography>
 				<Typography variant="body2" color="text.secondary">
-					{reportType === 'candidate'
-						? 'Generate and customize candidate data reports for export.'
-						: reportType === 'placement'
-						? 'Track candidate placement statuses across specific job roles.'
-						: 'Track candidate progress and allocations across training batches.'}
+					Configure columns and filters to build your custom report across all modules.
 				</Typography>
 			</Box>
 			<Box
@@ -70,29 +58,6 @@ const ReportHeader: React.FC<ReportHeaderProps> = ({
 				role="toolbar"
 				aria-label="Report Actions"
 			>
-				<FormControl size="small" sx={{ minWidth: isMobile ? '100%' : 220 }}>
-					<InputLabel id="report-type-label">Report Type</InputLabel>
-					<Select
-						labelId="report-type-label"
-						value={reportType}
-						label="Report Type"
-						onChange={(e) => onReportTypeChange(e.target.value)}
-						sx={{
-							height: 36,
-							fontSize: theme.typography.body2.fontSize,
-							borderRadius: `${theme.shape.borderRadius}px`,
-							'& .MuiOutlinedInput-notchedOutline': { borderColor: theme.palette.divider }
-						}}
-						inputProps={{
-							'aria-label': 'Select report type'
-						}}
-					>
-						<MenuItem value="candidate" sx={{ fontSize: theme.typography.body2.fontSize }}>Candidate Report</MenuItem>
-						<MenuItem value="training" sx={{ fontSize: theme.typography.body2.fontSize }}>Training Management Report</MenuItem>
-						<MenuItem value="placement" sx={{ fontSize: theme.typography.body2.fontSize }}>Placement Report</MenuItem>
-					</Select>
-				</FormControl>
-
 				<Box sx={{ display: 'flex', gap: 2, width: isMobile ? '100%' : 'auto' }}>
 					<Button
 						variant="outlined"

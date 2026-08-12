@@ -34,6 +34,7 @@ export interface FilterField {
 	label: string;
 	type: 'multi-select' | 'single-select' | 'boolean' | 'range' | 'text' | 'date' | 'searchable-multi-select';
 	options?: FilterOption[];
+	section?: string;
 }
 
 interface FilterDrawerProps {
@@ -335,29 +336,45 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
 				p: 2.5,
 				'overscrollBehavior': 'contain'
 			}}>
-				{fields.map((field, index) => (
-					<Box
-						key={field.key}
-						sx={{
-							mb: index === fields.length - 1 ? 0 : 3,
-						}}
-					>
-						<Typography variant="awsSectionTitle" sx={{ mb: 1, fontSize: '0.85rem' }}>
-							{field.label}
-						</Typography>
+				{fields.map((field, index) => {
+					const showSectionHeader = field.section && (index === 0 || fields[index - 1].section !== field.section);
+					return (
+						<React.Fragment key={field.key}>
+							{showSectionHeader && (
+								<Box sx={{
+									mt: index === 0 ? 0 : 3,
+									mb: 1.5,
+									pb: 0.5,
+									borderBottom: `2px solid ${theme.palette.accent?.main || theme.palette.primary.main}`
+								}}>
+									<Typography variant="subtitle2" sx={{ fontWeight: 700, color: theme.palette.text.primary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+										{field.section}
+									</Typography>
+								</Box>
+							)}
+							<Box
+								sx={{
+									mb: index === fields.length - 1 ? 0 : 2.5,
+								}}
+							>
+								<Typography variant="awsSectionTitle" sx={{ mb: 1, fontSize: '0.85rem' }}>
+									{field.label}
+								</Typography>
 
-						<Box sx={{
-							...awsPanel,
-							p: 0,
-							overflow: 'hidden',
-							bgcolor: theme.palette.background.paper,
-							borderColor: theme.palette.divider,
-							boxShadow: theme.shadows[1]
-						}}>
-							{renderFieldContent(field)}
-						</Box>
-					</Box>
-				))}
+								<Box sx={{
+									...awsPanel,
+									p: 0,
+									overflow: 'hidden',
+									bgcolor: theme.palette.background.paper,
+									borderColor: theme.palette.divider,
+									boxShadow: theme.shadows[1]
+								}}>
+									{renderFieldContent(field)}
+								</Box>
+							</Box>
+						</React.Fragment>
+					);
+				})}
 			</Box>
 
 			{/* Footer */}
