@@ -285,7 +285,10 @@ class UnifiedReportService:
         if created_from:
             filters.append(Candidate.created_at >= created_from)
         if created_to:
-            filters.append(Candidate.created_at <= created_to)
+            to_str = str(created_to).strip()
+            if len(to_str) == 10:
+                to_str += " 23:59:59"
+            filters.append(Candidate.created_at <= to_str)
 
         # --- Screening Filters ---
         if screening_status:
@@ -327,7 +330,29 @@ class UnifiedReportService:
 
         # --- Counseling Filters ---
         if counseling_status:
-            filters.append(CandidateCounseling.status.ilike(counseling_status))
+            if counseling_status.lower() == "pending":
+                filters.append(
+                    or_(
+                        CandidateCounseling.id.is_(None),
+                        CandidateCounseling.status.ilike("pending"),
+                        CandidateCounseling.status.is_(None),
+                        CandidateCounseling.status == ""
+                    )
+                )
+            elif counseling_status.lower() in ("in progress", "in-progress"):
+                filters.append(
+                    and_(
+                        CandidateCounseling.id.isnot(None),
+                        or_(
+                            CandidateCounseling.status.ilike("in progress"),
+                            CandidateCounseling.status.ilike("in-progress"),
+                            CandidateCounseling.status.is_(None),
+                            CandidateCounseling.status == ""
+                        )
+                    )
+                )
+            else:
+                filters.append(CandidateCounseling.status.ilike(counseling_status))
 
         # --- Document Filters ---
         if has_resume is not None:
@@ -411,38 +436,27 @@ class UnifiedReportService:
             filters.append(Candidate.id.in_(ana_subq))
 
         # --- Placement Filters ---
-        if company_id:
-            comp_subq = (
-                select(PlacementMapping.candidate_id)
-                .join(JobRole, PlacementMapping.job_role_id == JobRole.id)
-                .where(
-                    JobRole.company_id == company_id,
-                    PlacementMapping.is_active == True,
-                    PlacementMapping.is_deleted == False
-                )
-            )
-            filters.append(Candidate.id.in_(comp_subq))
-
-        if job_role_id:
-            jr_subq = (
-                select(PlacementMapping.candidate_id)
-                .join(JobRole, PlacementMapping.job_role_id == JobRole.id)
-                .where(
+        if company_id or job_role_id or placement_status:
+            pm_conditions = [
+                PlacementMapping.is_active == True,
+                PlacementMapping.is_deleted == False
+            ]
+            if company_id:
+                pm_conditions.append(JobRole.company_id == company_id)
+            if job_role_id:
+                pm_conditions.append(
                     or_(
                         PlacementMapping.job_role_id == int(job_role_id) if str(job_role_id).isdigit() else False,
                         JobRole.public_id.cast(String) == str(job_role_id)
-                    ),
-                    PlacementMapping.is_active == True,
-                    PlacementMapping.is_deleted == False
+                    )
                 )
-            )
-            filters.append(Candidate.id.in_(jr_subq))
+            if placement_status:
+                pm_conditions.append(PlacementMapping.status.cast(String).ilike(placement_status))
 
-        if placement_status:
-            pm_subq = select(PlacementMapping.candidate_id).where(
-                PlacementMapping.status.cast(String).ilike(placement_status),
-                PlacementMapping.is_active == True,
-                PlacementMapping.is_deleted == False
+            pm_subq = (
+                select(PlacementMapping.candidate_id)
+                .join(JobRole, PlacementMapping.job_role_id == JobRole.id)
+                .where(and_(*pm_conditions))
             )
             filters.append(Candidate.id.in_(pm_subq))
 
@@ -476,14 +490,14 @@ class UnifiedReportService:
                 if key.startswith("screening_others."):
                     field_name = key.replace("screening_others.", "")
                     conditions = [
-                        func.json_extract_path_text(CandidateScreening.others, field_name).ilike(f"%{v}%")
+                        CandidateScreening.others[field_name].as_string().ilike(f"%{v}%")
                         for v in selected_values
                     ]
                     filters.append(or_(*conditions) if len(conditions) > 1 else conditions[0])
                 elif key.startswith("counseling_others."):
                     field_name = key.replace("counseling_others.", "")
                     conditions = [
-                        func.json_extract_path_text(CandidateCounseling.others, field_name).ilike(f"%{v}%")
+                        CandidateCounseling.others[field_name].as_string().ilike(f"%{v}%")
                         for v in selected_values
                     ]
                     filters.append(or_(*conditions) if len(conditions) > 1 else conditions[0])

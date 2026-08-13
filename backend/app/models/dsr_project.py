@@ -2,8 +2,7 @@ from __future__ import annotations
 import uuid
 import enum
 from typing import TYPE_CHECKING
-from sqlalchemy import String, Boolean, Integer, ForeignKey, Uuid, Enum, Table, Column
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import String, Boolean, Integer, ForeignKey, Uuid, Enum, Table, Column, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
 
@@ -86,7 +85,7 @@ class DSRProject(BaseModel):
 
     # Extensible metadata
     others: Mapped[dict | None] = mapped_column(
-        JSONB,
+        JSON,
         nullable=True,
         comment="Extensible project metadata (e.g. client, priority, tags)",
     )

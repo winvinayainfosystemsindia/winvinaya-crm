@@ -5,8 +5,7 @@ import uuid
 import enum
 from datetime import date
 from typing import TYPE_CHECKING
-from sqlalchemy import String, Text, Boolean, Integer, Date, ForeignKey, Enum, Uuid, Float
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import String, Text, Boolean, Integer, Date, ForeignKey, Enum, Uuid, Float, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
 
@@ -115,7 +114,7 @@ class DSRActivity(BaseModel):
 
     # Extensible metadata
     others: Mapped[dict | None] = mapped_column(
-        JSONB,
+        JSON,
         nullable=True,
         comment="Extensible metadata (e.g. priority, estimated_hours, labels)",
     )

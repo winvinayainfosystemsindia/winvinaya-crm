@@ -77,65 +77,88 @@ export const useReports = () => {
 		setupColumns();
 	}, [toast]);
 
+	// Helper to build standardized report params from state
+	const buildReportParams = useCallback((pPage?: number, pRowsPerPage?: number) => {
+		const extraFilters: Record<string, string> = {};
+		Object.keys(filters).forEach(key => {
+			if (key.startsWith('screening_others.') || key.startsWith('counseling_others.')) {
+				const val = filters[key];
+				if (val && (!Array.isArray(val) || val.length > 0)) {
+					extraFilters[key] = Array.isArray(val) ? val.join(',') : val;
+				}
+			}
+		});
+
+		const hasMinOrMax = (obj: any) => {
+			if (!obj || typeof obj !== 'object') return false;
+			const hasMin = obj.min !== undefined && obj.min !== null && String(obj.min).trim() !== '';
+			const hasMax = obj.max !== undefined && obj.max !== null && String(obj.max).trim() !== '';
+			return hasMin || hasMax;
+		};
+
+		const formatArray = (arr: any) => {
+			if (!Array.isArray(arr)) return undefined;
+			const filtered = arr.filter(item => item !== undefined && item !== null && String(item).trim() !== '');
+			return filtered.length > 0 ? filtered.join(',') : undefined;
+		};
+
+		return {
+			skip: pPage !== undefined && pRowsPerPage !== undefined ? pPage * pRowsPerPage : undefined,
+			limit: pRowsPerPage,
+			search: search || undefined,
+			gender: filters.gender || undefined,
+			disability_types: formatArray(filters.disability_type),
+			education_levels: formatArray(filters.education_level),
+			cities: formatArray(filters.city),
+			disability_percentages: hasMinOrMax(filters.disability_percentage)
+				? `${filters.disability_percentage.min || 0}-${filters.disability_percentage.max || 100}`
+				: undefined,
+			year_of_passing: formatArray(filters.year_of_passing),
+			year_of_experience: hasMinOrMax(filters.year_of_experience)
+				? `${filters.year_of_experience.min || 0}-${filters.year_of_experience.max || 50}`
+				: undefined,
+			is_experienced: filters.is_experienced === 'true' ? true : filters.is_experienced === 'false' ? false : undefined,
+			currently_employed: filters.currently_employed === 'true' ? true : filters.currently_employed === 'false' ? false : undefined,
+			registration_type: filters.registration_type || undefined,
+			status_of_beneficiary: formatArray(filters.status_of_beneficiary),
+			created_from: filters.created_from || undefined,
+			created_to: filters.created_to || undefined,
+			// Screening
+			screening_status: filters.screening_status || undefined,
+			consent_status: filters.consent_status || undefined,
+			screening_reason: formatArray(filters.screening_reason),
+			// Counseling
+			counseling_status: filters.counseling_status || undefined,
+			// Documents
+			has_resume: filters.has_resume === true ? true : filters.has_resume === false ? false : undefined,
+			has_disability_cert: filters.has_disability_cert === true ? true : filters.has_disability_cert === false ? false : undefined,
+			// Training
+			batch_ids: formatArray(filters.batch_id),
+			batch_tag: filters.batch_tag || undefined,
+			training_status: filters.training_status || undefined,
+			is_dropout: filters.is_dropout === true ? true : filters.is_dropout === false ? false : undefined,
+			// Mock interview
+			mock_interview_status: filters.mock_interview_status || undefined,
+			// Analysis
+			recommendation: filters.recommendation || undefined,
+			analysis_status: filters.analysis_status || undefined,
+			// Placement
+			company_id: filters.company_id ? Number(filters.company_id) : undefined,
+			job_role_id: filters.job_role_id || undefined,
+			placement_status: filters.placement_status || undefined,
+			offer_response: filters.offer_response || undefined,
+			joining_status: filters.joining_status || undefined,
+			// Dynamic
+			extra_filters: Object.keys(extraFilters).length > 0 ? JSON.stringify(extraFilters) : undefined,
+		};
+	}, [filters, search]);
+
 	// Data Fetching — single unified API call
 	const fetchData = useCallback(async () => {
 		setReportLoading(true);
 		try {
-			// Build extra filters for dynamic fields
-			const extraFilters: Record<string, string> = {};
-			Object.keys(filters).forEach(key => {
-				if (key.startsWith('screening_others.') || key.startsWith('counseling_others.')) {
-					const val = filters[key];
-					if (val && (!Array.isArray(val) || val.length > 0)) {
-						extraFilters[key] = Array.isArray(val) ? val.join(',') : val;
-					}
-				}
-			});
-
-			const result = await unifiedReportService.getReport({
-				skip: page * rowsPerPage,
-				limit: rowsPerPage,
-				search: search || undefined,
-				gender: filters.gender || undefined,
-				disability_types: filters.disability_type?.join(',') || undefined,
-				education_levels: filters.education_level?.join(',') || undefined,
-				cities: filters.city?.join(',') || undefined,
-				disability_percentages: filters.disability_percentage ? `${filters.disability_percentage.min || 0}-${filters.disability_percentage.max || 100}` : undefined,
-				year_of_passing: filters.year_of_passing?.join(',') || undefined,
-				year_of_experience: filters.year_of_experience ? `${filters.year_of_experience.min || 0}-${filters.year_of_experience.max || 50}` : undefined,
-				is_experienced: filters.is_experienced === 'true' ? true : filters.is_experienced === 'false' ? false : undefined,
-				currently_employed: filters.currently_employed === 'true' ? true : filters.currently_employed === 'false' ? false : undefined,
-				registration_type: filters.registration_type || undefined,
-				status_of_beneficiary: filters.status_of_beneficiary?.join(',') || undefined,
-				created_from: filters.created_from || undefined,
-				created_to: filters.created_to || undefined,
-				// Screening
-				screening_status: filters.screening_status || undefined,
-				consent_status: filters.consent_status || undefined,
-				screening_reason: filters.screening_reason?.join(',') || undefined,
-				// Counseling
-				counseling_status: filters.counseling_status || undefined,
-				// Documents
-				has_resume: filters.has_resume === true ? true : filters.has_resume === false ? false : undefined,
-				has_disability_cert: filters.has_disability_cert === true ? true : filters.has_disability_cert === false ? false : undefined,
-				// Training
-				batch_ids: filters.batch_id?.join(',') || undefined,
-				batch_tag: filters.batch_tag || undefined,
-				training_status: filters.training_status || undefined,
-				is_dropout: filters.is_dropout === true ? true : undefined,
-				// Mock interview
-				mock_interview_status: filters.mock_interview_status || undefined,
-				// Analysis
-				recommendation: filters.recommendation || undefined,
-				// Placement
-				company_id: filters.company_id ? Number(filters.company_id) : undefined,
-				job_role_id: filters.job_role_id || undefined,
-				placement_status: filters.placement_status || undefined,
-				offer_response: filters.offer_response || undefined,
-				joining_status: filters.joining_status || undefined,
-				// Dynamic
-				extra_filters: Object.keys(extraFilters).length > 0 ? JSON.stringify(extraFilters) : undefined,
-			});
+			const params = buildReportParams(page, rowsPerPage);
+			const result = await unifiedReportService.getReport(params);
 
 			setReportData(result.items);
 			setReportTotal(result.total);
@@ -144,7 +167,7 @@ export const useReports = () => {
 		} finally {
 			setReportLoading(false);
 		}
-	}, [page, rowsPerPage, search, filters, toast]);
+	}, [page, rowsPerPage, buildReportParams, toast]);
 
 	useEffect(() => {
 		dispatch(fetchFilterOptions());
@@ -255,28 +278,9 @@ export const useReports = () => {
 				return { id, label: col?.label || id };
 			});
 
-			// Build extra filters for dynamic fields
-			const extraFilters: Record<string, string> = {};
-			Object.keys(filters).forEach(key => {
-				if (key.startsWith('screening_others.') || key.startsWith('counseling_others.')) {
-					const val = filters[key];
-					if (val && (!Array.isArray(val) || val.length > 0)) {
-						extraFilters[key] = Array.isArray(val) ? val.join(',') : val;
-					}
-				}
-			});
-
+			const params = buildReportParams();
 			const response = await unifiedReportService.exportReport({
-				search: search || undefined,
-				gender: filters.gender || undefined,
-				disability_types: filters.disability_type?.join(',') || undefined,
-				education_levels: filters.education_level?.join(',') || undefined,
-				cities: filters.city?.join(',') || undefined,
-				counseling_status: filters.counseling_status || undefined,
-				screening_status: filters.screening_status || undefined,
-				registration_type: filters.registration_type || undefined,
-				status_of_beneficiary: filters.status_of_beneficiary?.join(',') || undefined,
-				extra_filters: Object.keys(extraFilters).length > 0 ? JSON.stringify(extraFilters) : undefined,
+				...params,
 				columns: JSON.stringify(visibleColData),
 			});
 
