@@ -233,6 +233,13 @@ class ConsentPDFService:
 		disability_type = disability_details.get("disability_type") or disability_details.get("type")
 
 		# Generate PDF
+		consent_timestamp = (
+			screening.consent_at 
+			or getattr(screening, "updated_at", None) 
+			or getattr(screening, "created_at", None) 
+			or getattr(candidate, "created_at", None) 
+			or datetime.utcnow()
+		)
 		file_size = ConsentPDFService.generate_pdf_file(
 			candidate_name=candidate.name,
 			candidate_email=candidate.email,
@@ -240,8 +247,8 @@ class ConsentPDFService:
 			disability_type=disability_type,
 			city=candidate.city,
 			public_id=str(candidate.public_id),
-			consent_at=screening.consent_at or datetime.utcnow(),
-			consent_ip=consent_ip or screening.consent_ip,
+			consent_at=consent_timestamp,
+			consent_ip=consent_ip or screening.consent_ip or "System Record",
 			output_path=str(file_path)
 		)
 
@@ -287,7 +294,7 @@ class ConsentPDFService:
 		stmt = (
 			select(CandidateScreening)
 			.where(
-				CandidateScreening.consent_status == "Accepted",
+				CandidateScreening.consent_status.ilike("accepted"),
 				CandidateScreening.is_deleted == False
 			)
 			.options(selectinload(CandidateScreening.candidate))

@@ -6,6 +6,7 @@ from uuid import UUID
 from app.api import deps
 from app.services.consent_service import ConsentService
 from app.models.candidate import Candidate
+from app.models.user import UserRole
 from sqlalchemy import select
 
 router = APIRouter()
@@ -65,3 +66,24 @@ async def submit_consent(
     client_host = request.client.host if request.client else "unknown"
     success = await service.submit_consent(str(public_id), client_host)
     return {"success": success}
+
+
+@router.post("/backfill-pdfs")
+async def backfill_consent_pdfs(
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: Any = Depends(deps.require_roles([UserRole.ADMIN, UserRole.MANAGER]))
+) -> Any:
+    """
+    Backfill missing consent form PDFs for all candidates who previously accepted consent.
+    Generates PDF documents using original consent/registration timestamps and saves them to Candidate Documents.
+    (Admin/Manager only)
+    """
+    from app.services.consent_pdf_service import ConsentPDFService
+    count = await ConsentPDFService.backfill_all_accepted_candidates(db)
+    return {
+        "success": True,
+        "message": f"Successfully generated consent form PDFs for {count} candidate(s).",
+        "generated_count": count
+    }
+
+
