@@ -29,6 +29,7 @@ interface ContactFormDialogProps {
 	onClose: () => void;
 	onSubmit: (data: ContactCreate | ContactUpdate) => void;
 	contact?: Contact | null;
+	initialCompanyId?: number;
 	loading?: boolean;
 }
 
@@ -46,6 +47,7 @@ const ContactFormDialog: React.FC<ContactFormDialogProps> = ({
 	onClose,
 	onSubmit,
 	contact,
+	initialCompanyId,
 	loading = false
 }) => {
 	const { list: companies } = useAppSelector((state) => state.companies);
@@ -58,7 +60,7 @@ const ContactFormDialog: React.FC<ContactFormDialogProps> = ({
 		mobile: '',
 		designation: '',
 		department: '',
-		company_id: undefined,
+		company_id: initialCompanyId,
 		is_primary: false,
 		is_decision_maker: false,
 		contact_source: 'linkedin',
@@ -80,7 +82,7 @@ const ContactFormDialog: React.FC<ContactFormDialogProps> = ({
 					mobile: '',
 					designation: '',
 					department: '',
-					company_id: undefined,
+					company_id: initialCompanyId,
 					is_primary: false,
 					is_decision_maker: false,
 					contact_source: 'linkedin',
@@ -89,7 +91,7 @@ const ContactFormDialog: React.FC<ContactFormDialogProps> = ({
 			}
 		}, 0);
 		return () => clearTimeout(timer);
-	}, [contact, open]);
+	}, [contact, initialCompanyId, open]);
 
 	const handleChange = (field: string, value: unknown) => {
 		setFormData(prev => ({ ...prev, [field]: value }));

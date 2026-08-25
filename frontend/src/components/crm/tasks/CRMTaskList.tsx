@@ -66,12 +66,14 @@ const CRMTaskList: React.FC<CRMTaskListProps> = ({ onAddClick }) => {
 		handleRefresh();
 	}, [handleRefresh]);
 
+	const handleOpenAdd = () => {
+		setSelectedTask(null);
+		setDialogOpen(true);
+	};
+
 	useEffect(() => {
 		if (onAddClick) {
-			onAddClick(() => {
-				setSelectedTask(null);
-				setDialogOpen(true);
-			});
+			onAddClick(handleOpenAdd);
 		}
 	}, [onAddClick]);
 
@@ -189,6 +191,9 @@ const CRMTaskList: React.FC<CRMTaskListProps> = ({ onAddClick }) => {
 				onFilterOpen={() => setFilterDrawerOpen(true)}
 				activeFilterCount={Object.keys(activeFilters).length}
 				onRefresh={handleRefresh}
+				onCreateClick={handleOpenAdd}
+				createButtonText="Add Task"
+				canCreate={true}
 				renderRow={(task) => (
 					<TaskTableRow
 						key={task.public_id}

@@ -71,13 +71,15 @@ const ContactList: React.FC<ContactListProps> = ({ onAddClick }) => {
 		dispatch(fetchCompanies({ limit: 1000 }));
 	}, [handleRefresh, dispatch]);
 
+	const handleOpenAdd = () => {
+		setSelectedContact(null);
+		setDialogOpen(true);
+	};
+
 	// Bridge the add button from PageHeader to internal state
 	useEffect(() => {
 		if (onAddClick) {
-			onAddClick(() => {
-				setSelectedContact(null);
-				setDialogOpen(true);
-			});
+			onAddClick(handleOpenAdd);
 		}
 	}, [onAddClick]);
 
@@ -196,6 +198,9 @@ const ContactList: React.FC<ContactListProps> = ({ onAddClick }) => {
 				onFilterOpen={() => setFilterDrawerOpen(true)}
 				activeFilterCount={Object.keys(activeFilters).length}
 				onRefresh={handleRefresh}
+				onCreateClick={handleOpenAdd}
+				createButtonText="Add Contact"
+				canCreate={true}
 				renderRow={(contact) => (
 					<ContactTableRow
 						key={contact.public_id}

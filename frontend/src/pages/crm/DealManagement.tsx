@@ -3,11 +3,8 @@ import { Box, Container, Button } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import PageHeader from '../../components/common/page-header';
 import DealList from '../../components/crm/deals/DealList';
-import { useAppSelector } from '../../store/hooks';
 
 const DealManagement: React.FC = () => {
-	const { user } = useAppSelector((state) => state.auth);
-	const isAdmin = user?.role === 'admin';
 	
 	const addDealTrigger = useRef<(() => void) | null>(null);
 
@@ -24,16 +21,23 @@ const DealManagement: React.FC = () => {
 					title="Deal Management"
 					subtitle="Track sales opportunities and revenue pipeline"
 					action={
-						isAdmin ? (
-							<Button
-								variant="contained"
-								color="primary"
-								startIcon={<AddIcon />}
-								onClick={handleAddClick}
-							>
-								Add Deal
-							</Button>
-						) : undefined
+						<Button
+							variant="contained"
+							color="primary"
+							startIcon={<AddIcon />}
+							onClick={handleAddClick}
+							sx={{
+								textTransform: 'none',
+								fontWeight: 600,
+								px: 3,
+								py: 1,
+								borderRadius: 3,
+								boxShadow: 'none',
+								'&:hover': { boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }
+							}}
+						>
+							Add Deal
+						</Button>
 					}
 				/>
 				

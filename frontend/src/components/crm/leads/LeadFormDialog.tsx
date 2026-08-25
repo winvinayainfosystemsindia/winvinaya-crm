@@ -37,6 +37,7 @@ interface LeadFormDialogProps {
 	onClose: () => void;
 	onSubmit: (data: LeadCreate | LeadUpdate) => void;
 	lead?: Lead | null;
+	initialCompanyId?: number;
 	loading?: boolean;
 }
 
@@ -63,6 +64,7 @@ const LeadFormDialog: React.FC<LeadFormDialogProps> = ({
 	onClose,
 	onSubmit,
 	lead,
+	initialCompanyId,
 	loading = false
 }) => {
 	const dispatch = useAppDispatch();
@@ -80,7 +82,7 @@ const LeadFormDialog: React.FC<LeadFormDialogProps> = ({
 		currency: 'INR',
 		expected_close_date: '',
 		assigned_to: undefined,
-		company_id: undefined,
+		company_id: initialCompanyId,
 		contact_id: undefined
 	});
 
@@ -110,13 +112,13 @@ const LeadFormDialog: React.FC<LeadFormDialogProps> = ({
 					currency: 'INR',
 					expected_close_date: '',
 					assigned_to: undefined,
-					company_id: undefined,
+					company_id: initialCompanyId,
 					contact_id: undefined
 				});
 			}
 		}, 0);
 		return () => clearTimeout(timer);
-	}, [lead, open]);
+	}, [lead, initialCompanyId, open]);
 
 	const handleChange = (field: string, value: unknown) => {
 		setFormData(prev => ({ ...prev, [field]: value }));

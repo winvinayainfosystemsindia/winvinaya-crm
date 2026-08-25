@@ -38,6 +38,7 @@ interface DealFormDialogProps {
 	onClose: () => void;
 	onSubmit: (data: DealCreate | DealUpdate) => void;
 	deal?: Deal | null;
+	initialCompanyId?: number;
 	loading?: boolean;
 }
 
@@ -62,6 +63,7 @@ const DealFormDialog: React.FC<DealFormDialogProps> = ({
 	onClose,
 	onSubmit,
 	deal,
+	initialCompanyId,
 	loading = false
 }) => {
 	const dispatch = useAppDispatch();
@@ -80,7 +82,7 @@ const DealFormDialog: React.FC<DealFormDialogProps> = ({
 		currency: 'INR',
 		expected_close_date: '',
 		assigned_to: 0,
-		company_id: undefined,
+		company_id: initialCompanyId,
 		contact_id: undefined,
 		original_lead_id: undefined
 	});
@@ -112,14 +114,14 @@ const DealFormDialog: React.FC<DealFormDialogProps> = ({
 					currency: 'INR',
 					expected_close_date: '',
 					assigned_to: 0,
-					company_id: undefined,
+					company_id: initialCompanyId,
 					contact_id: undefined,
 					original_lead_id: undefined
 				});
 			}
 		}, 0);
 		return () => clearTimeout(timer);
-	}, [deal, open]);
+	}, [deal, initialCompanyId, open]);
 
 	const handleChange = (field: string, value: unknown) => {
 		setFormData(prev => ({ ...prev, [field]: value }));

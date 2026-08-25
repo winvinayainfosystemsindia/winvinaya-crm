@@ -73,12 +73,14 @@ const LeadList: React.FC<LeadListProps> = ({ onAddClick }) => {
 		dispatch(fetchContacts({ limit: 1000 }));
 	}, [handleRefresh, dispatch]);
 
+	const handleOpenAdd = () => {
+		setSelectedLead(null);
+		setDialogOpen(true);
+	};
+
 	useEffect(() => {
 		if (onAddClick) {
-			onAddClick(() => {
-				setSelectedLead(null);
-				setDialogOpen(true);
-			});
+			onAddClick(handleOpenAdd);
 		}
 	}, [onAddClick]);
 
@@ -195,6 +197,9 @@ const LeadList: React.FC<LeadListProps> = ({ onAddClick }) => {
 				onFilterOpen={() => setFilterDrawerOpen(true)}
 				activeFilterCount={Object.keys(activeFilters).length}
 				onRefresh={handleRefresh}
+				onCreateClick={handleOpenAdd}
+				createButtonText="Add Lead"
+				canCreate={true}
 				renderRow={(lead) => (
 					<LeadTableRow
 						key={lead.public_id}

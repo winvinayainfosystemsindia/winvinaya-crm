@@ -1,7 +1,6 @@
 import React, { useCallback, useRef } from 'react';
 import { Container, Button } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
-import { useAppSelector } from '../../store/hooks';
 import CompanyList from '../../components/crm/companies/CompanyList';
 import PageHeader from '../../components/common/page-header';
 
@@ -10,8 +9,6 @@ import PageHeader from '../../components/common/page-header';
  * Standardized page for managing organizational profiles and corporate partnerships.
  */
 const CompanyManagement: React.FC = () => {
-	const { user } = useAppSelector((state) => state.auth);
-	const isAdmin = user?.role === 'admin';
 
 	// Holds the trigger exposed by CompanyList once it mounts
 	const addTriggerRef = useRef<(() => void) | null>(null);
@@ -24,7 +21,7 @@ const CompanyManagement: React.FC = () => {
 		addTriggerRef.current?.();
 	};
 
-	const headerAction = isAdmin ? (
+	const headerAction = (
 		<Button
 			variant="contained"
 			startIcon={<AddIcon />}
@@ -41,7 +38,7 @@ const CompanyManagement: React.FC = () => {
 		>
 			Add Company
 		</Button>
-	) : undefined;
+	);
 
 	return (
 		<Container maxWidth="xl" sx={{ py: { xs: 2, sm: 4 } }}>

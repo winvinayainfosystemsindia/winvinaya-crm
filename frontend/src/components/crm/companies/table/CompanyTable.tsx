@@ -24,6 +24,7 @@ interface CompanyTableProps {
 	onFilterOpen: () => void;
 	activeFilterCount: number;
 	onRefresh: () => void;
+	onAdd?: () => void;
 	// Row actions
 	isAdmin: boolean;
 	onRowClick: (company: Company) => void;
@@ -57,6 +58,7 @@ const CompanyTable: React.FC<CompanyTableProps> = ({
 	onFilterOpen,
 	activeFilterCount,
 	onRefresh,
+	onAdd,
 	isAdmin,
 	onRowClick,
 	onEdit,
@@ -81,6 +83,9 @@ const CompanyTable: React.FC<CompanyTableProps> = ({
 			onFilterOpen={onFilterOpen}
 			activeFilterCount={activeFilterCount}
 			onRefresh={onRefresh}
+			onCreateClick={onAdd}
+			createButtonText="Add Company"
+			canCreate={!!onAdd}
 			emptyMessage="No companies found. Start by adding your first company."
 			renderRow={(company) => (
 				<CompanyTableRow

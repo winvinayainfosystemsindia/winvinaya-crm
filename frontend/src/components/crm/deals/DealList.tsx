@@ -72,12 +72,14 @@ const DealList: React.FC<DealListProps> = ({ onAddClick }) => {
 		dispatch(fetchContacts({ limit: 1000 }));
 	}, [handleRefresh, dispatch]);
 
+	const handleOpenAdd = () => {
+		setSelectedDeal(null);
+		setDialogOpen(true);
+	};
+
 	useEffect(() => {
 		if (onAddClick) {
-			onAddClick(() => {
-				setSelectedDeal(null);
-				setDialogOpen(true);
-			});
+			onAddClick(handleOpenAdd);
 		}
 	}, [onAddClick]);
 
@@ -201,6 +203,9 @@ const DealList: React.FC<DealListProps> = ({ onAddClick }) => {
 				onFilterOpen={() => setFilterDrawerOpen(true)}
 				activeFilterCount={Object.keys(activeFilters).length}
 				onRefresh={handleRefresh}
+				onCreateClick={handleOpenAdd}
+				createButtonText="Add Deal"
+				canCreate={true}
 				renderRow={(deal) => (
 					<DealTableRow
 						key={deal.public_id}
