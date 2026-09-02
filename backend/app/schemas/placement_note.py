@@ -1,6 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from app.models.placement_note import NoteType
 
 
@@ -11,6 +11,7 @@ class PlacementNoteBase(BaseModel):
     note_type: NoteType = NoteType.GENERAL
     content: str
     is_pinned: bool = False
+    attachments: Optional[List[Dict[str, Any]]] = None
 
 
 class PlacementNoteCreate(PlacementNoteBase):
@@ -21,6 +22,7 @@ class PlacementNoteUpdate(BaseModel):
     note_type: Optional[NoteType] = None
     content: Optional[str] = None
     is_pinned: Optional[bool] = None
+    attachments: Optional[List[Dict[str, Any]]] = None
 
 
 class PlacementNoteResponse(PlacementNoteBase):

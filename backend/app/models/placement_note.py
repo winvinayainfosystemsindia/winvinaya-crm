@@ -2,7 +2,7 @@ from __future__ import annotations
 import enum
 from datetime import datetime
 from typing import TYPE_CHECKING
-from sqlalchemy import Integer, ForeignKey, String, DateTime, Text, Enum, Boolean
+from sqlalchemy import Integer, ForeignKey, String, DateTime, Text, Enum, Boolean, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
 
@@ -69,6 +69,12 @@ class PlacementNote(BaseModel):
         Integer,
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True
+    )
+
+    attachments: Mapped[list[dict] | None] = mapped_column(
+        JSON,
+        nullable=True,
+        comment='[{"file_name": "", "saved_name": "", "file_path": "", "file_size": 0, "mime_type": ""}]'
     )
     
     # Relationships

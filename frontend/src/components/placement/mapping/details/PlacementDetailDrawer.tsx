@@ -64,7 +64,6 @@ const PlacementDetailDrawer = ({
 	
 	// Local state
 	const [tabValue, setTabValue] = useState(0);
-	const [newNote, setNewNote] = useState('');
 	const [isAddingNote, setIsAddingNote] = useState(false);
 
 	const fetchData = useCallback(async () => {
@@ -150,18 +149,19 @@ const PlacementDetailDrawer = ({
 		}
 	};
 
-	const handleAddNote = async () => {
-		if (!newNote.trim()) return;
+	const handleAddNote = async (content: string, files?: File[]) => {
+		if (!content.trim() && (!files || files.length === 0)) return;
 		setIsAddingNote(true);
 		try {
 			await dispatch(addPlacementNote({
 				mapping_id: mappingId,
-				content: newNote.trim()
+				content: content.trim(),
+				files: files && files.length > 0 ? files : undefined
 			})).unwrap();
-			setNewNote('');
 			toast.success('Note added successfully');
 		} catch (error: any) {
 			toast.error(error.message || 'Failed to add note');
+			throw error;
 		} finally {
 			setIsAddingNote(false);
 		}
@@ -241,8 +241,6 @@ const PlacementDetailDrawer = ({
 						{tabValue === 2 && (
 							<NotesTab 
 								notes={notes}
-								newNote={newNote}
-								onNewNoteChange={setNewNote}
 								onAddNote={handleAddNote}
 								isAdding={isAddingNote}
 							/>

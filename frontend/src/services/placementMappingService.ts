@@ -176,8 +176,30 @@ const placementMappingService = {
         return res.data;
     },
 
-    addNote: async (note: { mapping_id: number; content: string }): Promise<any> => {
-        const response = await api.post('/placement/notes/', note);
+    addNote: async (note: { mapping_id: number; content: string; files?: File[] }): Promise<any> => {
+        if (note.files && note.files.length > 0) {
+            const formData = new FormData();
+            formData.append('mapping_id', note.mapping_id.toString());
+            formData.append('content', note.content);
+            note.files.forEach((file) => {
+                formData.append('files', file);
+            });
+            const response = await api.post('/placement/notes/with-attachments', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            return response.data;
+        }
+        const response = await api.post('/placement/notes/', {
+            mapping_id: note.mapping_id,
+            content: note.content
+        });
+        return response.data;
+    },
+
+    downloadNoteAttachment: async (noteId: number, fileName: string): Promise<Blob> => {
+        const response = await api.get(`/placement/notes/${noteId}/attachments/${encodeURIComponent(fileName)}`, {
+            responseType: 'blob'
+        });
         return response.data;
     },
 

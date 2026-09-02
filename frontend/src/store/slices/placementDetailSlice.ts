@@ -66,7 +66,7 @@ export const fetchCandidateDocuments = createAsyncThunk(
 
 export const addPlacementNote = createAsyncThunk(
     'placementDetail/addNote',
-    async (note: { mapping_id: number; content: string }, { rejectWithValue }) => {
+    async (note: { mapping_id: number; content: string; files?: File[] }, { rejectWithValue }) => {
         try {
             return await placementMappingService.addNote(note);
         } catch (error: any) {
