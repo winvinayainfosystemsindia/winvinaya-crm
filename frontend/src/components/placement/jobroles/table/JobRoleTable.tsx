@@ -88,7 +88,7 @@ const JobRoleTable: React.FC<JobRoleTableProps> = ({ onEditJobRole }) => {
 				onRowsPerPageChange={(rows) => handleChangeRowsPerPage({ target: { value: rows.toString() } } as any)}
 				searchTerm={searchTerm}
 				onSearchChange={(v) => handleSearch({ target: { value: v } } as any)}
-				searchPlaceholder="Search job roles..."
+				searchPlaceholder="Search by job title, company..."
 				orderBy={orderBy as keyof JobRole}
 				order={order}
 				onSortRequest={(property) => handleRequestSort(property as keyof JobRole)}

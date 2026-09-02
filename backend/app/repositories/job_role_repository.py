@@ -6,6 +6,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.repositories.base import BaseRepository
 from app.models.job_role import JobRole, JobRoleStatus
+from app.models.company import Company
 
 
 class JobRoleRepository(BaseRepository[JobRole]):
@@ -61,9 +62,11 @@ class JobRoleRepository(BaseRepository[JobRole]):
             query = query.where(self.model.contact_id == contact_id)
             
         if search:
+            query = query.outerjoin(Company, self.model.company_id == Company.id)
             search_filter = or_(
                 self.model.title.ilike(f"%{search}%"),
                 self.model.description.ilike(f"%{search}%"),
+                Company.name.ilike(f"%{search}%"),
             )
             query = query.where(search_filter)
             
@@ -126,9 +129,11 @@ class JobRoleRepository(BaseRepository[JobRole]):
             query = query.where(self.model.contact_id == contact_id)
             
         if search:
+            query = query.outerjoin(Company, self.model.company_id == Company.id)
             search_filter = or_(
                 self.model.title.ilike(f"%{search}%"),
                 self.model.description.ilike(f"%{search}%"),
+                Company.name.ilike(f"%{search}%"),
             )
             query = query.where(search_filter)
             
