@@ -290,6 +290,7 @@ export interface CandidateStats {
 	docs_pending: number;
 	files_collected: number;
 	files_to_collect: number;
+	files_pending?: number;
 	candidates_fully_submitted: number;
 	candidates_partially_submitted: number;
 	candidates_not_submitted: number;
