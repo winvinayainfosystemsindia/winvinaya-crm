@@ -1,6 +1,4 @@
-"""Candidate Repository"""
-
-from datetime import datetime
+from datetime import datetime, timedelta, time
 from typing import Optional, List
 from uuid import UUID
 from sqlalchemy import select, func, Integer, or_, and_, case, cast, Numeric
@@ -11,6 +9,9 @@ from app.models.candidate_screening import CandidateScreening
 from app.models.candidate_document import CandidateDocument
 from app.models.candidate_counseling import CandidateCounseling
 from app.models.candidate_assignment import CandidateAssignment
+from app.models.training_candidate_allocation import TrainingCandidateAllocation
+from app.models.training_batch import TrainingBatch
+from app.models.placement_mapping import PlacementMapping
 from app.repositories.base import BaseRepository
 
 
@@ -774,16 +775,12 @@ class CandidateRepository(BaseRepository[Candidate]):
         )
         
         async def get_weekly_stats():
-            # Get start of today (midnight)
             now = datetime.now()
             today_start = datetime(now.year, now.month, now.day)
-            
-            # Query for the last 7 days
             days = []
             for i in range(6, -1, -1):
                 day_start = today_start - timedelta(days=i)
                 day_end = day_start + timedelta(days=1) - timedelta(microseconds=1)
-                
                 stmt = (
                     select(func.count(Candidate.id))
                     .where(
@@ -795,93 +792,77 @@ class CandidateRepository(BaseRepository[Candidate]):
                 )
                 result = await self.db.execute(stmt)
                 count = result.scalar() or 0
-                
-                days.append({
-                    "date": day_start.strftime("%Y-%m-%d"),
-                    "day": day_start.strftime("%a"),
-                    "count": count
-                })
+                days.append(count)
             return days
 
         try:
-            # Total candidates (registered only)
-            stmt = select(func.count(Candidate.id)).where(
+            # Helper to execute count query for registered candidates
+            async def get_count(filter_expr=None):
+                stmt = select(func.count(Candidate.id))
+                start_filter = (Candidate.is_deleted == False) & registered_filter
+                if filter_expr is not None:
+                    stmt = stmt.where(start_filter, filter_expr)
+                else:
+                    stmt = stmt.where(start_filter)
+                result = await self.db.execute(stmt)
+                return result.scalar() or 0
+
+            total = await get_count()
+            male = await get_count(func.lower(Candidate.gender) == 'male')
+            female = await get_count(func.lower(Candidate.gender) == 'female')
+            others = max(0, total - (male + female))
+            
+            # Candidates registered today
+            today_start = datetime.combine(datetime.now().date(), time.min)
+            today_count = await get_count(Candidate.created_at >= today_start)
+
+            # Weekly registrations
+            weekly = await get_weekly_stats()
+
+            # Screening stats
+            stmt_screened = select(func.count(CandidateScreening.id)).join(Candidate).where(
                 (Candidate.is_deleted == False) & registered_filter
             )
-            result = await self.db.execute(stmt)
-            total_candidates = result.scalar() or 0
+            result_screened = await self.db.execute(stmt_screened)
+            screened = result_screened.scalar() or 0
+            not_screened = max(0, total - screened)
 
-            # Screened candidates (candidates with screening completed)
-            stmt = (
-                select(func.count(Candidate.id))
-                .join(CandidateScreening, Candidate.id == CandidateScreening.candidate_id)
-                .where((Candidate.is_deleted == False) & registered_filter)
-                .where(CandidateScreening.status == 'Completed')
-            )
-            result = await self.db.execute(stmt)
-            screened_candidates = result.scalar() or 0
+            # Screening distribution
+            stmt_dist = select(CandidateScreening.status, func.count(CandidateScreening.id)).join(Candidate).where(
+                (Candidate.is_deleted == False) & registered_filter
+            ).group_by(CandidateScreening.status)
+            res_dist = await self.db.execute(stmt_dist)
+            raw_dist = dict(res_dist.all())
+            
+            screening_distribution = {}
+            for status_key, count in raw_dist.items():
+                target_key = status_key
+                if status_key is None or status_key == '':
+                    target_key = 'In Progress'
+                screening_distribution[target_key] = screening_distribution.get(target_key, 0) + count
 
-            # Unscreened candidates (candidates without screening records)
-            stmt = (
-                select(func.count(Candidate.id))
-                .outerjoin(CandidateScreening, Candidate.id == CandidateScreening.candidate_id)
-                .where((Candidate.is_deleted == False) & registered_filter)
-                .where(CandidateScreening.id.is_(None))
-            )
-            result = await self.db.execute(stmt)
-            unscreened_candidates = result.scalar() or 0
+            # Counseling stats
+            stmt_counseling = select(func.lower(CandidateCounseling.status), func.count(CandidateCounseling.id)).join(Candidate).where(
+                (Candidate.is_deleted == False) & registered_filter
+            ).group_by(func.lower(CandidateCounseling.status))
+            result_counseling = await self.db.execute(stmt_counseling)
+            counseling_counts = dict(result_counseling.all())
 
-            # Counseled candidates (candidates with counseling status != pending)
-            stmt = (
-                select(func.count(Candidate.id))
-                .join(CandidateCounseling, Candidate.id == CandidateCounseling.candidate_id)
-                .where((Candidate.is_deleted == False) & registered_filter)
-                .where(CandidateCounseling.status.in_(['selected', 'rejected']))
-            )
-            result = await self.db.execute(stmt)
-            counseled_candidates = result.scalar() or 0
+            counseling_selected = counseling_counts.get('selected', 0)
+            counseling_rejected = counseling_counts.get('rejected', 0)
+            counseling_pending = counseling_counts.get('pending', 0)
+            total_counseled = sum(counseling_counts.values())
 
-            # Pending counseling candidates (counseled status is pending)
-            stmt = (
-                select(func.count(Candidate.id))
-                .join(CandidateCounseling, Candidate.id == CandidateCounseling.candidate_id)
-                .where((Candidate.is_deleted == False) & registered_filter)
-                .where(CandidateCounseling.status == 'pending')
+            # Count candidates who completed screening but have no counseling record
+            stmt_not_counseled = select(func.count(Candidate.id)).join(CandidateScreening).outerjoin(CandidateCounseling).where(
+                (Candidate.is_deleted == False) &
+                registered_filter &
+                (CandidateScreening.status == 'Completed') &
+                (CandidateCounseling.id.is_(None))
             )
-            result = await self.db.execute(stmt)
-            pending_counseling = result.scalar() or 0
-
-            # Not counseled candidates (candidates with screening completed but no counseling record)
-            stmt = (
-                select(func.count(Candidate.id))
-                .join(CandidateScreening, Candidate.id == CandidateScreening.candidate_id)
-                .outerjoin(CandidateCounseling, Candidate.id == CandidateCounseling.candidate_id)
-                .where((Candidate.is_deleted == False) & registered_filter)
-                .where(CandidateScreening.status == 'Completed')
-                .where(CandidateCounseling.id.is_(None))
-            )
-            result = await self.db.execute(stmt)
-            not_counseled = result.scalar() or 0
-
-            # Selected candidates (counseling status == selected)
-            stmt = (
-                select(func.count(Candidate.id))
-                .join(CandidateCounseling, Candidate.id == CandidateCounseling.candidate_id)
-                .where((Candidate.is_deleted == False) & registered_filter)
-                .where(CandidateCounseling.status == 'selected')
-            )
-            result = await self.db.execute(stmt)
-            selected_candidates = result.scalar() or 0
-
-            # Rejected candidates (counseling status == rejected)
-            stmt = (
-                select(func.count(Candidate.id))
-                .join(CandidateCounseling, Candidate.id == CandidateCounseling.candidate_id)
-                .where((Candidate.is_deleted == False) & registered_filter)
-                .where(CandidateCounseling.status == 'rejected')
-            )
-            result = await self.db.execute(stmt)
-            rejected_candidates = result.scalar() or 0
+            result_not_counseled = await self.db.execute(stmt_not_counseled)
+            not_counseled_count = result_not_counseled.scalar() or 0
+            counseling_counts['not_counseled'] = not_counseled_count
 
             # ------ Document Collection stats for ALL registered candidates -------
             DOCS_BASE = {'resume', '10th_certificate', '12th_certificate', 'degree_certificate',
@@ -944,13 +925,12 @@ class CandidateRepository(BaseRepository[Candidate]):
 
             pwd_files_pending = max(0, pwd_files_to_collect - pwd_files_collected)
             non_pwd_files_pending = max(0, non_pwd_files_to_collect - non_pwd_files_collected)
+            files_pending = max(0, files_to_collect - files_collected)
             docs_completed = candidates_fully_submitted
             docs_pending = docs_total - candidates_fully_submitted
 
-            weekly = await get_weekly_stats()
-
-            # New metrics for dashboard
-            # 1. In Training: count distinct candidates assigned to active batches who have not dropped out
+            # Pipeline counts
+            # 1. In Training
             stmt_training = select(func.count(func.distinct(TrainingCandidateAllocation.candidate_id))).join(
                 TrainingBatch, TrainingCandidateAllocation.batch_id == TrainingBatch.id
             ).join(Candidate, TrainingCandidateAllocation.candidate_id == Candidate.id).where(
@@ -960,26 +940,25 @@ class CandidateRepository(BaseRepository[Candidate]):
                     TrainingCandidateAllocation.is_dropout == False,
                     TrainingBatch.is_deleted == False,
                     Candidate.is_deleted == False,
-                    or_(Candidate.other.is_(None), Candidate.other['registration_type'].as_string() == 'Registered')
+                    registered_filter
                 )
             )
             result_training = await self.db.execute(stmt_training)
             in_training_count = result_training.scalar() or 0
 
-            # 2. Moved to Placement: count distinct candidates in placement_mappings 
-            # (any candidate who has reached the placement stage)
+            # 2. Moved to Placement
             stmt_moved_placement = select(func.count(func.distinct(PlacementMapping.candidate_id))).join(
                 Candidate, PlacementMapping.candidate_id == Candidate.id
             ).where(
                 and_(
                     Candidate.is_deleted == False,
-                    or_(Candidate.other.is_(None), Candidate.other['registration_type'].as_string() == 'Registered')
+                    registered_filter
                 )
             )
             result_moved_placement = await self.db.execute(stmt_moved_placement)
             moved_to_placement_count = result_moved_placement.scalar() or 0
 
-            # 3. Got Job: count distinct candidates who have accepted offers or joined, including Excel imports
+            # 3. Got Job
             stmt_got_job = select(func.count(func.distinct(Candidate.id))).outerjoin(
                 PlacementMapping, PlacementMapping.candidate_id == Candidate.id
             ).where(
@@ -989,9 +968,7 @@ class CandidateRepository(BaseRepository[Candidate]):
                         Candidate.other.is_(None), 
                         Candidate.other['registration_type'].as_string().in_(['Registered', 'Excel'])
                     ),
-                    or_(
-                        PlacementMapping.status.in_(['offered', 'offer_made', 'offer_accepted', 'joined'])
-                    )
+                    PlacementMapping.status.in_(['offered', 'offer_made', 'offer_accepted', 'joined'])
                 )
             )
             result_got_job = await self.db.execute(stmt_got_job)
@@ -1010,12 +987,12 @@ class CandidateRepository(BaseRepository[Candidate]):
                 "counseling_pending": counseling_pending,
                 "counseling_selected": counseling_selected,
                 "counseling_rejected": counseling_rejected,
-                # Legacy/flat doc stats (Stage 2 values, kept for backward compat)
                 "docs_total": docs_total,
                 "docs_completed": docs_completed,
                 "docs_pending": docs_pending,
                 "files_collected": files_collected,
                 "files_to_collect": files_to_collect,
+                "files_pending": files_pending,
                 "candidates_fully_submitted": candidates_fully_submitted,
                 "candidates_partially_submitted": candidates_partially_submitted,
                 "candidates_not_submitted": candidates_not_submitted,
@@ -1027,38 +1004,6 @@ class CandidateRepository(BaseRepository[Candidate]):
                 "non_pwd_files_collected": non_pwd_files_collected,
                 "non_pwd_files_to_collect": non_pwd_files_to_collect,
                 "non_pwd_files_pending": non_pwd_files_pending,
-                # Stage 1: ALL screened registered candidates (resume + consent_form)
-                "stage1_total": stage1_total,
-                "stage1_pwd_count": stage1_pwd_count,
-                "stage1_non_pwd_count": stage1_non_pwd_count,
-                "stage1_files_collected": stage1_files_collected,
-                "stage1_files_to_collect": stage1_files_to_collect,
-                "stage1_files_pending": stage1_files_pending,
-                "stage1_pwd_files_collected": stage1_pwd_files_collected,
-                "stage1_pwd_files_to_collect": stage1_pwd_files_to_collect,
-                "stage1_pwd_files_pending": stage1_pwd_files_pending,
-                "stage1_non_pwd_files_collected": stage1_non_pwd_files_collected,
-                "stage1_non_pwd_files_to_collect": stage1_non_pwd_files_to_collect,
-                "stage1_non_pwd_files_pending": stage1_non_pwd_files_pending,
-                "stage1_fully_submitted": stage1_fully_submitted,
-                "stage1_partially_submitted": stage1_partially_submitted,
-                "stage1_not_submitted": stage1_not_submitted,
-                # Stage 2: ONLY counseling-SELECTED candidates (full 9/10 docs)
-                "stage2_total": stage2_total,
-                "stage2_pwd_count": stage2_pwd_count,
-                "stage2_non_pwd_count": stage2_non_pwd_count,
-                "stage2_files_collected": stage2_files_collected,
-                "stage2_files_to_collect": stage2_files_to_collect,
-                "stage2_files_pending": stage2_files_pending,
-                "stage2_pwd_files_collected": stage2_pwd_files_collected,
-                "stage2_pwd_files_to_collect": stage2_pwd_files_to_collect,
-                "stage2_pwd_files_pending": stage2_pwd_files_pending,
-                "stage2_non_pwd_files_collected": stage2_non_pwd_files_collected,
-                "stage2_non_pwd_files_to_collect": stage2_non_pwd_files_to_collect,
-                "stage2_non_pwd_files_pending": stage2_non_pwd_files_pending,
-                "stage2_fully_submitted": stage2_fully_submitted,
-                "stage2_partially_submitted": stage2_partially_submitted,
-                "stage2_not_submitted": stage2_not_submitted,
                 "screening_distribution": screening_distribution,
                 "counseling_distribution": counseling_counts,
                 "in_training": in_training_count,
@@ -1074,7 +1019,13 @@ class CandidateRepository(BaseRepository[Candidate]):
                 "today": 0, "weekly": [], "screened": 0, "not_screened": 0,
                 "total_counseled": 0, "counseling_pending": 0,
                 "counseling_selected": 0, "counseling_rejected": 0,
-                "docs_total": 0, "docs_completed": 0, "docs_pending": 0
+                "docs_total": 0, "docs_completed": 0, "docs_pending": 0,
+                "files_collected": 0, "files_to_collect": 0, "files_pending": 0,
+                "candidates_fully_submitted": 0, "candidates_partially_submitted": 0, "candidates_not_submitted": 0,
+                "pwd_candidates": 0, "pwd_files_collected": 0, "pwd_files_to_collect": 0, "pwd_files_pending": 0,
+                "non_pwd_candidates": 0, "non_pwd_files_collected": 0, "non_pwd_files_to_collect": 0, "non_pwd_files_pending": 0,
+                "screening_distribution": {}, "counseling_distribution": {},
+                "in_training": 0, "moved_to_placement": 0, "got_job": 0
             }
 
     async def get_filter_options(self) -> dict:
