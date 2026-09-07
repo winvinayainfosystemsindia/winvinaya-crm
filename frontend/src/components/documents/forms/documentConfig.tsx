@@ -3,7 +3,8 @@ import {
   School as EducationIcon,
   Article as ResumeIcon,
   Badge as IDIcon,
-  Verified as VerifiedIcon
+  Verified as VerifiedIcon,
+  Gavel as ConsentIcon
 } from '@mui/icons-material';
 
 export interface RequiredDocument {
@@ -70,5 +71,12 @@ export const REQUIRED_DOCUMENTS: RequiredDocument[] = [
     description: 'Authorized Medical Certificate', 
     icon: <VerifiedIcon sx={{ color: '#059669' }} />,
     roles: ['disabled'] // Custom flag for conditional rendering
+  },
+  { 
+    type: 'consent_form', 
+    label: 'Consent Form', 
+    description: 'Signed Digital/Physical Candidate Consent', 
+    icon: <ConsentIcon sx={{ color: '#8b5cf6' }} /> 
   }
 ];
+

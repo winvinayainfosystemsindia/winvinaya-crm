@@ -70,6 +70,8 @@ const DocumentCollectionTable: React.FC<DocumentCollectionTableProps> = ({ type 
 		checkDoc('degree_certificate', 'Degree');
 		checkDoc('pan_card', 'PAN');
 		checkDoc('aadhar_card', 'Aadhar');
+		checkDoc('passport_photo', 'Photo');
+		checkDoc('consent_form', 'Consent');
 
 		return (
 			<Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
