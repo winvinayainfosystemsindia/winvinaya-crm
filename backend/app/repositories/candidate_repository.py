@@ -857,21 +857,23 @@ class CandidateRepository(BaseRepository[Candidate]):
             counseling_counts['not_counseled'] = counseling_pending
 
             # Document collection stats (for Selected candidates)
-            # 1. Total to collect from (status == 'selected')
-            docs_total = raw_selected
-            
             # 2. Detailed collections
-            # Strategy: Get IDs of selected candidates and their document types.
+            # Strategy: Get IDs of candidates eligible for document collection and their document types.
             stmt_sel_docs = (
                 select(Candidate.id, Candidate.disability_details, func.array_agg(CandidateDocument.document_type))
-                .join(CandidateCounseling, Candidate.id == CandidateCounseling.candidate_id)
+                .outerjoin(CandidateCounseling, Candidate.id == CandidateCounseling.candidate_id)
                 .outerjoin(CandidateDocument, and_(Candidate.id == CandidateDocument.candidate_id, CandidateDocument.is_active == True))
-                .where(CandidateCounseling.status == 'selected')
                 .where((Candidate.is_deleted == False) & (or_(Candidate.other.is_(None), Candidate.other['registration_type'].as_string() == 'Registered')))
+                .where(or_(
+                    CandidateCounseling.id.is_(None),
+                    func.lower(CandidateCounseling.status).in_(['selected', 'pending', 'counseled', ''])
+                ))
                 .group_by(Candidate.id)
             )
             res_sel_docs = await self.db.execute(stmt_sel_docs)
             sel_rows = res_sel_docs.all()
+            
+            docs_total = len(sel_rows)
             
             docs_completed = 0
             files_collected = 0
@@ -880,7 +882,15 @@ class CandidateRepository(BaseRepository[Candidate]):
             candidates_partially_submitted = 0
             candidates_not_submitted = 0
             
-            required_base = {'resume', '10th_certificate', '12th_certificate', 'degree_certificate', 'pan_card', 'aadhar_card'}
+            pwd_candidates = 0
+            pwd_files_collected = 0
+            pwd_files_to_collect = 0
+            
+            non_pwd_candidates = 0
+            non_pwd_files_collected = 0
+            non_pwd_files_to_collect = 0
+            
+            required_base = {'resume', '10th_certificate', '12th_certificate', 'degree_certificate', 'pan_card', 'aadhar_card', 'passport_photo', 'consent_form'}
             
             for row in sel_rows:
                 c_id, disp_details, doc_types = row
@@ -905,6 +915,15 @@ class CandidateRepository(BaseRepository[Candidate]):
                 files_collected += uploaded_count
                 files_to_collect += target_count
                 
+                if is_disabled:
+                    pwd_candidates += 1
+                    pwd_files_collected += uploaded_count
+                    pwd_files_to_collect += target_count
+                else:
+                    non_pwd_candidates += 1
+                    non_pwd_files_collected += uploaded_count
+                    non_pwd_files_to_collect += target_count
+                
                 if uploaded_count == target_count:
                     candidates_fully_submitted += 1
                 elif uploaded_count > 0:
@@ -912,6 +931,8 @@ class CandidateRepository(BaseRepository[Candidate]):
                 else:
                     candidates_not_submitted += 1
 
+            pwd_files_pending = max(0, pwd_files_to_collect - pwd_files_collected)
+            non_pwd_files_pending = max(0, non_pwd_files_to_collect - non_pwd_files_collected)
             docs_completed = candidates_fully_submitted
             docs_pending = docs_total - docs_completed
 
@@ -986,6 +1007,14 @@ class CandidateRepository(BaseRepository[Candidate]):
                 "candidates_fully_submitted": candidates_fully_submitted,
                 "candidates_partially_submitted": candidates_partially_submitted,
                 "candidates_not_submitted": candidates_not_submitted,
+                "pwd_candidates": pwd_candidates,
+                "pwd_files_collected": pwd_files_collected,
+                "pwd_files_to_collect": pwd_files_to_collect,
+                "pwd_files_pending": pwd_files_pending,
+                "non_pwd_candidates": non_pwd_candidates,
+                "non_pwd_files_collected": non_pwd_files_collected,
+                "non_pwd_files_to_collect": non_pwd_files_to_collect,
+                "non_pwd_files_pending": non_pwd_files_pending,
                 "screening_distribution": screening_distribution,
                 "counseling_distribution": counseling_counts,
                 "in_training": in_training_count,

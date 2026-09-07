@@ -591,6 +591,14 @@ class CandidateStats(BaseModel):
     candidates_fully_submitted: int = 0
     candidates_partially_submitted: int = 0
     candidates_not_submitted: int = 0
+    pwd_candidates: int = 0
+    pwd_files_collected: int = 0
+    pwd_files_to_collect: int = 0
+    pwd_files_pending: int = 0
+    non_pwd_candidates: int = 0
+    non_pwd_files_collected: int = 0
+    non_pwd_files_to_collect: int = 0
+    non_pwd_files_pending: int = 0
     screening_distribution: dict = {}
     counseling_distribution: dict = {}
     in_training: int = 0

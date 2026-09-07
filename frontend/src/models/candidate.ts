@@ -293,6 +293,14 @@ export interface CandidateStats {
 	candidates_fully_submitted: number;
 	candidates_partially_submitted: number;
 	candidates_not_submitted: number;
+	pwd_candidates?: number;
+	pwd_files_collected?: number;
+	pwd_files_to_collect?: number;
+	pwd_files_pending?: number;
+	non_pwd_candidates?: number;
+	non_pwd_files_collected?: number;
+	non_pwd_files_to_collect?: number;
+	non_pwd_files_pending?: number;
 	screening_distribution?: Record<string, number>;
 	counseling_distribution?: Record<string, number>;
 	in_training: number;
