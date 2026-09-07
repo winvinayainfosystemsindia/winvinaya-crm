@@ -21,7 +21,6 @@ export const useDocumentPage = (type?: 'not_collected' | 'pending' | 'collected'
 		dispatch(fetchScreenedCandidates({
 			skip: page * rowsPerPage,
 			limit: rowsPerPage,
-			counselingStatus: 'selected',
 			search: debouncedSearchTerm,
 			documentStatus: type,
 			sortBy: orderBy,

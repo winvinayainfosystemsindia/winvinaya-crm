@@ -61,9 +61,9 @@ const DocumentTabs: React.FC<DocumentTabsProps> = ({ tabValue, handleTabChange, 
 						}
 					}}
 				>
-					<Tab label={renderTabLabel("Not Collected", stats?.stage2_not_submitted ?? stats?.candidates_not_submitted ?? 0)} />
-					<Tab label={renderTabLabel("Pending Collection", stats?.stage2_partially_submitted ?? stats?.candidates_partially_submitted ?? 0)} />
-					<Tab label={renderTabLabel("Collection Completed", stats?.stage2_fully_submitted ?? stats?.candidates_fully_submitted ?? 0)} />
+					<Tab label={renderTabLabel("Not Collected", stats?.candidates_not_submitted ?? 0)} />
+					<Tab label={renderTabLabel("Pending Collection", stats?.candidates_partially_submitted ?? 0)} />
+					<Tab label={renderTabLabel("Collection Completed", stats?.candidates_fully_submitted ?? 0)} />
 				</Tabs>
 			</Box>
 

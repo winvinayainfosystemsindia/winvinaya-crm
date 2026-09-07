@@ -559,20 +559,38 @@ class CandidateRepository(BaseRepository[Candidate]):
         )
         base_filter = (Candidate.is_deleted == False) & registered_filter
         
-        stmt = (
-            select(Candidate)
-            .join(Candidate.screening)
-            .outerjoin(Candidate.counseling)
-            .outerjoin(Candidate.assignment)
-            .where(CandidateScreening.id.isnot(None))
-            .where(base_filter)
-            .options(
-                joinedload(Candidate.screening).joinedload(CandidateScreening.screened_by),
-                selectinload(Candidate.documents),
-                joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor),
-                joinedload(Candidate.assignment).joinedload(CandidateAssignment.user)
+        if document_status:
+            # Document collection view covers all registered candidates
+            stmt = (
+                select(Candidate)
+                .outerjoin(Candidate.screening)
+                .outerjoin(Candidate.counseling)
+                .outerjoin(Candidate.assignment)
+                .where(base_filter)
+                .options(
+                    joinedload(Candidate.screening).joinedload(CandidateScreening.screened_by),
+                    selectinload(Candidate.documents),
+                    joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor),
+                    joinedload(Candidate.assignment).joinedload(CandidateAssignment.user)
+                )
             )
-        )
+            count_stmt = select(func.count(Candidate.id)).outerjoin(Candidate.screening).outerjoin(Candidate.counseling).outerjoin(Candidate.assignment).where(base_filter)
+        else:
+            stmt = (
+                select(Candidate)
+                .join(Candidate.screening)
+                .outerjoin(Candidate.counseling)
+                .outerjoin(Candidate.assignment)
+                .where(CandidateScreening.id.isnot(None))
+                .where(base_filter)
+                .options(
+                    joinedload(Candidate.screening).joinedload(CandidateScreening.screened_by),
+                    selectinload(Candidate.documents),
+                    joinedload(Candidate.counseling).joinedload(CandidateCounseling.counselor),
+                    joinedload(Candidate.assignment).joinedload(CandidateAssignment.user)
+                )
+            )
+            count_stmt = select(func.count(Candidate.id)).join(Candidate.screening).outerjoin(Candidate.counseling).outerjoin(Candidate.assignment).where(CandidateScreening.id.isnot(None)).where(base_filter)
         
         if assigned_to_id is not None:
             if assigned_to_id == 0:
@@ -580,21 +598,15 @@ class CandidateRepository(BaseRepository[Candidate]):
             else:
                 stmt = stmt.where(CandidateAssignment.user_id == assigned_to_id)
         
-        # Base count statement for screened candidates
-        count_stmt = select(func.count(Candidate.id)).join(Candidate.screening).outerjoin(Candidate.counseling).outerjoin(Candidate.assignment).where(CandidateScreening.id.isnot(None)).where(base_filter)
-
         if assigned_to_id is not None:
             if assigned_to_id == 0:
                 count_stmt = count_stmt.where(CandidateAssignment.id.is_(None))
             else:
                 count_stmt = count_stmt.where(CandidateAssignment.user_id == assigned_to_id)
         
-        # Apply screening status filter if provided (though mostly would be 'Completed' based on logic above)
+        # Apply screening status filter if provided
         if screening_status:
             if screening_status == 'Other':
-                # Exclude standard statuses
-                # Standard ones: 'Completed', 'In Progress', 'Rejected', 'Pending'
-                # We also EXCLUDE Empty and None because they now map to 'In Progress'
                 excluded_statuses = MAIN_STATUSES
                 
                 stmt = stmt.where(
@@ -612,7 +624,6 @@ class CandidateRepository(BaseRepository[Candidate]):
                     )
                 )
             elif screening_status == 'In Progress':
-                # Treat empty/null status as 'In Progress' for filtering
                 in_progress_filter = or_(
                     CandidateScreening.status == 'In Progress',
                     CandidateScreening.status.is_(None),
@@ -635,7 +646,7 @@ class CandidateRepository(BaseRepository[Candidate]):
                 stmt = stmt.where(CandidateCounseling.status == 'pending')
                 count_stmt = count_stmt.where(CandidateCounseling.status == 'pending')
             elif counseling_status == 'selected':
-                # Only counseling-selected candidates (Stage 2 / ready for placement)
+                # Only counseling-selected candidates
                 stmt = stmt.where(func.lower(CandidateCounseling.status) == 'selected')
                 count_stmt = count_stmt.where(func.lower(CandidateCounseling.status) == 'selected')
             elif counseling_status == 'counseled':
@@ -649,20 +660,9 @@ class CandidateRepository(BaseRepository[Candidate]):
 
         # Apply document status filter
         if document_status:
-            # We need to filter based on whether all required documents are present
-            # Base required docs: resume, 10th_certificate, 12th_certificate, degree_certificate
-            # Optional required: disability_certificate (if is_disabled is True)
-            
-            # Subquery to count required documents per candidate
-            # This is complex in a single query with conditional disability cert.
-            # We'll use a CASE statement within the subquery to count matches.
-            
-            # Stage 2 full document set — must match get_stats() required_base exactly
             CORE_DOCS = ['resume', '10th_certificate', '12th_certificate', 'degree_certificate',
                          'pan_card', 'aadhar_card', 'passport_photo', 'consent_form']
 
-            # Subquery to calculate uploaded vs required counts per candidate
-            # This logic MUST match get_stats() stage2 logic exactly
             doc_counts_sub = (
                 select(
                     Candidate.id.label('c_id'),
@@ -682,19 +682,17 @@ class CandidateRepository(BaseRepository[Candidate]):
                     )).label('target_count')
                 )
                 .outerjoin(CandidateDocument, and_(Candidate.id == CandidateDocument.candidate_id, CandidateDocument.is_active == True))
+                .where(base_filter)
                 .group_by(Candidate.id)
             ).subquery()
 
             if document_status == 'collected':
-                # Fully collected: uploaded == target
                 stmt = stmt.join(doc_counts_sub, Candidate.id == doc_counts_sub.c.c_id).where(doc_counts_sub.c.uploaded_count == doc_counts_sub.c.target_count)
                 count_stmt = count_stmt.join(doc_counts_sub, Candidate.id == doc_counts_sub.c.c_id).where(doc_counts_sub.c.uploaded_count == doc_counts_sub.c.target_count)
             elif document_status == 'pending':
-                # Partially collected: 0 < uploaded < target
                 stmt = stmt.join(doc_counts_sub, Candidate.id == doc_counts_sub.c.c_id).where(and_(doc_counts_sub.c.uploaded_count > 0, doc_counts_sub.c.uploaded_count < doc_counts_sub.c.target_count))
                 count_stmt = count_stmt.join(doc_counts_sub, Candidate.id == doc_counts_sub.c.c_id).where(and_(doc_counts_sub.c.uploaded_count > 0, doc_counts_sub.c.uploaded_count < doc_counts_sub.c.target_count))
             elif document_status == 'not_collected':
-                # Not collected: uploaded == 0
                 stmt = stmt.join(doc_counts_sub, Candidate.id == doc_counts_sub.c.c_id).where(doc_counts_sub.c.uploaded_count == 0)
                 count_stmt = count_stmt.join(doc_counts_sub, Candidate.id == doc_counts_sub.c.c_id).where(doc_counts_sub.c.uploaded_count == 0)
 
@@ -758,276 +756,196 @@ class CandidateRepository(BaseRepository[Candidate]):
 
         # Apply pagination
         if limit is not None:
-            stmt = stmt.limit(limit)
-        if skip > 0:
+            stmt = stmt.offset(skip).limit(limit)
+        else:
             stmt = stmt.offset(skip)
+            
         result = await self.db.execute(stmt)
         return result.scalars().unique().all(), total
 
-
     async def get_stats(self) -> dict:
-        """Get candidate statistics"""
-        # Lazy imports to avoid circular dependency
-        # Lazy imports to avoid circular dependency
-        from sqlalchemy import func, or_, and_
-        from datetime import datetime, time, timedelta
-        from app.models.candidate_counseling import CandidateCounseling
-        from app.models.candidate_screening import CandidateScreening
-        from app.models.candidate_document import CandidateDocument
-        from app.models.training_candidate_allocation import TrainingCandidateAllocation
-        from app.models.training_batch import TrainingBatch
-        from app.models.placement_mapping import PlacementMapping
+        """Get counts for dashboard statistics"""
+        from sqlalchemy import or_, and_, case
+        registered_filter = or_(
+            Candidate.other.is_(None),
+            Candidate.other['registration_type'].is_(None),
+            Candidate.other['registration_type'].as_string() == '',
+            Candidate.other['registration_type'].as_string().ilike('registered')
+        )
         
-        try:
-            # Helper to execute count query
-            async def get_count(filter_expr=None):
-                stmt = select(func.count(Candidate.id))
-                start_filter = (Candidate.is_deleted == False) & (or_(Candidate.other.is_(None), Candidate.other['registration_type'].as_string() == 'Registered'))
-                if filter_expr is not None:
-                    stmt = stmt.where(start_filter, filter_expr)
-                else:
-                    stmt = stmt.where(start_filter)
-                result = await self.db.execute(stmt)
-                return result.scalar() or 0
-
-            async def get_weekly_stats():
-                # Get stats for last 7 days
-                today = datetime.now().date()
-                stats = []
-                # Loop for last 7 days including today (or 6 days + today)
-                for i in range(6, -1, -1):
-                    day = today - timedelta(days=i)
-                    start = datetime.combine(day, time.min)
-                    end = datetime.combine(day, time.max)
-                    count = await get_count((Candidate.created_at >= start) & (Candidate.created_at <= end))
-                    stats.append(count)
-                return stats
-
-            total = await get_count()
-            male = await get_count(func.lower(Candidate.gender) == 'male')
-            female = await get_count(func.lower(Candidate.gender) == 'female')
+        async def get_weekly_stats():
+            # Get start of today (midnight)
+            now = datetime.now()
+            today_start = datetime(now.year, now.month, now.day)
             
-            # All others that are not male/female (case insensitive)
-            others = total - (male + female)
-            
-            # Candidates registered today
-            today_start = datetime.combine(datetime.now().date(), time.min)
-            today_count = await get_count(Candidate.created_at >= today_start)
-            
-            # Screening stats - count all candidates with ANY screening record
-            stmt_screened = select(func.count(CandidateScreening.id)).join(Candidate).where(
-                (Candidate.is_deleted == False) & (or_(Candidate.other.is_(None), Candidate.other['registration_type'].as_string() == 'Registered'))
-            )
-            result_screened = await self.db.execute(stmt_screened)
-            screened = result_screened.scalar() or 0
-            
-            # Screening distribution
-            # Screening distribution
-            stmt_dist = select(CandidateScreening.status, func.count(CandidateScreening.id)).join(Candidate).where(
-                (Candidate.is_deleted == False) & (or_(Candidate.other.is_(None), Candidate.other['registration_type'].as_string() == 'Registered'))
-            ).group_by(CandidateScreening.status)
-            res_dist = await self.db.execute(stmt_dist)
-            raw_dist = dict(res_dist.all())
-            
-            # Merge None and empty string into 'In Progress'
-            screening_distribution = {}
-            for status_key, count in raw_dist.items():
-                target_key = status_key
-                if status_key is None or status_key == '':
-                    target_key = 'In Progress'
+            # Query for the last 7 days
+            days = []
+            for i in range(6, -1, -1):
+                day_start = today_start - timedelta(days=i)
+                day_end = day_start + timedelta(days=1) - timedelta(microseconds=1)
                 
-                screening_distribution[target_key] = screening_distribution.get(target_key, 0) + count
-            
-            not_screened = max(0, total - screened)
+                stmt = (
+                    select(func.count(Candidate.id))
+                    .where(
+                        (Candidate.is_deleted == False) &
+                        registered_filter &
+                        (Candidate.created_at >= day_start) &
+                        (Candidate.created_at <= day_end)
+                    )
+                )
+                result = await self.db.execute(stmt)
+                count = result.scalar() or 0
+                
+                days.append({
+                    "date": day_start.strftime("%Y-%m-%d"),
+                    "day": day_start.strftime("%a"),
+                    "count": count
+                })
+            return days
 
-            # Counseling stats
-            # Normalizing status to lowercase for consistent counting
-            stmt_counseling = select(func.lower(CandidateCounseling.status), func.count(CandidateCounseling.id)).join(Candidate).where(
-                (Candidate.is_deleted == False) & (or_(Candidate.other.is_(None), Candidate.other['registration_type'].as_string() == 'Registered'))
-            ).group_by(func.lower(CandidateCounseling.status))
-            result_counseling = await self.db.execute(stmt_counseling)
-            counseling_counts = dict(result_counseling.all())
-            
-            # Get raw counts
-            raw_selected = counseling_counts.get('selected', 0)
-            raw_rejected = counseling_counts.get('rejected', 0)
-            
-            # Count candidates who completed screening but have no counseling record (Yet to be counseled / Not Counseled)
-            stmt_not_counseled = select(func.count(Candidate.id)).join(CandidateScreening).outerjoin(CandidateCounseling).where(
-                (Candidate.is_deleted == False) &
-                (or_(Candidate.other.is_(None), Candidate.other['registration_type'].as_string() == 'Registered')) &
-                (CandidateScreening.status == 'Completed') &
-                (CandidateCounseling.id.is_(None))
+        try:
+            # Total candidates (registered only)
+            stmt = select(func.count(Candidate.id)).where(
+                (Candidate.is_deleted == False) & registered_filter
             )
-            result_not_counseled = await self.db.execute(stmt_not_counseled)
-            counseling_pending = result_not_counseled.scalar() or 0
-            
-            counseling_selected = raw_selected
-            counseling_rejected = raw_rejected
-            total_counseled = sum(counseling_counts.values())
-            
-            # Add 'not_counseled' to distribution counts for frontend tabs
-            counseling_counts['not_counseled'] = counseling_pending
+            result = await self.db.execute(stmt)
+            total_candidates = result.scalar() or 0
 
-            # -----------------------------------------------------------------------
-            # Document Collection Stats — Stage 1 & Stage 2
-            # -----------------------------------------------------------------------
-            registered_filter = or_(
-                Candidate.other.is_(None),
-                Candidate.other['registration_type'].is_(None),
-                Candidate.other['registration_type'].as_string() == '',
-                Candidate.other['registration_type'].as_string().ilike('registered')
-            )
-
-            # ------ Stage 1: ALL screened registered candidates -------------------
-            # Documents required: resume + consent_form (+ disability_cert for PwD)
-            # Stage 1 docs per candidate: Non-PwD = 2, PwD = 3
-            STAGE1_DOCS_BASE = {'resume', 'consent_form'}
-
-            stmt_stage1 = (
-                select(Candidate.id, Candidate.disability_details, func.array_agg(CandidateDocument.document_type))
+            # Screened candidates (candidates with screening completed)
+            stmt = (
+                select(func.count(Candidate.id))
                 .join(CandidateScreening, Candidate.id == CandidateScreening.candidate_id)
-                .outerjoin(CandidateDocument, and_(Candidate.id == CandidateDocument.candidate_id, CandidateDocument.is_active == True))
                 .where((Candidate.is_deleted == False) & registered_filter)
-                .group_by(Candidate.id)
+                .where(CandidateScreening.status == 'Completed')
             )
-            res_stage1 = await self.db.execute(stmt_stage1)
-            stage1_rows = res_stage1.all()
+            result = await self.db.execute(stmt)
+            screened_candidates = result.scalar() or 0
 
-            stage1_total = len(stage1_rows)
-            stage1_pwd_count = 0
-            stage1_non_pwd_count = 0
-            stage1_files_collected = 0
-            stage1_files_to_collect = 0
-            stage1_pwd_files_collected = 0
-            stage1_pwd_files_to_collect = 0
-            stage1_non_pwd_files_collected = 0
-            stage1_non_pwd_files_to_collect = 0
-            stage1_fully_submitted = 0
-            stage1_partially_submitted = 0
-            stage1_not_submitted = 0
+            # Unscreened candidates (candidates without screening records)
+            stmt = (
+                select(func.count(Candidate.id))
+                .outerjoin(CandidateScreening, Candidate.id == CandidateScreening.candidate_id)
+                .where((Candidate.is_deleted == False) & registered_filter)
+                .where(CandidateScreening.id.is_(None))
+            )
+            result = await self.db.execute(stmt)
+            unscreened_candidates = result.scalar() or 0
 
-            for row in stage1_rows:
-                c_id, disp_details, doc_types = row
-                uploaded = set(filter(None, doc_types))
-                is_disabled = False
-                if disp_details and isinstance(disp_details, dict):
-                    is_disabled = disp_details.get('is_disabled', False)
-
-                s1_required = set(STAGE1_DOCS_BASE)
-                if is_disabled:
-                    s1_required.add('disability_certificate')
-
-                s1_uploaded_count = len(uploaded.intersection(s1_required))
-                s1_target_count = len(s1_required)
-
-                stage1_files_collected += s1_uploaded_count
-                stage1_files_to_collect += s1_target_count
-
-                if is_disabled:
-                    stage1_pwd_count += 1
-                    stage1_pwd_files_collected += s1_uploaded_count
-                    stage1_pwd_files_to_collect += s1_target_count
-                else:
-                    stage1_non_pwd_count += 1
-                    stage1_non_pwd_files_collected += s1_uploaded_count
-                    stage1_non_pwd_files_to_collect += s1_target_count
-
-                if s1_uploaded_count == s1_target_count:
-                    stage1_fully_submitted += 1
-                elif s1_uploaded_count > 0:
-                    stage1_partially_submitted += 1
-                else:
-                    stage1_not_submitted += 1
-
-            stage1_files_pending = max(0, stage1_files_to_collect - stage1_files_collected)
-            stage1_pwd_files_pending = max(0, stage1_pwd_files_to_collect - stage1_pwd_files_collected)
-            stage1_non_pwd_files_pending = max(0, stage1_non_pwd_files_to_collect - stage1_non_pwd_files_collected)
-
-            # ------ Stage 2: ONLY counseling-SELECTED registered candidates -------
-            # Documents required: full 9 docs (+ disability_cert for PwD = 10)
-            # Stage 2 docs per candidate: Non-PwD = 9, PwD = 10
-            STAGE2_DOCS_BASE = {'resume', '10th_certificate', '12th_certificate', 'degree_certificate',
-                                 'pan_card', 'aadhar_card', 'passport_photo', 'consent_form'}
-
-            stmt_stage2 = (
-                select(Candidate.id, Candidate.disability_details, func.array_agg(CandidateDocument.document_type))
+            # Counseled candidates (candidates with counseling status != pending)
+            stmt = (
+                select(func.count(Candidate.id))
                 .join(CandidateCounseling, Candidate.id == CandidateCounseling.candidate_id)
+                .where((Candidate.is_deleted == False) & registered_filter)
+                .where(CandidateCounseling.status.in_(['selected', 'rejected']))
+            )
+            result = await self.db.execute(stmt)
+            counseled_candidates = result.scalar() or 0
+
+            # Pending counseling candidates (counseled status is pending)
+            stmt = (
+                select(func.count(Candidate.id))
+                .join(CandidateCounseling, Candidate.id == CandidateCounseling.candidate_id)
+                .where((Candidate.is_deleted == False) & registered_filter)
+                .where(CandidateCounseling.status == 'pending')
+            )
+            result = await self.db.execute(stmt)
+            pending_counseling = result.scalar() or 0
+
+            # Not counseled candidates (candidates with screening completed but no counseling record)
+            stmt = (
+                select(func.count(Candidate.id))
+                .join(CandidateScreening, Candidate.id == CandidateScreening.candidate_id)
+                .outerjoin(CandidateCounseling, Candidate.id == CandidateCounseling.candidate_id)
+                .where((Candidate.is_deleted == False) & registered_filter)
+                .where(CandidateScreening.status == 'Completed')
+                .where(CandidateCounseling.id.is_(None))
+            )
+            result = await self.db.execute(stmt)
+            not_counseled = result.scalar() or 0
+
+            # Selected candidates (counseling status == selected)
+            stmt = (
+                select(func.count(Candidate.id))
+                .join(CandidateCounseling, Candidate.id == CandidateCounseling.candidate_id)
+                .where((Candidate.is_deleted == False) & registered_filter)
+                .where(CandidateCounseling.status == 'selected')
+            )
+            result = await self.db.execute(stmt)
+            selected_candidates = result.scalar() or 0
+
+            # Rejected candidates (counseling status == rejected)
+            stmt = (
+                select(func.count(Candidate.id))
+                .join(CandidateCounseling, Candidate.id == CandidateCounseling.candidate_id)
+                .where((Candidate.is_deleted == False) & registered_filter)
+                .where(CandidateCounseling.status == 'rejected')
+            )
+            result = await self.db.execute(stmt)
+            rejected_candidates = result.scalar() or 0
+
+            # ------ Document Collection stats for ALL registered candidates -------
+            DOCS_BASE = {'resume', '10th_certificate', '12th_certificate', 'degree_certificate',
+                         'pan_card', 'aadhar_card', 'passport_photo', 'consent_form'}
+
+            stmt_docs = (
+                select(Candidate.id, Candidate.disability_details, func.array_agg(CandidateDocument.document_type))
                 .outerjoin(CandidateDocument, and_(Candidate.id == CandidateDocument.candidate_id, CandidateDocument.is_active == True))
                 .where((Candidate.is_deleted == False) & registered_filter)
-                .where(func.lower(CandidateCounseling.status) == 'selected')
                 .group_by(Candidate.id)
             )
-            res_stage2 = await self.db.execute(stmt_stage2)
-            stage2_rows = res_stage2.all()
+            res_docs = await self.db.execute(stmt_docs)
+            doc_rows = res_docs.all()
 
-            stage2_total = len(stage2_rows)
-            stage2_pwd_count = 0
-            stage2_non_pwd_count = 0
-            stage2_files_collected = 0
-            stage2_files_to_collect = 0
-            stage2_pwd_files_collected = 0
-            stage2_pwd_files_to_collect = 0
-            stage2_non_pwd_files_collected = 0
-            stage2_non_pwd_files_to_collect = 0
-            stage2_fully_submitted = 0
-            stage2_partially_submitted = 0
-            stage2_not_submitted = 0
+            docs_total = len(doc_rows)
+            pwd_candidates = 0
+            non_pwd_candidates = 0
+            files_collected = 0
+            files_to_collect = 0
+            pwd_files_collected = 0
+            pwd_files_to_collect = 0
+            non_pwd_files_collected = 0
+            non_pwd_files_to_collect = 0
+            candidates_fully_submitted = 0
+            candidates_partially_submitted = 0
+            candidates_not_submitted = 0
 
-            for row in stage2_rows:
+            for row in doc_rows:
                 c_id, disp_details, doc_types = row
                 uploaded = set(filter(None, doc_types))
                 is_disabled = False
                 if disp_details and isinstance(disp_details, dict):
                     is_disabled = disp_details.get('is_disabled', False)
 
-                s2_required = set(STAGE2_DOCS_BASE)
+                required = set(DOCS_BASE)
                 if is_disabled:
-                    s2_required.add('disability_certificate')
+                    required.add('disability_certificate')
 
-                s2_uploaded_count = len(uploaded.intersection(s2_required))
-                s2_target_count = len(s2_required)
+                uploaded_count = len(uploaded.intersection(required))
+                target_count = len(required)
 
-                stage2_files_collected += s2_uploaded_count
-                stage2_files_to_collect += s2_target_count
+                files_collected += uploaded_count
+                files_to_collect += target_count
 
                 if is_disabled:
-                    stage2_pwd_count += 1
-                    stage2_pwd_files_collected += s2_uploaded_count
-                    stage2_pwd_files_to_collect += s2_target_count
+                    pwd_candidates += 1
+                    pwd_files_collected += uploaded_count
+                    pwd_files_to_collect += target_count
                 else:
-                    stage2_non_pwd_count += 1
-                    stage2_non_pwd_files_collected += s2_uploaded_count
-                    stage2_non_pwd_files_to_collect += s2_target_count
+                    non_pwd_candidates += 1
+                    non_pwd_files_collected += uploaded_count
+                    non_pwd_files_to_collect += target_count
 
-                if s2_uploaded_count == s2_target_count:
-                    stage2_fully_submitted += 1
-                elif s2_uploaded_count > 0:
-                    stage2_partially_submitted += 1
+                if uploaded_count == target_count:
+                    candidates_fully_submitted += 1
+                elif uploaded_count > 0:
+                    candidates_partially_submitted += 1
                 else:
-                    stage2_not_submitted += 1
+                    candidates_not_submitted += 1
 
-            stage2_files_pending = max(0, stage2_files_to_collect - stage2_files_collected)
-            stage2_pwd_files_pending = max(0, stage2_pwd_files_to_collect - stage2_pwd_files_collected)
-            stage2_non_pwd_files_pending = max(0, stage2_non_pwd_files_to_collect - stage2_non_pwd_files_collected)
-
-            # ------ Legacy flat stats (kept for backward compatibility) -----------
-            docs_total = stage2_total
-            docs_completed = stage2_fully_submitted
-            docs_pending = stage2_total - stage2_fully_submitted
-            files_collected = stage2_files_collected
-            files_to_collect = stage2_files_to_collect
-            candidates_fully_submitted = stage2_fully_submitted
-            candidates_partially_submitted = stage2_partially_submitted
-            candidates_not_submitted = stage2_not_submitted
-            pwd_candidates = stage2_pwd_count
-            pwd_files_collected = stage2_pwd_files_collected
-            pwd_files_to_collect = stage2_pwd_files_to_collect
-            pwd_files_pending = stage2_pwd_files_pending
-            non_pwd_candidates = stage2_non_pwd_count
-            non_pwd_files_collected = stage2_non_pwd_files_collected
-            non_pwd_files_to_collect = stage2_non_pwd_files_to_collect
-            non_pwd_files_pending = stage2_non_pwd_files_pending
+            pwd_files_pending = max(0, pwd_files_to_collect - pwd_files_collected)
+            non_pwd_files_pending = max(0, non_pwd_files_to_collect - non_pwd_files_collected)
+            docs_completed = candidates_fully_submitted
+            docs_pending = docs_total - candidates_fully_submitted
 
             weekly = await get_weekly_stats()
 
