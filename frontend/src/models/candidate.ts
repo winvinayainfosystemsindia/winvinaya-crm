@@ -301,6 +301,38 @@ export interface CandidateStats {
 	non_pwd_files_collected?: number;
 	non_pwd_files_to_collect?: number;
 	non_pwd_files_pending?: number;
+	// Stage 1: All screened candidates — resume + consent_form (Non-PwD=2, PwD=3)
+	stage1_total?: number;
+	stage1_pwd_count?: number;
+	stage1_non_pwd_count?: number;
+	stage1_files_collected?: number;
+	stage1_files_to_collect?: number;
+	stage1_files_pending?: number;
+	stage1_pwd_files_collected?: number;
+	stage1_pwd_files_to_collect?: number;
+	stage1_pwd_files_pending?: number;
+	stage1_non_pwd_files_collected?: number;
+	stage1_non_pwd_files_to_collect?: number;
+	stage1_non_pwd_files_pending?: number;
+	stage1_fully_submitted?: number;
+	stage1_partially_submitted?: number;
+	stage1_not_submitted?: number;
+	// Stage 2: Counseling-selected candidates — full 9/10 docs
+	stage2_total?: number;
+	stage2_pwd_count?: number;
+	stage2_non_pwd_count?: number;
+	stage2_files_collected?: number;
+	stage2_files_to_collect?: number;
+	stage2_files_pending?: number;
+	stage2_pwd_files_collected?: number;
+	stage2_pwd_files_to_collect?: number;
+	stage2_pwd_files_pending?: number;
+	stage2_non_pwd_files_collected?: number;
+	stage2_non_pwd_files_to_collect?: number;
+	stage2_non_pwd_files_pending?: number;
+	stage2_fully_submitted?: number;
+	stage2_partially_submitted?: number;
+	stage2_not_submitted?: number;
 	screening_distribution?: Record<string, number>;
 	counseling_distribution?: Record<string, number>;
 	in_training: number;
