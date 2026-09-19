@@ -492,19 +492,26 @@ class CandidateRepository(BaseRepository[Candidate]):
 
         # Apply Counseling Status filters
         if counseling_status:
-            if counseling_status.lower() == 'pending':
+            c_status = counseling_status.lower()
+            if c_status in ('pending', 'not_counseled'):
                 # No counseling record OR status is 'pending'
-                stmt = stmt.where(or_(CandidateCounseling.id.is_(None), CandidateCounseling.status == 'pending'))
-                count_stmt = count_stmt.outerjoin(Candidate.counseling).where(or_(CandidateCounseling.id.is_(None), CandidateCounseling.status == 'pending'))
-            elif counseling_status.lower() == 'counseled':
+                stmt = stmt.where(or_(CandidateCounseling.id.is_(None), func.lower(CandidateCounseling.status) == 'pending'))
+                count_stmt = count_stmt.outerjoin(Candidate.counseling).where(or_(CandidateCounseling.id.is_(None), func.lower(CandidateCounseling.status) == 'pending'))
+            elif c_status == 'selected':
+                # Only counseling-selected candidates
+                stmt = stmt.where(func.lower(CandidateCounseling.status) == 'selected')
+                count_stmt = count_stmt.outerjoin(Candidate.counseling).where(func.lower(CandidateCounseling.status) == 'selected')
+            elif c_status == 'rejected':
+                # Only counseling-rejected candidates
+                stmt = stmt.where(func.lower(CandidateCounseling.status) == 'rejected')
+                count_stmt = count_stmt.outerjoin(Candidate.counseling).where(func.lower(CandidateCounseling.status) == 'rejected')
+            elif c_status == 'counseled':
                 # Has counseling record AND status is 'selected' or 'rejected'
-                stmt = stmt.where(CandidateCounseling.status.in_(['selected', 'rejected']))
-                count_stmt = count_stmt.outerjoin(Candidate.counseling).where(CandidateCounseling.status.in_(['selected', 'rejected']))
+                stmt = stmt.where(func.lower(CandidateCounseling.status).in_(['selected', 'rejected']))
+                count_stmt = count_stmt.outerjoin(Candidate.counseling).where(func.lower(CandidateCounseling.status).in_(['selected', 'rejected']))
             else:
-                # Specific status (selected, rejected, etc.)
-                sel_filter = or_(CandidateCounseling.id.is_(None), func.lower(CandidateCounseling.status).in_(['selected', 'pending', 'counseled', '']))
-                stmt = stmt.where(sel_filter)
-                count_stmt = count_stmt.outerjoin(Candidate.counseling).where(sel_filter)
+                stmt = stmt.where(func.lower(CandidateCounseling.status) == c_status)
+                count_stmt = count_stmt.outerjoin(Candidate.counseling).where(func.lower(CandidateCounseling.status) == c_status)
 
         if is_experienced is not None:
             is_exp_val = 'true' if is_experienced else 'false'
@@ -644,26 +651,26 @@ class CandidateRepository(BaseRepository[Candidate]):
         
         # Apply counseling status filter
         if counseling_status:
-            if counseling_status == 'not_counseled':
-                # No counseling record
-                stmt = stmt.where(CandidateCounseling.id.is_(None))
-                count_stmt = count_stmt.where(CandidateCounseling.id.is_(None))
-            elif counseling_status == 'pending':
-                # Explicitly 'pending' status in counseling record
-                stmt = stmt.where(CandidateCounseling.status == 'pending')
-                count_stmt = count_stmt.where(CandidateCounseling.status == 'pending')
-            elif counseling_status == 'selected':
+            c_status = counseling_status.lower()
+            if c_status in ('not_counseled', 'pending'):
+                # No counseling record OR status is 'pending'
+                stmt = stmt.where(or_(CandidateCounseling.id.is_(None), func.lower(CandidateCounseling.status) == 'pending'))
+                count_stmt = count_stmt.where(or_(CandidateCounseling.id.is_(None), func.lower(CandidateCounseling.status) == 'pending'))
+            elif c_status == 'selected':
                 # Only counseling-selected candidates
                 stmt = stmt.where(func.lower(CandidateCounseling.status) == 'selected')
                 count_stmt = count_stmt.where(func.lower(CandidateCounseling.status) == 'selected')
-            elif counseling_status == 'counseled':
+            elif c_status == 'rejected':
+                # Only counseling-rejected candidates
+                stmt = stmt.where(func.lower(CandidateCounseling.status) == 'rejected')
+                count_stmt = count_stmt.where(func.lower(CandidateCounseling.status) == 'rejected')
+            elif c_status == 'counseled':
                 # Counseled includes 'selected' or 'rejected'
-                stmt = stmt.where(CandidateCounseling.status.in_(['selected', 'rejected']))
-                count_stmt = count_stmt.where(CandidateCounseling.status.in_(['selected', 'rejected']))
+                stmt = stmt.where(func.lower(CandidateCounseling.status).in_(['selected', 'rejected']))
+                count_stmt = count_stmt.where(func.lower(CandidateCounseling.status).in_(['selected', 'rejected']))
             else:
-                sel_filter = or_(CandidateCounseling.id.is_(None), func.lower(CandidateCounseling.status).in_(['selected', 'pending', 'counseled', '']))
-                stmt = stmt.where(sel_filter)
-                count_stmt = count_stmt.where(sel_filter)
+                stmt = stmt.where(func.lower(CandidateCounseling.status) == c_status)
+                count_stmt = count_stmt.where(func.lower(CandidateCounseling.status) == c_status)
 
         # Apply document status filter
         if document_status:
