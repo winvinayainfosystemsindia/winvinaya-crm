@@ -378,6 +378,7 @@ async def get_screened_candidates(
     cities: str = None,
     screening_status: str = None,
     is_experienced: bool = None,
+    registration_type: str = None,
     is_global: bool = False,
     current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.MANAGER, UserRole.SOURCING, UserRole.TRAINER, UserRole.PLACEMENT, UserRole.COUNSELOR])),
     db: AsyncSession = Depends(get_db)
@@ -404,6 +405,7 @@ async def get_screened_candidates(
         cities=cities_list,
         screening_status=screening_status,
         is_experienced=is_experienced,
+        registration_type=registration_type,
         current_user=current_user,
         is_global=is_global
     )

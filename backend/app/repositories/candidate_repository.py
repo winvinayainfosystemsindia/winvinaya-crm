@@ -547,18 +547,24 @@ class CandidateRepository(BaseRepository[Candidate]):
         is_experienced: Optional[bool] = None,
         gender: Optional[str] = None,
         assigned_to_id: Optional[int] = None,
-        extra_filters: Optional[dict] = None
+        extra_filters: Optional[dict] = None,
+        registration_type: Optional[str] = None
     ):
         """Get candidates with 'Completed' screening records loaded, with optional counseling status filter, document status filter, search filtering, category filters, and sorting"""
 
         from sqlalchemy import or_
-        registered_filter = or_(
-            Candidate.other.is_(None),
-            Candidate.other['registration_type'].is_(None),
-            Candidate.other['registration_type'].as_string() == '',
-            Candidate.other['registration_type'].as_string().ilike('registered')
-        )
-        base_filter = (Candidate.is_deleted == False) & registered_filter
+        base_filter = Candidate.is_deleted == False
+        if registration_type:
+            if registration_type.lower() == 'registered':
+                registration_filter = or_(
+                    Candidate.other.is_(None),
+                    Candidate.other['registration_type'].is_(None),
+                    Candidate.other['registration_type'].as_string() == '',
+                    Candidate.other['registration_type'].as_string().ilike('registered')
+                )
+            else:
+                registration_filter = Candidate.other['registration_type'].as_string().ilike(registration_type)
+            base_filter = base_filter & registration_filter
         
         if document_status:
             # Document collection view covers all registered candidates

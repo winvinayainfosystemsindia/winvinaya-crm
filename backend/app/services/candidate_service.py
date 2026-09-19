@@ -275,6 +275,7 @@ class CandidateService:
         cities: Optional[list] = None,
         screening_status: Optional[str] = None,
         is_experienced: Optional[bool] = None,
+        registration_type: Optional[str] = None,
         current_user: Optional[User] = None,
         is_global: bool = False
     ) -> dict:
@@ -297,6 +298,7 @@ class CandidateService:
             cities=cities,
             screening_status=screening_status,
             is_experienced=is_experienced,
+            registration_type=registration_type,
             assigned_to_id=assigned_to_id
         )
         return {"items": items, "total": total}
