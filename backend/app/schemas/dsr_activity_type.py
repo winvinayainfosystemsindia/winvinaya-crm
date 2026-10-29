@@ -55,7 +55,7 @@ class DSRActivityTypeListResponse(BaseModel):
     items: list[DSRActivityTypeResponse]
     total: int
     skip: int
-    limit: int
+    limit: Optional[int] = None
 
 
 class DSRActivityTypeBulkDelete(BaseModel):

@@ -41,6 +41,7 @@ import useToast from '../../../../hooks/useToast';
 import type { DSRActivityType } from '../../../../models/dsr';
 import DSRAdminTableHeader from './DSRAdminTableHeader';
 import { ConfirmationDialog, ImportDialog, type ImportResult } from '../../../common/dialogbox';
+import CustomTablePagination from '../../../common/table/CustomTablePagination';
 
 const DSRActivityTypeManagement: React.FC = () => {
 	const dispatch = useAppDispatch();
@@ -57,6 +58,8 @@ const DSRActivityTypeManagement: React.FC = () => {
 		sort_order: 0
 	});
 	const [searchTerm, setSearchTerm] = useState('');
+	const [page, setPage] = useState(0);
+	const [rowsPerPage, setRowsPerPage] = useState(200);
 	const [importDialogOpen, setImportDialogOpen] = useState(false);
 	const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 	const [typeToDelete, setTypeToDelete] = useState<string | null>(null);
@@ -76,6 +79,16 @@ const DSRActivityTypeManagement: React.FC = () => {
 			(t.description || '').toLowerCase().includes(s)
 		);
 	}, [activityTypes, searchTerm]);
+
+	const paginatedActivityTypes = React.useMemo(() => {
+		const start = page * rowsPerPage;
+		return filteredActivityTypes.slice(start, start + rowsPerPage);
+	}, [filteredActivityTypes, page, rowsPerPage]);
+
+	const handleSearchChange = (term: string) => {
+		setSearchTerm(term);
+		setPage(0);
+	};
 
 	useEffect(() => {
 		dispatch(fetchActivityTypes({ onlyActive: false }));
@@ -211,7 +224,7 @@ const DSRActivityTypeManagement: React.FC = () => {
 				<DSRAdminTableHeader
 					title="Activity Taxonomy"
 					searchTerm={searchTerm}
-					onSearchChange={setSearchTerm}
+					onSearchChange={handleSearchChange}
 					onRefresh={() => dispatch(fetchActivityTypes({ onlyActive: false }))}
 					placeholder="Search activity types..."
 					actions={
@@ -304,7 +317,7 @@ const DSRActivityTypeManagement: React.FC = () => {
 									</TableCell>
 								</TableRow>
 							) : (
-									filteredActivityTypes.map((type) => (
+									paginatedActivityTypes.map((type) => (
 										<TableRow 
 											key={type.public_id} 
 											hover
@@ -356,6 +369,21 @@ const DSRActivityTypeManagement: React.FC = () => {
 						</TableBody>
 					</Table>
 				</TableContainer>
+
+				<CustomTablePagination
+					count={filteredActivityTypes.length}
+					page={page}
+					rowsPerPage={rowsPerPage}
+					onPageChange={(_, p) => setPage(p)}
+					onRowsPerPageChange={(e) => {
+						setRowsPerPage(parseInt(e.target.value, 10));
+						setPage(0);
+					}}
+					onRowsPerPageSelectChange={(r) => {
+						setRowsPerPage(r);
+						setPage(0);
+					}}
+				/>
 			</Paper>
 
 			<Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>

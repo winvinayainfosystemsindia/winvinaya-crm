@@ -97,7 +97,7 @@ class DSRActivityTypeService:
     async def get_types(
         self,
         skip: int = 0,
-        limit: int = 100,
+        limit: Optional[int] = None,
         active_only: bool = False,
         search: Optional[str] = None,
     ) -> Tuple[List[DSRActivityType], int]:
@@ -192,6 +192,7 @@ class DSRActivityTypeService:
                     existing.category = category
                     existing.description = description
                     existing.sort_order = sort_order
+                    existing.is_active = True
                     
                     if hasattr(existing, 'is_deleted') and existing.is_deleted:
                         existing.is_deleted = False

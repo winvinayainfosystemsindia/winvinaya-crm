@@ -4,12 +4,14 @@ import type { DSRActivityType, PaginationResult, ImportResult } from '../models/
 const dsrActivityTypeService = {
 	getActivityTypes: async (
 		skip = 0,
-		limit = 100,
+		limit?: number,
 		onlyActive = true
 	): Promise<PaginationResult<DSRActivityType>> => {
-		const response = await api.get('/dsr/activity-types/', {
-			params: { skip, limit, active_only: onlyActive }
-		});
+		const params: Record<string, any> = { skip, active_only: onlyActive };
+		if (limit !== undefined && limit !== null) {
+			params.limit = limit;
+		}
+		const response = await api.get('/dsr/activity-types/', { params });
 		return response.data;
 	},
 

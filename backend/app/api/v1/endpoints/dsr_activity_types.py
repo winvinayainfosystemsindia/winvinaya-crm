@@ -36,7 +36,7 @@ _ALL_ROLES = [
 @router.get("", response_model=DSRActivityTypeListResponse)
 async def list_activity_types(
     skip: int = Query(default=0, ge=0),
-    limit: int = Query(default=200, ge=1, le=500),
+    limit: Optional[int] = Query(default=None, ge=1, le=5000),
     active_only: bool = Query(default=False),
     search: Optional[str] = Query(default=None),
     current_user: User = Depends(require_roles(_ALL_ROLES)),
@@ -45,7 +45,7 @@ async def list_activity_types(
     """List all DSR activity types (all authenticated roles — used by DSR form dropdown)."""
     service = DSRActivityTypeService(db)
     items, total = await service.get_types(skip=skip, limit=limit, active_only=active_only, search=search)
-    return DSRActivityTypeListResponse(items=items, total=total, skip=skip, limit=limit)
+    return DSRActivityTypeListResponse(items=items, total=total, skip=skip, limit=limit if limit is not None else total)
 
 
 @router.get("/{public_id}", response_model=DSRActivityTypeResponse)

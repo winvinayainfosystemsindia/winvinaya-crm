@@ -256,7 +256,7 @@ export const useDSRSubmission = (props?: UseDSRSubmissionProps) => {
 	useEffect(() => {
 		dispatch(fetchProjects({ skip: 0, limit: 500, active_only: true, assigned_to: user?.public_id }));
 		dispatch(fetchPermissionRequests({ skip: 0, limit: 100, user_id: user?.id as any }));
-		dispatch(fetchActivityTypes({ skip: 0, limit: 100, onlyActive: true }));
+		dispatch(fetchActivityTypes({ onlyActive: true }));
 
 		// Fetch calendar status with extended history (matching the 60-day UI check)
 		const start = format(subDays(startOfDay(new Date()), 60), 'yyyy-MM-dd');

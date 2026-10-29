@@ -58,7 +58,7 @@ class DSRActivityTypeRepository(BaseRepository[DSRActivityType]):
     async def get_multi_paginated(
         self,
         skip: int = 0,
-        limit: int = 100,
+        limit: Optional[int] = None,
         active_only: bool = False,
         search: Optional[str] = None,
     ) -> Tuple[List[DSRActivityType], int]:
@@ -88,8 +88,10 @@ class DSRActivityTypeRepository(BaseRepository[DSRActivityType]):
             query
             .order_by(DSRActivityType.sort_order, DSRActivityType.name)
             .offset(skip)
-            .limit(limit)
         )
+        if limit is not None:
+            query = query.limit(limit)
+
         result = await self.db.execute(query)
         return list(result.scalars().all()), total
 

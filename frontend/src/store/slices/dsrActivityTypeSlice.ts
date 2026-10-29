@@ -20,7 +20,7 @@ export const fetchActivityTypes = createAsyncThunk(
 	'dsrActivityType/fetchActivityTypes',
 	async (params: { skip?: number; limit?: number; onlyActive?: boolean } | undefined, { rejectWithValue }) => {
 		try {
-			const { skip = 0, limit = 100, onlyActive = true } = params || {};
+			const { skip = 0, limit, onlyActive = true } = params || {};
 			return await dsrActivityTypeService.getActivityTypes(skip, limit, onlyActive);
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.detail || 'Failed to fetch activity types');
