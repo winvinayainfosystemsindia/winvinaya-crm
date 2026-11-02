@@ -144,37 +144,44 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 								id={`mobile-project-select-row-${index}`}
 								options={projects}
 								getOptionLabel={(option) => (typeof option === 'string' ? option : option?.name || '')}
-								groupBy={(option: any) => option.group}
-								renderGroup={(params) => (
-									<li key={params.key} role="group" aria-label={params.group}>
-										<Typography
-											component="div"
-											sx={{
-												px: 2,
-												py: 0.75,
-												fontWeight: 700,
-												fontSize: '0.72rem',
-												color: '#475569',
-												textTransform: 'uppercase',
-												bgcolor: '#f1f5f9',
-												letterSpacing: '0.04em'
-											}}
-										>
-											{params.group}
-										</Typography>
-										<ul style={{ padding: 0, margin: 0, listStyle: 'none' }}>
-											{params.children}
-										</ul>
-									</li>
-								)}
-								isOptionEqualToValue={(option, value) => !value || option?.public_id === value?.public_id}
+								isOptionEqualToValue={(option, value) => Boolean(value?.public_id && option?.public_id === value?.public_id)}
 								value={selectedProject}
 								autoHighlight
+								blurOnSelect={false}
 								onChange={(_, val) => onRowChange(index, 'project_public_id', val?.public_id || null)}
 								slotProps={{
 									listbox: {
 										'aria-label': `Projects for Row ${index + 1}`
 									}
+								}}
+								renderOption={(props, option) => {
+									const { key, ...otherProps } = props;
+									return (
+										<Box
+											component="li"
+											key={key || option.public_id || option.name}
+											{...otherProps}
+											sx={{
+												display: 'flex',
+												flexDirection: 'column',
+												alignItems: 'flex-start',
+												py: 1,
+												px: 2,
+												cursor: 'pointer',
+												'&.Mui-focused': { bgcolor: '#f3f4f6' },
+												'&[aria-selected="true"]': { bgcolor: '#fff7ed !important', color: '#ec7211', fontWeight: 600 }
+											}}
+										>
+											<Typography variant="body2" sx={{ fontWeight: 600, color: 'inherit' }}>
+												{option.name}
+											</Typography>
+											{(option as any).group && (
+												<Typography variant="caption" sx={{ color: '#64748b', fontSize: '0.7rem' }}>
+													{(option as any).group}
+												</Typography>
+											)}
+										</Box>
+									);
 								}}
 								renderInput={(params) => (
 									<TextField
@@ -210,6 +217,7 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 									}}
 									value={selectedActivityOption as any}
 									autoHighlight
+									blurOnSelect={false}
 									disabled={!item.project_public_id}
 									onChange={(_, val: any) => {
 										if (isCategoryProject) {
@@ -398,37 +406,44 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 						id={`project-select-row-${index}`}
 						options={projects}
 						getOptionLabel={(option) => (typeof option === 'string' ? option : option?.name || '')}
-						groupBy={(option: any) => option.group}
-						renderGroup={(params) => (
-							<li key={params.key} role="group" aria-label={params.group}>
-								<Typography
-									component="div"
-									sx={{
-										px: 2,
-										py: 0.75,
-										fontWeight: 700,
-										fontSize: '0.72rem',
-										color: '#475569',
-										textTransform: 'uppercase',
-										bgcolor: '#f1f5f9',
-										letterSpacing: '0.04em'
-									}}
-								>
-									{params.group}
-								</Typography>
-								<ul style={{ padding: 0, margin: 0, listStyle: 'none' }}>
-									{params.children}
-								</ul>
-							</li>
-						)}
-						isOptionEqualToValue={(option, value) => !value || option?.public_id === value?.public_id}
+						isOptionEqualToValue={(option, value) => Boolean(value?.public_id && option?.public_id === value?.public_id)}
 						value={selectedProject}
 						autoHighlight
+						blurOnSelect={false}
 						onChange={(_, val) => onRowChange(index, 'project_public_id', val?.public_id || null)}
 						slotProps={{
 							listbox: {
 								'aria-label': `Projects for Row ${index + 1}`
 							}
+						}}
+						renderOption={(props, option) => {
+							const { key, ...otherProps } = props;
+							return (
+								<Box
+									component="li"
+									key={key || option.public_id || option.name}
+									{...otherProps}
+									sx={{
+										display: 'flex',
+										flexDirection: 'column',
+										alignItems: 'flex-start',
+										py: 1,
+										px: 2,
+										cursor: 'pointer',
+										'&.Mui-focused': { bgcolor: '#f3f4f6' },
+										'&[aria-selected="true"]': { bgcolor: '#fff7ed !important', color: '#ec7211', fontWeight: 600 }
+									}}
+								>
+									<Typography variant="body2" sx={{ fontWeight: 600, color: 'inherit' }}>
+										{option.name}
+									</Typography>
+									{(option as any).group && (
+										<Typography variant="caption" sx={{ color: '#64748b', fontSize: '0.7rem' }}>
+											{(option as any).group}
+										</Typography>
+									)}
+								</Box>
+							);
 						}}
 						sx={textFieldStyles}
 						renderInput={(params) => (
@@ -466,6 +481,8 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 									}}
 									value={selectedActivityOption as any}
 									autoHighlight
+									blurOnSelect={false}
+									disabled={!item.project_public_id}
 									onChange={(_, val: any) => {
 										if (isCategoryProject) {
 											onRowChange(index, 'activity_type_name', val?.name || null);
@@ -480,7 +497,6 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 											}
 										}
 									}}
-									disabled={!item.project_public_id}
 									slotProps={{
 										listbox: {
 											'aria-label': `Activities for Row ${index + 1}`
