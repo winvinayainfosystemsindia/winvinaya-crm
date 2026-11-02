@@ -141,12 +141,53 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 							<Typography variant="body2" sx={{ fontWeight: 600, py: 1, color: '#111827' }}>{selectedProject?.name || item.project_name || '-'}</Typography>
 						) : (
 							<Autocomplete
+								id={`mobile-project-select-row-${index}`}
 								options={projects}
-								getOptionLabel={(option) => option.name || ''}
+								getOptionLabel={(option) => (typeof option === 'string' ? option : option?.name || '')}
 								groupBy={(option: any) => option.group}
+								renderGroup={(params) => (
+									<li key={params.key} role="group" aria-label={params.group}>
+										<Typography
+											component="div"
+											sx={{
+												px: 2,
+												py: 0.75,
+												fontWeight: 700,
+												fontSize: '0.72rem',
+												color: '#475569',
+												textTransform: 'uppercase',
+												bgcolor: '#f1f5f9',
+												letterSpacing: '0.04em'
+											}}
+										>
+											{params.group}
+										</Typography>
+										<ul style={{ padding: 0, margin: 0, listStyle: 'none' }}>
+											{params.children}
+										</ul>
+									</li>
+								)}
+								isOptionEqualToValue={(option, value) => !value || option?.public_id === value?.public_id}
 								value={selectedProject}
+								autoHighlight
 								onChange={(_, val) => onRowChange(index, 'project_public_id', val?.public_id || null)}
-								renderInput={(params) => <TextField {...params} size="small" placeholder="Select Project" sx={textFieldStyles} />}
+								slotProps={{
+									listbox: {
+										'aria-label': `Projects for Row ${index + 1}`
+									}
+								}}
+								renderInput={(params) => (
+									<TextField
+										{...params}
+										size="small"
+										placeholder="Select Project"
+										inputProps={{
+											...params.inputProps,
+											'aria-label': `Select Project, Row ${index + 1}`
+										}}
+										sx={textFieldStyles}
+									/>
+								)}
 							/>
 						)}
 					</Box>
@@ -159,9 +200,17 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 						) : (
 							<Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
 								<Autocomplete
+									id={`mobile-activity-select-row-${index}`}
 									options={activityOptions as any[]}
-									getOptionLabel={(option) => option.name || ''}
+									getOptionLabel={(option) => (typeof option === 'string' ? option : option?.name || '')}
+									isOptionEqualToValue={(option, value) => {
+										if (!value) return false;
+										if (isCategoryProject) return option?.name === value?.name;
+										return option?.public_id === value?.public_id;
+									}}
 									value={selectedActivityOption as any}
+									autoHighlight
+									disabled={!item.project_public_id}
 									onChange={(_, val: any) => {
 										if (isCategoryProject) {
 											onRowChange(index, 'activity_type_name', val?.name || null);
@@ -176,7 +225,23 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 											}
 										}
 									}}
-									renderInput={(params) => <TextField {...params} size="small" placeholder="Select Activity" sx={textFieldStyles} />}
+									slotProps={{
+										listbox: {
+											'aria-label': `Activities for Row ${index + 1}`
+										}
+									}}
+									renderInput={(params) => (
+										<TextField
+											{...params}
+											size="small"
+											placeholder={item.project_public_id ? "Select Activity" : "Select Project first"}
+											inputProps={{
+												...params.inputProps,
+												'aria-label': `Select Activity, Row ${index + 1}`
+											}}
+											sx={textFieldStyles}
+										/>
+									)}
 								/>
 								{isOtherActivity && (
 									<TextField
@@ -185,6 +250,9 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 										placeholder="Specify other activity details..."
 										value={item.activity_name_other || ''}
 										onChange={(e) => onRowChange(index, 'activity_name_other', e.target.value)}
+										inputProps={{
+											'aria-label': `Specify other activity details, Row ${index + 1}`
+										}}
 										sx={{ ...textFieldStyles, '& .MuiOutlinedInput-root': { bgcolor: '#fffdfa' } }}
 									/>
 								)}
@@ -210,6 +278,9 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 							placeholder="Briefly describe what you did..."
 							value={item.description}
 							onChange={(e) => onRowChange(index, 'description', e.target.value)}
+							inputProps={{
+								'aria-label': `Work description, Row ${index + 1}`
+							}}
 							sx={textFieldStyles}
 						/>
 					)}
@@ -234,6 +305,9 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 									textField: { 
 										size: 'small', 
 										fullWidth: true, 
+										inputProps: {
+											'aria-label': `Start time, Row ${index + 1}`
+										},
 										sx: { 
 											...textFieldStyles, 
 											'& .MuiOutlinedInput-input': { p: '10px 8px', fontSize: '0.8rem' } 
@@ -252,6 +326,9 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 									textField: { 
 										size: 'small', 
 										fullWidth: true, 
+										inputProps: {
+											'aria-label': `End time, Row ${index + 1}`
+										},
 										sx: { 
 											...textFieldStyles, 
 											'& .MuiOutlinedInput-input': { p: '10px 8px', fontSize: '0.8rem' } 
@@ -281,6 +358,7 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 							<IconButton
 								onClick={() => onRemoveRow(index)}
 								disabled={isDeleteDisabled}
+								aria-label={`Remove activity row ${index + 1}`}
 								size="medium"
 								sx={{ 
 									color: '#9ca3af', 
@@ -317,13 +395,53 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 					<Typography variant="body2" sx={{ fontWeight: 600, py: 1.5, px: 1, color: '#111827' }}>{selectedProject?.name || item.project_name || '-'}</Typography>
 				) : (
 					<Autocomplete
+						id={`project-select-row-${index}`}
 						options={projects}
-						getOptionLabel={(option) => option.name || ''}
+						getOptionLabel={(option) => (typeof option === 'string' ? option : option?.name || '')}
 						groupBy={(option: any) => option.group}
+						renderGroup={(params) => (
+							<li key={params.key} role="group" aria-label={params.group}>
+								<Typography
+									component="div"
+									sx={{
+										px: 2,
+										py: 0.75,
+										fontWeight: 700,
+										fontSize: '0.72rem',
+										color: '#475569',
+										textTransform: 'uppercase',
+										bgcolor: '#f1f5f9',
+										letterSpacing: '0.04em'
+									}}
+								>
+									{params.group}
+								</Typography>
+								<ul style={{ padding: 0, margin: 0, listStyle: 'none' }}>
+									{params.children}
+								</ul>
+							</li>
+						)}
+						isOptionEqualToValue={(option, value) => !value || option?.public_id === value?.public_id}
 						value={selectedProject}
+						autoHighlight
 						onChange={(_, val) => onRowChange(index, 'project_public_id', val?.public_id || null)}
+						slotProps={{
+							listbox: {
+								'aria-label': `Projects for Row ${index + 1}`
+							}
+						}}
 						sx={textFieldStyles}
-						renderInput={(params) => <TextField {...params} size="small" placeholder="Project" />}
+						renderInput={(params) => (
+							<TextField
+								{...params}
+								size="small"
+								placeholder="Select Project"
+								inputProps={{
+									...params.inputProps,
+									'aria-label': `Select Project, Row ${index + 1}`
+								}}
+							/>
+						)}
 					/>
 				)}
 			</Box>
@@ -338,9 +456,16 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 						) : (
 							<>
 								<Autocomplete
+									id={`activity-select-row-${index}`}
 									options={activityOptions as any[]}
-									getOptionLabel={(option) => option.name || ''}
+									getOptionLabel={(option) => (typeof option === 'string' ? option : option?.name || '')}
+									isOptionEqualToValue={(option, value) => {
+										if (!value) return false;
+										if (isCategoryProject) return option?.name === value?.name;
+										return option?.public_id === value?.public_id;
+									}}
 									value={selectedActivityOption as any}
+									autoHighlight
 									onChange={(_, val: any) => {
 										if (isCategoryProject) {
 											onRowChange(index, 'activity_type_name', val?.name || null);
@@ -356,8 +481,23 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 										}
 									}}
 									disabled={!item.project_public_id}
+									slotProps={{
+										listbox: {
+											'aria-label': `Activities for Row ${index + 1}`
+										}
+									}}
 									sx={textFieldStyles}
-									renderInput={(params) => <TextField {...params} size="small" placeholder="Activity" />}
+									renderInput={(params) => (
+										<TextField
+											{...params}
+											size="small"
+											placeholder={item.project_public_id ? "Select Activity" : "Select Project first"}
+											inputProps={{
+												...params.inputProps,
+												'aria-label': `Select Activity, Row ${index + 1}`
+											}}
+										/>
+									)}
 								/>
 								{isOtherActivity && (
 									<TextField
@@ -367,6 +507,9 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 										placeholder="Activity name..."
 										value={item.activity_name_other || ''}
 										onChange={(e) => onRowChange(index, 'activity_name_other', e.target.value)}
+										inputProps={{
+											'aria-label': `Specify other activity details, Row ${index + 1}`
+										}}
 										sx={{ ...textFieldStyles, '& .MuiOutlinedInput-root': { bgcolor: '#fffdfa' } }}
 									/>
 								)}
@@ -388,6 +531,9 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 						placeholder="Work details..."
 						value={item.description}
 						onChange={(e) => onRowChange(index, 'description', e.target.value)}
+						inputProps={{
+							'aria-label': `Work details, Row ${index + 1}`
+						}}
 						sx={textFieldStyles}
 					/>
 				)}
@@ -400,6 +546,9 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 							textField: { 
 								size: 'small', 
 								fullWidth: true, 
+								inputProps: {
+									'aria-label': `Start time, Row ${index + 1}`
+								},
 								sx: { ...textFieldStyles, '& .MuiOutlinedInput-input': { textAlign: 'center', p: '10px 12px', fontSize: '0.8rem' } } 
 							} 
 						}}
@@ -414,6 +563,9 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 							textField: { 
 								size: 'small', 
 								fullWidth: true, 
+								inputProps: {
+									'aria-label': `End time, Row ${index + 1}`
+								},
 								sx: { ...textFieldStyles, '& .MuiOutlinedInput-input': { textAlign: 'center', p: '10px 12px', fontSize: '0.8rem' } } 
 							} 
 						}}
@@ -435,6 +587,7 @@ const DSRItemRow: React.FC<DSRItemRowProps> = ({
 						<IconButton
 							onClick={() => onRemoveRow(index)}
 							disabled={isDeleteDisabled}
+							aria-label={`Remove activity row ${index + 1}`}
 							size="small"
 							sx={{ 
 								color: '#9ca3af', 

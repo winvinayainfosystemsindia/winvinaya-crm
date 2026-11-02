@@ -41,7 +41,7 @@ const DSRDialogHeader: React.FC<DSRDialogHeaderProps> = ({ title, subtitle, onCl
 					</Typography>
 				</Box>
 			</Box>
-			<IconButton onClick={onClose} size="small" sx={{ color: 'rgba(255,255,255,0.6)', '&:hover': { color: 'white', bgcolor: 'rgba(255,255,255,0.1)' } }}>
+			<IconButton onClick={onClose} size="small" aria-label="Close dialog" sx={{ color: 'rgba(255,255,255,0.6)', '&:hover': { color: 'white', bgcolor: 'rgba(255,255,255,0.1)' } }}>
 				<CloseIcon fontSize="small" />
 			</IconButton>
 		</DialogTitle>

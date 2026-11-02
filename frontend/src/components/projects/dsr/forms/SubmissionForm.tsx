@@ -139,6 +139,7 @@ const SubmissionForm: React.FC<SubmissionFormProps> = ({
 								startIcon={<AddIcon />}
 								onClick={onAddRow}
 								disabled={!isLastRowComplete}
+								aria-label="Add activity row"
 								variant="text"
 								sx={{
 									color: isLastRowComplete ? '#ec7211' : '#aab7bd',

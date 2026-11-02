@@ -53,6 +53,7 @@ const ReportingHeader: React.FC<ReportingHeaderProps> = ({
 							textField: {
 								size: 'small',
 								variant: 'standard',
+								inputProps: { 'aria-label': 'Reporting date' },
 								InputProps: { disableUnderline: true },
 								sx: {
 									'& .MuiInputBase-input': {
