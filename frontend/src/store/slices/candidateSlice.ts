@@ -460,6 +460,9 @@ export const sendConsentEmail = createAsyncThunk(
 	async ({ publicId }: { publicId: string }, { rejectWithValue }) => {
 		try {
 			const response = await screeningService.sendConsent(publicId);
+			if (response && response.success === false) {
+				return rejectWithValue('Failed to send consent email. Please check candidate email address.');
+			}
 			return response;
 		} catch (error: any) {
 			return rejectWithValue(error.response?.data?.detail || error.message || 'Failed to send consent email');

@@ -42,13 +42,19 @@ async def send_email(
     message = MIMEMultipart("mixed")
     
     # Create the alternative part for HTML/Text
+    import re
+    plain_text = re.sub(r'<[^>]+>', ' ', html_content)
+    plain_text = re.sub(r'\s+', ' ', plain_text).strip()
+
     alt_part = MIMEMultipart("alternative")
-    alt_part.attach(MIMEText(html_content, "html"))
+    alt_part.attach(MIMEText(plain_text, "plain", "utf-8"))
+    alt_part.attach(MIMEText(html_content, "html", "utf-8"))
     message.attach(alt_part)
     
     message["From"] = f"{from_name} <{from_email}>"
     message["To"] = to_email
     message["Subject"] = subject
+    message["Reply-To"] = from_email
     
     if cc:
         message["Cc"] = ", ".join(cc)
@@ -67,7 +73,7 @@ async def send_email(
     try:
         # Debug log for credentials (masked)
         pass_hint = f"{smtp_password[:2]}...{smtp_password[-1]}" if len(smtp_password) > 2 else "***"
-        logger.info(f"Attempting SMTP send: {smtp_host}:{smtp_port} as {smtp_user} (Pass: {pass_hint})")
+        logger.info(f"Attempting SMTP send: {smtp_host}:{smtp_port} as {smtp_user} (Pass: {pass_hint}) to {to_email}")
         
         await aiosmtplib.send(
             message,
@@ -77,6 +83,7 @@ async def send_email(
             password=smtp_password,
             use_tls=use_tls_strategy,
             start_tls=start_tls_strategy,
+            timeout=30,
         )
         logger.info(f"Email sent successfully to {to_email}")
         return True

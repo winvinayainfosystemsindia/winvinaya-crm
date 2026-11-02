@@ -299,7 +299,10 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 
 		setSendingConsent(true);
 		try {
-			await dispatch(sendConsentEmail({ publicId: candidatePublicId })).unwrap();
+			const res: any = await dispatch(sendConsentEmail({ publicId: candidatePublicId })).unwrap();
+			if (res && res.success === false) {
+				throw new Error('Failed to send consent email. Please check candidate email address.');
+			}
 			toast.success('Consent form email sent to candidate');
 			// Update local state to reflect Pending status
 			setFormData(prev => ({
@@ -307,7 +310,7 @@ const ScreeningFormDialog: React.FC<ScreeningFormDialogProps> = ({
 				consent_status: 'Pending'
 			}));
 		} catch (error: any) {
-			toast.error(error || 'Failed to send consent email');
+			toast.error(error?.message || error || 'Failed to send consent email');
 		} finally {
 			setSendingConsent(false);
 		}
