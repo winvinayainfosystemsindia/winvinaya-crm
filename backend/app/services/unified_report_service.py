@@ -127,19 +127,59 @@ class UnifiedReportService:
 
         # --- Candidate Filters ---
         if gender:
-            filters.append(func.lower(Candidate.gender) == gender.lower())
+            if gender.lower() == 'female':
+                filters.append(
+                    or_(
+                        func.lower(Candidate.gender) == 'female',
+                        Candidate.disability_details['disability_type'].as_string().ilike('%women%'),
+                        Candidate.disability_details['type'].as_string().ilike('%women%')
+                    )
+                )
+            else:
+                filters.append(func.lower(Candidate.gender) == gender.lower())
 
         if disability_types:
             dt_list = [d.strip() for d in disability_types.split(",") if d.strip()]
             if dt_list:
                 dt_conditions = []
                 for dt in dt_list:
-                    dt_conditions.append(
-                        Candidate.disability_details['disability_type'].as_string().ilike(dt)
-                    )
-                    dt_conditions.append(
-                        Candidate.disability_details['type'].as_string().ilike(dt)
-                    )
+                    dt_lower = dt.lower()
+                    if dt_lower in ['non-pwd', 'non pwd', 'none', 'no disability', 'non_pwd']:
+                        dt_conditions.extend([
+                            Candidate.disability_details.is_(None),
+                            Candidate.disability_details['is_disabled'].as_string() == 'false',
+                            Candidate.disability_details['disability_type'].as_string().is_(None),
+                            Candidate.disability_details['disability_type'].as_string() == '',
+                            Candidate.disability_details['disability_type'].as_string().ilike('none'),
+                            Candidate.disability_details['disability_type'].as_string().ilike('non-pwd'),
+                            Candidate.disability_details['disability_type'].as_string().ilike('non pwd'),
+                            Candidate.disability_details['disability_type'].as_string().ilike('%women%'),
+                            Candidate.disability_details['type'].as_string().ilike('%women%'),
+                        ])
+                    elif dt_lower in ['women', 'woman']:
+                        dt_conditions.extend([
+                            Candidate.disability_details['disability_type'].as_string().ilike('%women%'),
+                            Candidate.disability_details['type'].as_string().ilike('%women%'),
+                            and_(
+                                func.lower(Candidate.gender) == 'female',
+                                or_(
+                                    Candidate.disability_details.is_(None),
+                                    Candidate.disability_details['is_disabled'].as_string() == 'false',
+                                    Candidate.disability_details['disability_type'].as_string().is_(None),
+                                    Candidate.disability_details['disability_type'].as_string() == '',
+                                    Candidate.disability_details['disability_type'].as_string().ilike('none'),
+                                    Candidate.disability_details['disability_type'].as_string().ilike('non-pwd'),
+                                    Candidate.disability_details['disability_type'].as_string().ilike('non pwd'),
+                                )
+                            )
+                        ])
+                    else:
+                        dt_conditions.append(
+                            Candidate.disability_details['disability_type'].as_string().ilike(dt)
+                        )
+                        dt_conditions.append(
+                            Candidate.disability_details['type'].as_string().ilike(dt)
+                        )
                 filters.append(or_(*dt_conditions))
 
         if education_levels:
@@ -607,11 +647,22 @@ class UnifiedReportService:
         work_experience = c.work_experience or {}
         other = c.other or {}
 
+        # Resolve disability type display and gender inference
+        raw_disability = disability_details.get("disability_type") or disability_details.get("type")
+        if not raw_disability or str(raw_disability).strip() == "" or str(raw_disability).strip().lower() in ["none", "null"]:
+            disability_type_val = "Non-PwD"
+        else:
+            disability_type_val = str(raw_disability).strip()
+
+        gender_val = c.gender
+        if (not gender_val or str(gender_val).strip() == "") and raw_disability and "women" in str(raw_disability).lower():
+            gender_val = "female"
+
         item = {
             # Core
             "public_id": str(c.public_id),
             "name": c.name,
-            "gender": c.gender,
+            "gender": gender_val,
             "email": c.email,
             "phone": c.phone,
             "whatsapp_number": c.whatsapp_number,
@@ -629,7 +680,7 @@ class UnifiedReportService:
             "year_of_passing": education_details.get("year_of_passing"),
 
             # Disability
-            "disability_type": disability_details.get("disability_type") or disability_details.get("type"),
+            "disability_type": disability_type_val,
             "disability_percentage": disability_details.get("disability_percentage"),
             "disability_sub_category": disability_details.get("disability_sub_category"),
 

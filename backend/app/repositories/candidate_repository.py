@@ -468,9 +468,43 @@ class CandidateRepository(BaseRepository[Candidate]):
             disability_filters = []
             for d_type in disability_types:
                 if d_type:
-                    disability_filters.append(
-                        Candidate.disability_details['disability_type'].as_string() == d_type
-                    )
+                    dt_l = d_type.lower()
+                    if dt_l in ['non-pwd', 'non pwd', 'none', 'no disability', 'non_pwd']:
+                        disability_filters.extend([
+                            Candidate.disability_details.is_(None),
+                            Candidate.disability_details['is_disabled'].as_string() == 'false',
+                            Candidate.disability_details['disability_type'].as_string().is_(None),
+                            Candidate.disability_details['disability_type'].as_string() == '',
+                            Candidate.disability_details['disability_type'].as_string().ilike('none'),
+                            Candidate.disability_details['disability_type'].as_string().ilike('non-pwd'),
+                            Candidate.disability_details['disability_type'].as_string().ilike('non pwd'),
+                            Candidate.disability_details['disability_type'].as_string().ilike('%women%'),
+                            Candidate.disability_details['type'].as_string().ilike('%women%'),
+                        ])
+                    elif dt_l in ['women', 'woman']:
+                        disability_filters.extend([
+                            Candidate.disability_details['disability_type'].as_string().ilike('%women%'),
+                            Candidate.disability_details['type'].as_string().ilike('%women%'),
+                            and_(
+                                func.lower(Candidate.gender) == 'female',
+                                or_(
+                                    Candidate.disability_details.is_(None),
+                                    Candidate.disability_details['is_disabled'].as_string() == 'false',
+                                    Candidate.disability_details['disability_type'].as_string().is_(None),
+                                    Candidate.disability_details['disability_type'].as_string() == '',
+                                    Candidate.disability_details['disability_type'].as_string().ilike('none'),
+                                    Candidate.disability_details['disability_type'].as_string().ilike('non-pwd'),
+                                    Candidate.disability_details['disability_type'].as_string().ilike('non pwd'),
+                                )
+                            )
+                        ])
+                    else:
+                        disability_filters.append(
+                            Candidate.disability_details['disability_type'].as_string().ilike(d_type)
+                        )
+                        disability_filters.append(
+                            Candidate.disability_details['type'].as_string().ilike(d_type)
+                        )
             if disability_filters:
                 stmt = stmt.where(or_(*disability_filters))
                 count_stmt = count_stmt.where(or_(*disability_filters))
@@ -517,6 +551,18 @@ class CandidateRepository(BaseRepository[Candidate]):
             is_exp_val = 'true' if is_experienced else 'false'
             stmt = stmt.where(Candidate.work_experience['is_experienced'].as_string() == is_exp_val)
             count_stmt = count_stmt.where(Candidate.work_experience['is_experienced'].as_string() == is_exp_val)
+
+        if gender:
+            if gender.lower() == 'female':
+                g_cond = or_(
+                    func.lower(Candidate.gender) == 'female',
+                    Candidate.disability_details['disability_type'].as_string().ilike('%women%'),
+                    Candidate.disability_details['type'].as_string().ilike('%women%')
+                )
+            else:
+                g_cond = func.lower(Candidate.gender) == gender.lower()
+            stmt = stmt.where(g_cond)
+            count_stmt = count_stmt.where(g_cond)
 
 
         count_result = await self.db.execute(count_stmt)
@@ -726,9 +772,43 @@ class CandidateRepository(BaseRepository[Candidate]):
             disability_filters = []
             for d_type in disability_types:
                 if d_type:
-                    disability_filters.append(
-                        Candidate.disability_details['disability_type'].as_string() == d_type
-                    )
+                    dt_l = d_type.lower()
+                    if dt_l in ['non-pwd', 'non pwd', 'none', 'no disability', 'non_pwd']:
+                        disability_filters.extend([
+                            Candidate.disability_details.is_(None),
+                            Candidate.disability_details['is_disabled'].as_string() == 'false',
+                            Candidate.disability_details['disability_type'].as_string().is_(None),
+                            Candidate.disability_details['disability_type'].as_string() == '',
+                            Candidate.disability_details['disability_type'].as_string().ilike('none'),
+                            Candidate.disability_details['disability_type'].as_string().ilike('non-pwd'),
+                            Candidate.disability_details['disability_type'].as_string().ilike('non pwd'),
+                            Candidate.disability_details['disability_type'].as_string().ilike('%women%'),
+                            Candidate.disability_details['type'].as_string().ilike('%women%'),
+                        ])
+                    elif dt_l in ['women', 'woman']:
+                        disability_filters.extend([
+                            Candidate.disability_details['disability_type'].as_string().ilike('%women%'),
+                            Candidate.disability_details['type'].as_string().ilike('%women%'),
+                            and_(
+                                func.lower(Candidate.gender) == 'female',
+                                or_(
+                                    Candidate.disability_details.is_(None),
+                                    Candidate.disability_details['is_disabled'].as_string() == 'false',
+                                    Candidate.disability_details['disability_type'].as_string().is_(None),
+                                    Candidate.disability_details['disability_type'].as_string() == '',
+                                    Candidate.disability_details['disability_type'].as_string().ilike('none'),
+                                    Candidate.disability_details['disability_type'].as_string().ilike('non-pwd'),
+                                    Candidate.disability_details['disability_type'].as_string().ilike('non pwd'),
+                                )
+                            )
+                        ])
+                    else:
+                        disability_filters.append(
+                            Candidate.disability_details['disability_type'].as_string().ilike(d_type)
+                        )
+                        disability_filters.append(
+                            Candidate.disability_details['type'].as_string().ilike(d_type)
+                        )
             if disability_filters:
                 stmt = stmt.where(or_(*disability_filters))
                 count_stmt = count_stmt.where(or_(*disability_filters))
@@ -751,6 +831,18 @@ class CandidateRepository(BaseRepository[Candidate]):
             is_exp_val = 'true' if is_experienced else 'false'
             stmt = stmt.where(Candidate.work_experience['is_experienced'].as_string() == is_exp_val)
             count_stmt = count_stmt.where(Candidate.work_experience['is_experienced'].as_string() == is_exp_val)
+
+        if gender:
+            if gender.lower() == 'female':
+                g_cond = or_(
+                    func.lower(Candidate.gender) == 'female',
+                    Candidate.disability_details['disability_type'].as_string().ilike('%women%'),
+                    Candidate.disability_details['type'].as_string().ilike('%women%')
+                )
+            else:
+                g_cond = func.lower(Candidate.gender) == gender.lower()
+            stmt = stmt.where(g_cond)
+            count_stmt = count_stmt.where(g_cond)
 
 
         # Count total screened (with filter)
@@ -1056,6 +1148,13 @@ class CandidateRepository(BaseRepository[Candidate]):
                     disability_type = row.get('disability_type')
                     if disability_type:
                         disability_types.add(disability_type)
+
+            from app.core.constants import DISABILITY_TYPES
+            for dt in DISABILITY_TYPES:
+                disability_types.add(dt)
+            disability_types.add("Non-PwD")
+            disability_types.discard("")
+            disability_types.discard(None)
             
             # Get unique education levels (from degree names)
             stmt_education = select(Candidate.education_details).where(

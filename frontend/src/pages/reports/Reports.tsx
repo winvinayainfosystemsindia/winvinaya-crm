@@ -13,6 +13,7 @@ import FilterDrawer, { type FilterField } from '../../components/common/drawer/F
 import { fetchJobRoles } from '../../store/slices/jobRoleSlice';
 import { fetchCompanies } from '../../store/slices/companySlice';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { disabilityTypes } from '../../data/Disabilities';
 
 const Reports: React.FC = () => {
 	const theme = useTheme();
@@ -62,6 +63,26 @@ const Reports: React.FC = () => {
 		}
 	}, [dispatch, jobRoles.length, companies.length]);
 
+	// ─── Disability Filter Options (Ensuring Non-PwD and Women are always available) ───
+	const disabilityOptions = React.useMemo(() => {
+		const rawSet = new Set<string>([
+			'Non-PwD',
+			'Women',
+			...(filterOptions.disability_types || []),
+			...disabilityTypes
+		]);
+		return Array.from(rawSet)
+			.filter(v => v && String(v).trim() !== '')
+			.sort((a, b) => {
+				if (a === 'Non-PwD') return -1;
+				if (b === 'Non-PwD') return 1;
+				if (a === 'Women') return -1;
+				if (b === 'Women') return 1;
+				return a.localeCompare(b);
+			})
+			.map(v => ({ value: v, label: v }));
+	}, [filterOptions.disability_types]);
+
 	// ─── Unified Filter Field Configuration ───
 	const filterFields: FilterField[] = [
 		// General
@@ -95,7 +116,7 @@ const Reports: React.FC = () => {
 			label: 'Disability Type',
 			type: 'multi-select',
 			section: 'General',
-			options: (filterOptions.disability_types || []).map((v: string) => ({ value: v, label: v }))
+			options: disabilityOptions
 		},
 		{
 			key: 'disability_percentage',

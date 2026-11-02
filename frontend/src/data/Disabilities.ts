@@ -1,4 +1,5 @@
 export const disabilityTypes = [
+	"Non-PwD",
 	"Blindness",
 	"Low Vision",
 	"Leprosy Cured Persons",
