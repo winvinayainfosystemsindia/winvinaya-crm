@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime
 from app.services.unified_report_service import UnifiedReportService
 from app.models.candidate import Candidate
 from app.models.candidate_screening import CandidateScreening
@@ -341,4 +342,73 @@ async def test_unified_report_screening_counseling_selected_unallocated(db_sessi
     # 3. Check is_allocated flag in serialized items
     item_c1 = next(c for c in res_unalloc["items"] if c["name"] == "Candidate One")
     assert item_c1["is_allocated"] is False
+
+
+@pytest.mark.asyncio
+async def test_unified_report_registration_date_filters(db_session):
+    c_jan = Candidate(
+        name="Jan Candidate",
+        gender="Female",
+        email="jan@example.com",
+        phone="9876543241",
+        pincode="600001",
+        city="Chennai",
+        district="Chennai",
+        state="Tamil Nadu",
+        created_at=datetime(2026, 1, 15, 10, 0, 0),
+        is_deleted=False
+    )
+    c_feb = Candidate(
+        name="Feb Candidate",
+        gender="Male",
+        email="feb@example.com",
+        phone="9876543242",
+        pincode="600001",
+        city="Chennai",
+        district="Chennai",
+        state="Tamil Nadu",
+        created_at=datetime(2026, 2, 15, 14, 30, 0),
+        is_deleted=False
+    )
+    c_mar = Candidate(
+        name="Mar Candidate",
+        gender="Female",
+        email="mar@example.com",
+        phone="9876543243",
+        pincode="600001",
+        city="Chennai",
+        district="Chennai",
+        state="Tamil Nadu",
+        created_at=datetime(2026, 3, 15, 9, 15, 0),
+        is_deleted=False
+    )
+
+    for c in [c_jan, c_feb, c_mar]:
+        db_session.add(c)
+        await db_session.flush()
+    await db_session.commit()
+
+    service = UnifiedReportService(db_session)
+
+    # 1. Range filter covering February only
+    res_feb = await service.get_report(created_from="2026-02-01", created_to="2026-02-28")
+    feb_names = {c["name"] for c in res_feb["items"]}
+    assert "Feb Candidate" in feb_names
+    assert "Jan Candidate" not in feb_names
+    assert "Mar Candidate" not in feb_names
+
+    # 2. Filter from Feb onwards
+    res_from_feb = await service.get_report(created_from="2026-02-01")
+    from_feb_names = {c["name"] for c in res_from_feb["items"]}
+    assert "Feb Candidate" in from_feb_names
+    assert "Mar Candidate" in from_feb_names
+    assert "Jan Candidate" not in from_feb_names
+
+    # 3. Filter up to Feb
+    res_to_feb = await service.get_report(created_to="2026-02-28")
+    to_feb_names = {c["name"] for c in res_to_feb["items"]}
+    assert "Jan Candidate" in to_feb_names
+    assert "Feb Candidate" in to_feb_names
+    assert "Mar Candidate" not in to_feb_names
+
 

@@ -1,6 +1,7 @@
 """Unified Report Service - Aggregates all candidate data across modules"""
 
 from typing import Optional
+from datetime import datetime, date
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, or_, and_, case, String, text, cast, Numeric
 from sqlalchemy.orm import selectinload, joinedload
@@ -324,12 +325,48 @@ class UnifiedReportService:
                 filters.append(or_(*sb_conditions))
 
         if created_from:
-            filters.append(Candidate.created_at >= created_from)
+            from_dt = None
+            if isinstance(created_from, datetime):
+                from_dt = created_from
+            elif isinstance(created_from, date):
+                from_dt = datetime.combine(created_from, datetime.min.time())
+            else:
+                from_str = str(created_from).strip()
+                try:
+                    if len(from_str) == 10:
+                        from_dt = datetime.strptime(from_str, "%Y-%m-%d")
+                    else:
+                        from_dt = datetime.fromisoformat(from_str.replace("Z", "+00:00"))
+                except Exception:
+                    try:
+                        from_dt = datetime.strptime(from_str[:19], "%Y-%m-%d %H:%M:%S")
+                    except Exception:
+                        pass
+            if from_dt is not None:
+                filters.append(Candidate.created_at >= from_dt)
+
         if created_to:
-            to_str = str(created_to).strip()
-            if len(to_str) == 10:
-                to_str += " 23:59:59"
-            filters.append(Candidate.created_at <= to_str)
+            to_dt = None
+            if isinstance(created_to, datetime):
+                to_dt = created_to
+            elif isinstance(created_to, date):
+                to_dt = datetime.combine(created_to, datetime.max.time().replace(microsecond=0))
+            else:
+                to_str = str(created_to).strip()
+                try:
+                    if len(to_str) == 10:
+                        to_dt = datetime.strptime(to_str + " 23:59:59", "%Y-%m-%d %H:%M:%S")
+                    else:
+                        to_dt = datetime.fromisoformat(to_str.replace("Z", "+00:00"))
+                except Exception:
+                    try:
+                        to_dt = datetime.strptime(to_str[:19], "%Y-%m-%d %H:%M:%S")
+                    except Exception:
+                        pass
+            if to_dt is not None:
+                if to_dt.hour == 0 and to_dt.minute == 0 and to_dt.second == 0:
+                    to_dt = to_dt.replace(hour=23, minute=59, second=59, microsecond=999999)
+                filters.append(Candidate.created_at <= to_dt)
 
         # --- Screening Filters ---
         if screening_status:
