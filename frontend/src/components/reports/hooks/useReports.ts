@@ -136,7 +136,16 @@ export const useReports = () => {
 			batch_ids: formatArray(filters.batch_id),
 			batch_tag: filters.batch_tag || undefined,
 			training_status: filters.training_status || undefined,
-			is_dropout: filters.is_dropout === true ? true : filters.is_dropout === false ? false : undefined,
+			is_allocated: filters.is_allocated === 'true' || filters.is_allocated === true
+				? true
+				: filters.is_allocated === 'false' || filters.is_allocated === false
+				? false
+				: undefined,
+			is_dropout: filters.is_dropout === true || filters.is_dropout === 'true'
+				? true
+				: filters.is_dropout === false || filters.is_dropout === 'false'
+				? false
+				: undefined,
 			// Mock interview
 			mock_interview_status: filters.mock_interview_status || undefined,
 			// Analysis

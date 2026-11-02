@@ -1,6 +1,10 @@
 import pytest
 from app.services.unified_report_service import UnifiedReportService
 from app.models.candidate import Candidate
+from app.models.candidate_screening import CandidateScreening
+from app.models.candidate_counseling import CandidateCounseling
+from app.models.training_batch import TrainingBatch
+from app.models.training_candidate_allocation import TrainingCandidateAllocation
 
 @pytest.mark.asyncio
 async def test_unified_report_multiple_filters(db_session):
@@ -174,3 +178,167 @@ async def test_unified_report_female_non_pwd_and_women(db_session):
 
     item_kavitha = next(c for c in res_female_non_pwd["items"] if c["name"] == "Kavitha Mani")
     assert item_kavitha["disability_type"] == "Non-PwD"
+
+
+@pytest.mark.asyncio
+async def test_unified_report_screening_counseling_selected_unallocated(db_session):
+    # Create batch
+    batch = TrainingBatch(
+        batch_name="Batch Alpha",
+        status="in_progress",
+        is_deleted=False
+    )
+    db_session.add(batch)
+    await db_session.flush()
+
+    # Candidate 1: Screening "Completed", Counseling "selected", Unallocated (NO allocation) -> MATCHES
+    c1 = Candidate(
+        name="Candidate One",
+        gender="Female",
+        email="c1@example.com",
+        phone="9876543231",
+        pincode="600001",
+        city="Chennai",
+        district="Chennai",
+        state="Tamil Nadu",
+        is_deleted=False
+    )
+    # Candidate 2: Screening "selected", Counseling "selected", Unallocated (NO allocation) -> MATCHES
+    c2 = Candidate(
+        name="Candidate Two",
+        gender="Male",
+        email="c2@example.com",
+        phone="9876543232",
+        pincode="600001",
+        city="Chennai",
+        district="Chennai",
+        state="Tamil Nadu",
+        is_deleted=False
+    )
+    # Candidate 3: Screening "Completed", Counseling "selected", ALLOCATED to Batch Alpha -> EXCLUDED
+    c3 = Candidate(
+        name="Candidate Three",
+        gender="Female",
+        email="c3@example.com",
+        phone="9876543233",
+        pincode="600001",
+        city="Chennai",
+        district="Chennai",
+        state="Tamil Nadu",
+        is_deleted=False
+    )
+    # Candidate 4: Screening "Completed", Counseling "selected", COMPLETED TRAINING in Batch Alpha -> EXCLUDED
+    c4 = Candidate(
+        name="Candidate Four",
+        gender="Male",
+        email="c4@example.com",
+        phone="9876543234",
+        pincode="600001",
+        city="Chennai",
+        district="Chennai",
+        state="Tamil Nadu",
+        is_deleted=False
+    )
+    # Candidate 5: Screening "Pending", Counseling "selected", Unallocated -> EXCLUDED
+    c5 = Candidate(
+        name="Candidate Five",
+        gender="Female",
+        email="c5@example.com",
+        phone="9876543235",
+        pincode="600001",
+        city="Chennai",
+        district="Chennai",
+        state="Tamil Nadu",
+        is_deleted=False
+    )
+    # Candidate 6: Screening "Completed", Counseling "rejected", Unallocated -> EXCLUDED
+    c6 = Candidate(
+        name="Candidate Six",
+        gender="Male",
+        email="c6@example.com",
+        phone="9876543236",
+        pincode="600001",
+        city="Chennai",
+        district="Chennai",
+        state="Tamil Nadu",
+        is_deleted=False
+    )
+
+    for cand in [c1, c2, c3, c4, c5, c6]:
+        db_session.add(cand)
+        await db_session.flush()
+
+    # Add Screenings
+    s1 = CandidateScreening(candidate_id=c1.id, status="Completed")
+    s2 = CandidateScreening(candidate_id=c2.id, status="selected")
+    s3 = CandidateScreening(candidate_id=c3.id, status="Completed")
+    s4 = CandidateScreening(candidate_id=c4.id, status="Completed")
+    s5 = CandidateScreening(candidate_id=c5.id, status="pending")
+    s6 = CandidateScreening(candidate_id=c6.id, status="Completed")
+
+    # Add Counselings
+    cn1 = CandidateCounseling(candidate_id=c1.id, status="selected")
+    cn2 = CandidateCounseling(candidate_id=c2.id, status="selected")
+    cn3 = CandidateCounseling(candidate_id=c3.id, status="selected")
+    cn4 = CandidateCounseling(candidate_id=c4.id, status="selected")
+    cn5 = CandidateCounseling(candidate_id=c5.id, status="selected")
+    cn6 = CandidateCounseling(candidate_id=c6.id, status="rejected")
+
+    for obj in [s1, s2, s3, s4, s5, s6, cn1, cn2, cn3, cn4, cn5, cn6]:
+        db_session.add(obj)
+        await db_session.flush()
+
+    # Add Allocations
+    alloc3 = TrainingCandidateAllocation(
+        candidate_id=c3.id,
+        batch_id=batch.id,
+        status="allocated",
+        is_dropout=False,
+        is_deleted=False
+    )
+    alloc4 = TrainingCandidateAllocation(
+        candidate_id=c4.id,
+        batch_id=batch.id,
+        status="completed",
+        is_dropout=False,
+        is_deleted=False
+    )
+    db_session.add(alloc3)
+    db_session.add(alloc4)
+    await db_session.flush()
+    await db_session.commit()
+
+    service = UnifiedReportService(db_session)
+
+    # 1. Filter: screening_status="selected", counseling_status="selected", is_allocated=False
+    res_unalloc = await service.get_report(
+        screening_status="selected",
+        counseling_status="selected",
+        is_allocated=False
+    )
+    names = {c["name"] for c in res_unalloc["items"]}
+    assert "Candidate One" in names
+    assert "Candidate Two" in names
+    assert "Candidate Three" not in names  # currently allocated
+    assert "Candidate Four" not in names   # already completed training
+    assert "Candidate Five" not in names   # pending screening
+    assert "Candidate Six" not in names    # rejected counseling
+
+    # 2. Filter: screening_status="Completed", counseling_status="selected", training_status="unallocated"
+    res_unalloc_status = await service.get_report(
+        screening_status="Completed",
+        counseling_status="selected",
+        training_status="unallocated"
+    )
+    names_status = {c["name"] for c in res_unalloc_status["items"]}
+    assert "Candidate One" in names_status
+    assert "Candidate Two" in names_status
+    assert "Candidate Three" not in names_status
+    assert "Candidate Four" not in names_status
+    assert "Candidate Five" not in names_status
+    assert "Candidate Six" not in names_status
+
+    # 3. Check is_allocated flag in serialized items
+    item_c1 = next(c for c in res_unalloc["items"] if c["name"] == "Candidate One")
+    assert item_c1["is_allocated"] is False
+

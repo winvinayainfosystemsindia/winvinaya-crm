@@ -83,6 +83,36 @@ const Reports: React.FC = () => {
 			.map(v => ({ value: v, label: v }));
 	}, [filterOptions.disability_types]);
 
+	// ─── Screening Options (Ensure Completed & Selected are both present) ───
+	const screeningStatusOptions = React.useMemo(() => {
+		const base = (filterOptions.screening_statuses || []).map((v: string) => ({
+			value: v,
+			label: v.charAt(0).toUpperCase() + v.slice(1)
+		}));
+		if (!base.some(o => o.value.toLowerCase() === 'completed')) {
+			base.unshift({ value: 'Completed', label: 'Completed' });
+		}
+		if (!base.some(o => o.value.toLowerCase() === 'selected')) {
+			base.unshift({ value: 'Selected', label: 'Selected' });
+		}
+		return base;
+	}, [filterOptions.screening_statuses]);
+
+	// ─── Counseling Options (Ensure Selected & Completed are both present) ───
+	const counselingStatusOptions = React.useMemo(() => {
+		const base = (filterOptions.counseling_statuses || []).map((v: string) => ({
+			value: v,
+			label: v.charAt(0).toUpperCase() + v.slice(1)
+		}));
+		if (!base.some(o => o.value.toLowerCase() === 'selected')) {
+			base.unshift({ value: 'selected', label: 'Selected' });
+		}
+		if (!base.some(o => o.value.toLowerCase() === 'completed')) {
+			base.push({ value: 'completed', label: 'Completed' });
+		}
+		return base;
+	}, [filterOptions.counseling_statuses]);
+
 	// ─── Unified Filter Field Configuration ───
 	const filterFields: FilterField[] = [
 		// General
@@ -192,7 +222,7 @@ const Reports: React.FC = () => {
 			label: 'Screening Status',
 			type: 'single-select',
 			section: 'Screening',
-			options: (filterOptions.screening_statuses || []).map((v: string) => ({ value: v, label: v }))
+			options: screeningStatusOptions
 		},
 		{
 			key: 'consent_status',
@@ -218,7 +248,7 @@ const Reports: React.FC = () => {
 			label: 'Counseling Status',
 			type: 'single-select',
 			section: 'Counseling',
-			options: (filterOptions.counseling_statuses || []).map((v: string) => ({ value: v, label: v.charAt(0).toUpperCase() + v.slice(1) }))
+			options: counselingStatusOptions
 		},
 
 		// Documents
@@ -236,6 +266,16 @@ const Reports: React.FC = () => {
 		},
 
 		// Training
+		{
+			key: 'is_allocated',
+			label: 'Allocated to Batch?',
+			type: 'single-select',
+			section: 'Training',
+			options: [
+				{ value: 'false', label: 'No (Not Allocated / Ready for Training)' },
+				{ value: 'true', label: 'Yes (Allocated)' }
+			]
+		},
 		{
 			key: 'batch_id',
 			label: 'Batch Name',
@@ -255,6 +295,7 @@ const Reports: React.FC = () => {
 			type: 'single-select',
 			section: 'Training',
 			options: [
+				{ label: 'Not Allocated (Unallocated)', value: 'unallocated' },
 				{ label: 'Allocated', value: 'allocated' },
 				{ label: 'In Training', value: 'in_training' },
 				{ label: 'Completed', value: 'completed' },

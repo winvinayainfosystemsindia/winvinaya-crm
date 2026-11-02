@@ -62,6 +62,7 @@ class UnifiedReportService:
         batch_ids: Optional[str] = None,
         batch_tag: Optional[str] = None,
         training_status: Optional[str] = None,
+        is_allocated: Optional[bool] = None,
         is_dropout: Optional[bool] = None,
         # Mock interview filters
         mock_interview_status: Optional[str] = None,
@@ -353,6 +354,13 @@ class UnifiedReportService:
                         )
                     )
                 )
+            elif screening_status.lower() in ("selected", "completed"):
+                filters.append(
+                    or_(
+                        CandidateScreening.status.ilike("completed"),
+                        CandidateScreening.status.ilike("selected")
+                    )
+                )
             else:
                 filters.append(CandidateScreening.status.ilike(screening_status))
 
@@ -389,6 +397,13 @@ class UnifiedReportService:
                             CandidateCounseling.status.is_(None),
                             CandidateCounseling.status == ""
                         )
+                    )
+                )
+            elif counseling_status.lower() in ("selected", "completed"):
+                filters.append(
+                    or_(
+                        CandidateCounseling.status.ilike("selected"),
+                        CandidateCounseling.status.ilike("completed")
                     )
                 )
             else:
@@ -438,7 +453,42 @@ class UnifiedReportService:
             )
             filters.append(Candidate.id.in_(tag_subq))
 
-        if training_status:
+        # Subquery of candidates who are currently allocated to any batch or have completed training
+        allocated_or_completed_subq = (
+            select(TrainingCandidateAllocation.candidate_id).where(
+                TrainingCandidateAllocation.is_deleted == False,
+                or_(
+                    TrainingCandidateAllocation.status.ilike("completed"),
+                    TrainingCandidateAllocation.status.ilike("allocated"),
+                    TrainingCandidateAllocation.status.ilike("in_training"),
+                    TrainingCandidateAllocation.status.ilike("in-training"),
+                    TrainingCandidateAllocation.status.ilike("placed"),
+                    TrainingCandidateAllocation.status.ilike("moved_to_placement"),
+                    and_(
+                        TrainingCandidateAllocation.is_dropout == False,
+                        TrainingCandidateAllocation.batch_id.isnot(None)
+                    )
+                )
+            )
+        )
+
+        is_unallocated_request = (is_allocated is False) or (
+            training_status and training_status.lower() in ("unallocated", "not_allocated", "none", "not allocated")
+        )
+        is_allocated_request = (is_allocated is True) or (
+            training_status and training_status.lower() == "allocated" and is_allocated is not False
+        )
+
+        if is_unallocated_request:
+            filters.append(Candidate.id.not_in(allocated_or_completed_subq))
+        elif is_allocated_request:
+            allocated_subq = select(TrainingCandidateAllocation.candidate_id).where(
+                TrainingCandidateAllocation.is_deleted == False,
+                TrainingCandidateAllocation.is_dropout == False,
+                TrainingCandidateAllocation.batch_id.isnot(None)
+            )
+            filters.append(Candidate.id.in_(allocated_subq))
+        elif training_status:
             ts_subq = select(TrainingCandidateAllocation.candidate_id).where(
                 TrainingCandidateAllocation.status.ilike(training_status),
                 TrainingCandidateAllocation.is_deleted == False
@@ -834,6 +884,7 @@ class UnifiedReportService:
                 "courses": self._format_courses(allocations[0].batch.courses) if allocations[0].batch else None,
                 "duration": self._format_duration(allocations[0].batch) if allocations[0].batch else None,
                 "training_status": allocations[0].status,
+                "is_allocated": any((not a.is_dropout and a.status != "dropped_out") for a in allocations),
             })
         else:
             item.update({
@@ -845,6 +896,7 @@ class UnifiedReportService:
                 "batch_name": None, "batch_status": None, "batch_tag": None,
                 "domain": None, "training_mode": None, "courses": None,
                 "duration": None, "training_status": None,
+                "is_allocated": False,
             })
 
         # === Attendance (calculated directly from TrainingAttendance table) ===

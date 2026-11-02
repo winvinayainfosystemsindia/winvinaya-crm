@@ -31,6 +31,7 @@ export interface UnifiedReportParams {
 	batch_ids?: string;
 	batch_tag?: string;
 	training_status?: string;
+	is_allocated?: boolean;
 	is_dropout?: boolean;
 	// Mock interview filters
 	mock_interview_status?: string;

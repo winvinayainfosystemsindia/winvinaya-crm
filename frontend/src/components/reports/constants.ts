@@ -64,6 +64,7 @@ export const UNIFIED_COLUMNS = [
 	{ id: 'total_documents', label: 'Total Documents', default: false, group: 'documents' },
 
 	// ── Training Batch ──
+	{ id: 'is_allocated', label: 'Allocated to Batch?', default: false, group: 'training' },
 	{ id: 'training_summary', label: 'Training Summary', default: false, group: 'training' },
 	{ id: 'batch_names', label: 'Batch Name(s)', default: false, group: 'training' },
 	{ id: 'batch_statuses', label: 'Batch Status(es)', default: false, group: 'training' },
