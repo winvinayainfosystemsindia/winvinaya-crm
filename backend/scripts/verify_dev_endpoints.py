@@ -95,6 +95,13 @@ async def verify():
             today_str = date.today().isoformat()
             print(f"Checking Batch {b1_id} ({b1.get('batch_name')}) [UUID: {b1_pub_id}]:")
 
+            # Candidate Allocations
+            alloc_resp = await client.get(f"{BASE_URL}/training-candidate-allocations/batch/{b1_pub_id}", headers=headers)
+            allocs = alloc_resp.json() if alloc_resp.status_code == 200 else []
+            print(f"Candidate Allocations status: {alloc_resp.status_code}, count: {len(allocs)}")
+            for a in allocs:
+                print(f"  Candidate {a.get('candidate', {}).get('name')}: Status = '{a.get('status')}', is_dropout = {a.get('is_dropout')}")
+
             # Weekly plan
             plan_resp = await client.get(f"{BASE_URL}/training-batch-plans/batch/{b1_pub_id}?start_date={today_str}", headers=headers)
             print(f"Training plan status: {plan_resp.status_code}, periods: {len(plan_resp.json()) if plan_resp.status_code == 200 else plan_resp.text}")

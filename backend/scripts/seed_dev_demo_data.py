@@ -500,16 +500,20 @@ async def seed_dev_demo_data():
         # 5. TRAINING BATCHES, ALLOCATIONS, PLANS, ATTENDANCE, MOCK INTERVIEWS
         # -------------------------------------------------------------
         print("\n[5/9] Seeding Training Batches, Weekly Plans, Attendance for Today, and Mocks...")
+        today = date.today()
+        # Find Monday of this week so dates match current active week perfectly
+        monday = today - timedelta(days=today.weekday())
+
         batch1 = TrainingBatch(
             public_id=uuid.uuid4(),
             batch_name="Batch-2026-01: Full Stack Python & React Development (PwD Cohort 12)",
             disability_types=["Locomotor Disability", "Hearing Impairment (Deaf and Hard of Hearing)", "Low Vision"],
-            start_date=date(2026, 1, 5),
-            approx_close_date=date(2026, 4, 15),
+            start_date=monday - timedelta(days=14), # Started 2 weeks ago
+            approx_close_date=monday + timedelta(days=120), # Active through March 2027
             total_extension_days=0,
             courses=["Python Core", "React JS", "FastAPI", "PostgreSQL", "Soft Skills"],
             duration={"duration_months": 3.5, "duration_weeks": 14, "display": "3.5 Months"},
-            status="in_progress",
+            status="running",
             other={"domain": "Full Stack Web Development", "training_mode": "Hybrid"},
             owner_id=admin_id,
             is_deleted=False,
@@ -518,12 +522,12 @@ async def seed_dev_demo_data():
             public_id=uuid.uuid4(),
             batch_name="Batch-2026-02: Quality Assurance & Test Automation (Inclusive Track)",
             disability_types=["Locomotor Disability", "Blindness", "Low Vision"],
-            start_date=date(2026, 2, 1),
-            approx_close_date=date(2026, 5, 10),
+            start_date=monday - timedelta(days=14), # Started 2 weeks ago
+            approx_close_date=monday + timedelta(days=120), # Active through March 2027
             total_extension_days=0,
             courses=["Manual Testing", "Selenium WebDriver", "Python Test Automation", "Jira & Bugzilla"],
             duration={"duration_months": 3.0, "duration_weeks": 12, "display": "3 Months"},
-            status="in_progress",
+            status="running",
             other={"domain": "Software Testing & QA", "training_mode": "Online"},
             owner_id=admin_id,
             is_deleted=False,
@@ -534,12 +538,13 @@ async def seed_dev_demo_data():
         batch1_candidates = [candidates[0], candidates[1], candidates[4], candidates[5], candidates[6]]
         batch2_candidates = [candidates[2], candidates[3], candidates[7], candidates[8], candidates[9]]
 
+        # Move allocated candidates to 'in_training' status
         for cand in batch1_candidates:
             session.add(TrainingCandidateAllocation(
                 public_id=uuid.uuid4(),
                 batch_id=batch1.id,
                 candidate_id=cand.id,
-                status="Enrolled",
+                status="in_training",
                 is_dropout=False,
                 is_deleted=False,
             ))
@@ -549,19 +554,14 @@ async def seed_dev_demo_data():
                 public_id=uuid.uuid4(),
                 batch_id=batch2.id,
                 candidate_id=cand.id,
-                status="Enrolled",
+                status="in_training",
                 is_dropout=False,
                 is_deleted=False,
             ))
 
         await session.flush()
 
-        # Training Batch Plans for CURRENT WEEK (Monday Nov 2 to Friday Nov 6, 2026)
-        # Multiple periods per day so calendar is rich and realistic
-        today = date.today()
-        # Find Monday of this week
-        monday = today - timedelta(days=today.weekday())
-
+        # Training Batch Plans across Previous Week, Current Week, and Next 2 Weeks
         b1_schedule = [
             ("09:30:00", "11:30:00", "Python Data Structures & OOP In-depth"),
             ("11:45:00", "13:15:00", "FastAPI Asynchronous Routing & Schema Validation"),
@@ -574,49 +574,63 @@ async def seed_dev_demo_data():
             ("14:00:00", "16:30:00", "Web Accessibility (WCAG 2.1) Automated Auditing"),
         ]
 
+        # Multi-week plans: Week -1, Week 0 (Current), Week +1, Week +2
+        week_offsets = [-7, 0, 7, 14]
         plan_count = 0
-        for day_offset in range(5): # Monday to Friday
-            plan_date = monday + timedelta(days=day_offset)
+        b1_plans_by_date = {}
+        b2_plans_by_date = {}
 
-            # Batch 1 periods
-            for st, et, act_name in b1_schedule:
-                t_start = time.fromisoformat(st)
-                t_end = time.fromisoformat(et)
-                session.add(TrainingBatchPlan(
-                    public_id=uuid.uuid4(),
-                    batch_id=batch1.id,
-                    date=plan_date,
-                    start_time=t_start,
-                    end_time=t_end,
-                    activity_type="course",
-                    activity_name=act_name,
-                    trainer="Senior Technical Trainer",
-                    trainer_user_id=admin_id,
-                    notes=f"Delivered curriculum module on {act_name} with interactive coding exercises.",
-                    is_deleted=False,
-                ))
-                plan_count += 1
+        for w_offset in week_offsets:
+            w_monday = monday + timedelta(days=w_offset)
+            for day_offset in range(5): # Monday to Friday
+                plan_date = w_monday + timedelta(days=day_offset)
+                b1_plans_by_date[plan_date] = []
+                b2_plans_by_date[plan_date] = []
 
-            # Batch 2 periods
-            for st, et, act_name in b2_schedule:
-                t_start = time.fromisoformat(st)
-                t_end = time.fromisoformat(et)
-                session.add(TrainingBatchPlan(
-                    public_id=uuid.uuid4(),
-                    batch_id=batch2.id,
-                    date=plan_date,
-                    start_time=t_start,
-                    end_time=t_end,
-                    activity_type="course",
-                    activity_name=act_name,
-                    trainer="Lead QA Specialist",
-                    trainer_user_id=admin_id,
-                    notes=f"Hands-on automation lab on {act_name}.",
-                    is_deleted=False,
-                ))
-                plan_count += 1
+                # Batch 1 periods
+                for st, et, act_name in b1_schedule:
+                    t_start = time.fromisoformat(st)
+                    t_end = time.fromisoformat(et)
+                    p1 = TrainingBatchPlan(
+                        public_id=uuid.uuid4(),
+                        batch_id=batch1.id,
+                        date=plan_date,
+                        start_time=t_start,
+                        end_time=t_end,
+                        activity_type="course",
+                        activity_name=act_name,
+                        trainer="Senior Technical Trainer",
+                        trainer_user_id=admin_id,
+                        notes=f"Delivered curriculum module on {act_name} with interactive coding exercises.",
+                        is_deleted=False,
+                    )
+                    session.add(p1)
+                    b1_plans_by_date[plan_date].append(p1)
+                    plan_count += 1
 
-        print(f"  -> Created {plan_count} training plan periods across current week for Batch 1 & Batch 2.")
+                # Batch 2 periods
+                for st, et, act_name in b2_schedule:
+                    t_start = time.fromisoformat(st)
+                    t_end = time.fromisoformat(et)
+                    p2 = TrainingBatchPlan(
+                        public_id=uuid.uuid4(),
+                        batch_id=batch2.id,
+                        date=plan_date,
+                        start_time=t_start,
+                        end_time=t_end,
+                        activity_type="course",
+                        activity_name=act_name,
+                        trainer="Lead QA Specialist",
+                        trainer_user_id=admin_id,
+                        notes=f"Hands-on automation lab on {act_name}.",
+                        is_deleted=False,
+                    )
+                    session.add(p2)
+                    b2_plans_by_date[plan_date].append(p2)
+                    plan_count += 1
+
+        await session.flush()
+        print(f"  -> Created {plan_count} training plan periods across multiple weeks for Batch 1 & Batch 2.")
 
         # Training Attendance: Mark attendance for TODAY and past days of this week for BOTH batches!
         attendance_count = 0
@@ -625,29 +639,61 @@ async def seed_dev_demo_data():
         for d in days_to_mark:
             # Batch 1 candidates
             for i, cand in enumerate(batch1_candidates):
+                cand_status = "present" if (i + d.day) % 7 != 0 else "late"
+                # Daily full-day attendance
                 session.add(TrainingAttendance(
                     batch_id=batch1.id,
                     candidate_id=cand.id,
                     date=d,
-                    status="present" if (i + d.day) % 7 != 0 else "late",
+                    period_id=None,
+                    status=cand_status,
                     remarks="Attended scheduled training sessions on time.",
                     is_deleted=False,
                 ))
                 attendance_count += 1
 
+                # Period-level attendance for each scheduled period
+                for plan in b1_plans_by_date.get(d, []):
+                    session.add(TrainingAttendance(
+                        batch_id=batch1.id,
+                        candidate_id=cand.id,
+                        date=d,
+                        period_id=plan.id,
+                        status=cand_status,
+                        remarks="Period completed successfully.",
+                        is_deleted=False,
+                    ))
+                    attendance_count += 1
+
             # Batch 2 candidates
             for i, cand in enumerate(batch2_candidates):
+                cand_status = "present" if (i + d.day) % 6 != 0 else "late"
+                # Daily full-day attendance
                 session.add(TrainingAttendance(
                     batch_id=batch2.id,
                     candidate_id=cand.id,
                     date=d,
-                    status="present" if (i + d.day) % 6 != 0 else "late",
+                    period_id=None,
+                    status=cand_status,
                     remarks="Present for all automation lab periods.",
                     is_deleted=False,
                 ))
                 attendance_count += 1
 
-        print(f"  -> Marked {attendance_count} attendance records for today and recent days across both batches.")
+                # Period-level attendance for each scheduled period
+                for plan in b2_plans_by_date.get(d, []):
+                    session.add(TrainingAttendance(
+                        batch_id=batch2.id,
+                        candidate_id=cand.id,
+                        date=d,
+                        period_id=plan.id,
+                        status=cand_status,
+                        remarks="Period completed successfully.",
+                        is_deleted=False,
+                    ))
+                    attendance_count += 1
+
+        print(f"  -> Marked {attendance_count} daily and period attendance records across both batches.")
 
         # Assignments for candidates
         for cand in batch1_candidates:
