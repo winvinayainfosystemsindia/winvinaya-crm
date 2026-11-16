@@ -145,7 +145,12 @@ async def verify():
             print(f"Candidate Matches status: {match_resp.status_code}, count: {len(match_resp.json()) if match_resp.status_code == 200 else match_resp.text}")
             
             mapped_resp = await client.get(f"{BASE_URL}/placement/mappings/job-role/{r1_pub_id}", headers=headers)
-            print(f"Mapped Candidates status: {mapped_resp.status_code}, count: {len(mapped_resp.json()) if mapped_resp.status_code == 200 else mapped_resp.text}")
+            mapped_items = mapped_resp.json() if mapped_resp.status_code == 200 else []
+            print(f"Mapped Candidates status: {mapped_resp.status_code}, count: {len(mapped_items)}")
+            for m in mapped_items:
+                cand_info = m.get("candidate", {})
+                c_name = cand_info.get("name") or f"{cand_info.get('first_name')} {cand_info.get('last_name')}"
+                print(f"  Candidate {c_name}: Pipeline Stage Status = '{m.get('status')}', Match Score = {m.get('match_score')}%")
 
 if __name__ == "__main__":
     asyncio.run(verify())

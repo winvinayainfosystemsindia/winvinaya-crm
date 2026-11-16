@@ -62,13 +62,23 @@ const PipelineKanbanTab: React.FC<PipelineKanbanTabProps> = ({ jobRolePublicId }
 		if (!jobRole?.pipeline_stages) return [];
 
 		const columns: { id: string, title: string, stages: string[], category: string }[] = [];
+		const hasLeadStage = jobRole.pipeline_stages.some(s => s.id === 'mapped' || s.category === 'lead');
 
-		jobRole.pipeline_stages.forEach(stage => {
+		jobRole.pipeline_stages.forEach((stage, idx) => {
 			const stages = [stage.id];
 			
-			// Handle status aliases (offered and offer_made are equivalent)
-			if (stage.id === 'offer_made') stages.push('offered');
-			if (stage.id === 'offered') stages.push('offer_made');
+			// Handle status aliases (offered, offer_made, and offer_accepted are equivalent for offer column)
+			if (stage.id === 'offer_made' || stage.category === 'offer') {
+				stages.push('offered', 'offer_accepted');
+			}
+			if (stage.id === 'offered') {
+				stages.push('offer_made', 'offer_accepted');
+			}
+
+			// If no dedicated 'mapped' column exists in this pipeline, include 'mapped' in the first column
+			if (!hasLeadStage && idx === 0) {
+				stages.push('mapped');
+			}
 
 			columns.push({
 				id: stage.id,

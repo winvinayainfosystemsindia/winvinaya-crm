@@ -1092,10 +1092,11 @@ async def seed_dev_demo_data():
                 no_of_vacancies=jr_data["no_of_vacancies"],
                 requirements=jr_data["requirements"],
                 pipeline_stages=[
-                    {"id": "shortlisted", "label": "Shortlisted"},
-                    {"id": "interview_l1", "label": "L1 Interview"},
-                    {"id": "offer_made", "label": "Offer Made"},
-                    {"id": "joined", "label": "Joined"}
+                    {"id": "mapped", "label": "Mapped", "category": "lead"},
+                    {"id": "shortlisted", "label": "Shortlisted", "category": "shortlisted"},
+                    {"id": "interview_l1", "label": "L1 Interview", "category": "interview"},
+                    {"id": "offer_made", "label": "Offer Made", "category": "offer"},
+                    {"id": "joined", "label": "Joined", "category": "hired"}
                 ],
                 status=jr_data["status"],
                 is_visible=True,
@@ -1108,11 +1109,11 @@ async def seed_dev_demo_data():
 
         # Candidate Mappings for Junior Full Stack Developer (Job Role 0) & Others
         mappings_seed = [
-            (candidates[0].id, job_roles[0].id, PlacementStatus.OFFER_ACCEPTED, 94.0, "Outstanding match for Full Stack Python/React position"),
+            (candidates[0].id, job_roles[0].id, PlacementStatus.OFFER_MADE, 94.0, "Outstanding match for Full Stack Python/React position, offer extended"),
             (candidates[1].id, job_roles[2].id, PlacementStatus.INTERVIEW_L2, 88.0, "Strong accounting skills, cleared initial round"),
             (candidates[2].id, job_roles[1].id, PlacementStatus.TECHNICAL_ROUND, 91.0, "Great QA foundation, scheduled for tech round"),
             (candidates[4].id, job_roles[0].id, PlacementStatus.SHORTLISTED, 90.0, "Solid React fundamentals, shortlisted for client review"),
-            (candidates[5].id, job_roles[0].id, PlacementStatus.MAPPED, 92.0, "Strong React portfolio, ready for resume submission"),
+            (candidates[5].id, job_roles[0].id, PlacementStatus.INTERVIEW_L1, 92.0, "Strong React portfolio, advanced to L1 Interview round"),
         ]
 
         mappings = []
