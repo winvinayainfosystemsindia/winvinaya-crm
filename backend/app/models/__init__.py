@@ -46,6 +46,7 @@ from app.models.skill import Skill
 from app.models.ai_task_log import AITaskLog, AITaskStatus, AITaskTrigger
 from app.models.ai_chat import AIChatSession, AIChatMessage
 from app.models.user_email_configuration import UserEmailConfiguration
+from app.models.mcp_oauth import OAuthClient, OAuthAuthCode, OAuthToken, MCPAuditLog
 
 __all__ = [
     "User",
@@ -132,5 +133,9 @@ __all__ = [
     "PlacementNote",
     "NoteType",
     "UserEmailConfiguration",
+    "OAuthClient",
+    "OAuthAuthCode",
+    "OAuthToken",
+    "MCPAuditLog",
 ]
 

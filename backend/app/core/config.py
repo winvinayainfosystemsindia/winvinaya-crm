@@ -132,6 +132,40 @@ class Settings(BaseSettings):
     AI_MAX_RETRIES: int = 3                 # Retry failed tool calls
     AI_APPROVAL_RECORD_THRESHOLD: int = 5   # Tasks touching >N records need approval
     AI_LOG_RETENTION_DAYS: int = 90         # How long to keep AI task journals
+
+    # ── Claude MCP Connector ──────────────────────────────────────────────────
+    MCP_ISSUER_URL: Optional[str] = None
+
+    @validator("MCP_ISSUER_URL", pre=True, always=True)
+    def assemble_mcp_issuer_url(cls, v: Optional[str], values: dict) -> str:
+        """Dynamically resolve MCP_ISSUER_URL per staged ENVIRONMENT when not explicitly overridden."""
+        if isinstance(v, str) and v.strip():
+            return v.strip().rstrip("/")
+        env = str(values.get("ENVIRONMENT") or "development").strip().lower()
+        stage_urls = {
+            "production": "https://crm.winvinaya.com/mcp",
+            "prod": "https://crm.winvinaya.com/mcp",
+            "qa": "https://qa-crm.winvinaya.com/mcp",
+            "staging": "https://qa-crm.winvinaya.com/mcp",
+            "development": "https://dev-crm.winvinaya.com/mcp",
+            "dev": "https://dev-crm.winvinaya.com/mcp",
+            "local": "http://localhost:8100/mcp",
+            "testing": "http://localhost:8100/mcp",
+        }
+        return stage_urls.get(env, "https://dev-crm.winvinaya.com/mcp")
+
+    MCP_TOKEN_SECRET: Optional[str] = None
+    MCP_ALLOWED_ROLES: str = "admin"
+    MCP_ACCESS_TOKEN_EXPIRE_SECONDS: int = 3600
+    MCP_REFRESH_TOKEN_EXPIRE_SECONDS: int = 60 * 60 * 24 * 30
+    MCP_AUTH_CODE_EXPIRE_SECONDS: int = 300
+    MCP_MAX_ROWS: int = 50
+    MCP_ALLOWED_REDIRECT_URIS: str = (
+        "https://claude.ai/api/mcp/auth_callback,"
+        "https://claude.com/api/mcp/auth_callback,"
+        "http://localhost,"
+        "http://127.0.0.1"
+    )
     
     model_config = SettingsConfigDict(
         env_file=os.getenv("ENV_FILE", ".env"),

@@ -17,17 +17,23 @@ fi
 case $ENV in
     dev)
         PORT=8000
+        MCP_PORT=8100
         APP_NAME="winvinaya-backend-dev"
+        MCP_APP_NAME="winvinaya-mcp-dev"
         ENV_FILE="/var/www/winvinaya-crm/backend/.env.dev"
         ;;
     qa)
         PORT=8001
+        MCP_PORT=8101
         APP_NAME="winvinaya-backend-qa"
+        MCP_APP_NAME="winvinaya-mcp-qa"
         ENV_FILE="/var/www/winvinaya-crm/backend/.env.qa"
         ;;
     prod)
         PORT=8002
+        MCP_PORT=8102
         APP_NAME="winvinaya-backend-prod"
+        MCP_APP_NAME="winvinaya-mcp-prod"
         ENV_FILE="/var/www/winvinaya-crm/backend/.env.prod"
         ;;
     *)
@@ -45,9 +51,11 @@ echo "================================"
 cd /var/www/winvinaya-crm/backend
 
 # Stop existing PM2 process safely
-echo "🛑 Stopping existing PM2 process..."
+echo "🛑 Stopping existing PM2 processes..."
 pm2 stop $APP_NAME || true
 pm2 delete $APP_NAME || true
+pm2 stop $MCP_APP_NAME || true
+pm2 delete $MCP_APP_NAME || true
 
 # Create virtual environment if missing
 if [ ! -d "venv-$ENV" ]; then
@@ -87,6 +95,23 @@ pm2 start venv-$ENV/bin/uvicorn \
     -- app.main:app \
     --host 0.0.0.0 \
     --port "$PORT" \
+    --env-file "$ENV_FILE"
+
+# Start isolated Claude MCP Server PM2 process
+echo "▶️ Starting Claude MCP Server ($MCP_APP_NAME) on port $MCP_PORT..."
+if [ ! -d "venv-mcp-$ENV" ]; then
+    python3.11 -m venv venv-mcp-$ENV
+fi
+venv-mcp-$ENV/bin/pip install --upgrade pip
+venv-mcp-$ENV/bin/pip install -r requirements-mcp.txt
+
+pm2 start venv-mcp-$ENV/bin/uvicorn \
+    --name "$MCP_APP_NAME" \
+    --interpreter none \
+    -- app.mcp_server.main:app \
+    --host 127.0.0.1 \
+    --port "$MCP_PORT" \
+    --workers 2 \
     --env-file "$ENV_FILE"
 
 # Persist PM2 processes

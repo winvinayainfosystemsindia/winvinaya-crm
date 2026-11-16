@@ -60,7 +60,7 @@ class GetUserPerformanceTool(BaseTool):
             # ─────────────────────────────────────────────────────────────────
 
             # Use IST for business lookback
-            now_ist = datetime.now(timezone.utc) + self._ist_offset
+            now_ist = datetime.now(timezone.utc) + timedelta(hours=5, minutes=30)
             since_date = now_ist - timedelta(days=days)
 
             # Screening Counts (aggregated)

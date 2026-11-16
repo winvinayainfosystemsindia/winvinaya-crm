@@ -16,3 +16,4 @@ from . import crm_tools
 from . import placement_tools
 from . import candidate_tools
 from . import operational_tools
+from . import mis_tools

@@ -42,6 +42,10 @@ class ToolDefinition(BaseModel):
         default=False,
         description="If True, this tool only reads data; never modifies the DB"
     )
+    allowed_roles: list[str] = Field(
+        default_factory=lambda: ["admin"],
+        description="User roles permitted to invoke this tool via MCP"
+    )
     parameters: dict[str, ToolParameterSchema] = Field(
         default_factory=dict,
         description="Map of parameter name → schema"
