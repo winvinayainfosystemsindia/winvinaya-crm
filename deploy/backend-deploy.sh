@@ -99,13 +99,7 @@ pm2 start venv-$ENV/bin/uvicorn \
 
 # Start isolated Claude MCP Server PM2 process
 echo "▶️ Starting Claude MCP Server ($MCP_APP_NAME) on port $MCP_PORT..."
-if [ ! -d "venv-mcp-$ENV" ]; then
-    python3.11 -m venv venv-mcp-$ENV
-fi
-venv-mcp-$ENV/bin/pip install --upgrade pip
-venv-mcp-$ENV/bin/pip install -r requirements-mcp.txt
-
-pm2 start venv-mcp-$ENV/bin/uvicorn \
+pm2 start venv-$ENV/bin/uvicorn \
     --name "$MCP_APP_NAME" \
     --interpreter none \
     -- app.mcp_server.main:app \

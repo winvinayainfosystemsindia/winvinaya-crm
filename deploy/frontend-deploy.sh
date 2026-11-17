@@ -82,7 +82,8 @@ echo "Setting permissions..."
 chmod -R 755 $DEPLOY_DIR
 
 # Reload Nginx
-echo "Reloading Nginx..."
+echo "Updating and reloading Nginx..."
+sudo cp /var/www/winvinaya-crm/deploy/nginx-$ENV.conf /etc/nginx/sites-available/nginx-$ENV.conf
 sudo nginx -t && sudo systemctl reload nginx
 
 echo "================================"
