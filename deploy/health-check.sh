@@ -67,6 +67,15 @@ else
     echo "⚠️  Database health check endpoint not found (may be normal)"
 fi
 
+# Check Claude MCP Connector endpoint
+echo "Checking Claude MCP Connector on $API_URL/mcp/health..."
+if curl -f -s "$API_URL/mcp/health" > /dev/null; then
+    echo "✅ Claude MCP Connector is healthy"
+else
+    echo "❌ Claude MCP Connector health check failed"
+    exit 1
+fi
+
 echo "================================"
 echo "✅ All health checks passed!"
 echo "================================"
