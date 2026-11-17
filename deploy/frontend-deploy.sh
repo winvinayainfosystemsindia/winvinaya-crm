@@ -41,9 +41,20 @@ echo "================================"
 # Navigate to frontend directory
 cd /var/www/winvinaya-crm/frontend
 
+# Ensure 2GB swap is active on EC2 so Vite build (14,600+ modules) never hangs on RAM
+if [ "$(swapon --show | wc -l)" -eq 0 ]; then
+    echo "Enabling 2GB swapfile for Vite build..."
+    if [ ! -f /swapfile ]; then
+        sudo fallocate -l 2G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
+        sudo chmod 600 /swapfile
+        sudo mkswap /swapfile
+    fi
+    sudo swapon /swapfile || true
+fi
+
 # Install/update dependencies
 echo "Installing dependencies..."
-npm ci
+npm install --prefer-offline --no-audit
 
 # Check if environment file exists
 if [ ! -f "$ENV_FILE" ]; then
@@ -55,8 +66,9 @@ fi
 echo "Using environment file: $ENV_FILE"
 cp $ENV_FILE .env
 
-# Build application
+# Build application with explicit Node memory ceiling
 echo "Building application..."
+export NODE_OPTIONS="--max-old-space-size=2048"
 npm run build
 
 # Create deploy directory if it doesn't exist

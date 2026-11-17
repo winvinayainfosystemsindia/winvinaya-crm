@@ -87,7 +87,7 @@ source <(grep -v '^#' "$ENV_FILE" | grep -v '^$' | sed 's/\r$//')
 set +a
 alembic upgrade head
 
-# Start backend using EXACT working PM2 command
+# Start backend using EXACT working PM2 command (includes Claude MCP /mcp routes)
 echo "▶️ Starting backend with PM2..."
 pm2 start venv-$ENV/bin/uvicorn \
     --name "$APP_NAME" \
@@ -95,17 +95,6 @@ pm2 start venv-$ENV/bin/uvicorn \
     -- app.main:app \
     --host 0.0.0.0 \
     --port "$PORT" \
-    --env-file "$ENV_FILE"
-
-# Start isolated Claude MCP Server PM2 process
-echo "▶️ Starting Claude MCP Server ($MCP_APP_NAME) on port $MCP_PORT..."
-pm2 start venv-$ENV/bin/uvicorn \
-    --name "$MCP_APP_NAME" \
-    --interpreter none \
-    -- app.mcp_server.main:app \
-    --host 127.0.0.1 \
-    --port "$MCP_PORT" \
-    --workers 2 \
     --env-file "$ENV_FILE"
 
 # Persist PM2 processes

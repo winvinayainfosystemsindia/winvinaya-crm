@@ -15,6 +15,7 @@ from app.core.rate_limiter import limiter
 from app.middleware.logging import LoggingMiddleware
 from app.middleware.error_handler import ErrorHandlerMiddleware
 from app.api.v1.router import router as v1_router
+from app.mcp_server import mcp_protocol_router, oauth_router
 from loguru import logger
 from fastapi.exceptions import RequestValidationError
 
@@ -72,6 +73,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Mcp-Session-Id", "WWW-Authenticate"],
 )
 
 # Add custom middleware
@@ -83,6 +85,10 @@ app.include_router(
     v1_router,
     prefix=settings.API_V1_PREFIX,
 )
+
+# Include Claude MCP Connector (Streamable HTTP /mcp + OAuth 2.1 discovery & auth)
+app.include_router(oauth_router)
+app.include_router(mcp_protocol_router)
 
 # Add more API versions here as needed
 # app.include_router(v2_router, prefix="/api/v2")
