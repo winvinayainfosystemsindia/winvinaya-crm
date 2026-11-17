@@ -100,6 +100,12 @@ pm2 start venv-$ENV/bin/uvicorn \
 # Persist PM2 processes
 pm2 save
 
+# Ensure Nginx config is up to date for backend/MCP routes
+if [ -f "/var/www/winvinaya-crm/deploy/nginx-$ENV.conf" ]; then
+    sudo cp /var/www/winvinaya-crm/deploy/nginx-$ENV.conf /etc/nginx/sites-available/nginx-$ENV.conf
+    sudo nginx -t && sudo systemctl reload nginx
+fi
+
 echo "================================"
 echo "✅ Backend deployed successfully!"
 echo "Process: $APP_NAME"
